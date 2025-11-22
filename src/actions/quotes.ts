@@ -1,0 +1,907 @@
+'use server';
+
+import { ZodError } from 'zod';
+import { auth } from '@/auth';
+import { revalidatePath } from 'next/cache';
+import { SearchParams } from 'nuqs/server';
+import { QuoteRepository } from '@/repositories/quote-repository';
+import { InvoiceRepository } from '@/repositories/invoice-repository';
+import { Prisma, InvoiceStatus, QuoteStatus } from '@/prisma/client';
+import { prisma } from '@/lib/prisma';
+import {
+  CreateQuoteSchema,
+  UpdateQuoteSchema,
+  MarkQuoteAsAcceptedSchema,
+  MarkQuoteAsRejectedSchema,
+  ConvertQuoteToInvoiceSchema,
+  QuoteFiltersSchema,
+  UploadAttachmentSchema,
+  DeleteAttachmentSchema,
+  UploadItemAttachmentSchema,
+  DeleteItemAttachmentSchema,
+  type CreateQuoteInput,
+  type UpdateQuoteInput,
+  type MarkQuoteAsAcceptedInput,
+  type MarkQuoteAsRejectedInput,
+  type ConvertQuoteToInvoiceInput,
+} from '@/schemas/quotes';
+import type {
+  QuoteFilters,
+  QuoteStatistics,
+  QuoteWithDetails,
+  QuotePagination,
+  QuoteAttachment,
+  QuoteItemAttachment,
+} from '@/features/finances/quotes/types';
+import type { ActionResult } from '@/types/actions';
+import {
+  uploadFileToS3,
+  deleteFileFromS3,
+  getSignedDownloadUrl,
+  ALLOWED_IMAGE_MIME_TYPES,
+} from '@/lib/s3';
+
+const quoteRepo = new QuoteRepository(prisma);
+const invoiceRepo = new InvoiceRepository(prisma);
+
+/**
+ * Retrieves a paginated list of quotes based on specified search and filter criteria.
+ * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated quote data.
+ * @throws Will throw an error if the user is not authenticated or if the search parameters are invalid.
+ */
+export async function getQuotes(
+  searchParams: SearchParams,
+): Promise<ActionResult<QuotePagination>> {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error('Unauthorized');
+  }
+
+  const parseResult = QuoteFiltersSchema.safeParse(searchParams);
+  if (!parseResult.success) {
+    throw new Error('Invalid query parameters');
+  }
+
+  try {
+    const repoParams: QuoteFilters = {
+      search: parseResult.data.search,
+      status: parseResult.data.status,
+      page: parseResult.data.page,
+      perPage: parseResult.data.perPage,
+      sort: parseResult.data.sort,
+    };
+
+    const result = await quoteRepo.searchAndPaginate(repoParams);
+
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to fetch quotes' };
+  }
+}
+
+/**
+ * Retrieves a single quote by its unique identifier, including associated details.
+ * @param id - The ID of the quote to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the quote details,
+ * or an error if the quote is not found.
+ */
+export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDetails>> {
+  try {
+    const quote = await quoteRepo.findByIdWithDetails(id);
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    return { success: true, data: quote };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to fetch quote' };
+  }
+}
+
+/**
+ * Retrieves statistics about quotes, such as counts for different statuses.
+ * Can be filtered by a date range.
+ * @param dateFilter - An optional object with startDate and endDate to filter the statistics.
+ * @returns A promise that resolves to an `ActionResult` containing the quote statistics.
+ */
+export async function getQuoteStatistics(dateFilter?: {
+  startDate?: Date;
+  endDate?: Date;
+}): Promise<ActionResult<QuoteStatistics>> {
+  try {
+    const stats = await quoteRepo.getStatistics(dateFilter);
+    return { success: true, data: stats };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to fetch statistics' };
+  }
+}
+
+/**
+ * Creates a new quote with the provided data.
+ * It calculates the total amount and generates a new quote number.
+ * @param data - The input data for creating the quote, conforming to `CreateQuoteInput`.
+ * @returns A promise that resolves to an `ActionResult` with the new quote's ID and number.
+ */
+export async function createQuote(
+  data: CreateQuoteInput,
+): Promise<ActionResult<{ id: string; quoteNumber: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    // Validate input
+    const validatedData = CreateQuoteSchema.parse(data);
+    const quote = await quoteRepo.createQuoteWithItems(validatedData);
+    revalidatePath('/finances/quotes');
+
+    return {
+      success: true,
+      data: { id: quote.id, quoteNumber: quote.quoteNumber },
+    };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: 'Invalid quote data. Please check the fields and try again.',
+      };
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return { success: false, error: 'Quote number already exists' };
+      }
+      if (error.code === 'P2003') {
+        return { success: false, error: 'Customer not found' };
+      }
+    }
+
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to create quote' };
+  }
+}
+
+/**
+ * Updates an existing quote with the provided data.
+ * It recalculates the total amount and handles updates to quote items.
+ * @param data - The input data for updating the quote, conforming to `UpdateQuoteInput`.
+ * @returns A promise that resolves to an `ActionResult` with the updated quote's ID.
+ */
+export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error('Unauthorized');
+  }
+
+  try {
+    // Validate input
+    const validatedData = UpdateQuoteSchema.parse(data);
+
+    // Check if quote exists
+    const existing = await quoteRepo.findById(validatedData.id);
+    if (!existing) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    const quote = await quoteRepo.updateQuoteWithItems(validatedData.id, validatedData);
+    if (!quote) {
+      return { success: false, error: 'Failed to update quote' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${quote.id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return {
+        success: false,
+        error: 'Invalid quote data. Please check the fields and try again.',
+      };
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2003') {
+        return { success: false, error: 'Customer not found' };
+      }
+    }
+
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to update quote' };
+  }
+}
+
+/**
+ * Marks a quote as accepted.
+ * @param data - An object containing the quote ID and the acceptance date.
+ * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
+ * or an error if the quote is not found.
+ */
+export async function markQuoteAsAccepted(
+  data: MarkQuoteAsAcceptedInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
+
+    const quote = await quoteRepo.markAsAccepted(validatedData.id, validatedData.acceptedDate);
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to mark quote as accepted' };
+  }
+}
+
+/**
+ * Marks a quote as rejected.
+ * @param data - An object containing the quote ID, rejection date, and reason for rejection.
+ * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
+ * or an error if the quote is not found.
+ */
+export async function markQuoteAsRejected(
+  data: MarkQuoteAsRejectedInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const validatedData = MarkQuoteAsRejectedSchema.parse(data);
+
+    const quote = await quoteRepo.markAsRejected(
+      validatedData.id,
+      validatedData.rejectedDate,
+      validatedData.rejectReason,
+    );
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to mark quote as rejected' };
+  }
+}
+
+/**
+ * Marks a quote as sent.
+ * @param id - The ID of the quote to mark as sent.
+ * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
+ * or an error if the quote is not found.
+ */
+export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: string }>> {
+  try {
+    const quote = await quoteRepo.markAsSent(id);
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to mark quote as sent' };
+  }
+}
+
+/**
+ * Converts an accepted quote into a new invoice.
+ * It copies over relevant details from the quote to a new invoice record.
+ * @param data - The input data for the conversion, including the quote ID and invoice due date.
+ * @returns A promise that resolves to an `ActionResult` containing the new invoice's ID and number.
+ * @throws Will throw an error if the quote is not found or is not in 'ACCEPTED' status.
+ */
+export async function convertQuoteToInvoice(
+  data: ConvertQuoteToInvoiceInput,
+): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+  try {
+    const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Get quote with details
+      const quote = await tx.quote.findUnique({
+        where: { id: validatedData.id, deletedAt: null },
+        include: {
+          items: true,
+          customer: true,
+        },
+      });
+
+      if (!quote) {
+        throw new Error('Quote not found');
+      }
+
+      if (quote.status !== QuoteStatus.ACCEPTED) {
+        throw new Error('Only accepted quotes can be converted to invoices');
+      }
+
+      // Generate invoice number
+      const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
+
+      // Create invoice from quote
+      const invoice = await tx.invoice.create({
+        data: {
+          invoiceNumber,
+          customerId: quote.customerId,
+          status: InvoiceStatus.DRAFT,
+          amount: quote.amount,
+          currency: quote.currency,
+          gst: validatedData.gst,
+          discount: validatedData.discount,
+          issuedDate: new Date(),
+          dueDate: validatedData.dueDate,
+          notes: quote.notes,
+          items: {
+            create: quote.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              productId: item.productId,
+            })),
+          },
+        },
+      });
+
+      // Update quote status
+      await tx.quote.update({
+        where: { id: validatedData.id },
+        data: {
+          status: QuoteStatus.CONVERTED,
+          convertedDate: new Date(),
+          invoiceId: invoice.id,
+        },
+      });
+
+      return { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber };
+    });
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.id}`);
+    revalidatePath('/finances/invoices');
+
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to convert quote to invoice' };
+  }
+}
+
+/**
+ * Checks for quotes that are past their 'validUntil' date and updates their status to 'EXPIRED'.
+ * This is intended to be run periodically.
+ * @returns A promise that resolves to an `ActionResult` with the count of expired quotes.
+ */
+export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: number }>> {
+  try {
+    const count = await quoteRepo.checkAndExpireQuotes();
+
+    if (count > 0) {
+      revalidatePath('/finances/quotes');
+    }
+
+    return { success: true, data: { count } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to expire quotes' };
+  }
+}
+
+/**
+ * Soft deletes a quote by setting its `deletedAt` timestamp.
+ * The quote is not permanently removed from the database.
+ * @param id - The ID of the quote to delete.
+ * @returns A promise that resolves to an `ActionResult` with the ID of the soft-deleted quote,
+ * or an error if the quote is not found.
+ */
+export async function deleteQuote(id: string): Promise<ActionResult<{ id: string }>> {
+  try {
+    const success = await quoteRepo.softDelete(id);
+
+    if (!success) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+
+    return { success: true, data: { id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to delete quote' };
+  }
+}
+
+/**
+ * Uploads a file attachment for a specific quote.
+ * The file is stored in S3 and a corresponding record is created in the database.
+ * @param formData - The form data containing the file and the quote ID.
+ * @returns A promise that resolves to an `ActionResult` with the new attachment's data.
+ */
+export async function uploadQuoteAttachment(
+  formData: FormData,
+): Promise<ActionResult<QuoteAttachment>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const quoteId = formData.get('quoteId');
+    const fileEntry = formData.get('file');
+
+    if (typeof quoteId !== 'string' || !(fileEntry instanceof File)) {
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const file: File = fileEntry;
+
+    // Validate inputs with file properties
+    const validatedData = UploadAttachmentSchema.parse({
+      quoteId,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+    });
+
+    // Check if quote exists
+    const quote = await quoteRepo.findById(validatedData.quoteId);
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const params = {
+      file: buffer,
+      fileName: validatedData.fileName,
+      mimeType: validatedData.mimeType,
+      quoteId: validatedData.quoteId,
+    };
+
+    const { s3Key, s3Url } = await uploadFileToS3({
+      ...params,
+      resourceType: 'quotes',
+      resourceId: params.quoteId,
+      subPath: 'attachments',
+      metadata: { quoteId: params.quoteId },
+    });
+
+    // Create database record
+    const attachment = await quoteRepo.createAttachment({
+      quoteId: validatedData.quoteId,
+      fileName: validatedData.fileName,
+      fileSize: validatedData.fileSize,
+      mimeType: validatedData.mimeType,
+      s3Key,
+      s3Url,
+      uploadedBy: session.user.id,
+    });
+
+    revalidatePath(`/finances/quotes/${validatedData.quoteId}`);
+
+    return {
+      success: true,
+      data: {
+        id: attachment.id,
+        quoteId: attachment.quoteId,
+        fileName: attachment.fileName,
+        fileSize: attachment.fileSize,
+        mimeType: attachment.mimeType,
+        s3Key: attachment.s3Key,
+        s3Url: attachment.s3Url,
+        uploadedBy: attachment.uploadedBy,
+        uploadedAt: attachment.uploadedAt,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to upload attachment' };
+  }
+}
+
+/**
+ * Deletes a quote attachment from both S3 and the database.
+ * @param data - An object containing the `attachmentId` of the attachment to be deleted.
+ * @returns A promise that resolves to an `ActionResult` with the ID of the deleted attachment,
+ * or an error if the attachment is not found.
+ */
+export async function deleteQuoteAttachment(data: {
+  attachmentId: string;
+}): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const validatedData = DeleteAttachmentSchema.parse(data);
+
+    // Get attachment details
+    const attachment = await quoteRepo.getAttachmentById(validatedData.attachmentId);
+    if (!attachment) {
+      return { success: false, error: 'Attachment not found' };
+    }
+
+    // Delete from S3
+    await deleteFileFromS3(attachment.s3Key);
+
+    // Delete from database
+    const success = await quoteRepo.deleteAttachment(validatedData.attachmentId);
+    if (!success) {
+      return { success: false, error: 'Failed to delete attachment record' };
+    }
+
+    revalidatePath(`/finances/quotes/${attachment.quoteId}`);
+
+    return { success: true, data: { id: validatedData.attachmentId } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to delete attachment' };
+  }
+}
+
+/**
+ * Retrieves all attachments associated with a specific quote.
+ * @param quoteId - The ID of the quote.
+ * @returns A promise that resolves to an `ActionResult` containing an array of quote attachments.
+ */
+export async function getQuoteAttachments(
+  quoteId: string,
+): Promise<ActionResult<QuoteAttachment[]>> {
+  try {
+    const attachments = await quoteRepo.getQuoteAttachments(quoteId);
+
+    return {
+      success: true,
+      data: attachments.map((attachment) => ({
+        id: attachment.id,
+        quoteId: attachment.quoteId,
+        fileName: attachment.fileName,
+        fileSize: attachment.fileSize,
+        mimeType: attachment.mimeType,
+        s3Key: attachment.s3Key,
+        s3Url: attachment.s3Url,
+        uploadedBy: attachment.uploadedBy,
+        uploadedAt: attachment.uploadedAt,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to fetch attachments' };
+  }
+}
+
+/**
+ * Generates a temporary, signed URL for downloading a quote attachment from S3.
+ * @param attachmentId - The ID of the attachment.
+ * @returns A promise that resolves to an `ActionResult` containing the signed URL and the original file name,
+ * or an error if the attachment is not found.
+ */
+export async function getAttachmentDownloadUrl(
+  attachmentId: string,
+): Promise<ActionResult<{ url: string; fileName: string }>> {
+  try {
+    // Get attachment details
+    const attachment = await quoteRepo.getAttachmentById(attachmentId);
+    if (!attachment) {
+      return { success: false, error: 'Attachment not found' };
+    }
+
+    // Generate signed URL
+    const url = await getSignedDownloadUrl(attachment.s3Key);
+
+    return {
+      success: true,
+      data: {
+        url,
+        fileName: attachment.fileName,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to generate download URL' };
+  }
+}
+
+/**
+ * Uploads an image attachment for a specific quote item.
+ * The file is stored in S3 and a corresponding record is created in the database.
+ * @param formData - The form data containing the file, quote ID, and quote item ID.
+ * @returns A promise that resolves to an `ActionResult` with the new item attachment's data.
+ */
+export async function uploadQuoteItemAttachment(
+  formData: FormData,
+): Promise<ActionResult<QuoteItemAttachment>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const quoteItemId = formData.get('quoteItemId');
+    const quoteId = formData.get('quoteId');
+    const fileEntry = formData.get('file');
+
+    if (
+      typeof quoteItemId !== 'string' ||
+      typeof quoteId !== 'string' ||
+      !(fileEntry instanceof File)
+    ) {
+      return { success: false, error: 'Missing required fields' };
+    }
+
+    const file: File = fileEntry;
+
+    // Validate inputs with file properties
+    const validatedData = UploadItemAttachmentSchema.parse({
+      quoteItemId,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+    });
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const params = {
+      file: buffer,
+      fileName: validatedData.fileName,
+      mimeType: validatedData.mimeType,
+      quoteId,
+    };
+
+    const { s3Key, s3Url } = await uploadFileToS3({
+      ...params,
+      resourceType: 'quotes',
+      resourceId: params.quoteId,
+      subPath: `items/${validatedData.quoteItemId}`,
+      allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+      metadata: {
+        quoteId: params.quoteId,
+        itemId: validatedData.quoteItemId,
+      },
+    });
+
+    // Create database record
+    const attachment = await quoteRepo.createItemAttachment({
+      quoteItemId: validatedData.quoteItemId,
+      fileName: validatedData.fileName,
+      fileSize: validatedData.fileSize,
+      mimeType: validatedData.mimeType,
+      s3Key,
+      s3Url,
+      uploadedBy: session.user.id,
+    });
+
+    revalidatePath(`/finances/quotes/${quoteId}`);
+
+    return {
+      success: true,
+      data: {
+        id: attachment.id,
+        quoteItemId: attachment.quoteItemId,
+        fileName: attachment.fileName,
+        fileSize: attachment.fileSize,
+        mimeType: attachment.mimeType,
+        s3Key: attachment.s3Key,
+        s3Url: attachment.s3Url,
+        uploadedBy: attachment.uploadedBy,
+        uploadedAt: attachment.uploadedAt,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to upload item attachment' };
+  }
+}
+
+/**
+ * Deletes a quote item attachment from both S3 and the database.
+ * @param data - An object containing the `attachmentId` and `quoteId`.
+ * The `quoteId` is used for revalidating the cache.
+ * @returns A promise that resolves to an `ActionResult` with the ID of the deleted attachment,
+ * or an error if the attachment is not found.
+ */
+export async function deleteQuoteItemAttachment(data: {
+  attachmentId: string;
+  quoteId: string;
+}): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const validatedData = DeleteItemAttachmentSchema.parse(data);
+
+    // Get attachment details
+    const attachment = await quoteRepo.getItemAttachmentById(validatedData.attachmentId);
+    if (!attachment) {
+      return { success: false, error: 'Attachment not found' };
+    }
+
+    // Delete from S3
+    await deleteFileFromS3(attachment.s3Key);
+
+    // Delete from database
+    const success = await quoteRepo.deleteItemAttachment(validatedData.attachmentId);
+    if (!success) {
+      return { success: false, error: 'Failed to delete attachment record' };
+    }
+
+    revalidatePath(`/finances/quotes/${data.quoteId}`);
+
+    return { success: true, data: { id: validatedData.attachmentId } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to delete item attachment' };
+  }
+}
+
+/**
+ * Updates the notes for a specific quote item.
+ * @param data - An object containing the `quoteItemId`, `quoteId`, and the new `notes`.
+ * The `quoteId` is used for revalidating the cache.
+ * @returns A promise that resolves to an `ActionResult` with the updated item's ID and notes,
+ * or an error if the update fails.
+ */
+export async function updateQuoteItemNotes(data: {
+  quoteItemId: string;
+  quoteId: string;
+  notes: string;
+}): Promise<ActionResult<{ id: string; notes: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    // Update notes in database
+    const quoteItem = await quoteRepo.updateQuoteItemNotes(data.quoteItemId, data.notes);
+
+    revalidatePath(`/finances/quotes/${data.quoteId}`);
+
+    return {
+      success: true,
+      data: {
+        id: quoteItem.id,
+        notes: quoteItem.notes ?? '',
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to update quote item notes' };
+  }
+}
+
+/**
+ * Retrieves all attachments associated with a specific quote item.
+ * @param quoteItemId - The ID of the quote item.
+ * @returns A promise that resolves to an `ActionResult` containing an array of quote item attachments.
+ */
+export async function getQuoteItemAttachments(
+  quoteItemId: string,
+): Promise<ActionResult<QuoteItemAttachment[]>> {
+  try {
+    const attachments = await quoteRepo.getQuoteItemAttachments(quoteItemId);
+
+    return {
+      success: true,
+      data: attachments.map((attachment) => ({
+        id: attachment.id,
+        quoteItemId: attachment.quoteItemId,
+        fileName: attachment.fileName,
+        fileSize: attachment.fileSize,
+        mimeType: attachment.mimeType,
+        s3Key: attachment.s3Key,
+        s3Url: attachment.s3Url,
+        uploadedBy: attachment.uploadedBy,
+        uploadedAt: attachment.uploadedAt,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to fetch item attachments' };
+  }
+}
+
+/**
+ * Generates a temporary, signed URL for downloading a quote item attachment from S3.
+ * @param attachmentId - The ID of the item attachment.
+ * @returns A promise that resolves to an `ActionResult` containing the signed URL and the original file name,
+ * or an error if the attachment is not found.
+ */
+export async function getItemAttachmentDownloadUrl(
+  attachmentId: string,
+): Promise<ActionResult<{ url: string; fileName: string }>> {
+  try {
+    // Get attachment details
+    const attachment = await quoteRepo.getItemAttachmentById(attachmentId);
+    if (!attachment) {
+      return { success: false, error: 'Attachment not found' };
+    }
+
+    // Generate signed URL
+    const url = await getSignedDownloadUrl(attachment.s3Key);
+
+    return {
+      success: true,
+      data: {
+        url,
+        fileName: attachment.fileName,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: 'Failed to generate download URL' };
+  }
+}

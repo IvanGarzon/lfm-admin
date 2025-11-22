@@ -1,0 +1,25 @@
+import { Prisma } from '@/prisma/client';
+
+import { z } from 'zod';
+import { isValidDecimalInput } from './isValidDecimalInput';
+import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
+import { NullableJsonNullValueInputSchema } from './NullableJsonNullValueInputSchema';
+import { InputJsonValueSchema } from './InputJsonValueSchema';
+import { QuoteItemAttachmentUncheckedCreateNestedManyWithoutQuoteItemInputSchema } from './QuoteItemAttachmentUncheckedCreateNestedManyWithoutQuoteItemInputSchema';
+
+export const QuoteItemUncheckedCreateWithoutProductInputSchema: z.ZodType<Prisma.QuoteItemUncheckedCreateWithoutProductInput> = z.strictObject({
+  id: z.cuid().optional(),
+  quoteId: z.string(),
+  description: z.string(),
+  quantity: z.number().int(),
+  unitPrice: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),
+  total: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),
+  order: z.number().int().optional(),
+  notes: z.string().optional().nullable(),
+  colorPalette: z.union([ z.lazy(() => NullableJsonNullValueInputSchema), InputJsonValueSchema ]).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+  attachments: z.lazy(() => QuoteItemAttachmentUncheckedCreateNestedManyWithoutQuoteItemInputSchema).optional(),
+});
+
+export default QuoteItemUncheckedCreateWithoutProductInputSchema;
