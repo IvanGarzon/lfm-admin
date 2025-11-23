@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useMemo } from 'react';
 import Image from 'next/image';
-import { Trash2, Download, Loader2, Eye } from 'lucide-react';
+import { Trash2, Download, Loader2, Eye, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import {
 import { formatFileSize } from '@/lib/s3';
 import { DeleteItemImageDialog } from './delete-item-image-dialog';
 import { ImagePreviewDialog } from './image-preview-dialog';
+import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';
 
-interface QuoteItemImagesProps {
+interface QuoteItemDetailsProps {
   quoteId: string;
   readOnly?: boolean;
   onDownloadImage: (attachmentId: string) => void;
@@ -23,13 +24,13 @@ interface QuoteItemImagesProps {
   isDeleting?: boolean;
 }
 
-export function QuoteItemImages({
+export function QuoteItemDetails({
   quoteId,
   readOnly = false,
   onDownloadImage,
   onDeleteImage,
   isDeleting = false,
-}: QuoteItemImagesProps) {
+}: QuoteItemDetailsProps) {
   const [deleteItemAttachment, setDeleteItemAttachment] = useState<{
     attachmentId: string;
     quoteItemId: string;
@@ -40,18 +41,26 @@ export function QuoteItemImages({
     itemDescription: string;
   } | null>(null);
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
+  const [editingColors, setEditingColors] = useState<{
+    quoteItemId: string;
+    itemDescription: string;
+    colors: string[];
+  } | null>(null);
 
   const { data: quote, isLoading } = useQuote(quoteId);
   const updateNotesMutation = useUpdateQuoteItemNotes();
 
-  // Memoize items with attachments to prevent reordering on updates
-  const itemsWithAttachments = useMemo(() => {
+  // Memoize items with attachments or colors to prevent reordering on updates
+  const itemsWithContent = useMemo(() => {
     if (!quote?.items) {
       return [];
     }
 
     return quote.items
-      .filter((item) => item.attachments && item.attachments.length > 0)
+      .filter((item) => 
+        (item.attachments && item.attachments.length > 0) || 
+        (item.colors && item.colors.length > 0)
+      )
       .sort((a, b) => a.order - b.order);
   }, [quote?.items]);
 
@@ -98,8 +107,8 @@ export function QuoteItemImages({
     );
   }
 
-  // Check if there are any item attachments
-  if (itemsWithAttachments.length === 0) {
+  // Check if there are any item attachments or colors
+  if (itemsWithContent.length === 0) {
     return null;
   }
 
@@ -107,19 +116,62 @@ export function QuoteItemImages({
     <>
       <Card className="p-6">
         <Box className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">Item Images</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">Item Colors & Images</h3>
 
-          {itemsWithAttachments.map((item) => {
+          {itemsWithContent.map((item) => {
+            const hasColors = item.colors && item.colors.length > 0;
+            const hasImages = item.attachments && item.attachments.length > 0;
+            
             return (
               <Box key={item.id} className="space-y-3">
+                {/* Item Title */}
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   <span className="font-medium">{item.description}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
-                    ({item.attachments.length} {item.attachments.length === 1 ? 'image' : 'images'})
-                  </span>
+                  {hasColors ? (
+                    <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
+                      ({item.colors.length} {item.colors.length === 1 ? 'color' : 'colors'})
+                    </span>
+                  ): null}
+
+                  {hasImages ? (
+                    <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
+                      ({item.attachments.length} {item.attachments.length === 1 ? 'image' : 'images'})
+                    </span>
+                  ): null}
                 </p>
 
-                <Box className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {/* Color Palette */}
+                {hasColors ? (
+                  <Box className="flex flex-wrap gap-1 items-center">
+                    {item.colors.map((color, colorIndex) => (
+                      <Box
+                        key={`${item.id}-color-${colorIndex}`}
+                        className="w-16 h-16 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-sm"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
+                    ))}
+                    {!readOnly ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingColors({
+                          quoteItemId: item.id,
+                          itemDescription: item.description,
+                          colors: item.colors,
+                        })}
+                        className="w-16 h-16 px-4"
+                      >
+                        <Edit className="h-4 w-4" />                        
+                      </Button>
+                    ): null}
+                  </Box>
+                ): null}
+
+                {/* Images Grid */}
+                {hasImages ? (
+                  <Box className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {item.attachments.map((attachment) => (
                     <Box
                       key={attachment.id}
@@ -197,14 +249,16 @@ export function QuoteItemImages({
                       </Box>
                     </Box>
                   ))}
-                </Box>
+                  </Box>
+                ): null}
 
-                {/* Notes Editor */}
-                {!readOnly ? (
+                {/* Notes Editor - Only show if there are colors OR images */}
+                {(hasColors || hasImages) ? (
+                  !readOnly ? (
                   <Box>
                     <RichTextEditor
                       key={`editor-${item.id}`}
-                      placeholder="Add notes about these images..."
+                      placeholder="Add notes about these colors and images..."
                       value={editingNotes[item.id] ?? item.notes ?? ''}
                       onChange={(value) => handleNotesChange(item.id, value)}
                       onBlur={() => handleNotesBlur(item.id, item.notes)}
@@ -212,7 +266,7 @@ export function QuoteItemImages({
                     />
                   </Box>
                 ) : (
-                  item.notes && (
+                  item.notes ? (
                     <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
                       <RichTextEditor
                         key={`editor-readonly-${item.id}`}
@@ -220,8 +274,9 @@ export function QuoteItemImages({
                         editable={false}
                       />
                     </Box>
-                  )
-                )}
+                  ): null
+                )
+                ): null}
               </Box>
             );
           })}
@@ -243,6 +298,20 @@ export function QuoteItemImages({
         imageUrl={previewImage?.url ?? null}
         fileName={previewImage?.fileName ?? null}
         itemDescription={previewImage?.itemDescription ?? null}
+      />
+
+      {/* Color Palette Edit Dialog */}
+      <QuoteItemColorPaletteDialog
+        open={editingColors !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingColors(null);
+          }
+        }}
+        quoteId={quoteId}
+        quoteItemId={editingColors?.quoteItemId ?? ''}
+        itemDescription={editingColors?.itemDescription ?? ''}
+        initialColors={editingColors?.colors ?? []}
       />
     </>
   );

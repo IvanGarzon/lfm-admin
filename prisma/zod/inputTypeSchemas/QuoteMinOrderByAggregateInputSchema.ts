@@ -21,7 +21,6 @@ export const QuoteMinOrderByAggregateInputSchema: z.ZodType<Prisma.QuoteMinOrder
   invoiceId: z.lazy(() => SortOrderSchema).optional(),
   notes: z.lazy(() => SortOrderSchema).optional(),
   terms: z.lazy(() => SortOrderSchema).optional(),
-  colorPalette: z.lazy(() => SortOrderSchema).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   deletedAt: z.lazy(() => SortOrderSchema).optional(),

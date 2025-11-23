@@ -2,7 +2,7 @@ import { type NextAuthConfig, type Account, type Profile } from 'next-auth';
 import { handleSignIn } from '@/services/authService';
 import { prisma } from '@/lib/prisma';
 import { getClientDetails } from '@/lib/agent';
-import { env } from 'env';
+import { env } from '@/env';
 
 export interface SignInArgs {
   account: Account | null; // Account can be null for credential logins

@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { JsonValueSchema } from '../inputTypeSchemas/JsonValueSchema'
 import { Prisma } from '@/prisma/client'
-import type { JsonValueType } from '../inputTypeSchemas/JsonValueSchema';
 import { QuoteWithRelationsSchema } from './QuoteSchema'
 import type { QuoteWithRelations } from './QuoteSchema'
 import { ProductWithRelationsSchema } from './ProductSchema'
@@ -22,8 +20,8 @@ export const QuoteItemSchema = z.object({
   total: z.instanceof(Prisma.Decimal, { message: "Field 'total' must be a Decimal. Location: ['Models', 'QuoteItem']"}),
   order: z.number().int(),
   productId: z.string().nullish(),
+  colors: z.string().array(),
   notes: z.string().nullish(),
-  colorPalette: JsonValueSchema.nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -40,9 +38,7 @@ export type QuoteItemRelations = {
   attachments: QuoteItemAttachmentWithRelations[];
 };
 
-export type QuoteItemWithRelations = Omit<z.infer<typeof QuoteItemSchema>, "colorPalette"> & {
-  colorPalette?: JsonValueType | null;
-} & QuoteItemRelations
+export type QuoteItemWithRelations = z.infer<typeof QuoteItemSchema> & QuoteItemRelations
 
 export const QuoteItemWithRelationsSchema: z.ZodType<QuoteItemWithRelations> = QuoteItemSchema.merge(z.object({
   quote: z.lazy(() => QuoteWithRelationsSchema),

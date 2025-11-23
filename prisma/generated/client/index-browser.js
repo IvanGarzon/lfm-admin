@@ -302,6 +302,7 @@ exports.Prisma.QuoteItemScalarFieldEnum = {
   total: 'total',
   order: 'order',
   productId: 'productId',
+  colors: 'colors',
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

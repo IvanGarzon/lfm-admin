@@ -1,5 +1,5 @@
 import Google from 'next-auth/providers/google';
-import { env } from 'env';
+import { env } from '@/env';
 
 export const GoogleProvider = Google({
   clientId: env.GOOGLE_CLIENT_ID,

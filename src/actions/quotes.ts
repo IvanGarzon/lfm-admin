@@ -838,6 +838,56 @@ export async function updateQuoteItemNotes(data: {
 }
 
 /**
+ * Updates the color palette for a specific quote item.
+ * @param data - An object containing the `quoteItemId`, `quoteId`, and the array of `colors`.
+ * The `quoteId` is used for revalidating the cache.
+ * @returns A promise that resolves to an `ActionResult` with the updated item's ID and colors,
+ * or an error if the update fails.
+ */
+export async function updateQuoteItemColors(data: {
+  quoteItemId: string;
+  quoteId: string;
+  colors: string[];
+}): Promise<ActionResult<{ id: string; colors: string[] }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    // Validate that colors are valid hex codes
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    const validColors = data.colors.every((color) => hexColorRegex.test(color));
+    
+    if (!validColors) {
+      return { success: false, error: 'Invalid color format. Use hex colors (e.g., #FF5733)' };
+    }
+
+    if (data.colors.length > 10) {
+      return { success: false, error: 'Maximum of 10 colors allowed' };
+    }
+
+    // Update colors in database
+    const quoteItem = await quoteRepo.updateQuoteItemColors(data.quoteItemId, data.colors);
+
+    revalidatePath(`/finances/quotes/${data.quoteId}`);
+
+    return {
+      success: true,
+      data: {
+        id: quoteItem.id,
+        colors: quoteItem.colors,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to update quote item colors' };
+  }
+}
+
+/**
  * Retrieves all attachments associated with a specific quote item.
  * @param quoteItemId - The ID of the quote item.
  * @returns A promise that resolves to an `ActionResult` containing an array of quote item attachments.

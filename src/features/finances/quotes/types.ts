@@ -56,6 +56,7 @@ export type QuoteWithDetails = {
     productId: string | null;
     notes: string | null;
     order: number;
+    colors: string[];
     createdAt: Date;
     attachments: QuoteItemAttachment[];
   }[];

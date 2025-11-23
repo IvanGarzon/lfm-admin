@@ -1,0 +1,16 @@
+# Ignore all files in node_modules and build/dist directories
+node_modules/
+dist/
+build/
+.next/
+
+apps/bank-api/**/*
+# Ignore all files in the bank page app, where eslint 9+ is used
+
+# Ignore TODO.ts and other specific files
+TODO.ts
+
+# Ignore packages
+packages/db/**/*
+packages/store/**/*
+packages/common/**/*

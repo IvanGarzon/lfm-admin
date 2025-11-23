@@ -13,6 +13,7 @@ import {
   Lock,
   Unlock,
   ImagePlus,
+  Palette,
 } from 'lucide-react';
 
 import { cn, formatters, formatCurrency } from '@/lib/utils';
@@ -34,9 +35,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
 import { QuoteItemAttachmentsDialog } from './quote-item-attachments-dialog';
+import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';
 
 type QuoteItemRowProps = {
   index: number;
@@ -80,9 +81,9 @@ export function QuoteItemRow({
   const y = useMotionValue(0);
   const dragControls = useDragControls();
 
-  const [isPriceLocked, setIsPriceLocked] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [attachmentsDialogOpen, setAttachmentsDialogOpen] = useState(false);
+  const [colorPaletteDialogOpen, setColorPaletteDialogOpen] = useState(false);
 
   const selectedProductId = form.watch(`items.${index}.productId`);
   const quantity = form.watch(`items.${index}.quantity`) || 0;
@@ -141,7 +142,6 @@ export function QuoteItemRow({
                         <InputGroupButton
                           type="button"
                           onClick={() => {
-                            setIsPriceLocked(true);
                             onClearProduct(index);
                           }}
                           aria-label="Clear product"
@@ -223,22 +223,7 @@ export function QuoteItemRow({
                       min="0"
                       className="text-left"
                       disabled={isLocked}
-                    />
-                    {/* {selectedProductId ? (
-                      <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                          type="button"
-                          onClick={() => setIsPriceLocked(!isPriceLocked)}
-                          aria-label={isPriceLocked ? 'Unlock price' : 'Lock price'}
-                          title={isPriceLocked ? 'Unlock to edit price' : 'Lock price'}
-                          size="icon-xs"
-                          className="cursor-pointer"
-                          disabled={isLocked}
-                        >
-                          {isPriceLocked ? <Lock /> : <Unlock />}
-                        </InputGroupButton>
-                      </InputGroupAddon>
-                    ) : null} */}
+                    />                    
                   </InputGroup>
                 </FormControl>
               </FormItem>
@@ -254,6 +239,25 @@ export function QuoteItemRow({
               maxFractionDigits: 0,
             })}
           </Box>
+        </Box>
+
+        {/* Color Palette Button */}
+        <Box className="w-4 shrink-0 flex items-center justify-center">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setColorPaletteDialogOpen(true)}
+            className={cn(
+              'h-8 w-8 p-0',
+              quoteId && itemId
+                ? 'text-gray-400 hover:text-purple-500 hover:bg-transparent cursor-pointer'
+                : 'text-gray-300 dark:text-gray-700 cursor-not-allowed',
+            )}
+            title={quoteId && itemId ? 'Edit color palette' : 'Save the quote first to add colors'}
+            disabled={isLocked || !quoteId || !itemId}
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
         </Box>
 
         {/* Attach Images Button */}
@@ -381,6 +385,18 @@ export function QuoteItemRow({
           itemDescription={form.watch(`items.${index}.description`) || 'Untitled Item'}
         />
       ) : null}
+
+      {/* Color Palette Dialog */}
+      {/* {quoteId && itemId ? (
+        <QuoteItemColorPaletteDialog
+          open={colorPaletteDialogOpen}
+          onOpenChange={setColorPaletteDialogOpen}
+          quoteId={quoteId}
+          quoteItemId={itemId}
+          itemDescription={form.watch(`items.${index}.description`) || 'Untitled Item'}
+          initialColors={field.colors || []}
+        />
+      ) : null} */}
     </Reorder.Item>
   );
 }

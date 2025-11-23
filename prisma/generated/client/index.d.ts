@@ -15817,6 +15817,7 @@ export namespace Prisma {
     total: number
     order: number
     productId: number
+    colors: number
     notes: number
     createdAt: number
     updatedAt: number
@@ -15875,6 +15876,7 @@ export namespace Prisma {
     total?: true
     order?: true
     productId?: true
+    colors?: true
     notes?: true
     createdAt?: true
     updatedAt?: true
@@ -15976,6 +15978,7 @@ export namespace Prisma {
     total: Decimal
     order: number
     productId: string | null
+    colors: string[]
     notes: string | null
     createdAt: Date
     updatedAt: Date
@@ -16009,6 +16012,7 @@ export namespace Prisma {
     total?: boolean
     order?: boolean
     productId?: boolean
+    colors?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -16027,6 +16031,7 @@ export namespace Prisma {
     total?: boolean
     order?: boolean
     productId?: boolean
+    colors?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -16043,6 +16048,7 @@ export namespace Prisma {
     total?: boolean
     order?: boolean
     productId?: boolean
+    colors?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -16059,12 +16065,13 @@ export namespace Prisma {
     total?: boolean
     order?: boolean
     productId?: boolean
+    colors?: boolean
     notes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type QuoteItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteId" | "description" | "quantity" | "unitPrice" | "total" | "order" | "productId" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["quoteItem"]>
+  export type QuoteItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteId" | "description" | "quantity" | "unitPrice" | "total" | "order" | "productId" | "colors" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["quoteItem"]>
   export type QuoteItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     quote?: boolean | QuoteDefaultArgs<ExtArgs>
     product?: boolean | QuoteItem$productArgs<ExtArgs>
@@ -16096,6 +16103,7 @@ export namespace Prisma {
       total: Prisma.Decimal
       order: number
       productId: string | null
+      colors: string[]
       notes: string | null
       createdAt: Date
       updatedAt: Date
@@ -16533,6 +16541,7 @@ export namespace Prisma {
     readonly total: FieldRef<"QuoteItem", 'Decimal'>
     readonly order: FieldRef<"QuoteItem", 'Int'>
     readonly productId: FieldRef<"QuoteItem", 'String'>
+    readonly colors: FieldRef<"QuoteItem", 'String[]'>
     readonly notes: FieldRef<"QuoteItem", 'String'>
     readonly createdAt: FieldRef<"QuoteItem", 'DateTime'>
     readonly updatedAt: FieldRef<"QuoteItem", 'DateTime'>
@@ -19509,6 +19518,7 @@ export namespace Prisma {
     total: 'total',
     order: 'order',
     productId: 'productId',
+    colors: 'colors',
     notes: 'notes',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -20869,6 +20879,7 @@ export namespace Prisma {
     total?: DecimalFilter<"QuoteItem"> | Decimal | DecimalJsLike | number | string
     order?: IntFilter<"QuoteItem"> | number
     productId?: StringNullableFilter<"QuoteItem"> | string | null
+    colors?: StringNullableListFilter<"QuoteItem">
     notes?: StringNullableFilter<"QuoteItem"> | string | null
     createdAt?: DateTimeFilter<"QuoteItem"> | Date | string
     updatedAt?: DateTimeFilter<"QuoteItem"> | Date | string
@@ -20886,6 +20897,7 @@ export namespace Prisma {
     total?: SortOrder
     order?: SortOrder
     productId?: SortOrderInput | SortOrder
+    colors?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20906,6 +20918,7 @@ export namespace Prisma {
     total?: DecimalFilter<"QuoteItem"> | Decimal | DecimalJsLike | number | string
     order?: IntFilter<"QuoteItem"> | number
     productId?: StringNullableFilter<"QuoteItem"> | string | null
+    colors?: StringNullableListFilter<"QuoteItem">
     notes?: StringNullableFilter<"QuoteItem"> | string | null
     createdAt?: DateTimeFilter<"QuoteItem"> | Date | string
     updatedAt?: DateTimeFilter<"QuoteItem"> | Date | string
@@ -20923,6 +20936,7 @@ export namespace Prisma {
     total?: SortOrder
     order?: SortOrder
     productId?: SortOrderInput | SortOrder
+    colors?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -20945,6 +20959,7 @@ export namespace Prisma {
     total?: DecimalWithAggregatesFilter<"QuoteItem"> | Decimal | DecimalJsLike | number | string
     order?: IntWithAggregatesFilter<"QuoteItem"> | number
     productId?: StringNullableWithAggregatesFilter<"QuoteItem"> | string | null
+    colors?: StringNullableListFilter<"QuoteItem">
     notes?: StringNullableWithAggregatesFilter<"QuoteItem"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"QuoteItem"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"QuoteItem"> | Date | string
@@ -22348,6 +22363,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22365,6 +22381,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     order?: number
     productId?: string | null
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22378,6 +22395,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22395,6 +22413,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
     productId?: NullableStringFieldUpdateOperationsInput | string | null
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22410,6 +22429,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     order?: number
     productId?: string | null
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22422,6 +22442,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22436,6 +22457,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
     productId?: NullableStringFieldUpdateOperationsInput | string | null
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23776,6 +23798,14 @@ export namespace Prisma {
     _max?: NestedEnumQuoteStatusFilter<$PrismaModel>
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type QuoteScalarRelationFilter = {
     is?: QuoteWhereInput
     isNot?: QuoteWhereInput
@@ -23800,6 +23830,7 @@ export namespace Prisma {
     total?: SortOrder
     order?: SortOrder
     productId?: SortOrder
+    colors?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -24558,6 +24589,10 @@ export namespace Prisma {
     deleteMany?: QuoteAttachmentScalarWhereInput | QuoteAttachmentScalarWhereInput[]
   }
 
+  export type QuoteItemCreatecolorsInput = {
+    set: string[]
+  }
+
   export type QuoteCreateNestedOneWithoutItemsInput = {
     create?: XOR<QuoteCreateWithoutItemsInput, QuoteUncheckedCreateWithoutItemsInput>
     connectOrCreate?: QuoteCreateOrConnectWithoutItemsInput
@@ -24582,6 +24617,11 @@ export namespace Prisma {
     connectOrCreate?: QuoteItemAttachmentCreateOrConnectWithoutQuoteItemInput | QuoteItemAttachmentCreateOrConnectWithoutQuoteItemInput[]
     createMany?: QuoteItemAttachmentCreateManyQuoteItemInputEnvelope
     connect?: QuoteItemAttachmentWhereUniqueInput | QuoteItemAttachmentWhereUniqueInput[]
+  }
+
+  export type QuoteItemUpdatecolorsInput = {
+    set?: string[]
+    push?: string | string[]
   }
 
   export type QuoteUpdateOneRequiredWithoutItemsNestedInput = {
@@ -25367,6 +25407,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -25382,6 +25423,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -25457,6 +25499,7 @@ export namespace Prisma {
     total?: DecimalFilter<"QuoteItem"> | Decimal | DecimalJsLike | number | string
     order?: IntFilter<"QuoteItem"> | number
     productId?: StringNullableFilter<"QuoteItem"> | string | null
+    colors?: StringNullableListFilter<"QuoteItem">
     notes?: StringNullableFilter<"QuoteItem"> | string | null
     createdAt?: DateTimeFilter<"QuoteItem"> | Date | string
     updatedAt?: DateTimeFilter<"QuoteItem"> | Date | string
@@ -26196,6 +26239,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -26211,6 +26255,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     order?: number
     productId?: string | null
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -26713,6 +26758,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -26729,6 +26775,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     order?: number
     productId?: string | null
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -26757,6 +26804,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -26773,6 +26821,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
     productId?: NullableStringFieldUpdateOperationsInput | string | null
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -26949,6 +26998,7 @@ export namespace Prisma {
     unitPrice: Decimal | DecimalJsLike | number | string
     total: Decimal | DecimalJsLike | number | string
     order?: number
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -26994,6 +27044,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27009,6 +27060,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27023,6 +27075,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27314,6 +27367,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     order?: number
     productId?: string | null
+    colors?: QuoteItemCreatecolorsInput | string[]
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -27337,6 +27391,7 @@ export namespace Prisma {
     unitPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27352,6 +27407,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
     productId?: NullableStringFieldUpdateOperationsInput | string | null
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -27366,6 +27422,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     order?: IntFieldUpdateOperationsInput | number
     productId?: NullableStringFieldUpdateOperationsInput | string | null
+    colors?: QuoteItemUpdatecolorsInput | string[]
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

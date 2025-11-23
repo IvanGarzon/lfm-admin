@@ -41,7 +41,7 @@ import type { QuoteWithDetails, QuoteFormInput } from '@/features/finances/quote
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
-import { QuoteItemImages } from '@/features/finances/quotes/components/quote-item-images';
+import { QuoteItemDetails } from '@/features/finances/quotes/components/quote-item-details';
 import {
   useDeleteQuoteItemAttachment,
   useGetItemAttachmentDownloadUrl,
@@ -63,6 +63,7 @@ const defaultFormState: CreateQuoteInput = {
       quantity: 1,
       unitPrice: 0,
       productId: null,
+      colors: []
     },
   ],
 };
@@ -80,11 +81,12 @@ const mapQuoteToFormValues = (quote: QuoteWithDetails): UpdateQuoteInput => {
     notes: quote.notes ?? '',
     terms: quote.terms ?? '',
     items: quote.items.map((item) => ({
-      id: item.id, // Include database ID for existing items
+      id: item.id,
       description: item.description,
       quantity: item.quantity,
       unitPrice: Number(item.unitPrice),
       productId: item.productId,
+      colors: item.colors
     })),
   };
 };
@@ -529,10 +531,10 @@ export function QuoteForm({
             />
           </FieldGroup>
 
-          {/* Attachments & Item Images (only for existing quotes) */}
+          {/* Item Details: Colors & Images (only for existing quotes) */}
           {mode === 'update' && quote && quote.items.length > 0 ? (
             <Box className="space-y-4">
-              <QuoteItemImages
+              <QuoteItemDetails
                 quoteId={quote.id}
                 readOnly={isLocked}
                 onDownloadImage={handleDownloadItemImage}

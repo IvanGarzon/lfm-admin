@@ -76,6 +76,7 @@ export function QuoteItemsList({
         quantity: 1,
         unitPrice: 0,
         productId: null,
+        colors: [],
       },
       { shouldFocus: false },
     );

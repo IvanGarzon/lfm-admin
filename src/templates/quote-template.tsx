@@ -217,6 +217,20 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
+  colorsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  colorBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
   notes: {
     marginTop: 30,
     padding: 12,
@@ -376,21 +390,36 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           ))}
         </View>
 
-        {/* Item Details (attachments and notes) */}
-        {quote.items.some((item) => item.attachments?.length > 0 || item.notes) ? (
+        {/* Item Details (colors, attachments and notes) */}
+        {quote.items.some((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0)) ? (
           <View style={styles.itemDetailsSection} wrap={false}>
             <Text style={styles.sectionTitle}>Item Details</Text>
             {quote.items
-              .filter((item) => item.attachments?.length > 0 || item.notes)
+              .filter((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0))
               .sort((a, b) => a.order - b.order)
               .map((item) => (
                 <View key={item.id} style={styles.itemDetailBox}>
                   <Text style={styles.itemDetailTitle}>
                     {item.description}
+                    {item.colors && item.colors.length > 0
+                      ? ` (${item.colors.length} ${item.colors.length === 1 ? 'color' : 'colors'})`
+                      : ''}
                     {item.attachments?.length > 0
                       ? ` (${item.attachments.length} ${item.attachments.length === 1 ? 'image' : 'images'})`
                       : ''}
                   </Text>
+
+                  {/* Color Palette */}
+                  {item.colors && item.colors.length > 0 ? (
+                    <View style={styles.colorsGrid}>
+                      {item.colors.map((color, colorIndex) => (
+                        <View
+                          key={`${item.id}-color-${colorIndex}`}
+                          style={[styles.colorBox, { backgroundColor: color }]}
+                        />
+                      ))}
+                    </View>
+                  ) : null}
 
                   {item.attachments && item.attachments.length > 0 ? (
                     <>

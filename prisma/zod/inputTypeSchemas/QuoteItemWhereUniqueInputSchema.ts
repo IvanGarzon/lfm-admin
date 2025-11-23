@@ -8,7 +8,7 @@ import { DecimalFilterSchema } from './DecimalFilterSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
 import { StringNullableFilterSchema } from './StringNullableFilterSchema';
-import { JsonNullableFilterSchema } from './JsonNullableFilterSchema';
+import { StringNullableListFilterSchema } from './StringNullableListFilterSchema';
 import { DateTimeFilterSchema } from './DateTimeFilterSchema';
 import { QuoteScalarRelationFilterSchema } from './QuoteScalarRelationFilterSchema';
 import { QuoteWhereInputSchema } from './QuoteWhereInputSchema';
@@ -31,8 +31,8 @@ export const QuoteItemWhereUniqueInputSchema: z.ZodType<Prisma.QuoteItemWhereUni
   total: z.union([ z.lazy(() => DecimalFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),
   order: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
   productId: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
+  colors: z.lazy(() => StringNullableListFilterSchema).optional(),
   notes: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
-  colorPalette: z.lazy(() => JsonNullableFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),
   quote: z.union([ z.lazy(() => QuoteScalarRelationFilterSchema), z.lazy(() => QuoteWhereInputSchema) ]).optional(),

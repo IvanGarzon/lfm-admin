@@ -260,7 +260,6 @@ model Quote {
   issuedDate DateTime @map(name: "issued_date") @db.Date
   validUntil DateTime @map(name: "valid_until") @db.Date
 
-  // Status-specific fields
   // ACCEPTED fields
   acceptedDate DateTime? @map(name: "accepted_date") @db.Date
 
@@ -308,6 +307,9 @@ model QuoteItem {
 
   // Item-level attachments (flower arrangement photos)
   attachments QuoteItemAttachment[]
+
+  // Color palette (array of hex color codes, max 10 colors)
+  colors String[] @default([])
 
   // Notes for this quote item (describing the images/attachments)
   notes String? @db.Text

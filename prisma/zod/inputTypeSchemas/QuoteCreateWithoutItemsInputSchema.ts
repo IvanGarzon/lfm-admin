@@ -24,7 +24,6 @@ export const QuoteCreateWithoutItemsInputSchema: z.ZodType<Prisma.QuoteCreateWit
   invoiceId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   terms: z.string().optional().nullable(),
-  colorPalette: z.string().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   deletedAt: z.coerce.date().optional().nullable(),

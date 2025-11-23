@@ -3,7 +3,7 @@ import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { ALLOWED_MIME_TYPES, ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/s3';
 
 export const QuoteItemSchema = z.object({
-  id: z.string().optional(), // Database ID for existing items (only present when editing)
+  id: z.string().optional(),
   description: z
     .string()
     .trim()
@@ -19,6 +19,13 @@ export const QuoteItemSchema = z.object({
     .nonnegative({ error: 'Unit price must be non-negative' })
     .max(1000000, { error: 'Unit price must be less than 1,000,000' }),
   productId: z.string().nullable(),
+  colors: z
+    .array(
+      z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
+        message: 'Color must be a valid hex code (e.g., #FF5733 or #F00)',
+      })
+    )
+    .max(10, { error: 'Maximum 10 colors allowed' }),
 });
 
 export const QuoteSchema = z

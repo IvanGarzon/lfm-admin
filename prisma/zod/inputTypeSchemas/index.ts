@@ -276,6 +276,7 @@ export { QuoteMaxOrderByAggregateInputSchema } from './QuoteMaxOrderByAggregateI
 export { QuoteMinOrderByAggregateInputSchema } from './QuoteMinOrderByAggregateInputSchema';
 export { QuoteSumOrderByAggregateInputSchema } from './QuoteSumOrderByAggregateInputSchema';
 export { EnumQuoteStatusWithAggregatesFilterSchema } from './EnumQuoteStatusWithAggregatesFilterSchema';
+export { StringNullableListFilterSchema } from './StringNullableListFilterSchema';
 export { QuoteScalarRelationFilterSchema } from './QuoteScalarRelationFilterSchema';
 export { QuoteItemAttachmentListRelationFilterSchema } from './QuoteItemAttachmentListRelationFilterSchema';
 export { QuoteItemAttachmentOrderByRelationAggregateInputSchema } from './QuoteItemAttachmentOrderByRelationAggregateInputSchema';
@@ -368,10 +369,12 @@ export { QuoteItemUpdateManyWithoutQuoteNestedInputSchema } from './QuoteItemUpd
 export { QuoteAttachmentUpdateManyWithoutQuoteNestedInputSchema } from './QuoteAttachmentUpdateManyWithoutQuoteNestedInputSchema';
 export { QuoteItemUncheckedUpdateManyWithoutQuoteNestedInputSchema } from './QuoteItemUncheckedUpdateManyWithoutQuoteNestedInputSchema';
 export { QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInputSchema } from './QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInputSchema';
+export { QuoteItemCreatecolorsInputSchema } from './QuoteItemCreatecolorsInputSchema';
 export { QuoteCreateNestedOneWithoutItemsInputSchema } from './QuoteCreateNestedOneWithoutItemsInputSchema';
 export { ProductCreateNestedOneWithoutQuoteItemsInputSchema } from './ProductCreateNestedOneWithoutQuoteItemsInputSchema';
 export { QuoteItemAttachmentCreateNestedManyWithoutQuoteItemInputSchema } from './QuoteItemAttachmentCreateNestedManyWithoutQuoteItemInputSchema';
 export { QuoteItemAttachmentUncheckedCreateNestedManyWithoutQuoteItemInputSchema } from './QuoteItemAttachmentUncheckedCreateNestedManyWithoutQuoteItemInputSchema';
+export { QuoteItemUpdatecolorsInputSchema } from './QuoteItemUpdatecolorsInputSchema';
 export { QuoteUpdateOneRequiredWithoutItemsNestedInputSchema } from './QuoteUpdateOneRequiredWithoutItemsNestedInputSchema';
 export { ProductUpdateOneWithoutQuoteItemsNestedInputSchema } from './ProductUpdateOneWithoutQuoteItemsNestedInputSchema';
 export { QuoteItemAttachmentUpdateManyWithoutQuoteItemNestedInputSchema } from './QuoteItemAttachmentUpdateManyWithoutQuoteItemNestedInputSchema';

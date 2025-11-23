@@ -20,6 +20,7 @@ import {
   updateQuoteItemNotes,
   getQuoteItemAttachments,
   getItemAttachmentDownloadUrl,
+  updateQuoteItemColors,
 } from '@/actions/quotes';
 import type {
   QuoteFilters,
@@ -552,6 +553,7 @@ export function useUpdateQuoteItemNotes() {
         quoteId: data.quoteId,
         notes: data.notes,
       });
+
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -563,6 +565,33 @@ export function useUpdateQuoteItemNotes() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update notes');
+    },
+  });
+}
+
+export function useUploadQuoteItemColorPalette() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { quoteItemId: string; quoteId: string; colors: string[] }) => {
+      const result = await updateQuoteItemColors({
+        quoteItemId: data.quoteItemId,
+        quoteId: data.quoteId,
+        colors: data.colors
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return { ...result.data, quoteId: data.quoteId };
+    },    
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
+      toast.success('Color palette updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update color palette');
     },
   });
 }

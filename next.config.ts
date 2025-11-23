@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-// import('env');
+import './env';
 
 const nextConfig: NextConfig = {
   images: {

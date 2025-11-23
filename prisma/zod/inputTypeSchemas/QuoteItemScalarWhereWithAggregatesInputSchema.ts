@@ -7,7 +7,7 @@ import { DecimalWithAggregatesFilterSchema } from './DecimalWithAggregatesFilter
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
 import { StringNullableWithAggregatesFilterSchema } from './StringNullableWithAggregatesFilterSchema';
-import { JsonNullableWithAggregatesFilterSchema } from './JsonNullableWithAggregatesFilterSchema';
+import { StringNullableListFilterSchema } from './StringNullableListFilterSchema';
 import { DateTimeWithAggregatesFilterSchema } from './DateTimeWithAggregatesFilterSchema';
 
 export const QuoteItemScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.QuoteItemScalarWhereWithAggregatesInput> = z.strictObject({
@@ -22,8 +22,8 @@ export const QuoteItemScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Quo
   total: z.union([ z.lazy(() => DecimalWithAggregatesFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),
   order: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
   productId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
+  colors: z.lazy(() => StringNullableListFilterSchema).optional(),
   notes: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
-  colorPalette: z.lazy(() => JsonNullableWithAggregatesFilterSchema).optional(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema), z.coerce.date() ]).optional(),
 });

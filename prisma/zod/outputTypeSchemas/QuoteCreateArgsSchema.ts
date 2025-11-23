@@ -28,7 +28,6 @@ export const QuoteSelectSchema: z.ZodType<Prisma.QuoteSelect> = z.object({
   invoiceId: z.boolean().optional(),
   notes: z.boolean().optional(),
   terms: z.boolean().optional(),
-  colorPalette: z.boolean().optional(),
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   deletedAt: z.boolean().optional(),

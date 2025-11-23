@@ -30,7 +30,6 @@ export const QuoteSchema = z.object({
   invoiceId: z.string().nullish(),
   notes: z.string().nullish(),
   terms: z.string().nullish(),
-  colorPalette: z.string().nullish(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   deletedAt: z.coerce.date().nullish(),

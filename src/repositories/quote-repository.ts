@@ -176,6 +176,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             productId: true,
             notes: true,
             order: true,
+            colors: true,
             createdAt: true,
             attachments: {
               select: {
@@ -736,6 +737,16 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     return this.prisma.quoteItem.update({
       where: { id: quoteItemId },
       data: { notes },
+    });
+  }
+
+  /**
+   * Update quote item colors
+   */
+  async updateQuoteItemColors(quoteItemId: string, colors: string[]) {
+    return this.prisma.quoteItem.update({
+      where: { id: quoteItemId },
+      data: { colors },
     });
   }
 
