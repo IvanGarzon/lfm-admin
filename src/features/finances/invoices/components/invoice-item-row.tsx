@@ -3,9 +3,9 @@
 import type { UseFormReturn, FieldArrayWithId } from 'react-hook-form';
 import { useState } from 'react';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
-import { GripVertical, Package, Trash2, Check, Loader2, X, Lock, Unlock } from 'lucide-react';
+import { GripVertical, Package, Trash2, X, Lock, Unlock } from 'lucide-react';
 
-import { cn, formatters, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { ActiveProduct } from '@/features/products/types';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -17,14 +17,7 @@ import {
   InputGroupButton,
 } from '@/components/ui/input-group';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { ProductSearchDialog } from '@/components/shared/product-search-dialog';
 import type { InvoiceFormInput } from '@/features/finances/invoices/types';
 
 type InvoiceItemRowProps = {
@@ -35,13 +28,6 @@ type InvoiceItemRowProps = {
   isLoadingProducts: boolean;
   canRemove: boolean;
   onRemove: () => void;
-  productSearchOpen: boolean;
-  onProductSearchOpenChange: (open: boolean) => void;
-  productSearchQuery: string;
-  onProductSearchQueryChange: (query: string) => void;
-  filteredProducts: ActiveProduct[];
-  onProductSelect: (index: number, productId: string) => void;
-  onClearProduct: (index: number) => void;
   isLocked?: boolean;
 };
 
@@ -53,13 +39,6 @@ export function InvoiceItemRow({
   isLoadingProducts,
   canRemove,
   onRemove,
-  productSearchOpen,
-  onProductSearchOpenChange,
-  productSearchQuery,
-  onProductSearchQueryChange,
-  filteredProducts,
-  onProductSelect,
-  onClearProduct,
   isLocked,
 }: InvoiceItemRowProps) {
   const y = useMotionValue(0);
@@ -67,6 +46,44 @@ export function InvoiceItemRow({
 
   const [isPriceLocked, setIsPriceLocked] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+
+  const handleProductSelect = (productId: string) => {
+    const product = products?.find((p) => p.id === productId);
+    if (!product) {
+      return;
+    }
+
+    const current = form.getValues(`items.${index}`);
+
+    form.setValue(
+      `items.${index}`,
+      {
+        ...current,
+        productId,
+        description: product.name ?? '',
+        unitPrice: Number(product.price),
+      },
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+
+    setProductSearchOpen(false);
+  };
+
+  const handleClearProduct = () => {
+    form.setValue(`items.${index}`, {
+      ...form.getValues(`items.${index}`),
+      productId: null,
+      description: '',
+      unitPrice: 0,
+    }, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
   const selectedProductId = form.watch(`items.${index}.productId`);
   const quantity = form.watch(`items.${index}.quantity`) || 0;
@@ -128,10 +145,7 @@ export function InvoiceItemRow({
                       {selectedProductId ? (
                         <InputGroupButton
                           type="button"
-                          onClick={() => {
-                            setIsPriceLocked(true);
-                            onClearProduct(index);
-                          }}
+                          onClick={handleClearProduct}
                           aria-label="Clear product"
                           title="Clear product selection"
                           size="icon-xs"
@@ -142,10 +156,10 @@ export function InvoiceItemRow({
                         </InputGroupButton>
                       ) : (
                         products &&
-                        products.length > 0 && (
+                        products.length > 0 ? (
                           <InputGroupButton
                             type="button"
-                            onClick={() => onProductSearchOpenChange(true)}
+                            onClick={() => setProductSearchOpen(true)}
                             aria-label="Browse products"
                             title="Browse products"
                             size="icon-xs"
@@ -154,7 +168,7 @@ export function InvoiceItemRow({
                           >
                             <Package />
                           </InputGroupButton>
-                        )
+                        ) : null
                       )}
                     </InputGroupAddon>
                   </InputGroup>
@@ -246,7 +260,7 @@ export function InvoiceItemRow({
 
         {/* Delete Button */}
         <Box className="w-10 shrink-0 flex items-center justify-center">
-          {canRemove && (
+          {canRemove ? (
             <Button
               type="button"
               variant="ghost"
@@ -256,89 +270,19 @@ export function InvoiceItemRow({
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          )}
+          ): null}
         </Box>
       </Box>
 
       {/* Product Search Modal */}
-      <Dialog
+      <ProductSearchDialog
         open={productSearchOpen}
-        onOpenChange={(open) => {
-          onProductSearchOpenChange(open);
-          if (!open) {
-            onProductSearchQueryChange('');
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Select Product</DialogTitle>
-            <DialogDescription>Search and select a product to add to the invoice</DialogDescription>
-          </DialogHeader>
-
-          {isLoadingProducts ? (
-            <Box className="flex flex-col items-center justify-center h-full min-h-[300px] space-y-2 text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <p>Loading products...</p>
-            </Box>
-          ) : null}
-
-          {Array.isArray(filteredProducts) && filteredProducts.length > 0 ? (
-            <Box className="flex-1 flex flex-col gap-4 overflow-hidden">
-              <Box className="relative">
-                <Input
-                  type="search"
-                  inputSize="lg"
-                  placeholder="Search products by name..."
-                  value={productSearchQuery}
-                  onChange={(e) => onProductSearchQueryChange(e.target.value)}
-                  autoFocus
-                  className="focus-visible:ring-primary/20 focus-visible:border-primary"
-                />
-              </Box>
-              <Box className="flex-1 border rounded-lg overflow-hidden flex flex-col">
-                <Box className="flex-1 overflow-y-auto">
-                  <Box className="divide-y dark:divide-gray-800">
-                    {filteredProducts.map((product) => (
-                      <button
-                        key={product.id}
-                        type="button"
-                        onClick={() => product.id && onProductSelect(index, product.id)}
-                        className="w-full px-4 py-3 hover:bg-muted/50 transition-colors text-left flex items-center gap-3 cursor-pointer"
-                      >
-                        <Box className="shrink-0 w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
-                          <Package className="h-8 w-8 text-muted-foreground" />
-                        </Box>
-                        <Box className="flex-1 min-w-0">
-                          <Box className="font-medium">{product.name}</Box>
-                          {product.description ? (
-                            <Box className="text-sm text-muted-foreground line-clamp-1">
-                              {product.description}
-                            </Box>
-                          ) : null}
-                          <Box className="text-sm font-semibold text-primary mt-1">
-                            {formatCurrency({
-                              number: product.price,
-                            })}
-                          </Box>
-                        </Box>
-                        {selectedProductId === product.id && (
-                          <Check className="h-5 w-5 text-primary shrink-0" />
-                        )}
-                      </button>
-                    ))}
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-          ) : !isLoadingProducts ? (
-            <Box className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground">
-              <Package className="h-8 w-8 mb-2" />
-              <p>No products found</p>
-            </Box>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setProductSearchOpen}
+        products={products || []}
+        isLoadingProducts={isLoadingProducts}
+        selectedProductId={selectedProductId}
+        onProductSelect={handleProductSelect}
+      />
     </Reorder.Item>
   );
 }

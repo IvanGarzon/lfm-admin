@@ -26,46 +26,6 @@ export function InvoiceItemsList({
   isLocked?: boolean;
 }) {
   const { fields, append, remove, move } = fieldArray;
-  const [productSearchOpen, setProductSearchOpen] = useState<Record<number, boolean>>({});
-  const [productSearchQuery, setProductSearchQuery] = useState('');
-
-  const handleProductSelect = useCallback(
-    (index: number, productId: string) => {
-      const product = (products ?? []).find((p) => p.id === productId);
-      if (product) {
-        form.setValue(`items.${index}.productId`, productId, {
-          shouldValidate: true,
-        });
-        form.setValue(`items.${index}.description`, product.name ?? '', {
-          shouldValidate: true,
-        });
-        form.setValue(`items.${index}.unitPrice`, Number(product.price), {
-          shouldValidate: true,
-        });
-      }
-
-      setProductSearchOpen((prev) => ({ ...prev, [index]: false }));
-      setProductSearchQuery('');
-    },
-    [form, products],
-  );
-
-  const clearProductSelection = useCallback(
-    (index: number) => {
-      form.setValue(`items.${index}.productId`, null, { shouldValidate: true });
-      form.setValue(`items.${index}.description`, '', { shouldValidate: true });
-      form.setValue(`items.${index}.unitPrice`, 0, { shouldValidate: true });
-    },
-    [form],
-  );
-
-  const filteredProducts = useMemo(() => {
-    if (!productSearchQuery) return products ?? [];
-    return (products ?? []).filter(
-      (product: ActiveProduct) =>
-        product?.name && product.name.toLowerCase().includes(productSearchQuery.toLowerCase()),
-    );
-  }, [productSearchQuery, products]);
 
   const handleAddItem = useCallback(() => {
     append(
@@ -123,25 +83,15 @@ export function InvoiceItemsList({
               index={index}
               form={form}
               isLocked={isLocked}
-              {...{
-                products,
-                isLoadingProducts,
-                canRemove: fields.length > 1,
-                onRemove: () => {
-                  const nextFocusIndex = index === 0 ? 0 : index - 1;
-                  remove(index);
-                  if (fields.length > 1) {
-                    form.setFocus(`items.${nextFocusIndex}.description`);
-                  }
-                },
-                productSearchOpen: productSearchOpen[index] ?? false,
-                onProductSearchOpenChange: (open) =>
-                  setProductSearchOpen((prev) => ({ ...prev, [index]: open })),
-                productSearchQuery,
-                onProductSearchQueryChange: setProductSearchQuery,
-                filteredProducts,
-                onProductSelect: handleProductSelect,
-                onClearProduct: clearProductSelection,
+              products={products}
+              isLoadingProducts={isLoadingProducts}
+              canRemove={fields.length > 1}
+              onRemove={() => {
+                const nextFocusIndex = index === 0 ? 0 : index - 1;
+                remove(index);
+                if (fields.length > 1) {
+                  form.setFocus(`items.${nextFocusIndex}.description`);
+                }
               }}
             />
           ))}

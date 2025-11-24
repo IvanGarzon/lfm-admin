@@ -149,6 +149,41 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
             </Box>
           </Box>
 
+          {/* Summary Section */}
+          <Box className="flex justify-end mb-8">
+            <Box className="w-1/2 space-y-3">
+              <Box className="flex justify-between items-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Subtotal</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                  {formatCurrency({ number: subtotal })}
+                </p>
+              </Box>
+
+              <Box className="flex justify-between items-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">GST ({quote.gst}%)</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                  {formatCurrency({ number: gstAmount })}
+                </p>
+              </Box>
+
+              {quote.discount > 0 ? (
+                <Box className="flex justify-between items-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Discount</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                    -{formatCurrency({ number: quote.discount })}
+                  </p>
+                </Box>
+              ) : null}
+
+              <Box className="flex justify-between items-center pt-3 border-t-2 border-gray-900 dark:border-gray-50">
+                <p className="text-base font-bold text-gray-900 dark:text-gray-50">Quote Total</p>
+                <p className="text-base font-bold text-gray-900 dark:text-gray-50">
+                  {formatCurrency({ number: total })}
+                </p>
+              </Box>
+            </Box>
+          </Box>
+
           {/* Item Images and Notes Section */}
           {quote.items.some((item) => item.attachments.length > 0 || item.notes || (item.colors && item.colors.length > 0)) && (
             <Box className="mb-8">
@@ -225,48 +260,15 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                         </Box>
                       ) : null}
 
-                      {/* Item Notes */}
-                      {item.notes ? <RichTextEditor value={item.notes} editable={false} /> : null}
+                      {/* Item Notes - Show when colors, images, or notes exist */}
+                      {item.notes ? (
+                        <RichTextEditor value={item.notes ?? ''} editable={false} />
+                      ) : null}
                     </Box>
                   ))}
               </Box>
             </Box>
-          )}
-
-          {/* Summary Section */}
-          <Box className="flex justify-end mb-8">
-            <Box className="w-1/2 space-y-3">
-              <Box className="flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Subtotal</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: subtotal })}
-                </p>
-              </Box>
-
-              <Box className="flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">GST ({quote.gst}%)</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: gstAmount })}
-                </p>
-              </Box>
-
-              {quote.discount > 0 ? (
-                <Box className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Discount</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                    -{formatCurrency({ number: quote.discount })}
-                  </p>
-                </Box>
-              ) : null}
-
-              <Box className="flex justify-between items-center pt-3 border-t-2 border-gray-900 dark:border-gray-50">
-                <p className="text-base font-bold text-gray-900 dark:text-gray-50">Quote Total</p>
-                <p className="text-base font-bold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: total })}
-                </p>
-              </Box>
-            </Box>
-          </Box>
+          )}          
 
           {/* Notes Section */}
           {quote.notes ? (

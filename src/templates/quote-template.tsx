@@ -390,6 +390,31 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           ))}
         </View>
 
+         {/* Summary Section */}
+         <View style={styles.summarySection} wrap={false}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryValue}>{formatCurrency({ number: subtotal })}</Text>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>GST ({quote.gst}%)</Text>
+            <Text style={styles.summaryValue}>{formatCurrency({ number: gstAmount })}</Text>
+          </View>
+
+          {quote.discount > 0 ? (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Discount</Text>
+              <Text style={styles.summaryValue}>-{formatCurrency({ number: quote.discount })}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Quote Total</Text>
+            <Text style={styles.totalValue}>{formatCurrency({ number: total })}</Text>
+          </View>
+        </View>
+
         {/* Item Details (colors, attachments and notes) */}
         {quote.items.some((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0)) ? (
           <View style={styles.itemDetailsSection} wrap={false}>
@@ -429,7 +454,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
                           .map((attachment) => (
                             <View key={attachment.id} style={styles.imageContainer}>
                               <Image src={attachment.s3Url} style={styles.itemImage} />
-                              <Text style={styles.imageCaption}>{attachment.fileName}</Text>
                             </View>
                           ))}
                       </View>
@@ -451,31 +475,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
               ))}
           </View>
         ) : null}
-
-        {/* Summary Section */}
-        <View style={styles.summarySection} wrap={false}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{formatCurrency({ number: subtotal })}</Text>
-          </View>
-
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>GST ({quote.gst}%)</Text>
-            <Text style={styles.summaryValue}>{formatCurrency({ number: gstAmount })}</Text>
-          </View>
-
-          {quote.discount > 0 ? (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount</Text>
-              <Text style={styles.summaryValue}>-{formatCurrency({ number: quote.discount })}</Text>
-            </View>
-          ) : null}
-
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Quote Total</Text>
-            <Text style={styles.totalValue}>{formatCurrency({ number: total })}</Text>
-          </View>
-        </View>
 
         {/* Notes */}
         {quote.notes ? (

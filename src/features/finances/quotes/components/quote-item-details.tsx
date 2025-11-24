@@ -50,16 +50,17 @@ export function QuoteItemDetails({
   const { data: quote, isLoading } = useQuote(quoteId);
   const updateNotesMutation = useUpdateQuoteItemNotes();
 
-  // Memoize items with attachments or colors to prevent reordering on updates
+  // Memoize items with attachments, colors, or notes to prevent reordering on updates
   const itemsWithContent = useMemo(() => {
     if (!quote?.items) {
       return [];
     }
 
     return quote.items
-      .filter((item) => 
-        (item.attachments && item.attachments.length > 0) || 
-        (item.colors && item.colors.length > 0)
+      .filter((item) =>
+        (item.attachments && item.attachments.length > 0) ||
+        (item.colors && item.colors.length > 0) ||
+        item.notes
       )
       .sort((a, b) => a.order - b.order);
   }, [quote?.items]);
@@ -100,9 +101,9 @@ export function QuoteItemDetails({
   if (isLoading) {
     return (
       <Card className="p-6">
-        <div className="flex items-center justify-center py-8">
+        <Box className="flex items-center justify-center py-8">
           <Loader2 className="size-6 animate-spin text-gray-400" />
-        </div>
+        </Box>
       </Card>
     );
   }
@@ -114,7 +115,7 @@ export function QuoteItemDetails({
 
   return (
     <>
-      <Card className="p-6">
+      <Card className="p-6 my-6">
         <Box className="space-y-4">
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">Item Colors & Images</h3>
 
@@ -252,8 +253,8 @@ export function QuoteItemDetails({
                   </Box>
                 ): null}
 
-                {/* Notes Editor - Only show if there are colors OR images */}
-                {(hasColors || hasImages) ? (
+                {/* Notes Editor - Only show if there are colors OR images OR notes */}
+                {(hasColors || hasImages || item.notes) ? (
                   !readOnly ? (
                   <Box>
                     <RichTextEditor
@@ -266,15 +267,13 @@ export function QuoteItemDetails({
                     />
                   </Box>
                 ) : (
-                  item.notes ? (
-                    <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
-                      <RichTextEditor
-                        key={`editor-readonly-${item.id}`}
-                        value={item.notes}
-                        editable={false}
-                      />
-                    </Box>
-                  ): null
+                  <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
+                    <RichTextEditor
+                      key={`editor-readonly-${item.id}`}
+                      value={item.notes ?? ''}
+                      editable={false}
+                    />
+                  </Box>
                 )
                 ): null}
               </Box>
