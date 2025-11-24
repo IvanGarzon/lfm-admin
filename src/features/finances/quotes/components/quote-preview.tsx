@@ -7,9 +7,7 @@ import { Box } from '@/components/ui/box';
 import { formatCurrency } from '@/lib/utils';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { lasFloresAccount } from '@/constants/data';
-import { QuoteStatusBadge } from './quote-status-badge';
 import { formatFileSize, isImageFile } from '@/lib/s3';
-import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
 
 type QuoteHtmlPreviewProps = {
   quote: QuoteWithDetails;
@@ -247,14 +245,6 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                 />
                               </Box>
-                              <Box className="p-2">
-                                <p className="text-xs font-medium text-gray-900 dark:text-gray-50 truncate">
-                                  {attachment.fileName}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">
-                                  {formatFileSize(attachment.fileSize)}
-                                </p>
-                              </Box>
                             </Box>
                           ))}
                         </Box>
@@ -262,7 +252,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
 
                       {/* Item Notes - Show when colors, images, or notes exist */}
                       {item.notes ? (
-                        <RichTextEditor value={item.notes ?? ''} editable={false} />
+                        <Box className="text-sm text-gray-600 dark:text-gray-400">{item.notes.replace(/<[^>]*>/g, '')}</Box>
                       ) : null}
                     </Box>
                   ))}

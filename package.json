@@ -15,7 +15,8 @@
   "homepage": "https://github.com/lasfloresmelbourne/lfm-admin#readme",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "turbo": "next dev --turbo",
     "start": "next start",

@@ -133,7 +133,7 @@ export function QuoteList({
         </Box>
       </Box>
 
-      {showStats && stats ? (
+      {showStats ? (
         <Box className="space-y-3 min-w-0">
           <QuoteStats stats={stats} isLoading={statsLoading} error={statsError} />
         </Box>

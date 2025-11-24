@@ -197,20 +197,20 @@ const styles = StyleSheet.create({
   imagesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-    marginBottom: 8,
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 4,
   },
   imageContainer: {
-    width: '48%',
-    marginBottom: 8,
+    width: '30%',
+    marginBottom: 6,
+    aspectRatio: '1',
   },
   itemImage: {
     width: '100%',
-    height: 150,
+    height: '100%',
     objectFit: 'cover',
     borderRadius: 4,
-    marginBottom: 4,
   },
   imageCaption: {
     fontSize: 7,
@@ -417,7 +417,7 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
 
         {/* Item Details (colors, attachments and notes) */}
         {quote.items.some((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0)) ? (
-          <View style={styles.itemDetailsSection} wrap={false}>
+          <View style={styles.itemDetailsSection}>
             <Text style={styles.sectionTitle}>Item Details</Text>
             {quote.items
               .filter((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0))
@@ -436,7 +436,7 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
 
                   {/* Color Palette */}
                   {item.colors && item.colors.length > 0 ? (
-                    <View style={styles.colorsGrid}>
+                    <View style={styles.colorsGrid} wrap={false}>
                       {item.colors.map((color, colorIndex) => (
                         <View
                           key={`${item.id}-color-${colorIndex}`}
@@ -448,11 +448,11 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
 
                   {item.attachments && item.attachments.length > 0 ? (
                     <>
-                      <View style={styles.imagesGrid}>
+                      <View style={styles.imagesGrid} break>
                         {item.attachments
                           .filter((attachment) => isSupportedImageFormat(attachment.mimeType))
                           .map((attachment) => (
-                            <View key={attachment.id} style={styles.imageContainer}>
+                            <View key={attachment.id} style={styles.imageContainer} wrap={false}>
                               <Image src={attachment.s3Url} style={styles.itemImage} />
                             </View>
                           ))}

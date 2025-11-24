@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-import './env';
+import '@/env';
 
 const nextConfig: NextConfig = {
   images: {
@@ -50,7 +50,18 @@ const nextConfig: NextConfig = {
   //   ];
   // },
   // experimental: {
-  //   serverComponentsExternalPackages: ['@prisma/client'],
+  //   serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+  //   turbo: {
+  //     resolveAlias: {
+  //       '.prisma/client/index-browser': './prisma/generated/client/index-browser.js',
+  //     },
+  //   },
+  // },
+  // webpack: (config, { isServer }) => {
+  //   if (isServer) {
+  //     config.externals.push('@prisma/client');
+  //   }
+  //   return config;
   // },
   // Already doing linting and typechecking as separate tasks in CI
   eslint: { ignoreDuringBuilds: true },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Trash2, Download, Loader2, Eye, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export function QuoteItemDetails({
     attachmentId: string;
     quoteItemId: string;
   } | null>(null);
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     fileName: string;
@@ -64,6 +65,28 @@ export function QuoteItemDetails({
       )
       .sort((a, b) => a.order - b.order);
   }, [quote?.items]);
+
+  // Initialize loading state for all images
+  useEffect(() => {
+    if (!quote?.items) return;
+
+    const allImageIds = new Set<string>();
+    quote.items.forEach((item) => {
+      item.attachments?.forEach((attachment) => {
+        allImageIds.add(attachment.id);
+      });
+    });
+
+    setLoadingImages(allImageIds);
+  }, [quote?.items]);
+
+  const handleImageLoadComplete = useCallback((attachmentId: string) => {
+    setLoadingImages((prev) => {
+      const next = new Set(prev);
+      next.delete(attachmentId);
+      return next;
+    });
+  }, []);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteItemAttachment) {
@@ -180,12 +203,22 @@ export function QuoteItemDetails({
                     >
                       {/* Image Preview */}
                       <Box className="aspect-square bg-gray-100 dark:bg-gray-800 relative">
+                        {/* Loading Spinner */}
+                        {loadingImages.has(attachment.id) && (
+                          <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
+                            <Loader2 className="size-8 animate-spin text-gray-400" />
+                          </Box>
+                        )}
+
                         <Image
                           src={attachment.s3Url}
                           alt={attachment.fileName}
                           fill
-                          className="object-cover"
+                          className={`object-cover transition-opacity duration-300 ${
+                            loadingImages.has(attachment.id) ? 'opacity-0' : 'opacity-100'
+                          }`}
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          onLoadingComplete={() => handleImageLoadComplete(attachment.id)}
                         />
 
                         {/* Hover Overlay */}
