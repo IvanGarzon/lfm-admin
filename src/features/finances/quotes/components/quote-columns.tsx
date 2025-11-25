@@ -3,7 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { Text, X, Check, CircleDashed, Send, Clock, FileCheck } from 'lucide-react';
+import { Text, X, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
 import { QuoteStatusSchema, type QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
@@ -14,6 +14,7 @@ import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-st
 import { QuoteActions } from '@/features/finances/quotes/components/quote-actions';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
+import { isExpired } from '@/features/finances/quotes/utils/quote-helpers';
 
 function QuoteLink({ quoteId, quoteNumber }: { quoteId: string; quoteNumber: string }) {
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
@@ -43,6 +44,11 @@ const StatusOptions: {
     icon: Send,
   },
   {
+    label: 'On Hold',
+    value: QuoteStatusSchema.enum.ON_HOLD,
+    icon: Pause,
+  },
+  {
     label: 'Accepted',
     value: QuoteStatusSchema.enum.ACCEPTED,
     icon: Check,
@@ -58,6 +64,11 @@ const StatusOptions: {
     icon: Clock,
   },
   {
+    label: 'Cancelled',
+    value: QuoteStatusSchema.enum.CANCELLED,
+    icon: X,
+  },
+  {
     label: 'Converted',
     value: QuoteStatusSchema.enum.CONVERTED,
     icon: FileCheck,
@@ -69,8 +80,11 @@ export const createQuoteColumns = (
   onAccept: (id: string) => void,
   onReject: (id: string) => void,
   onSend: (id: string) => void,
+  onOnHold: (id: string) => void,
+  onCancel: (id: string) => void,
   onConvert: (id: string) => void,
   onDownloadPdf: (id: string) => void,
+  onCreateVersion: (id: string) => void,
 ): ColumnDef<QuoteListItem>[] => [
   {
     id: 'search',
@@ -144,13 +158,23 @@ export const createQuoteColumns = (
     accessorKey: 'validUntil',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Valid Until" />,
     cell: ({ row }) => {
-      const date = row.getValue('validUntil') as Date;
-      const isExpired = new Date() > date;
+      const quoteStatus: QuoteStatusType = row.getValue('status');
+      const validUntil: Date = row.getValue('validUntil');
+      const quoteHasExpired = isExpired(quoteStatus, validUntil);
       return (
-        <span className={isExpired ? 'text-sm text-red-600' : 'text-sm text-muted-foreground'}>
-          {format(date, 'MMM dd, yyyy')}
+        <span className={quoteHasExpired ? 'text-sm text-red-600' : 'text-sm text-muted-foreground'}>
+          {format(validUntil, 'MMM dd, yyyy')}
         </span>
       );
+    },
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'versionNumber',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
+    cell: ({ row }) => {
+      const versionNumber: number = row.getValue('versionNumber');
+      return <span className="font-medium">{versionNumber}</span>;
     },
     enableSorting: true,
   },
@@ -163,8 +187,11 @@ export const createQuoteColumns = (
         onAccept={onAccept}
         onReject={onReject}
         onSend={onSend}
+        onOnHold={onOnHold}
+        onCancel={onCancel}
         onConvert={onConvert}
         onDownloadPdf={onDownloadPdf}
+        onCreateVersion={onCreateVersion}
       />
     ),
   },

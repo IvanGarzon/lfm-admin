@@ -13,17 +13,23 @@ import {
   UpdateQuoteSchema,
   MarkQuoteAsAcceptedSchema,
   MarkQuoteAsRejectedSchema,
+  MarkQuoteAsOnHoldSchema,
+  MarkQuoteAsCancelledSchema,
   ConvertQuoteToInvoiceSchema,
   QuoteFiltersSchema,
   UploadAttachmentSchema,
   DeleteAttachmentSchema,
   UploadItemAttachmentSchema,
   DeleteItemAttachmentSchema,
+  CreateVersionSchema,
   type CreateQuoteInput,
   type UpdateQuoteInput,
   type MarkQuoteAsAcceptedInput,
   type MarkQuoteAsRejectedInput,
+  type MarkQuoteAsOnHoldInput,
+  type MarkQuoteAsCancelledInput,
   type ConvertQuoteToInvoiceInput,
+  type CreateVersionInput,
 } from '@/schemas/quotes';
 import type {
   QuoteFilters,
@@ -40,6 +46,7 @@ import {
   getSignedDownloadUrl,
   ALLOWED_IMAGE_MIME_TYPES,
 } from '@/lib/s3';
+import { validateQuoteStatusTransition } from '@/lib/quote-status-transitions';
 
 const quoteRepo = new QuoteRepository(prisma);
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -237,7 +244,7 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
 
 /**
  * Marks a quote as accepted.
- * @param data - An object containing the quote ID and the acceptance date.
+ * @param data - An object containing the quote ID.
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
@@ -248,11 +255,7 @@ export async function markQuoteAsAccepted(
     const session = await auth();
     const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
 
-    const quote = await quoteRepo.markAsAccepted(
-      validatedData.id,
-      validatedData.acceptedDate,
-      session?.user?.id,
-    );
+    const quote = await quoteRepo.markAsAccepted(validatedData.id, session?.user?.id);
 
     if (!quote) {
       return { success: false, error: 'Quote not found' };
@@ -273,7 +276,7 @@ export async function markQuoteAsAccepted(
 
 /**
  * Marks a quote as rejected.
- * @param data - An object containing the quote ID, rejection date, and reason for rejection.
+ * @param data - An object containing the quote ID and reason for rejection.
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
@@ -286,7 +289,6 @@ export async function markQuoteAsRejected(
 
     const quote = await quoteRepo.markAsRejected(
       validatedData.id,
-      validatedData.rejectedDate,
       validatedData.rejectReason,
       session?.user?.id,
     );
@@ -335,6 +337,76 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
 }
 
 /**
+ * Marks a quote as on hold.
+ * @param data - An object containing the quote ID and optional reason.
+ * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
+ * or an error if the quote is not found.
+ */
+export async function markQuoteAsOnHold(
+  data: MarkQuoteAsOnHoldInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const session = await auth();
+    const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
+
+    const quote = await quoteRepo.markAsOnHold(
+      validatedData.id,
+      validatedData.reason,
+      session?.user?.id,
+    );
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to mark quote as on hold' };
+  }
+}
+
+/**
+ * Marks a quote as cancelled.
+ * @param data - An object containing the quote ID and optional reason.
+ * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
+ * or an error if the quote is not found.
+ */
+export async function markQuoteAsCancelled(
+  data: MarkQuoteAsCancelledInput,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const session = await auth();
+    const validatedData = MarkQuoteAsCancelledSchema.parse(data);
+
+    const quote = await quoteRepo.markAsCancelled(
+      validatedData.id,
+      validatedData.reason,
+      session?.user?.id,
+    );
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+    return { success: true, data: { id: quote.id } };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to cancel quote' };
+  }
+}
+
+/**
  * Converts an accepted quote into a new invoice.
  * It copies over relevant details from the quote to a new invoice record.
  * @param data - The input data for the conversion, including the quote ID and invoice due date.
@@ -362,22 +434,21 @@ export async function convertQuoteToInvoice(
         throw new Error('Quote not found');
       }
 
-      if (quote.status !== QuoteStatus.ACCEPTED) {
-        throw new Error('Only accepted quotes can be converted to invoices');
-      }
-
       const previousStatus = quote.status;
       const convertedDate = new Date();
+
+      // Validate status transition (ACCEPTED -> CONVERTED)
+      validateQuoteStatusTransition(previousStatus, QuoteStatus.CONVERTED);
 
       // Generate invoice number
       const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
 
-      // Create invoice from quote
+      // Create invoice from quote with PENDING status
       const invoice = await tx.invoice.create({
         data: {
           invoiceNumber,
           customerId: quote.customerId,
-          status: InvoiceStatus.DRAFT,
+          status: InvoiceStatus.PENDING,
           amount: quote.amount,
           currency: quote.currency,
           gst: validatedData.gst,
@@ -402,7 +473,6 @@ export async function convertQuoteToInvoice(
         where: { id: validatedData.id },
         data: {
           status: QuoteStatus.CONVERTED,
-          convertedDate,
           invoiceId: invoice.id,
         },
       });
@@ -981,5 +1051,95 @@ export async function getItemAttachmentDownloadUrl(
     }
 
     return { success: false, error: 'Failed to generate download URL' };
+  }
+}
+
+/**
+ * Gets all versions of a quote.
+ * @param quoteId - The ID of any quote in the version chain.
+ * @returns A promise that resolves to an `ActionResult` with all versions.
+ */
+export async function getQuoteVersions(quoteId: string): Promise<
+  ActionResult<
+    {
+      id: string;
+      quoteNumber: string;
+      versionNumber: number;
+      status: QuoteStatus;
+      amount: number;
+      issuedDate: Date;
+      createdAt: Date;
+      updatedAt: Date;
+    }[]
+  >
+> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error('Unauthorized');
+    }
+
+    const versions = await quoteRepo.getQuoteVersions(quoteId);
+
+    // Convert Decimal to number
+    const normalizedVersions = versions.map((v) => ({
+      ...v,
+      amount: Number(v.amount),
+    }));
+
+    return { success: true, data: normalizedVersions };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to fetch quote versions' };
+  }
+}
+
+/**
+ * Creates a new version of an existing quote.
+ * The new version copies all data from the parent quote and starts in DRAFT status.
+ * @param data - An object containing the quote ID to create a version from.
+ * @returns A promise that resolves to an `ActionResult` with the new version's details.
+ */
+export async function createQuoteVersion(
+  data: CreateVersionInput,
+): Promise<
+  ActionResult<{ id: string; quoteNumber: string; versionNumber: number; parentQuoteNumber: string }>
+> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error('Unauthorized');
+    }
+
+    const validatedData = CreateVersionSchema.parse(data);
+
+    // Get parent quote to include its number in the response
+    const parentQuote = await quoteRepo.findById(validatedData.quoteId);
+    if (!parentQuote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    const newVersion = await quoteRepo.createVersion(validatedData.quoteId, session.user.id);
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${validatedData.quoteId}`);
+    revalidatePath(`/finances/quotes/${newVersion.id}`);
+
+    return {
+      success: true,
+      data: {
+        id: newVersion.id,
+        quoteNumber: newVersion.quoteNumber,
+        versionNumber: newVersion.versionNumber,
+        parentQuoteNumber: parentQuote.quoteNumber,
+      },
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: 'Failed to create quote version' };
   }
 }

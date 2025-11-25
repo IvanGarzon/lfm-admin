@@ -461,8 +461,7 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
                         (attachment) => !isSupportedImageFormat(attachment.mimeType),
                       ) ? (
                         <Text style={styles.itemDetailText}>
-                          Note: Some image formats (WebP) are not supported in PDF and have been
-                          excluded.
+                          Note: Some file formats (WebP, documents) cannot be displayed in PDF.
                         </Text>
                       ) : null}
                     </>

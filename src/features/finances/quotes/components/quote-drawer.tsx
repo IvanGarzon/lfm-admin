@@ -13,10 +13,14 @@ import {
   Send,
   FileCheck,
   AlertCircle,
+  Copy,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Ban,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { Box } from '@/components/ui/box';
 import {
@@ -28,16 +32,6 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,15 +45,23 @@ import {
   useMarkQuoteAsAccepted,
   useMarkQuoteAsRejected,
   useMarkQuoteAsSent,
+  useMarkQuoteAsOnHold,
+  useMarkQuoteAsCancelled,
   useConvertQuoteToInvoice,
   useDeleteQuote,
+  useCreateQuoteVersion,
+  useQuoteVersions,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { downloadQuotePdf } from '@/features/finances/quotes/utils/quoteHelpers';
+import { downloadQuotePdf, getQuotePermissions, QuoteStatus } from '@/features/finances/quotes/utils/quote-helpers';
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
 import { QuotePreview } from '@/features/finances/quotes/components/quote-preview';
+import { RejectQuoteDialog } from '@/features/finances/quotes/components/reject-quote-dialog';
 import { DeleteQuoteDialog } from '@/features/finances/quotes/components/delete-quote-dialog';
+import { OnHoldDialog } from '@/features/finances/quotes/components/on-hold-dialog';
+import { CancelQuoteDialog } from '@/features/finances/quotes/components/cancel-quote-dialog';
+import { ConvertToInvoiceDialog } from '@/features/finances/quotes/components/convert-to-invoice-dialog';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 
@@ -75,25 +77,37 @@ export function QuoteDrawer({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showOnHoldDialog, setShowOnHoldDialog] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: quote, isLoading, error, isError } = useQuote(id);
+  const { data: versions } = useQuoteVersions(id);
 
   const createQuote = useCreateQuote();
   const updateQuote = useUpdateQuote();
   const markAsAccepted = useMarkQuoteAsAccepted();
   const markAsRejected = useMarkQuoteAsRejected();
   const markAsSent = useMarkQuoteAsSent();
+  const markAsOnHold = useMarkQuoteAsOnHold();
+  const markAsCancelled = useMarkQuoteAsCancelled();
   const convertToInvoice = useConvertQuoteToInvoice();
   const deleteQuote = useDeleteQuote();
+  const createVersion = useCreateQuoteVersion();
 
   const router = useRouter();
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
+
+  // Version navigation
+  const currentVersionIndex = versions?.findIndex((v) => v.id === id) ?? -1;
+  const hasPreviousVersion = currentVersionIndex > 0;
+  const hasNextVersion = currentVersionIndex >= 0 && currentVersionIndex < (versions?.length ?? 0) - 1;
+  const previousVersionId = hasPreviousVersion ? versions?.[currentVersionIndex - 1]?.id : null;
+  const nextVersionId = hasNextVersion ? versions?.[currentVersionIndex + 1]?.id : null;
 
   const mode: DrawerMode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/quotes/${id}`) ?? false) : (open ?? false);
@@ -137,77 +151,147 @@ export function QuoteDrawer({
   );
 
   const handleAccept = useCallback(() => {
-    if (!quote) return;
-    markAsAccepted.mutate(
-      { id: quote.id, acceptedDate: new Date() },
-      {
-        onSuccess: () => {
-          setShowAcceptDialog(false);
-          toast.success('Quote accepted');
-        },
-      },
-    );
-  }, [quote, markAsAccepted]);
-
-  const handleReject = useCallback(() => {
-    if (!quote) return;
-    const rejectReason = prompt('Please provide a reason for rejection:');
-    if (!rejectReason) return;
-
-    markAsRejected.mutate(
-      { id: quote.id, rejectedDate: new Date(), rejectReason },
-      {
-        onSuccess: () => {
-          setShowRejectDialog(false);
-          toast.success('Quote rejected');
-        },
-      },
-    );
-  }, [quote, markAsRejected]);
-
-  const handleSend = useCallback(() => {
-    if (!quote) return;
-    markAsSent.mutate(quote.id, {
-      onSuccess: () => {
-        toast.success('Quote marked as sent');
-      },
-    });
-  }, [quote, markAsSent]);
-
-  const handleConvert = useCallback(() => {
-    if (!quote) return;
-    const dueDateStr = prompt('Enter invoice due date (YYYY-MM-DD):');
-    if (!dueDateStr) return;
-
-    const dueDate = new Date(dueDateStr);
-    if (isNaN(dueDate.getTime())) {
-      toast.error('Invalid date format');
+    if (!quote) {
       return;
     }
 
-    convertToInvoice.mutate(
-      { id: quote.id, dueDate },
-      {
-        onSuccess: (data) => {
-          setShowConvertDialog(false);
-          toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
-          router.push(`/finances/invoices/${data.invoiceId}`);
+    markAsAccepted.mutate({ id: quote.id });
+  }, [quote, markAsAccepted]);
+
+  const handleReject = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    setShowRejectDialog(true);
+  }, [quote]);
+
+  const confirmReject = useCallback(
+    (data: { id: string; rejectReason: string }) => {
+      markAsRejected.mutate(data, {
+        onSuccess: () => {
+          setShowRejectDialog(false);
         },
-      },
-    );
-  }, [quote, convertToInvoice, router]);
+      });
+    },
+    [markAsRejected],
+  );
+
+  const handleSend = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    markAsSent.mutate(quote.id);
+  }, [quote, markAsSent]);
+
+  const handleOnHold = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    setShowOnHoldDialog(true);
+  }, [quote]);
+
+  const confirmOnHold = useCallback(
+    (data: { id: string; reason?: string }) => {
+      markAsOnHold.mutate(data, {
+        onSuccess: () => {
+          setShowOnHoldDialog(false);
+          toast.success('Quote put on hold');
+        },
+      });
+    },
+    [markAsOnHold],
+  );
+
+  const handleCancel = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    setShowCancelDialog(true);
+  }, [quote]);
+
+  const confirmCancel = useCallback(
+    (data: { id: string; reason?: string }) => {
+      markAsCancelled.mutate(data, {
+        onSuccess: () => {
+          setShowCancelDialog(false);
+        },
+      });
+    },
+    [markAsCancelled],
+  );
+
+  const handleConvert = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    setShowConvertDialog(true);
+  }, [quote]);
+
+  const confirmConvert = useCallback(
+    (data: { id: string; dueDate: Date; gst: number; discount: number }) => {
+      convertToInvoice.mutate(data, {
+        onSuccess: () => {
+          setShowConvertDialog(false);
+        },
+      });
+    },
+    [convertToInvoice],
+  );
 
   const handleDelete = useCallback(() => {
-    if (!quote) return;
-    deleteQuote.mutate(quote.id, {
-      onSuccess: () => {
-        setShowDeleteDialog(false);
-        const basePath = '/finances/quotes';
-        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+    if (!quote) {
+      return;
+    }
+
+    setShowDeleteDialog(true);
+  }, [quote]);
+
+  const confirmDelete = useCallback(
+    (quoteId: string) => {
+      deleteQuote.mutate(quoteId, {
+        onSuccess: () => {
+          setShowDeleteDialog(false);
+          const basePath = '/finances/quotes';
+          const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+          router.push(targetPath);
+        },
+      });
+    },
+    [deleteQuote, router, queryString],
+  );
+
+  const handleCreateVersion = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+    
+    createVersion.mutate(quote.id, {
+      onSuccess: (data) => {
+        // Navigate to the newly created version
+        const targetPath = `/finances/quotes/${data.id}`;
         router.push(targetPath);
       },
     });
-  }, [quote, deleteQuote, router, queryString]);
+  }, [quote, createVersion, router]);
+
+  const handleNavigateToVersion = useCallback(
+    (versionId: string) => {
+      if (hasUnsavedChanges) {
+        toast.warning('You have unsaved changes', {
+          description: 'Please save or discard your changes before navigating to another version.',
+          duration: 5000,
+        });
+        return;
+      }
+      router.push(`/finances/quotes/${versionId}`);
+    },
+    [router, hasUnsavedChanges],
+  );
 
   const handleDownloadPdf = useCallback(async () => {
     if (!quote) {
@@ -236,14 +320,9 @@ export function QuoteDrawer({
     await downloadQuotePdf(quote);
   }, [quote, hasUnsavedChanges]);
 
-  const canAccept = quote?.status === QuoteStatusSchema.enum.SENT;
-  const canReject = quote?.status === QuoteStatusSchema.enum.SENT;
-  const canSend = quote?.status === QuoteStatusSchema.enum.DRAFT;
-  const canConvert = quote?.status === QuoteStatusSchema.enum.ACCEPTED;
-  const canDelete =
-    quote?.status === QuoteStatusSchema.enum.DRAFT ||
-    quote?.status === QuoteStatusSchema.enum.REJECTED ||
-    quote?.status === QuoteStatusSchema.enum.EXPIRED;
+  // Get permissions based on quote status
+  const { canAccept, canReject, canSend, canPutOnHold, canCancel, canConvert, canDelete, canCreateVersion } =
+    getQuotePermissions(quote?.status);
 
   const getDrawerHeader = () => {
     if (mode === 'create') {
@@ -253,17 +332,20 @@ export function QuoteDrawer({
       };
     }
 
+    const versionIndicator =
+      quote?.versionNumber && quote.versionNumber > 1 ? ` (v${quote.versionNumber})` : '';
+
     return {
-      title: 'Update Quote',
+      title: `${quote?.quoteNumber || 'Update Quote'}${versionIndicator}`,
       status: quote?.status ?? null,
     };
   };
 
-  const { title, status } = getDrawerHeader();
+  const { title, status} = getDrawerHeader();
 
   return (
     <>
-      <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+      <Drawer key={id} open={isOpen} modal={true} onOpenChange={handleOpenChange}>
         <DrawerContent
           className="overflow-x-hidden dark:bg-gray-925 pb-0!"
           style={{
@@ -295,11 +377,42 @@ export function QuoteDrawer({
                       </span>
                     ) : null}
                   </Box>
-                  {status ? (
-                    <DrawerDescription>
-                      <QuoteStatusBadge status={status} />
-                    </DrawerDescription>
-                  ) : null}
+                  <Box className="flex items-center gap-2">
+                    {status ? (
+                      <DrawerDescription>
+                        <QuoteStatusBadge status={status} />
+                      </DrawerDescription>
+                    ) : null}
+
+                    {/* Version Navigation */}
+                    {mode === 'edit' && versions && versions.length > 1 ? (
+                      <Box className="flex items-center gap-1 ml-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => previousVersionId && handleNavigateToVersion(previousVersionId)}
+                          disabled={!hasPreviousVersion || hasUnsavedChanges}
+                          title="Previous version"
+                        >
+                          <ChevronLeft className="h-3 w-3" />
+                        </Button>
+                        <span className="text-xs text-muted-foreground px-1">
+                          {currentVersionIndex + 1} / {versions.length}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => nextVersionId && handleNavigateToVersion(nextVersionId)}
+                          disabled={!hasNextVersion || hasUnsavedChanges}
+                          title="Next version"
+                        >
+                          <ChevronRight className="h-3 w-3" />
+                        </Button>
+                      </Box>
+                    ) : null}
+                  </Box>
                 </Box>
 
                 {/* Preview Button and Actions */}
@@ -339,8 +452,9 @@ export function QuoteDrawer({
 
                   {mode === 'edit' && quote ? (
                     <>
-                      {quote.status !== QuoteStatusSchema.enum.ACCEPTED &&
-                      quote.status !== QuoteStatusSchema.enum.CONVERTED ? (
+                      {quote.status !== QuoteStatus.ACCEPTED &&
+                      quote.status !== QuoteStatus.CONVERTED &&
+                      quote.status !== QuoteStatus.ON_HOLD ? (
                         <Button
                           type="submit"
                           form="form-rhf-quote"
@@ -375,8 +489,15 @@ export function QuoteDrawer({
                             </DropdownMenuItem>
                           ) : null}
 
+                          {canPutOnHold ? (
+                            <DropdownMenuItem onClick={handleOnHold}>
+                              <Pause className="h-4 w-4" />
+                              Put on hold
+                            </DropdownMenuItem>
+                          ) : null}
+
                           {canAccept ? (
-                            <DropdownMenuItem onClick={() => setShowAcceptDialog(true)}>
+                            <DropdownMenuItem onClick={handleAccept}>
                               <Check className="h-4 w-4" />
                               Accept quote
                             </DropdownMenuItem>
@@ -389,10 +510,24 @@ export function QuoteDrawer({
                             </DropdownMenuItem>
                           ) : null}
 
+                          {canCancel ? (
+                            <DropdownMenuItem onClick={handleCancel}>
+                              <Ban className="h-4 w-4" />
+                              Cancel quote
+                            </DropdownMenuItem>
+                          ) : null}
+
                           {canConvert ? (
                             <DropdownMenuItem onClick={handleConvert}>
                               <FileCheck className="h-4 w-4" />
                               Convert to invoice
+                            </DropdownMenuItem>
+                          ) : null}
+
+                          {canCreateVersion ? (
+                            <DropdownMenuItem onClick={handleCreateVersion}>
+                              <Copy className="h-4 w-4" />
+                              Create new version
                             </DropdownMenuItem>
                           ) : null}
 
@@ -403,7 +538,7 @@ export function QuoteDrawer({
 
                           {canDelete ? (
                             <DropdownMenuItem
-                              onClick={() => setShowDeleteDialog(true)}
+                              onClick={handleDelete}
                               className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
                             >
                               <AlertCircle className="h-4 w-4" />
@@ -449,6 +584,7 @@ export function QuoteDrawer({
                       />
                     )}
                   </Box>
+
                   {mode === 'edit' && showPreview && quote ? (
                     <Box
                       className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
@@ -479,34 +615,69 @@ export function QuoteDrawer({
             </>
           ) : null}
         </DrawerContent>
-      </Drawer>
+      </Drawer>     
 
-      {/* Delete Confirmation Dialog */}
-      {showDeleteDialog && quote?.id ? (
-        <DeleteQuoteDialog
-          open={showDeleteDialog}
-          isPending={deleteQuote.isPending}
-          onOpenChange={setShowDeleteDialog}
-          onDelete={handleDelete}
+      {/* Reject Quote Dialog */}
+      {showRejectDialog && quote?.id ? (
+        <RejectQuoteDialog
+          open={showRejectDialog}
+          onOpenChange={setShowRejectDialog}
+          onConfirm={confirmReject}
+          quoteId={quote.id}
+          quoteNumber={quote.quoteNumber}
+          isPending={markAsRejected.isPending}
         />
       ) : null}
 
-      {/* Accept Confirmation Dialog */}
-      <AlertDialog open={showAcceptDialog} onOpenChange={setShowAcceptDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Accept Quote</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to accept this quote? You can convert it to an invoice
-              afterwards.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAccept}>Accept Quote</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* On Hold Dialog */}
+      {showOnHoldDialog && quote?.id ? (
+        <OnHoldDialog
+          open={showOnHoldDialog}
+          onOpenChange={setShowOnHoldDialog}
+          onConfirm={confirmOnHold}
+          quoteId={quote.id}
+          quoteNumber={quote.quoteNumber}
+          isPending={markAsOnHold.isPending}
+        />
+      ) : null}
+
+      {/* Cancel Quote Dialog */}
+      {showCancelDialog && quote?.id ? (
+        <CancelQuoteDialog
+          open={showCancelDialog}
+          onOpenChange={setShowCancelDialog}
+          onConfirm={confirmCancel}
+          quoteId={quote.id}
+          quoteNumber={quote.quoteNumber}
+          isPending={markAsCancelled.isPending}
+        />
+      ) : null}
+
+      {/* Convert to Invoice Dialog */}
+      {showConvertDialog && quote?.id ? (
+        <ConvertToInvoiceDialog
+          open={showConvertDialog}
+          onOpenChange={setShowConvertDialog}
+          onConfirm={confirmConvert}
+          quoteId={quote.id}
+          quoteNumber={quote.quoteNumber}
+          quoteGst={Number(quote.gst)}
+          quoteDiscount={Number(quote.discount)}
+          isPending={convertToInvoice.isPending}
+        />
+      ) : null}
+
+       {/* Delete Confirmation Dialog */}
+       {showDeleteDialog && quote?.id ? (
+        <DeleteQuoteDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onConfirm={confirmDelete}
+          quoteId={quote.id}
+          quoteNumber={quote.quoteNumber}
+          isPending={deleteQuote.isPending}
+        />
+      ) : null}
     </>
   );
 }

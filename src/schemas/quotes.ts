@@ -65,7 +65,6 @@ export const UpdateQuoteSchema = QuoteSchema.safeExtend({
  */
 export const MarkQuoteAsAcceptedSchema = z.object({
   id: z.string().min(1, { error: 'Quote ID is required' }),
-  acceptedDate: z.date(),
 });
 
 /**
@@ -73,12 +72,27 @@ export const MarkQuoteAsAcceptedSchema = z.object({
  */
 export const MarkQuoteAsRejectedSchema = z.object({
   id: z.string().min(1, { error: 'Quote ID is required' }),
-  rejectedDate: z.date(),
   rejectReason: z
     .string()
     .trim()
     .min(1, { error: 'Rejection reason is required' })
     .max(500, { error: 'Reason must be less than 500 characters' }),
+});
+
+/**
+ * Mark Quote as On Hold Schema
+ */
+export const MarkQuoteAsOnHoldSchema = z.object({
+  id: z.string().min(1, { error: 'Quote ID is required' }),
+  reason: z.string().trim().max(500, { error: 'Reason must be less than 500 characters' }).optional(),
+});
+
+/**
+ * Mark Quote as Cancelled Schema
+ */
+export const MarkQuoteAsCancelledSchema = z.object({
+  id: z.string().min(1, { error: 'Quote ID is required' }),
+  reason: z.string().trim().max(500, { error: 'Reason must be less than 500 characters' }).optional(),
 });
 
 /**
@@ -90,13 +104,11 @@ export const ConvertQuoteToInvoiceSchema = z.object({
   gst: z
     .number()
     .min(0, { error: 'GST percentage must be at least 0%' })
-    .max(100, { error: 'GST percentage cannot exceed 100%' })
-    .default(10),
+    .max(100, { error: 'GST percentage cannot exceed 100%' }),
   discount: z
     .number()
     .min(0, { error: 'Discount must be at least 0' })
-    .max(1000000, { error: 'Discount must be less than 1,000,000' })
-    .default(0),
+    .max(1000000, { error: 'Discount must be less than 1,000,000' }),
 });
 
 /**
@@ -106,6 +118,8 @@ export type CreateQuoteInput = z.infer<typeof CreateQuoteSchema>;
 export type UpdateQuoteInput = z.infer<typeof UpdateQuoteSchema>;
 export type MarkQuoteAsAcceptedInput = z.infer<typeof MarkQuoteAsAcceptedSchema>;
 export type MarkQuoteAsRejectedInput = z.infer<typeof MarkQuoteAsRejectedSchema>;
+export type MarkQuoteAsOnHoldInput = z.infer<typeof MarkQuoteAsOnHoldSchema>;
+export type MarkQuoteAsCancelledInput = z.infer<typeof MarkQuoteAsCancelledSchema>;
 export type ConvertQuoteToInvoiceInput = z.infer<typeof ConvertQuoteToInvoiceSchema>;
 
 /**
@@ -238,3 +252,12 @@ export const DeleteItemAttachmentSchema = z.object({
 export type QuoteItemAttachmentInput = z.infer<typeof QuoteItemAttachmentSchema>;
 export type UploadItemAttachmentInput = z.infer<typeof UploadItemAttachmentSchema>;
 export type DeleteItemAttachmentInput = z.infer<typeof DeleteItemAttachmentSchema>;
+
+/**
+ * Create Version Schema
+ */
+export const CreateVersionSchema = z.object({
+  quoteId: z.string().min(1, { error: 'Quote ID is required' }),
+});
+
+export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;

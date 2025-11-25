@@ -8,6 +8,8 @@ import {
   markQuoteAsAccepted,
   markQuoteAsRejected,
   markQuoteAsSent,
+  markQuoteAsOnHold,
+  markQuoteAsCancelled,
   convertQuoteToInvoice,
   checkAndExpireQuotes,
   deleteQuote,
@@ -21,11 +23,15 @@ import {
   getQuoteItemAttachments,
   getItemAttachmentDownloadUrl,
   updateQuoteItemColors,
+  createQuoteVersion,
+  getQuoteVersions,
 } from '@/actions/quotes';
 import type {
   QuoteFilters,
   MarkQuoteAsAcceptedData,
   MarkQuoteAsRejectedData,
+  MarkQuoteAsOnHoldData,
+  MarkQuoteAsCancelledData,
   ConvertQuoteToInvoiceData,
 } from '@/features/finances/quotes/types';
 
@@ -42,6 +48,7 @@ export const QUOTE_KEYS = {
   attachments: (quoteId: string) => [...QUOTE_KEYS.detail(quoteId), 'attachments'] as const,
   itemAttachments: (quoteItemId: string) =>
     [...QUOTE_KEYS.all, 'item-attachments', quoteItemId] as const,
+  versions: (quoteId: string) => [...QUOTE_KEYS.detail(quoteId), 'versions'] as const,
 };
 
 export function useQuotes(filters: QuoteFilters) {
@@ -84,6 +91,24 @@ export function useQuote(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+  });
+}
+
+export function useQuoteVersions(quoteId: string | undefined) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.versions(quoteId ?? ''),
+    queryFn: async () => {
+      if (!quoteId) {
+        throw new Error('Quote ID is required');
+      }
+      const result = await getQuoteVersions(quoteId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: Boolean(quoteId),
   });
 }
 
@@ -217,6 +242,52 @@ export function useMarkQuoteAsSent() {
   });
 }
 
+export function useMarkQuoteAsOnHold() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: MarkQuoteAsOnHoldData) => {
+      const result = await markQuoteAsOnHold(data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      toast.success('Quote put on hold');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to put quote on hold');
+    },
+  });
+}
+
+export function useMarkQuoteAsCancelled() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: MarkQuoteAsCancelledData) => {
+      const result = await markQuoteAsCancelled(data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      toast.success('Quote cancelled');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel quote');
+    },
+  });
+}
+
 export function useConvertQuoteToInvoice() {
   const queryClient = useQueryClient();
 
@@ -232,11 +303,12 @@ export function useConvertQuoteToInvoice() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      // Invalidate quotes and invoices since we're creating an invoice
+    onSuccess: (data, variables) => {
+      // Invalidate the specific quote detail to update the drawer
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] }); // Also invalidate invoice queries
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
     },
     onError: (error: Error) => {
@@ -291,6 +363,31 @@ export function useDeleteQuote() {
   });
 }
 
+export function useCreateQuoteVersion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const result = await createQuoteVersion({ quoteId });
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.details() });
+      toast.success(
+        `Version ${data.versionNumber} created successfully (${data.quoteNumber})`,
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create quote version');
+    },
+  });
+}
+
 export function useDownloadQuotePdf() {
   const queryClient = useQueryClient();
 
@@ -307,7 +404,7 @@ export function useDownloadQuotePdf() {
         },
       });
 
-      const { downloadQuotePdf } = await import('@/features/finances/quotes/utils/quoteHelpers');
+      const { downloadQuotePdf } = await import('@/features/finances/quotes/utils/quote-helpers.tsx');
 
       return await downloadQuotePdf(quoteData);
     },
@@ -422,12 +519,6 @@ export function useGetAttachmentDownloadUrl() {
     },
   });
 }
-
-/**
- * =====================================
- * QUOTE ITEM ATTACHMENT HOOKS
- * =====================================
- */
 
 /**
  * Get attachments for a quote item

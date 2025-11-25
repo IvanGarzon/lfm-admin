@@ -266,16 +266,8 @@ model Quote {
   issuedDate DateTime @map(name: "issued_date") @db.Date
   validUntil DateTime @map(name: "valid_until") @db.Date
 
-  // ACCEPTED fields
-  acceptedDate DateTime? @map(name: "accepted_date") @db.Date
-
-  // REJECTED fields
-  rejectedDate DateTime? @map(name: "rejected_date") @db.Date
-  rejectReason String?   @map(name: "reject_reason")
-
   // CONVERTED fields (to invoice)
-  convertedDate DateTime? @map(name: "converted_date") @db.Date
-  invoiceId     String?   @unique @map(name: "invoice_id")
+  invoiceId String? @unique @map(name: "invoice_id")
 
   // Relations
   items         QuoteItem[]
@@ -355,13 +347,14 @@ model QuoteItemAttachment {
   fileName String @map(name: "file_name")
   fileSize Int    @map(name: "file_size")
   mimeType String @map(name: "mime_type")
-  s3Key    String @unique @map(name: "s3_key")
+  s3Key    String @map(name: "s3_key")
   s3Url    String @map(name: "s3_url")
 
   uploadedBy String?  @map(name: "uploaded_by")
   uploadedAt DateTime @default(now()) @map(name: "uploaded_at") @db.Timestamptz()
 
   @@index([quoteItemId])
+  @@index([s3Key])
   @@map(name: "quote_item_attachments")
 }
 
@@ -430,8 +423,10 @@ enum InvoiceStatus {
 enum QuoteStatus {
   DRAFT
   SENT
+  ON_HOLD
   ACCEPTED
   REJECTED
   EXPIRED
+  CANCELLED
   CONVERTED
 }

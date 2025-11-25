@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Controller, useForm, useFieldArray, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays, startOfToday } from 'date-fns';
 
 import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -38,11 +38,13 @@ import {
 } from '@/schemas/quotes';
 import { CustomerSelect } from '@/components/shared/customer-select';
 import type { QuoteWithDetails, QuoteFormInput } from '@/features/finances/quotes/types';
+import { getQuoteStatusLabel, getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import { QuoteItemDetails } from '@/features/finances/quotes/components/quote-item-details';
 import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
+import { QuoteVersions } from '@/features/finances/quotes/components/quote-versions';
 import {
   useDeleteQuoteItemAttachment,
   useGetItemAttachmentDownloadUrl,
@@ -51,8 +53,8 @@ import {
 const defaultFormState: CreateQuoteInput = {
   customerId: '',
   status: QuoteStatusSchema.enum.DRAFT,
-  issuedDate: new Date(),
-  validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+  issuedDate: startOfToday(),
+  validUntil: addDays(startOfToday(), 15), // 15 days from now
   currency: 'AUD',
   gst: 10,
   discount: 0,
@@ -151,14 +153,9 @@ export function QuoteForm({
     }
   }, [form.formState.isDirty, onDirtyStateChange]);
 
-  const isLocked = useMemo(() => {
-    return (
-      mode === 'update' &&
-      (quote?.status === QuoteStatusSchema.enum.ACCEPTED ||
-        quote?.status === QuoteStatusSchema.enum.CONVERTED ||
-        quote?.status === QuoteStatusSchema.enum.REJECTED)
-    );
-  }, [mode, quote?.status]);
+  // Use permissions from getQuotePermissions for consistency
+  const { canEdit } = getQuotePermissions(quote?.status);
+  const isLocked = mode === 'update' && !canEdit;
 
   const onSubmit: SubmitHandler<QuoteFormInput> = useCallback(
     (data: QuoteFormInput) => {
@@ -236,7 +233,7 @@ export function QuoteForm({
           <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
             <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              This quote is {quote?.status.toLowerCase()} and cannot be edited.
+              This quote is {quote?.status ? getQuoteStatusLabel(quote.status) : 'locked'} and cannot be edited.
             </span>
           </Box>
         ) : null}
@@ -568,9 +565,18 @@ export function QuoteForm({
           </FieldGroup>
 
           {/* Status History - Only show for existing quotes */}
-          {quote?.statusHistory && quote.statusHistory.length > 0 && (
-            <QuoteStatusHistory history={quote.statusHistory} />
-          )}
+          {quote?.statusHistory && quote.statusHistory.length > 0 ? (
+            <FieldGroup>
+              <QuoteStatusHistory history={quote.statusHistory} />
+            </FieldGroup>
+          ): null}
+
+          {/* Version History - Only show for existing quotes with versions */}
+          {quote?.id ? (
+            <FieldGroup>
+              <QuoteVersions quoteId={quote.id} currentVersionId={quote.id} />
+            </FieldGroup>
+          ) : null}
         </Box>
       </form>
     </Form>

@@ -283,10 +283,6 @@ exports.Prisma.QuoteScalarFieldEnum = {
   discount: 'discount',
   issuedDate: 'issuedDate',
   validUntil: 'validUntil',
-  acceptedDate: 'acceptedDate',
-  rejectedDate: 'rejectedDate',
-  rejectReason: 'rejectReason',
-  convertedDate: 'convertedDate',
   invoiceId: 'invoiceId',
   notes: 'notes',
   terms: 'terms',
@@ -419,9 +415,11 @@ exports.InvoiceStatus = exports.$Enums.InvoiceStatus = {
 exports.QuoteStatus = exports.$Enums.QuoteStatus = {
   DRAFT: 'DRAFT',
   SENT: 'SENT',
+  ON_HOLD: 'ON_HOLD',
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED',
   EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED',
   CONVERTED: 'CONVERTED'
 };
 

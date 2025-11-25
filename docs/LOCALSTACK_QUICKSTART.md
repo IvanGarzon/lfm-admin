@@ -7,7 +7,7 @@ You need Docker installed and running on your machine.
 ### Check if Docker is Running
 
 ```bash
-docker ps
+docker-compose down
 ```
 
 If you see an error like "Cannot connect to the Docker daemon", you need to start Docker:

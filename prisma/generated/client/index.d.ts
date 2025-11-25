@@ -347,9 +347,11 @@ export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus]
 export const QuoteStatus: {
   DRAFT: 'DRAFT',
   SENT: 'SENT',
+  ON_HOLD: 'ON_HOLD',
   ACCEPTED: 'ACCEPTED',
   REJECTED: 'REJECTED',
   EXPIRED: 'EXPIRED',
+  CANCELLED: 'CANCELLED',
   CONVERTED: 'CONVERTED'
 };
 
@@ -14549,10 +14551,6 @@ export namespace Prisma {
     discount: Decimal | null
     issuedDate: Date | null
     validUntil: Date | null
-    acceptedDate: Date | null
-    rejectedDate: Date | null
-    rejectReason: string | null
-    convertedDate: Date | null
     invoiceId: string | null
     notes: string | null
     terms: string | null
@@ -14574,10 +14572,6 @@ export namespace Prisma {
     discount: Decimal | null
     issuedDate: Date | null
     validUntil: Date | null
-    acceptedDate: Date | null
-    rejectedDate: Date | null
-    rejectReason: string | null
-    convertedDate: Date | null
     invoiceId: string | null
     notes: string | null
     terms: string | null
@@ -14599,10 +14593,6 @@ export namespace Prisma {
     discount: number
     issuedDate: number
     validUntil: number
-    acceptedDate: number
-    rejectedDate: number
-    rejectReason: number
-    convertedDate: number
     invoiceId: number
     notes: number
     terms: number
@@ -14640,10 +14630,6 @@ export namespace Prisma {
     discount?: true
     issuedDate?: true
     validUntil?: true
-    acceptedDate?: true
-    rejectedDate?: true
-    rejectReason?: true
-    convertedDate?: true
     invoiceId?: true
     notes?: true
     terms?: true
@@ -14665,10 +14651,6 @@ export namespace Prisma {
     discount?: true
     issuedDate?: true
     validUntil?: true
-    acceptedDate?: true
-    rejectedDate?: true
-    rejectReason?: true
-    convertedDate?: true
     invoiceId?: true
     notes?: true
     terms?: true
@@ -14690,10 +14672,6 @@ export namespace Prisma {
     discount?: true
     issuedDate?: true
     validUntil?: true
-    acceptedDate?: true
-    rejectedDate?: true
-    rejectReason?: true
-    convertedDate?: true
     invoiceId?: true
     notes?: true
     terms?: true
@@ -14802,10 +14780,6 @@ export namespace Prisma {
     discount: Decimal
     issuedDate: Date
     validUntil: Date
-    acceptedDate: Date | null
-    rejectedDate: Date | null
-    rejectReason: string | null
-    convertedDate: Date | null
     invoiceId: string | null
     notes: string | null
     terms: string | null
@@ -14846,10 +14820,6 @@ export namespace Prisma {
     discount?: boolean
     issuedDate?: boolean
     validUntil?: boolean
-    acceptedDate?: boolean
-    rejectedDate?: boolean
-    rejectReason?: boolean
-    convertedDate?: boolean
     invoiceId?: boolean
     notes?: boolean
     terms?: boolean
@@ -14878,10 +14848,6 @@ export namespace Prisma {
     discount?: boolean
     issuedDate?: boolean
     validUntil?: boolean
-    acceptedDate?: boolean
-    rejectedDate?: boolean
-    rejectReason?: boolean
-    convertedDate?: boolean
     invoiceId?: boolean
     notes?: boolean
     terms?: boolean
@@ -14905,10 +14871,6 @@ export namespace Prisma {
     discount?: boolean
     issuedDate?: boolean
     validUntil?: boolean
-    acceptedDate?: boolean
-    rejectedDate?: boolean
-    rejectReason?: boolean
-    convertedDate?: boolean
     invoiceId?: boolean
     notes?: boolean
     terms?: boolean
@@ -14932,10 +14894,6 @@ export namespace Prisma {
     discount?: boolean
     issuedDate?: boolean
     validUntil?: boolean
-    acceptedDate?: boolean
-    rejectedDate?: boolean
-    rejectReason?: boolean
-    convertedDate?: boolean
     invoiceId?: boolean
     notes?: boolean
     terms?: boolean
@@ -14944,7 +14902,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type QuoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteNumber" | "customerId" | "status" | "versionNumber" | "parentQuoteId" | "amount" | "currency" | "gst" | "discount" | "issuedDate" | "validUntil" | "acceptedDate" | "rejectedDate" | "rejectReason" | "convertedDate" | "invoiceId" | "notes" | "terms" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["quote"]>
+  export type QuoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteNumber" | "customerId" | "status" | "versionNumber" | "parentQuoteId" | "amount" | "currency" | "gst" | "discount" | "issuedDate" | "validUntil" | "invoiceId" | "notes" | "terms" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["quote"]>
   export type QuoteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
@@ -14986,10 +14944,6 @@ export namespace Prisma {
       discount: Prisma.Decimal
       issuedDate: Date
       validUntil: Date
-      acceptedDate: Date | null
-      rejectedDate: Date | null
-      rejectReason: string | null
-      convertedDate: Date | null
       invoiceId: string | null
       notes: string | null
       terms: string | null
@@ -15437,10 +15391,6 @@ export namespace Prisma {
     readonly discount: FieldRef<"Quote", 'Decimal'>
     readonly issuedDate: FieldRef<"Quote", 'DateTime'>
     readonly validUntil: FieldRef<"Quote", 'DateTime'>
-    readonly acceptedDate: FieldRef<"Quote", 'DateTime'>
-    readonly rejectedDate: FieldRef<"Quote", 'DateTime'>
-    readonly rejectReason: FieldRef<"Quote", 'String'>
-    readonly convertedDate: FieldRef<"Quote", 'DateTime'>
     readonly invoiceId: FieldRef<"Quote", 'String'>
     readonly notes: FieldRef<"Quote", 'String'>
     readonly terms: FieldRef<"Quote", 'String'>
@@ -20802,10 +20752,6 @@ export namespace Prisma {
     discount: 'discount',
     issuedDate: 'issuedDate',
     validUntil: 'validUntil',
-    acceptedDate: 'acceptedDate',
-    rejectedDate: 'rejectedDate',
-    rejectReason: 'rejectReason',
-    convertedDate: 'convertedDate',
     invoiceId: 'invoiceId',
     notes: 'notes',
     terms: 'terms',
@@ -22066,10 +22012,6 @@ export namespace Prisma {
     discount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFilter<"Quote"> | Date | string
     validUntil?: DateTimeFilter<"Quote"> | Date | string
-    acceptedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectReason?: StringNullableFilter<"Quote"> | string | null
-    convertedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
     invoiceId?: StringNullableFilter<"Quote"> | string | null
     notes?: StringNullableFilter<"Quote"> | string | null
     terms?: StringNullableFilter<"Quote"> | string | null
@@ -22097,10 +22039,6 @@ export namespace Prisma {
     discount?: SortOrder
     issuedDate?: SortOrder
     validUntil?: SortOrder
-    acceptedDate?: SortOrderInput | SortOrder
-    rejectedDate?: SortOrderInput | SortOrder
-    rejectReason?: SortOrderInput | SortOrder
-    convertedDate?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
@@ -22132,10 +22070,6 @@ export namespace Prisma {
     discount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFilter<"Quote"> | Date | string
     validUntil?: DateTimeFilter<"Quote"> | Date | string
-    acceptedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectReason?: StringNullableFilter<"Quote"> | string | null
-    convertedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
     notes?: StringNullableFilter<"Quote"> | string | null
     terms?: StringNullableFilter<"Quote"> | string | null
     createdAt?: DateTimeFilter<"Quote"> | Date | string
@@ -22162,10 +22096,6 @@ export namespace Prisma {
     discount?: SortOrder
     issuedDate?: SortOrder
     validUntil?: SortOrder
-    acceptedDate?: SortOrderInput | SortOrder
-    rejectedDate?: SortOrderInput | SortOrder
-    rejectReason?: SortOrderInput | SortOrder
-    convertedDate?: SortOrderInput | SortOrder
     invoiceId?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
     terms?: SortOrderInput | SortOrder
@@ -22195,10 +22125,6 @@ export namespace Prisma {
     discount?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeWithAggregatesFilter<"Quote"> | Date | string
     validUntil?: DateTimeWithAggregatesFilter<"Quote"> | Date | string
-    acceptedDate?: DateTimeNullableWithAggregatesFilter<"Quote"> | Date | string | null
-    rejectedDate?: DateTimeNullableWithAggregatesFilter<"Quote"> | Date | string | null
-    rejectReason?: StringNullableWithAggregatesFilter<"Quote"> | string | null
-    convertedDate?: DateTimeNullableWithAggregatesFilter<"Quote"> | Date | string | null
     invoiceId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     notes?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     terms?: StringNullableWithAggregatesFilter<"Quote"> | string | null
@@ -22413,7 +22339,6 @@ export namespace Prisma {
 
   export type QuoteItemAttachmentWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    s3Key?: string
     AND?: QuoteItemAttachmentWhereInput | QuoteItemAttachmentWhereInput[]
     OR?: QuoteItemAttachmentWhereInput[]
     NOT?: QuoteItemAttachmentWhereInput | QuoteItemAttachmentWhereInput[]
@@ -22421,11 +22346,12 @@ export namespace Prisma {
     fileName?: StringFilter<"QuoteItemAttachment"> | string
     fileSize?: IntFilter<"QuoteItemAttachment"> | number
     mimeType?: StringFilter<"QuoteItemAttachment"> | string
+    s3Key?: StringFilter<"QuoteItemAttachment"> | string
     s3Url?: StringFilter<"QuoteItemAttachment"> | string
     uploadedBy?: StringNullableFilter<"QuoteItemAttachment"> | string | null
     uploadedAt?: DateTimeFilter<"QuoteItemAttachment"> | Date | string
     quoteItem?: XOR<QuoteItemScalarRelationFilter, QuoteItemWhereInput>
-  }, "id" | "s3Key">
+  }, "id">
 
   export type QuoteItemAttachmentOrderByWithAggregationInput = {
     id?: SortOrder
@@ -23604,10 +23530,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -23635,10 +23557,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -23662,10 +23580,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23693,10 +23607,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23722,10 +23632,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -23745,10 +23651,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23770,10 +23672,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25230,10 +25128,6 @@ export namespace Prisma {
     discount?: SortOrder
     issuedDate?: SortOrder
     validUntil?: SortOrder
-    acceptedDate?: SortOrder
-    rejectedDate?: SortOrder
-    rejectReason?: SortOrder
-    convertedDate?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
@@ -25262,10 +25156,6 @@ export namespace Prisma {
     discount?: SortOrder
     issuedDate?: SortOrder
     validUntil?: SortOrder
-    acceptedDate?: SortOrder
-    rejectedDate?: SortOrder
-    rejectReason?: SortOrder
-    convertedDate?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
@@ -25287,10 +25177,6 @@ export namespace Prisma {
     discount?: SortOrder
     issuedDate?: SortOrder
     validUntil?: SortOrder
-    acceptedDate?: SortOrder
-    rejectedDate?: SortOrder
-    rejectReason?: SortOrder
-    convertedDate?: SortOrder
     invoiceId?: SortOrder
     notes?: SortOrder
     terms?: SortOrder
@@ -27299,10 +27185,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -27328,10 +27210,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -27462,10 +27340,6 @@ export namespace Prisma {
     discount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFilter<"Quote"> | Date | string
     validUntil?: DateTimeFilter<"Quote"> | Date | string
-    acceptedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
-    rejectReason?: StringNullableFilter<"Quote"> | string | null
-    convertedDate?: DateTimeNullableFilter<"Quote"> | Date | string | null
     invoiceId?: StringNullableFilter<"Quote"> | string | null
     notes?: StringNullableFilter<"Quote"> | string | null
     terms?: StringNullableFilter<"Quote"> | string | null
@@ -27953,10 +27827,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -27983,10 +27853,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28014,10 +27880,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28043,10 +27905,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28232,10 +28090,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28262,10 +28116,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28380,10 +28230,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28410,10 +28256,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28517,10 +28359,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28547,10 +28385,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28643,10 +28477,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28673,10 +28503,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28715,10 +28541,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28745,10 +28567,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28847,10 +28665,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28877,10 +28691,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -28919,10 +28729,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -28949,10 +28755,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29251,10 +29053,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -29339,10 +29137,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29368,10 +29162,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29396,10 +29186,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29520,10 +29306,6 @@ export namespace Prisma {
     discount?: Decimal | DecimalJsLike | number | string
     issuedDate: Date | string
     validUntil: Date | string
-    acceptedDate?: Date | string | null
-    rejectedDate?: Date | string | null
-    rejectReason?: string | null
-    convertedDate?: Date | string | null
     invoiceId?: string | null
     notes?: string | null
     terms?: string | null
@@ -29577,10 +29359,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29606,10 +29384,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29634,10 +29408,6 @@ export namespace Prisma {
     discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
     validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
-    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
-    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     terms?: NullableStringFieldUpdateOperationsInput | string | null

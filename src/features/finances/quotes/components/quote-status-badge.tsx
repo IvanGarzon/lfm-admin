@@ -1,4 +1,4 @@
-import { X, Check, CircleDashed, Send, Clock, FileCheck } from 'lucide-react';
+import { X, Ban, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
 
 import type { QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,12 @@ const statusConfig: Record<
     className: 'bg-blue-50 text-blue-700 border-blue-200',
     icon: <Send className="h-4 w-4" />,
   },
+  ON_HOLD: {
+    label: 'On Hold',
+    variant: 'outline',
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: <Pause className="h-4 w-4" />,
+  },
   ACCEPTED: {
     label: 'Accepted',
     variant: 'outline',
@@ -37,7 +43,7 @@ const statusConfig: Record<
   REJECTED: {
     label: 'Rejected',
     variant: 'outline',
-    className: 'bg-red-50 text-red-700 border-red-200',
+    className: 'bg-pink-50 text-pink-700 border-pink-200',
     icon: <X className="h-4 w-4" />,
   },
   EXPIRED: {
@@ -45,6 +51,12 @@ const statusConfig: Record<
     variant: 'outline',
     className: 'bg-orange-50 text-orange-700 border-orange-200',
     icon: <Clock className="h-4 w-4" />,
+  },
+  CANCELLED: {
+    label: 'Cancelled',
+    variant: 'outline',
+    className: 'bg-red-50 text-red-700 border-red-200',
+    icon: <Ban className="h-4 w-4" />,
   },
   CONVERTED: {
     label: 'Converted',

@@ -21,6 +21,12 @@ export const env = createEnv({
       .string()
       .refine((s) => s === 'true' || s === 'false')
       .transform((s) => s === 'true'),
+
+    AWS_REGION: z.string().min(1),
+    AWS_ACCESS_KEY_ID: z.string().min(1),
+    AWS_SECRET_ACCESS_KEY: z.string().min(1),
+    AWS_S3_BUCKET_NAME: z.string().min(1),
+    AWS_ENDPOINT_URL: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -41,7 +47,6 @@ export const env = createEnv({
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
-    AWS_S3_QUOTES_PREFIX: process.env.AWS_S3_QUOTES_PREFIX,
     AWS_ENDPOINT_URL: process.env.AWS_ENDPOINT_URL,
   },
 });

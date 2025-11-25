@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { X, Eye, Send, Check, FileCheck, FileDown, MoreHorizontal } from 'lucide-react';
+import { X, Eye, Send, Check, FileCheck, FileDown, MoreHorizontal, Copy, AlertCircle, Pause, Ban } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -13,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import type { QuoteListItem } from '@/features/finances/quotes/types';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
+import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 
 interface QuoteActionsProps {
   quote: QuoteListItem;
@@ -24,8 +24,11 @@ interface QuoteActionsProps {
   onAccept: (id: string) => void;
   onReject: (id: string) => void;
   onSend: (id: string) => void;
+  onOnHold: (id: string) => void;
+  onCancel: (id: string) => void;
   onConvert: (id: string) => void;
   onDownloadPdf: (id: string) => void;
+  onCreateVersion: (id: string) => void;
 }
 
 export function QuoteActions({
@@ -34,12 +37,19 @@ export function QuoteActions({
   onAccept,
   onReject,
   onSend,
+  onOnHold,
+  onCancel,
   onConvert,
   onDownloadPdf,
+  onCreateVersion,
 }: QuoteActionsProps) {
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quote.id}`;
   const quoteUrl = queryString ? `${basePath}?${queryString}` : basePath;
+
+  // Get permissions based on quote status
+  const { canAccept, canReject, canSend, canPutOnHold, canCancel, canConvert, canDelete, canCreateVersion } =
+    getQuotePermissions(quote.status);
 
   return (
     <Box className="flex items-center gap-1 justify-end">
@@ -69,41 +79,68 @@ export function QuoteActions({
               View quote
             </Link>
           </DropdownMenuItem>
-          {quote.status === QuoteStatusSchema.enum.DRAFT && (
+
+          {canSend ? (
             <DropdownMenuItem onClick={() => onSend(quote.id)}>
               <Send className="h-4 w-4" />
-              Send quote
+              Mark as sent
             </DropdownMenuItem>
-          )}
-          {quote.status === QuoteStatusSchema.enum.SENT && (
-            <>
-              <DropdownMenuItem onClick={() => onAccept(quote.id)}>
-                <Check className="h-4 w-4" />
-                Mark as accepted
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onReject(quote.id)}>
-                <X className="h-4 w-4" />
-                Mark as rejected
-              </DropdownMenuItem>
-            </>
-          )}
-          {quote.status === QuoteStatusSchema.enum.ACCEPTED && (
+          ) : null}
+
+          {canPutOnHold ? (
+            <DropdownMenuItem onClick={() => onOnHold(quote.id)}>
+              <Pause className="h-4 w-4" />
+              Put on hold
+            </DropdownMenuItem>
+          ) : null}
+
+          {canAccept ? (
+            <DropdownMenuItem onClick={() => onAccept(quote.id)}>
+              <Check className="h-4 w-4" />
+              Accept quote
+            </DropdownMenuItem>
+          ) : null}
+
+          {canReject ? (
+            <DropdownMenuItem onClick={() => onReject(quote.id)}>
+              <X className="h-4 w-4" />
+              Reject quote
+            </DropdownMenuItem>
+          ) : null}
+
+          {canCancel ? (
+            <DropdownMenuItem onClick={() => onCancel(quote.id)}>
+              <Ban className="h-4 w-4" />
+              Cancel quote
+            </DropdownMenuItem>
+          ) : null}
+
+          {canConvert ? (
             <DropdownMenuItem onClick={() => onConvert(quote.id)}>
               <FileCheck className="h-4 w-4" />
               Convert to invoice
             </DropdownMenuItem>
-          )}
-          {(quote.status === QuoteStatusSchema.enum.DRAFT ||
-            quote.status === QuoteStatusSchema.enum.REJECTED ||
-            quote.status === QuoteStatusSchema.enum.EXPIRED) && (
+          ) : null}
+
+          {canCreateVersion ? (
+            <DropdownMenuItem onClick={() => onCreateVersion(quote.id)}>
+              <Copy className="h-4 w-4" />
+              Create new version
+            </DropdownMenuItem>
+          ) : null}
+
+          {canDelete ? (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete(quote.id)} className="text-destructive">
-                <X className="h-4 w-4" />
+              <DropdownMenuItem
+                onClick={() => onDelete(quote.id)}
+                className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+              >
+                <AlertCircle className="h-4 w-4" />
                 Delete quote
               </DropdownMenuItem>
             </>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </Box>

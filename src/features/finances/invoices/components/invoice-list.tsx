@@ -228,7 +228,11 @@ export function InvoiceList({
         />
       )}
 
-      {!hideCreateDrawer && showCreateModal ? (
+      {/* {!hideCreateDrawer && showCreateModal ? (
+        <InvoiceDrawer open={showCreateModal} onClose={handleShowCreateModal} />
+      ) : null} */}
+
+      {showCreateModal ? (
         <InvoiceDrawer open={showCreateModal} onClose={handleShowCreateModal} />
       ) : null}
     </Box>

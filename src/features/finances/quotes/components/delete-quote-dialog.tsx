@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,43 +13,49 @@ import { Button } from '@/components/ui/button';
 
 interface DeleteQuoteDialogProps {
   open: boolean;
-  isPending: boolean;
   onOpenChange: (open: boolean) => void;
-  onDelete: () => void;
+  onConfirm: (quoteId: string) => void;
+  quoteId: string;
+  quoteNumber: string;
+  isPending?: boolean;
 }
 
 export function DeleteQuoteDialog({
   open,
-  isPending = false,
   onOpenChange,
-  onDelete,
+  onConfirm,
+  quoteId,
+  quoteNumber,
+  isPending = false,
 }: DeleteQuoteDialogProps) {
+  const handleConfirm = () => {
+    onConfirm(quoteId);
+  };
+
   const handleCancel = () => {
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Delete Quote</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Delete Quote
+          </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this quote? This action cannot be undone.
+            Are you sure you want to delete quote <strong>{quoteNumber}</strong>? This action cannot
+            be undone.
           </DialogDescription>
         </DialogHeader>
+
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Go Back
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+            Cancel
           </Button>
-          <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              'Delete'
-            )}
+          <Button type="button" variant="destructive" onClick={handleConfirm} disabled={isPending}>
+            {isPending ? 'Deleting...' : 'Delete Quote'}
           </Button>
         </DialogFooter>
       </DialogContent>

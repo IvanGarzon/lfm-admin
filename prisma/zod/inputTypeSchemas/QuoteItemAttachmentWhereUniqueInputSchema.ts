@@ -9,21 +9,11 @@ import { DateTimeFilterSchema } from './DateTimeFilterSchema';
 import { QuoteItemScalarRelationFilterSchema } from './QuoteItemScalarRelationFilterSchema';
 import { QuoteItemWhereInputSchema } from './QuoteItemWhereInputSchema';
 
-export const QuoteItemAttachmentWhereUniqueInputSchema: z.ZodType<Prisma.QuoteItemAttachmentWhereUniqueInput> = z.union([
-  z.object({
-    id: z.cuid(),
-    s3Key: z.string(),
-  }),
-  z.object({
-    id: z.cuid(),
-  }),
-  z.object({
-    s3Key: z.string(),
-  }),
-])
+export const QuoteItemAttachmentWhereUniqueInputSchema: z.ZodType<Prisma.QuoteItemAttachmentWhereUniqueInput> = z.object({
+  id: z.cuid(),
+})
 .and(z.strictObject({
   id: z.cuid().optional(),
-  s3Key: z.string().optional(),
   AND: z.union([ z.lazy(() => QuoteItemAttachmentWhereInputSchema), z.lazy(() => QuoteItemAttachmentWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => QuoteItemAttachmentWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => QuoteItemAttachmentWhereInputSchema), z.lazy(() => QuoteItemAttachmentWhereInputSchema).array() ]).optional(),
@@ -31,6 +21,7 @@ export const QuoteItemAttachmentWhereUniqueInputSchema: z.ZodType<Prisma.QuoteIt
   fileName: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   fileSize: z.union([ z.lazy(() => IntFilterSchema), z.number().int() ]).optional(),
   mimeType: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
+  s3Key: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   s3Url: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   uploadedBy: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   uploadedAt: z.union([ z.lazy(() => DateTimeFilterSchema), z.coerce.date() ]).optional(),

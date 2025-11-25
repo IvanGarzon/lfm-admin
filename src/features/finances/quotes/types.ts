@@ -16,6 +16,8 @@ export type QuoteListItem = {
   validUntil: Date;
   itemCount: number;
   attachmentCount: number;
+  versionNumber: number;
+  parentQuoteId: string | null;
 };
 
 export type QuoteStatusHistoryItem = {
@@ -37,13 +39,11 @@ export type QuoteWithDetails = {
   discount: number;
   issuedDate: Date;
   validUntil: Date;
-  acceptedDate?: Date | null;
-  rejectedDate?: Date | null;
-  rejectReason?: string | null;
-  convertedDate?: Date | null;
   invoiceId?: string | null;
   notes?: string;
   terms?: string;
+  versionNumber: number;
+  parentQuoteId?: string | null;
   customer: {
     id: string;
     firstName: string;
@@ -126,13 +126,21 @@ export type QuotePagination = {
  */
 export type MarkQuoteAsAcceptedData = {
   id: string;
-  acceptedDate: Date;
 };
 
 export type MarkQuoteAsRejectedData = {
   id: string;
-  rejectedDate: Date;
   rejectReason: string;
+};
+
+export type MarkQuoteAsOnHoldData = {
+  id: string;
+  reason?: string;
+};
+
+export type MarkQuoteAsCancelledData = {
+  id: string;
+  reason?: string;
 };
 
 export type ConvertQuoteToInvoiceData = {
@@ -149,9 +157,11 @@ export type QuoteStatistics = {
   total: number;
   draft: number;
   sent: number;
+  onHold: number;
   accepted: number;
   rejected: number;
   expired: number;
+  cancelled: number;
   converted: number;
   totalQuotedValue: number;
   totalAcceptedValue: number;

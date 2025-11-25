@@ -10,6 +10,7 @@ import type {
   QuotePagination,
 } from '@/features/finances/quotes/types';
 import { getPaginationMetadata } from '@/lib/utils';
+import { validateQuoteStatusTransition } from '@/lib/quote-status-transitions';
 
 import { type CreateQuoteInput, type UpdateQuoteInput } from '@/schemas/quotes';
 
@@ -35,6 +36,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
+      // Only show latest versions (quotes that don't have any child versions)
+      versions: {
+        none: {
+          deletedAt: null,
+        },
+      },
     };
 
     if (status && status.length > 0) {
@@ -80,7 +87,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const countOperation = this.prisma.quote.count({ where: whereClause });
     const findManyOperation = this.prisma.quote.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        quoteNumber: true,
+        customerId: true,
+        status: true,
+        amount: true,
+        currency: true,
+        issuedDate: true,
+        validUntil: true,
+        versionNumber: true,
+        parentQuoteId: true,
         customer: {
           select: {
             id: true,
@@ -119,6 +136,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       validUntil: quote.validUntil,
       itemCount: quote._count.items,
       attachmentCount: quote._count.attachments,
+      versionNumber: quote.versionNumber,
+      parentQuoteId: quote.parentQuoteId,
     }));
 
     return {
@@ -143,13 +162,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         discount: true,
         issuedDate: true,
         validUntil: true,
-        acceptedDate: true,
-        rejectedDate: true,
-        rejectReason: true,
-        convertedDate: true,
         invoiceId: true,
         notes: true,
         terms: true,
+        versionNumber: true,
+        parentQuoteId: true,
         customer: {
           select: {
             id: true,
@@ -248,6 +265,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async getStatistics(dateFilter?: { startDate?: Date; endDate?: Date }): Promise<QuoteStatistics> {
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
+      // Only count latest versions (quotes that don't have any child versions)
+      versions: {
+        none: {
+          deletedAt: null,
+        },
+      },
     };
 
     // Add date filter if provided
@@ -262,11 +285,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }
     }
 
-    // Build the SQL query for average calculation
+    // Build the SQL query for average calculation (only include latest versions)
     let avgQuery = Prisma.sql`
       SELECT AVG(amount::numeric)::float as avg
       FROM quotes
       WHERE deleted_at IS NULL
+        AND id NOT IN (
+          SELECT DISTINCT parent_quote_id
+          FROM quotes
+          WHERE parent_quote_id IS NOT NULL
+            AND deleted_at IS NULL
+        )
     `;
 
     if (dateFilter?.startDate) {
@@ -333,9 +362,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       total: totalData._count,
       draft: 0,
       sent: 0,
+      onHold: 0,
       accepted: 0,
       rejected: 0,
       expired: 0,
+      cancelled: 0,
       converted: 0,
       totalQuotedValue: Number(totalQuotedData._sum.amount ?? 0),
       totalAcceptedValue: Number(acceptedData._sum.amount ?? 0),
@@ -353,6 +384,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         case QuoteStatusSchema.enum.SENT:
           stats.sent = item._count;
           break;
+        case QuoteStatusSchema.enum.ON_HOLD:
+          stats.onHold = item._count;
+          break;
         case QuoteStatusSchema.enum.ACCEPTED:
           stats.accepted = item._count;
           break;
@@ -361,6 +395,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           break;
         case QuoteStatusSchema.enum.EXPIRED:
           stats.expired = item._count;
+          break;
+        case QuoteStatusSchema.enum.CANCELLED:
+          stats.cancelled = item._count;
           break;
         case QuoteStatusSchema.enum.CONVERTED:
           stats.converted = item._count;
@@ -453,6 +490,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       const statusChanged = currentQuote.status !== data.status;
       const previousStatus = currentQuote.status;
+
+      // Validate status transition if status is changing
+      if (statusChanged) {
+        validateQuoteStatusTransition(previousStatus, data.status);
+      }
 
       // Separate existing items from new items
       const existingItems = data.items.filter((item) => item.id);
@@ -578,11 +620,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   /**
    * Mark quote as accepted
    */
-  async markAsAccepted(
-    id: string,
-    acceptedDate: Date,
-    changedBy?: string,
-  ): Promise<QuoteWithDetails | null> {
+  async markAsAccepted(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -594,6 +632,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
+    const changedAt = new Date();
+
+    // Validate status transition
+    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.ACCEPTED);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -602,8 +644,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatusSchema.enum.ACCEPTED,
-          acceptedDate,
-          updatedAt: new Date(),
+          updatedAt: changedAt,
         },
       });
 
@@ -613,9 +654,115 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatusSchema.enum.ACCEPTED,
           previousStatus,
-          changedAt: acceptedDate,
+          changedAt,
           changedBy,
           notes: 'Quote accepted by customer',
+        },
+      });
+
+      return updatedQuote;
+    });
+
+    if (!updated) {
+      return null;
+    }
+
+    return this.findByIdWithDetails(updated.id);
+  }
+
+  /**
+   * Mark quote as on hold
+   */
+  async markAsOnHold(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+    // Get current status before update
+    const quote = await this.prisma.quote.findUnique({
+      where: { id, deletedAt: null },
+      select: { status: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const previousStatus = quote.status;
+    const changedAt = new Date();
+
+    // Validate status transition
+    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.ON_HOLD);
+
+    // Update quote and create status history in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update quote status
+      const updatedQuote = await tx.quote.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: QuoteStatusSchema.enum.ON_HOLD,
+          updatedAt: changedAt,
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: id,
+          status: QuoteStatusSchema.enum.ON_HOLD,
+          previousStatus,
+          changedAt,
+          changedBy,
+          notes: reason || 'Quote put on hold by customer',
+        },
+      });
+
+      return updatedQuote;
+    });
+
+    if (!updated) {
+      return null;
+    }
+
+    return this.findByIdWithDetails(updated.id);
+  }
+
+  /**
+   * Mark quote as cancelled
+   */
+  async markAsCancelled(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+    // Get current status before update
+    const quote = await this.prisma.quote.findUnique({
+      where: { id, deletedAt: null },
+      select: { status: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const previousStatus = quote.status;
+    const changedAt = new Date();
+
+    // Validate status transition
+    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.CANCELLED);
+
+    // Update quote and create status history in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update quote status
+      const updatedQuote = await tx.quote.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: QuoteStatusSchema.enum.CANCELLED,
+          updatedAt: changedAt,
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: id,
+          status: QuoteStatusSchema.enum.CANCELLED,
+          previousStatus,
+          changedAt,
+          changedBy,
+          notes: reason || 'Quote cancelled',
         },
       });
 
@@ -634,7 +781,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async markAsRejected(
     id: string,
-    rejectedDate: Date,
     rejectReason: string,
     changedBy?: string,
   ): Promise<QuoteWithDetails | null> {
@@ -649,6 +795,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
+    const changedAt = new Date();
+
+    // Validate status transition
+    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.REJECTED);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -657,9 +807,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatusSchema.enum.REJECTED,
-          rejectedDate,
-          rejectReason,
-          updatedAt: new Date(),
+          updatedAt: changedAt,
         },
       });
 
@@ -669,7 +817,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatusSchema.enum.REJECTED,
           previousStatus,
-          changedAt: rejectedDate,
+          changedAt,
           changedBy,
           notes: `Quote rejected by customer${rejectReason ? `: ${rejectReason}` : ''}`,
         },
@@ -697,6 +845,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     const previousStatus = quote.status;
     const sentDate = new Date();
+
+    // Validate status transition
+    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.SENT);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -798,6 +949,45 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     });
 
     return result !== null;
+  }
+
+  /**
+   * Get all versions of a quote
+   */
+  async getQuoteVersions(quoteId: string) {
+    // First, get the quote to determine if it has a parent or is the root
+    const quote = await this.prisma.quote.findUnique({
+      where: { id: quoteId, deletedAt: null },
+      select: { id: true, parentQuoteId: true },
+    });
+
+    if (!quote) {
+      return [];
+    }
+
+    // Determine the root quote ID (either the parent or the quote itself)
+    const rootQuoteId = quote.parentQuoteId || quoteId;
+
+    // Fetch all versions (root + all children)
+    const versions = await this.prisma.quote.findMany({
+      where: {
+        OR: [{ id: rootQuoteId }, { parentQuoteId: rootQuoteId }],
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        quoteNumber: true,
+        versionNumber: true,
+        status: true,
+        amount: true,
+        issuedDate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { versionNumber: 'asc' },
+    });
+
+    return versions;
   }
 
   /**
@@ -970,6 +1160,143 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async countQuoteItemAttachments(itemId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
       where: { quoteItemId: itemId },
+    });
+  }
+
+  /**
+   * Create a new version of an existing quote
+   * Copies all quote data and items, increments version number, and links to parent
+   */
+  async createVersion(
+    parentQuoteId: string,
+    createdBy?: string,
+  ): Promise<{ id: string; quoteNumber: string; versionNumber: number }> {
+    return this.prisma.$transaction(async (tx) => {
+      // Get the parent quote with all details including item attachments
+      const parentQuote = await tx.quote.findUnique({
+        where: { id: parentQuoteId, deletedAt: null },
+        include: {
+          items: {
+            include: {
+              attachments: true,
+            },
+            orderBy: { order: 'asc' },
+          },
+        },
+      });
+
+      if (!parentQuote) {
+        throw new Error('Parent quote not found');
+      }
+
+      // Calculate the next version number
+      // Get the highest version number in the version chain
+      const highestVersionQuote = await tx.quote.findFirst({
+        where: {
+          OR: [
+            { id: parentQuoteId },
+            { parentQuoteId: parentQuoteId },
+            {
+              parentQuoteId: parentQuote.parentQuoteId
+                ? parentQuote.parentQuoteId
+                : undefined,
+            },
+          ],
+          deletedAt: null,
+        },
+        orderBy: { versionNumber: 'desc' },
+        select: { versionNumber: true },
+      });
+
+      const nextVersionNumber = (highestVersionQuote?.versionNumber || 1) + 1;
+
+      // Generate a new quote number for the version
+      const newQuoteNumber = await this.generateQuoteNumber();
+
+      const createdDate = new Date();
+
+      // Create the new version
+      const newVersion = await tx.quote.create({
+        data: {
+          quoteNumber: newQuoteNumber,
+          customerId: parentQuote.customerId,
+          status: QuoteStatusSchema.enum.DRAFT, // New versions start as DRAFT
+          amount: parentQuote.amount,
+          currency: parentQuote.currency,
+          gst: parentQuote.gst,
+          discount: parentQuote.discount,
+          issuedDate: createdDate,
+          validUntil: parentQuote.validUntil,
+          notes: parentQuote.notes,
+          terms: parentQuote.terms,
+          versionNumber: nextVersionNumber,
+          parentQuoteId: parentQuote.parentQuoteId || parentQuoteId, // Link to root parent
+          items: {
+            create: parentQuote.items.map((item, index) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              productId: item.productId,
+              notes: item.notes,
+              colors: item.colors,
+              order: index,
+              attachments: {
+                create: item.attachments.map((attachment) => ({
+                  fileName: attachment.fileName,
+                  fileSize: attachment.fileSize,
+                  mimeType: attachment.mimeType,
+                  s3Key: attachment.s3Key,
+                  s3Url: attachment.s3Url,
+                  uploadedBy: createdBy,
+                  uploadedAt: createdDate,
+                })),
+              },
+            })),
+          },
+        },
+        select: {
+          id: true,
+          quoteNumber: true,
+          versionNumber: true,
+        },
+      });
+
+      // Create initial status history entry for the new version
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: newVersion.id,
+          status: QuoteStatusSchema.enum.DRAFT,
+          previousStatus: null,
+          changedAt: createdDate,
+          changedBy: createdBy,
+          notes: `New version created from ${parentQuote.quoteNumber}`,
+        },
+      });
+
+      // Mark parent quote as CANCELLED since it's been superseded by a new version
+      const previousParentStatus = parentQuote.status;
+      await tx.quote.update({
+        where: { id: parentQuoteId },
+        data: {
+          status: QuoteStatusSchema.enum.CANCELLED,
+          updatedAt: createdDate,
+        },
+      });
+
+      // Create status history entry for parent quote cancellation
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: parentQuoteId,
+          status: QuoteStatusSchema.enum.CANCELLED,
+          previousStatus: previousParentStatus,
+          changedAt: createdDate,
+          changedBy: createdBy,
+          notes: `Quote cancelled due to new version ${newQuoteNumber} being created`,
+        },
+      });
+
+      return newVersion;
     });
   }
 }
