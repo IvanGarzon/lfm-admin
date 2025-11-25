@@ -42,6 +42,7 @@ import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import { QuoteItemDetails } from '@/features/finances/quotes/components/quote-item-details';
+import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
 import {
   useDeleteQuoteItemAttachment,
   useGetItemAttachmentDownloadUrl,
@@ -565,7 +566,12 @@ export function QuoteForm({
               )}
             />
           </FieldGroup>
-        </Box>       
+
+          {/* Status History - Only show for existing quotes */}
+          {quote?.statusHistory && quote.statusHistory.length > 0 && (
+            <QuoteStatusHistory history={quote.statusHistory} />
+          )}
+        </Box>
       </form>
     </Form>
   );

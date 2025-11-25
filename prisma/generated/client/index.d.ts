@@ -266,6 +266,11 @@ export type QuoteAttachment = $Result.DefaultSelection<Prisma.$QuoteAttachmentPa
  * 
  */
 export type QuoteItemAttachment = $Result.DefaultSelection<Prisma.$QuoteItemAttachmentPayload>
+/**
+ * Model QuoteStatusHistory
+ * 
+ */
+export type QuoteStatusHistory = $Result.DefaultSelection<Prisma.$QuoteStatusHistoryPayload>
 
 /**
  * Enums
@@ -641,6 +646,16 @@ export class PrismaClient<
     * ```
     */
   get quoteItemAttachment(): Prisma.QuoteItemAttachmentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.quoteStatusHistory`: Exposes CRUD operations for the **QuoteStatusHistory** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more QuoteStatusHistories
+    * const quoteStatusHistories = await prisma.quoteStatusHistory.findMany()
+    * ```
+    */
+  get quoteStatusHistory(): Prisma.QuoteStatusHistoryDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1095,7 +1110,8 @@ export namespace Prisma {
     Quote: 'Quote',
     QuoteItem: 'QuoteItem',
     QuoteAttachment: 'QuoteAttachment',
-    QuoteItemAttachment: 'QuoteItemAttachment'
+    QuoteItemAttachment: 'QuoteItemAttachment',
+    QuoteStatusHistory: 'QuoteStatusHistory'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1114,7 +1130,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "account" | "user" | "product" | "customer" | "organization" | "employee" | "audit" | "session" | "invoice" | "invoiceItem" | "quote" | "quoteItem" | "quoteAttachment" | "quoteItemAttachment"
+      modelProps: "account" | "user" | "product" | "customer" | "organization" | "employee" | "audit" | "session" | "invoice" | "invoiceItem" | "quote" | "quoteItem" | "quoteAttachment" | "quoteItemAttachment" | "quoteStatusHistory"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2154,6 +2170,80 @@ export namespace Prisma {
           }
         }
       }
+      QuoteStatusHistory: {
+        payload: Prisma.$QuoteStatusHistoryPayload<ExtArgs>
+        fields: Prisma.QuoteStatusHistoryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.QuoteStatusHistoryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.QuoteStatusHistoryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          findFirst: {
+            args: Prisma.QuoteStatusHistoryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.QuoteStatusHistoryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          findMany: {
+            args: Prisma.QuoteStatusHistoryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>[]
+          }
+          create: {
+            args: Prisma.QuoteStatusHistoryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          createMany: {
+            args: Prisma.QuoteStatusHistoryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.QuoteStatusHistoryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>[]
+          }
+          delete: {
+            args: Prisma.QuoteStatusHistoryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          update: {
+            args: Prisma.QuoteStatusHistoryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          deleteMany: {
+            args: Prisma.QuoteStatusHistoryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.QuoteStatusHistoryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.QuoteStatusHistoryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>[]
+          }
+          upsert: {
+            args: Prisma.QuoteStatusHistoryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$QuoteStatusHistoryPayload>
+          }
+          aggregate: {
+            args: Prisma.QuoteStatusHistoryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateQuoteStatusHistory>
+          }
+          groupBy: {
+            args: Prisma.QuoteStatusHistoryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<QuoteStatusHistoryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.QuoteStatusHistoryCountArgs<ExtArgs>
+            result: $Utils.Optional<QuoteStatusHistoryCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2264,6 +2354,7 @@ export namespace Prisma {
     quoteItem?: QuoteItemOmit
     quoteAttachment?: QuoteAttachmentOmit
     quoteItemAttachment?: QuoteItemAttachmentOmit
+    quoteStatusHistory?: QuoteStatusHistoryOmit
   }
 
   /* Types for Logging */
@@ -2526,13 +2617,17 @@ export namespace Prisma {
    */
 
   export type QuoteCountOutputType = {
+    versions: number
     items: number
     attachments: number
+    statusHistory: number
   }
 
   export type QuoteCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    versions?: boolean | QuoteCountOutputTypeCountVersionsArgs
     items?: boolean | QuoteCountOutputTypeCountItemsArgs
     attachments?: boolean | QuoteCountOutputTypeCountAttachmentsArgs
+    statusHistory?: boolean | QuoteCountOutputTypeCountStatusHistoryArgs
   }
 
   // Custom InputTypes
@@ -2549,6 +2644,13 @@ export namespace Prisma {
   /**
    * QuoteCountOutputType without action
    */
+  export type QuoteCountOutputTypeCountVersionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuoteWhereInput
+  }
+
+  /**
+   * QuoteCountOutputType without action
+   */
   export type QuoteCountOutputTypeCountItemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: QuoteItemWhereInput
   }
@@ -2558,6 +2660,13 @@ export namespace Prisma {
    */
   export type QuoteCountOutputTypeCountAttachmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: QuoteAttachmentWhereInput
+  }
+
+  /**
+   * QuoteCountOutputType without action
+   */
+  export type QuoteCountOutputTypeCountStatusHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuoteStatusHistoryWhereInput
   }
 
 
@@ -14414,12 +14523,14 @@ export namespace Prisma {
   }
 
   export type QuoteAvgAggregateOutputType = {
+    versionNumber: number | null
     amount: Decimal | null
     gst: Decimal | null
     discount: Decimal | null
   }
 
   export type QuoteSumAggregateOutputType = {
+    versionNumber: number | null
     amount: Decimal | null
     gst: Decimal | null
     discount: Decimal | null
@@ -14430,6 +14541,8 @@ export namespace Prisma {
     quoteNumber: string | null
     customerId: string | null
     status: $Enums.QuoteStatus | null
+    versionNumber: number | null
+    parentQuoteId: string | null
     amount: Decimal | null
     currency: string | null
     gst: Decimal | null
@@ -14453,6 +14566,8 @@ export namespace Prisma {
     quoteNumber: string | null
     customerId: string | null
     status: $Enums.QuoteStatus | null
+    versionNumber: number | null
+    parentQuoteId: string | null
     amount: Decimal | null
     currency: string | null
     gst: Decimal | null
@@ -14476,6 +14591,8 @@ export namespace Prisma {
     quoteNumber: number
     customerId: number
     status: number
+    versionNumber: number
+    parentQuoteId: number
     amount: number
     currency: number
     gst: number
@@ -14497,12 +14614,14 @@ export namespace Prisma {
 
 
   export type QuoteAvgAggregateInputType = {
+    versionNumber?: true
     amount?: true
     gst?: true
     discount?: true
   }
 
   export type QuoteSumAggregateInputType = {
+    versionNumber?: true
     amount?: true
     gst?: true
     discount?: true
@@ -14513,6 +14632,8 @@ export namespace Prisma {
     quoteNumber?: true
     customerId?: true
     status?: true
+    versionNumber?: true
+    parentQuoteId?: true
     amount?: true
     currency?: true
     gst?: true
@@ -14536,6 +14657,8 @@ export namespace Prisma {
     quoteNumber?: true
     customerId?: true
     status?: true
+    versionNumber?: true
+    parentQuoteId?: true
     amount?: true
     currency?: true
     gst?: true
@@ -14559,6 +14682,8 @@ export namespace Prisma {
     quoteNumber?: true
     customerId?: true
     status?: true
+    versionNumber?: true
+    parentQuoteId?: true
     amount?: true
     currency?: true
     gst?: true
@@ -14669,6 +14794,8 @@ export namespace Prisma {
     quoteNumber: string
     customerId: string
     status: $Enums.QuoteStatus
+    versionNumber: number
+    parentQuoteId: string | null
     amount: Decimal
     currency: string
     gst: Decimal
@@ -14711,6 +14838,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     customerId?: boolean
     status?: boolean
+    versionNumber?: boolean
+    parentQuoteId?: boolean
     amount?: boolean
     currency?: boolean
     gst?: boolean
@@ -14728,8 +14857,11 @@ export namespace Prisma {
     updatedAt?: boolean
     deletedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
+    versions?: boolean | Quote$versionsArgs<ExtArgs>
     items?: boolean | Quote$itemsArgs<ExtArgs>
     attachments?: boolean | Quote$attachmentsArgs<ExtArgs>
+    statusHistory?: boolean | Quote$statusHistoryArgs<ExtArgs>
     _count?: boolean | QuoteCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["quote"]>
 
@@ -14738,6 +14870,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     customerId?: boolean
     status?: boolean
+    versionNumber?: boolean
+    parentQuoteId?: boolean
     amount?: boolean
     currency?: boolean
     gst?: boolean
@@ -14755,6 +14889,7 @@ export namespace Prisma {
     updatedAt?: boolean
     deletedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
   }, ExtArgs["result"]["quote"]>
 
   export type QuoteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -14762,6 +14897,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     customerId?: boolean
     status?: boolean
+    versionNumber?: boolean
+    parentQuoteId?: boolean
     amount?: boolean
     currency?: boolean
     gst?: boolean
@@ -14779,6 +14916,7 @@ export namespace Prisma {
     updatedAt?: boolean
     deletedAt?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
   }, ExtArgs["result"]["quote"]>
 
   export type QuoteSelectScalar = {
@@ -14786,6 +14924,8 @@ export namespace Prisma {
     quoteNumber?: boolean
     customerId?: boolean
     status?: boolean
+    versionNumber?: boolean
+    parentQuoteId?: boolean
     amount?: boolean
     currency?: boolean
     gst?: boolean
@@ -14804,32 +14944,42 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type QuoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteNumber" | "customerId" | "status" | "amount" | "currency" | "gst" | "discount" | "issuedDate" | "validUntil" | "acceptedDate" | "rejectedDate" | "rejectReason" | "convertedDate" | "invoiceId" | "notes" | "terms" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["quote"]>
+  export type QuoteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteNumber" | "customerId" | "status" | "versionNumber" | "parentQuoteId" | "amount" | "currency" | "gst" | "discount" | "issuedDate" | "validUntil" | "acceptedDate" | "rejectedDate" | "rejectReason" | "convertedDate" | "invoiceId" | "notes" | "terms" | "createdAt" | "updatedAt" | "deletedAt", ExtArgs["result"]["quote"]>
   export type QuoteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
+    versions?: boolean | Quote$versionsArgs<ExtArgs>
     items?: boolean | Quote$itemsArgs<ExtArgs>
     attachments?: boolean | Quote$attachmentsArgs<ExtArgs>
+    statusHistory?: boolean | Quote$statusHistoryArgs<ExtArgs>
     _count?: boolean | QuoteCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type QuoteIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
   }
   export type QuoteIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
+    parentQuote?: boolean | Quote$parentQuoteArgs<ExtArgs>
   }
 
   export type $QuotePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Quote"
     objects: {
       customer: Prisma.$CustomerPayload<ExtArgs>
+      parentQuote: Prisma.$QuotePayload<ExtArgs> | null
+      versions: Prisma.$QuotePayload<ExtArgs>[]
       items: Prisma.$QuoteItemPayload<ExtArgs>[]
       attachments: Prisma.$QuoteAttachmentPayload<ExtArgs>[]
+      statusHistory: Prisma.$QuoteStatusHistoryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       quoteNumber: string
       customerId: string
       status: $Enums.QuoteStatus
+      versionNumber: number
+      parentQuoteId: string | null
       amount: Prisma.Decimal
       currency: string
       gst: Prisma.Decimal
@@ -15241,8 +15391,11 @@ export namespace Prisma {
   export interface Prisma__QuoteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    parentQuote<T extends Quote$parentQuoteArgs<ExtArgs> = {}>(args?: Subset<T, Quote$parentQuoteArgs<ExtArgs>>): Prisma__QuoteClient<$Result.GetResult<Prisma.$QuotePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    versions<T extends Quote$versionsArgs<ExtArgs> = {}>(args?: Subset<T, Quote$versionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     items<T extends Quote$itemsArgs<ExtArgs> = {}>(args?: Subset<T, Quote$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     attachments<T extends Quote$attachmentsArgs<ExtArgs> = {}>(args?: Subset<T, Quote$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteAttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    statusHistory<T extends Quote$statusHistoryArgs<ExtArgs> = {}>(args?: Subset<T, Quote$statusHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -15276,6 +15429,8 @@ export namespace Prisma {
     readonly quoteNumber: FieldRef<"Quote", 'String'>
     readonly customerId: FieldRef<"Quote", 'String'>
     readonly status: FieldRef<"Quote", 'QuoteStatus'>
+    readonly versionNumber: FieldRef<"Quote", 'Int'>
+    readonly parentQuoteId: FieldRef<"Quote", 'String'>
     readonly amount: FieldRef<"Quote", 'Decimal'>
     readonly currency: FieldRef<"Quote", 'String'>
     readonly gst: FieldRef<"Quote", 'Decimal'>
@@ -15688,6 +15843,49 @@ export namespace Prisma {
   }
 
   /**
+   * Quote.parentQuote
+   */
+  export type Quote$parentQuoteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quote
+     */
+    select?: QuoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quote
+     */
+    omit?: QuoteOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteInclude<ExtArgs> | null
+    where?: QuoteWhereInput
+  }
+
+  /**
+   * Quote.versions
+   */
+  export type Quote$versionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Quote
+     */
+    select?: QuoteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Quote
+     */
+    omit?: QuoteOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteInclude<ExtArgs> | null
+    where?: QuoteWhereInput
+    orderBy?: QuoteOrderByWithRelationInput | QuoteOrderByWithRelationInput[]
+    cursor?: QuoteWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: QuoteScalarFieldEnum | QuoteScalarFieldEnum[]
+  }
+
+  /**
    * Quote.items
    */
   export type Quote$itemsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -15733,6 +15931,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: QuoteAttachmentScalarFieldEnum | QuoteAttachmentScalarFieldEnum[]
+  }
+
+  /**
+   * Quote.statusHistory
+   */
+  export type Quote$statusHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    where?: QuoteStatusHistoryWhereInput
+    orderBy?: QuoteStatusHistoryOrderByWithRelationInput | QuoteStatusHistoryOrderByWithRelationInput[]
+    cursor?: QuoteStatusHistoryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: QuoteStatusHistoryScalarFieldEnum | QuoteStatusHistoryScalarFieldEnum[]
   }
 
   /**
@@ -19291,6 +19513,1090 @@ export namespace Prisma {
 
 
   /**
+   * Model QuoteStatusHistory
+   */
+
+  export type AggregateQuoteStatusHistory = {
+    _count: QuoteStatusHistoryCountAggregateOutputType | null
+    _min: QuoteStatusHistoryMinAggregateOutputType | null
+    _max: QuoteStatusHistoryMaxAggregateOutputType | null
+  }
+
+  export type QuoteStatusHistoryMinAggregateOutputType = {
+    id: string | null
+    quoteId: string | null
+    status: $Enums.QuoteStatus | null
+    previousStatus: $Enums.QuoteStatus | null
+    changedAt: Date | null
+    changedBy: string | null
+    notes: string | null
+  }
+
+  export type QuoteStatusHistoryMaxAggregateOutputType = {
+    id: string | null
+    quoteId: string | null
+    status: $Enums.QuoteStatus | null
+    previousStatus: $Enums.QuoteStatus | null
+    changedAt: Date | null
+    changedBy: string | null
+    notes: string | null
+  }
+
+  export type QuoteStatusHistoryCountAggregateOutputType = {
+    id: number
+    quoteId: number
+    status: number
+    previousStatus: number
+    changedAt: number
+    changedBy: number
+    notes: number
+    _all: number
+  }
+
+
+  export type QuoteStatusHistoryMinAggregateInputType = {
+    id?: true
+    quoteId?: true
+    status?: true
+    previousStatus?: true
+    changedAt?: true
+    changedBy?: true
+    notes?: true
+  }
+
+  export type QuoteStatusHistoryMaxAggregateInputType = {
+    id?: true
+    quoteId?: true
+    status?: true
+    previousStatus?: true
+    changedAt?: true
+    changedBy?: true
+    notes?: true
+  }
+
+  export type QuoteStatusHistoryCountAggregateInputType = {
+    id?: true
+    quoteId?: true
+    status?: true
+    previousStatus?: true
+    changedAt?: true
+    changedBy?: true
+    notes?: true
+    _all?: true
+  }
+
+  export type QuoteStatusHistoryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuoteStatusHistory to aggregate.
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuoteStatusHistories to fetch.
+     */
+    orderBy?: QuoteStatusHistoryOrderByWithRelationInput | QuoteStatusHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: QuoteStatusHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuoteStatusHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuoteStatusHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned QuoteStatusHistories
+    **/
+    _count?: true | QuoteStatusHistoryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: QuoteStatusHistoryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: QuoteStatusHistoryMaxAggregateInputType
+  }
+
+  export type GetQuoteStatusHistoryAggregateType<T extends QuoteStatusHistoryAggregateArgs> = {
+        [P in keyof T & keyof AggregateQuoteStatusHistory]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateQuoteStatusHistory[P]>
+      : GetScalarType<T[P], AggregateQuoteStatusHistory[P]>
+  }
+
+
+
+
+  export type QuoteStatusHistoryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: QuoteStatusHistoryWhereInput
+    orderBy?: QuoteStatusHistoryOrderByWithAggregationInput | QuoteStatusHistoryOrderByWithAggregationInput[]
+    by: QuoteStatusHistoryScalarFieldEnum[] | QuoteStatusHistoryScalarFieldEnum
+    having?: QuoteStatusHistoryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: QuoteStatusHistoryCountAggregateInputType | true
+    _min?: QuoteStatusHistoryMinAggregateInputType
+    _max?: QuoteStatusHistoryMaxAggregateInputType
+  }
+
+  export type QuoteStatusHistoryGroupByOutputType = {
+    id: string
+    quoteId: string
+    status: $Enums.QuoteStatus
+    previousStatus: $Enums.QuoteStatus | null
+    changedAt: Date
+    changedBy: string | null
+    notes: string | null
+    _count: QuoteStatusHistoryCountAggregateOutputType | null
+    _min: QuoteStatusHistoryMinAggregateOutputType | null
+    _max: QuoteStatusHistoryMaxAggregateOutputType | null
+  }
+
+  type GetQuoteStatusHistoryGroupByPayload<T extends QuoteStatusHistoryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<QuoteStatusHistoryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof QuoteStatusHistoryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], QuoteStatusHistoryGroupByOutputType[P]>
+            : GetScalarType<T[P], QuoteStatusHistoryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type QuoteStatusHistorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    quoteId?: boolean
+    status?: boolean
+    previousStatus?: boolean
+    changedAt?: boolean
+    changedBy?: boolean
+    notes?: boolean
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quoteStatusHistory"]>
+
+  export type QuoteStatusHistorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    quoteId?: boolean
+    status?: boolean
+    previousStatus?: boolean
+    changedAt?: boolean
+    changedBy?: boolean
+    notes?: boolean
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quoteStatusHistory"]>
+
+  export type QuoteStatusHistorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    quoteId?: boolean
+    status?: boolean
+    previousStatus?: boolean
+    changedAt?: boolean
+    changedBy?: boolean
+    notes?: boolean
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["quoteStatusHistory"]>
+
+  export type QuoteStatusHistorySelectScalar = {
+    id?: boolean
+    quoteId?: boolean
+    status?: boolean
+    previousStatus?: boolean
+    changedAt?: boolean
+    changedBy?: boolean
+    notes?: boolean
+  }
+
+  export type QuoteStatusHistoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "quoteId" | "status" | "previousStatus" | "changedAt" | "changedBy" | "notes", ExtArgs["result"]["quoteStatusHistory"]>
+  export type QuoteStatusHistoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }
+  export type QuoteStatusHistoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }
+  export type QuoteStatusHistoryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    quote?: boolean | QuoteDefaultArgs<ExtArgs>
+  }
+
+  export type $QuoteStatusHistoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "QuoteStatusHistory"
+    objects: {
+      quote: Prisma.$QuotePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      quoteId: string
+      status: $Enums.QuoteStatus
+      previousStatus: $Enums.QuoteStatus | null
+      changedAt: Date
+      changedBy: string | null
+      notes: string | null
+    }, ExtArgs["result"]["quoteStatusHistory"]>
+    composites: {}
+  }
+
+  type QuoteStatusHistoryGetPayload<S extends boolean | null | undefined | QuoteStatusHistoryDefaultArgs> = $Result.GetResult<Prisma.$QuoteStatusHistoryPayload, S>
+
+  type QuoteStatusHistoryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<QuoteStatusHistoryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: QuoteStatusHistoryCountAggregateInputType | true
+    }
+
+  export interface QuoteStatusHistoryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['QuoteStatusHistory'], meta: { name: 'QuoteStatusHistory' } }
+    /**
+     * Find zero or one QuoteStatusHistory that matches the filter.
+     * @param {QuoteStatusHistoryFindUniqueArgs} args - Arguments to find a QuoteStatusHistory
+     * @example
+     * // Get one QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends QuoteStatusHistoryFindUniqueArgs>(args: SelectSubset<T, QuoteStatusHistoryFindUniqueArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one QuoteStatusHistory that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {QuoteStatusHistoryFindUniqueOrThrowArgs} args - Arguments to find a QuoteStatusHistory
+     * @example
+     * // Get one QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends QuoteStatusHistoryFindUniqueOrThrowArgs>(args: SelectSubset<T, QuoteStatusHistoryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first QuoteStatusHistory that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryFindFirstArgs} args - Arguments to find a QuoteStatusHistory
+     * @example
+     * // Get one QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends QuoteStatusHistoryFindFirstArgs>(args?: SelectSubset<T, QuoteStatusHistoryFindFirstArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first QuoteStatusHistory that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryFindFirstOrThrowArgs} args - Arguments to find a QuoteStatusHistory
+     * @example
+     * // Get one QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends QuoteStatusHistoryFindFirstOrThrowArgs>(args?: SelectSubset<T, QuoteStatusHistoryFindFirstOrThrowArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more QuoteStatusHistories that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all QuoteStatusHistories
+     * const quoteStatusHistories = await prisma.quoteStatusHistory.findMany()
+     * 
+     * // Get first 10 QuoteStatusHistories
+     * const quoteStatusHistories = await prisma.quoteStatusHistory.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const quoteStatusHistoryWithIdOnly = await prisma.quoteStatusHistory.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends QuoteStatusHistoryFindManyArgs>(args?: SelectSubset<T, QuoteStatusHistoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a QuoteStatusHistory.
+     * @param {QuoteStatusHistoryCreateArgs} args - Arguments to create a QuoteStatusHistory.
+     * @example
+     * // Create one QuoteStatusHistory
+     * const QuoteStatusHistory = await prisma.quoteStatusHistory.create({
+     *   data: {
+     *     // ... data to create a QuoteStatusHistory
+     *   }
+     * })
+     * 
+     */
+    create<T extends QuoteStatusHistoryCreateArgs>(args: SelectSubset<T, QuoteStatusHistoryCreateArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many QuoteStatusHistories.
+     * @param {QuoteStatusHistoryCreateManyArgs} args - Arguments to create many QuoteStatusHistories.
+     * @example
+     * // Create many QuoteStatusHistories
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends QuoteStatusHistoryCreateManyArgs>(args?: SelectSubset<T, QuoteStatusHistoryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many QuoteStatusHistories and returns the data saved in the database.
+     * @param {QuoteStatusHistoryCreateManyAndReturnArgs} args - Arguments to create many QuoteStatusHistories.
+     * @example
+     * // Create many QuoteStatusHistories
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many QuoteStatusHistories and only return the `id`
+     * const quoteStatusHistoryWithIdOnly = await prisma.quoteStatusHistory.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends QuoteStatusHistoryCreateManyAndReturnArgs>(args?: SelectSubset<T, QuoteStatusHistoryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a QuoteStatusHistory.
+     * @param {QuoteStatusHistoryDeleteArgs} args - Arguments to delete one QuoteStatusHistory.
+     * @example
+     * // Delete one QuoteStatusHistory
+     * const QuoteStatusHistory = await prisma.quoteStatusHistory.delete({
+     *   where: {
+     *     // ... filter to delete one QuoteStatusHistory
+     *   }
+     * })
+     * 
+     */
+    delete<T extends QuoteStatusHistoryDeleteArgs>(args: SelectSubset<T, QuoteStatusHistoryDeleteArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one QuoteStatusHistory.
+     * @param {QuoteStatusHistoryUpdateArgs} args - Arguments to update one QuoteStatusHistory.
+     * @example
+     * // Update one QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends QuoteStatusHistoryUpdateArgs>(args: SelectSubset<T, QuoteStatusHistoryUpdateArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more QuoteStatusHistories.
+     * @param {QuoteStatusHistoryDeleteManyArgs} args - Arguments to filter QuoteStatusHistories to delete.
+     * @example
+     * // Delete a few QuoteStatusHistories
+     * const { count } = await prisma.quoteStatusHistory.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends QuoteStatusHistoryDeleteManyArgs>(args?: SelectSubset<T, QuoteStatusHistoryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QuoteStatusHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many QuoteStatusHistories
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends QuoteStatusHistoryUpdateManyArgs>(args: SelectSubset<T, QuoteStatusHistoryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more QuoteStatusHistories and returns the data updated in the database.
+     * @param {QuoteStatusHistoryUpdateManyAndReturnArgs} args - Arguments to update many QuoteStatusHistories.
+     * @example
+     * // Update many QuoteStatusHistories
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more QuoteStatusHistories and only return the `id`
+     * const quoteStatusHistoryWithIdOnly = await prisma.quoteStatusHistory.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends QuoteStatusHistoryUpdateManyAndReturnArgs>(args: SelectSubset<T, QuoteStatusHistoryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one QuoteStatusHistory.
+     * @param {QuoteStatusHistoryUpsertArgs} args - Arguments to update or create a QuoteStatusHistory.
+     * @example
+     * // Update or create a QuoteStatusHistory
+     * const quoteStatusHistory = await prisma.quoteStatusHistory.upsert({
+     *   create: {
+     *     // ... data to create a QuoteStatusHistory
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the QuoteStatusHistory we want to update
+     *   }
+     * })
+     */
+    upsert<T extends QuoteStatusHistoryUpsertArgs>(args: SelectSubset<T, QuoteStatusHistoryUpsertArgs<ExtArgs>>): Prisma__QuoteStatusHistoryClient<$Result.GetResult<Prisma.$QuoteStatusHistoryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of QuoteStatusHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryCountArgs} args - Arguments to filter QuoteStatusHistories to count.
+     * @example
+     * // Count the number of QuoteStatusHistories
+     * const count = await prisma.quoteStatusHistory.count({
+     *   where: {
+     *     // ... the filter for the QuoteStatusHistories we want to count
+     *   }
+     * })
+    **/
+    count<T extends QuoteStatusHistoryCountArgs>(
+      args?: Subset<T, QuoteStatusHistoryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], QuoteStatusHistoryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a QuoteStatusHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends QuoteStatusHistoryAggregateArgs>(args: Subset<T, QuoteStatusHistoryAggregateArgs>): Prisma.PrismaPromise<GetQuoteStatusHistoryAggregateType<T>>
+
+    /**
+     * Group by QuoteStatusHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {QuoteStatusHistoryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends QuoteStatusHistoryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: QuoteStatusHistoryGroupByArgs['orderBy'] }
+        : { orderBy?: QuoteStatusHistoryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, QuoteStatusHistoryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetQuoteStatusHistoryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the QuoteStatusHistory model
+   */
+  readonly fields: QuoteStatusHistoryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for QuoteStatusHistory.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__QuoteStatusHistoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    quote<T extends QuoteDefaultArgs<ExtArgs> = {}>(args?: Subset<T, QuoteDefaultArgs<ExtArgs>>): Prisma__QuoteClient<$Result.GetResult<Prisma.$QuotePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the QuoteStatusHistory model
+   */
+  interface QuoteStatusHistoryFieldRefs {
+    readonly id: FieldRef<"QuoteStatusHistory", 'String'>
+    readonly quoteId: FieldRef<"QuoteStatusHistory", 'String'>
+    readonly status: FieldRef<"QuoteStatusHistory", 'QuoteStatus'>
+    readonly previousStatus: FieldRef<"QuoteStatusHistory", 'QuoteStatus'>
+    readonly changedAt: FieldRef<"QuoteStatusHistory", 'DateTime'>
+    readonly changedBy: FieldRef<"QuoteStatusHistory", 'String'>
+    readonly notes: FieldRef<"QuoteStatusHistory", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * QuoteStatusHistory findUnique
+   */
+  export type QuoteStatusHistoryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which QuoteStatusHistory to fetch.
+     */
+    where: QuoteStatusHistoryWhereUniqueInput
+  }
+
+  /**
+   * QuoteStatusHistory findUniqueOrThrow
+   */
+  export type QuoteStatusHistoryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which QuoteStatusHistory to fetch.
+     */
+    where: QuoteStatusHistoryWhereUniqueInput
+  }
+
+  /**
+   * QuoteStatusHistory findFirst
+   */
+  export type QuoteStatusHistoryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which QuoteStatusHistory to fetch.
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuoteStatusHistories to fetch.
+     */
+    orderBy?: QuoteStatusHistoryOrderByWithRelationInput | QuoteStatusHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuoteStatusHistories.
+     */
+    cursor?: QuoteStatusHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuoteStatusHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuoteStatusHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuoteStatusHistories.
+     */
+    distinct?: QuoteStatusHistoryScalarFieldEnum | QuoteStatusHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * QuoteStatusHistory findFirstOrThrow
+   */
+  export type QuoteStatusHistoryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which QuoteStatusHistory to fetch.
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuoteStatusHistories to fetch.
+     */
+    orderBy?: QuoteStatusHistoryOrderByWithRelationInput | QuoteStatusHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for QuoteStatusHistories.
+     */
+    cursor?: QuoteStatusHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuoteStatusHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuoteStatusHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of QuoteStatusHistories.
+     */
+    distinct?: QuoteStatusHistoryScalarFieldEnum | QuoteStatusHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * QuoteStatusHistory findMany
+   */
+  export type QuoteStatusHistoryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which QuoteStatusHistories to fetch.
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of QuoteStatusHistories to fetch.
+     */
+    orderBy?: QuoteStatusHistoryOrderByWithRelationInput | QuoteStatusHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing QuoteStatusHistories.
+     */
+    cursor?: QuoteStatusHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` QuoteStatusHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` QuoteStatusHistories.
+     */
+    skip?: number
+    distinct?: QuoteStatusHistoryScalarFieldEnum | QuoteStatusHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * QuoteStatusHistory create
+   */
+  export type QuoteStatusHistoryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a QuoteStatusHistory.
+     */
+    data: XOR<QuoteStatusHistoryCreateInput, QuoteStatusHistoryUncheckedCreateInput>
+  }
+
+  /**
+   * QuoteStatusHistory createMany
+   */
+  export type QuoteStatusHistoryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many QuoteStatusHistories.
+     */
+    data: QuoteStatusHistoryCreateManyInput | QuoteStatusHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * QuoteStatusHistory createManyAndReturn
+   */
+  export type QuoteStatusHistoryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * The data used to create many QuoteStatusHistories.
+     */
+    data: QuoteStatusHistoryCreateManyInput | QuoteStatusHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * QuoteStatusHistory update
+   */
+  export type QuoteStatusHistoryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a QuoteStatusHistory.
+     */
+    data: XOR<QuoteStatusHistoryUpdateInput, QuoteStatusHistoryUncheckedUpdateInput>
+    /**
+     * Choose, which QuoteStatusHistory to update.
+     */
+    where: QuoteStatusHistoryWhereUniqueInput
+  }
+
+  /**
+   * QuoteStatusHistory updateMany
+   */
+  export type QuoteStatusHistoryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update QuoteStatusHistories.
+     */
+    data: XOR<QuoteStatusHistoryUpdateManyMutationInput, QuoteStatusHistoryUncheckedUpdateManyInput>
+    /**
+     * Filter which QuoteStatusHistories to update
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * Limit how many QuoteStatusHistories to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * QuoteStatusHistory updateManyAndReturn
+   */
+  export type QuoteStatusHistoryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * The data used to update QuoteStatusHistories.
+     */
+    data: XOR<QuoteStatusHistoryUpdateManyMutationInput, QuoteStatusHistoryUncheckedUpdateManyInput>
+    /**
+     * Filter which QuoteStatusHistories to update
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * Limit how many QuoteStatusHistories to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * QuoteStatusHistory upsert
+   */
+  export type QuoteStatusHistoryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the QuoteStatusHistory to update in case it exists.
+     */
+    where: QuoteStatusHistoryWhereUniqueInput
+    /**
+     * In case the QuoteStatusHistory found by the `where` argument doesn't exist, create a new QuoteStatusHistory with this data.
+     */
+    create: XOR<QuoteStatusHistoryCreateInput, QuoteStatusHistoryUncheckedCreateInput>
+    /**
+     * In case the QuoteStatusHistory was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<QuoteStatusHistoryUpdateInput, QuoteStatusHistoryUncheckedUpdateInput>
+  }
+
+  /**
+   * QuoteStatusHistory delete
+   */
+  export type QuoteStatusHistoryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+    /**
+     * Filter which QuoteStatusHistory to delete.
+     */
+    where: QuoteStatusHistoryWhereUniqueInput
+  }
+
+  /**
+   * QuoteStatusHistory deleteMany
+   */
+  export type QuoteStatusHistoryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which QuoteStatusHistories to delete
+     */
+    where?: QuoteStatusHistoryWhereInput
+    /**
+     * Limit how many QuoteStatusHistories to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * QuoteStatusHistory without action
+   */
+  export type QuoteStatusHistoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the QuoteStatusHistory
+     */
+    select?: QuoteStatusHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the QuoteStatusHistory
+     */
+    omit?: QuoteStatusHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: QuoteStatusHistoryInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -19488,6 +20794,8 @@ export namespace Prisma {
     quoteNumber: 'quoteNumber',
     customerId: 'customerId',
     status: 'status',
+    versionNumber: 'versionNumber',
+    parentQuoteId: 'parentQuoteId',
     amount: 'amount',
     currency: 'currency',
     gst: 'gst',
@@ -19555,6 +20863,19 @@ export namespace Prisma {
   };
 
   export type QuoteItemAttachmentScalarFieldEnum = (typeof QuoteItemAttachmentScalarFieldEnum)[keyof typeof QuoteItemAttachmentScalarFieldEnum]
+
+
+  export const QuoteStatusHistoryScalarFieldEnum: {
+    id: 'id',
+    quoteId: 'quoteId',
+    status: 'status',
+    previousStatus: 'previousStatus',
+    changedAt: 'changedAt',
+    changedBy: 'changedBy',
+    notes: 'notes'
+  };
+
+  export type QuoteStatusHistoryScalarFieldEnum = (typeof QuoteStatusHistoryScalarFieldEnum)[keyof typeof QuoteStatusHistoryScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -20737,6 +22058,8 @@ export namespace Prisma {
     quoteNumber?: StringFilter<"Quote"> | string
     customerId?: StringFilter<"Quote"> | string
     status?: EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
+    versionNumber?: IntFilter<"Quote"> | number
+    parentQuoteId?: StringNullableFilter<"Quote"> | string | null
     amount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Quote"> | string
     gst?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
@@ -20754,8 +22077,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Quote"> | Date | string
     deletedAt?: DateTimeNullableFilter<"Quote"> | Date | string | null
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
+    parentQuote?: XOR<QuoteNullableScalarRelationFilter, QuoteWhereInput> | null
+    versions?: QuoteListRelationFilter
     items?: QuoteItemListRelationFilter
     attachments?: QuoteAttachmentListRelationFilter
+    statusHistory?: QuoteStatusHistoryListRelationFilter
   }
 
   export type QuoteOrderByWithRelationInput = {
@@ -20763,6 +22089,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     customerId?: SortOrder
     status?: SortOrder
+    versionNumber?: SortOrder
+    parentQuoteId?: SortOrderInput | SortOrder
     amount?: SortOrder
     currency?: SortOrder
     gst?: SortOrder
@@ -20780,8 +22108,11 @@ export namespace Prisma {
     updatedAt?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
     customer?: CustomerOrderByWithRelationInput
+    parentQuote?: QuoteOrderByWithRelationInput
+    versions?: QuoteOrderByRelationAggregateInput
     items?: QuoteItemOrderByRelationAggregateInput
     attachments?: QuoteAttachmentOrderByRelationAggregateInput
+    statusHistory?: QuoteStatusHistoryOrderByRelationAggregateInput
   }
 
   export type QuoteWhereUniqueInput = Prisma.AtLeast<{
@@ -20793,6 +22124,8 @@ export namespace Prisma {
     NOT?: QuoteWhereInput | QuoteWhereInput[]
     customerId?: StringFilter<"Quote"> | string
     status?: EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
+    versionNumber?: IntFilter<"Quote"> | number
+    parentQuoteId?: StringNullableFilter<"Quote"> | string | null
     amount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Quote"> | string
     gst?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
@@ -20809,8 +22142,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Quote"> | Date | string
     deletedAt?: DateTimeNullableFilter<"Quote"> | Date | string | null
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
+    parentQuote?: XOR<QuoteNullableScalarRelationFilter, QuoteWhereInput> | null
+    versions?: QuoteListRelationFilter
     items?: QuoteItemListRelationFilter
     attachments?: QuoteAttachmentListRelationFilter
+    statusHistory?: QuoteStatusHistoryListRelationFilter
   }, "id" | "quoteNumber" | "invoiceId">
 
   export type QuoteOrderByWithAggregationInput = {
@@ -20818,6 +22154,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     customerId?: SortOrder
     status?: SortOrder
+    versionNumber?: SortOrder
+    parentQuoteId?: SortOrderInput | SortOrder
     amount?: SortOrder
     currency?: SortOrder
     gst?: SortOrder
@@ -20849,6 +22187,8 @@ export namespace Prisma {
     quoteNumber?: StringWithAggregatesFilter<"Quote"> | string
     customerId?: StringWithAggregatesFilter<"Quote"> | string
     status?: EnumQuoteStatusWithAggregatesFilter<"Quote"> | $Enums.QuoteStatus
+    versionNumber?: IntWithAggregatesFilter<"Quote"> | number
+    parentQuoteId?: StringNullableWithAggregatesFilter<"Quote"> | string | null
     amount?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     currency?: StringWithAggregatesFilter<"Quote"> | string
     gst?: DecimalWithAggregatesFilter<"Quote"> | Decimal | DecimalJsLike | number | string
@@ -21117,6 +22457,71 @@ export namespace Prisma {
     s3Url?: StringWithAggregatesFilter<"QuoteItemAttachment"> | string
     uploadedBy?: StringNullableWithAggregatesFilter<"QuoteItemAttachment"> | string | null
     uploadedAt?: DateTimeWithAggregatesFilter<"QuoteItemAttachment"> | Date | string
+  }
+
+  export type QuoteStatusHistoryWhereInput = {
+    AND?: QuoteStatusHistoryWhereInput | QuoteStatusHistoryWhereInput[]
+    OR?: QuoteStatusHistoryWhereInput[]
+    NOT?: QuoteStatusHistoryWhereInput | QuoteStatusHistoryWhereInput[]
+    id?: StringFilter<"QuoteStatusHistory"> | string
+    quoteId?: StringFilter<"QuoteStatusHistory"> | string
+    status?: EnumQuoteStatusFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus
+    previousStatus?: EnumQuoteStatusNullableFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFilter<"QuoteStatusHistory"> | Date | string
+    changedBy?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+    notes?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+    quote?: XOR<QuoteScalarRelationFilter, QuoteWhereInput>
+  }
+
+  export type QuoteStatusHistoryOrderByWithRelationInput = {
+    id?: SortOrder
+    quoteId?: SortOrder
+    status?: SortOrder
+    previousStatus?: SortOrderInput | SortOrder
+    changedAt?: SortOrder
+    changedBy?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    quote?: QuoteOrderByWithRelationInput
+  }
+
+  export type QuoteStatusHistoryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: QuoteStatusHistoryWhereInput | QuoteStatusHistoryWhereInput[]
+    OR?: QuoteStatusHistoryWhereInput[]
+    NOT?: QuoteStatusHistoryWhereInput | QuoteStatusHistoryWhereInput[]
+    quoteId?: StringFilter<"QuoteStatusHistory"> | string
+    status?: EnumQuoteStatusFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus
+    previousStatus?: EnumQuoteStatusNullableFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFilter<"QuoteStatusHistory"> | Date | string
+    changedBy?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+    notes?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+    quote?: XOR<QuoteScalarRelationFilter, QuoteWhereInput>
+  }, "id">
+
+  export type QuoteStatusHistoryOrderByWithAggregationInput = {
+    id?: SortOrder
+    quoteId?: SortOrder
+    status?: SortOrder
+    previousStatus?: SortOrderInput | SortOrder
+    changedAt?: SortOrder
+    changedBy?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    _count?: QuoteStatusHistoryCountOrderByAggregateInput
+    _max?: QuoteStatusHistoryMaxOrderByAggregateInput
+    _min?: QuoteStatusHistoryMinOrderByAggregateInput
+  }
+
+  export type QuoteStatusHistoryScalarWhereWithAggregatesInput = {
+    AND?: QuoteStatusHistoryScalarWhereWithAggregatesInput | QuoteStatusHistoryScalarWhereWithAggregatesInput[]
+    OR?: QuoteStatusHistoryScalarWhereWithAggregatesInput[]
+    NOT?: QuoteStatusHistoryScalarWhereWithAggregatesInput | QuoteStatusHistoryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"QuoteStatusHistory"> | string
+    quoteId?: StringWithAggregatesFilter<"QuoteStatusHistory"> | string
+    status?: EnumQuoteStatusWithAggregatesFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus
+    previousStatus?: EnumQuoteStatusNullableWithAggregatesFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus | null
+    changedAt?: DateTimeWithAggregatesFilter<"QuoteStatusHistory"> | Date | string
+    changedBy?: StringNullableWithAggregatesFilter<"QuoteStatusHistory"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"QuoteStatusHistory"> | string | null
   }
 
   export type AccountCreateInput = {
@@ -22192,6 +23597,7 @@ export namespace Prisma {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -22209,8 +23615,11 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     customer: CustomerCreateNestedOneWithoutQuotesInput
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemCreateNestedManyWithoutQuoteInput
     attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteUncheckedCreateInput = {
@@ -22218,6 +23627,8 @@ export namespace Prisma {
     quoteNumber: string
     customerId: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -22234,14 +23645,17 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
     attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -22259,8 +23673,11 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUpdateManyWithoutQuoteNestedInput
     attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteUncheckedUpdateInput = {
@@ -22268,6 +23685,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -22284,8 +23703,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
     attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteCreateManyInput = {
@@ -22293,6 +23714,8 @@ export namespace Prisma {
     quoteNumber: string
     customerId: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -22315,6 +23738,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -22338,6 +23762,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -22627,6 +24053,75 @@ export namespace Prisma {
     s3Url?: StringFieldUpdateOperationsInput | string
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuoteStatusHistoryCreateInput = {
+    id?: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+    quote: QuoteCreateNestedOneWithoutStatusHistoryInput
+  }
+
+  export type QuoteStatusHistoryUncheckedCreateInput = {
+    id?: string
+    quoteId: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+  }
+
+  export type QuoteStatusHistoryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    quote?: QuoteUpdateOneRequiredWithoutStatusHistoryNestedInput
+  }
+
+  export type QuoteStatusHistoryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuoteStatusHistoryCreateManyInput = {
+    id?: string
+    quoteId: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+  }
+
+  export type QuoteStatusHistoryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuoteStatusHistoryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -23697,13 +25192,28 @@ export namespace Prisma {
     not?: NestedEnumQuoteStatusFilter<$PrismaModel> | $Enums.QuoteStatus
   }
 
+  export type QuoteNullableScalarRelationFilter = {
+    is?: QuoteWhereInput | null
+    isNot?: QuoteWhereInput | null
+  }
+
   export type QuoteAttachmentListRelationFilter = {
     every?: QuoteAttachmentWhereInput
     some?: QuoteAttachmentWhereInput
     none?: QuoteAttachmentWhereInput
   }
 
+  export type QuoteStatusHistoryListRelationFilter = {
+    every?: QuoteStatusHistoryWhereInput
+    some?: QuoteStatusHistoryWhereInput
+    none?: QuoteStatusHistoryWhereInput
+  }
+
   export type QuoteAttachmentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type QuoteStatusHistoryOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -23712,6 +25222,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     customerId?: SortOrder
     status?: SortOrder
+    versionNumber?: SortOrder
+    parentQuoteId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
     gst?: SortOrder
@@ -23731,6 +25243,7 @@ export namespace Prisma {
   }
 
   export type QuoteAvgOrderByAggregateInput = {
+    versionNumber?: SortOrder
     amount?: SortOrder
     gst?: SortOrder
     discount?: SortOrder
@@ -23741,6 +25254,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     customerId?: SortOrder
     status?: SortOrder
+    versionNumber?: SortOrder
+    parentQuoteId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
     gst?: SortOrder
@@ -23764,6 +25279,8 @@ export namespace Prisma {
     quoteNumber?: SortOrder
     customerId?: SortOrder
     status?: SortOrder
+    versionNumber?: SortOrder
+    parentQuoteId?: SortOrder
     amount?: SortOrder
     currency?: SortOrder
     gst?: SortOrder
@@ -23783,6 +25300,7 @@ export namespace Prisma {
   }
 
   export type QuoteSumOrderByAggregateInput = {
+    versionNumber?: SortOrder
     amount?: SortOrder
     gst?: SortOrder
     discount?: SortOrder
@@ -23969,6 +25487,53 @@ export namespace Prisma {
 
   export type QuoteItemAttachmentSumOrderByAggregateInput = {
     fileSize?: SortOrder
+  }
+
+  export type EnumQuoteStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.QuoteStatus | EnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumQuoteStatusNullableFilter<$PrismaModel> | $Enums.QuoteStatus | null
+  }
+
+  export type QuoteStatusHistoryCountOrderByAggregateInput = {
+    id?: SortOrder
+    quoteId?: SortOrder
+    status?: SortOrder
+    previousStatus?: SortOrder
+    changedAt?: SortOrder
+    changedBy?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type QuoteStatusHistoryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    quoteId?: SortOrder
+    status?: SortOrder
+    previousStatus?: SortOrder
+    changedAt?: SortOrder
+    changedBy?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type QuoteStatusHistoryMinOrderByAggregateInput = {
+    id?: SortOrder
+    quoteId?: SortOrder
+    status?: SortOrder
+    previousStatus?: SortOrder
+    changedAt?: SortOrder
+    changedBy?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type EnumQuoteStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.QuoteStatus | EnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumQuoteStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.QuoteStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumQuoteStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumQuoteStatusNullableFilter<$PrismaModel>
   }
 
   export type UserCreateNestedOneWithoutAccountsInput = {
@@ -24493,6 +26058,19 @@ export namespace Prisma {
     connect?: CustomerWhereUniqueInput
   }
 
+  export type QuoteCreateNestedOneWithoutVersionsInput = {
+    create?: XOR<QuoteCreateWithoutVersionsInput, QuoteUncheckedCreateWithoutVersionsInput>
+    connectOrCreate?: QuoteCreateOrConnectWithoutVersionsInput
+    connect?: QuoteWhereUniqueInput
+  }
+
+  export type QuoteCreateNestedManyWithoutParentQuoteInput = {
+    create?: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput> | QuoteCreateWithoutParentQuoteInput[] | QuoteUncheckedCreateWithoutParentQuoteInput[]
+    connectOrCreate?: QuoteCreateOrConnectWithoutParentQuoteInput | QuoteCreateOrConnectWithoutParentQuoteInput[]
+    createMany?: QuoteCreateManyParentQuoteInputEnvelope
+    connect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+  }
+
   export type QuoteItemCreateNestedManyWithoutQuoteInput = {
     create?: XOR<QuoteItemCreateWithoutQuoteInput, QuoteItemUncheckedCreateWithoutQuoteInput> | QuoteItemCreateWithoutQuoteInput[] | QuoteItemUncheckedCreateWithoutQuoteInput[]
     connectOrCreate?: QuoteItemCreateOrConnectWithoutQuoteInput | QuoteItemCreateOrConnectWithoutQuoteInput[]
@@ -24505,6 +26083,20 @@ export namespace Prisma {
     connectOrCreate?: QuoteAttachmentCreateOrConnectWithoutQuoteInput | QuoteAttachmentCreateOrConnectWithoutQuoteInput[]
     createMany?: QuoteAttachmentCreateManyQuoteInputEnvelope
     connect?: QuoteAttachmentWhereUniqueInput | QuoteAttachmentWhereUniqueInput[]
+  }
+
+  export type QuoteStatusHistoryCreateNestedManyWithoutQuoteInput = {
+    create?: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput> | QuoteStatusHistoryCreateWithoutQuoteInput[] | QuoteStatusHistoryUncheckedCreateWithoutQuoteInput[]
+    connectOrCreate?: QuoteStatusHistoryCreateOrConnectWithoutQuoteInput | QuoteStatusHistoryCreateOrConnectWithoutQuoteInput[]
+    createMany?: QuoteStatusHistoryCreateManyQuoteInputEnvelope
+    connect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+  }
+
+  export type QuoteUncheckedCreateNestedManyWithoutParentQuoteInput = {
+    create?: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput> | QuoteCreateWithoutParentQuoteInput[] | QuoteUncheckedCreateWithoutParentQuoteInput[]
+    connectOrCreate?: QuoteCreateOrConnectWithoutParentQuoteInput | QuoteCreateOrConnectWithoutParentQuoteInput[]
+    createMany?: QuoteCreateManyParentQuoteInputEnvelope
+    connect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
   }
 
   export type QuoteItemUncheckedCreateNestedManyWithoutQuoteInput = {
@@ -24521,6 +26113,13 @@ export namespace Prisma {
     connect?: QuoteAttachmentWhereUniqueInput | QuoteAttachmentWhereUniqueInput[]
   }
 
+  export type QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput = {
+    create?: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput> | QuoteStatusHistoryCreateWithoutQuoteInput[] | QuoteStatusHistoryUncheckedCreateWithoutQuoteInput[]
+    connectOrCreate?: QuoteStatusHistoryCreateOrConnectWithoutQuoteInput | QuoteStatusHistoryCreateOrConnectWithoutQuoteInput[]
+    createMany?: QuoteStatusHistoryCreateManyQuoteInputEnvelope
+    connect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+  }
+
   export type EnumQuoteStatusFieldUpdateOperationsInput = {
     set?: $Enums.QuoteStatus
   }
@@ -24531,6 +26130,30 @@ export namespace Prisma {
     upsert?: CustomerUpsertWithoutQuotesInput
     connect?: CustomerWhereUniqueInput
     update?: XOR<XOR<CustomerUpdateToOneWithWhereWithoutQuotesInput, CustomerUpdateWithoutQuotesInput>, CustomerUncheckedUpdateWithoutQuotesInput>
+  }
+
+  export type QuoteUpdateOneWithoutVersionsNestedInput = {
+    create?: XOR<QuoteCreateWithoutVersionsInput, QuoteUncheckedCreateWithoutVersionsInput>
+    connectOrCreate?: QuoteCreateOrConnectWithoutVersionsInput
+    upsert?: QuoteUpsertWithoutVersionsInput
+    disconnect?: QuoteWhereInput | boolean
+    delete?: QuoteWhereInput | boolean
+    connect?: QuoteWhereUniqueInput
+    update?: XOR<XOR<QuoteUpdateToOneWithWhereWithoutVersionsInput, QuoteUpdateWithoutVersionsInput>, QuoteUncheckedUpdateWithoutVersionsInput>
+  }
+
+  export type QuoteUpdateManyWithoutParentQuoteNestedInput = {
+    create?: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput> | QuoteCreateWithoutParentQuoteInput[] | QuoteUncheckedCreateWithoutParentQuoteInput[]
+    connectOrCreate?: QuoteCreateOrConnectWithoutParentQuoteInput | QuoteCreateOrConnectWithoutParentQuoteInput[]
+    upsert?: QuoteUpsertWithWhereUniqueWithoutParentQuoteInput | QuoteUpsertWithWhereUniqueWithoutParentQuoteInput[]
+    createMany?: QuoteCreateManyParentQuoteInputEnvelope
+    set?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    disconnect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    delete?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    connect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    update?: QuoteUpdateWithWhereUniqueWithoutParentQuoteInput | QuoteUpdateWithWhereUniqueWithoutParentQuoteInput[]
+    updateMany?: QuoteUpdateManyWithWhereWithoutParentQuoteInput | QuoteUpdateManyWithWhereWithoutParentQuoteInput[]
+    deleteMany?: QuoteScalarWhereInput | QuoteScalarWhereInput[]
   }
 
   export type QuoteItemUpdateManyWithoutQuoteNestedInput = {
@@ -24561,6 +26184,34 @@ export namespace Prisma {
     deleteMany?: QuoteAttachmentScalarWhereInput | QuoteAttachmentScalarWhereInput[]
   }
 
+  export type QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput = {
+    create?: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput> | QuoteStatusHistoryCreateWithoutQuoteInput[] | QuoteStatusHistoryUncheckedCreateWithoutQuoteInput[]
+    connectOrCreate?: QuoteStatusHistoryCreateOrConnectWithoutQuoteInput | QuoteStatusHistoryCreateOrConnectWithoutQuoteInput[]
+    upsert?: QuoteStatusHistoryUpsertWithWhereUniqueWithoutQuoteInput | QuoteStatusHistoryUpsertWithWhereUniqueWithoutQuoteInput[]
+    createMany?: QuoteStatusHistoryCreateManyQuoteInputEnvelope
+    set?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    disconnect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    delete?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    connect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    update?: QuoteStatusHistoryUpdateWithWhereUniqueWithoutQuoteInput | QuoteStatusHistoryUpdateWithWhereUniqueWithoutQuoteInput[]
+    updateMany?: QuoteStatusHistoryUpdateManyWithWhereWithoutQuoteInput | QuoteStatusHistoryUpdateManyWithWhereWithoutQuoteInput[]
+    deleteMany?: QuoteStatusHistoryScalarWhereInput | QuoteStatusHistoryScalarWhereInput[]
+  }
+
+  export type QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput = {
+    create?: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput> | QuoteCreateWithoutParentQuoteInput[] | QuoteUncheckedCreateWithoutParentQuoteInput[]
+    connectOrCreate?: QuoteCreateOrConnectWithoutParentQuoteInput | QuoteCreateOrConnectWithoutParentQuoteInput[]
+    upsert?: QuoteUpsertWithWhereUniqueWithoutParentQuoteInput | QuoteUpsertWithWhereUniqueWithoutParentQuoteInput[]
+    createMany?: QuoteCreateManyParentQuoteInputEnvelope
+    set?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    disconnect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    delete?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    connect?: QuoteWhereUniqueInput | QuoteWhereUniqueInput[]
+    update?: QuoteUpdateWithWhereUniqueWithoutParentQuoteInput | QuoteUpdateWithWhereUniqueWithoutParentQuoteInput[]
+    updateMany?: QuoteUpdateManyWithWhereWithoutParentQuoteInput | QuoteUpdateManyWithWhereWithoutParentQuoteInput[]
+    deleteMany?: QuoteScalarWhereInput | QuoteScalarWhereInput[]
+  }
+
   export type QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput = {
     create?: XOR<QuoteItemCreateWithoutQuoteInput, QuoteItemUncheckedCreateWithoutQuoteInput> | QuoteItemCreateWithoutQuoteInput[] | QuoteItemUncheckedCreateWithoutQuoteInput[]
     connectOrCreate?: QuoteItemCreateOrConnectWithoutQuoteInput | QuoteItemCreateOrConnectWithoutQuoteInput[]
@@ -24587,6 +26238,20 @@ export namespace Prisma {
     update?: QuoteAttachmentUpdateWithWhereUniqueWithoutQuoteInput | QuoteAttachmentUpdateWithWhereUniqueWithoutQuoteInput[]
     updateMany?: QuoteAttachmentUpdateManyWithWhereWithoutQuoteInput | QuoteAttachmentUpdateManyWithWhereWithoutQuoteInput[]
     deleteMany?: QuoteAttachmentScalarWhereInput | QuoteAttachmentScalarWhereInput[]
+  }
+
+  export type QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput = {
+    create?: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput> | QuoteStatusHistoryCreateWithoutQuoteInput[] | QuoteStatusHistoryUncheckedCreateWithoutQuoteInput[]
+    connectOrCreate?: QuoteStatusHistoryCreateOrConnectWithoutQuoteInput | QuoteStatusHistoryCreateOrConnectWithoutQuoteInput[]
+    upsert?: QuoteStatusHistoryUpsertWithWhereUniqueWithoutQuoteInput | QuoteStatusHistoryUpsertWithWhereUniqueWithoutQuoteInput[]
+    createMany?: QuoteStatusHistoryCreateManyQuoteInputEnvelope
+    set?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    disconnect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    delete?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    connect?: QuoteStatusHistoryWhereUniqueInput | QuoteStatusHistoryWhereUniqueInput[]
+    update?: QuoteStatusHistoryUpdateWithWhereUniqueWithoutQuoteInput | QuoteStatusHistoryUpdateWithWhereUniqueWithoutQuoteInput[]
+    updateMany?: QuoteStatusHistoryUpdateManyWithWhereWithoutQuoteInput | QuoteStatusHistoryUpdateManyWithWhereWithoutQuoteInput[]
+    deleteMany?: QuoteStatusHistoryScalarWhereInput | QuoteStatusHistoryScalarWhereInput[]
   }
 
   export type QuoteItemCreatecolorsInput = {
@@ -24696,6 +26361,24 @@ export namespace Prisma {
     upsert?: QuoteItemUpsertWithoutAttachmentsInput
     connect?: QuoteItemWhereUniqueInput
     update?: XOR<XOR<QuoteItemUpdateToOneWithWhereWithoutAttachmentsInput, QuoteItemUpdateWithoutAttachmentsInput>, QuoteItemUncheckedUpdateWithoutAttachmentsInput>
+  }
+
+  export type QuoteCreateNestedOneWithoutStatusHistoryInput = {
+    create?: XOR<QuoteCreateWithoutStatusHistoryInput, QuoteUncheckedCreateWithoutStatusHistoryInput>
+    connectOrCreate?: QuoteCreateOrConnectWithoutStatusHistoryInput
+    connect?: QuoteWhereUniqueInput
+  }
+
+  export type NullableEnumQuoteStatusFieldUpdateOperationsInput = {
+    set?: $Enums.QuoteStatus | null
+  }
+
+  export type QuoteUpdateOneRequiredWithoutStatusHistoryNestedInput = {
+    create?: XOR<QuoteCreateWithoutStatusHistoryInput, QuoteUncheckedCreateWithoutStatusHistoryInput>
+    connectOrCreate?: QuoteCreateOrConnectWithoutStatusHistoryInput
+    upsert?: QuoteUpsertWithoutStatusHistoryInput
+    connect?: QuoteWhereUniqueInput
+    update?: XOR<XOR<QuoteUpdateToOneWithWhereWithoutStatusHistoryInput, QuoteUpdateWithoutStatusHistoryInput>, QuoteUncheckedUpdateWithoutStatusHistoryInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -25132,6 +26815,23 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumQuoteStatusFilter<$PrismaModel>
     _max?: NestedEnumQuoteStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumQuoteStatusNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.QuoteStatus | EnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumQuoteStatusNullableFilter<$PrismaModel> | $Enums.QuoteStatus | null
+  }
+
+  export type NestedEnumQuoteStatusNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.QuoteStatus | EnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    in?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.QuoteStatus[] | ListEnumQuoteStatusFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumQuoteStatusNullableWithAggregatesFilter<$PrismaModel> | $Enums.QuoteStatus | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumQuoteStatusNullableFilter<$PrismaModel>
+    _max?: NestedEnumQuoteStatusNullableFilter<$PrismaModel>
   }
 
   export type UserCreateWithoutAccountsInput = {
@@ -25592,6 +27292,7 @@ export namespace Prisma {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -25608,14 +27309,19 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemCreateNestedManyWithoutQuoteInput
     attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteUncheckedCreateWithoutCustomerInput = {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -25632,8 +27338,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
     attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteCreateOrConnectWithoutCustomerInput = {
@@ -25746,6 +27454,8 @@ export namespace Prisma {
     quoteNumber?: StringFilter<"Quote"> | string
     customerId?: StringFilter<"Quote"> | string
     status?: EnumQuoteStatusFilter<"Quote"> | $Enums.QuoteStatus
+    versionNumber?: IntFilter<"Quote"> | number
+    parentQuoteId?: StringNullableFilter<"Quote"> | string | null
     amount?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
     currency?: StringFilter<"Quote"> | string
     gst?: DecimalFilter<"Quote"> | Decimal | DecimalJsLike | number | string
@@ -26232,6 +27942,133 @@ export namespace Prisma {
     create: XOR<CustomerCreateWithoutQuotesInput, CustomerUncheckedCreateWithoutQuotesInput>
   }
 
+  export type QuoteCreateWithoutVersionsInput = {
+    id?: string
+    quoteNumber: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    customer: CustomerCreateNestedOneWithoutQuotesInput
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    items?: QuoteItemCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteUncheckedCreateWithoutVersionsInput = {
+    id?: string
+    quoteNumber: string
+    customerId: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteCreateOrConnectWithoutVersionsInput = {
+    where: QuoteWhereUniqueInput
+    create: XOR<QuoteCreateWithoutVersionsInput, QuoteUncheckedCreateWithoutVersionsInput>
+  }
+
+  export type QuoteCreateWithoutParentQuoteInput = {
+    id?: string
+    quoteNumber: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    customer: CustomerCreateNestedOneWithoutQuotesInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
+    items?: QuoteItemCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteUncheckedCreateWithoutParentQuoteInput = {
+    id?: string
+    quoteNumber: string
+    customerId: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
+    items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteCreateOrConnectWithoutParentQuoteInput = {
+    where: QuoteWhereUniqueInput
+    create: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput>
+  }
+
+  export type QuoteCreateManyParentQuoteInputEnvelope = {
+    data: QuoteCreateManyParentQuoteInput | QuoteCreateManyParentQuoteInput[]
+    skipDuplicates?: boolean
+  }
+
   export type QuoteItemCreateWithoutQuoteInput = {
     id?: string
     description: string
@@ -26304,6 +28141,34 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type QuoteStatusHistoryCreateWithoutQuoteInput = {
+    id?: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+  }
+
+  export type QuoteStatusHistoryUncheckedCreateWithoutQuoteInput = {
+    id?: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+  }
+
+  export type QuoteStatusHistoryCreateOrConnectWithoutQuoteInput = {
+    where: QuoteStatusHistoryWhereUniqueInput
+    create: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput>
+  }
+
+  export type QuoteStatusHistoryCreateManyQuoteInputEnvelope = {
+    data: QuoteStatusHistoryCreateManyQuoteInput | QuoteStatusHistoryCreateManyQuoteInput[]
+    skipDuplicates?: boolean
+  }
+
   export type CustomerUpsertWithoutQuotesInput = {
     update: XOR<CustomerUpdateWithoutQuotesInput, CustomerUncheckedUpdateWithoutQuotesInput>
     create: XOR<CustomerCreateWithoutQuotesInput, CustomerUncheckedCreateWithoutQuotesInput>
@@ -26343,6 +28208,89 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invoices?: InvoiceUncheckedUpdateManyWithoutCustomerNestedInput
+  }
+
+  export type QuoteUpsertWithoutVersionsInput = {
+    update: XOR<QuoteUpdateWithoutVersionsInput, QuoteUncheckedUpdateWithoutVersionsInput>
+    create: XOR<QuoteCreateWithoutVersionsInput, QuoteUncheckedCreateWithoutVersionsInput>
+    where?: QuoteWhereInput
+  }
+
+  export type QuoteUpdateToOneWithWhereWithoutVersionsInput = {
+    where?: QuoteWhereInput
+    data: XOR<QuoteUpdateWithoutVersionsInput, QuoteUncheckedUpdateWithoutVersionsInput>
+  }
+
+  export type QuoteUpdateWithoutVersionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    items?: QuoteItemUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
+  }
+
+  export type QuoteUncheckedUpdateWithoutVersionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
+  }
+
+  export type QuoteUpsertWithWhereUniqueWithoutParentQuoteInput = {
+    where: QuoteWhereUniqueInput
+    update: XOR<QuoteUpdateWithoutParentQuoteInput, QuoteUncheckedUpdateWithoutParentQuoteInput>
+    create: XOR<QuoteCreateWithoutParentQuoteInput, QuoteUncheckedCreateWithoutParentQuoteInput>
+  }
+
+  export type QuoteUpdateWithWhereUniqueWithoutParentQuoteInput = {
+    where: QuoteWhereUniqueInput
+    data: XOR<QuoteUpdateWithoutParentQuoteInput, QuoteUncheckedUpdateWithoutParentQuoteInput>
+  }
+
+  export type QuoteUpdateManyWithWhereWithoutParentQuoteInput = {
+    where: QuoteScalarWhereInput
+    data: XOR<QuoteUpdateManyMutationInput, QuoteUncheckedUpdateManyWithoutParentQuoteInput>
   }
 
   export type QuoteItemUpsertWithWhereUniqueWithoutQuoteInput = {
@@ -26392,10 +28340,40 @@ export namespace Prisma {
     uploadedAt?: DateTimeFilter<"QuoteAttachment"> | Date | string
   }
 
+  export type QuoteStatusHistoryUpsertWithWhereUniqueWithoutQuoteInput = {
+    where: QuoteStatusHistoryWhereUniqueInput
+    update: XOR<QuoteStatusHistoryUpdateWithoutQuoteInput, QuoteStatusHistoryUncheckedUpdateWithoutQuoteInput>
+    create: XOR<QuoteStatusHistoryCreateWithoutQuoteInput, QuoteStatusHistoryUncheckedCreateWithoutQuoteInput>
+  }
+
+  export type QuoteStatusHistoryUpdateWithWhereUniqueWithoutQuoteInput = {
+    where: QuoteStatusHistoryWhereUniqueInput
+    data: XOR<QuoteStatusHistoryUpdateWithoutQuoteInput, QuoteStatusHistoryUncheckedUpdateWithoutQuoteInput>
+  }
+
+  export type QuoteStatusHistoryUpdateManyWithWhereWithoutQuoteInput = {
+    where: QuoteStatusHistoryScalarWhereInput
+    data: XOR<QuoteStatusHistoryUpdateManyMutationInput, QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteInput>
+  }
+
+  export type QuoteStatusHistoryScalarWhereInput = {
+    AND?: QuoteStatusHistoryScalarWhereInput | QuoteStatusHistoryScalarWhereInput[]
+    OR?: QuoteStatusHistoryScalarWhereInput[]
+    NOT?: QuoteStatusHistoryScalarWhereInput | QuoteStatusHistoryScalarWhereInput[]
+    id?: StringFilter<"QuoteStatusHistory"> | string
+    quoteId?: StringFilter<"QuoteStatusHistory"> | string
+    status?: EnumQuoteStatusFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus
+    previousStatus?: EnumQuoteStatusNullableFilter<"QuoteStatusHistory"> | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFilter<"QuoteStatusHistory"> | Date | string
+    changedBy?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+    notes?: StringNullableFilter<"QuoteStatusHistory"> | string | null
+  }
+
   export type QuoteCreateWithoutItemsInput = {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -26413,7 +28391,10 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     customer: CustomerCreateNestedOneWithoutQuotesInput
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
     attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteUncheckedCreateWithoutItemsInput = {
@@ -26421,6 +28402,8 @@ export namespace Prisma {
     quoteNumber: string
     customerId: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -26437,7 +28420,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
     attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteCreateOrConnectWithoutItemsInput = {
@@ -26525,6 +28510,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -26542,7 +28528,10 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
     attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteUncheckedUpdateWithoutItemsInput = {
@@ -26550,6 +28539,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -26566,7 +28557,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
     attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
   }
 
   export type ProductUpsertWithoutQuoteItemsInput = {
@@ -26643,6 +28636,7 @@ export namespace Prisma {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -26660,7 +28654,10 @@ export namespace Prisma {
     updatedAt?: Date | string
     deletedAt?: Date | string | null
     customer: CustomerCreateNestedOneWithoutQuotesInput
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteUncheckedCreateWithoutAttachmentsInput = {
@@ -26668,6 +28665,8 @@ export namespace Prisma {
     quoteNumber: string
     customerId: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -26684,7 +28683,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
     items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
+    statusHistory?: QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInput
   }
 
   export type QuoteCreateOrConnectWithoutAttachmentsInput = {
@@ -26707,6 +28708,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -26724,7 +28726,10 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteUncheckedUpdateWithoutAttachmentsInput = {
@@ -26732,6 +28737,8 @@ export namespace Prisma {
     quoteNumber?: StringFieldUpdateOperationsInput | string
     customerId?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -26748,7 +28755,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteItemCreateWithoutAttachmentsInput = {
@@ -26825,6 +28834,134 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuoteCreateWithoutStatusHistoryInput = {
+    id?: string
+    quoteNumber: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    customer: CustomerCreateNestedOneWithoutQuotesInput
+    parentQuote?: QuoteCreateNestedOneWithoutVersionsInput
+    versions?: QuoteCreateNestedManyWithoutParentQuoteInput
+    items?: QuoteItemCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteUncheckedCreateWithoutStatusHistoryInput = {
+    id?: string
+    quoteNumber: string
+    customerId: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    versions?: QuoteUncheckedCreateNestedManyWithoutParentQuoteInput
+    items?: QuoteItemUncheckedCreateNestedManyWithoutQuoteInput
+    attachments?: QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInput
+  }
+
+  export type QuoteCreateOrConnectWithoutStatusHistoryInput = {
+    where: QuoteWhereUniqueInput
+    create: XOR<QuoteCreateWithoutStatusHistoryInput, QuoteUncheckedCreateWithoutStatusHistoryInput>
+  }
+
+  export type QuoteUpsertWithoutStatusHistoryInput = {
+    update: XOR<QuoteUpdateWithoutStatusHistoryInput, QuoteUncheckedUpdateWithoutStatusHistoryInput>
+    create: XOR<QuoteCreateWithoutStatusHistoryInput, QuoteUncheckedCreateWithoutStatusHistoryInput>
+    where?: QuoteWhereInput
+  }
+
+  export type QuoteUpdateToOneWithWhereWithoutStatusHistoryInput = {
+    where?: QuoteWhereInput
+    data: XOR<QuoteUpdateWithoutStatusHistoryInput, QuoteUncheckedUpdateWithoutStatusHistoryInput>
+  }
+
+  export type QuoteUpdateWithoutStatusHistoryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
+    items?: QuoteItemUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+  }
+
+  export type QuoteUncheckedUpdateWithoutStatusHistoryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
+    items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
   }
 
   export type AccountCreateManyUserInput = {
@@ -27106,6 +29243,8 @@ export namespace Prisma {
     id?: string
     quoteNumber: string
     status?: $Enums.QuoteStatus
+    versionNumber?: number
+    parentQuoteId?: string | null
     amount: Decimal | DecimalJsLike | number | string
     currency?: string
     gst?: Decimal | DecimalJsLike | number | string
@@ -27193,6 +29332,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -27209,14 +29349,19 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    parentQuote?: QuoteUpdateOneWithoutVersionsNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUpdateManyWithoutQuoteNestedInput
     attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteUncheckedUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -27233,14 +29378,18 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
     items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
     attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
   }
 
   export type QuoteUncheckedUpdateManyWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
     quoteNumber?: StringFieldUpdateOperationsInput | string
     status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    parentQuoteId?: NullableStringFieldUpdateOperationsInput | string | null
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     currency?: StringFieldUpdateOperationsInput | string
     gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -27359,6 +29508,30 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type QuoteCreateManyParentQuoteInput = {
+    id?: string
+    quoteNumber: string
+    customerId: string
+    status?: $Enums.QuoteStatus
+    versionNumber?: number
+    amount: Decimal | DecimalJsLike | number | string
+    currency?: string
+    gst?: Decimal | DecimalJsLike | number | string
+    discount?: Decimal | DecimalJsLike | number | string
+    issuedDate: Date | string
+    validUntil: Date | string
+    acceptedDate?: Date | string | null
+    rejectedDate?: Date | string | null
+    rejectReason?: string | null
+    convertedDate?: Date | string | null
+    invoiceId?: string | null
+    notes?: string | null
+    terms?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+  }
+
   export type QuoteItemCreateManyQuoteInput = {
     id?: string
     description: string
@@ -27382,6 +29555,95 @@ export namespace Prisma {
     s3Url: string
     uploadedBy?: string | null
     uploadedAt?: Date | string
+  }
+
+  export type QuoteStatusHistoryCreateManyQuoteInput = {
+    id?: string
+    status: $Enums.QuoteStatus
+    previousStatus?: $Enums.QuoteStatus | null
+    changedAt?: Date | string
+    changedBy?: string | null
+    notes?: string | null
+  }
+
+  export type QuoteUpdateWithoutParentQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customer?: CustomerUpdateOneRequiredWithoutQuotesNestedInput
+    versions?: QuoteUpdateManyWithoutParentQuoteNestedInput
+    items?: QuoteItemUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUpdateManyWithoutQuoteNestedInput
+  }
+
+  export type QuoteUncheckedUpdateWithoutParentQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    versions?: QuoteUncheckedUpdateManyWithoutParentQuoteNestedInput
+    items?: QuoteItemUncheckedUpdateManyWithoutQuoteNestedInput
+    attachments?: QuoteAttachmentUncheckedUpdateManyWithoutQuoteNestedInput
+    statusHistory?: QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteNestedInput
+  }
+
+  export type QuoteUncheckedUpdateManyWithoutParentQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    quoteNumber?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    versionNumber?: IntFieldUpdateOperationsInput | number
+    amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currency?: StringFieldUpdateOperationsInput | string
+    gst?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    discount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    issuedDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    validUntil?: DateTimeFieldUpdateOperationsInput | Date | string
+    acceptedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejectReason?: NullableStringFieldUpdateOperationsInput | string | null
+    convertedDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invoiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    terms?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type QuoteItemUpdateWithoutQuoteInput = {
@@ -27459,6 +29721,33 @@ export namespace Prisma {
     s3Url?: StringFieldUpdateOperationsInput | string
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
     uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type QuoteStatusHistoryUpdateWithoutQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuoteStatusHistoryUncheckedUpdateWithoutQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type QuoteStatusHistoryUncheckedUpdateManyWithoutQuoteInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus
+    previousStatus?: NullableEnumQuoteStatusFieldUpdateOperationsInput | $Enums.QuoteStatus | null
+    changedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    changedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuoteItemAttachmentCreateManyQuoteItemInput = {

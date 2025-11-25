@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { StringFieldUpdateOperationsInputSchema } from './StringFieldUpdateOperationsInputSchema';
 import { QuoteStatusSchema } from './QuoteStatusSchema';
 import { EnumQuoteStatusFieldUpdateOperationsInputSchema } from './EnumQuoteStatusFieldUpdateOperationsInputSchema';
+import { IntFieldUpdateOperationsInputSchema } from './IntFieldUpdateOperationsInputSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
 import { DecimalFieldUpdateOperationsInputSchema } from './DecimalFieldUpdateOperationsInputSchema';
@@ -11,12 +12,16 @@ import { DateTimeFieldUpdateOperationsInputSchema } from './DateTimeFieldUpdateO
 import { NullableDateTimeFieldUpdateOperationsInputSchema } from './NullableDateTimeFieldUpdateOperationsInputSchema';
 import { NullableStringFieldUpdateOperationsInputSchema } from './NullableStringFieldUpdateOperationsInputSchema';
 import { CustomerUpdateOneRequiredWithoutQuotesNestedInputSchema } from './CustomerUpdateOneRequiredWithoutQuotesNestedInputSchema';
+import { QuoteUpdateOneWithoutVersionsNestedInputSchema } from './QuoteUpdateOneWithoutVersionsNestedInputSchema';
+import { QuoteUpdateManyWithoutParentQuoteNestedInputSchema } from './QuoteUpdateManyWithoutParentQuoteNestedInputSchema';
 import { QuoteItemUpdateManyWithoutQuoteNestedInputSchema } from './QuoteItemUpdateManyWithoutQuoteNestedInputSchema';
+import { QuoteStatusHistoryUpdateManyWithoutQuoteNestedInputSchema } from './QuoteStatusHistoryUpdateManyWithoutQuoteNestedInputSchema';
 
 export const QuoteUpdateWithoutAttachmentsInputSchema: z.ZodType<Prisma.QuoteUpdateWithoutAttachmentsInput> = z.strictObject({
   id: z.union([ z.cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   quoteNumber: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.lazy(() => QuoteStatusSchema), z.lazy(() => EnumQuoteStatusFieldUpdateOperationsInputSchema) ]).optional(),
+  versionNumber: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   amount: z.union([ z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),z.lazy(() => DecimalFieldUpdateOperationsInputSchema) ]).optional(),
   currency: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   gst: z.union([ z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),z.lazy(() => DecimalFieldUpdateOperationsInputSchema) ]).optional(),
@@ -34,7 +39,10 @@ export const QuoteUpdateWithoutAttachmentsInputSchema: z.ZodType<Prisma.QuoteUpd
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   deletedAt: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   customer: z.lazy(() => CustomerUpdateOneRequiredWithoutQuotesNestedInputSchema).optional(),
+  parentQuote: z.lazy(() => QuoteUpdateOneWithoutVersionsNestedInputSchema).optional(),
+  versions: z.lazy(() => QuoteUpdateManyWithoutParentQuoteNestedInputSchema).optional(),
   items: z.lazy(() => QuoteItemUpdateManyWithoutQuoteNestedInputSchema).optional(),
+  statusHistory: z.lazy(() => QuoteStatusHistoryUpdateManyWithoutQuoteNestedInputSchema).optional(),
 });
 
 export default QuoteUpdateWithoutAttachmentsInputSchema;

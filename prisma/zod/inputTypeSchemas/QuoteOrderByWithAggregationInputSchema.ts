@@ -14,6 +14,8 @@ export const QuoteOrderByWithAggregationInputSchema: z.ZodType<Prisma.QuoteOrder
   quoteNumber: z.lazy(() => SortOrderSchema).optional(),
   customerId: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  parentQuoteId: z.union([ z.lazy(() => SortOrderSchema), z.lazy(() => SortOrderInputSchema) ]).optional(),
   amount: z.lazy(() => SortOrderSchema).optional(),
   currency: z.lazy(() => SortOrderSchema).optional(),
   gst: z.lazy(() => SortOrderSchema).optional(),

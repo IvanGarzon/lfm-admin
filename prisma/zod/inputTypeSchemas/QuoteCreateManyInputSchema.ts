@@ -10,6 +10,8 @@ export const QuoteCreateManyInputSchema: z.ZodType<Prisma.QuoteCreateManyInput> 
   quoteNumber: z.string(),
   customerId: z.string(),
   status: z.lazy(() => QuoteStatusSchema).optional(),
+  versionNumber: z.number().int().optional(),
+  parentQuoteId: z.string().optional().nullable(),
   amount: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),
   currency: z.string().optional(),
   gst: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }).optional(),

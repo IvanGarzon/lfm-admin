@@ -4,14 +4,18 @@ import { z } from 'zod';
 import { QuoteStatusSchema } from './QuoteStatusSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
+import { QuoteUncheckedCreateNestedManyWithoutParentQuoteInputSchema } from './QuoteUncheckedCreateNestedManyWithoutParentQuoteInputSchema';
 import { QuoteItemUncheckedCreateNestedManyWithoutQuoteInputSchema } from './QuoteItemUncheckedCreateNestedManyWithoutQuoteInputSchema';
 import { QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInputSchema } from './QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInputSchema';
+import { QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInputSchema } from './QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInputSchema';
 
 export const QuoteUncheckedCreateInputSchema: z.ZodType<Prisma.QuoteUncheckedCreateInput> = z.strictObject({
   id: z.cuid().optional(),
   quoteNumber: z.string(),
   customerId: z.string(),
   status: z.lazy(() => QuoteStatusSchema).optional(),
+  versionNumber: z.number().int().optional(),
+  parentQuoteId: z.string().optional().nullable(),
   amount: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),
   currency: z.string().optional(),
   gst: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }).optional(),
@@ -28,8 +32,10 @@ export const QuoteUncheckedCreateInputSchema: z.ZodType<Prisma.QuoteUncheckedCre
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   deletedAt: z.coerce.date().optional().nullable(),
+  versions: z.lazy(() => QuoteUncheckedCreateNestedManyWithoutParentQuoteInputSchema).optional(),
   items: z.lazy(() => QuoteItemUncheckedCreateNestedManyWithoutQuoteInputSchema).optional(),
   attachments: z.lazy(() => QuoteAttachmentUncheckedCreateNestedManyWithoutQuoteInputSchema).optional(),
+  statusHistory: z.lazy(() => QuoteStatusHistoryUncheckedCreateNestedManyWithoutQuoteInputSchema).optional(),
 });
 
 export default QuoteUncheckedCreateInputSchema;

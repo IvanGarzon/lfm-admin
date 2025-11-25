@@ -7,8 +7,11 @@ import { QuoteUncheckedCreateInputSchema } from '../inputTypeSchemas/QuoteUnchec
 import { QuoteUpdateInputSchema } from '../inputTypeSchemas/QuoteUpdateInputSchema'
 import { QuoteUncheckedUpdateInputSchema } from '../inputTypeSchemas/QuoteUncheckedUpdateInputSchema'
 import { CustomerArgsSchema } from "../outputTypeSchemas/CustomerArgsSchema"
+import { QuoteArgsSchema } from "../outputTypeSchemas/QuoteArgsSchema"
+import { QuoteFindManyArgsSchema } from "../outputTypeSchemas/QuoteFindManyArgsSchema"
 import { QuoteItemFindManyArgsSchema } from "../outputTypeSchemas/QuoteItemFindManyArgsSchema"
 import { QuoteAttachmentFindManyArgsSchema } from "../outputTypeSchemas/QuoteAttachmentFindManyArgsSchema"
+import { QuoteStatusHistoryFindManyArgsSchema } from "../outputTypeSchemas/QuoteStatusHistoryFindManyArgsSchema"
 import { QuoteCountOutputTypeArgsSchema } from "../outputTypeSchemas/QuoteCountOutputTypeArgsSchema"
 // Select schema needs to be in file to prevent circular imports
 //------------------------------------------------------
@@ -18,6 +21,8 @@ export const QuoteSelectSchema: z.ZodType<Prisma.QuoteSelect> = z.object({
   quoteNumber: z.boolean().optional(),
   customerId: z.boolean().optional(),
   status: z.boolean().optional(),
+  versionNumber: z.boolean().optional(),
+  parentQuoteId: z.boolean().optional(),
   amount: z.boolean().optional(),
   currency: z.boolean().optional(),
   gst: z.boolean().optional(),
@@ -35,8 +40,11 @@ export const QuoteSelectSchema: z.ZodType<Prisma.QuoteSelect> = z.object({
   updatedAt: z.boolean().optional(),
   deletedAt: z.boolean().optional(),
   customer: z.union([z.boolean(),z.lazy(() => CustomerArgsSchema)]).optional(),
+  parentQuote: z.union([z.boolean(),z.lazy(() => QuoteArgsSchema)]).optional(),
+  versions: z.union([z.boolean(),z.lazy(() => QuoteFindManyArgsSchema)]).optional(),
   items: z.union([z.boolean(),z.lazy(() => QuoteItemFindManyArgsSchema)]).optional(),
   attachments: z.union([z.boolean(),z.lazy(() => QuoteAttachmentFindManyArgsSchema)]).optional(),
+  statusHistory: z.union([z.boolean(),z.lazy(() => QuoteStatusHistoryFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => QuoteCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 

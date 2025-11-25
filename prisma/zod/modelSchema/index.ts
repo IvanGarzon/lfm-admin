@@ -12,3 +12,4 @@ export * from './QuoteSchema';
 export * from './QuoteItemSchema';
 export * from './QuoteAttachmentSchema';
 export * from './QuoteItemAttachmentSchema';
+export * from './QuoteStatusHistorySchema';

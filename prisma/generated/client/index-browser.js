@@ -275,6 +275,8 @@ exports.Prisma.QuoteScalarFieldEnum = {
   quoteNumber: 'quoteNumber',
   customerId: 'customerId',
   status: 'status',
+  versionNumber: 'versionNumber',
+  parentQuoteId: 'parentQuoteId',
   amount: 'amount',
   currency: 'currency',
   gst: 'gst',
@@ -330,6 +332,16 @@ exports.Prisma.QuoteItemAttachmentScalarFieldEnum = {
   s3Url: 's3Url',
   uploadedBy: 'uploadedBy',
   uploadedAt: 'uploadedAt'
+};
+
+exports.Prisma.QuoteStatusHistoryScalarFieldEnum = {
+  id: 'id',
+  quoteId: 'quoteId',
+  status: 'status',
+  previousStatus: 'previousStatus',
+  changedAt: 'changedAt',
+  changedBy: 'changedBy',
+  notes: 'notes'
 };
 
 exports.Prisma.SortOrder = {
@@ -427,7 +439,8 @@ exports.Prisma.ModelName = {
   Quote: 'Quote',
   QuoteItem: 'QuoteItem',
   QuoteAttachment: 'QuoteAttachment',
-  QuoteItemAttachment: 'QuoteItemAttachment'
+  QuoteItemAttachment: 'QuoteItemAttachment',
+  QuoteStatusHistory: 'QuoteStatusHistory'
 };
 
 /**

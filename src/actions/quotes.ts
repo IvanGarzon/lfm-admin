@@ -146,7 +146,7 @@ export async function createQuote(
   try {
     // Validate input
     const validatedData = CreateQuoteSchema.parse(data);
-    const quote = await quoteRepo.createQuoteWithItems(validatedData);
+    const quote = await quoteRepo.createQuoteWithItems(validatedData, session.user.id);
     revalidatePath('/finances/quotes');
 
     return {
@@ -200,7 +200,11 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
       return { success: false, error: 'Quote not found' };
     }
 
-    const quote = await quoteRepo.updateQuoteWithItems(validatedData.id, validatedData);
+    const quote = await quoteRepo.updateQuoteWithItems(
+      validatedData.id,
+      validatedData,
+      session.user.id,
+    );
     if (!quote) {
       return { success: false, error: 'Failed to update quote' };
     }
@@ -241,9 +245,14 @@ export async function markQuoteAsAccepted(
   data: MarkQuoteAsAcceptedInput,
 ): Promise<ActionResult<{ id: string }>> {
   try {
+    const session = await auth();
     const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
 
-    const quote = await quoteRepo.markAsAccepted(validatedData.id, validatedData.acceptedDate);
+    const quote = await quoteRepo.markAsAccepted(
+      validatedData.id,
+      validatedData.acceptedDate,
+      session?.user?.id,
+    );
 
     if (!quote) {
       return { success: false, error: 'Quote not found' };
@@ -272,12 +281,14 @@ export async function markQuoteAsRejected(
   data: MarkQuoteAsRejectedInput,
 ): Promise<ActionResult<{ id: string }>> {
   try {
+    const session = await auth();
     const validatedData = MarkQuoteAsRejectedSchema.parse(data);
 
     const quote = await quoteRepo.markAsRejected(
       validatedData.id,
       validatedData.rejectedDate,
       validatedData.rejectReason,
+      session?.user?.id,
     );
 
     if (!quote) {
@@ -304,7 +315,8 @@ export async function markQuoteAsRejected(
  */
 export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: string }>> {
   try {
-    const quote = await quoteRepo.markAsSent(id);
+    const session = await auth();
+    const quote = await quoteRepo.markAsSent(id, session?.user?.id);
 
     if (!quote) {
       return { success: false, error: 'Quote not found' };
@@ -333,6 +345,7 @@ export async function convertQuoteToInvoice(
   data: ConvertQuoteToInvoiceInput,
 ): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
   try {
+    const session = await auth();
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -352,6 +365,9 @@ export async function convertQuoteToInvoice(
       if (quote.status !== QuoteStatus.ACCEPTED) {
         throw new Error('Only accepted quotes can be converted to invoices');
       }
+
+      const previousStatus = quote.status;
+      const convertedDate = new Date();
 
       // Generate invoice number
       const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
@@ -386,8 +402,20 @@ export async function convertQuoteToInvoice(
         where: { id: validatedData.id },
         data: {
           status: QuoteStatus.CONVERTED,
-          convertedDate: new Date(),
+          convertedDate,
           invoiceId: invoice.id,
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: validatedData.id,
+          status: QuoteStatus.CONVERTED,
+          previousStatus,
+          changedAt: convertedDate,
+          changedBy: session?.user?.id,
+          notes: `Quote converted to invoice ${invoice.invoiceNumber}`,
         },
       });
 

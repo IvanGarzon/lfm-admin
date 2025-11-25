@@ -209,6 +209,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           },
           orderBy: { uploadedAt: 'desc' },
         },
+        statusHistory: {
+          select: {
+            id: true,
+            status: true,
+            previousStatus: true,
+            changedAt: true,
+            changedBy: true,
+            notes: true,
+          },
+          orderBy: { changedAt: 'asc' },
+        },
       },
     });
 
@@ -360,50 +371,89 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     return stats;
   }
 
-  async createQuoteWithItems(data: CreateQuoteInput): Promise<{ id: string; quoteNumber: string }> {
+  async createQuoteWithItems(
+    data: CreateQuoteInput,
+    createdBy?: string,
+  ): Promise<{ id: string; quoteNumber: string }> {
     // Generate invoice number
     const quoteNumber = await this.generateQuoteNumber();
 
     // Calculate total amount
     const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-    return this.prisma.quote.create({
-      data: {
-        quoteNumber,
-        customerId: data.customerId,
-        status: data.status,
-        amount: totalAmount,
-        currency: data.currency,
-        gst: data.gst,
-        discount: data.discount,
-        issuedDate: data.issuedDate,
-        validUntil: data.validUntil,
-        notes: data.notes ?? null,
-        terms: data.terms ?? null,
-        items: {
-          create: data.items.map((item, index) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.quantity * item.unitPrice,
-            productId: item.productId,
-            order: index,
-          })),
+    const createdDate = new Date();
+
+    // Create quote and initial status history in a transaction
+    return this.prisma.$transaction(async (tx) => {
+      const quote = await tx.quote.create({
+        data: {
+          quoteNumber,
+          customerId: data.customerId,
+          status: data.status,
+          amount: totalAmount,
+          currency: data.currency,
+          gst: data.gst,
+          discount: data.discount,
+          issuedDate: data.issuedDate,
+          validUntil: data.validUntil,
+          notes: data.notes ?? null,
+          terms: data.terms ?? null,
+          items: {
+            create: data.items.map((item, index) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.quantity * item.unitPrice,
+              productId: item.productId,
+              order: index,
+            })),
+          },
         },
-      },
-      select: {
-        id: true,
-        quoteNumber: true,
-      },
+        select: {
+          id: true,
+          quoteNumber: true,
+        },
+      });
+
+      // Create initial status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: quote.id,
+          status: data.status,
+          previousStatus: null,
+          changedAt: createdDate,
+          changedBy: createdBy,
+          notes: 'Quote created',
+        },
+      });
+
+      return quote;
     });
   }
 
-  async updateQuoteWithItems(id: string, data: UpdateQuoteInput): Promise<QuoteWithDetails | null> {
+  async updateQuoteWithItems(
+    id: string,
+    data: UpdateQuoteInput,
+    updatedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
     // Calculate total amount
     const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
     // Update quote with items in a transaction
     const updatedQuote = await this.prisma.$transaction(async (tx) => {
+      // Get current quote to check for status changes
+      const currentQuote = await tx.quote.findUnique({
+        where: { id },
+        select: { status: true },
+      });
+
+      if (!currentQuote) {
+        throw new Error('Quote not found');
+      }
+
+      const statusChanged = currentQuote.status !== data.status;
+      const previousStatus = currentQuote.status;
+
       // Separate existing items from new items
       const existingItems = data.items.filter((item) => item.id);
       const newItems = data.items.filter((item) => !item.id);
@@ -434,6 +484,20 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           updatedAt: new Date(),
         },
       });
+
+      // Create status history entry if status changed
+      if (statusChanged) {
+        await tx.quoteStatusHistory.create({
+          data: {
+            quoteId: id,
+            status: data.status,
+            previousStatus,
+            changedAt: new Date(),
+            changedBy: updatedBy,
+            notes: 'Status updated via quote edit',
+          },
+        });
+      }
 
       // Update existing items
       for (let index = 0; index < existingItems.length; index++) {
@@ -514,14 +578,48 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   /**
    * Mark quote as accepted
    */
-  async markAsAccepted(id: string, acceptedDate: Date): Promise<QuoteWithDetails | null> {
-    const updated = await this.prisma.quote.update({
+  async markAsAccepted(
+    id: string,
+    acceptedDate: Date,
+    changedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
+    // Get current status before update
+    const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
-      data: {
-        status: QuoteStatusSchema.enum.ACCEPTED,
-        acceptedDate,
-        updatedAt: new Date(),
-      },
+      select: { status: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const previousStatus = quote.status;
+
+    // Update quote and create status history in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update quote status
+      const updatedQuote = await tx.quote.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: QuoteStatusSchema.enum.ACCEPTED,
+          acceptedDate,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: id,
+          status: QuoteStatusSchema.enum.ACCEPTED,
+          previousStatus,
+          changedAt: acceptedDate,
+          changedBy,
+          notes: 'Quote accepted by customer',
+        },
+      });
+
+      return updatedQuote;
     });
 
     if (!updated) {
@@ -538,15 +636,46 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     id: string,
     rejectedDate: Date,
     rejectReason: string,
+    changedBy?: string,
   ): Promise<QuoteWithDetails | null> {
-    const updated = await this.prisma.quote.update({
+    // Get current status before update
+    const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
-      data: {
-        status: QuoteStatusSchema.enum.REJECTED,
-        rejectedDate,
-        rejectReason,
-        updatedAt: new Date(),
-      },
+      select: { status: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const previousStatus = quote.status;
+
+    // Update quote and create status history in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update quote status
+      const updatedQuote = await tx.quote.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: QuoteStatusSchema.enum.REJECTED,
+          rejectedDate,
+          rejectReason,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: id,
+          status: QuoteStatusSchema.enum.REJECTED,
+          previousStatus,
+          changedAt: rejectedDate,
+          changedBy,
+          notes: `Quote rejected by customer${rejectReason ? `: ${rejectReason}` : ''}`,
+        },
+      });
+
+      return updatedQuote;
     });
 
     return this.findByIdWithDetails(updated.id);
@@ -555,13 +684,44 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   /**
    * Mark quote as sent
    */
-  async markAsSent(id: string): Promise<QuoteWithDetails | null> {
-    const updated = await this.prisma.quote.update({
+  async markAsSent(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+    // Get current status before update
+    const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
-      data: {
-        status: QuoteStatusSchema.enum.SENT,
-        updatedAt: new Date(),
-      },
+      select: { status: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const previousStatus = quote.status;
+    const sentDate = new Date();
+
+    // Update quote and create status history in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update quote status
+      const updatedQuote = await tx.quote.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: QuoteStatusSchema.enum.SENT,
+          updatedAt: sentDate,
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: id,
+          status: QuoteStatusSchema.enum.SENT,
+          previousStatus,
+          changedAt: sentDate,
+          changedBy,
+          notes: 'Quote sent to customer',
+        },
+      });
+
+      return updatedQuote;
     });
 
     if (!updated) {
@@ -577,7 +737,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async checkAndExpireQuotes(): Promise<number> {
     const today = new Date();
 
-    const result = await this.prisma.quote.updateMany({
+    // Find quotes that need to be expired
+    const quotesToExpire = await this.prisma.quote.findMany({
       where: {
         status: {
           in: [QuoteStatusSchema.enum.DRAFT, QuoteStatusSchema.enum.SENT],
@@ -585,13 +746,43 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         validUntil: { lt: today },
         deletedAt: null,
       },
-      data: {
-        status: QuoteStatusSchema.enum.EXPIRED,
-        updatedAt: new Date(),
+      select: {
+        id: true,
+        status: true,
+        validUntil: true,
       },
     });
 
-    return result.count;
+    // Update each quote and create status history
+    let expiredCount = 0;
+    for (const quote of quotesToExpire) {
+      await this.prisma.$transaction(async (tx) => {
+        // Update quote status
+        await tx.quote.update({
+          where: { id: quote.id },
+          data: {
+            status: QuoteStatusSchema.enum.EXPIRED,
+            updatedAt: new Date(),
+          },
+        });
+
+        // Create status history entry
+        await tx.quoteStatusHistory.create({
+          data: {
+            quoteId: quote.id,
+            status: QuoteStatusSchema.enum.EXPIRED,
+            previousStatus: quote.status,
+            changedAt: quote.validUntil,
+            changedBy: null, // System-initiated
+            notes: 'Quote expired automatically',
+          },
+        });
+
+        expiredCount++;
+      });
+    }
+
+    return expiredCount;
   }
 
   /**

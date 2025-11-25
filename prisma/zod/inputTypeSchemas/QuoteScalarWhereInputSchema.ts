@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { StringFilterSchema } from './StringFilterSchema';
 import { EnumQuoteStatusFilterSchema } from './EnumQuoteStatusFilterSchema';
 import { QuoteStatusSchema } from './QuoteStatusSchema';
+import { IntFilterSchema } from './IntFilterSchema';
+import { StringNullableFilterSchema } from './StringNullableFilterSchema';
 import { DecimalFilterSchema } from './DecimalFilterSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
 import { DateTimeFilterSchema } from './DateTimeFilterSchema';
 import { DateTimeNullableFilterSchema } from './DateTimeNullableFilterSchema';
-import { StringNullableFilterSchema } from './StringNullableFilterSchema';
 
 export const QuoteScalarWhereInputSchema: z.ZodType<Prisma.QuoteScalarWhereInput> = z.strictObject({
   AND: z.union([ z.lazy(() => QuoteScalarWhereInputSchema), z.lazy(() => QuoteScalarWhereInputSchema).array() ]).optional(),
@@ -19,6 +20,8 @@ export const QuoteScalarWhereInputSchema: z.ZodType<Prisma.QuoteScalarWhereInput
   quoteNumber: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   customerId: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   status: z.union([ z.lazy(() => EnumQuoteStatusFilterSchema), z.lazy(() => QuoteStatusSchema) ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntFilterSchema), z.number() ]).optional(),
+  parentQuoteId: z.union([ z.lazy(() => StringNullableFilterSchema), z.string() ]).optional().nullable(),
   amount: z.union([ z.lazy(() => DecimalFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),
   currency: z.union([ z.lazy(() => StringFilterSchema), z.string() ]).optional(),
   gst: z.union([ z.lazy(() => DecimalFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),

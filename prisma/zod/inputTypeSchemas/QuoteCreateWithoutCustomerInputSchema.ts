@@ -4,13 +4,17 @@ import { z } from 'zod';
 import { QuoteStatusSchema } from './QuoteStatusSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
+import { QuoteCreateNestedOneWithoutVersionsInputSchema } from './QuoteCreateNestedOneWithoutVersionsInputSchema';
+import { QuoteCreateNestedManyWithoutParentQuoteInputSchema } from './QuoteCreateNestedManyWithoutParentQuoteInputSchema';
 import { QuoteItemCreateNestedManyWithoutQuoteInputSchema } from './QuoteItemCreateNestedManyWithoutQuoteInputSchema';
 import { QuoteAttachmentCreateNestedManyWithoutQuoteInputSchema } from './QuoteAttachmentCreateNestedManyWithoutQuoteInputSchema';
+import { QuoteStatusHistoryCreateNestedManyWithoutQuoteInputSchema } from './QuoteStatusHistoryCreateNestedManyWithoutQuoteInputSchema';
 
 export const QuoteCreateWithoutCustomerInputSchema: z.ZodType<Prisma.QuoteCreateWithoutCustomerInput> = z.strictObject({
   id: z.cuid().optional(),
   quoteNumber: z.string(),
   status: z.lazy(() => QuoteStatusSchema).optional(),
+  versionNumber: z.number().int().optional(),
   amount: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }),
   currency: z.string().optional(),
   gst: z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }).optional(),
@@ -27,8 +31,11 @@ export const QuoteCreateWithoutCustomerInputSchema: z.ZodType<Prisma.QuoteCreate
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   deletedAt: z.coerce.date().optional().nullable(),
+  parentQuote: z.lazy(() => QuoteCreateNestedOneWithoutVersionsInputSchema).optional(),
+  versions: z.lazy(() => QuoteCreateNestedManyWithoutParentQuoteInputSchema).optional(),
   items: z.lazy(() => QuoteItemCreateNestedManyWithoutQuoteInputSchema).optional(),
   attachments: z.lazy(() => QuoteAttachmentCreateNestedManyWithoutQuoteInputSchema).optional(),
+  statusHistory: z.lazy(() => QuoteStatusHistoryCreateNestedManyWithoutQuoteInputSchema).optional(),
 });
 
 export default QuoteCreateWithoutCustomerInputSchema;

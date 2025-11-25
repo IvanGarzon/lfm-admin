@@ -8,6 +8,8 @@ export const QuoteMinOrderByAggregateInputSchema: z.ZodType<Prisma.QuoteMinOrder
   quoteNumber: z.lazy(() => SortOrderSchema).optional(),
   customerId: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
+  versionNumber: z.lazy(() => SortOrderSchema).optional(),
+  parentQuoteId: z.lazy(() => SortOrderSchema).optional(),
   amount: z.lazy(() => SortOrderSchema).optional(),
   currency: z.lazy(() => SortOrderSchema).optional(),
   gst: z.lazy(() => SortOrderSchema).optional(),

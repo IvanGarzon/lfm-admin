@@ -18,6 +18,15 @@ export type QuoteListItem = {
   attachmentCount: number;
 };
 
+export type QuoteStatusHistoryItem = {
+  id: string;
+  status: QuoteStatusType;
+  previousStatus: QuoteStatusType | null;
+  changedAt: Date;
+  changedBy: string | null;
+  notes: string | null;
+};
+
 export type QuoteWithDetails = {
   id: string;
   quoteNumber: string;
@@ -61,6 +70,7 @@ export type QuoteWithDetails = {
     attachments: QuoteItemAttachment[];
   }[];
   attachments: QuoteAttachment[];
+  statusHistory: QuoteStatusHistoryItem[];
 };
 
 export type QuoteAttachment = {

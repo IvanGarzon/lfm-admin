@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { StringWithAggregatesFilterSchema } from './StringWithAggregatesFilterSchema';
 import { EnumQuoteStatusWithAggregatesFilterSchema } from './EnumQuoteStatusWithAggregatesFilterSchema';
 import { QuoteStatusSchema } from './QuoteStatusSchema';
+import { IntWithAggregatesFilterSchema } from './IntWithAggregatesFilterSchema';
+import { StringNullableWithAggregatesFilterSchema } from './StringNullableWithAggregatesFilterSchema';
 import { DecimalWithAggregatesFilterSchema } from './DecimalWithAggregatesFilterSchema';
 import { isValidDecimalInput } from './isValidDecimalInput';
 import { DecimalJsLikeSchema } from './DecimalJsLikeSchema';
 import { DateTimeWithAggregatesFilterSchema } from './DateTimeWithAggregatesFilterSchema';
 import { DateTimeNullableWithAggregatesFilterSchema } from './DateTimeNullableWithAggregatesFilterSchema';
-import { StringNullableWithAggregatesFilterSchema } from './StringNullableWithAggregatesFilterSchema';
 
 export const QuoteScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.QuoteScalarWhereWithAggregatesInput> = z.strictObject({
   AND: z.union([ z.lazy(() => QuoteScalarWhereWithAggregatesInputSchema), z.lazy(() => QuoteScalarWhereWithAggregatesInputSchema).array() ]).optional(),
@@ -19,6 +20,8 @@ export const QuoteScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.QuoteSc
   quoteNumber: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   customerId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   status: z.union([ z.lazy(() => EnumQuoteStatusWithAggregatesFilterSchema), z.lazy(() => QuoteStatusSchema) ]).optional(),
+  versionNumber: z.union([ z.lazy(() => IntWithAggregatesFilterSchema), z.number() ]).optional(),
+  parentQuoteId: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema), z.string() ]).optional().nullable(),
   amount: z.union([ z.lazy(() => DecimalWithAggregatesFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),
   currency: z.union([ z.lazy(() => StringWithAggregatesFilterSchema), z.string() ]).optional(),
   gst: z.union([ z.lazy(() => DecimalWithAggregatesFilterSchema), z.union([z.number(),z.string(),z.instanceof(Prisma.Decimal),DecimalJsLikeSchema,]).refine((v) => isValidDecimalInput(v), { message: 'Must be a Decimal' }) ]).optional(),

@@ -1,7 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "./generated/client"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+  // previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -252,6 +252,12 @@ model Quote {
 
   status QuoteStatus @default(DRAFT)
 
+  // Version tracking
+  versionNumber Int     @default(1) @map(name: "version_number")
+  parentQuoteId String? @map(name: "parent_quote_id")
+  parentQuote   Quote?  @relation("QuoteVersions", fields: [parentQuoteId], references: [id], onDelete: Restrict)
+  versions      Quote[] @relation("QuoteVersions")
+
   // Common fields
   amount     Decimal  @db.Money
   currency   String   @default("AUD")
@@ -272,8 +278,9 @@ model Quote {
   invoiceId     String?   @unique @map(name: "invoice_id")
 
   // Relations
-  items       QuoteItem[]
-  attachments QuoteAttachment[]
+  items         QuoteItem[]
+  attachments   QuoteAttachment[]
+  statusHistory QuoteStatusHistory[]
 
   // Notes/Terms
   notes String? @db.Text
@@ -356,6 +363,21 @@ model QuoteItemAttachment {
 
   @@index([quoteItemId])
   @@map(name: "quote_item_attachments")
+}
+
+model QuoteStatusHistory {
+  id      String @id @default(cuid())
+  quoteId String @map(name: "quote_id")
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  status         QuoteStatus
+  previousStatus QuoteStatus?
+  changedAt      DateTime     @default(now()) @map(name: "changed_at") @db.Timestamptz()
+  changedBy      String?      @map(name: "changed_by")
+  notes          String?      @db.Text
+
+  @@index([quoteId, changedAt])
+  @@map(name: "quote_status_history")
 }
 
 enum Gender {
