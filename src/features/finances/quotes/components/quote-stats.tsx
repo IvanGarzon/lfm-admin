@@ -40,7 +40,7 @@ function getStatCards(stats: QuoteStatistics) {
     },
     {
       title: 'Conversion Rate',
-      value: `${stats.conversionRate.toFixed(0)}%`,
+      value: `${stats.conversionRate.toFixed(1)}%`,
       description: 'Quotes converted',
       icon: TrendingUp,
       color: 'text-purple-600',

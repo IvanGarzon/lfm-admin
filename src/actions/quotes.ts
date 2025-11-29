@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { SearchParams } from 'nuqs/server';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
-import { Prisma, InvoiceStatus, QuoteStatus } from '@/prisma/client';
+import { Prisma, QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import {
   CreateQuoteSchema,
@@ -46,7 +46,6 @@ import {
   getSignedDownloadUrl,
   ALLOWED_IMAGE_MIME_TYPES,
 } from '@/lib/s3';
-import { validateQuoteStatusTransition } from '@/lib/quote-status-transitions';
 
 const quoteRepo = new QuoteRepository(prisma);
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -62,7 +61,7 @@ export async function getQuotes(
 ): Promise<ActionResult<QuotePagination>> {
   const session = await auth();
   if (!session?.user) {
-    throw new Error('Unauthorized');
+    return { success: false, error: 'Unauthorized' };
   }
 
   const parseResult = QuoteFiltersSchema.safeParse(searchParams);
@@ -99,6 +98,11 @@ export async function getQuotes(
  */
 export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDetails>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const quote = await quoteRepo.findByIdWithDetails(id);
 
     if (!quote) {
@@ -147,7 +151,7 @@ export async function createQuote(
 ): Promise<ActionResult<{ id: string; quoteNumber: string }>> {
   const session = await auth();
   if (!session?.user) {
-    throw new Error('Unauthorized');
+    return { success: false, error: 'Unauthorized' };
   }
 
   try {
@@ -194,7 +198,7 @@ export async function createQuote(
 export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user) {
-    throw new Error('Unauthorized');
+    return { success: false, error: 'Unauthorized' };
   }
 
   try {
@@ -253,10 +257,13 @@ export async function markQuoteAsAccepted(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
-
     const quote = await quoteRepo.markAsAccepted(validatedData.id, session?.user?.id);
-
+    
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -285,8 +292,11 @@ export async function markQuoteAsRejected(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+    
     const validatedData = MarkQuoteAsRejectedSchema.parse(data);
-
     const quote = await quoteRepo.markAsRejected(
       validatedData.id,
       validatedData.rejectReason,
@@ -318,6 +328,10 @@ export async function markQuoteAsRejected(
 export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const quote = await quoteRepo.markAsSent(id, session?.user?.id);
 
     if (!quote) {
@@ -347,8 +361,11 @@ export async function markQuoteAsOnHold(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+    
     const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
-
     const quote = await quoteRepo.markAsOnHold(
       validatedData.id,
       validatedData.reason,
@@ -382,8 +399,11 @@ export async function markQuoteAsCancelled(
 ): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+    
     const validatedData = MarkQuoteAsCancelledSchema.parse(data);
-
     const quote = await quoteRepo.markAsCancelled(
       validatedData.id,
       validatedData.reason,
@@ -407,90 +427,36 @@ export async function markQuoteAsCancelled(
 }
 
 /**
- * Converts an accepted quote into a new invoice.
- * It copies over relevant details from the quote to a new invoice record.
- * @param data - The input data for the conversion, including the quote ID and invoice due date.
- * @returns A promise that resolves to an `ActionResult` containing the new invoice's ID and number.
- * @throws Will throw an error if the quote is not found or is not in 'ACCEPTED' status.
+ * Converts a quote into a new invoice with PENDING status.
+ * It copies over relevant details from the quote to a new invoice record and updates the quote status to CONVERTED.
+ * The status transition is validated before conversion.
+ * @param data - The input data for the conversion, including the quote ID, invoice due date, GST, and discount.
+ * @returns A promise that resolves to an `ActionResult` containing the new invoice's ID and number,
+ * or an error if the quote is not found or the status transition is invalid.
  */
 export async function convertQuoteToInvoice(
   data: ConvertQuoteToInvoiceInput,
 ): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
+    const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
 
-    const result = await prisma.$transaction(async (tx) => {
-      // Get quote with details
-      const quote = await tx.quote.findUnique({
-        where: { id: validatedData.id, deletedAt: null },
-        include: {
-          items: true,
-          customer: true,
-        },
-      });
-
-      if (!quote) {
-        throw new Error('Quote not found');
-      }
-
-      const previousStatus = quote.status;
-      const convertedDate = new Date();
-
-      // Validate status transition (ACCEPTED -> CONVERTED)
-      validateQuoteStatusTransition(previousStatus, QuoteStatus.CONVERTED);
-
-      // Generate invoice number
-      const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
-
-      // Create invoice from quote with PENDING status
-      const invoice = await tx.invoice.create({
-        data: {
-          invoiceNumber,
-          customerId: quote.customerId,
-          status: InvoiceStatus.PENDING,
-          amount: quote.amount,
-          currency: quote.currency,
-          gst: validatedData.gst,
-          discount: validatedData.discount,
-          issuedDate: new Date(),
-          dueDate: validatedData.dueDate,
-          notes: quote.notes,
-          items: {
-            create: quote.items.map((item) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-              productId: item.productId,
-            })),
-          },
-        },
-      });
-
-      // Update quote status
-      await tx.quote.update({
-        where: { id: validatedData.id },
-        data: {
-          status: QuoteStatus.CONVERTED,
-          invoiceId: invoice.id,
-        },
-      });
-
-      // Create status history entry
-      await tx.quoteStatusHistory.create({
-        data: {
-          quoteId: validatedData.id,
-          status: QuoteStatus.CONVERTED,
-          previousStatus,
-          changedAt: convertedDate,
-          changedBy: session?.user?.id,
-          notes: `Quote converted to invoice ${invoice.invoiceNumber}`,
-        },
-      });
-
-      return { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber };
-    });
+    // Convert quote to invoice
+    const result = await quoteRepo.convertToInvoice(
+      validatedData.id,
+      {
+        invoiceNumber,
+        gst: validatedData.gst,
+        discount: validatedData.discount,
+        dueDate: validatedData.dueDate,
+      },
+      session?.user?.id,
+    );
 
     revalidatePath('/finances/quotes');
     revalidatePath(`/finances/quotes/${validatedData.id}`);
@@ -536,6 +502,11 @@ export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: numb
  */
 export async function deleteQuote(id: string): Promise<ActionResult<{ id: string }>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+    
     const success = await quoteRepo.softDelete(id);
 
     if (!success) {
@@ -1076,7 +1047,7 @@ export async function getQuoteVersions(quoteId: string): Promise<
   try {
     const session = await auth();
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      return { success: false, error: 'Unauthorized' };
     }
 
     const versions = await quoteRepo.getQuoteVersions(quoteId);
@@ -1110,7 +1081,7 @@ export async function createQuoteVersion(
   try {
     const session = await auth();
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      return { success: false, error: 'Unauthorized' };
     }
 
     const validatedData = CreateVersionSchema.parse(data);

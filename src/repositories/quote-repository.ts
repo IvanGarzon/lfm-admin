@@ -29,7 +29,22 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Search and paginate quotes with filters
+   * Search and paginate quotes with filters.
+   * Only returns the latest versions of quotes (quotes without child versions).
+   *
+   * @param params - The filter parameters including search text, status filters, pagination, and sorting options
+   * @returns A promise that resolves to a paginated list of quotes with customer information and counts
+   *
+   * @example
+   * ```ts
+   * const results = await quoteRepo.searchAndPaginate({
+   *   search: 'John Doe',
+   *   status: ['SENT', 'ACCEPTED'],
+   *   page: 1,
+   *   perPage: 20,
+   *   sort: [{ id: 'issuedDate', desc: true }]
+   * });
+   * ```
    */
   async searchAndPaginate(params: QuoteFilters): Promise<QuotePagination> {
     const { search, status, page, perPage, sort } = params;
@@ -147,7 +162,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Find a quote by its ID with details
+   * Find a quote by its ID with complete details including customer, items, attachments, and status history.
+   * Only returns non-deleted quotes.
+   *
+   * @param id - The unique identifier of the quote
+   * @returns A promise that resolves to the quote with all details, or null if not found
    */
   async findByIdWithDetails(id: string): Promise<QuoteWithDetails | null> {
     const quote = await this.prisma.quote.findUnique({
@@ -260,7 +279,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get quote statistics
+   * Get comprehensive statistics about quotes including counts by status, total values, and conversion rates.
+   * Only counts the latest versions of quotes (quotes without child versions).
+   *
+   * @param dateFilter - Optional date range filter for the statistics
+   * @param dateFilter.startDate - The start date (inclusive) for filtering quotes
+   * @param dateFilter.endDate - The end date (inclusive) for filtering quotes
+   * @returns A promise that resolves to statistics object with counts, values, and conversion rate
    */
   async getStatistics(dateFilter?: { startDate?: Date; endDate?: Date }): Promise<QuoteStatistics> {
     const whereClause: Prisma.QuoteWhereInput = {
@@ -352,12 +377,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       },
     });
 
-    // Calculate sent quotes count for conversion rate
-    const sentCount =
-      statusCounts.find((item) => item.status === QuoteStatusSchema.enum.SENT)?._count || 0;
-    const acceptedCount =
-      statusCounts.find((item) => item.status === QuoteStatusSchema.enum.ACCEPTED)?._count || 0;
-
     const stats: QuoteStatistics = {
       total: totalData._count,
       draft: 0,
@@ -371,7 +390,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       totalQuotedValue: Number(totalQuotedData._sum.amount ?? 0),
       totalAcceptedValue: Number(acceptedData._sum.amount ?? 0),
       totalConvertedValue: Number(convertedData._sum.amount ?? 0),
-      conversionRate: sentCount > 0 ? (acceptedCount / sentCount) * 100 : 0,
+      conversionRate: 0,
       avgQuoteValue: avgQuoteValue[0]?.avg ?? 0,
     };
 
@@ -405,14 +424,29 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }
     });
 
+    // Calculate conversion rate after status counts are populated
+    // Conversion rate = accepted / (all quotes that were sent to customers)
+    const totalSentQuotes = stats.sent + stats.accepted + stats.rejected + stats.expired + stats.converted;
+    stats.conversionRate = totalSentQuotes > 0 ? (stats.accepted / totalSentQuotes) * 100 : 0;
+
     return stats;
   }
 
+  /**
+   * Create a new quote with its items in a single transaction.
+   * Automatically generates a quote number, calculates total amount, and creates initial status history.
+   *
+   * @param data - The quote data including customer, items, dates, and financial details
+   * @param createdBy - Optional ID of the user creating the quote (for audit trail)
+   * @returns A promise that resolves to an object containing the new quote's ID and generated quote number
+   *
+   * @throws {Error} If the transaction fails or validation errors occur
+   */
   async createQuoteWithItems(
     data: CreateQuoteInput,
     createdBy?: string,
   ): Promise<{ id: string; quoteNumber: string }> {
-    // Generate invoice number
+    // Generate quote number
     const quoteNumber = await this.generateQuoteNumber();
 
     // Calculate total amount
@@ -468,6 +502,18 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     });
   }
 
+  /**
+   * Update an existing quote and its items in a single transaction.
+   * Handles adding new items, updating existing items, and removing deleted items.
+   * Validates status transitions and creates status history when status changes.
+   *
+   * @param id - The ID of the quote to update
+   * @param data - The updated quote data including items
+   * @param updatedBy - Optional ID of the user updating the quote (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid or the transaction fails
+   */
   async updateQuoteWithItems(
     id: string,
     data: UpdateQuoteInput,
@@ -587,7 +633,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Generate quote number
+   * Generate a unique quote number based on the current year.
+   * Format: QUO-YYYY-NNNN (e.g., QUO-2025-0001)
+   *
+   * @returns A promise that resolves to the next available quote number for the current year
    */
   async generateQuoteNumber(): Promise<string> {
     const year = new Date().getFullYear();
@@ -618,7 +667,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Mark quote as accepted
+   * Mark a quote as accepted by the customer.
+   * Validates the status transition and creates a status history entry in a transaction.
+   *
+   * @param id - The ID of the quote to mark as accepted
+   * @param changedBy - Optional ID of the user who marked the quote as accepted (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid (e.g., cannot accept a cancelled quote)
    */
   async markAsAccepted(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
@@ -671,7 +727,15 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Mark quote as on hold
+   * Mark a quote as on hold.
+   * Validates the status transition and creates a status history entry with the optional reason.
+   *
+   * @param id - The ID of the quote to mark as on hold
+   * @param reason - Optional reason for putting the quote on hold
+   * @param changedBy - Optional ID of the user who put the quote on hold (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid
    */
   async markAsOnHold(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
@@ -724,7 +788,15 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Mark quote as cancelled
+   * Mark a quote as cancelled.
+   * Validates the status transition and creates a status history entry with the optional reason.
+   *
+   * @param id - The ID of the quote to cancel
+   * @param reason - Optional reason for cancelling the quote
+   * @param changedBy - Optional ID of the user who cancelled the quote (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid
    */
   async markAsCancelled(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
@@ -777,7 +849,15 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Mark quote as rejected
+   * Mark a quote as rejected by the customer.
+   * Validates the status transition and creates a status history entry with the rejection reason.
+   *
+   * @param id - The ID of the quote to mark as rejected
+   * @param rejectReason - The reason why the quote was rejected (required)
+   * @param changedBy - Optional ID of the user who marked the quote as rejected (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid
    */
   async markAsRejected(
     id: string,
@@ -830,7 +910,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Mark quote as sent
+   * Mark a quote as sent to the customer.
+   * Validates the status transition and creates a status history entry.
+   *
+   * @param id - The ID of the quote to mark as sent
+   * @param changedBy - Optional ID of the user who sent the quote (for audit trail)
+   * @returns A promise that resolves to the updated quote with full details, or null if quote not found
+   *
+   * @throws {Error} If the status transition is invalid (e.g., cannot send a cancelled quote)
    */
   async markAsSent(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
@@ -883,7 +970,107 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Check and expire old quotes
+   * Convert a quote to an invoice in a single transaction.
+   * Creates a new invoice with PENDING status, updates the quote status to CONVERTED,
+   * and creates a status history entry. All quote items are copied to the invoice.
+   *
+   * @param quoteId - The ID of the quote to convert
+   * @param invoiceData - The invoice-specific data
+   * @param invoiceData.invoiceNumber - The pre-generated invoice number to use
+   * @param invoiceData.gst - The GST/tax amount for the invoice
+   * @param invoiceData.discount - The discount amount for the invoice
+   * @param invoiceData.dueDate - The payment due date for the invoice
+   * @param changedBy - Optional ID of the user who performed the conversion (for audit trail)
+   * @returns A promise that resolves to an object containing the new invoice's ID and number
+   *
+   * @throws {Error} If the quote is not found or the status transition is invalid
+   */
+  async convertToInvoice(
+    quoteId: string,
+    invoiceData: {
+      invoiceNumber: string;
+      gst: number;
+      discount: number;
+      dueDate: Date;
+    },
+    changedBy?: string,
+  ): Promise<{ invoiceId: string; invoiceNumber: string }> {
+    return this.prisma.$transaction(async (tx) => {
+      // Get quote with details
+      const quote = await tx.quote.findUnique({
+        where: { id: quoteId, deletedAt: null },
+        include: {
+          items: true,
+          customer: true,
+        },
+      });
+
+      if (!quote) {
+        throw new Error('Quote not found');
+      }
+
+      const previousStatus = quote.status;
+      const convertedDate = new Date();
+
+      // Validate status transition (ACCEPTED -> CONVERTED)
+      validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.CONVERTED);
+
+      // Create invoice from quote with PENDING status
+      const invoice = await tx.invoice.create({
+        data: {
+          invoiceNumber: invoiceData.invoiceNumber,
+          customerId: quote.customerId,
+          status: 'PENDING',
+          amount: quote.amount,
+          currency: quote.currency,
+          gst: invoiceData.gst,
+          discount: invoiceData.discount,
+          issuedDate: new Date(),
+          dueDate: invoiceData.dueDate,
+          notes: quote.notes,
+          items: {
+            create: quote.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              productId: item.productId,
+            })),
+          },
+        },
+      });
+
+      // Update quote status
+      await tx.quote.update({
+        where: { id: quoteId },
+        data: {
+          status: QuoteStatusSchema.enum.CONVERTED,
+          invoiceId: invoice.id,
+        },
+      });
+
+      // Create status history entry
+      await tx.quoteStatusHistory.create({
+        data: {
+          quoteId: quoteId,
+          status: QuoteStatusSchema.enum.CONVERTED,
+          previousStatus,
+          changedAt: convertedDate,
+          changedBy: changedBy,
+          notes: `Quote converted to invoice ${invoice.invoiceNumber}`,
+        },
+      });
+
+      return { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber };
+    });
+  }
+
+  /**
+   * Check for quotes that have passed their validity date and automatically expire them.
+   * Only checks quotes with DRAFT or SENT status. Each quote is updated in its own transaction
+   * with a status history entry.
+   *
+   * @returns A promise that resolves to the number of quotes that were expired
    */
   async checkAndExpireQuotes(): Promise<number> {
     const today = new Date();
@@ -937,7 +1124,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Soft delete quote
+   * Soft delete a quote by setting its deletedAt timestamp.
+   * The quote is not permanently removed from the database and can potentially be restored.
+   *
+   * @param id - The ID of the quote to soft delete
+   * @returns A promise that resolves to true if the quote was deleted, false otherwise
    */
   async softDelete(id: string): Promise<boolean> {
     const result = await this.prisma.quote.update({
@@ -952,7 +1143,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get all versions of a quote
+   * Get all versions of a quote in the version chain.
+   * Returns the root quote and all its child versions, ordered by version number.
+   *
+   * @param quoteId - The ID of any quote in the version chain (can be root or child version)
+   * @returns A promise that resolves to an array of quote versions with basic information
    */
   async getQuoteVersions(quoteId: string) {
     // First, get the quote to determine if it has a parent or is the root
@@ -991,7 +1186,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Check if quote number exists
+   * Check if a quote number already exists in the database.
+   * Useful for validation before creating or updating quotes.
+   *
+   * @param quoteNumber - The quote number to check
+   * @param excludeId - Optional quote ID to exclude from the check (useful when updating)
+   * @returns A promise that resolves to true if the quote number exists, false otherwise
    */
   async quoteNumberExists(quoteNumber: string, excludeId?: string): Promise<boolean> {
     const where: Prisma.QuoteWhereInput = {
@@ -1008,7 +1208,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get all attachments for a quote
+   * Get all file attachments associated with a specific quote.
+   * Results are ordered by upload date (newest first).
+   *
+   * @param quoteId - The ID of the quote
+   * @returns A promise that resolves to an array of quote attachments
    */
   async getQuoteAttachments(quoteId: string) {
     return this.prisma.quoteAttachment.findMany({
@@ -1018,7 +1222,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Create a new attachment record
+   * Create a new attachment record for a quote.
+   * The file should already be uploaded to S3 before calling this method.
+   *
+   * @param data - The attachment data including S3 information and file metadata
+   * @returns A promise that resolves to the created attachment record
    */
   async createAttachment(data: {
     quoteId: string;
@@ -1044,7 +1252,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get a single attachment by ID
+   * Get a single quote attachment by its ID.
+   *
+   * @param attachmentId - The ID of the attachment
+   * @returns A promise that resolves to the attachment record, or null if not found
    */
   async getAttachmentById(attachmentId: string) {
     return this.prisma.quoteAttachment.findUnique({
@@ -1053,7 +1264,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Delete an attachment record
+   * Delete a quote attachment record from the database.
+   * Note: This does not delete the file from S3 - that should be handled separately.
+   *
+   * @param attachmentId - The ID of the attachment to delete
+   * @returns A promise that resolves to true if deletion was successful, false otherwise
    */
   async deleteAttachment(attachmentId: string): Promise<boolean> {
     try {
@@ -1067,7 +1282,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Count attachments for a quote
+   * Count the total number of attachments for a specific quote.
+   *
+   * @param quoteId - The ID of the quote
+   * @returns A promise that resolves to the count of attachments
    */
   async countQuoteAttachments(quoteId: string): Promise<number> {
     return this.prisma.quoteAttachment.count({
@@ -1076,7 +1294,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get all attachments for a quote item
+   * Get all file attachments associated with a specific quote item.
+   * Results are ordered by upload date (newest first).
+   *
+   * @param itemId - The ID of the quote item
+   * @returns A promise that resolves to an array of quote item attachments
    */
   async getQuoteItemAttachments(itemId: string) {
     return this.prisma.quoteItemAttachment.findMany({
@@ -1086,7 +1308,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Create a new item attachment record
+   * Create a new attachment record for a quote item.
+   * The file should already be uploaded to S3 before calling this method.
+   * Typically used for product images or design mockups.
+   *
+   * @param data - The attachment data including S3 information and file metadata
+   * @returns A promise that resolves to the created item attachment record
    */
   async createItemAttachment(data: {
     quoteItemId: string;
@@ -1112,7 +1339,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Update quote item notes
+   * Update the notes field for a specific quote item.
+   * Useful for adding special instructions or requirements for individual line items.
+   *
+   * @param quoteItemId - The ID of the quote item to update
+   * @param notes - The notes text to set (can be empty string to clear notes)
+   * @returns A promise that resolves to the updated quote item
    */
   async updateQuoteItemNotes(quoteItemId: string, notes: string) {
     return this.prisma.quoteItem.update({
@@ -1122,7 +1354,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Update quote item colors
+   * Update the color palette for a specific quote item.
+   * Useful for storing product color options or design color schemes.
+   *
+   * @param quoteItemId - The ID of the quote item to update
+   * @param colors - An array of color values (typically hex codes)
+   * @returns A promise that resolves to the updated quote item
    */
   async updateQuoteItemColors(quoteItemId: string, colors: string[]) {
     return this.prisma.quoteItem.update({
@@ -1132,7 +1369,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Get a single item attachment by ID
+   * Get a single quote item attachment by its ID.
+   *
+   * @param attachmentId - The ID of the item attachment
+   * @returns A promise that resolves to the attachment record, or null if not found
    */
   async getItemAttachmentById(attachmentId: string) {
     return this.prisma.quoteItemAttachment.findUnique({
@@ -1141,7 +1381,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Delete an item attachment record
+   * Delete a quote item attachment record from the database.
+   * Note: This does not delete the file from S3 - that should be handled separately.
+   *
+   * @param attachmentId - The ID of the item attachment to delete
+   * @returns A promise that resolves to true if deletion was successful, false otherwise
    */
   async deleteItemAttachment(attachmentId: string): Promise<boolean> {
     try {
@@ -1155,7 +1399,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Count attachments for a quote item
+   * Count the total number of attachments for a specific quote item.
+   *
+   * @param itemId - The ID of the quote item
+   * @returns A promise that resolves to the count of item attachments
    */
   async countQuoteItemAttachments(itemId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
@@ -1164,8 +1411,23 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Create a new version of an existing quote
-   * Copies all quote data and items, increments version number, and links to parent
+   * Create a new version of an existing quote in a transaction.
+   * Copies all quote data, items, and item attachments to a new quote with incremented version number.
+   * The new version starts in DRAFT status, and the parent quote is automatically cancelled.
+   * All versions in a chain are linked to the same root parent quote.
+   *
+   * @param parentQuoteId - The ID of the quote to create a version from
+   * @param createdBy - Optional ID of the user creating the version (for audit trail)
+   * @returns A promise that resolves to an object containing the new version's ID, quote number, and version number
+   *
+   * @throws {Error} If the parent quote is not found
+   *
+   * @example
+   * ```ts
+   * // Create a new version of quote QUO-2025-0001
+   * const newVersion = await quoteRepo.createVersion('quote-id-123', 'user-id-456');
+   * // Returns: { id: 'new-id', quoteNumber: 'QUO-2025-0002', versionNumber: 2 }
+   * ```
    */
   async createVersion(
     parentQuoteId: string,
