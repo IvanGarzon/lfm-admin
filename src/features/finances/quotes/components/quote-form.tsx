@@ -504,6 +504,7 @@ export function QuoteForm({
             <Box className="space-y-4">
               <QuoteItemDetails
                 quoteId={quote.id}
+                items={quote.items}
                 readOnly={isLocked}
                 onDownloadImage={handleDownloadItemImage}
                 onDeleteImage={handleDeleteItemImage}

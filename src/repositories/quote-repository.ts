@@ -331,7 +331,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       avgQuery = Prisma.sql`${avgQuery} AND issued_date <= ${dateFilter.endDate}`;
     }
 
-    const [statusCounts, totalData, avgQuoteValue] = await Promise.all([
+    const [
+      statusCounts,
+      totalData,
+      avgQuoteValue,
+      totalQuotedData,
+      acceptedData,
+      convertedData,
+    ] = await Promise.all([
       this.prisma.quote.groupBy({
         by: ['status'],
         where: whereClause,
@@ -345,37 +352,37 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       // Use raw SQL to calculate average of money type with date filter
       this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
+
+      // Get total quoted value (all quotes)
+      this.prisma.quote.aggregate({
+        where: whereClause,
+        _sum: {
+          amount: true,
+        },
+      }),
+
+      // Get total accepted value
+      this.prisma.quote.aggregate({
+        where: {
+          ...whereClause,
+          status: QuoteStatusSchema.enum.ACCEPTED,
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+
+      // Get total converted value
+      this.prisma.quote.aggregate({
+        where: {
+          ...whereClause,
+          status: QuoteStatusSchema.enum.CONVERTED,
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
     ]);
-
-    // Get total quoted value (all quotes)
-    const totalQuotedData = await this.prisma.quote.aggregate({
-      where: whereClause,
-      _sum: {
-        amount: true,
-      },
-    });
-
-    // Get total accepted value
-    const acceptedData = await this.prisma.quote.aggregate({
-      where: {
-        ...whereClause,
-        status: QuoteStatusSchema.enum.ACCEPTED,
-      },
-      _sum: {
-        amount: true,
-      },
-    });
-
-    // Get total converted value
-    const convertedData = await this.prisma.quote.aggregate({
-      where: {
-        ...whereClause,
-        status: QuoteStatusSchema.enum.CONVERTED,
-      },
-      _sum: {
-        amount: true,
-      },
-    });
 
     const stats: QuoteStatistics = {
       total: totalData._count,
@@ -435,71 +442,93 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   /**
    * Create a new quote with its items in a single transaction.
    * Automatically generates a quote number, calculates total amount, and creates initial status history.
+   * Implements retry logic to handle race conditions in quote number generation.
    *
    * @param data - The quote data including customer, items, dates, and financial details
    * @param createdBy - Optional ID of the user creating the quote (for audit trail)
    * @returns A promise that resolves to an object containing the new quote's ID and generated quote number
    *
-   * @throws {Error} If the transaction fails or validation errors occur
+   * @throws {Error} If the transaction fails, validation errors occur, or unique quote number cannot be generated after 3 attempts
    */
   async createQuoteWithItems(
     data: CreateQuoteInput,
     createdBy?: string,
   ): Promise<{ id: string; quoteNumber: string }> {
-    // Generate quote number
-    const quoteNumber = await this.generateQuoteNumber();
+    let attempts = 0;
+    const maxAttempts = 3;
 
-    // Calculate total amount
-    const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    while (attempts < maxAttempts) {
+      try {
+        // Generate quote number
+        const quoteNumber = await this.generateQuoteNumber();
 
-    const createdDate = new Date();
+        // Calculate total amount
+        const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-    // Create quote and initial status history in a transaction
-    return this.prisma.$transaction(async (tx) => {
-      const quote = await tx.quote.create({
-        data: {
-          quoteNumber,
-          customerId: data.customerId,
-          status: data.status,
-          amount: totalAmount,
-          currency: data.currency,
-          gst: data.gst,
-          discount: data.discount,
-          issuedDate: data.issuedDate,
-          validUntil: data.validUntil,
-          notes: data.notes ?? null,
-          terms: data.terms ?? null,
-          items: {
-            create: data.items.map((item, index) => ({
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.quantity * item.unitPrice,
-              productId: item.productId,
-              order: index,
-            })),
-          },
-        },
-        select: {
-          id: true,
-          quoteNumber: true,
-        },
-      });
+        const createdDate = new Date();
 
-      // Create initial status history entry
-      await tx.quoteStatusHistory.create({
-        data: {
-          quoteId: quote.id,
-          status: data.status,
-          previousStatus: null,
-          changedAt: createdDate,
-          changedBy: createdBy,
-          notes: 'Quote created',
-        },
-      });
+        // Create quote and initial status history in a transaction
+        return await this.prisma.$transaction(async (tx) => {
+          const quote = await tx.quote.create({
+            data: {
+              quoteNumber,
+              customerId: data.customerId,
+              status: data.status,
+              amount: totalAmount,
+              currency: data.currency,
+              gst: data.gst,
+              discount: data.discount,
+              issuedDate: data.issuedDate,
+              validUntil: data.validUntil,
+              notes: data.notes ?? null,
+              terms: data.terms ?? null,
+              items: {
+                create: data.items.map((item, index) => ({
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  total: item.quantity * item.unitPrice,
+                  productId: item.productId,
+                  order: index,
+                })),
+              },
+            },
+            select: {
+              id: true,
+              quoteNumber: true,
+            },
+          });
 
-      return quote;
-    });
+          // Create initial status history entry
+          await tx.quoteStatusHistory.create({
+            data: {
+              quoteId: quote.id,
+              status: data.status,
+              previousStatus: null,
+              changedAt: createdDate,
+              changedBy: createdBy,
+              notes: 'Quote created',
+            },
+          });
+
+          return quote;
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002' // Unique constraint violation
+        ) {
+          attempts++;
+          if (attempts === maxAttempts) {
+            throw new Error('Failed to generate a unique quote number. Please try again.');
+          }
+          continue; // Retry with a new number
+        }
+        throw error; // Re-throw other errors
+      }
+    }
+
+    throw new Error('Failed to create quote');
   }
 
   /**

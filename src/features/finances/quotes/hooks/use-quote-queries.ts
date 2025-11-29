@@ -28,6 +28,7 @@ import {
 } from '@/actions/quotes';
 import type {
   QuoteFilters,
+  QuoteWithDetails,
   MarkQuoteAsAcceptedData,
   MarkQuoteAsRejectedData,
   MarkQuoteAsOnHoldData,
@@ -137,6 +138,10 @@ export function useCreateQuote() {
       }
       return result.data;
     },
+    onMutate: async () => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+    },
     onSuccess: (data) => {
       // Invalidate lists and statistics
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
@@ -160,15 +165,73 @@ export function useUpdateQuote() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      // Invalidate the specific quote, lists, and statistics
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update quote with new data
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+
+          // Calculate new total amount from items
+          const totalAmount = newData.items.reduce(
+            (sum, item) => sum + item.quantity * item.unitPrice,
+            0
+          );
+
+          return {
+            ...old,
+            status: newData.status,
+            amount: totalAmount,
+            gst: newData.gst,
+            discount: newData.discount,
+            currency: newData.currency,
+            issuedDate: newData.issuedDate,
+            validUntil: newData.validUntil,
+            notes: newData.notes,
+            terms: newData.terms,
+            // Update items - merge with existing item data
+            items: newData.items.map((item, index) => ({
+              id: item.id ?? old.items[index]?.id ?? '',
+              quoteId: old.id,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.quantity * item.unitPrice,
+              productId: item.productId ?? null,
+              notes: item.notes ?? old.items[index]?.notes ?? null,
+              order: index,
+              colors: item.colors ?? old.items[index]?.colors ?? [],
+              createdAt: old.items[index]?.createdAt ?? new Date(),
+              attachments: old.items[index]?.attachments ?? [],
+            })),
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to update quote');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update quote');
+    onSuccess: () => {
+      toast.success('Quote updated successfully');
     },
   });
 }
@@ -184,14 +247,43 @@ export function useMarkQuoteAsAccepted() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: 'ACCEPTED' as const,
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to mark quote as accepted');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote marked as accepted');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to mark quote as accepted');
+    onSuccess: () => {
+      toast.success('Quote marked as accepted');
     },
   });
 }
@@ -207,14 +299,43 @@ export function useMarkQuoteAsRejected() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: 'REJECTED' as const,
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to mark quote as rejected');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote marked as rejected');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to mark quote as rejected');
+    onSuccess: () => {
+      toast.success('Quote marked as rejected');
     },
   });
 }
@@ -230,14 +351,40 @@ export function useMarkQuoteAsSent() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(QUOTE_KEYS.detail(id), (old: QuoteWithDetails | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: 'SENT' as const,
+        };
+      });
+
+      return { previousQuote, id };
+    },
+    onError: (err, id, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to mark quote as sent');
+    },
+    onSettled: (_data, _error, id) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote marked as sent');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to mark quote as sent');
+    onSuccess: () => {
+      toast.success('Quote marked as sent');
     },
   });
 }
@@ -253,14 +400,43 @@ export function useMarkQuoteAsOnHold() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: 'ON_HOLD' as const,
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to put quote on hold');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote put on hold');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to put quote on hold');
+    onSuccess: () => {
+      toast.success('Quote put on hold');
     },
   });
 }
@@ -276,14 +452,43 @@ export function useMarkQuoteAsCancelled() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: 'CANCELLED' as const,
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to cancel quote');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote cancelled');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel quote');
+    onSuccess: () => {
+      toast.success('Quote cancelled');
     },
   });
 }
@@ -303,16 +508,44 @@ export function useConvertQuoteToInvoice() {
       }
       return result.data;
     },
-    onSuccess: (data, variables) => {
-      // Invalidate the specific quote detail to update the drawer
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(newData.id),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: 'CONVERTED' as const,
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(newData.id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to convert quote to invoice');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to convert quote to invoice');
+    onSuccess: (data) => {
+      toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
     },
   });
 }
@@ -352,13 +585,40 @@ export function useDeleteQuote() {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      // Snapshot the previous values
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(id));
+      const previousLists = queryClient.getQueriesData({ queryKey: QUOTE_KEYS.lists() });
+
+      // Optimistically remove from detail cache
+      queryClient.removeQueries({ queryKey: QUOTE_KEYS.detail(id) });
+
+      // Return context for rollback
+      return { previousQuote, previousLists, id };
+    },
+    onError: (error: Error, id, context) => {
+      // Rollback optimistic update
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(id), context.previousQuote);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      toast.error(error.message || 'Failed to delete quote');
+    },
+    onSettled: () => {
+      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      toast.success('Quote deleted');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete quote');
+    onSuccess: () => {
+      toast.success('Quote deleted');
     },
   });
 }
@@ -418,9 +678,6 @@ export function useDownloadQuotePdf() {
   });
 }
 
-/**
- * Get attachments for a quote
- */
 export function useQuoteAttachments(quoteId: string | undefined) {
   return useQuery({
     queryKey: QUOTE_KEYS.attachments(quoteId ?? ''),
@@ -438,9 +695,6 @@ export function useQuoteAttachments(quoteId: string | undefined) {
   });
 }
 
-/**
- * Upload an attachment to a quote
- */
 export function useUploadQuoteAttachment() {
   const queryClient = useQueryClient();
 
@@ -469,9 +723,6 @@ export function useUploadQuoteAttachment() {
   });
 }
 
-/**
- * Delete an attachment from a quote
- */
 export function useDeleteQuoteAttachment() {
   const queryClient = useQueryClient();
 
@@ -483,22 +734,51 @@ export function useDeleteQuoteAttachment() {
       }
       return { ...result.data, quoteId: data.quoteId };
     },
-    onSuccess: (data) => {
-      // Invalidate attachments for this quote and the quote detail
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.attachments(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      toast.success('Attachment deleted successfully');
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.attachments(data.quoteId) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
+
+      // Snapshot the previous values
+      const previousAttachments = queryClient.getQueryData(QUOTE_KEYS.attachments(data.quoteId));
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(data.quoteId));
+
+      // Optimistically remove attachment from quote detail
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(data.quoteId),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            attachments: old.attachments.filter((att) => att.id !== data.attachmentId),
+          };
+        },
+      );
+
+      return { previousAttachments, previousQuote };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, data, context) => {
+      // Rollback optimistic update
+      if (context?.previousAttachments) {
+        queryClient.setQueryData(QUOTE_KEYS.attachments(data.quoteId), context.previousAttachments);
+      }
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(data.quoteId), context.previousQuote);
+      }
       toast.error(error.message || 'Failed to delete attachment');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.attachments(variables.quoteId) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Attachment deleted successfully');
     },
   });
 }
 
-/**
- * Get a signed download URL for an attachment
- */
 export function useGetAttachmentDownloadUrl() {
   return useMutation({
     mutationFn: async (attachmentId: string) => {
@@ -520,9 +800,6 @@ export function useGetAttachmentDownloadUrl() {
   });
 }
 
-/**
- * Get attachments for a quote item
- */
 export function useQuoteItemAttachments(quoteItemId: string | undefined) {
   return useQuery({
     queryKey: QUOTE_KEYS.itemAttachments(quoteItemId ?? ''),
@@ -540,9 +817,6 @@ export function useQuoteItemAttachments(quoteItemId: string | undefined) {
   });
 }
 
-/**
- * Upload an image attachment to a quote item
- */
 export function useUploadQuoteItemAttachment() {
   const queryClient = useQueryClient();
 
@@ -572,9 +846,6 @@ export function useUploadQuoteItemAttachment() {
   });
 }
 
-/**
- * Delete an attachment from a quote item
- */
 export function useDeleteQuoteItemAttachment() {
   const queryClient = useQueryClient();
 
@@ -589,22 +860,64 @@ export function useDeleteQuoteItemAttachment() {
       }
       return { ...result.data, quoteItemId: data.quoteItemId, quoteId: data.quoteId };
     },
-    onSuccess: (data) => {
-      // Invalidate item attachments, quote detail, and lists
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.itemAttachments(data.quoteItemId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      toast.success('Image deleted successfully');
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.itemAttachments(data.quoteItemId) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
+
+      // Snapshot the previous values
+      const previousItemAttachments = queryClient.getQueryData(
+        QUOTE_KEYS.itemAttachments(data.quoteItemId),
+      );
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(data.quoteId));
+
+      // Optimistically remove attachment from quote detail
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(data.quoteId),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((item) => {
+              if (item.id === data.quoteItemId) {
+                return {
+                  ...item,
+                  attachments: item.attachments.filter((att) => att.id !== data.attachmentId),
+                };
+              }
+              return item;
+            }),
+          };
+        },
+      );
+
+      return { previousItemAttachments, previousQuote };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, data, context) => {
+      // Rollback optimistic update
+      if (context?.previousItemAttachments) {
+        queryClient.setQueryData(
+          QUOTE_KEYS.itemAttachments(data.quoteItemId),
+          context.previousItemAttachments,
+        );
+      }
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(data.quoteId), context.previousQuote);
+      }
       toast.error(error.message || 'Failed to delete image');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Image deleted successfully');
     },
   });
 }
 
-/**
- * Get a signed download URL for an item attachment
- */
 export function useGetItemAttachmentDownloadUrl() {
   return useMutation({
     mutationFn: async (attachmentId: string) => {
@@ -631,9 +944,6 @@ export function useGetItemAttachmentDownloadUrl() {
   });
 }
 
-/**
- * Update notes for a quote item attachment
- */
 export function useUpdateQuoteItemNotes() {
   const queryClient = useQueryClient();
 
@@ -650,12 +960,48 @@ export function useUpdateQuoteItemNotes() {
       }
       return { ...result.data, quoteId: data.quoteId };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      toast.success('Notes updated successfully');
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(data.quoteId));
+
+      // Optimistically update notes in quote detail
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(data.quoteId),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((item) => {
+              if (item.id === data.quoteItemId) {
+                return {
+                  ...item,
+                  notes: data.notes,
+                };
+              }
+              return item;
+            }),
+          };
+        },
+      );
+
+      return { previousQuote };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, data, context) => {
+      // Rollback optimistic update
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(data.quoteId), context.previousQuote);
+      }
       toast.error(error.message || 'Failed to update notes');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
+    },
+    onSuccess: () => {
+      toast.success('Notes updated successfully');
     },
   });
 }
@@ -676,13 +1022,49 @@ export function useUploadQuoteItemColorPalette() {
       }
 
       return { ...result.data, quoteId: data.quoteId };
-    },    
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      toast.success('Color palette updated successfully');
     },
-    onError: (error: Error) => {
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
+
+      // Snapshot the previous value
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(data.quoteId));
+
+      // Optimistically update colors in quote detail
+      queryClient.setQueryData(
+        QUOTE_KEYS.detail(data.quoteId),
+        (old: QuoteWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((item) => {
+              if (item.id === data.quoteItemId) {
+                return {
+                  ...item,
+                  colors: data.colors,
+                };
+              }
+              return item;
+            }),
+          };
+        },
+      );
+
+      return { previousQuote };
+    },
+    onError: (error: Error, data, context) => {
+      // Rollback optimistic update
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(data.quoteId), context.previousQuote);
+      }
       toast.error(error.message || 'Failed to update color palette');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
+    },
+    onSuccess: () => {
+      toast.success('Color palette updated successfully');
     },
   });
 }

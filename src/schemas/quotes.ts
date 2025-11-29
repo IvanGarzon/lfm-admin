@@ -19,6 +19,7 @@ export const QuoteItemSchema = z.object({
     .nonnegative({ error: 'Unit price must be non-negative' })
     .max(1000000, { error: 'Unit price must be less than 1,000,000' }),
   productId: z.string().nullable(),
+  notes: z.string().max(500, { error: 'Notes must be less than 500 characters' }).optional(),
   colors: z
     .array(
       z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {

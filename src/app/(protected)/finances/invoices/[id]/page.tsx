@@ -2,8 +2,20 @@ import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { getInvoices } from '@/actions/invoices';
 
+import dynamic from 'next/dynamic';
 import { InvoiceList } from '@/features/finances/invoices/components/invoice-list';
 import { InvoiceDrawer } from '@/features/finances/invoices/components/invoice-drawer';
+
+// const InvoiceDrawer = dynamic(
+//   () =>
+//     import('@/features/finances/invoices/components/invoice-drawer').then(
+//       (mod) => mod.InvoiceDrawer,
+//     ),
+//   {
+//     ssr: false,
+//     loading: () => null,
+//   },
+// );
 
 export default async function InvoicePage({
   params,

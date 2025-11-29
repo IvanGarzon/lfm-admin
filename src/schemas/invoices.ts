@@ -17,6 +17,7 @@ export const InvoiceItemSchema = z.object({
     .nonnegative({ error: 'Unit price must be non-negative' })
     .max(1000000, { error: 'Unit price must be less than 1,000,000' }),
   productId: z.string().nullable(),
+  id: z.string().optional(),
 });
 
 export const InvoiceSchema = z

@@ -8,9 +8,9 @@ import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
 import {
-  useQuote,
   useUpdateQuoteItemNotes,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
+import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { formatFileSize } from '@/lib/s3';
 import { DeleteItemImageDialog } from './delete-item-image-dialog';
 import { ImagePreviewDialog } from './image-preview-dialog';
@@ -18,6 +18,7 @@ import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';
 
 interface QuoteItemDetailsProps {
   quoteId: string;
+  items: QuoteWithDetails['items'];
   readOnly?: boolean;
   onDownloadImage: (attachmentId: string) => void;
   onDeleteImage: (attachmentId: string, quoteItemId: string, onSuccess: () => void) => void;
@@ -26,6 +27,7 @@ interface QuoteItemDetailsProps {
 
 export function QuoteItemDetails({
   quoteId,
+  items,
   readOnly = false,
   onDownloadImage,
   onDeleteImage,
@@ -48,37 +50,36 @@ export function QuoteItemDetails({
     colors: string[];
   } | null>(null);
 
-  const { data: quote, isLoading } = useQuote(quoteId);
   const updateNotesMutation = useUpdateQuoteItemNotes();
 
   // Memoize items with attachments, colors, or notes to prevent reordering on updates
   const itemsWithContent = useMemo(() => {
-    if (!quote?.items) {
+    if (!items) {
       return [];
     }
 
-    return quote.items
+    return items
       .filter((item) =>
         (item.attachments && item.attachments.length > 0) ||
         (item.colors && item.colors.length > 0) ||
         item.notes
       )
       .sort((a, b) => a.order - b.order);
-  }, [quote?.items]);
+  }, [items]);
 
   // Initialize loading state for all images
   useEffect(() => {
-    if (!quote?.items) return;
+    if (!items) return;
 
     const allImageIds = new Set<string>();
-    quote.items.forEach((item) => {
+    items.forEach((item) => {
       item.attachments?.forEach((attachment) => {
         allImageIds.add(attachment.id);
       });
     });
 
     setLoadingImages(allImageIds);
-  }, [quote?.items]);
+  }, [items]);
 
   const handleImageLoadComplete = useCallback((attachmentId: string) => {
     setLoadingImages((prev) => {
@@ -121,15 +122,7 @@ export function QuoteItemDetails({
     [editingNotes, quoteId, updateNotesMutation],
   );
 
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <Box className="flex items-center justify-center py-8">
-          <Loader2 className="size-6 animate-spin text-gray-400" />
-        </Box>
-      </Card>
-    );
-  }
+
 
   // Check if there are any item attachments or colors
   if (itemsWithContent.length === 0) {

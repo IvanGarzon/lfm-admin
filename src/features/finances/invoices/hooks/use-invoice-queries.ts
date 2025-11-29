@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { InvoiceStatus } from '@/prisma/client'
 import {
   getInvoices,
   getInvoiceById,
@@ -13,6 +14,7 @@ import {
 } from '@/actions/invoices';
 import type {
   InvoiceFilters,
+  InvoiceWithDetails,
   MarkInvoiceAsPaidData,
   CancelInvoiceData,
 } from '@/features/finances/invoices/types';
@@ -97,6 +99,10 @@ export function useCreateInvoice() {
       }
       return result.data;
     },
+    onMutate: async () => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+    },
     onSuccess: (data) => {
       // Invalidate lists and statistics
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
@@ -120,15 +126,68 @@ export function useUpdateInvoice() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      // Invalidate the specific invoice, lists, and statistics
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(newData.id));
+
+      // Optimistically update invoice with new data
+      queryClient.setQueryData(
+        INVOICE_KEYS.detail(newData.id),
+        (old: InvoiceWithDetails | undefined) => {
+          if (!old) return old;
+
+          // Calculate new total amount from items
+          const totalAmount = newData.items.reduce(
+            (sum, item) => sum + item.quantity * item.unitPrice,
+            0
+          );
+
+          return {
+            ...old,
+            status: newData.status,
+            amount: totalAmount,
+            gst: newData.gst,
+            discount: newData.discount,
+            currency: newData.currency,
+            issuedDate: newData.issuedDate,
+            dueDate: newData.dueDate,
+            notes: newData.notes,
+            // Update items - merge with existing item data
+            items: newData.items.map((item, index) => ({
+              id: item.id ?? old.items[index]?.id ?? '',
+              invoiceId: old.id,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.quantity * item.unitPrice,
+              productId: item.productId ?? null,
+            })),
+          };
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(newData.id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to update invoice');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
-      toast.success('Invoice updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update invoice');
+    onSuccess: () => {
+      toast.success('Invoice updated successfully');
     },
   });
 }
@@ -144,14 +203,46 @@ export function useMarkInvoiceAsPaid() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        INVOICE_KEYS.detail(newData.id),
+        (old: InvoiceWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: InvoiceStatus.PAID,
+            paidDate: newData.paidDate,
+            paymentMethod: newData.paymentMethod,
+          };
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(newData.id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to mark invoice as paid');
+    },
+    onSettled: (data, error, variables) => {
+      // Always refetch after error or success:
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
-      toast.success('Invoice marked as paid');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to mark invoice as paid');
+    onSuccess: () => {
+      toast.success('Invoice marked as paid');
     },
   });
 }
@@ -167,14 +258,43 @@ export function useMarkInvoiceAsPending() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(data.id) });
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(INVOICE_KEYS.detail(id), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: InvoiceStatus.PENDING,
+          paidDate: null,
+          paymentMethod: null,
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice, id };
+    },
+    onError: (err, id, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to mark invoice as pending');
+    },
+    onSettled: (_data, _error, id) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
-      toast.success('Invoice marked as pending');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to mark invoice as pending');
+    onSuccess: () => {
+      toast.success('Invoice marked as pending');
     },
   });
 }
@@ -190,14 +310,46 @@ export function useCancelInvoice() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(data.id) });
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(newData.id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        INVOICE_KEYS.detail(newData.id),
+        (old: InvoiceWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: InvoiceStatus.CANCELLED,
+            cancelledDate: newData.cancelledDate,
+            cancelReason: newData.cancelReason,
+          };
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice };
+    },
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(newData.id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to cancel invoice');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
-      toast.success('Invoice cancelled');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to cancel invoice');
+    onSuccess: () => {
+      toast.success('Invoice cancelled');
     },
   });
 }
@@ -213,13 +365,43 @@ export function useSendInvoiceReminder() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(data.id) });
-      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
-      toast.success('Reminder sent');
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
+
+      // Optimistically update to increment remindersSent
+      queryClient.setQueryData(
+        INVOICE_KEYS.detail(id),
+        (old: InvoiceWithDetails | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            remindersSent: (old.remindersSent ?? 0) + 1,
+          };
+        },
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice, id };
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to send reminder');
+    onError: (err, id, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to send reminder');
+    },
+    onSettled: (_data, _error, id) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Reminder sent');
     },
   });
 }
@@ -235,13 +417,40 @@ export function useDeleteInvoice() {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous values
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
+      const previousLists = queryClient.getQueriesData({ queryKey: INVOICE_KEYS.lists() });
+
+      // Optimistically remove from detail cache
+      queryClient.removeQueries({ queryKey: INVOICE_KEYS.detail(id) });
+
+      // Return context for rollback
+      return { previousInvoice, previousLists, id };
+    },
+    onError: (error: Error, id, context) => {
+      // Rollback optimistic update
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(id), context.previousInvoice);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      toast.error(error.message || 'Failed to delete invoice');
+    },
+    onSettled: () => {
+      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
-      toast.success('Invoice deleted');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete invoice');
+    onSuccess: () => {
+      toast.success('Invoice deleted');
     },
   });
 }

@@ -66,7 +66,7 @@ export async function getQuotes(
 
   const parseResult = QuoteFiltersSchema.safeParse(searchParams);
   if (!parseResult.success) {
-    throw new Error('Invalid query parameters');
+    return { success: false, error: 'Invalid query parameters' };
   }
 
   try {
@@ -216,6 +216,7 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
       validatedData,
       session.user.id,
     );
+    
     if (!quote) {
       return { success: false, error: 'Failed to update quote' };
     }

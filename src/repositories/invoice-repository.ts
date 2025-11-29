@@ -238,74 +238,62 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       }
     }
 
-    // Build the SQL query for average calculation
-    let avgQuery = Prisma.sql`
-      SELECT AVG(amount::numeric)::float as avg
-      FROM invoices
-      WHERE deleted_at IS NULL
-      AND status::text = ${InvoiceStatusSchema.enum.PAID}
-    `;
-
-    if (dateFilter?.startDate) {
-      avgQuery = Prisma.sql`${avgQuery} AND issued_date >= ${dateFilter.startDate}`;
-    }
-
-    if (dateFilter?.endDate) {
-      avgQuery = Prisma.sql`${avgQuery} AND issued_date <= ${dateFilter.endDate}`;
-    }
-
-    const [statusCounts, revenueData, avgInvoiceValue] = await Promise.all([
+    // Optimized: Run only 2 queries instead of 5
+    const [statusGroupData, paidData] = await Promise.all([
+      // Query 1: Group by status to get counts AND sums per status in one query
       this.prisma.invoice.groupBy({
         by: ['status'],
         where: whereClause,
         _count: true,
+        _sum: {
+          amount: true,
+        },
       }),
 
+      // Query 2: Get average for PAID invoices using Prisma aggregate (type-safe)
       this.prisma.invoice.aggregate({
-        where: whereClause,
-        _count: true,
+        where: {
+          ...whereClause,
+          status: InvoiceStatusSchema.enum.PAID,
+        },
+        _avg: {
+          amount: true,
+        },
       }),
-
-      // Use raw SQL to calculate average of money type with date filter
-      this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
     ]);
 
-    const paidRevenue = await this.prisma.invoice.aggregate({
-      where: {
-        ...whereClause,
-        status: InvoiceStatusSchema.enum.PAID,
-      },
-      _sum: {
-        amount: true,
-      },
-    });
+    // Extract status-specific revenue sums from grouped data
+    let totalRevenue = 0;
+    let pendingRevenue = 0;
+    let totalCount = 0;
 
-    const pendingRevenue = await this.prisma.invoice.aggregate({
-      where: {
-        ...whereClause,
-        status: {
-          in: [InvoiceStatusSchema.enum.PENDING, InvoiceStatusSchema.enum.OVERDUE],
-        },
-      },
-      _sum: {
-        amount: true,
-      },
+    statusGroupData.forEach((group) => {
+      totalCount += group._count;
+
+      if (group.status === InvoiceStatusSchema.enum.PAID) {
+        totalRevenue = Number(group._sum.amount ?? 0);
+      } else if (
+        group.status === InvoiceStatusSchema.enum.PENDING ||
+        group.status === InvoiceStatusSchema.enum.OVERDUE
+      ) {
+        pendingRevenue += Number(group._sum.amount ?? 0);
+      }
     });
 
     const stats: InvoiceStatistics = {
-      total: revenueData._count,
+      total: totalCount,
       draft: 0,
       pending: 0,
       paid: 0,
       cancelled: 0,
       overdue: 0,
-      totalRevenue: Number(paidRevenue._sum.amount ?? 0),
-      pendingRevenue: Number(pendingRevenue._sum.amount ?? 0),
-      avgInvoiceValue: avgInvoiceValue[0]?.avg ?? 0,
+      totalRevenue,
+      pendingRevenue,
+      avgInvoiceValue: Number(paidData._avg.amount ?? 0),
     };
 
     // Map status counts
-    statusCounts.forEach((item) => {
+    statusGroupData.forEach((item) => {
       switch (item.status) {
         case InvoiceStatusSchema.enum.DRAFT:
           stats.draft = item._count;
@@ -359,40 +347,64 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async createInvoiceWithItems(
     data: CreateInvoiceInput,
   ): Promise<{ id: string; invoiceNumber: string }> {
-    // Generate invoice number
-    const invoiceNumber = await this.generateInvoiceNumber();
+    let attempts = 0;
+    const maxAttempts = 3;
 
-    // Calculate total amount
-    const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    while (attempts < maxAttempts) {
+      try {
+        // Generate invoice number
+        const invoiceNumber = await this.generateInvoiceNumber();
 
-    return this.model.create({
-      data: {
-        invoiceNumber,
-        customerId: data.customerId,
-        status: data.status,
-        amount: totalAmount,
-        currency: data.currency,
-        gst: data.gst,
-        discount: data.discount,
-        issuedDate: data.issuedDate,
-        dueDate: data.dueDate,
-        notes: data.notes ?? null,
-        remindersSent: 0,
-        items: {
-          create: data.items.map((item) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.quantity * item.unitPrice,
-            productId: item.productId,
-          })),
-        },
-      },
-      select: {
-        id: true,
-        invoiceNumber: true,
-      },
-    });
+        // Calculate total amount
+        const totalAmount = data.items.reduce(
+          (sum, item) => sum + item.quantity * item.unitPrice,
+          0,
+        );
+
+        return await this.model.create({
+          data: {
+            invoiceNumber,
+            customerId: data.customerId,
+            status: data.status,
+            amount: totalAmount,
+            currency: data.currency,
+            gst: data.gst,
+            discount: data.discount,
+            issuedDate: data.issuedDate,
+            dueDate: data.dueDate,
+            notes: data.notes ?? null,
+            remindersSent: 0,
+            items: {
+              create: data.items.map((item) => ({
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.quantity * item.unitPrice,
+                productId: item.productId,
+              })),
+            },
+          },
+          select: {
+            id: true,
+            invoiceNumber: true,
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002' // Unique constraint violation
+        ) {
+          attempts++;
+          if (attempts === maxAttempts) {
+            throw new Error('Failed to generate a unique invoice number. Please try again.');
+          }
+          continue; // Retry with a new number
+        }
+        throw error; // Re-throw other errors
+      }
+    }
+
+    throw new Error('Failed to create invoice');
   }
 
   async updateInvoiceWithItems(
@@ -401,16 +413,38 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   ): Promise<InvoiceWithDetails | null> {
     // Calculate total amount
     const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-
+    
     // Update invoice with items in a transaction
     const updatedInvoice = await this.prisma.$transaction(async (tx) => {
-      // Delete existing items
+      // Get current quote to check for status changes
+      const currentInvoice = await tx.invoice.findUnique({
+        where: { id },
+        select: { status: true },
+      }); 
+
+      if(!currentInvoice) {
+        throw new Error('Invoice not found');
+      }
+
+      if(currentInvoice.status !== data.status) {
+        throw new Error('Invoice status cannot be changed');
+      }
+
+      // Separate existing items from new items
+      const existingItems = data.items.filter((item) => item.id);
+      const newItems = data.items.filter((item) => !item.id);
+      const existingItemIds = existingItems.map((item) => item.id!);
+
+      // Delete items that are no longer in the list (preserves attachments for kept items)
       await tx.invoiceItem.deleteMany({
-        where: { invoiceId: id },
+        where: {
+          invoiceId: data.id,
+          id: { notIn: existingItemIds },
+        },
       });
 
-      // Update invoice with new items
-      return tx.invoice.update({
+      // Update invoice details
+      const invoice = await tx.invoice.update({
         where: { id },
         data: {
           customerId: data.customerId,
@@ -423,17 +457,42 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           dueDate: data.dueDate,
           notes: data.notes ?? null,
           updatedAt: new Date(),
-          items: {
-            create: data.items.map((item) => ({
+        },
+      });
+
+      // Update existing items
+      for (let index = 0; index < existingItems.length; index++) {
+        const item = existingItems[index];
+        await tx.invoiceItem.update({
+          where: { id: item.id },
+          data: {
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.quantity * item.unitPrice,
+            productId: item.productId,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Create new items
+      if (newItems.length > 0) {
+        await tx.invoiceItem.createMany({
+          data: newItems.map((item) => {
+            return {
+              invoiceId: data.id,
               description: item.description,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.quantity * item.unitPrice,
               productId: item.productId,
-            })),
-          },
-        },
-      });
+            };
+          }),
+        });
+      }
+
+      return invoice;
     });
 
     if (!updatedInvoice) {

@@ -20,9 +20,23 @@ import {
   useDownloadReceiptPdf,
   useInvoice,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
+import dynamic from 'next/dynamic';
 import { InvoiceStats } from '@/features/finances/invoices/components/invoice-stats';
 import { InvoiceStatsFilters } from '@/features/finances/invoices/components/invoice-stats-filters';
 import { InvoiceDrawer } from '@/features/finances/invoices/components/invoice-drawer';
+// import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
+
+// const InvoiceDrawer = dynamic(
+//   () =>
+//     import('@/features/finances/invoices/components/invoice-drawer').then(
+//       (mod) => mod.InvoiceDrawer,
+//     ),
+//   {
+//     ssr: false,
+//     loading: () => null,
+//   },
+// );
+
 import { InvoiceTable } from '@/features/finances/invoices/components/invoice-table';
 import { MarkAsPaidDialog } from '@/features/finances/invoices/components/mark-as-paid-dialog';
 import { CancelInvoiceDialog } from '@/features/finances/invoices/components/cancel-invoice-dialog';

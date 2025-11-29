@@ -42,12 +42,12 @@ export async function getInvoices(
 ): Promise<ActionResult<InvoicePagination>> {
   const session = await auth();
   if (!session?.user) {
-    throw new Error('Unauthorized');
+    return { success: false, error: 'Unauthorized' };
   }
 
   const parseResult = InvoiceFiltersSchema.safeParse(searchParams);
   if (!parseResult.success) {
-    throw new Error('Invalid query parameters');
+    return { success: false, error: 'Invalid query parameters' };
   }
 
   try {
@@ -80,6 +80,11 @@ export async function getInvoices(
  */
 export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWithDetails>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     const invoice = await invoiceRepo.findByIdWithDetails(id);
 
     if (!invoice) {
@@ -129,7 +134,7 @@ export async function createInvoice(
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
   const session = await auth();
   if (!session?.user) {
-    throw new Error('Unauthorized');
+    return { success: false, error: 'Unauthorized' };
   }
 
   try {
@@ -177,6 +182,11 @@ export async function createInvoice(
 export async function updateInvoice(
   data: UpdateInvoiceInput,
 ): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     // Validate input
     const validatedData = UpdateInvoiceSchema.parse(data);
@@ -188,6 +198,7 @@ export async function updateInvoice(
     }
 
     const invoice = await invoiceRepo.updateInvoiceWithItems(validatedData.id, validatedData);
+    
     if (!invoice) {
       return { success: false, error: 'Failed to update invoice' };
     }
