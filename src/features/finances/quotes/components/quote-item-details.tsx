@@ -122,8 +122,6 @@ export function QuoteItemDetails({
     [editingNotes, quoteId, updateNotesMutation],
   );
 
-
-
   // Check if there are any item attachments or colors
   if (itemsWithContent.length === 0) {
     return null;
@@ -280,7 +278,7 @@ export function QuoteItemDetails({
                 ): null}
 
                 {/* Notes Editor - Only show if there are colors OR images OR notes */}
-                {(hasColors || hasImages || item.notes) ? (
+                {hasColors || hasImages || item.notes ? (
                   !readOnly ? (
                   <Box>
                     <RichTextEditor

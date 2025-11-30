@@ -1,4 +1,4 @@
-import { Invoice, Prisma, PrismaClient } from '@/prisma/client';
+import { InvoiceStatus, Prisma, PrismaClient } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
 
@@ -238,8 +238,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       }
     }
 
+    // Build raw SQL query for average (money type doesn't support avg in Prisma aggregate)
+    let avgQuery = Prisma.sql`
+      SELECT AVG(amount::numeric)::float as avg
+      FROM invoices
+      WHERE deleted_at IS NULL
+      AND status::text = ${InvoiceStatus.PAID}
+    `;
+
+    if (dateFilter?.startDate) {
+      avgQuery = Prisma.sql`${avgQuery} AND issued_date >= ${dateFilter.startDate}`;
+    }
+
+    if (dateFilter?.endDate) {
+      avgQuery = Prisma.sql`${avgQuery} AND issued_date <= ${dateFilter.endDate}`;
+    }
+
     // Optimized: Run only 2 queries instead of 5
-    const [statusGroupData, paidData] = await Promise.all([
+    const [statusGroupData, avgInvoiceData] = await Promise.all([
       // Query 1: Group by status to get counts AND sums per status in one query
       this.prisma.invoice.groupBy({
         by: ['status'],
@@ -250,16 +266,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         },
       }),
 
-      // Query 2: Get average for PAID invoices using Prisma aggregate (type-safe)
-      this.prisma.invoice.aggregate({
-        where: {
-          ...whereClause,
-          status: InvoiceStatusSchema.enum.PAID,
-        },
-        _avg: {
-          amount: true,
-        },
-      }),
+      // Query 2: Get average for PAID invoices using raw SQL (money type doesn't support avg in aggregate)
+      this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
     ]);
 
     // Extract status-specific revenue sums from grouped data
@@ -270,11 +278,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     statusGroupData.forEach((group) => {
       totalCount += group._count;
 
-      if (group.status === InvoiceStatusSchema.enum.PAID) {
+      if (group.status === InvoiceStatus.PAID) {
         totalRevenue = Number(group._sum.amount ?? 0);
       } else if (
-        group.status === InvoiceStatusSchema.enum.PENDING ||
-        group.status === InvoiceStatusSchema.enum.OVERDUE
+        group.status === InvoiceStatus.PENDING ||
+        group.status === InvoiceStatus.OVERDUE
       ) {
         pendingRevenue += Number(group._sum.amount ?? 0);
       }
@@ -289,25 +297,25 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       overdue: 0,
       totalRevenue,
       pendingRevenue,
-      avgInvoiceValue: Number(paidData._avg.amount ?? 0),
+      avgInvoiceValue: Number(avgInvoiceData[0]?.avg ?? 0),
     };
 
     // Map status counts
     statusGroupData.forEach((item) => {
       switch (item.status) {
-        case InvoiceStatusSchema.enum.DRAFT:
+        case InvoiceStatus.DRAFT:
           stats.draft = item._count;
           break;
-        case InvoiceStatusSchema.enum.PENDING:
+        case InvoiceStatus.PENDING:
           stats.pending = item._count;
           break;
-        case InvoiceStatusSchema.enum.PAID:
+        case InvoiceStatus.PAID:
           stats.paid = item._count;
           break;
-        case InvoiceStatusSchema.enum.CANCELLED:
+        case InvoiceStatus.CANCELLED:
           stats.cancelled = item._count;
           break;
-        case InvoiceStatusSchema.enum.OVERDUE:
+        case InvoiceStatus.OVERDUE:
           stats.overdue = item._count;
           break;
       }
@@ -513,7 +521,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     const updated = await this.prisma.invoice.update({
       where: { id, deletedAt: null },
       data: {
-        status: InvoiceStatusSchema.enum.PAID,
+        status: InvoiceStatus.PAID,
         paidDate,
         paymentMethod,
         updatedAt: new Date(),
@@ -534,7 +542,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     const updated = await this.prisma.invoice.update({
       where: { id, deletedAt: null },
       data: {
-        status: InvoiceStatusSchema.enum.PENDING,
+        status: InvoiceStatus.PENDING,
         updatedAt: new Date(),
       },
     });
@@ -557,7 +565,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     const updated = await this.prisma.invoice.update({
       where: { id, deletedAt: null },
       data: {
-        status: InvoiceStatusSchema.enum.CANCELLED,
+        status: InvoiceStatus.CANCELLED,
         cancelledDate,
         cancelReason,
         updatedAt: new Date(),

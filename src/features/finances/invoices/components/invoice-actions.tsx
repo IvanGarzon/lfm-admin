@@ -20,11 +20,11 @@ import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/in
 
 interface InvoiceActionsProps {
   invoice: InvoiceListItem;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, invoiceNumber: string) => void;
   onSendReminder: (id: string) => void;
   onMarkAsPending: (id: string) => void;
-  onMarkAsPaid: (id: string) => void;
-  onCancel: (id: string) => void;
+  onMarkAsPaid: (id: string, invoiceNumber: string) => void;
+  onCancel: (id: string, invoiceNumber: string) => void;
   onDownloadPdf: (id: string) => void;
   onSendReceipt?: (id: string) => void;
 }
@@ -80,7 +80,7 @@ export function InvoiceActions({
           {(invoice.status === InvoiceStatusSchema.enum.PENDING ||
             invoice.status === InvoiceStatusSchema.enum.OVERDUE) && (
             <>
-              <DropdownMenuItem onClick={() => onMarkAsPaid(invoice.id)}>
+              <DropdownMenuItem onClick={() => onMarkAsPaid(invoice.id, invoice.invoiceNumber)}>
                 <Check className="h-4 w-4" />
                 Mark as paid
               </DropdownMenuItem>
@@ -88,7 +88,7 @@ export function InvoiceActions({
                 <Mail className="h-4 w-4" />
                 Send reminder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onCancel(invoice.id)}>
+              <DropdownMenuItem onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}>
                 <X className="h-4 w-4" />
                 Cancel invoice
               </DropdownMenuItem>
@@ -102,7 +102,7 @@ export function InvoiceActions({
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => onDelete(invoice.id)}
+            onClick={() => onDelete(invoice.id, invoice.invoiceNumber)}
             className="text-destructive focus:text-destructive"
           >
             <AlertCircle className="h-4 w-4" />

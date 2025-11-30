@@ -8,6 +8,8 @@ import { formatCurrency } from '@/lib/utils';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { lasFloresAccount } from '@/constants/data';
 import { formatFileSize, isImageFile } from '@/lib/s3';
+import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
+
 
 type QuoteHtmlPreviewProps = {
   quote: QuoteWithDetails;
@@ -252,7 +254,11 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
 
                       {/* Item Notes - Show when colors, images, or notes exist */}
                       {item.notes ? (
-                        <Box className="text-sm text-gray-600 dark:text-gray-400">{item.notes.replace(/<[^>]*>/g, '')}</Box>
+                        <RichTextEditor
+                          key={`editor-readonly-${item.id}`}
+                          value={item.notes ?? ''}
+                          editable={false}
+                        />
                       ) : null}
                     </Box>
                   ))}

@@ -29,16 +29,6 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -47,26 +37,20 @@ import {
 import {
   useInvoice,
   useCreateInvoice,
-  useMarkInvoiceAsPaid,
   useMarkInvoiceAsPending,
-  useCancelInvoice,
-  useDeleteInvoice,
   useUpdateInvoice,
   useSendInvoiceReminder,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import {
   downloadInvoicePdf,
-  downloadReceiptPdf,
 } from '@/features/finances/invoices/utils/invoiceHelpers';
 import { InvoiceForm } from '@/features/finances/invoices/components//invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
 import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
-import { MarkAsPaidDialog } from '@/features/finances/invoices/components/mark-as-paid-dialog';
-import { CancelInvoiceDialog } from '@/features/finances/invoices/components/cancel-invoice-dialog';
-import { SendReceiptDialog } from '@/features/finances/invoices/components/send-receipt-dialog';
 import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
+import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
 
 type DrawerMode = 'edit' | 'create';
 
@@ -80,21 +64,16 @@ export function InvoiceDrawer({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const [showMarkAsPaidDialog, setShowMarkAsPaidDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: invoice, isLoading, error, isError } = useInvoice(id);
 
+  const { openDelete, openMarkAsPaid, openCancel, openSendReceipt } = useInvoiceActions();
+
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
-  const markAsPaid = useMarkInvoiceAsPaid();
   const markAsPending = useMarkInvoiceAsPending();
-  const cancelInvoice = useCancelInvoice();
-  const deleteInvoice = useDeleteInvoice();
   const sendReminder = useSendInvoiceReminder();
 
   const router = useRouter();
@@ -141,27 +120,6 @@ export function InvoiceDrawer({
     [updateInvoice],
   );
 
-  const confirmMarkAsPaid = useCallback(
-    (data: { id: string; paidDate: Date; paymentMethod: string }) => {
-      markAsPaid.mutate(data, {
-        onSuccess: () => {
-          setShowMarkAsPaidDialog(false);
-          // Show receipt dialog after successfully marking as paid
-          setShowReceiptDialog(true);
-        },
-      });
-    },
-    [markAsPaid],
-  );
-
-  const confirmCancel = useCallback(
-    (data: { id: string; cancelledDate: Date; cancelReason: string }) => {
-      cancelInvoice.mutate(data);
-      setShowCancelDialog(false);
-    },
-    [cancelInvoice],
-  );
-
   const handleDownloadPdf = useCallback(async () => {
     if (!invoice) {
       return;
@@ -189,21 +147,6 @@ export function InvoiceDrawer({
     await downloadInvoicePdf(invoice);
   }, [invoice, hasUnsavedChanges]);
 
-  const handleDelete = useCallback(() => {
-    if (!invoice) {
-      return;
-    }
-
-    deleteInvoice.mutate(invoice.id, {
-      onSuccess: () => {
-        setShowDeleteDialog(false);
-        const basePath = '/finances/invoices';
-        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
-        router.push(targetPath);
-      },
-    });
-  }, [invoice, deleteInvoice, router, queryString]);
-
   const handleSendReminder = useCallback(() => {
     if (!invoice) {
       return;
@@ -225,35 +168,33 @@ export function InvoiceDrawer({
   }, []);
 
   const handleMarkAsPaidDialog = useCallback(() => {
-    setShowMarkAsPaidDialog((prev) => !prev);
-  }, []);
+    if (!invoice) return;
+    openMarkAsPaid(invoice.id, invoice.invoiceNumber, () => {
+      openSendReceipt(invoice.id, invoice);
+    });
+  }, [invoice, openMarkAsPaid, openSendReceipt]);
 
   const handleCancelDialog = useCallback(() => {
-    setShowCancelDialog((prev) => !prev);
-  }, []);
+    if (!invoice) return;
+    openCancel(invoice.id, invoice.invoiceNumber);
+  }, [invoice, openCancel]);
 
   const handleDeleteDialog = useCallback(() => {
-    setShowDeleteDialog((prev) => !prev);
-  }, []);
+    if (!invoice) return;
+    openDelete(invoice.id, invoice.invoiceNumber, () => {
+      const basePath = '/finances/invoices';
+      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+      router.push(targetPath);
+    });
+  }, [invoice, openDelete, router, queryString]);
+
+  const handleOpenReceiptDialog = useCallback(() => {
+    if (!invoice) return;
+    openSendReceipt(invoice.id, invoice);
+  }, [invoice, openSendReceipt]);
 
   const handleUnsavedChanges = useCallback((isDirty: boolean) => {
     setHasUnsavedChanges(isDirty);
-  }, []);
-
-  const handleDownloadReceipt = useCallback(async () => {
-    if (!invoice) {
-      return;
-    }
-    await downloadReceiptPdf(invoice);
-  }, [invoice]);
-
-  const handleSendReceipt = useCallback(async () => {
-    // TODO: Implement email sending functionality
-    toast.info('Email sending functionality will be implemented soon');
-  }, []);
-
-  const handleOpenReceiptDialog = useCallback(() => {
-    setShowReceiptDialog(true);
   }, []);
 
   const getDrawerHeader = () => {
@@ -274,7 +215,7 @@ export function InvoiceDrawer({
 
   return (
     <>
-      <Drawer key={id}  open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+      <Drawer key={id} open={isOpen} modal={true} onOpenChange={handleOpenChange}>
         <DrawerContent
           className="overflow-x-hidden dark:bg-gray-925 pb-0!"
           style={{
@@ -484,55 +425,6 @@ export function InvoiceDrawer({
           ) : null}
         </DrawerContent>
       </Drawer>
-
-      {showMarkAsPaidDialog && invoice?.id ? (
-        <MarkAsPaidDialog
-          open={showMarkAsPaidDialog}
-          onOpenChange={setShowMarkAsPaidDialog}
-          onConfirm={confirmMarkAsPaid}
-          invoiceId={invoice.id}
-          invoiceNumber={invoice.invoiceNumber}
-          isPending={markAsPaid.isPending}
-        />
-      ) : null}
-
-      {showCancelDialog && invoice?.id ? (
-        <CancelInvoiceDialog
-          open={showCancelDialog}
-          onOpenChange={setShowCancelDialog}
-          onConfirm={confirmCancel}
-          invoiceId={invoice?.id || ''}
-          invoiceNumber={invoice?.invoiceNumber || ''}
-          isPending={cancelInvoice.isPending}
-        />
-      ) : null}
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the invoice. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {showReceiptDialog && invoice ? (
-        <SendReceiptDialog
-          open={showReceiptDialog}
-          onOpenChange={setShowReceiptDialog}
-          invoice={invoice}
-          onDownload={handleDownloadReceipt}
-          onSendEmail={handleSendReceipt}
-        />
-      ) : null}
     </>
   );
 }

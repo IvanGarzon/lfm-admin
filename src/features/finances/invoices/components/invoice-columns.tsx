@@ -64,11 +64,11 @@ const StatusOptions: {
 ];
 
 export const createInvoiceColumns = (
-  onDelete: (id: string) => void,
+  onDelete: (id: string, invoiceNumber: string) => void,
   onSendReminder: (id: string) => void,
   onMarkAsPending: (id: string) => void,
-  onMarkAsPaid: (id: string) => void,
-  onCancel: (id: string) => void,
+  onMarkAsPaid: (id: string, invoiceNumber: string) => void,
+  onCancel: (id: string, invoiceNumber: string) => void,
   onDownloadPdf: (id: string) => void,
   onSendReceipt?: (id: string) => void,
 ): ColumnDef<InvoiceListItem>[] => [
