@@ -1,3 +1,5 @@
+import { QuoteActionProvider } from '@/features/finances/quotes/context/quote-action-context';
+
 export default function QuotesLayout({
   children,
   modal,
@@ -6,9 +8,9 @@ export default function QuotesLayout({
   modal: React.ReactNode;
 }) {
   return (
-    <>
+    <QuoteActionProvider>
       {children}
       {modal}
-    </>
+    </QuoteActionProvider>
   );
 }

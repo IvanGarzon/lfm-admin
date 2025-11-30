@@ -110,17 +110,17 @@ export function InvoiceItemRow({
     >
       <Box
         className={cn(
-          'flex items-center gap-3 px-4 py-3 transition-colors',
+          'flex items-center gap-2 px-4 py-3 transition-colors',
           isDragging
             ? 'bg-gray-100 dark:bg-gray-800 shadow-lg cursor-grabbing'
             : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
         )}
       >
         <Box
-          className="w-10 shrink-0 flex items-center justify-center"
+          className="w-4 shrink-0 flex items-center justify-center"
           onPointerDown={(e) => dragControls.start(e)}
         >
-          <GripVertical className="h-5 w-5 text-gray-400 cursor-grab active:cursor-grabbing" />
+          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
         </Box>
 
         {/* Item Description with Product Selector */}
@@ -179,7 +179,7 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Quantity */}
-        <Box className="w-20 shrink-0">
+        <Box className="w-18 shrink-0">
           <FormField
             control={form.control}
             name={`items.${index}.quantity`}
@@ -205,7 +205,7 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Unit Price */}
-        <Box className="w-32 shrink-0">
+        <Box className="w-30 shrink-0">
           <FormField
             control={form.control}
             name={`items.${index}.unitPrice`}
@@ -249,7 +249,7 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Total */}
-        <Box className="w-24 shrink-0">
+        <Box className="w-30 shrink-0">
           <Box className="h-9 px-3 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 font-semibold text-sm text-gray-700 dark:text-gray-300 w-full flex items-center">
             {formatCurrency({
               number: total,
@@ -259,7 +259,7 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Delete Button */}
-        <Box className="w-10 shrink-0 flex items-center justify-center">
+        <Box className="w-4 shrink-0 flex items-center justify-center">
           {canRemove ? (
             <Button
               type="button"

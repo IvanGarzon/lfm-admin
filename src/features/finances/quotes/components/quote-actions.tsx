@@ -20,13 +20,13 @@ import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-help
 
 interface QuoteActionsProps {
   quote: QuoteListItem;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, quoteNumber: string) => void;
   onAccept: (id: string) => void;
-  onReject: (id: string) => void;
+  onReject: (id: string, quoteNumber: string) => void;
   onSend: (id: string) => void;
-  onOnHold: (id: string) => void;
-  onCancel: (id: string) => void;
-  onConvert: (id: string) => void;
+  onOnHold: (id: string, quoteNumber: string) => void;
+  onCancel: (id: string, quoteNumber: string) => void;
+  onConvert: (id: string, quoteNumber: string, gst: number, discount: number) => void;
   onDownloadPdf: (id: string) => void;
   onCreateVersion: (id: string) => void;
 }
@@ -88,7 +88,7 @@ export function QuoteActions({
           ) : null}
 
           {canPutOnHold ? (
-            <DropdownMenuItem onClick={() => onOnHold(quote.id)}>
+            <DropdownMenuItem onClick={() => onOnHold(quote.id, quote.quoteNumber)}>
               <Pause className="h-4 w-4" />
               Put on hold
             </DropdownMenuItem>
@@ -102,21 +102,21 @@ export function QuoteActions({
           ) : null}
 
           {canReject ? (
-            <DropdownMenuItem onClick={() => onReject(quote.id)}>
+            <DropdownMenuItem onClick={() => onReject(quote.id, quote.quoteNumber)}>
               <X className="h-4 w-4" />
               Reject quote
             </DropdownMenuItem>
           ) : null}
 
           {canCancel ? (
-            <DropdownMenuItem onClick={() => onCancel(quote.id)}>
+            <DropdownMenuItem onClick={() => onCancel(quote.id, quote.quoteNumber)}>
               <Ban className="h-4 w-4" />
               Cancel quote
             </DropdownMenuItem>
           ) : null}
 
           {canConvert ? (
-            <DropdownMenuItem onClick={() => onConvert(quote.id)}>
+            <DropdownMenuItem onClick={() => onConvert(quote.id, quote.quoteNumber, Number(quote.gst), Number(quote.discount))}>
               <FileCheck className="h-4 w-4" />
               Convert to invoice
             </DropdownMenuItem>
@@ -133,7 +133,7 @@ export function QuoteActions({
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => onDelete(quote.id)}
+                onClick={() => onDelete(quote.id, quote.quoteNumber)}
                 className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
               >
                 <AlertCircle className="h-4 w-4" />

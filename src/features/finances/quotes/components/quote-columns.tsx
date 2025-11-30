@@ -76,13 +76,13 @@ const StatusOptions: {
 ];
 
 export const createQuoteColumns = (
-  onDelete: (id: string) => void,
+  onDelete: (id: string, quoteNumber: string) => void,
   onAccept: (id: string) => void,
-  onReject: (id: string) => void,
+  onReject: (id: string, quoteNumber: string) => void,
   onSend: (id: string) => void,
-  onOnHold: (id: string) => void,
-  onCancel: (id: string) => void,
-  onConvert: (id: string) => void,
+  onOnHold: (id: string, quoteNumber: string) => void,
+  onCancel: (id: string, quoteNumber: string) => void,
+  onConvert: (id: string, quoteNumber: string, gst: number, discount: number) => void,
   onDownloadPdf: (id: string) => void,
   onCreateVersion: (id: string) => void,
 ): ColumnDef<QuoteListItem>[] => [

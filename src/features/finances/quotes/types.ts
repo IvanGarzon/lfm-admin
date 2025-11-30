@@ -12,6 +12,8 @@ export type QuoteListItem = {
   status: QuoteStatusType;
   amount: number;
   currency: string;
+  gst: number;
+  discount: number;
   issuedDate: Date;
   validUntil: Date;
   itemCount: number;

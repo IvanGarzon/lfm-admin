@@ -48,13 +48,13 @@ export function InvoiceItemsList({
       <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {/* Table Header */}
         <Box className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Box className="flex items-center gap-3 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-            <Box className="w-10 shrink-0"></Box>
+          <Box className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+            <Box className="w-4 shrink-0"></Box>
             <Box className="flex-1 min-w-0">Item</Box>
-            <Box className="w-20 shrink-0">QTY</Box>
-            <Box className="w-32 shrink-0">Cost</Box>
-            <Box className="w-24 shrink-0">Total</Box>
-            <Box className="w-10 shrink-0"></Box>
+            <Box className="w-18 shrink-0">QTY</Box>
+            <Box className="w-30 shrink-0">Cost</Box>
+            <Box className="w-30 shrink-0">Total</Box>
+            <Box className="w-4 shrink-0"></Box>
           </Box>
         </Box>
 

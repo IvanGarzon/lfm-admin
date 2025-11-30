@@ -43,12 +43,7 @@ import {
   useCreateQuote,
   useUpdateQuote,
   useMarkQuoteAsAccepted,
-  useMarkQuoteAsRejected,
   useMarkQuoteAsSent,
-  useMarkQuoteAsOnHold,
-  useMarkQuoteAsCancelled,
-  useConvertQuoteToInvoice,
-  useDeleteQuote,
   useCreateQuoteVersion,
   useQuoteVersions,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
@@ -57,13 +52,9 @@ import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
 import { QuotePreview } from '@/features/finances/quotes/components/quote-preview';
-import { RejectQuoteDialog } from '@/features/finances/quotes/components/reject-quote-dialog';
-import { DeleteQuoteDialog } from '@/features/finances/quotes/components/delete-quote-dialog';
-import { OnHoldDialog } from '@/features/finances/quotes/components/on-hold-dialog';
-import { CancelQuoteDialog } from '@/features/finances/quotes/components/cancel-quote-dialog';
-import { ConvertToInvoiceDialog } from '@/features/finances/quotes/components/convert-to-invoice-dialog';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
+import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
 
 type DrawerMode = 'edit' | 'create';
 
@@ -77,26 +68,18 @@ export function QuoteDrawer({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [showOnHoldDialog, setShowOnHoldDialog] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showConvertDialog, setShowConvertDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: quote, isLoading, error, isError } = useQuote(id);
   const { data: versions } = useQuoteVersions(id);
 
+  const { openDelete, openReject, openOnHold, openCancel, openConvert } = useQuoteActions();
+
   const createQuote = useCreateQuote();
   const updateQuote = useUpdateQuote();
   const markAsAccepted = useMarkQuoteAsAccepted();
-  const markAsRejected = useMarkQuoteAsRejected();
   const markAsSent = useMarkQuoteAsSent();
-  const markAsOnHold = useMarkQuoteAsOnHold();
-  const markAsCancelled = useMarkQuoteAsCancelled();
-  const convertToInvoice = useConvertQuoteToInvoice();
-  const deleteQuote = useDeleteQuote();
   const createVersion = useCreateQuoteVersion();
 
   const router = useRouter();
@@ -159,23 +142,9 @@ export function QuoteDrawer({
   }, [quote, markAsAccepted]);
 
   const handleReject = useCallback(() => {
-    if (!quote) {
-      return;
-    }
-
-    setShowRejectDialog(true);
-  }, [quote]);
-
-  const confirmReject = useCallback(
-    (data: { id: string; rejectReason: string }) => {
-      markAsRejected.mutate(data, {
-        onSuccess: () => {
-          setShowRejectDialog(false);
-        },
-      });
-    },
-    [markAsRejected],
-  );
+    if (!quote) return;
+    openReject(quote.id, quote.quoteNumber);
+  }, [quote, openReject]);
 
   const handleSend = useCallback(() => {
     if (!quote) {
@@ -186,84 +155,28 @@ export function QuoteDrawer({
   }, [quote, markAsSent]);
 
   const handleOnHold = useCallback(() => {
-    if (!quote) {
-      return;
-    }
-
-    setShowOnHoldDialog(true);
-  }, [quote]);
-
-  const confirmOnHold = useCallback(
-    (data: { id: string; reason?: string }) => {
-      markAsOnHold.mutate(data, {
-        onSuccess: () => {
-          setShowOnHoldDialog(false);
-          toast.success('Quote put on hold');
-        },
-      });
-    },
-    [markAsOnHold],
-  );
+    if (!quote) return;
+    openOnHold(quote.id, quote.quoteNumber);
+  }, [quote, openOnHold]);
 
   const handleCancel = useCallback(() => {
-    if (!quote) {
-      return;
-    }
-
-    setShowCancelDialog(true);
-  }, [quote]);
-
-  const confirmCancel = useCallback(
-    (data: { id: string; reason?: string }) => {
-      markAsCancelled.mutate(data, {
-        onSuccess: () => {
-          setShowCancelDialog(false);
-        },
-      });
-    },
-    [markAsCancelled],
-  );
+    if (!quote) return;
+    openCancel(quote.id, quote.quoteNumber);
+  }, [quote, openCancel]);
 
   const handleConvert = useCallback(() => {
-    if (!quote) {
-      return;
-    }
-
-    setShowConvertDialog(true);
-  }, [quote]);
-
-  const confirmConvert = useCallback(
-    (data: { id: string; dueDate: Date; gst: number; discount: number }) => {
-      convertToInvoice.mutate(data, {
-        onSuccess: () => {
-          setShowConvertDialog(false);
-        },
-      });
-    },
-    [convertToInvoice],
-  );
+    if (!quote) return;
+    openConvert(quote.id, quote.quoteNumber, Number(quote.gst), Number(quote.discount));
+  }, [quote, openConvert]);
 
   const handleDelete = useCallback(() => {
-    if (!quote) {
-      return;
-    }
-
-    setShowDeleteDialog(true);
-  }, [quote]);
-
-  const confirmDelete = useCallback(
-    (quoteId: string) => {
-      deleteQuote.mutate(quoteId, {
-        onSuccess: () => {
-          setShowDeleteDialog(false);
-          const basePath = '/finances/quotes';
-          const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
-          router.push(targetPath);
-        },
-      });
-    },
-    [deleteQuote, router, queryString],
-  );
+    if (!quote) return;
+    openDelete(quote.id, quote.quoteNumber, () => {
+      const basePath = '/finances/quotes';
+      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+      router.push(targetPath);
+    });
+  }, [quote, openDelete, router, queryString]);
 
   const handleCreateVersion = useCallback(() => {
     if (!quote) {
@@ -615,69 +528,7 @@ export function QuoteDrawer({
             </>
           ) : null}
         </DrawerContent>
-      </Drawer>     
-
-      {/* Reject Quote Dialog */}
-      {showRejectDialog && quote?.id ? (
-        <RejectQuoteDialog
-          open={showRejectDialog}
-          onOpenChange={setShowRejectDialog}
-          onConfirm={confirmReject}
-          quoteId={quote.id}
-          quoteNumber={quote.quoteNumber}
-          isPending={markAsRejected.isPending}
-        />
-      ) : null}
-
-      {/* On Hold Dialog */}
-      {showOnHoldDialog && quote?.id ? (
-        <OnHoldDialog
-          open={showOnHoldDialog}
-          onOpenChange={setShowOnHoldDialog}
-          onConfirm={confirmOnHold}
-          quoteId={quote.id}
-          quoteNumber={quote.quoteNumber}
-          isPending={markAsOnHold.isPending}
-        />
-      ) : null}
-
-      {/* Cancel Quote Dialog */}
-      {showCancelDialog && quote?.id ? (
-        <CancelQuoteDialog
-          open={showCancelDialog}
-          onOpenChange={setShowCancelDialog}
-          onConfirm={confirmCancel}
-          quoteId={quote.id}
-          quoteNumber={quote.quoteNumber}
-          isPending={markAsCancelled.isPending}
-        />
-      ) : null}
-
-      {/* Convert to Invoice Dialog */}
-      {showConvertDialog && quote?.id ? (
-        <ConvertToInvoiceDialog
-          open={showConvertDialog}
-          onOpenChange={setShowConvertDialog}
-          onConfirm={confirmConvert}
-          quoteId={quote.id}
-          quoteNumber={quote.quoteNumber}
-          quoteGst={Number(quote.gst)}
-          quoteDiscount={Number(quote.discount)}
-          isPending={convertToInvoice.isPending}
-        />
-      ) : null}
-
-       {/* Delete Confirmation Dialog */}
-       {showDeleteDialog && quote?.id ? (
-        <DeleteQuoteDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          onConfirm={confirmDelete}
-          quoteId={quote.id}
-          quoteNumber={quote.quoteNumber}
-          isPending={deleteQuote.isPending}
-        />
-      ) : null}
+      </Drawer>
     </>
   );
 }

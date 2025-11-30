@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Trash2, Download, Loader2, Eye, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,8 @@ export function QuoteItemDetails({
     quoteItemId: string;
   } | null>(null);
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
+  // Track which images have completed loading (persists across re-renders)
+  const loadedImagesRef = useRef<Set<string>>(new Set());
   const [previewImage, setPreviewImage] = useState<{
     url: string;
     fileName: string;
@@ -67,21 +69,29 @@ export function QuoteItemDetails({
       .sort((a, b) => a.order - b.order);
   }, [items]);
 
-  // Initialize loading state for all images
+  // Initialize loading state for NEW images only (images not yet loaded)
   useEffect(() => {
     if (!items) return;
 
-    const allImageIds = new Set<string>();
+    const newLoadingImages = new Set<string>();
+    
     items.forEach((item) => {
       item.attachments?.forEach((attachment) => {
-        allImageIds.add(attachment.id);
+        // Only add to loading state if it hasn't been loaded yet
+        if (!loadedImagesRef.current.has(attachment.id)) {
+          newLoadingImages.add(attachment.id);
+        }
       });
     });
 
-    setLoadingImages(allImageIds);
+    setLoadingImages(newLoadingImages);
   }, [items]);
 
   const handleImageLoadComplete = useCallback((attachmentId: string) => {
+    // Mark this image as loaded
+    loadedImagesRef.current.add(attachmentId);
+    
+    // Remove from loading state
     setLoadingImages((prev) => {
       const next = new Set(prev);
       next.delete(attachmentId);
@@ -195,12 +205,11 @@ export function QuoteItemDetails({
                       {/* Image Preview */}
                       <Box className="aspect-square bg-gray-100 dark:bg-gray-800 relative">
                         {/* Loading Spinner */}
-                        {loadingImages.has(attachment.id) && (
+                        {loadingImages.has(attachment.id) ? (
                           <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
                             <Loader2 className="size-8 animate-spin text-gray-400" />
                           </Box>
-                        )}
-
+                        ): null}
                         <Image
                           src={attachment.s3Url}
                           alt={attachment.fileName}
@@ -290,16 +299,15 @@ export function QuoteItemDetails({
                       editable={true}
                     />
                   </Box>
-                ) : (
+                ) : item.notes ? (
                   <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
                     <RichTextEditor
                       key={`editor-readonly-${item.id}`}
                       value={item.notes ?? ''}
                       editable={false}
                     />
-                  </Box>
-                )
-                ): null}
+                  </Box>) : null
+                ) : null}
               </Box>
             );
           })}
