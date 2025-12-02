@@ -2,11 +2,17 @@ import superjson from 'superjson';
 import { Prisma } from '@/prisma/client';
 
 // Register custom serializer for Prisma Decimal (as number, not string)
-superjson.registerCustom<Prisma.Decimal, number>(
+// Note: PostgreSQL MONEY type may return values with commas in certain locales
+superjson.registerCustom<Prisma.Decimal, number | string>(
   {
     isApplicable: (v): v is Prisma.Decimal => Prisma.Decimal.isDecimal(v),
     serialize: (v) => v.toNumber(),
-    deserialize: (v) => new Prisma.Decimal(v),
+    deserialize: (v) => {
+      // Handle both number and string inputs
+      // Remove commas from strings (e.g., "6,400.00" -> "6400.00")
+      const cleanValue = typeof v === 'string' ? v.replace(/,/g, '') : v;
+      return new Prisma.Decimal(cleanValue);
+    },
   },
   'prisma-decimal',
 );

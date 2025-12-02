@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   output          = "./generated/client"
+  // engineType      = "binary"
   // previewFeatures = ["driverAdapters"]
 }
 
@@ -69,7 +70,7 @@ model Product {
   name        String
   description String?
   status      ProductStatus @default(ACTIVE)
-  price       Decimal       @default(0) @db.Money
+  price       Decimal       @default(0) @db.Decimal(15, 2)
   stock       Int           @default(0)
   createdAt   DateTime      @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt   DateTime      @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
@@ -189,9 +190,9 @@ model Invoice {
 
   status InvoiceStatus @default(DRAFT)
 
-  amount     Decimal  @db.Money
+  amount     Decimal  @db.Decimal(15, 2)
   currency   String   @default("AUD")
-  discount   Decimal  @default(0) @db.Money
+  discount   Decimal  @default(0) @db.Decimal(15, 2)
   gst        Decimal  @default(10) @map(name: "gst") @db.Decimal(5, 2)
   issuedDate DateTime @map(name: "issued_date") @db.Date
   dueDate    DateTime @map(name: "due_date") @db.Date
@@ -230,8 +231,8 @@ model InvoiceItem {
 
   description String
   quantity    Int
-  unitPrice   Decimal @map(name: "unit_price") @db.Money
-  total       Decimal @db.Money
+  unitPrice   Decimal @map(name: "unit_price") @db.Decimal(15, 2)
+  total       Decimal @db.Decimal(15, 2)
 
   productId String?  @map(name: "product_id")
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
@@ -258,10 +259,10 @@ model Quote {
   versions       Quote[] @relation("QuoteVersions")
 
   // Common fields
-  amount     Decimal  @db.Money
+  amount     Decimal  @db.Decimal(15, 2)
   currency   String   @default("AUD")
   gst        Decimal  @default(10) @db.Decimal(5, 2) // GST percentage (0-100)
-  discount   Decimal  @default(0) @db.Money // Discount amount
+  discount   Decimal  @default(0) @db.Decimal(15, 2) // Discount amount
   issuedDate DateTime @map(name: "issued_date") @db.Date
   validUntil DateTime @map(name: "valid_until") @db.Date
 
@@ -295,8 +296,8 @@ model QuoteItem {
 
   description String
   quantity    Int
-  unitPrice   Decimal @map(name: "unit_price") @db.Money
-  total       Decimal @db.Money
+  unitPrice   Decimal @map(name: "unit_price") @db.Decimal(15, 2)
+  total       Decimal @db.Decimal(15, 2)
   order       Int     @default(0) // Display order within the quote
 
   // Optional product reference

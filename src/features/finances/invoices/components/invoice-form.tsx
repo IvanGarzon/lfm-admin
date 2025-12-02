@@ -41,6 +41,7 @@ import type { InvoiceWithDetails, InvoiceFormInput } from '@/features/finances/i
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 const defaultFormState: CreateInvoiceInput = {
   customerId: '',
@@ -139,6 +140,9 @@ export function InvoiceForm({
       onDirtyStateChange(form.formState.isDirty);
     }
   }, [form.formState.isDirty, onDirtyStateChange]);
+
+  // Warn user before leaving page with unsaved changes
+  useUnsavedChanges(form.formState.isDirty);
 
   const isLocked = useMemo(() => {
     return (
@@ -427,7 +431,7 @@ export function InvoiceForm({
                         type="number"
                         step="1"
                         min="0"
-                        value={isNaN(field.value) ? '' : field.value}
+                        value={isNaN(field.value ?? 0) ? '' : (field.value ?? 0)}
                         onChange={(e) => {
                           const value = e.target.valueAsNumber;
                           field.onChange(isNaN(value) ? 0 : value);

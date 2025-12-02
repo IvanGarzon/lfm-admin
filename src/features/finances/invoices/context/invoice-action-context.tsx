@@ -98,8 +98,9 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   }, [state, downloadReceiptPdf]);
 
   const handleSendEmailReceipt = useCallback(async () => {
-    // Placeholder for email sending logic
-    console.log('Sending email receipt for', state?.id);
+    // TODO: Implement email sending logic
+    // This is a placeholder that needs to be replaced with actual email service integration
+    // toast.info('Email functionality not yet implemented');
     return Promise.resolve();
   }, [state]);
 

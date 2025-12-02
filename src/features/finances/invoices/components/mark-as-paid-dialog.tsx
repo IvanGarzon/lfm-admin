@@ -56,8 +56,6 @@ export function MarkAsPaidDialog({
   invoiceNumber,
   isPending = false,
 }: MarkAsPaidDialogProps) {
-  console.log('MarkAsPaidDialog render:', { open, invoiceId, invoiceNumber });
-
   const form = useForm<MarkInvoiceAsPaidInput>({
     resolver: zodResolver(MarkInvoiceAsPaidSchema),
     defaultValues: {
@@ -71,10 +69,6 @@ export function MarkAsPaidDialog({
     onConfirm(data);
     form.reset();
     onOpenChange(false);
-  };
-
-  const handleError = (errors: unknown) => {
-    console.error('Form validation errors:', errors);
   };
 
   const handleCancel = () => {
@@ -92,7 +86,7 @@ export function MarkAsPaidDialog({
         <Form {...form}>
           <form
             id="mark-as-paid-form"
-            onSubmit={form.handleSubmit(handleSubmit, handleError)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
             <FieldGroup>

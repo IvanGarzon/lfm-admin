@@ -1,7 +1,7 @@
 import { isAfter, differenceInDays, startOfToday } from 'date-fns';
 import { pdf } from '@react-pdf/renderer';
 import { toast } from 'sonner';
-import type { QuoteListItem, QuoteWithDetails } from '../types';
+import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
 import { QuoteDocument } from '@/templates/quote-template';
 import { QuoteStatusSchema, type QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 
@@ -108,8 +108,8 @@ export async function downloadQuotePdf(quote: QuoteWithDetails): Promise<void> {
 
     toast.success('PDF downloaded successfully');
   } catch (error) {
-    console.error('Error generating PDF:', error);
     toast.error('Failed to generate PDF');
+    // Re-throw to let caller handle error
     throw error;
   }
 }

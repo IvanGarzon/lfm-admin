@@ -24,8 +24,8 @@ export async function downloadInvoicePdf(invoice: InvoiceWithDetails): Promise<v
 
     toast.success('PDF downloaded successfully');
   } catch (error) {
-    console.error('Error generating PDF:', error);
     toast.error('Failed to generate PDF');
+    // Re-throw to let caller handle error
     throw error;
   }
 }
@@ -50,8 +50,8 @@ export async function downloadReceiptPdf(invoice: InvoiceWithDetails): Promise<v
 
     toast.success('Receipt PDF downloaded successfully');
   } catch (error) {
-    console.error('Error generating receipt PDF:', error);
     toast.error('Failed to generate receipt PDF');
+    // Re-throw to let caller handle error
     throw error;
   }
 }

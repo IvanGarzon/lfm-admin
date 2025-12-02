@@ -41,9 +41,7 @@ import {
   useUpdateInvoice,
   useSendInvoiceReminder,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import {
-  downloadInvoicePdf,
-} from '@/features/finances/invoices/utils/invoiceHelpers';
+import { downloadInvoicePdf } from '@/features/finances/invoices/utils/invoice-pdf-helpers';
 import { InvoiceForm } from '@/features/finances/invoices/components//invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
 import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';

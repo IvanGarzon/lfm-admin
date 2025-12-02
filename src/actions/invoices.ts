@@ -1,12 +1,11 @@
 'use server';
 
-import { ZodError } from 'zod';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
-import { Prisma } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { handleActionError } from '@/lib/error-handler';
 import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
@@ -63,11 +62,7 @@ export async function getInvoices(
 
     return { success: true, data: result };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch invoices' };
+    return handleActionError(error, 'Failed to fetch invoices');
   }
 }
 
@@ -79,12 +74,12 @@ export async function getInvoices(
  *
  */
 export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWithDetails>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
 
+  try {
     const invoice = await invoiceRepo.findByIdWithDetails(id);
 
     if (!invoice) {
@@ -93,11 +88,7 @@ export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWi
 
     return { success: true, data: invoice };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch invoice' };
+    return handleActionError(error, 'Failed to fetch invoice');
   }
 }
 
@@ -112,14 +103,16 @@ export async function getInvoiceStatistics(dateFilter?: {
   startDate?: Date;
   endDate?: Date;
 }): Promise<ActionResult<InvoiceStatistics>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     const stats = await invoiceRepo.getStatistics(dateFilter);
     return { success: true, data: stats };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to fetch statistics' };
+    return handleActionError(error, 'Failed to fetch statistics');
   }
 }
 
@@ -148,28 +141,7 @@ export async function createInvoice(
       data: { id: invoice.id, invoiceNumber: invoice.invoiceNumber },
     };
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: 'Invalid invoice data. Please check the fields and try again.',
-      };
-    }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return { success: false, error: 'Invoice number already exists' };
-      }
-
-      if (error.code === 'P2003') {
-        return { success: false, error: 'Customer not found' };
-      }
-    }
-
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to create invoice' };
+    return handleActionError(error, 'Failed to create invoice');
   }
 }
 
@@ -208,17 +180,7 @@ export async function updateInvoice(
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2003') {
-        return { success: false, error: 'Customer not found' };
-      }
-    }
-
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to update invoice' };
+    return handleActionError(error, 'Failed to update invoice');
   }
 }
 
@@ -249,11 +211,7 @@ export async function markInvoiceAsPaid(
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to mark invoice as paid' };
+    return handleActionError(error, 'Failed to mark invoice as paid');
   }
 }
 
@@ -280,11 +238,7 @@ export async function markInvoiceAsPending(
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to mark invoice as pending' };
+    return handleActionError(error, 'Failed to mark invoice as pending');
   }
 }
 
@@ -315,11 +269,7 @@ export async function cancelInvoice(
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to cancel invoice' };
+    return handleActionError(error, 'Failed to cancel invoice');
   }
 }
 
@@ -342,11 +292,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to send reminder' };
+    return handleActionError(error, 'Failed to send reminder');
   }
 }
 
@@ -358,6 +304,11 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
  * or an error if the invoice is not found.
  */
 export async function deleteInvoice(id: string): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     const success = await invoiceRepo.softDelete(id);
 
@@ -369,10 +320,6 @@ export async function deleteInvoice(id: string): Promise<ActionResult<{ id: stri
 
     return { success: true, data: { id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to delete invoice' };
+    return handleActionError(error, 'Failed to delete invoice');
   }
 }
