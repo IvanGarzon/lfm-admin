@@ -56,8 +56,6 @@ export function MarkAsPaidDialog({
   invoiceNumber,
   isPending = false,
 }: MarkAsPaidDialogProps) {
-  console.log('MarkAsPaidDialog render:', { open, invoiceId, invoiceNumber });
-
   const form = useForm<MarkInvoiceAsPaidInput>({
     resolver: zodResolver(MarkInvoiceAsPaidSchema),
     defaultValues: {

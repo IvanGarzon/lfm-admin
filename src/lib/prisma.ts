@@ -1,18 +1,14 @@
 import { neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@/prisma/client';
-// import { serializationMiddleware } from '../../prisma';
 import { env } from '@/env';
 import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
 const prismaClientSingleton = () => {
-  // Prisma 7 requires an adapter for edge/serverless environments
   neonConfig.poolQueryViaFetch = true;
-
   const connectionString = env.DATABASE_URL;
 
-  // Add a check to ensure the DATABASE_URL is actually set
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not defined.');
   }
@@ -29,7 +25,7 @@ const prismaClientSingleton = () => {
             { emit: 'stdout', level: 'error' },
           ]
         : [{ emit: 'stdout', level: 'error' }],
-  } as never);
+  });
 };
 
 declare global {

@@ -15,7 +15,6 @@ export default async function QuotesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const searchParamsResolved = await searchParams;
-
   const result = await getQuotes(searchParamsResolved);
 
   if (!result.success) {

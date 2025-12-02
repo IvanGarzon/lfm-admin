@@ -472,7 +472,7 @@ export function useDownloadInvoicePdf() {
       });
 
       const { downloadInvoicePdf } = await import(
-        '@/features/finances/invoices/utils/invoiceHelpers'
+        '@/features/finances/invoices/utils/invoice-pdf-helpers'
       );
 
       return await downloadInvoicePdf(invoiceData);
@@ -480,8 +480,8 @@ export function useDownloadInvoicePdf() {
     onSuccess: () => {
       toast.success('PDF downloaded successfully');
     },
-    onError: (error: Error) => {
-      console.error('Error downloading invoice:', error);
+    onError: () => {
+      // Error is thrown from downloadInvoicePdf, which already shows toast
       toast.error('Failed to download invoice');
     },
   });
@@ -504,7 +504,7 @@ export function useDownloadReceiptPdf() {
       });
 
       const { downloadReceiptPdf } = await import(
-        '@/features/finances/invoices/utils/invoiceHelpers'
+        '@/features/finances/invoices/utils/invoice-pdf-helpers'
       );
 
       return await downloadReceiptPdf(invoiceData);
@@ -512,8 +512,8 @@ export function useDownloadReceiptPdf() {
     onSuccess: () => {
       toast.success('Receipt downloaded successfully');
     },
-    onError: (error: Error) => {
-      console.error('Error downloading receipt:', error);
+    onError: () => {
+      // Error is thrown from downloadReceiptPdf, which already shows toast
       toast.error('Failed to download receipt');
     },
   });

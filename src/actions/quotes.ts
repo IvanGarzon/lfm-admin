@@ -1,13 +1,13 @@
 'use server';
 
-import { ZodError } from 'zod';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { SearchParams } from 'nuqs/server';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
-import { Prisma, QuoteStatus } from '@/prisma/client';
+import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { handleActionError } from '@/lib/error-handler';
 import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
@@ -82,11 +82,7 @@ export async function getQuotes(
 
     return { success: true, data: result };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch quotes' };
+    return handleActionError(error, 'Failed to fetch quotes');
   }
 }
 
@@ -111,11 +107,7 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
 
     return { success: true, data: quote };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch quote' };
+    return handleActionError(error, 'Failed to fetch quote');
   }
 }
 
@@ -133,10 +125,7 @@ export async function getQuoteStatistics(dateFilter?: {
     const stats = await quoteRepo.getStatistics(dateFilter);
     return { success: true, data: stats };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to fetch statistics' };
+    return handleActionError(error, 'Failed to fetch statistics');
   }
 }
 
@@ -165,27 +154,7 @@ export async function createQuote(
       data: { id: quote.id, quoteNumber: quote.quoteNumber },
     };
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: 'Invalid quote data. Please check the fields and try again.',
-      };
-    }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return { success: false, error: 'Quote number already exists' };
-      }
-      if (error.code === 'P2003') {
-        return { success: false, error: 'Customer not found' };
-      }
-    }
-
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to create quote' };
+    return handleActionError(error, 'Failed to create quote');
   }
 }
 
@@ -226,24 +195,7 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof ZodError) {
-      return {
-        success: false,
-        error: 'Invalid quote data. Please check the fields and try again.',
-      };
-    }
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2003') {
-        return { success: false, error: 'Customer not found' };
-      }
-    }
-
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to update quote' };
+    return handleActionError(error, 'Failed to update quote');    
   }
 }
 
@@ -274,11 +226,7 @@ export async function markQuoteAsAccepted(
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to mark quote as accepted' };
+    return handleActionError(error, 'Failed to mark quote as accepted');
   }
 }
 
@@ -313,10 +261,7 @@ export async function markQuoteAsRejected(
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to mark quote as rejected' };
+    return handleActionError(error, 'Failed to mark quote as rejected');
   }
 }
 
@@ -344,10 +289,7 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to mark quote as sent' };
+    return handleActionError(error, 'Failed to mark quote as sent');
   }
 }
 
@@ -382,10 +324,7 @@ export async function markQuoteAsOnHold(
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to mark quote as on hold' };
+    return handleActionError(error, 'Failed to mark quote as on hold');
   }
 }
 
@@ -420,10 +359,7 @@ export async function markQuoteAsCancelled(
 
     return { success: true, data: { id: quote.id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to cancel quote' };
+    return handleActionError(error, 'Failed to cancel quote');
   }
 }
 
@@ -465,10 +401,7 @@ export async function convertQuoteToInvoice(
 
     return { success: true, data: result };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to convert quote to invoice' };
+    return handleActionError(error, 'Failed to convert quote to invoice');
   }
 }
 
@@ -487,10 +420,7 @@ export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: numb
 
     return { success: true, data: { count } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to expire quotes' };
+    return handleActionError(error, 'Failed to expire quotes');
   }
 }
 
@@ -518,10 +448,7 @@ export async function deleteQuote(id: string): Promise<ActionResult<{ id: string
 
     return { success: true, data: { id } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to delete quote' };
+    return handleActionError(error, 'Failed to delete quote');
   }
 }
 
@@ -610,11 +537,7 @@ export async function uploadQuoteAttachment(
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to upload attachment' };
+    return handleActionError(error, 'Failed to upload attachment');
   }
 }
 
@@ -654,10 +577,7 @@ export async function deleteQuoteAttachment(data: {
 
     return { success: true, data: { id: validatedData.attachmentId } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to delete attachment' };
+    return handleActionError(error, 'Failed to delete attachment');
   }
 }
 
@@ -687,10 +607,7 @@ export async function getQuoteAttachments(
       })),
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to fetch attachments' };
+    return handleActionError(error, 'Failed to fetch attachments');
   }
 }
 
@@ -721,10 +638,7 @@ export async function getAttachmentDownloadUrl(
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to generate download URL' };
+    return handleActionError(error, 'Failed to generate download URL');
   }
 }
 
@@ -816,11 +730,7 @@ export async function uploadQuoteItemAttachment(
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to upload item attachment' };
+    return handleActionError(error, 'Failed to upload item attachment');
   }
 }
 
@@ -862,10 +772,7 @@ export async function deleteQuoteItemAttachment(data: {
 
     return { success: true, data: { id: validatedData.attachmentId } };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to delete item attachment' };
+    return handleActionError(error, 'Failed to delete item attachment');
   }
 }
 
@@ -900,10 +807,7 @@ export async function updateQuoteItemNotes(data: {
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to update quote item notes' };
+    return handleActionError(error, 'Failed to update quote item notes');
   }
 }
 
@@ -950,10 +854,7 @@ export async function updateQuoteItemColors(data: {
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to update quote item colors' };
+    return handleActionError(error, 'Failed to update quote item colors');
   }
 }
 
@@ -983,11 +884,7 @@ export async function getQuoteItemAttachments(
       })),
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch item attachments' };
+    return handleActionError(error, 'Failed to fetch item attachments');
   }
 }
 
@@ -1018,11 +915,7 @@ export async function getItemAttachmentDownloadUrl(
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to generate download URL' };
+    return handleActionError(error, 'Failed to generate download URL');
   }
 }
 
@@ -1061,10 +954,7 @@ export async function getQuoteVersions(quoteId: string): Promise<
 
     return { success: true, data: normalizedVersions };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to fetch quote versions' };
+    return handleActionError(error, 'Failed to fetch quote versions');
   }
 }
 
@@ -1109,9 +999,6 @@ export async function createQuoteVersion(
       },
     };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: 'Failed to create quote version' };
+    return handleActionError(error, 'Failed to create quote version');
   }
 }

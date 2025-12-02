@@ -55,7 +55,8 @@ export function CancelInvoiceDialog({
   };
 
   const handleError = (errors: unknown) => {
-    console.error('Form validation errors:', errors);
+    // Form validation errors are already displayed via form.formState.errors
+    // No need to log them separately
   };
 
   const handleCancel = () => {

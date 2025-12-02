@@ -671,8 +671,8 @@ export function useDownloadQuotePdf() {
     onSuccess: () => {
       toast.success('PDF downloaded successfully');
     },
-    onError: (error: Error) => {
-      console.error('Error downloading quote:', error);
+    onError: () => {
+      // Error is thrown from downloadQuotePdf, which already shows toast
       toast.error('Failed to download quote');
     },
   });

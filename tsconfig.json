@@ -2,7 +2,7 @@
   "compilerOptions": {
     /* Base Options: */
     "skipLibCheck": true,
-    "target": "es2022",
+    "target": "ES2023",
     "allowJs": true,
     "moduleDetection": "force",
     "isolatedModules": true,
@@ -17,7 +17,7 @@
     "noEmit": true,
     //"module": "Preserve",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
 
     "esModuleInterop": true,
     "resolveJsonModule": true,

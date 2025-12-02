@@ -40,7 +40,7 @@ export function SendReceiptDialog({
     try {
       await onDownload();
     } catch (error) {
-      console.error('Error downloading receipt:', error);
+      // Error is already handled by onDownload mutation (shows toast)
     } finally {
       setIsDownloading(false);
     }
@@ -58,7 +58,7 @@ export function SendReceiptDialog({
       toast.success('Receipt sent successfully');
       onOpenChange(false);
     } catch (error) {
-      console.error('Error sending receipt:', error);
+      // Error already shown via toast
       toast.error('Failed to send receipt');
     } finally {
       setIsSendingEmail(false);

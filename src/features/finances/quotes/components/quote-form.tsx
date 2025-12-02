@@ -49,6 +49,7 @@ import {
   useDeleteQuoteItemAttachment,
   useGetItemAttachmentDownloadUrl,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 const defaultFormState: CreateQuoteInput = {
   customerId: '',
@@ -152,6 +153,9 @@ export function QuoteForm({
       onDirtyStateChange(form.formState.isDirty);
     }
   }, [form.formState.isDirty, onDirtyStateChange]);
+
+  // Warn user before leaving page with unsaved changes
+  useUnsavedChanges(form.formState.isDirty);
 
   // Use permissions from getQuotePermissions for consistency
   const { canEdit } = getQuotePermissions(quote?.status);
@@ -461,7 +465,7 @@ export function QuoteForm({
                         type="number"
                         step="1"
                         min="0"
-                        value={isNaN(field.value) ? '' : field.value}
+                        value={isNaN(field.value ?? 0) ? '' : (field.value ?? 0)}
                         onChange={(e) => {
                           const value = e.target.valueAsNumber;
                           field.onChange(isNaN(value) ? 0 : value);
