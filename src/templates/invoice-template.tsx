@@ -1,6 +1,4 @@
-'use client';
-
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
@@ -9,6 +7,7 @@ import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 
 type InvoicePreviewProps = {
   invoice: InvoiceWithDetails;
+  logoUrl?: string;
 };
 
 const styles = StyleSheet.create({
@@ -242,7 +241,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function InvoiceDocument({ invoice }: InvoicePreviewProps) {
+export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
   const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * invoice.gst) / 100;
   const total = subtotal + gstAmount - invoice.discount;
@@ -262,7 +261,7 @@ export function InvoiceDocument({ invoice }: InvoicePreviewProps) {
             <Text style={styles.invoiceNumber}>Invoice Number #{invoice.invoiceNumber}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Image src="/static/logo-green-800.png" style={styles.logo} />
+            <Image src={logoUrl || "/static/logo-green-800.png"} style={styles.logo} />
           </View>
         </View>
 
@@ -399,13 +398,5 @@ export function InvoiceDocument({ invoice }: InvoicePreviewProps) {
         </View>
       </Page>
     </Document>
-  );
-}
-
-export function InvoicePdf({ invoice }: InvoicePreviewProps) {
-  return (
-    <PDFViewer width="100%" height="100%" className="border-0">
-      <InvoiceDocument invoice={invoice} />
-    </PDFViewer>
   );
 }

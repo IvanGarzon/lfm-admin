@@ -211,6 +211,14 @@ model Invoice {
 
   notes String? @db.Text
 
+  // PDF Metadata
+  fileName        String?   @map(name: "file_name")
+  fileSize        Int?      @map(name: "file_size")
+  mimeType        String?   @map(name: "mime_type")
+  s3Key           String?   @map(name: "s3_key")
+  s3Url           String?   @map(name: "s3_url")
+  lastGeneratedAt DateTime? @map(name: "last_generated_at") @db.Timestamptz()
+
   items InvoiceItem[]
 
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()

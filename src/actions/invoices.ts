@@ -6,6 +6,7 @@ import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
+import { logger } from '@/lib/logger';
 import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
@@ -13,11 +14,17 @@ import {
   MarkInvoiceAsPendingSchema,
   CancelInvoiceSchema,
   InvoiceFiltersSchema,
+  SendInvoiceEmailSchema,
+  SendReminderEmailSchema,
+  SendReceiptEmailSchema,
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
   type MarkInvoiceAsPaidInput,
   type MarkInvoiceAsPendingInput,
   type CancelInvoiceInput,
+  type SendInvoiceEmailInput,
+  type SendReminderEmailInput,
+  type SendReceiptEmailInput,
 } from '@/schemas/invoices';
 import type {
   InvoiceFilters,
@@ -131,9 +138,9 @@ export async function createInvoice(
   }
 
   try {
-    // Validate input
     const validatedData = CreateInvoiceSchema.parse(data);
     const invoice = await invoiceRepo.createInvoiceWithItems(validatedData);
+
     revalidatePath('/finances/invoices');
 
     return {
@@ -160,19 +167,43 @@ export async function updateInvoice(
   }
 
   try {
-    // Validate input
     const validatedData = UpdateInvoiceSchema.parse(data);
-
-    // Check if invoice exists
     const existing = await invoiceRepo.findById(validatedData.id);
     if (!existing) {
       return { success: false, error: 'Invoice not found' };
     }
 
     const invoice = await invoiceRepo.updateInvoiceWithItems(validatedData.id, validatedData);
-    
+
     if (!invoice) {
       return { success: false, error: 'Failed to update invoice' };
+    }
+
+    // Invalidate PDF cache - delete old PDF from S3 and clear metadata
+    if (existing.s3Key) {
+      try {
+        const { deleteFileFromS3 } = await import('@/lib/s3');
+        await deleteFileFromS3(existing.s3Key);
+
+        // Clear PDF metadata from database
+        await prisma.invoice.update({
+          where: { id: invoice.id },
+          data: {
+            fileName: null,
+            fileSize: null,
+            mimeType: null,
+            s3Key: null,
+            s3Url: null,
+            lastGeneratedAt: null,
+          },
+        });
+      } catch (error) {
+        // Log error but don't fail the update
+        logger.warn('Failed to delete old PDF from S3', {
+          context: 'updateInvoice',
+          metadata: { invoiceId: invoice.id, s3Key: existing.s3Key },
+        });
+      }
     }
 
     revalidatePath('/finances/invoices');
@@ -185,6 +216,94 @@ export async function updateInvoice(
 }
 
 /**
+ * Marks an invoice as pending.
+ * @param data - An object containing the invoice ID.
+ * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
+ * or an error if the invoice is not found.
+ */
+export async function markInvoiceAsPending(
+  data: MarkInvoiceAsPendingInput,
+): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const validatedInvoice = MarkInvoiceAsPendingSchema.parse(data);
+    const invoice = await invoiceRepo.markAsPending(validatedInvoice.id);
+
+    if (!invoice) {
+      return { success: false, error: 'Invoice not found' };
+    }
+
+    // Generate or retrieve PDF using centralized service
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const result = await getOrGenerateInvoicePdf(invoice, {
+      context: 'markInvoiceAsPending',
+      skipDownload: false,
+    });
+    const { pdfBuffer, pdfUrl, pdfFilename } = result;
+
+    if (result.wasRegenerated) {
+      await invoiceRepo.updatePdfMetadata(invoice.id, {
+        fileName: result.pdfFilename,
+        fileSize: result.pdfFileSize,
+        s3Key: result.s3Key,
+        s3Url: result.s3Url,
+      });
+    }
+
+    const validatedInvoiceEmailSchema: SendInvoiceEmailInput = SendInvoiceEmailSchema.parse({
+      invoiceId: invoice.id,
+      to: invoice.customer.email,
+      invoiceData: {
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        dueDate: invoice.dueDate,
+        issuedDate: invoice.issuedDate,
+      },
+      pdfUrl,
+    });
+
+    // Send invoice email with PDF link and attachment in background
+    const { sendEmailNotification } = await import('@/lib/email-service');
+
+    sendEmailNotification({ 
+      to: validatedInvoiceEmailSchema.to,
+      subject: `Invoice ${validatedInvoiceEmailSchema.invoiceData.invoiceNumber}`,
+      template: 'invoice',
+      props: {
+        invoiceData: {
+          ...validatedInvoiceEmailSchema.invoiceData,
+        },
+        pdfUrl,
+      },
+      ...(pdfBuffer
+        ? {
+            attachments: [
+              {
+                filename: pdfFilename,
+                content: pdfBuffer,
+              },
+            ],
+          }
+        : {}
+      ),
+    });
+
+    revalidatePath('/finances/invoices');
+    revalidatePath(`/finances/invoices/${invoice.id}`);
+
+    return { success: true, data: { id: invoice.id } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to mark invoice as pending');
+  }
+}
+
+/**
  * Marks an invoice as paid.
  * @param data - An object containing the invoice ID, the paid date, and the payment method.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
@@ -193,6 +312,11 @@ export async function updateInvoice(
 export async function markInvoiceAsPaid(
   data: MarkInvoiceAsPaidInput,
 ): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     const validatedData = MarkInvoiceAsPaidSchema.parse(data);
 
@@ -212,33 +336,6 @@ export async function markInvoiceAsPaid(
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
     return handleActionError(error, 'Failed to mark invoice as paid');
-  }
-}
-
-/**
- * Marks an invoice as pending.
- * @param data - An object containing the invoice ID.
- * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
- * or an error if the invoice is not found.
- */
-export async function markInvoiceAsPending(
-  data: MarkInvoiceAsPendingInput,
-): Promise<ActionResult<{ id: string }>> {
-  try {
-    const validatedData = MarkInvoiceAsPendingSchema.parse(data);
-
-    const invoice = await invoiceRepo.markAsPending(validatedData.id);
-
-    if (!invoice) {
-      return { success: false, error: 'Invoice not found' };
-    }
-
-    revalidatePath('/finances/invoices');
-    revalidatePath(`/finances/invoices/${validatedData.id}`);
-
-    return { success: true, data: { id: invoice.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to mark invoice as pending');
   }
 }
 
@@ -274,24 +371,201 @@ export async function cancelInvoice(
 }
 
 /**
+ * Sends a receipt email for a paid invoice with PDF attachment.
+ * @param id - The ID of the invoice to send a receipt for.
+ * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success.
+ */
+export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    // Get full invoice details
+    const invoice = await invoiceRepo.findByIdWithDetails(id);
+
+    if (!invoice) {
+      return { success: false, error: 'Invoice not found' };
+    }
+
+    // Generate receipt PDF
+    const { generateReceiptPDF, generateReceiptFilename } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+
+    const pdfBuffer = await generateReceiptPDF(invoice);
+    const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
+
+    const validatedReceiptEmailSchem: SendReceiptEmailInput = SendReceiptEmailSchema.parse({
+      invoiceId: invoice.id,
+      to: invoice.customer.email,
+      receiptData: {
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        paidDate: invoice.paidDate || new Date(),
+        paymentMethod: invoice.paymentMethod || 'Not specified',
+      },
+    });
+
+    // Send receipt email with PDF attachment
+    const { sendEmailNotification } = await import('@/lib/email-service');
+
+    await sendEmailNotification({
+      to: validatedReceiptEmailSchem.to,
+      subject: `Payment Receipt for Invoice ${validatedReceiptEmailSchem.receiptData.invoiceNumber}`,
+      template: 'receipt',
+      props: {
+        receiptData: {
+          ...validatedReceiptEmailSchem.receiptData,
+        },
+      },
+      ...(pdfBuffer
+        ? {
+            attachments: [
+              {
+                filename: pdfFilename,
+                content: pdfBuffer,
+              },
+            ],
+          }
+        : {}
+      ),
+    });
+
+    logger.info('Receipt email sent successfully with PDF attachment', {
+      context: 'sendInvoiceReceipt',
+      metadata: {
+        invoiceId: id,
+        invoiceNumber: invoice.invoiceNumber,
+      },
+    });
+
+    return { success: true, data: { id: invoice.id } };
+  } catch (error) {
+    logger.error('Failed to send receipt email', error, {
+      context: 'sendInvoiceReceipt',
+      metadata: { invoiceId: id },
+    });
+
+    return handleActionError(error, 'Failed to send receipt');
+  }
+}
+
+/**
  * Sends a reminder for an invoice.
  * @param id - The ID of the invoice to send a reminder for.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
  * or an error if the invoice is not found.
  */
 export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
-    const invoice = await invoiceRepo.sendReminder(id);
+    // Get full invoice details
+    const invoice = await invoiceRepo.findByIdWithDetails(id);
 
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };
     }
 
+    // Calculate days overdue
+    const dueDate = new Date(invoice.dueDate);
+    const today = new Date();
+    const daysOverdue = Math.max(
+      0,
+      Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
+    );
+
+    // Only send reminder if invoice is actually overdue
+    if (daysOverdue <= 0) {
+      return { success: false, error: 'Cannot send reminder for invoice that is not overdue' };
+    }
+
+    // Generate or retrieve PDF using centralized service
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const result = await getOrGenerateInvoicePdf(invoice, {
+      context: 'sendInvoiceReminder',
+      skipDownload: false, // Need buffer for email attachment
+    });
+    const { pdfBuffer, pdfUrl, pdfFilename } = result;
+
+    if (result.wasRegenerated) {
+      await invoiceRepo.updatePdfMetadata(invoice.id, {
+        fileName: result.pdfFilename,
+        fileSize: result.pdfFileSize,
+        s3Key: result.s3Key,
+        s3Url: result.s3Url,
+      });
+    }
+
+    const validatedReminderEmailSchema: SendReminderEmailInput = SendReminderEmailSchema.parse({
+      invoiceId: invoice.id,
+      to: invoice.customer.email,
+      reminderData: {
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        dueDate: invoice.dueDate,
+        daysOverdue,
+      },
+      pdfUrl,
+    });
+
+    // Send reminder email with PDF attachment and link
+    const { sendEmailNotification } = await import('@/lib/email-service');
+
+    await sendEmailNotification({
+      to: validatedReminderEmailSchema.to,
+      subject: `Payment Reminder: Invoice ${validatedReminderEmailSchema.reminderData.invoiceNumber} - ${validatedReminderEmailSchema.reminderData.daysOverdue} Days Overdue`,
+      template: 'reminder',
+      props: {
+        reminderData: {
+          ...validatedReminderEmailSchema.reminderData,
+        },
+        pdfUrl: validatedReminderEmailSchema.pdfUrl,
+      },
+      ...(pdfBuffer
+        ? {
+            attachments: [
+              {
+                filename: pdfFilename,
+                content: pdfBuffer,
+              },
+            ],
+          }
+        : {}
+      ),
+    });
+
+    const updatedInvoice = await invoiceRepo.incrementReminderCount(id);
+    if (!updatedInvoice) {
+      return { success: false, error: 'Failed to update reminder count' };
+    }
+
+    logger.info('Reminder email sent successfully with PDF attachment', {
+      context: 'sendInvoiceReminder',
+      metadata: {
+        invoiceId: id,
+        invoiceNumber: invoice.invoiceNumber,
+        daysOverdue,
+      },
+    });
+
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${id}`);
 
-    return { success: true, data: { id: invoice.id } };
+    return { success: true, data: { id: updatedInvoice.id } };
   } catch (error) {
+    logger.error('Failed to send reminder email', error, {
+      context: 'sendInvoiceReminder',
+      metadata: { invoiceId: id },
+    });
+
     return handleActionError(error, 'Failed to send reminder');
   }
 }
@@ -321,5 +595,101 @@ export async function deleteInvoice(id: string): Promise<ActionResult<{ id: stri
     return { success: true, data: { id } };
   } catch (error) {
     return handleActionError(error, 'Failed to delete invoice');
+  }
+}
+
+/**
+ * Retrieves the URL for the invoice PDF.
+ * If the PDF exists in S3, it returns a signed URL.
+ * If not, it generates the PDF, uploads it to S3, and then returns the signed URL.
+ * @param id - The ID of the invoice.
+ * @returns A promise that resolves to an `ActionResult` containing the PDF URL.
+ */
+export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const invoice = await invoiceRepo.findByIdWithDetails(id);
+    if (!invoice) {
+      return { success: false, error: 'Invoice not found' };
+    }
+
+    // Generate or retrieve PDF using centralized service
+    // Note: skipDownload=true since we only need the URL, not the buffer
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const result = await getOrGenerateInvoicePdf(invoice, {
+      context: 'getInvoicePdfUrl',
+      skipDownload: true,
+    });
+    const { pdfUrl } = result;
+
+    if (result.wasRegenerated) {
+      await invoiceRepo.updatePdfMetadata(invoice.id, {
+        fileName: result.pdfFilename,
+        fileSize: result.pdfFileSize,
+        s3Key: result.s3Key,
+        s3Url: result.s3Url,
+      });
+    }
+
+    return { success: true, data: { url: pdfUrl } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to get invoice PDF URL');
+  }
+}
+
+/**
+ * Retrieves the URL for the receipt PDF.
+ * Generates a receipt PDF on-demand (receipts are ephemeral, not cached like invoices).
+ * @param id - The ID of the invoice.
+ * @returns A promise that resolves to an `ActionResult` containing the PDF URL.
+ */
+export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const invoice = await invoiceRepo.findByIdWithDetails(id);
+    if (!invoice) {
+      return { success: false, error: 'Invoice not found' };
+    }
+
+    // Generate receipt PDF using the PDF manager
+    const { generateReceiptPDF, generateReceiptFilename } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getSignedDownloadUrl } = await import('@/lib/s3');
+
+    const pdfBuffer = await generateReceiptPDF(invoice);
+    const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
+
+    // For receipts, we generate on-demand and upload to a temporary location
+    // Use a unique key with timestamp to avoid conflicts
+    const timestamp = Date.now();
+    const { uploadFileToS3 } = await import('@/lib/s3');
+
+    const result = await uploadFileToS3({
+      file: pdfBuffer,
+      fileName: `${timestamp}-${pdfFilename}`,
+      mimeType: 'application/pdf',
+      resourceType: 'receipts',
+      resourceId: invoice.id,
+      allowedMimeTypes: ['application/pdf'],
+      metadata: {
+        invoiceNumber: invoice.invoiceNumber,
+        status: invoice.status,
+        type: 'receipt',
+      },
+    });
+
+    // Get signed URL with shorter expiration (1 hour) since it's temporary
+    const pdfUrl = await getSignedDownloadUrl(result.s3Key, 60 * 60); // 1 hour
+
+    return { success: true, data: { url: pdfUrl } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to get receipt PDF URL');
   }
 }

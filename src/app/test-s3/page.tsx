@@ -32,7 +32,11 @@ type S3File = {
   size: number;
   lastModified: string;
   fileName: string;
-  quoteId: string;
+  folder: string;
+  resourceType: string;
+  resourceId: string;
+  subPath: string;
+  fileType: string;
 };
 
 export default function TestS3Page() {
@@ -122,25 +126,52 @@ export default function TestS3Page() {
   };
 
   // Toggle folder expansion
-  const toggleFolder = (quoteId: string) => {
+  const toggleFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(quoteId)) {
-        newSet.delete(quoteId);
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId);
       } else {
-        newSet.add(quoteId);
+        newSet.add(folderId);
       }
       return newSet;
     });
   };
 
-  // Group files by quote ID
+  // Group files by full folder path hierarchy
+  const filesByResourceType = s3Files.reduce(
+    (acc, file) => {
+      if (!file.resourceType) return acc;
+      
+      if (!acc[file.resourceType]) {
+        acc[file.resourceType] = {};
+      }
+      
+      // Group by resourceId
+      if (!acc[file.resourceType][file.resourceId]) {
+        acc[file.resourceType][file.resourceId] = {};
+      }
+      
+      // Group by subPath (e.g., "items", "attachments", "pdfs")
+      const subPathKey = file.subPath || '_root';
+      if (!acc[file.resourceType][file.resourceId][subPathKey]) {
+        acc[file.resourceType][file.resourceId][subPathKey] = [];
+      }
+      
+      acc[file.resourceType][file.resourceId][subPathKey].push(file);
+      return acc;
+    },
+    {} as Record<string, Record<string, Record<string, S3File[]>>>,
+  );
+
+  // Legacy: Group files by resource type and ID (flat structure for backward compatibility)
   const filesByFolder = s3Files.reduce(
     (acc, file) => {
-      if (!acc[file.quoteId]) {
-        acc[file.quoteId] = [];
+      const folderId = `${file.resourceType}/${file.resourceId}`;
+      if (!acc[folderId]) {
+        acc[folderId] = [];
       }
-      acc[file.quoteId].push(file);
+      acc[folderId].push(file);
       return acc;
     },
     {} as Record<string, S3File[]>,
@@ -756,7 +787,7 @@ export default function TestS3Page() {
                       <Box className="min-w-0 flex-1">
                         <p className="font-medium truncate">{file.fileName}</p>
                         <p className="text-xs text-muted-foreground">
-                          Quote ID: {file.quoteId} • {formatFileSize(file.size)} •{' '}
+                          {file.resourceType}/{file.resourceId} • {file.fileType} • {formatFileSize(file.size)} •{' '}
                           {new Date(file.lastModified).toLocaleString()}
                         </p>
                         <p className="text-xs text-muted-foreground truncate mt-1">{file.key}</p>
@@ -782,75 +813,175 @@ export default function TestS3Page() {
                 </Box>
               ))
             ) : (
-              // Folder View
-              Object.entries(filesByFolder).map(([quoteId, files]) => {
-                const isExpanded = expandedFolders.has(quoteId);
+              // Hierarchical Folder View
+              Object.entries(filesByResourceType).map(([resourceType, resourceFolders]) => {
+                const resourceTypeId = resourceType;
+                const isResourceTypeExpanded = expandedFolders.has(resourceTypeId);
+                
+                // Calculate totals across all subfolders
+                const allFiles = Object.values(resourceFolders).flatMap(subPaths => 
+                  Object.values(subPaths).flat()
+                );
+                const totalFiles = allFiles.length;
+                const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
+
                 return (
-                  <Box key={quoteId} className="border rounded-lg overflow-hidden">
-                    {/* Folder Header */}
+                  <Box key={resourceType} className="border rounded-lg overflow-hidden mb-3">
+                    {/* Resource Type Header (Main Folder) */}
                     <Box
-                      className="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors flex items-center justify-between"
-                      onClick={() => toggleFolder(quoteId)}
+                      className="p-3 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40 cursor-pointer transition-colors flex items-center justify-between"
+                      onClick={() => toggleFolder(resourceTypeId)}
                     >
                       <Box className="flex items-center gap-2">
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        {isResourceTypeExpanded ? (
+                          <ChevronDown className="h-5 w-5 text-blue-700 dark:text-blue-400" />
                         ) : (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <ChevronRight className="h-5 w-5 text-blue-700 dark:text-blue-400" />
                         )}
-                        {isExpanded ? (
-                          <FolderOpen className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                        {isResourceTypeExpanded ? (
+                          <FolderOpen className="h-6 w-6 text-blue-600 dark:text-blue-500" />
                         ) : (
-                          <Folder className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                          <Folder className="h-6 w-6 text-blue-600 dark:text-blue-500" />
                         )}
-                        <span className="font-medium">Quote: {quoteId}</span>
+                        <span className="font-bold capitalize text-lg">{resourceType}/</span>
                         <span className="text-sm text-muted-foreground">
-                          ({files.length} file{files.length !== 1 ? 's' : ''})
+                          ({Object.keys(resourceFolders).length} folder{Object.keys(resourceFolders).length !== 1 ? 's' : ''}, {totalFiles} file{totalFiles !== 1 ? 's' : ''})
                         </span>
                       </Box>
-                      <span className="text-xs text-muted-foreground">
-                        {formatFileSize(files.reduce((sum, f) => sum + f.size, 0))} total
+                      <span className="text-sm text-muted-foreground font-medium">
+                        {formatFileSize(totalSize)} total
                       </span>
                     </Box>
 
-                    {/* Folder Contents */}
-                    {isExpanded && (
-                      <Box className="bg-white dark:bg-gray-900">
-                        {files.map((file, index) => (
-                          <Box
-                            key={index}
-                            className="p-3 border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                          >
-                            <Box className="flex items-center justify-between gap-4">
-                              <Box className="flex items-center gap-3 flex-1 min-w-0 pl-8">
-                                <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                                <Box className="min-w-0 flex-1">
-                                  <p className="font-medium truncate text-sm">{file.fileName}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFileSize(file.size)} •{' '}
-                                    {new Date(file.lastModified).toLocaleString()}
-                                  </p>
+                    {/* Resource ID Subfolders */}
+                    {isResourceTypeExpanded && (
+                      <Box className="bg-gray-50 dark:bg-gray-900/50">
+                        {Object.entries(resourceFolders).map(([resourceId, subPaths]) => {
+                          const resourceIdFolderId = `${resourceType}/${resourceId}`;
+                          const isResourceIdExpanded = expandedFolders.has(resourceIdFolderId);
+                          
+                          const resourceIdFiles = Object.values(subPaths).flat();
+                          const resourceIdFileCount = resourceIdFiles.length;
+                          const resourceIdSize = resourceIdFiles.reduce((sum, f) => sum + f.size, 0);
+                          
+                          return (
+                            <Box key={resourceIdFolderId} className="border-t">
+                              {/* Resource ID Header */}
+                              <Box
+                                className="p-3 pl-8 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFolder(resourceIdFolderId);
+                                }}
+                              >
+                                <Box className="flex items-center gap-2">
+                                  {isResourceIdExpanded ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                  {isResourceIdExpanded ? (
+                                    <FolderOpen className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                                  ) : (
+                                    <Folder className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                                  )}
+                                  <span className="font-medium">{resourceId}/</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    ({resourceIdFileCount} file{resourceIdFileCount !== 1 ? 's' : ''})
+                                  </span>
                                 </Box>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatFileSize(resourceIdSize)}
+                                </span>
                               </Box>
-                              <Box className="flex items-center gap-2 shrink-0">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => downloadFileFromExplorer(file.key)}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => deleteFileFromExplorer(file.key)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </Box>
+
+                              {/* SubPath Folders (items, attachments, pdfs, etc.) */}
+                              {isResourceIdExpanded && (
+                                <Box className="bg-gray-100 dark:bg-gray-800/50">
+                                  {Object.entries(subPaths).map(([subPath, files]) => {
+                                    const subPathFolderId = `${resourceType}/${resourceId}/${subPath}`;
+                                    const isSubPathExpanded = expandedFolders.has(subPathFolderId);
+                                    const subPathSize = files.reduce((sum, f) => sum + f.size, 0);
+                                    
+                                    return (
+                                      <Box key={subPathFolderId} className="border-t">
+                                        {/* SubPath Header */}
+                                        <Box
+                                          className="p-3 pl-16 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-center justify-between"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleFolder(subPathFolderId);
+                                          }}
+                                        >
+                                          <Box className="flex items-center gap-2">
+                                            {isSubPathExpanded ? (
+                                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                            ) : (
+                                              <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                            )}
+                                            {isSubPathExpanded ? (
+                                              <FolderOpen className="h-4 w-4 text-green-600 dark:text-green-500" />
+                                            ) : (
+                                              <Folder className="h-4 w-4 text-green-600 dark:text-green-500" />
+                                            )}
+                                            <span className="text-sm font-medium">{subPath === '_root' ? '(root)' : subPath}/</span>
+                                            <span className="text-xs text-muted-foreground">
+                                              ({files.length} file{files.length !== 1 ? 's' : ''})
+                                            </span>
+                                          </Box>
+                                          <span className="text-xs text-muted-foreground">
+                                            {formatFileSize(subPathSize)}
+                                          </span>
+                                        </Box>
+
+                                        {/* Files in SubPath */}
+                                        {isSubPathExpanded && (
+                                          <Box className="bg-white dark:bg-gray-900">
+                                            {files.map((file, index) => (
+                                              <Box
+                                                key={index}
+                                                className="p-3 border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                              >
+                                                <Box className="flex items-center justify-between gap-4">
+                                                  <Box className="flex items-center gap-3 flex-1 min-w-0 pl-20">
+                                                    <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                                                    <Box className="min-w-0 flex-1">
+                                                      <p className="font-medium truncate text-sm">{file.fileName}</p>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        {file.fileType} • {formatFileSize(file.size)} •{' '}
+                                                        {new Date(file.lastModified).toLocaleString()}
+                                                      </p>
+                                                    </Box>
+                                                  </Box>
+                                                  <Box className="flex items-center gap-2 shrink-0">
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      onClick={() => downloadFileFromExplorer(file.key)}
+                                                    >
+                                                      <Download className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                      variant="outline"
+                                                      size="sm"
+                                                      onClick={() => deleteFileFromExplorer(file.key)}
+                                                    >
+                                                      <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                  </Box>
+                                                </Box>
+                                              </Box>
+                                            ))}
+                                          </Box>
+                                        )}
+                                      </Box>
+                                    );
+                                  })}
+                                </Box>
+                              )}
                             </Box>
-                          </Box>
-                        ))}
+                          );
+                        })}
                       </Box>
                     )}
                   </Box>

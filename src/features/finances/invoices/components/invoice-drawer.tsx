@@ -40,8 +40,8 @@ import {
   useMarkInvoiceAsPending,
   useUpdateInvoice,
   useSendInvoiceReminder,
+  useDownloadInvoicePdf,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import { downloadInvoicePdf } from '@/features/finances/invoices/utils/invoice-pdf-helpers';
 import { InvoiceForm } from '@/features/finances/invoices/components//invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
 import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';
@@ -73,6 +73,7 @@ export function InvoiceDrawer({
   const updateInvoice = useUpdateInvoice();
   const markAsPending = useMarkInvoiceAsPending();
   const sendReminder = useSendInvoiceReminder();
+  const downloadPdf = useDownloadInvoicePdf();
 
   const router = useRouter();
   const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
@@ -118,7 +119,7 @@ export function InvoiceDrawer({
     [updateInvoice],
   );
 
-  const handleDownloadPdf = useCallback(async () => {
+  const handleDownloadPdf = useCallback(() => {
     if (!invoice) {
       return;
     }
@@ -142,8 +143,8 @@ export function InvoiceDrawer({
       return;
     }
 
-    await downloadInvoicePdf(invoice);
-  }, [invoice, hasUnsavedChanges]);
+    downloadPdf.mutate(invoice.id);
+  }, [invoice, hasUnsavedChanges, downloadPdf]);
 
   const handleSendReminder = useCallback(() => {
     if (!invoice) {

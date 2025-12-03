@@ -1,5 +1,3 @@
-'use client';
-
 import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { lasFloresAccount } from '@/constants/data';
@@ -8,6 +6,7 @@ import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 
 type ReceiptPreviewProps = {
   invoice: InvoiceWithDetails;
+  logoUrl?: string;
 };
 
 const styles = StyleSheet.create({
@@ -256,7 +255,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function ReceiptDocument({ invoice }: ReceiptPreviewProps) {
+export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
   const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * invoice.gst) / 100;
   const total = subtotal + gstAmount - invoice.discount;
@@ -288,7 +287,7 @@ export function ReceiptDocument({ invoice }: ReceiptPreviewProps) {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Image src="/static/logo-green-800.png" style={styles.logo} />
+            <Image src={logoUrl || "/static/logo-green-800.png"} style={styles.logo} />
           </View>
         </View>
 
@@ -403,13 +402,5 @@ export function ReceiptDocument({ invoice }: ReceiptPreviewProps) {
         </View>
       </Page>
     </Document>
-  );
-}
-
-export function ReceiptPdf({ invoice }: ReceiptPreviewProps) {
-  return (
-    <PDFViewer width="100%" height="100%" className="border-0">
-      <ReceiptDocument invoice={invoice} />
-    </PDFViewer>
   );
 }

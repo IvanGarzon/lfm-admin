@@ -8,6 +8,7 @@ export const InvoiceSumOrderByAggregateInputSchema: z.ZodType<Prisma.InvoiceSumO
   discount: z.lazy(() => SortOrderSchema).optional(),
   gst: z.lazy(() => SortOrderSchema).optional(),
   remindersSent: z.lazy(() => SortOrderSchema).optional(),
+  fileSize: z.lazy(() => SortOrderSchema).optional(),
 });
 
 export default InvoiceSumOrderByAggregateInputSchema;

@@ -70,11 +70,13 @@ export function generateS3Key(
   resourceId: string,
   fileName: string,
   subPath?: string,
+  useTimestamp: boolean = true,
 ): string {
   const timestamp = Date.now();
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
   const path = subPath ? `${subPath}/` : '';
-  return `${resourceType}/${resourceId}/${path}${timestamp}-${sanitizedFileName}`;
+  const prefix = useTimestamp ? `${timestamp}-` : '';
+  return `${resourceType}/${resourceId}/${path}${prefix}${sanitizedFileName}`;
 }
 
 /**
@@ -101,6 +103,7 @@ export async function uploadFileToS3(params: {
   subPath?: string;
   allowedMimeTypes?: readonly string[];
   metadata?: Record<string, string>;
+  useTimestamp?: boolean;
 }): Promise<{ s3Key: string; s3Url: string }> {
   const {
     file,
@@ -111,6 +114,7 @@ export async function uploadFileToS3(params: {
     subPath,
     allowedMimeTypes = ALLOWED_MIME_TYPES,
     metadata = {},
+    useTimestamp = true,
   } = params;
 
   // Validate file size
@@ -123,7 +127,7 @@ export async function uploadFileToS3(params: {
     throw new Error(`File type ${mimeType} is not allowed`);
   }
 
-  const s3Key = generateS3Key(resourceType, resourceId, fileName, subPath);
+  const s3Key = generateS3Key(resourceType, resourceId, fileName, subPath, useTimestamp);
 
   const uploadParams: PutObjectCommandInput = {
     Bucket: BUCKET_NAME,
@@ -257,4 +261,40 @@ export function getFileExtension(filename: string): string {
  */
 export function isImageFile(mimeType: string): boolean {
   return mimeType.startsWith('image/');
+}
+
+/**
+ * Download a file from S3 as a Buffer
+ */
+export async function downloadFileFromS3(s3Key: string): Promise<Buffer> {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: s3Key,
+    });
+
+    const response = await s3Client.send(command);
+
+    if (!response.Body) {
+      throw new Error('No content in S3 response');
+    }
+
+    // Convert the stream to a buffer using transformToByteArray
+    const { Readable } = await import('stream');
+
+    if (response.Body instanceof Readable) {
+      const chunks: Buffer[] = [];
+      for await (const chunk of response.Body) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      return Buffer.concat(chunks);
+    }
+
+    // Fallback for non-Node.js environments or SDK v3 blob responses
+    const bodyContents = await response.Body.transformToByteArray();
+    return Buffer.from(bodyContents);
+  } catch (error) {
+    console.error('Error downloading file from S3:', error);
+    throw new Error('Failed to download file from S3');
+  }
 }

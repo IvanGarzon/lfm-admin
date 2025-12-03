@@ -54,6 +54,3 @@ export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' 
 
   return 'low';
 }
-
-// Re-export the PDF download function from the PDF helpers file
-export { downloadInvoicePdf, downloadReceiptPdf } from './invoice-pdf-helpers';
