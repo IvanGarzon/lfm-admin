@@ -1,6 +1,6 @@
 import { Invoice, InvoiceStatus, Prisma, PrismaClient } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
-import { validateInvoiceStatusTransition } from '@/lib/invoice-status-transitions';
+import { validateInvoiceStatusTransition } from '@/features/finances/invoices/utils/invoice-helpers';
 import { isPrismaError } from '@/lib/error-handler';
 
 import type {
@@ -579,7 +579,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Generate receipt number if not already set
     let receiptNumber = currentInvoice.receiptNumber;
     if (!receiptNumber) {
-      const { generateReceiptNumber } = await import('@/lib/receipt-number-generator');
+      const { generateReceiptNumber } = await import('@/features/finances/invoices/utils/invoice-helpers');
       receiptNumber = await generateReceiptNumber();
     }
 

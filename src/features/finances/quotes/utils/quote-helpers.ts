@@ -99,6 +99,7 @@ export function validateQuoteStatusTransition(
         `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`,
       );
     }
+    
     throw new Error(
       `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_QUOTE_STATUS_TRANSITIONS[fromStatus].join(', ')}`,
     );

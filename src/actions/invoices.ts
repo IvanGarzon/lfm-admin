@@ -374,7 +374,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       });
       
       // Generate receipt number if missing
-      const { generateReceiptNumber } = await import('@/lib/receipt-number-generator');
+      const { generateReceiptNumber } = await import('@/features/finances/invoices/utils/invoice-helpers');
       const receiptNumber = await generateReceiptNumber();
       
       // Update invoice with receipt number
