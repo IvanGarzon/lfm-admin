@@ -7,18 +7,19 @@ import {
   PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { env } from '@/env';
 
 // Environment configuration
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isLocalStack = isDevelopment && !!process.env.AWS_ENDPOINT_URL;
+const isDevelopment = env.NODE_ENV === 'development';
+const isLocalStack = isDevelopment && !!env.AWS_ENDPOINT_URL;
 
 // S3 Configuration
-const AWS_REGION = process.env.AWS_REGION || 'ap-southeast-2';
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || 'test';
-const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || 'test';
-const AWS_ENDPOINT_URL = process.env.AWS_ENDPOINT_URL; // e.g., http://localhost:4566
+const AWS_REGION = env.AWS_REGION;
+const AWS_ACCESS_KEY_ID = env.AWS_ACCESS_KEY_ID;
+const AWS_SECRET_ACCESS_KEY = env.AWS_SECRET_ACCESS_KEY;
+const AWS_ENDPOINT_URL = env.AWS_ENDPOINT_URL; // e.g., http://localhost:4566
 
-export const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || 'lasflores-admin-uploads';
+export const BUCKET_NAME = env.AWS_S3_BUCKET_NAME;
 
 // Create S3 Client
 export const s3Client = new S3Client({
@@ -279,22 +280,12 @@ export async function downloadFileFromS3(s3Key: string): Promise<Buffer> {
       throw new Error('No content in S3 response');
     }
 
-    // Convert the stream to a buffer using transformToByteArray
-    const { Readable } = await import('stream');
-
-    if (response.Body instanceof Readable) {
-      const chunks: Buffer[] = [];
-      for await (const chunk of response.Body) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      }
-      return Buffer.concat(chunks);
-    }
-
-    // Fallback for non-Node.js environments or SDK v3 blob responses
+    // Use the SDK's built-in transformToByteArray method
+    // This works reliably across different environments
     const bodyContents = await response.Body.transformToByteArray();
     return Buffer.from(bodyContents);
   } catch (error) {
     console.error('Error downloading file from S3:', error);
-    throw new Error('Failed to download file from S3');
+    throw error; // Re-throw the original error for better debugging
   }
 }

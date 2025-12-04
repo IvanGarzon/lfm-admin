@@ -179,33 +179,6 @@ export async function updateInvoice(
       return { success: false, error: 'Failed to update invoice' };
     }
 
-    // Invalidate PDF cache - delete old PDF from S3 and clear metadata
-    if (existing.s3Key) {
-      try {
-        const { deleteFileFromS3 } = await import('@/lib/s3');
-        await deleteFileFromS3(existing.s3Key);
-
-        // Clear PDF metadata from database
-        await prisma.invoice.update({
-          where: { id: invoice.id },
-          data: {
-            fileName: null,
-            fileSize: null,
-            mimeType: null,
-            s3Key: null,
-            s3Url: null,
-            lastGeneratedAt: null,
-          },
-        });
-      } catch (error) {
-        // Log error but don't fail the update
-        logger.warn('Failed to delete old PDF from S3', {
-          context: 'updateInvoice',
-          metadata: { invoiceId: invoice.id, s3Key: existing.s3Key },
-        });
-      }
-    }
-
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${invoice.id}`);
 
@@ -237,22 +210,13 @@ export async function markInvoiceAsPending(
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Generate or retrieve PDF using centralized service
+    // Generate or retrieve PDF using DocumentService
     const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
     const result = await getOrGenerateInvoicePdf(invoice, {
       context: 'markInvoiceAsPending',
       skipDownload: false,
     });
     const { pdfBuffer, pdfUrl, pdfFilename } = result;
-
-    if (result.wasRegenerated) {
-      await invoiceRepo.updatePdfMetadata(invoice.id, {
-        fileName: result.pdfFilename,
-        fileSize: result.pdfFileSize,
-        s3Key: result.s3Key,
-        s3Url: result.s3Url,
-      });
-    }
 
     const validatedInvoiceEmailSchema: SendInvoiceEmailInput = SendInvoiceEmailSchema.parse({
       invoiceId: invoice.id,
@@ -292,6 +256,14 @@ export async function markInvoiceAsPending(
           }
         : {}
       ),
+    });
+
+    logger.info('Invoice email sent successfully with PDF attachment', {
+      context: 'markInvoiceAsPending',
+      metadata: {
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+      },
     });
 
     revalidatePath('/finances/invoices');
@@ -384,16 +356,19 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
   try {
     // Get full invoice details
     const invoice = await invoiceRepo.findByIdWithDetails(id);
-
+    
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Generate receipt PDF
-    const { generateReceiptPDF, generateReceiptFilename } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
-
-    const pdfBuffer = await generateReceiptPDF(invoice);
-    const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
+    // Generate or retrieve PDF using centralized service
+    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const result = await getOrGenerateReceiptPdf(invoice, {
+      context: 'sendInvoiceReceipt',
+      skipDownload: false,
+    });
+    
+    const { pdfBuffer, pdfFilename } = result;
 
     const validatedReceiptEmailSchem: SendReceiptEmailInput = SendReceiptEmailSchema.parse({
       invoiceId: invoice.id,
@@ -493,14 +468,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
     });
     const { pdfBuffer, pdfUrl, pdfFilename } = result;
 
-    if (result.wasRegenerated) {
-      await invoiceRepo.updatePdfMetadata(invoice.id, {
-        fileName: result.pdfFilename,
-        fileSize: result.pdfFileSize,
-        s3Key: result.s3Key,
-        s3Url: result.s3Url,
-      });
-    }
+    // Note: Document creation/update is handled inside getOrGenerateInvoicePdf via DocumentService
 
     const validatedReminderEmailSchema: SendReminderEmailInput = SendReminderEmailSchema.parse({
       invoiceId: invoice.id,
@@ -624,16 +592,8 @@ export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: 
       context: 'getInvoicePdfUrl',
       skipDownload: true,
     });
+    
     const { pdfUrl } = result;
-
-    if (result.wasRegenerated) {
-      await invoiceRepo.updatePdfMetadata(invoice.id, {
-        fileName: result.pdfFilename,
-        fileSize: result.pdfFileSize,
-        s3Key: result.s3Key,
-        s3Url: result.s3Url,
-      });
-    }
 
     return { success: true, data: { url: pdfUrl } };
   } catch (error) {
@@ -643,7 +603,8 @@ export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: 
 
 /**
  * Retrieves the URL for the receipt PDF.
- * Generates a receipt PDF on-demand (receipts are ephemeral, not cached like invoices).
+ * If the PDF exists in S3, it returns a signed URL.
+ * If not, it generates the PDF, uploads it to S3, and then returns the signed URL.
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the PDF URL.
  */
@@ -659,34 +620,15 @@ export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: 
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Generate receipt PDF using the PDF manager
-    const { generateReceiptPDF, generateReceiptFilename } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
-    const { getSignedDownloadUrl } = await import('@/lib/s3');
+    // Generate or retrieve PDF using centralized service
+    // Note: skipDownload=true since we only need the URL, not the buffer
+    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const result = await getOrGenerateReceiptPdf(invoice, {
+      context: 'getReceiptPdfUrl',
+      skipDownload: true,
+    });    
 
-    const pdfBuffer = await generateReceiptPDF(invoice);
-    const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
-
-    // For receipts, we generate on-demand and upload to a temporary location
-    // Use a unique key with timestamp to avoid conflicts
-    const timestamp = Date.now();
-    const { uploadFileToS3 } = await import('@/lib/s3');
-
-    const result = await uploadFileToS3({
-      file: pdfBuffer,
-      fileName: `${timestamp}-${pdfFilename}`,
-      mimeType: 'application/pdf',
-      resourceType: 'receipts',
-      resourceId: invoice.id,
-      allowedMimeTypes: ['application/pdf'],
-      metadata: {
-        invoiceNumber: invoice.invoiceNumber,
-        status: invoice.status,
-        type: 'receipt',
-      },
-    });
-
-    // Get signed URL with shorter expiration (1 hour) since it's temporary
-    const pdfUrl = await getSignedDownloadUrl(result.s3Key, 60 * 60); // 1 hour
+    const { pdfUrl } = result;
 
     return { success: true, data: { url: pdfUrl } };
   } catch (error) {

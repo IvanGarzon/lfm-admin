@@ -227,18 +227,6 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
   },
-  watermark: {
-    position: 'absolute',
-    top: '40%',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 100,
-    fontWeight: 'bold',
-    color: 'rgba(0, 0, 0, 0.1)',
-    transform: 'rotate(-45deg)',
-    zIndex: -1,
-  },
 });
 
 export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
@@ -248,12 +236,7 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {invoice.status === InvoiceStatusSchema.enum.DRAFT ? (
-          <View style={styles.watermark}>
-            <Text>Draft</Text>
-          </View>
-        ) : null}
+      <Page size="A4" style={styles.page}>        
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>

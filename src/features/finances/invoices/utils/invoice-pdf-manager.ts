@@ -1,9 +1,12 @@
 import { logger } from '@/lib/logger';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 import { generatePdfBuffer } from '@/lib/pdf';
-import { InvoiceDocument  } from '@/templates/invoice-template';
-import { ReceiptDocument  } from '@/templates/receipt-template';
+import { InvoiceDocument } from '@/templates/invoice-template';
+import { ReceiptDocument } from '@/templates/receipt-template';
 import { absoluteUrl } from '@/lib/utils';
+import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document-service';
+import { DocumentKind } from '@/prisma/client';
+import crypto from 'crypto';
 
 export interface PdfResult {
   /** PDF file buffer (only populated if skipDownload is false) */
@@ -29,17 +32,10 @@ export interface GetPdfOptions {
   skipDownload?: boolean;
   /** Context for logging purposes */
   context?: string;
-  /** 
-   * Hours to trust PDF metadata without verifying S3 existence (default: 24)
-   * Set to 0 to always verify with S3
-   */
-  metadataTrustHours?: number;
 }
 
 /**
  * Generate invoice filename
- * @param invoiceNumber - The invoice number
- * @returns string - The filename
  */
 export function generateInvoiceFilename(invoiceNumber: string): string {
   return `${invoiceNumber}.pdf`;
@@ -47,8 +43,6 @@ export function generateInvoiceFilename(invoiceNumber: string): string {
 
 /**
  * Generate receipt filename
- * @param invoiceNumber - The invoice number
- * @returns string - The filename
  */
 export function generateReceiptFilename(invoiceNumber: string): string {
   return `${invoiceNumber}.pdf`;
@@ -56,8 +50,6 @@ export function generateReceiptFilename(invoiceNumber: string): string {
 
 /**
  * Generate invoice PDF as Buffer (server-side)
- * @param invoice - The invoice details
- * @returns Promise<Buffer> - The PDF as a Buffer
  */
 export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<Buffer> {
   const logoUrl = absoluteUrl("/static/logo-green-800.png");
@@ -67,99 +59,93 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<B
 
 /**
  * Generate receipt PDF as Buffer (server-side)
- * @param invoice - The invoice details
- * @returns Promise<Buffer> - The PDF as a Buffer
  */
 export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<Buffer> {
-  // For now, we'll generate invoice PDF
-  // In the future, create a server-side receipt template
   const logoUrl = absoluteUrl("/static/logo-green-800.png");
   const pdfDoc = ReceiptDocument({ invoice, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
 
 /**
- * Gets or generates an invoice PDF with intelligent caching.
+ * Calculate hash of PDF content for deduplication.
+ * Only includes fields that affect the visual PDF output.
  * 
- * This function implements a smart caching strategy:
- * 1. Checks if PDF metadata exists in database
- * 2. Determines if regeneration is needed (invoice updated after last PDF generation)
- * 3. Verifies PDF still exists in S3
- * 4. Reuses existing PDF if valid, or generates new one if needed
+ * @param invoice - The invoice data
+ * @param type - The document type ('invoice' or 'receipt')
+ */
+function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice' | 'receipt' = 'invoice'): string {
+  const baseData = {
+    invoiceNumber: invoice.invoiceNumber,
+    amount: invoice.amount.toString(),
+    customer: {
+      firstName: invoice.customer.firstName,
+      lastName: invoice.customer.lastName,
+      email: invoice.customer.email,
+    },
+  };
+
+  // Add type-specific fields
+  const relevantData = type === 'invoice' 
+    ? {
+        ...baseData,
+        discount: invoice.discount.toString(),
+        gst: invoice.gst.toString(),
+        issuedDate: invoice.issuedDate.toISOString(),
+        dueDate: invoice.dueDate.toISOString(),
+        items: invoice.items.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice.toString(),
+          total: item.total.toString(),
+        })),
+        notes: invoice.notes,
+      }
+    : {
+        ...baseData,
+        paidDate: invoice.paidDate?.toISOString(),
+        paymentMethod: invoice.paymentMethod,
+      };
+
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(relevantData))
+    .digest('hex');
+}
+
+/**
+ * Gets or generates an invoice PDF using DocumentService.
+ *
+ * Strategy:
+ * 1. Calculate hash of invoice content (only PDF-relevant fields).
+ * 2. Check if a document with the same hash exists.
+ * 3. If yes, reuse it. If no, generate new PDF and save.
  * 
- * @param invoice - The invoice with full details
- * @param options - Configuration options
- * @returns PDF result with buffer, URL, and metadata
+ * This prevents duplicate PDFs when only non-visual fields change
+ * (e.g., status, updatedAt, notes that don't appear in PDF).
  */
 export async function getOrGenerateInvoicePdf(
   invoice: InvoiceWithDetails,
   options: GetPdfOptions = {}
 ): Promise<PdfResult> {
   const {
-    urlExpirationSeconds = 7 * 24 * 60 * 60, // 7 days default
     skipDownload = false,
     context = 'getOrGenerateInvoicePdf',
-    metadataTrustHours = 24, // Trust metadata for 24 hours by default
   } = options;
-
-  // Import S3 utilities
-  const {
-    uploadFileToS3,
-    getSignedDownloadUrl,
-    fileExistsInS3,
-    downloadFileFromS3,
-    deleteFileFromS3,
-  } = await import('@/lib/s3');
 
   const pdfFilename = generateInvoiceFilename(invoice.invoiceNumber);
 
-  // Step 1: Check if PDF metadata exists in database
-  const hasPdfMetadata = Boolean(invoice.s3Key && invoice.s3Url);
+  // Step 1: Calculate content hash
+  const contentHash = calculateContentHash(invoice, 'invoice');
 
-  // Step 2: Determine if regeneration is needed
-  const needsRegeneration =
-    hasPdfMetadata &&
-    invoice.lastGeneratedAt &&
-    invoice.updatedAt > invoice.lastGeneratedAt;
+  // Step 2: Check for existing document with same hash
+  const existingDoc = await getLatestDocument(
+    invoice.id,
+    DocumentKind.INVOICE,
+  );
 
-  // Step 3: Determine if we should trust metadata without S3 verification
-  const metadataTrustMs = metadataTrustHours * 60 * 60 * 1000;
-  const metadataAge = invoice.lastGeneratedAt 
-    ? Date.now() - invoice.lastGeneratedAt.getTime()
-    : Infinity;
-  const shouldTrustMetadata = 
-    hasPdfMetadata && 
-    !needsRegeneration && 
-    metadataAge < metadataTrustMs;
-
-  // Step 4: Verify PDF exists in S3 (only if metadata exists, no regeneration needed, and outside trust window)
-  let pdfExists: boolean;
-  
-  if (shouldTrustMetadata) {
-    // Trust metadata without S3 API call
-    pdfExists = true;
-    logger.debug('Trusting PDF metadata without S3 verification', {
-      context,
-      metadata: {
-        invoiceId: invoice.id,
-        metadataAgeHours: Math.round(metadataAge / (60 * 60 * 1000)),
-        trustWindowHours: metadataTrustHours,
-      },
-    });
-  } else if (hasPdfMetadata && !needsRegeneration) {
-    // Verify with S3 API call
-    pdfExists = await fileExistsInS3(invoice.s3Key!);
-    logger.debug('Verified PDF existence with S3 API call', {
-      context,
-      metadata: {
-        invoiceId: invoice.id,
-        exists: pdfExists,
-        s3Key: invoice.s3Key,
-      },
-    });
-  } else {
-    pdfExists = false;
-  }
+  // Step 3: Determine if regeneration is needed
+  // Only regenerate if content hash changed
+  const needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
 
   let pdfBuffer: Buffer | null = null;
   let s3Key: string;
@@ -168,96 +154,186 @@ export async function getOrGenerateInvoicePdf(
   let pdfFileSize: number;
   let wasRegenerated: boolean;
 
-  // Step 5: Reuse existing PDF if valid
-  if (pdfExists) {
-    s3Key = invoice.s3Key!;
-    s3Url = invoice.s3Url!;
-    pdfFileSize = invoice.fileSize || 0; // Fallback if missing, though it should exist
-    pdfUrl = await getSignedDownloadUrl(s3Key, urlExpirationSeconds);
+  if (!needsRegeneration && existingDoc) {
+    // REUSE EXISTING - Content hasn't changed
+    s3Key = existingDoc.s3Key;
+    s3Url = existingDoc.s3Url;
+    pdfFileSize = existingDoc.fileSize;
+    
+    // Get signed URL
+    pdfUrl = await getDocumentUrl(existingDoc.id);
 
-    // Only download if needed
+    // Download buffer if requested
     if (!skipDownload) {
+      const { downloadFileFromS3 } = await import('@/lib/s3');
       pdfBuffer = await downloadFileFromS3(s3Key);
-      pdfFileSize = pdfBuffer.byteLength; // Update with actual size if downloaded
     }
 
     wasRegenerated = false;
 
-    logger.info('Reused existing PDF from S3', {
+    logger.info('Reused existing PDF (content unchanged)', {
       context,
       metadata: {
         invoiceId: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
-        s3Key,
+        documentId: existingDoc.id,
+        contentHash,
         skipDownload,
       },
     });
-  }
-  // Step 6: Generate new PDF
-  else {
-    // Delete stale PDF from S3 if it exists
-    if (hasPdfMetadata) {
-      try {
-        await deleteFileFromS3(invoice.s3Key!);
-        logger.debug('Deleted stale PDF from S3', {
-          context,
-          metadata: { invoiceId: invoice.id, oldS3Key: invoice.s3Key },
-        });
-      } catch (error) {
-        logger.debug('Old PDF file not found in S3 during cleanup', {
-          context,
-          metadata: { invoiceId: invoice.id, oldS3Key: invoice.s3Key },
-        });
-      }
-    }
-
-    // Generate new PDF
-    logger.info('Generating new PDF', {
+  } else {
+    // GENERATE NEW - Content changed
+    logger.info('Generating new PDF (content changed)', {
       context,
       metadata: {
         invoiceId: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
-        reason: needsRegeneration ? 'invoice_updated' : hasPdfMetadata ? 'file_not_found' : 'first_generation',
+        reason: !existingDoc ? 'first_generation' : 'content_changed',
+        oldHash: existingDoc?.fileHash,
+        newHash: contentHash,
       },
     });
 
     const generatedPdfBuffer = await generateInvoicePDF(invoice);
     pdfFileSize = generatedPdfBuffer.byteLength;
 
-    // Upload to S3
-    const result = await uploadFileToS3({
-      file: generatedPdfBuffer,
+    // Save via DocumentService (handles S3 upload + DB record)
+    const newDoc = await createDocument({
+      kind: DocumentKind.INVOICE,
+      invoiceId: invoice.id,
+      buffer: generatedPdfBuffer,
       fileName: pdfFilename,
-      mimeType: 'application/pdf',
-      resourceType: 'invoices',
-      resourceId: invoice.id,
-      allowedMimeTypes: ['application/pdf'],
+      fileHash: contentHash,
       metadata: {
         invoiceNumber: invoice.invoiceNumber,
         status: invoice.status,
       },
     });
 
-    s3Key = result.s3Key;
-    s3Url = result.s3Url;
-    pdfUrl = await getSignedDownloadUrl(s3Key, urlExpirationSeconds);
+    s3Key = newDoc.s3Key;
+    s3Url = newDoc.s3Url;
+    
+    // Get signed URL
+    pdfUrl = await getDocumentUrl(newDoc.id);
 
-    // Only keep buffer if needed
     if (!skipDownload) {
       pdfBuffer = generatedPdfBuffer;
     }
 
     wasRegenerated = true;
+  }
 
-    logger.info('Generated and uploaded new PDF', {
+  return {
+    pdfBuffer,
+    s3Key,
+    s3Url,
+    pdfUrl,
+    pdfFilename,
+    pdfFileSize,
+    wasRegenerated,
+  };
+}
+
+
+
+/**
+ * Gets or generates a receipt PDF using DocumentService.
+ *
+ * Strategy:
+ * 1. Check DocumentService for latest 'RECEIPT' document.
+ * 2. If exists and valid (not stale), return URL.
+ * 3. If missing or stale, generate new PDF and save via DocumentService.
+ */
+export async function getOrGenerateReceiptPdf(
+  invoice: InvoiceWithDetails,
+  options: GetPdfOptions = {}
+): Promise<PdfResult> {
+  const {
+    skipDownload = false,
+    context = 'getOrGenerateReceiptPdf',
+  } = options;
+
+  const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
+
+  // Step 1: Calculate content hash
+  const contentHash = calculateContentHash(invoice, 'receipt');
+
+  // Step 2: Check for existing document
+  const existingDoc = await getLatestDocument(
+    invoice.id,
+    DocumentKind.RECEIPT,
+  );
+
+  // Step 3: Determine if regeneration is needed
+  const needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
+
+  let pdfBuffer: Buffer | null = null;
+  let s3Key: string;
+  let s3Url: string;
+  let pdfUrl: string;
+  let pdfFileSize: number;
+  let wasRegenerated: boolean;
+
+  if (!needsRegeneration && existingDoc) {
+    // REUSE EXISTING
+    s3Key = existingDoc.s3Key;
+    s3Url = existingDoc.s3Url;
+    pdfFileSize = existingDoc.fileSize;
+
+    // Get signed URL
+    pdfUrl = await getDocumentUrl(existingDoc.id);
+
+    // Download buffer if requested
+    if (!skipDownload) {
+      const { downloadFileFromS3 } = await import('@/lib/s3');
+      pdfBuffer = await downloadFileFromS3(s3Key);
+    }
+
+    wasRegenerated = false;
+
+    logger.info('Reused existing receipt PDF from DocumentService', {
       context,
       metadata: {
         invoiceId: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
-        s3Key,
-        fileSize: pdfFileSize,
+        documentId: existingDoc.id,
+        skipDownload,
       },
     });
+  } else {
+    // GENERATE NEW
+    logger.info('Generating new receipt PDF', {
+      context,
+      metadata: {
+        invoiceId: invoice.id,
+        reason: !existingDoc ? 'first_generation' : 'content_changed',
+      },
+    });
+
+    const generatedPdfBuffer = await generateReceiptPDF(invoice);
+    pdfFileSize = generatedPdfBuffer.byteLength;
+
+    // Save via DocumentService (handles S3 upload + DB record)
+    const newDoc = await createDocument({
+      kind: DocumentKind.RECEIPT,
+      invoiceId: invoice.id,
+      buffer: generatedPdfBuffer,
+      fileName: pdfFilename,
+      fileHash: contentHash,
+      metadata: {
+        invoiceNumber: invoice.invoiceNumber,
+        paidDate: invoice.paidDate,
+      },
+    });
+
+    s3Key = newDoc.s3Key;
+    s3Url = newDoc.s3Url;
+
+    // Get signed URL
+    pdfUrl = await getDocumentUrl(newDoc.id);
+
+    if (!skipDownload) {
+      pdfBuffer = generatedPdfBuffer;
+    }
+
+    wasRegenerated = true;
   }
 
   return {

@@ -173,12 +173,6 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         cancelledDate: true,
         cancelReason: true,
         notes: true,
-        fileName: true,
-        fileSize: true,
-        mimeType: true,
-        s3Key: true,
-        s3Url: true,
-        lastGeneratedAt: true,
         createdAt: true,
         updatedAt: true,
         customer: {
@@ -734,54 +728,5 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const count = await this.prisma.invoice.count({ where });
     return count > 0;
-  }
-
-  /**
-   * Update invoice PDF metadata after generating or uploading a PDF.
-   * @param id - The unique identifier of the invoice
-   * @param metadata - PDF metadata including file name, size, S3 key and URL
-   * @returns A promise that resolves to the updated invoice, or null if not found
-   */
-  async updatePdfMetadata(
-    id: string,
-    metadata: {
-      fileName: string;
-      fileSize: number;
-      s3Key: string;
-      s3Url: string;
-    }
-  ): Promise<Invoice | null> {
-    return this.prisma.invoice.update({
-      where: { id, deletedAt: null },
-      data: {
-        fileName: metadata.fileName,
-        fileSize: metadata.fileSize,
-        mimeType: 'application/pdf',
-        s3Key: metadata.s3Key,
-        s3Url: metadata.s3Url,
-        lastGeneratedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  /**
-   * Clear PDF metadata from an invoice (when file is deleted or stale).
-   * @param id - The unique identifier of the invoice
-   * @returns A promise that resolves to the updated invoice, or null if not found
-   */
-  async clearPdfMetadata(id: string): Promise<Invoice | null> {
-    return this.prisma.invoice.update({
-      where: { id, deletedAt: null },
-      data: {
-        fileName: null,
-        fileSize: null,
-        mimeType: null,
-        s3Key: null,
-        s3Url: null,
-        lastGeneratedAt: null,
-        updatedAt: new Date(),
-      },
-    });
   }
 }

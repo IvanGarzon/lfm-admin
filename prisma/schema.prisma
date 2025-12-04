@@ -1,8 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
   output          = "./generated/client"
-  // engineType      = "binary"
-  // previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -96,7 +94,6 @@ model Customer {
   updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
 
-  // In Customer model, add:
   invoices Invoice[]
   quotes   Quote[]
 
@@ -162,7 +159,7 @@ model Session {
   isActive  Boolean @default(true) @map(name: "is_active")
 
   deviceName     String? @map(name: "device_name")
-  deviceType     String? @map(name: "device_type") // e.g., 'mobile', 'desktop', 'tablet'
+  deviceType     String? @map(name: "device_type")
   deviceVendor   String? @map(name: "device_vendor")
   deviceModel    String? @map(name: "device_model")
   osName         String? @map(name: "os_name")
@@ -197,29 +194,18 @@ model Invoice {
   issuedDate DateTime @map(name: "issued_date") @db.Date
   dueDate    DateTime @map(name: "due_date") @db.Date
 
-  // Status-specific fields (nullable, populated based on status)
-  // PENDING fields
   remindersSent Int? @default(0) @map(name: "reminders_sent")
 
-  // PAID fields
   paidDate      DateTime? @map(name: "paid_date") @db.Date
   paymentMethod String?   @map(name: "payment_method")
 
-  // CANCELLED fields
   cancelledDate DateTime? @map(name: "cancelled_date") @db.Date
   cancelReason  String?   @map(name: "cancel_reason")
 
   notes String? @db.Text
 
-  // PDF Metadata
-  fileName        String?   @map(name: "file_name")
-  fileSize        Int?      @map(name: "file_size")
-  mimeType        String?   @map(name: "mime_type")
-  s3Key           String?   @map(name: "s3_key")
-  s3Url           String?   @map(name: "s3_url")
-  lastGeneratedAt DateTime? @map(name: "last_generated_at") @db.Timestamptz()
-
-  items InvoiceItem[]
+  items     InvoiceItem[]
+  documents Document[]
 
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
@@ -260,33 +246,27 @@ model Quote {
 
   status QuoteStatus @default(DRAFT)
 
-  // Version tracking
   versionNumber  Int     @default(1) @map(name: "version_number")
   parentQuoteId  String? @map(name: "parent_quote_id")
   parentQuote    Quote?  @relation("QuoteVersions", fields: [parentQuoteId], references: [id], onDelete: Restrict)
   versions       Quote[] @relation("QuoteVersions")
 
-  // Common fields
   amount     Decimal  @db.Decimal(15, 2)
   currency   String   @default("AUD")
-  gst        Decimal  @default(10) @db.Decimal(5, 2) // GST percentage (0-100)
-  discount   Decimal  @default(0) @db.Decimal(15, 2) // Discount amount
+  gst        Decimal  @default(10) @db.Decimal(5, 2)
+  discount   Decimal  @default(0) @db.Decimal(15, 2)
   issuedDate DateTime @map(name: "issued_date") @db.Date
   validUntil DateTime @map(name: "valid_until") @db.Date
 
-  // CONVERTED fields (to invoice)
   invoiceId String? @unique @map(name: "invoice_id")
-
-  // Relations
-  items         QuoteItem[]
-  attachments   QuoteAttachment[]
-  statusHistory QuoteStatusHistory[]
-
-  // Notes/Terms
   notes String? @db.Text
   terms String? @db.Text
 
-  // Audit fields
+  items         QuoteItem[]
+  documents     Document[]
+  attachments   QuoteAttachment[]
+  statusHistory QuoteStatusHistory[]
+
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
@@ -381,6 +361,38 @@ model QuoteStatusHistory {
   @@map(name: "quote_status_history")
 }
 
+model Document {
+  id String @id @default(cuid())
+
+  kind DocumentKind @map("kind")
+
+  invoiceId String?  @map("invoice_id")
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  quoteId String? @map("quote_id")
+  quote   Quote?  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  fileHash String @map("file_hash")
+  fileName String @map("file_name")
+  fileSize Int    @map("file_size")
+  mimeType String @default("application/pdf") @map("mime_type")
+  s3Key    String @unique @map("s3_key")
+  s3Url    String @map("s3_url")
+
+  generatedAt    DateTime @default(now()) @map("generated_at") @db.Timestamptz()
+  lastAccessedAt DateTime @default(now()) @map("last_accessed_at") @db.Timestamptz()
+
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([invoiceId])
+  @@index([quoteId])
+  @@map("documents")
+}
+
+
 enum Gender {
   MALE
   FEMALE
@@ -438,3 +450,10 @@ enum QuoteStatus {
   CANCELLED
   CONVERTED
 }
+
+enum DocumentKind {
+  INVOICE
+  RECEIPT
+  QUOTE
+}
+
