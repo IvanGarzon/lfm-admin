@@ -355,10 +355,41 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
 
   try {
     // Get full invoice details
-    const invoice = await invoiceRepo.findByIdWithDetails(id);
+    let invoice = await invoiceRepo.findByIdWithDetails(id);
     
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };
+    }
+
+    // Validate invoice is paid
+    if (invoice.status !== 'PAID') {
+      return { success: false, error: 'Invoice must be marked as paid before sending receipt' };
+    }
+
+    // Ensure receipt number exists (should be generated when marked as paid)
+    if (!invoice.receiptNumber) {
+      logger.warn('Receipt number missing, generating now', {
+        context: 'sendInvoiceReceipt',
+        metadata: { invoiceId: id },
+      });
+      
+      // Generate receipt number if missing
+      const { generateReceiptNumber } = await import('@/lib/receipt-number-generator');
+      const receiptNumber = await generateReceiptNumber();
+      
+      // Update invoice with receipt number
+      await prisma.invoice.update({
+        where: { id },
+        data: { receiptNumber },
+      });
+      
+      // Refetch invoice with receipt number
+      const updatedInvoice = await invoiceRepo.findByIdWithDetails(id);
+      if (!updatedInvoice) {
+        return { success: false, error: 'Failed to update invoice' };
+      }
+      
+      invoice = updatedInvoice;
     }
 
     // Generate or retrieve PDF using centralized service
@@ -375,6 +406,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       to: invoice.customer.email,
       receiptData: {
         invoiceNumber: invoice.invoiceNumber,
+        receiptNumber: invoice.receiptNumber,
         customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
         amount: invoice.amount,
         currency: invoice.currency,
@@ -388,7 +420,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
 
     await sendEmailNotification({
       to: validatedReceiptEmailSchem.to,
-      subject: `Payment Receipt for Invoice ${validatedReceiptEmailSchem.receiptData.invoiceNumber}`,
+      subject: `Payment Receipt ${validatedReceiptEmailSchem.receiptData.receiptNumber || validatedReceiptEmailSchem.receiptData.invoiceNumber}`,
       template: 'receipt',
       props: {
         receiptData: {
@@ -413,6 +445,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       metadata: {
         invoiceId: id,
         invoiceNumber: invoice.invoiceNumber,
+        receiptNumber: invoice.receiptNumber,
       },
     });
 

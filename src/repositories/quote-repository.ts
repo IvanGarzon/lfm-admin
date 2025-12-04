@@ -11,7 +11,7 @@ import type {
   QuotePagination,
 } from '@/features/finances/quotes/types';
 import { getPaginationMetadata } from '@/lib/utils';
-import { validateQuoteStatusTransition } from '@/lib/quote-status-transitions';
+import { validateQuoteStatusTransition } from '@/features/finances/quotes/utils/quote-helpers';
 
 import { type CreateQuoteInput, type UpdateQuoteInput } from '@/schemas/quotes';
 
@@ -114,6 +114,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         validUntil: true,
         versionNumber: true,
         parentQuoteId: true,
+        gst: true,
+        discount: true,
         customer: {
           select: {
             id: true,
@@ -146,7 +148,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       customerName: `${quote.customer.firstName} ${quote.customer.lastName}`,
       customerEmail: quote.customer.email,
       status: quote.status,
-      amount: Number(quote.amount),
+      amount: quote.amount,
+      gst: quote.gst,
+      discount: quote.discount,
       currency: quote.currency,
       issuedDate: quote.issuedDate,
       validUntil: quote.validUntil,

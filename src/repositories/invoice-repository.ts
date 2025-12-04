@@ -170,6 +170,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         remindersSent: true,
         paidDate: true,
         paymentMethod: true,
+        receiptNumber: true,
         cancelledDate: true,
         cancelReason: true,
         notes: true,
@@ -565,7 +566,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, deletedAt: null },
-      select: { status: true },
+      select: { status: true, receiptNumber: true },
     });
 
     if (!currentInvoice) {
@@ -575,12 +576,20 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Validate status transition
     validateInvoiceStatusTransition(currentInvoice.status, InvoiceStatus.PAID);
 
+    // Generate receipt number if not already set
+    let receiptNumber = currentInvoice.receiptNumber;
+    if (!receiptNumber) {
+      const { generateReceiptNumber } = await import('@/lib/receipt-number-generator');
+      receiptNumber = await generateReceiptNumber();
+    }
+
     const updated = await this.prisma.invoice.update({
       where: { id, deletedAt: null },
       data: {
         status: InvoiceStatus.PAID,
         paidDate,
         paymentMethod,
+        receiptNumber,
         updatedAt: new Date(),
       },
     });

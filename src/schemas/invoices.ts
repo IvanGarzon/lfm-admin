@@ -155,6 +155,7 @@ export const SendReceiptEmailSchema = z.object({
   to: z.email(),
   receiptData: z.object({
     invoiceNumber: z.string(),
+    receiptNumber: z.string().optional(),
     customerName: z.string(),
     amount: z.number().positive(),
     currency: z.string(),

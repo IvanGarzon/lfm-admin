@@ -42,10 +42,10 @@ export function generateInvoiceFilename(invoiceNumber: string): string {
 }
 
 /**
- * Generate receipt filename
+ * Generate receipt filename using receipt number
  */
-export function generateReceiptFilename(invoiceNumber: string): string {
-  return `${invoiceNumber}.pdf`;
+export function generateReceiptFilename(receiptNumber: string): string {
+  return `${receiptNumber}.pdf`;
 }
 
 /**
@@ -251,7 +251,7 @@ export async function getOrGenerateReceiptPdf(
     context = 'getOrGenerateReceiptPdf',
   } = options;
 
-  const pdfFilename = generateReceiptFilename(invoice.invoiceNumber);
+  const pdfFilename = generateReceiptFilename(invoice.receiptNumber || invoice.invoiceNumber);
 
   // Step 1: Calculate content hash
   const contentHash = calculateContentHash(invoice, 'receipt');

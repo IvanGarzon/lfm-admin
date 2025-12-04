@@ -198,6 +198,7 @@ model Invoice {
 
   paidDate      DateTime? @map(name: "paid_date") @db.Date
   paymentMethod String?   @map(name: "payment_method")
+  receiptNumber String?   @unique @map(name: "receipt_number")
 
   cancelledDate DateTime? @map(name: "cancelled_date") @db.Date
   cancelReason  String?   @map(name: "cancel_reason")

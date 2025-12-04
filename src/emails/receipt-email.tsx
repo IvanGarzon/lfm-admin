@@ -14,6 +14,7 @@ import { styles } from './styles';
 interface ReceiptEmailProps {
   receiptData: {
     invoiceNumber: string;
+    receiptNumber?: string;
     customerName: string;
     amount: number;
     currency: string;
@@ -24,7 +25,7 @@ interface ReceiptEmailProps {
 }
 
 function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
-  const { invoiceNumber, customerName, amount, currency, paidDate, paymentMethod } = receiptData;
+  const { invoiceNumber, receiptNumber, customerName, amount, currency, paidDate, paymentMethod } = receiptData;
 
   return (
     <>
@@ -42,7 +43,7 @@ function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.React
           <tbody>
             <tr>
               <td style={styles.labelCell}>Receipt Number:</td>
-              <td style={styles.valueCell}>{invoiceNumber}</td>
+              <td style={styles.valueCell}>{receiptNumber || invoiceNumber}</td>
             </tr>
             <tr>
               <td style={styles.labelCell}>Payment Date:</td>
@@ -87,7 +88,7 @@ function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.React
 
 export function ReceiptEmail(props: ReceiptEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Payment Receipt for Invoice ${props.receiptData.invoiceNumber}`}>
+    <BaseTemplateEmail previewText={`Payment Receipt ${props.receiptData.receiptNumber || props.receiptData.invoiceNumber}`}>
       <ReceiptContent {...props} />
     </BaseTemplateEmail>
   );

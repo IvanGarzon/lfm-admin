@@ -73,13 +73,11 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     }
   }, [state, deleteInvoice, close]);
 
-  const handleConfirmMarkAsPaid = useCallback((data: MarkInvoiceAsPaidData) => {
-    markAsPaid.mutate(data, {
-      onSuccess: () => {
-        // After marking as paid, open the Send Receipt dialog
-        openSendReceipt(data.id, undefined, state?.onSuccess);
-      },
-    });
+  const handleConfirmMarkAsPaid = useCallback(async (data: MarkInvoiceAsPaidData) => {
+    await markAsPaid.mutateAsync(data);
+    // After marking as paid, the invoice now has a receiptNumber
+    // Open the Send Receipt dialog (it will refetch the invoice with the new receiptNumber)
+    openSendReceipt(data.id, undefined, state?.onSuccess);
   }, [markAsPaid, state, openSendReceipt]);
 
   const handleConfirmCancel = useCallback((data: CancelInvoiceData) => {

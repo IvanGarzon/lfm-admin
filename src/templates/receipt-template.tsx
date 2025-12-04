@@ -269,7 +269,7 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
             <Text style={styles.title}>Receipt</Text>
             <View style={styles.paymentHeaderRow}>
               <Text style={styles.labelHeader}>Receipt Number: </Text>
-              <Text style={styles.subtitleHeader}>#{invoice.invoiceNumber}</Text>
+              <Text style={styles.subtitleHeader}>#{invoice.receiptNumber || invoice.invoiceNumber}</Text>
             </View>
             <View style={styles.paymentHeaderRow}>
               <Text style={styles.labelHeader}>Payment Method: </Text>
@@ -391,7 +391,7 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           <View style={styles.footerLine} />
           <View style={styles.footerContent}>
             <Text style={styles.footerLeft}>
-              Receipt #{invoice.invoiceNumber} · {formatCurrency({ number: total })} paid on{' '}
+              Receipt #{invoice.receiptNumber || invoice.invoiceNumber} · {formatCurrency({ number: total })} paid on{' '}
               {invoice.paidDate ? format(invoice.paidDate, 'MMM d, yyyy') : 'N/A'}
             </Text>
             <Text
