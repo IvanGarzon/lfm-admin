@@ -6,7 +6,7 @@ import { DeleteInvoiceDialog } from '@/features/finances/invoices/components/del
 import { MarkAsPaidDialog } from '@/features/finances/invoices/components/mark-as-paid-dialog';
 import { CancelInvoiceDialog } from '@/features/finances/invoices/components/cancel-invoice-dialog';
 import { SendReceiptDialog } from '@/features/finances/invoices/components/send-receipt-dialog';
-import type { InvoiceListItem, InvoiceWithDetails, MarkInvoiceAsPaidData, CancelInvoiceData } from '@/features/finances/invoices/types';
+import type { InvoiceWithDetails, MarkInvoiceAsPaidData, CancelInvoiceData } from '@/features/finances/invoices/types';
 
 type ModalType = 'DELETE' | 'MARK_PAID' | 'CANCEL' | 'SEND_RECEIPT';
 
@@ -76,11 +76,11 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   const handleConfirmMarkAsPaid = useCallback((data: MarkInvoiceAsPaidData) => {
     markAsPaid.mutate(data, {
       onSuccess: () => {
-        close();
-        state?.onSuccess?.();
+        // After marking as paid, open the Send Receipt dialog
+        openSendReceipt(data.id, undefined, state?.onSuccess);
       },
     });
-  }, [markAsPaid, state, close]);
+  }, [markAsPaid, state, openSendReceipt]);
 
   const handleConfirmCancel = useCallback((data: CancelInvoiceData) => {
     cancelInvoice.mutate(data, {
@@ -98,11 +98,23 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   }, [state, downloadReceiptPdf]);
 
   const handleSendEmailReceipt = useCallback(async () => {
-    // TODO: Implement email sending logic
-    // This is a placeholder that needs to be replaced with actual email service integration
-    // toast.info('Email functionality not yet implemented');
-    return Promise.resolve();
-  }, [state]);
+    if (!state?.id) {
+      throw new Error('No invoice ID available');
+    }
+
+    // Import the server action dynamically to avoid bundling issues
+    const { sendInvoiceReceipt } = await import('@/actions/invoices');
+
+    // Send the receipt email with PDF attachment
+    const result = await sendInvoiceReceipt(state.id);
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to send receipt');
+    }
+
+    close();
+    state.onSuccess?.();
+  }, [state, close]);
 
   const value = useMemo(() => ({
     openDelete,

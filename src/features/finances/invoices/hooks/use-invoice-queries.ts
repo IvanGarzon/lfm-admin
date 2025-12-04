@@ -11,6 +11,8 @@ import {
   cancelInvoice,
   sendInvoiceReminder,
   deleteInvoice,
+  getInvoicePdfUrl,
+  getReceiptPdfUrl,
 } from '@/actions/invoices';
 import type {
   InvoiceFilters,
@@ -267,7 +269,7 @@ export function useMarkInvoiceAsPending() {
       const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
 
       // Optimistically update to the new value
-      queryClient.setQueryData(INVOICE_KEYS.detail(id), (old: any) => {
+      queryClient.setQueryData(INVOICE_KEYS.detail(id), (old: InvoiceWithDetails | undefined) => {
         if (!old) return old;
         return {
           ...old,
@@ -456,65 +458,43 @@ export function useDeleteInvoice() {
 }
 
 export function useDownloadInvoicePdf() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (id: string) => {
-      const invoiceData = await queryClient.fetchQuery({
-        queryKey: INVOICE_KEYS.detail(id),
-        queryFn: async () => {
-          const result = await getInvoiceById(id);
-          if (!result.success) {
-            throw new Error(result.error);
-          }
-          return result.data;
-        },
-      });
+      const result = await getInvoicePdfUrl(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-      const { downloadInvoicePdf } = await import(
-        '@/features/finances/invoices/utils/invoice-pdf-helpers'
-      );
-
-      return await downloadInvoicePdf(invoiceData);
+      // Open in new tab
+      window.open(result.data.url, '_blank');
+      return result.data.url;
     },
     onSuccess: () => {
       toast.success('PDF downloaded successfully');
     },
-    onError: () => {
-      // Error is thrown from downloadInvoicePdf, which already shows toast
-      toast.error('Failed to download invoice');
+    onError: (error) => {
+      toast.error(error.message || 'Failed to download invoice');
     },
   });
 }
 
 export function useDownloadReceiptPdf() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (id: string) => {
-      const invoiceData = await queryClient.fetchQuery({
-        queryKey: INVOICE_KEYS.detail(id),
-        queryFn: async () => {
-          const result = await getInvoiceById(id);
-          if (!result.success) {
-            throw new Error(result.error);
-          }
-          return result.data;
-        },
-      });
+      const result = await getReceiptPdfUrl(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-      const { downloadReceiptPdf } = await import(
-        '@/features/finances/invoices/utils/invoice-pdf-helpers'
-      );
-
-      return await downloadReceiptPdf(invoiceData);
+      // Open in new tab
+      window.open(result.data.url, '_blank');
+      return result.data.url;
     },
     onSuccess: () => {
       toast.success('Receipt downloaded successfully');
     },
-    onError: () => {
-      // Error is thrown from downloadReceiptPdf, which already shows toast
-      toast.error('Failed to download receipt');
+    onError: (error) => {
+      toast.error(error.message || 'Failed to download receipt');
     },
   });
 }

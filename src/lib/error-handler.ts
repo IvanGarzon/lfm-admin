@@ -21,14 +21,6 @@ import { Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 import type { ActionResult } from '@/types/actions';
 
-// DecimalError class for handling Decimal parsing errors
-class DecimalError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DecimalError';
-  }
-}
-
 /**
  * Handles errors in server actions and returns a standardized ActionResult
  * @param error - The error that was thrown
@@ -54,20 +46,7 @@ export function handleActionError<T = never>(
       success: false,
       error: `Invalid ${fieldName}: ${message}`,
     };
-  }
-
-  // Handle DecimalError (Prisma 7 + Neon adapter MONEY type issue)
-  if (error instanceof Error && error.name === 'DecimalError') {
-    logger.error('Decimal parsing error', error, {
-      context: 'handleActionError',
-      metadata: { message: error.message },
-    });
-
-    return {
-      success: false,
-      error: 'Invalid decimal value. Please check numeric fields and try again.',
-    };
-  }
+  } 
 
   // Handle Prisma errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -120,7 +99,8 @@ function handlePrismaError<T = never>(
   switch (error.code) {
     // Unique constraint violation
     case 'P2002': {
-      const field = (error.meta?.target as string[])?.join(', ') || 'field';
+      const target: string[] = error.meta?.target; 
+      const field = target?.join(', ') || 'field';
       return {
         success: false,
         error: `A record with this ${field} already exists`,
@@ -129,7 +109,8 @@ function handlePrismaError<T = never>(
 
     // Foreign key constraint violation
     case 'P2003': {
-      const field = error.meta?.field_name as string | undefined;
+      const fieldName: string[] = error.meta?.target; 
+      const field = fieldName?.join(', ') || 'field';
       return {
         success: false,
         error: field

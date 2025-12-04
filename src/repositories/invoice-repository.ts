@@ -1,6 +1,7 @@
-import { InvoiceStatus, Prisma, PrismaClient } from '@/prisma/client';
+import { Invoice, InvoiceStatus, Prisma, PrismaClient } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { validateInvoiceStatusTransition } from '@/lib/invoice-status-transitions';
+import { isPrismaError } from '@/lib/error-handler';
 
 import type {
   InvoiceListItem,
@@ -172,6 +173,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         cancelledDate: true,
         cancelReason: true,
         notes: true,
+        fileName: true,
+        fileSize: true,
+        mimeType: true,
+        s3Key: true,
+        s3Url: true,
+        lastGeneratedAt: true,
+        createdAt: true,
+        updatedAt: true,
         customer: {
           select: {
             id: true,
@@ -422,18 +431,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             invoiceNumber: true,
           },
         });
-      } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2002' // Unique constraint violation
-        ) {
+      } catch (error: unknown) {
+        // Handle unique constraint violation (invoice number collision)
+        if (isPrismaError(error) && error.code === 'P2002') {
           attempts++;
           if (attempts === maxAttempts) {
             throw new Error('Failed to generate a unique invoice number. Please try again.');
           }
           continue; // Retry with a new number
         }
-        throw error; // Re-throw other errors
+
+        // Re-throw other errors
+        throw error;
       }
     }
 
@@ -668,30 +677,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   }
 
   /**
-   * Record that a payment reminder was sent for this invoice.
-   * Increments the remindersSent counter by 1.
+   * Increment the remindersSent counter for an invoice.
    * @param id - The unique identifier of the invoice
-   * @returns A promise that resolves to the updated invoice with details, or null if not found
+   * @returns A promise that resolves to the updated invoice, or null if not found
    */
-  async sendReminder(id: string): Promise<InvoiceWithDetails | null> {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
-      select: { remindersSent: true },
-    });
+  async incrementReminderCount(id: string): Promise<Invoice | null> {
+    const invoice = await this.findById(id);
 
     if (!invoice) {
       return null;
     }
 
-    const updated = await this.prisma.invoice.update({
+    return this.prisma.invoice.update({
       where: { id },
       data: {
         remindersSent: (invoice.remindersSent ?? 0) + 1,
         updatedAt: new Date(),
       },
     });
-
-    return this.findByIdWithDetails(updated.id);
   }
 
   /**
@@ -731,5 +734,54 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const count = await this.prisma.invoice.count({ where });
     return count > 0;
+  }
+
+  /**
+   * Update invoice PDF metadata after generating or uploading a PDF.
+   * @param id - The unique identifier of the invoice
+   * @param metadata - PDF metadata including file name, size, S3 key and URL
+   * @returns A promise that resolves to the updated invoice, or null if not found
+   */
+  async updatePdfMetadata(
+    id: string,
+    metadata: {
+      fileName: string;
+      fileSize: number;
+      s3Key: string;
+      s3Url: string;
+    }
+  ): Promise<Invoice | null> {
+    return this.prisma.invoice.update({
+      where: { id, deletedAt: null },
+      data: {
+        fileName: metadata.fileName,
+        fileSize: metadata.fileSize,
+        mimeType: 'application/pdf',
+        s3Key: metadata.s3Key,
+        s3Url: metadata.s3Url,
+        lastGeneratedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  /**
+   * Clear PDF metadata from an invoice (when file is deleted or stale).
+   * @param id - The unique identifier of the invoice
+   * @returns A promise that resolves to the updated invoice, or null if not found
+   */
+  async clearPdfMetadata(id: string): Promise<Invoice | null> {
+    return this.prisma.invoice.update({
+      where: { id, deletedAt: null },
+      data: {
+        fileName: null,
+        fileSize: null,
+        mimeType: null,
+        s3Key: null,
+        s3Url: null,
+        lastGeneratedAt: null,
+        updatedAt: new Date(),
+      },
+    });
   }
 }

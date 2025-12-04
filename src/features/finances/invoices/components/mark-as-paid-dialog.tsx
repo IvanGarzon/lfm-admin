@@ -71,10 +71,6 @@ export function MarkAsPaidDialog({
     onOpenChange(false);
   };
 
-  const handleError = (errors: unknown) => {
-    console.error('Form validation errors:', errors);
-  };
-
   const handleCancel = () => {
     form.reset();
     onOpenChange(false);
@@ -90,7 +86,7 @@ export function MarkAsPaidDialog({
         <Form {...form}>
           <form
             id="mark-as-paid-form"
-            onSubmit={form.handleSubmit(handleSubmit, handleError)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
             <FieldGroup>

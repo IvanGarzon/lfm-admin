@@ -53,6 +53,15 @@ export type InvoiceWithDetails = {
     total: number;
     productId: string | null;
   }[];
+  fileName?: string | null;
+  fileSize?: number | null;
+  mimeType?: string | null;
+  s3Key?: string | null;
+  s3Url?: string | null;
+  lastGeneratedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
 };
 
 export interface InvoiceFilters {

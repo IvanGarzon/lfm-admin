@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { isPrismaError } from '@/lib/error-handler';
 
 import type {
   QuoteListItem,
@@ -310,73 +311,28 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }
     }
 
-    // Build the SQL query for average calculation (only include latest versions)
-    let avgQuery = Prisma.sql`
-      SELECT AVG(amount::numeric)::float as avg
-      FROM quotes
-      WHERE deleted_at IS NULL
-        AND id NOT IN (
-          SELECT DISTINCT parent_quote_id
-          FROM quotes
-          WHERE parent_quote_id IS NOT NULL
-            AND deleted_at IS NULL
-        )
-    `;
-
-    if (dateFilter?.startDate) {
-      avgQuery = Prisma.sql`${avgQuery} AND issued_date >= ${dateFilter.startDate}`;
-    }
-
-    if (dateFilter?.endDate) {
-      avgQuery = Prisma.sql`${avgQuery} AND issued_date <= ${dateFilter.endDate}`;
-    }
-
-    const [
-      statusCounts,
-      totalData,
-      avgQuoteValue,
-      totalQuotedData,
-      acceptedData,
-      convertedData,
-    ] = await Promise.all([
+    // OPTIMIZED: Use only 2 queries instead of 6
+    const [statusGroupsWithSums, aggregateData] = await Promise.all([
+      // Query 1: Group by status with counts AND sums in a single query
       this.prisma.quote.groupBy({
         by: ['status'],
         where: whereClause,
-        _count: true,
-      }),
-
-      this.prisma.quote.aggregate({
-        where: whereClause,
-        _count: true,
-      }),
-
-      // Use raw SQL to calculate average of money type with date filter
-      this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
-
-      // Get total quoted value (all quotes)
-      this.prisma.quote.aggregate({
-        where: whereClause,
-        _sum: {
-          amount: true,
-        },
-      }),
-
-      // Get total accepted value
-      this.prisma.quote.aggregate({
-        where: {
-          ...whereClause,
-          status: QuoteStatusSchema.enum.ACCEPTED,
+        _count: {
+          _all: true,
         },
         _sum: {
           amount: true,
         },
       }),
 
-      // Get total converted value
+      // Query 2: Get total count and average in a single aggregate query
       this.prisma.quote.aggregate({
-        where: {
-          ...whereClause,
-          status: QuoteStatusSchema.enum.CONVERTED,
+        where: whereClause,
+        _count: {
+          _all: true,
+        },
+        _avg: {
+          amount: true,
         },
         _sum: {
           amount: true,
@@ -384,8 +340,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }),
     ]);
 
+    // Initialize stats with totals from aggregate
     const stats: QuoteStatistics = {
-      total: totalData._count,
+      total: aggregateData._count._all,
       draft: 0,
       sent: 0,
       onHold: 0,
@@ -394,39 +351,44 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       expired: 0,
       cancelled: 0,
       converted: 0,
-      totalQuotedValue: Number(totalQuotedData._sum.amount ?? 0),
-      totalAcceptedValue: Number(acceptedData._sum.amount ?? 0),
-      totalConvertedValue: Number(convertedData._sum.amount ?? 0),
+      totalQuotedValue: Number(aggregateData._sum.amount ?? 0),
+      totalAcceptedValue: 0,
+      totalConvertedValue: 0,
       conversionRate: 0,
-      avgQuoteValue: avgQuoteValue[0]?.avg ?? 0,
+      avgQuoteValue: Number(aggregateData._avg.amount ?? 0),
     };
 
-    // Map status counts
-    statusCounts.forEach((item) => {
-      switch (item.status) {
+    // Map status counts and sums from grouped data
+    statusGroupsWithSums.forEach((group) => {
+      const count = group._count._all;
+      const sum = Number(group._sum.amount ?? 0);
+
+      switch (group.status) {
         case QuoteStatusSchema.enum.DRAFT:
-          stats.draft = item._count;
+          stats.draft = count;
           break;
         case QuoteStatusSchema.enum.SENT:
-          stats.sent = item._count;
+          stats.sent = count;
           break;
         case QuoteStatusSchema.enum.ON_HOLD:
-          stats.onHold = item._count;
+          stats.onHold = count;
           break;
         case QuoteStatusSchema.enum.ACCEPTED:
-          stats.accepted = item._count;
+          stats.accepted = count;
+          stats.totalAcceptedValue = sum;
           break;
         case QuoteStatusSchema.enum.REJECTED:
-          stats.rejected = item._count;
+          stats.rejected = count;
           break;
         case QuoteStatusSchema.enum.EXPIRED:
-          stats.expired = item._count;
+          stats.expired = count;
           break;
         case QuoteStatusSchema.enum.CANCELLED:
-          stats.cancelled = item._count;
+          stats.cancelled = count;
           break;
         case QuoteStatusSchema.enum.CONVERTED:
-          stats.converted = item._count;
+          stats.converted = count;
+          stats.totalConvertedValue = sum;
           break;
       }
     });
@@ -513,18 +475,19 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
           return quote;
         });
-      } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2002' // Unique constraint violation
-        ) {
+      } catch (error: unknown) {
+        // Type narrow first, then check the code property
+         // Handle unique constraint violation (invoice number collision)
+        if (isPrismaError(error) && error.code === 'P2002') {
           attempts++;
           if (attempts === maxAttempts) {
             throw new Error('Failed to generate a unique quote number. Please try again.');
           }
           continue; // Retry with a new number
         }
-        throw error; // Re-throw other errors
+
+        // Re-throw other errors
+        throw error;
       }
     }
 

@@ -24,24 +24,73 @@ export async function GET() {
       const keyParts = item.Key?.split('/') || [];
       const folder = keyParts.length > 1 ? keyParts.slice(0, -1).join('/') : '';
 
-      // Extract quote ID from new structure: quotes/[QUOTE_ID]/attachments/... or quotes/[QUOTE_ID]/items/...
-      const quoteId = keyParts[0] === 'quotes' && keyParts.length > 1 ? keyParts[1] : '';
+      // Handle different S3 key structures:
+      // New: [resourceType]/[resourceId]/[subPath]/[filename]
+      // Old: quotes/[QUOTE_ID]/attachments/[filename] or quotes/[QUOTE_ID]/items/[ITEM_ID]/[filename]
+      
+      let resourceType = '';
+      let resourceId = '';
+      let subPath = '';
+      let fileType = 'unknown';
+
+      if (keyParts.length >= 2) {
+        resourceType = keyParts[0]; // 'quotes', 'invoices', etc.
+        resourceId = keyParts[1]; // quote ID, invoice ID, etc.
+        
+        if (keyParts.length > 2) {
+          subPath = keyParts.slice(2, -1).join('/');
+        }
+
+        // Determine file type based on path structure
+        if (resourceType === 'quotes') {
+          if (subPath.includes('items')) {
+            fileType = 'quote-item-attachment';
+          } else if (subPath.includes('attachments')) {
+            fileType = 'quote-attachment';
+          }
+        } else if (resourceType === 'invoices') {
+          if (subPath.includes('pdfs')) {
+            fileType = 'invoice-pdf';
+          } else if (subPath.includes('attachments')) {
+            fileType = 'invoice-attachment';
+          }
+        }
+      }
 
       return {
         key: item.Key || '',
         size: item.Size || 0,
         lastModified: item.LastModified?.toISOString() || '',
         fileName: item.Key?.split('/').pop() || '',
-        folder: folder, // Full folder path
-        type: item.Key?.includes('/items/') ? 'item' : 'quote', // Detect type
-        quoteId: quoteId, // Extract quote ID from path
+        folder: folder,
+        resourceType: resourceType,
+        resourceId: resourceId,
+        subPath: subPath,
+        fileType: fileType,
       };
     });
+
+    // Generate summary statistics
+    const summary = files.reduce((acc, file) => {
+      const key = `${file.resourceType}/${file.fileType}`;
+      if (!acc[key]) {
+        acc[key] = {
+          resourceType: file.resourceType,
+          fileType: file.fileType,
+          count: 0,
+          totalSize: 0,
+        };
+      }
+      acc[key].count++;
+      acc[key].totalSize += file.size;
+      return acc;
+    }, {} as Record<string, { resourceType: string; fileType: string; count: number; totalSize: number }>);
 
     return NextResponse.json({
       success: true,
       files,
       count: files.length,
+      summary: Object.values(summary),
     });
   } catch (error) {
     console.error('S3 list error:', error);
