@@ -1,7 +1,6 @@
-import { PrismaClient, InvoiceStatus } from '@/prisma/client';
+import { prisma } from '../../src/lib/prisma';
+import { InvoiceStatus } from '../generated/client/index.js';
 import { faker } from '@faker-js/faker';
-
-const prisma = new PrismaClient();
 
 /**
  * Seed Invoice Data
@@ -26,7 +25,7 @@ async function seedInvoices() {
     take: 10,
   });
 
-  const statuses: InvoiceStatus[] = ['PENDING', 'PAID', 'CANCELLED', 'OVERDUE'];
+  const statuses: InvoiceStatus[] = ['DRAFT', 'PENDING', 'PAID', 'CANCELLED', 'OVERDUE'];
   const paymentMethods = ['Bank Transfer', 'Credit Card', 'PayPal', 'Cash', 'Cheque'];
   const cancelReasons = [
     'Client Request',
@@ -38,11 +37,11 @@ async function seedInvoices() {
 
   const invoices = [];
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 60; i++) {
     const customer = faker.helpers.arrayElement(customers);
     const status = faker.helpers.arrayElement(statuses);
     const issuedDate = faker.date.between({
-      from: new Date(2024, 0, 1),
+      from: new Date(2025, 0, 1),
       to: new Date(),
     });
     const dueDate = new Date(issuedDate);
@@ -60,16 +59,47 @@ async function seedInvoices() {
       totalAmount += total;
 
       items.push({
-        description: faker.commerce.productName(),
+        description: faker.helpers.arrayElement([
+          'Floral Arrangement Service',
+          'Wedding Bouquet Package',
+          'Corporate Event Flowers',
+          'Sympathy Arrangement',
+          'Birthday Flower Delivery',
+          'Anniversary Special',
+          'Seasonal Flower Box',
+          'Premium Rose Bouquet',
+          'Orchid Collection',
+          'Tropical Arrangement',
+          'Arrangement for funeral',
+          'Floral Arrangement Service',
+          'Wedding Bouquet Package',
+          'Corporate Event Flowers',
+          'Sympathy Arrangement',
+          'Birthday Flower Delivery',
+          'Anniversary Special',
+          'Seasonal Flower Box',
+          'Premium Rose Bouquet',
+          'Orchid Collection',
+          'Tropical Arrangement',
+          'Arrangement for funeral',
+        ]),
         quantity,
         unitPrice,
         total,
         productId:
-          products.length > 0 && faker.datatype.boolean()
+          products.length > 0 && faker.datatype.boolean({ probability: 0.5 })
             ? faker.helpers.arrayElement(products).id
             : null,
       });
     }
+
+    // Random discount and GST
+    const discount = faker.helpers.weightedArrayElement([
+      { value: 0, weight: 0.7 },
+      { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+    ]);
+
+    const gst = 10; // Standard 10% GST
 
     // Create invoice data based on status
     const invoiceData: Record<string, unknown> = {
@@ -78,8 +108,14 @@ async function seedInvoices() {
       status,
       amount: totalAmount,
       currency: 'AUD',
+      discount,
+      gst,
       issuedDate,
       dueDate,
+      notes: faker.helpers.maybe(
+        () => faker.lorem.sentence(),
+        { probability: 0.3 },
+      ),
       items: {
         create: items,
       },
@@ -95,6 +131,9 @@ async function seedInvoices() {
       });
       invoiceData.paidDate = paidDate;
       invoiceData.paymentMethod = faker.helpers.arrayElement(paymentMethods);
+
+      // Add receipt number for paid invoices
+      invoiceData.receiptNumber = `RCP-2024-${String(i + 1).padStart(4, '0')}`;
     } else if (status === 'CANCELLED') {
       const cancelledDate = faker.date.between({
         from: issuedDate,
@@ -112,7 +151,7 @@ async function seedInvoices() {
   for (const invoiceData of invoices) {
     try {
       await prisma.invoice.create({
-        data: invoiceData,
+        data: invoiceData as any,
       });
       created++;
     } catch (error) {

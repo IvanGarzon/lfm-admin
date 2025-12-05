@@ -11,7 +11,7 @@ import {
   useDeleteQuoteAttachment,
   useGetAttachmentDownloadUrl,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { formatFileSize, isImageFile } from '@/lib/s3';
+import { formatFileSize, isImageFile } from '@/lib/file-constants';
 import { format } from 'date-fns';
 import {
   AlertDialog,

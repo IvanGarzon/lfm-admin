@@ -8,6 +8,14 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env';
+export {
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  formatFileSize,
+  getFileExtension,
+  isImageFile,
+} from './file-constants';
 
 // Environment configuration
 const isDevelopment = env.NODE_ENV === 'development';
@@ -35,27 +43,6 @@ export const s3Client = new S3Client({
       forcePathStyle: true, // Required for LocalStack
     }),
 });
-
-// Allowed MIME types for quote ITEM attachments (only images)
-export const ALLOWED_IMAGE_MIME_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-] as const;
-
-// Allowed MIME types for quote attachments
-export const ALLOWED_MIME_TYPES = [
-  ...ALLOWED_IMAGE_MIME_TYPES,
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-] as const;
-
-// Maximum file size (5MB)
-export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /**
  * Generate a unique S3 key with flexible path structure
@@ -236,33 +223,6 @@ export async function getFileMetadata(s3Key: string): Promise<{
   }
 }
 
-/**
- * Utility: Format file size for display
- */
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-}
-
-/**
- * Utility: Get file extension from filename
- */
-export function getFileExtension(filename: string): string {
-  const parts = filename.split('.');
-  return parts.length > 1 ? parts.pop()?.toLowerCase() || '' : '';
-}
-
-/**
- * Utility: Check if file is an image
- */
-export function isImageFile(mimeType: string): boolean {
-  return mimeType.startsWith('image/');
-}
 
 /**
  * Download a file from S3 as a Buffer

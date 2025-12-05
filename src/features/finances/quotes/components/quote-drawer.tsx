@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { QuoteStatus } from '@/prisma/client';
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { Box } from '@/components/ui/box';
 import {
@@ -47,7 +48,7 @@ import {
   useCreateQuoteVersion,
   useQuoteVersions,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { downloadQuotePdf, getQuotePermissions, QuoteStatus } from '@/features/finances/quotes/utils/quote-helpers';
+import { downloadQuotePdf, getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';

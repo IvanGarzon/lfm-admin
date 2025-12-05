@@ -1,6 +1,6 @@
 import { isAfter, differenceInDays, startOfToday } from 'date-fns';
 import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
-import { QuoteStatus } from '@/prisma/client'
+import { QuoteStatus } from '@/prisma/client';
 
 /**
  * Get human-readable label for a quote status

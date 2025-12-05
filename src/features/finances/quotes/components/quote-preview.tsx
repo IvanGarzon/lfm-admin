@@ -7,7 +7,7 @@ import { Box } from '@/components/ui/box';
 import { formatCurrency } from '@/lib/utils';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { lasFloresAccount } from '@/constants/data';
-import { formatFileSize, isImageFile } from '@/lib/s3';
+import { formatFileSize, isImageFile } from '@/lib/file-constants';
 import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
 
 

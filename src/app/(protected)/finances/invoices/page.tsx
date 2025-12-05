@@ -15,7 +15,6 @@ export default async function InvoicesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const searchParamsResolved = await searchParams;
-
   const result = await getInvoices(searchParamsResolved);
 
   if (!result.success) {

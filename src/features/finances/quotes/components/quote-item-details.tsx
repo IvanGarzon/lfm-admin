@@ -11,7 +11,7 @@ import {
   useUpdateQuoteItemNotes,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
-import { formatFileSize } from '@/lib/s3';
+import { formatFileSize } from '@/lib/file-constants';
 import { DeleteItemImageDialog } from './delete-item-image-dialog';
 import { ImagePreviewDialog } from './image-preview-dialog';
 import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';

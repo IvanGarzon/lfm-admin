@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
-import { ALLOWED_MIME_TYPES, ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/s3';
+import { ALLOWED_MIME_TYPES, ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
 
 export const QuoteItemSchema = z.object({
   id: z.string().optional(),
