@@ -1,12 +1,14 @@
 import { logger } from '@/lib/logger';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
-import { generatePdfBuffer } from '@/lib/pdf';
-import { InvoiceDocument } from '@/templates/invoice-template';
-import { ReceiptDocument } from '@/templates/receipt-template';
-import { absoluteUrl } from '@/lib/utils';
 import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document-service';
 import { DocumentKind } from '@/prisma/client';
-import crypto from 'crypto';
+import {
+  generateInvoiceFilename,
+  generateReceiptFilename,
+  calculateContentHash,
+  generateInvoicePDF,
+  generateReceiptPDF
+} from '../utils/invoice-helpers';
 
 export interface PdfResult {
   /** PDF file buffer (only populated if skipDownload is false) */
@@ -32,84 +34,6 @@ export interface GetPdfOptions {
   skipDownload?: boolean;
   /** Context for logging purposes */
   context?: string;
-}
-
-/**
- * Generate invoice filename
- */
-export function generateInvoiceFilename(invoiceNumber: string): string {
-  return `${invoiceNumber}.pdf`;
-}
-
-/**
- * Generate receipt filename using receipt number
- */
-export function generateReceiptFilename(receiptNumber: string): string {
-  return `${receiptNumber}.pdf`;
-}
-
-/**
- * Generate invoice PDF as Buffer (server-side)
- */
-export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<Buffer> {
-  const logoUrl = absoluteUrl("/static/logo-green-800.png");
-  const pdfDoc = InvoiceDocument({ invoice, logoUrl });
-  return generatePdfBuffer(pdfDoc);
-}
-
-/**
- * Generate receipt PDF as Buffer (server-side)
- */
-export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<Buffer> {
-  const logoUrl = absoluteUrl("/static/logo-green-800.png");
-  const pdfDoc = ReceiptDocument({ invoice, logoUrl });
-  return generatePdfBuffer(pdfDoc);
-}
-
-/**
- * Calculate hash of PDF content for deduplication.
- * Only includes fields that affect the visual PDF output.
- * 
- * @param invoice - The invoice data
- * @param type - The document type ('invoice' or 'receipt')
- */
-function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice' | 'receipt' = 'invoice'): string {
-  const baseData = {
-    invoiceNumber: invoice.invoiceNumber,
-    amount: invoice.amount.toString(),
-    customer: {
-      firstName: invoice.customer.firstName,
-      lastName: invoice.customer.lastName,
-      email: invoice.customer.email,
-    },
-  };
-
-  // Add type-specific fields
-  const relevantData = type === 'invoice' 
-    ? {
-        ...baseData,
-        discount: invoice.discount.toString(),
-        gst: invoice.gst.toString(),
-        issuedDate: invoice.issuedDate.toISOString(),
-        dueDate: invoice.dueDate.toISOString(),
-        items: invoice.items.map(item => ({
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice.toString(),
-          total: item.total.toString(),
-        })),
-        notes: invoice.notes,
-      }
-    : {
-        ...baseData,
-        paidDate: invoice.paidDate?.toISOString(),
-        paymentMethod: invoice.paymentMethod,
-      };
-
-  return crypto
-    .createHash('sha256')
-    .update(JSON.stringify(relevantData))
-    .digest('hex');
 }
 
 /**
@@ -231,8 +155,6 @@ export async function getOrGenerateInvoicePdf(
     wasRegenerated,
   };
 }
-
-
 
 /**
  * Gets or generates a receipt PDF using DocumentService.

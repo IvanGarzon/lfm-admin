@@ -211,7 +211,7 @@ export async function markInvoiceAsPending(
     }
 
     // Generate or retrieve PDF using DocumentService
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateInvoicePdf(invoice, {
       context: 'markInvoiceAsPending',
       skipDownload: false,
@@ -393,7 +393,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
     }
 
     // Generate or retrieve PDF using centralized service
-    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateReceiptPdf(invoice, {
       context: 'sendInvoiceReceipt',
       skipDownload: false,
@@ -494,7 +494,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
     }
 
     // Generate or retrieve PDF using centralized service
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateInvoicePdf(invoice, {
       context: 'sendInvoiceReminder',
       skipDownload: false, // Need buffer for email attachment
@@ -620,7 +620,7 @@ export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: 
 
     // Generate or retrieve PDF using centralized service
     // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateInvoicePdf(invoice, {
       context: 'getInvoicePdfUrl',
       skipDownload: true,
@@ -655,7 +655,7 @@ export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: 
 
     // Generate or retrieve PDF using centralized service
     // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/utils/invoice-pdf-manager');
+    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateReceiptPdf(invoice, {
       context: 'getReceiptPdfUrl',
       skipDownload: true,
