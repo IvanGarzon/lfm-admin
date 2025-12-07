@@ -1,75 +1,10 @@
-import { Prisma, prisma } from '@/lib/prisma';
-import { faker } from '@faker-js/faker';
-import { Employee, Customer, Organization } from '@/prisma/client';
-import {
-  EmployeeStatusType,
-  EmployeeStatusSchema,
-} from '@/zod/inputTypeSchemas/EmployeeStatusSchema';
-import {
-  CustomerStatusType,
-  CustomerStatusSchema,
-} from '@/zod/inputTypeSchemas/CustomerStatusSchema';
-import { GenderType, GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
-
-function generateRandomAustralianPhoneNumber(type: 'mobile' | 'landline' = 'mobile'): string {
-  if (type === 'mobile') {
-    return `04${Math.floor(10000000 + Math.random() * 90000000)}`;
-  }
-
-  const areaCodes = ['02', '03', '07', '08']; // Australian landline area codes
-  const randomAreaCode = areaCodes[Math.floor(Math.random() * areaCodes.length)];
-  return `${randomAreaCode}${Math.floor(10000000 + Math.random() * 90000000)}`;
-}
-
-const generateRandomOrganizations = (count: number): Partial<Organization>[] =>
-  Array.from({ length: count }, () => ({
-    name: faker.company.name(),
-    address: faker.location.streetAddress(),
-    city: faker.location.city(),
-    state: faker.helpers.arrayElement(['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT']),
-    postcode: faker.location.zipCode(),
-    country: 'Australia',
-  }));
-
-const generateRandomEmployees = (count: number): Partial<Employee>[] =>
-  Array.from({ length: count }, (_, i) => ({
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    email: faker.internet.email(),
-    phone: generateRandomAustralianPhoneNumber('mobile'),
-    dob: faker.date.past({ years: faker.number.int({ min: 18, max: 65 }) }),
-    rate: new Prisma.Decimal(faker.number.float({ min: 20, max: 50, multipleOf: 0.25 })),
-    gender: faker.helpers.arrayElement([
-      GenderSchema.enum.MALE,
-      GenderSchema.enum.FEMALE,
-    ]) as GenderType,
-    status: faker.helpers.arrayElement([
-      EmployeeStatusSchema.enum.ACTIVE,
-      EmployeeStatusSchema.enum.INACTIVE,
-    ]) as EmployeeStatusType,
-    avatarUrl: `https://api.slingacademy.com/public/sample-users/${i + 1}.png`,
-  }));
-
-const generateRandomCustomers = async (count: number): Promise<Partial<Customer>[]> => {
-  const organizations = await prisma.organization.findMany();
-
-  return Array.from({ length: count }, () => ({
-    firstName: faker.person.firstName(),
-    lastName: faker.person.lastName(),
-    gender: faker.helpers.arrayElement([
-      GenderSchema.enum.MALE,
-      GenderSchema.enum.FEMALE,
-    ]) as GenderType,
-    email: faker.internet.email(),
-    phone: generateRandomAustralianPhoneNumber('mobile'),
-    status: faker.helpers.arrayElement([
-      CustomerStatusSchema.enum.ACTIVE,
-      CustomerStatusSchema.enum.INACTIVE,
-      CustomerStatusSchema.enum.DELETED,
-    ]) as CustomerStatusType,
-    organizationId: organizations.length ? faker.helpers.arrayElement(organizations).id : null,
-  }));
-};
+import { prisma } from '@/lib/prisma';
+import { seedOrganizations } from './seeds/seed-organizations';
+import { seedCustomers } from './seeds/seed-customers';
+import { seedProducts } from './seeds/seed-products';
+import { seedEmployees } from './seeds/seed-employees';
+import { seedInvoices } from './seeds/seed-invoices';
+import { seedQuotes } from './seeds/seed-quotes';
 
 async function main() {
   console.log('Cleaning up tables...');
@@ -77,51 +12,111 @@ async function main() {
   await prisma.employee.deleteMany();
   await prisma.organization.deleteMany();
 
-  console.log('Generating data...');
-  const organizations = await generateRandomOrganizations(10);
-  await prisma.organization.createMany({
-    data: organizations.map((org) => ({
-      name: org.name!,
-      address: org.address!,
-      city: org.city!,
-      state: org.state!,
-      postcode: org.postcode!,
-      country: org.country!,
-    })),
-    skipDuplicates: true,
-  });
+  console.log('🌱 Starting complete database seeding...');
+  console.log('');
 
-  const employees = await generateRandomEmployees(65);
-  await prisma.employee.createMany({
-    data: employees.map((employee: Partial<Employee>) => ({
-      firstName: employee.firstName!,
-      lastName: employee.lastName!,
-      email: employee.email!,
-      dob: employee.dob!,
-      phone: employee.phone!,
-      gender: employee.gender as GenderType,
-      rate: employee.rate!,
-      status: employee.status!,
-      avatarUrl: employee.avatarUrl!,
-    })),
-    skipDuplicates: true,
-  });
+  try {
+    // Step 1: Seed organizations
+    const orgCount = await prisma.organization.count();
+    if (orgCount === 0) {
+      console.log('📋 Step 1: Seeding organizations...');
+      await seedOrganizations();
+      console.log('');
+    } else {
+      console.log('✅ Organizations already exist (skipping)');
+      console.log(`   Organizations: ${orgCount}`);
+      console.log('');
+    }
 
-  const customers = await generateRandomCustomers(65);
-  await prisma.customer.createMany({
-    data: customers.map((customer: Partial<Customer>) => ({
-      firstName: customer.firstName!,
-      lastName: customer.lastName!,
-      email: customer.email!,
-      phone: customer.phone!,
-      gender: customer.gender as GenderType,
-      status: customer.status!,
-      organizationId: customer.organizationId,
-    })),
-    skipDuplicates: true,
-  });
+     // Step 2: Seed customers
+    const customerCount = await prisma.customer.count();
+    if (customerCount === 0) {
+      console.log('📋 Step 2: Seeding customers...');
+      await seedCustomers();
+      console.log('');
+    } else {
+      console.log('✅ Customers already exist (skipping)');
+      console.log(`   Customers: ${customerCount}`);
+      console.log('');
+    }
 
-  console.log('Seeding finished! 🚀');
+    // Step 3: Seed products
+    const productCount = await prisma.product.count();
+    if (productCount === 0) {
+      console.log('📋 Step 3: Seeding products...');
+      await seedProducts();
+      console.log('');
+    } else {
+      console.log('✅ Products already exist (skipping)');
+      console.log(`   Products: ${productCount}`);
+      console.log('');
+    }
+
+    // Step 4: Seed employees
+    const employeeCount = await prisma.employee.count();
+    if (employeeCount === 0) {
+      console.log('📋 Step 4: Seeding employees...');
+      await seedEmployees();
+      console.log('');
+    } else {
+      console.log('✅ Employees already exist (skipping)');
+      console.log(`   Employees: ${employeeCount}`);
+      console.log('');
+    }
+    
+    // Step 5: Seed invoices
+    const invoiceCount = await prisma.invoice.count();
+    if (invoiceCount === 0) {
+      console.log('📋 Step 5: Seeding invoices...');
+      await seedInvoices();
+      console.log('');
+    } else {
+      console.log('✅ Invoices already exist (skipping)');
+      console.log(`   Invoices: ${invoiceCount}`);
+      console.log('');
+    }
+    
+    // Step 6: Seed quotes
+    const quoteCount = await prisma.quote.count();
+    if (quoteCount === 0) {
+      console.log('📋 Step 6: Seeding quotes...');
+      await seedQuotes();
+      console.log('');
+    } else {
+      console.log('✅ Quotes already exist (skipping)');
+      console.log(`   Quotes: ${quoteCount}`);
+      console.log('');
+    }
+
+    console.log('🎉 All seeding completed!');
+    console.log('');
+    console.log('📊 Final Summary:');
+    const stats = {
+      organizations: await prisma.organization.count(),
+      customers: await prisma.customer.count(),
+      employees: await prisma.employee.count(),
+      products: await prisma.product.count(),
+      invoices: await prisma.invoice.count(),
+      invoiceItems: await prisma.invoiceItem.count(),
+      quotes: await prisma.quote.count(),
+      quoteItems: await prisma.quoteItem.count(),
+    };
+
+    console.log(`   Organizations: ${stats.organizations}`);
+    console.log(`   Customers: ${stats.customers}`);
+    console.log(`   Employees: ${stats.employees}`);
+    console.log(`   Products: ${stats.products}`);
+    console.log(`   Invoices: ${stats.invoices}`);
+    console.log(`   Invoice Items: ${stats.invoiceItems}`);
+    console.log(`   Quotes: ${stats.quotes}`);
+    console.log(`   Quote Items: ${stats.quoteItems}`);
+    console.log('');
+    console.log('✨ Ready to go! Start your server: pnpm dev');
+    console.log('');
+  } catch (error) {
+    console.error('❌ Error during seeding:', error);
+    throw error;
+  }
 }
 
 main()

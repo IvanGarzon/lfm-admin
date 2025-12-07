@@ -1,13 +1,43 @@
-import { prisma } from '../../src/lib/prisma';
-import { InvoiceStatus } from '../generated/client/index.js';
+import { prisma } from '@/lib/prisma';
+import { InvoiceStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  productId: string | null;
+}
+
+interface Invoice {
+  invoiceNumber: string;
+  customerId: string;
+  status: InvoiceStatus;
+  amount: number;
+  currency: string;
+  discount: number;
+  gst: number;
+  issuedDate: Date;
+  dueDate: Date;
+  notes: string | null | undefined;
+  items: {
+    create: InvoiceItem[];
+  };
+  remindersSent?: number;
+  paidDate?: Date;
+  paymentMethod?: string;
+  receiptNumber?: string;
+  cancelledDate?: Date;
+  cancelReason?: string;
+}
 
 /**
  * Seed Invoice Data
  * Generates fake invoices with items for testing
  */
 
-async function seedInvoices() {
+export async function seedInvoices() {
   console.log('🌱 Seeding invoices...');
 
   // Get existing customers
@@ -35,7 +65,7 @@ async function seedInvoices() {
     'Contract Cancelled',
   ];
 
-  const invoices = [];
+  const invoices: Invoice[] = [];
 
   for (let i = 0; i < 60; i++) {
     const customer = faker.helpers.arrayElement(customers);
@@ -44,12 +74,13 @@ async function seedInvoices() {
       from: new Date(2025, 0, 1),
       to: new Date(),
     });
+
     const dueDate = new Date(issuedDate);
     dueDate.setDate(dueDate.getDate() + faker.number.int({ min: 14, max: 90 }));
 
     // Generate items
     const itemCount = faker.number.int({ min: 1, max: 5 });
-    const items = [];
+    const items: InvoiceItem[] = [];
     let totalAmount = 0;
 
     for (let j = 0; j < itemCount; j++) {
@@ -102,8 +133,8 @@ async function seedInvoices() {
     const gst = 10; // Standard 10% GST
 
     // Create invoice data based on status
-    const invoiceData: Record<string, unknown> = {
-      invoiceNumber: `INV-2024-${String(i + 1).padStart(4, '0')}`,
+    const invoiceData: Invoice = {
+      invoiceNumber: `INV-2025-${String(i + 1).padStart(4, '0')}`,
       customerId: customer.id,
       status,
       amount: totalAmount,
@@ -131,9 +162,8 @@ async function seedInvoices() {
       });
       invoiceData.paidDate = paidDate;
       invoiceData.paymentMethod = faker.helpers.arrayElement(paymentMethods);
-
       // Add receipt number for paid invoices
-      invoiceData.receiptNumber = `RCP-2024-${String(i + 1).padStart(4, '0')}`;
+      invoiceData.receiptNumber = `RCP-2024-${String(i + 1).padStart(4, '0')}`;      
     } else if (status === 'CANCELLED') {
       const cancelledDate = faker.date.between({
         from: issuedDate,
@@ -151,7 +181,7 @@ async function seedInvoices() {
   for (const invoiceData of invoices) {
     try {
       await prisma.invoice.create({
-        data: invoiceData as any,
+        data: invoiceData,
       });
       created++;
     } catch (error) {
@@ -161,22 +191,3 @@ async function seedInvoices() {
 
   console.log(`✅ Created ${created} invoices`);
 }
-
-async function main() {
-  try {
-    await seedInvoices();
-    console.log('🎉 Invoice seeding completed!');
-  } catch (error) {
-    console.error('❌ Error seeding invoices:', error);
-    throw error;
-  }
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

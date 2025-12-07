@@ -145,11 +145,7 @@ export function InvoiceForm({
   useUnsavedChanges(form.formState.isDirty);
 
   const isLocked = useMemo(() => {
-    return (
-      mode === 'update' &&
-      (invoice?.status === InvoiceStatusSchema.enum.PAID ||
-        invoice?.status === InvoiceStatusSchema.enum.CANCELLED)
-    );
+    return mode === 'update' && invoice?.status !== InvoiceStatusSchema.enum.DRAFT;
   }, [mode, invoice?.status]);
 
   const onSubmit: SubmitHandler<InvoiceFormInput> = useCallback(

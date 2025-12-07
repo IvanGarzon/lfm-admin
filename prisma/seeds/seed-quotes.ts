@@ -1,14 +1,42 @@
-import { prisma } from '../../src/lib/prisma';
-import { QuoteStatus } from '../generated/client/index.js';
+import { prisma } from '@/lib/prisma';
+import { QuoteStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
 import { addDays } from 'date-fns';
+
+interface QuoteItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  order: number;
+  colors: string[];
+  notes: string | null;
+  productId: string | null;
+}
+
+interface Quote {
+  quoteNumber: string;
+  customerId: string;
+  status: QuoteStatus;
+  amount: number;
+  currency: string;
+  discount: number;
+  gst: number;
+  issuedDate: Date;
+  validUntil: Date;
+  notes: string | null;
+  terms: string | null;
+  items: {
+    create: QuoteItem[];
+  };
+}
 
 /**
  * Seed Quote Data
  * Generates fake quotes with items for testing
  */
 
-async function seedQuotes() {
+export async function seedQuotes() {
   console.log('💰 Seeding quotes...');
 
   // Get existing customers
@@ -51,7 +79,7 @@ async function seedQuotes() {
 
     // Generate items
     const itemCount = faker.number.int({ min: 1, max: 6 });
-    const items = [];
+    const items: QuoteItem[] = [];
     let totalAmount = 0;
 
     for (let j = 0; j < itemCount; j++) {
@@ -94,7 +122,7 @@ async function seedQuotes() {
             'Specific delivery time required',
           ]),
           { probability: 0.3 },
-        ),
+        ) ?? null,
         productId:
           products.length > 0 && faker.datatype.boolean({ probability: 0.4 })
             ? faker.helpers.arrayElement(products).id
@@ -111,7 +139,7 @@ async function seedQuotes() {
     const gst = 10; // Standard 10% GST
 
     // Create quote data
-    const quoteData: Record<string, unknown> = {
+    const quoteData: Quote = {
       quoteNumber: `QT-2024-${String(i + 1).padStart(4, '0')}`,
       customerId: customer.id,
       status,
@@ -124,11 +152,11 @@ async function seedQuotes() {
       notes: faker.helpers.maybe(
         () => faker.lorem.paragraph(),
         { probability: 0.5 },
-      ),
+      ) ?? null,
       terms: faker.helpers.maybe(
         () => 'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
         { probability: 0.7 },
-      ),
+      ) ?? null,
       items: {
         create: items,
       },
@@ -163,22 +191,3 @@ async function seedQuotes() {
 
   console.log(`✅ Created ${created} quotes`);
 }
-
-async function main() {
-  try {
-    await seedQuotes();
-    console.log('🎉 Quote seeding completed!');
-  } catch (error) {
-    console.error('❌ Error seeding quotes:', error);
-    throw error;
-  }
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

@@ -1,23 +1,32 @@
-import { prisma } from '../../src/lib/prisma';
-import { Gender, CustomerStatus } from '../generated/client/index.js';
+import { prisma } from '@/lib/prisma';
+import { Gender, CustomerStatus} from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+
+interface Customer {
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  email: string;
+  phone: string | null;
+  status: CustomerStatus;
+  organizationId: string | null;
+}
 
 /**
  * Seed Customers
  * Creates customer records with optional organization links
  */
 
-async function seedCustomers() {
+export async function seedCustomers() {
   console.log('👥 Seeding customers...');
 
   // Get existing organizations
   const organizations = await prisma.organization.findMany();
-
-  const customers = [];
+  const customers: Customer[] = [];
 
   // Create 50 customers
   for (let i = 0; i < 50; i++) {
-    const gender = faker.helpers.arrayElement(['MALE', 'FEMALE'] as Gender[]);
+    const gender = faker.helpers.arrayElement(['MALE', 'FEMALE']);
     const firstName = faker.person.firstName(gender === 'MALE' ? 'male' : 'female');
     const lastName = faker.person.lastName();
     const email = faker.internet.email({ firstName, lastName }).toLowerCase();
@@ -28,7 +37,7 @@ async function seedCustomers() {
       ? faker.helpers.arrayElement(organizations).id
       : null;
 
-    const customer = {
+    const customer: Customer = {
       firstName,
       lastName,
       gender,
@@ -40,13 +49,14 @@ async function seedCustomers() {
             `04${faker.string.numeric(8)}`,
             `+614${faker.string.numeric(8)}`,
           ]);
+          
           return mobile;
         },
         { probability: 0.8 },
-      ),
+      ) ?? null,
       status: faker.helpers.weightedArrayElement([
-        { value: 'ACTIVE' as CustomerStatus, weight: 0.9 },
-        { value: 'INACTIVE' as CustomerStatus, weight: 0.1 },
+        { value: 'ACTIVE', weight: 0.9 },
+        { value: 'INACTIVE', weight: 0.1 },
       ]),
       organizationId,
     };
@@ -70,22 +80,3 @@ async function seedCustomers() {
 
   console.log(`✅ Created ${created} customers`);
 }
-
-async function main() {
-  try {
-    await seedCustomers();
-    console.log('🎉 Customer seeding completed!');
-  } catch (error) {
-    console.error('❌ Error seeding customers:', error);
-    throw error;
-  }
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

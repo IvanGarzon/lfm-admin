@@ -1,13 +1,23 @@
-import { prisma } from '../../src/lib/prisma';
-import { ProductStatus } from '../generated/client/index.js';
+import { prisma } from '@/lib/prisma';
+import { ProductStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+
+interface Product {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  status: ProductStatus;
+  imageUrl: string | null;
+  availableAt: Date;
+}
 
 /**
  * Seed Products
  * Creates florist industry products and services
  */
 
-async function seedProducts() {
+export async function seedProducts() {
   console.log('🌸 Seeding products...');
 
   const floristProducts = [
@@ -109,7 +119,7 @@ async function seedProducts() {
     },
   ];
 
-  const products = [];
+  const products: Product[] = [];
 
   for (const category of floristProducts) {
     for (const item of category.items) {
@@ -131,14 +141,14 @@ async function seedProducts() {
           ? item.stock
           : faker.number.int({ min: item.stock[0], max: item.stock[1] }),
         status: faker.helpers.weightedArrayElement([
-          { value: 'ACTIVE' as ProductStatus, weight: 0.9 },
-          { value: 'INACTIVE' as ProductStatus, weight: 0.05 },
-          { value: 'OUT_OF_STOCK' as ProductStatus, weight: 0.05 },
+          { value: 'ACTIVE', weight: 0.9 },
+          { value: 'INACTIVE', weight: 0.05 },
+          { value: 'OUT_OF_STOCK', weight: 0.05 },
         ]),
         imageUrl: faker.helpers.maybe(
           () => `https://picsum.photos/seed/${faker.string.alphanumeric(10)}/400/300`,
           { probability: 0.7 },
-        ),
+        ) ?? null,
         availableAt: faker.date.recent({ days: 30 }),
       };
 
@@ -155,21 +165,3 @@ async function seedProducts() {
   console.log(`✅ Created ${createdProducts.count} florist products`);
 }
 
-async function main() {
-  try {
-    await seedProducts();
-    console.log('🎉 Product seeding completed!');
-  } catch (error) {
-    console.error('❌ Error seeding products:', error);
-    throw error;
-  }
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

@@ -1,47 +1,54 @@
-import { prisma } from '../../src/lib/prisma';
-import { Gender, EmployeeStatus } from '../generated/client/index.js';
+import { prisma } from '@/lib/prisma';
+import { Gender, EmployeeStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+
+interface Employee {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  gender: Gender;
+  dob: Date | null;
+  rate: number;
+  status: EmployeeStatus;
+  avatarUrl: string | null;
+}
 
 /**
  * Seed Employee Data
  * Generates fake employees for testing
  */
-
-function generateRandomAustralianPhoneNumber(): string {
-  return `04${faker.string.numeric(8)}`;
-}
-
-async function seedEmployees() {
+export async function seedEmployees() {
   console.log('👷 Seeding employees...');
 
-  const employees = [];
+  const employees: Employee[] = [];
 
   // Create 30 employees
   for (let i = 0; i < 30; i++) {
-    const gender = faker.helpers.arrayElement(['MALE', 'FEMALE'] as Gender[]);
+    const gender = faker.helpers.arrayElement(['MALE', 'FEMALE']);
     const firstName = faker.person.firstName(gender === 'MALE' ? 'male' : 'female');
     const lastName = faker.person.lastName();
     const email = faker.internet.email({ firstName, lastName }).toLowerCase();
 
-    const employee = {
+    const employee: Employee = {
       firstName,
       lastName,
       email,
-      phone: generateRandomAustralianPhoneNumber(),
+      phone: `04${faker.string.numeric(8)}`,
       gender,
       dob: faker.helpers.maybe(
         () => faker.date.birthdate({ min: 18, max: 65, mode: 'age' }),
         { probability: 0.9 },
-      ),
+      ) ?? null,
       rate: faker.number.float({ min: 25, max: 150, multipleOf: 0.25 }),
       status: faker.helpers.weightedArrayElement([
-        { value: 'ACTIVE' as EmployeeStatus, weight: 0.85 },
-        { value: 'INACTIVE' as EmployeeStatus, weight: 0.15 },
+        { value: 'ACTIVE', weight: 0.85 },
+        { value: 'INACTIVE', weight: 0.15 },
       ]),
       avatarUrl: faker.helpers.maybe(
         () => `https://api.slingacademy.com/public/sample-users/${i + 1}.png`,
         { probability: 0.7 },
-      ),
+      ) ?? null,
     };
 
     employees.push(employee);
@@ -63,22 +70,3 @@ async function seedEmployees() {
 
   console.log(`✅ Created ${created} employees`);
 }
-
-async function main() {
-  try {
-    await seedEmployees();
-    console.log('🎉 Employee seeding completed!');
-  } catch (error) {
-    console.error('❌ Error seeding employees:', error);
-    throw error;
-  }
-}
-
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
