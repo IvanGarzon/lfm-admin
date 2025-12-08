@@ -14,14 +14,17 @@ import {
   useSendInvoiceReminder,
   useMarkInvoiceAsPending,
   useDownloadInvoicePdf,
+  useBulkUpdateInvoiceStatus,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import dynamic from 'next/dynamic';
 import { InvoiceStats } from '@/features/finances/invoices/components/invoice-stats';
 import { InvoiceStatsFilters } from '@/features/finances/invoices/components/invoice-stats-filters';
 import { InvoiceTable } from '@/features/finances/invoices/components/invoice-table';
+import { BulkActionsBar } from '@/features/finances/invoices/components/bulk-actions-bar';
 import type {
   InvoicePagination,
   StatsDateFilter,
+  InvoiceListItem,
 } from '@/features/finances/invoices/types';
 import { createInvoiceColumns } from '@/features/finances/invoices/components/invoice-columns';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
@@ -52,7 +55,7 @@ export function InvoiceList({
   const [showStats, setShowStats] = useState<boolean>(true);
   const [statsDateFilter, setStatsDateFilter] = useState<StatsDateFilter>({});
 
-  const { openDelete, openMarkAsPaid, openCancel, openSendReceipt } = useInvoiceActions();
+  const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.pagination.totalItems / perPage);
@@ -66,6 +69,7 @@ export function InvoiceList({
   const sendReminder = useSendInvoiceReminder();
   const markAsPending = useMarkInvoiceAsPending();
   const downloadPdf = useDownloadInvoicePdf();
+  const bulkUpdateStatus = useBulkUpdateInvoiceStatus();
 
   const handleShowCreateModal = () => {
     setShowCreateModal((prev) => !prev);
@@ -77,7 +81,7 @@ export function InvoiceList({
         (id, number) => openDelete(id, number),
         (id) => sendReminder.mutate(id),
         (id) => markAsPending.mutate(id),
-        (id, number) => openMarkAsPaid(id, number),
+        (id, number, invoice) => openRecordPayment(id, number, invoice),
         (id, number) => openCancel(id, number),
         (id) => downloadPdf.mutate(id),
         (id) => openSendReceipt(id),
@@ -87,7 +91,7 @@ export function InvoiceList({
       markAsPending,
       downloadPdf,
       openDelete,
-      openMarkAsPaid,
+      openRecordPayment,
       openCancel,
       openSendReceipt,
     ],
@@ -100,6 +104,16 @@ export function InvoiceList({
     shallow: false,
     debounceMs: 500,
   });
+
+  const handleBulkUpdateStatus = (rows: InvoiceListItem[], status: string) => {
+    bulkUpdateStatus.mutate(
+      // @ts-expect-error Status enum mismatch
+      { ids: rows.map((r) => r.id), status },
+      {
+        onSuccess: () => table.toggleAllPageRowsSelected(false),
+      },
+    );
+  };
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
@@ -128,6 +142,12 @@ export function InvoiceList({
           <InvoiceStats stats={stats} isLoading={statsLoading} error={statsError} />
         </Box>
       ) : null}
+
+      <BulkActionsBar
+        table={table}
+        onUpdateStatus={handleBulkUpdateStatus}
+        isPending={bulkUpdateStatus.isPending}
+      />
 
       <InvoiceTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
 

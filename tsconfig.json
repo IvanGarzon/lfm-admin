@@ -17,7 +17,7 @@
     "noEmit": true,
     //"module": "Preserve",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
 
     "esModuleInterop": true,
     "resolveJsonModule": true,

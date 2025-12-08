@@ -188,6 +188,8 @@ model Invoice {
   status InvoiceStatus @default(DRAFT)
 
   amount     Decimal  @db.Decimal(15, 2)
+  amountPaid Decimal  @default(0) @map(name: "amount_paid") @db.Decimal(15, 2)
+  amountDue  Decimal  @default(0) @map(name: "amount_due") @db.Decimal(15, 2)
   currency   String   @default("AUD") 
   gst        Decimal  @default(10) @db.Decimal(5, 2)
   discount   Decimal  @default(0) @db.Decimal(15, 2)
@@ -206,6 +208,7 @@ model Invoice {
   notes String? @db.Text
 
   items     InvoiceItem[]
+  payments  Payment[]
   documents Document[]
 
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
@@ -237,6 +240,25 @@ model InvoiceItem {
 
   @@index([invoiceId])
   @@map(name: "invoice_items")
+}
+
+model Payment {
+  id String @id @default(cuid())
+
+  invoiceId String  @map(name: "invoice_id")
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  amount    Decimal   @db.Decimal(15, 2)
+  date      DateTime  @db.Date
+  method    String
+  reference String?
+  notes     String?   @db.Text
+
+  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+
+  @@index([invoiceId])
+  @@map(name: "payments")
 }
 
 model Quote {
@@ -436,6 +458,7 @@ enum AuditLevel {
 enum InvoiceStatus {
   PENDING
   PAID
+  PARTIALLY_PAID
   CANCELLED
   OVERDUE
   DRAFT
@@ -457,4 +480,6 @@ enum DocumentKind {
   RECEIPT
   QUOTE
 }
+
+
 

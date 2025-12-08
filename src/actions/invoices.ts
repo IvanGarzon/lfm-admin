@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
-  MarkInvoiceAsPaidSchema,
+  RecordPaymentSchema,
   MarkInvoiceAsPendingSchema,
   CancelInvoiceSchema,
   InvoiceFiltersSchema,
@@ -19,7 +19,7 @@ import {
   SendReceiptEmailSchema,
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
-  type MarkInvoiceAsPaidInput,
+  type RecordPaymentInput,
   type MarkInvoiceAsPendingInput,
   type CancelInvoiceInput,
   type SendInvoiceEmailInput,
@@ -33,6 +33,7 @@ import type {
   InvoicePagination,
 } from '@/features/finances/invoices/types';
 import type { ActionResult } from '@/types/actions';
+import { InvoiceStatus } from '@/prisma/client';
 
 const invoiceRepo = new InvoiceRepository(prisma);
 
@@ -276,26 +277,27 @@ export async function markInvoiceAsPending(
 }
 
 /**
- * Marks an invoice as paid.
- * @param data - An object containing the invoice ID, the paid date, and the payment method.
- * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
- * or an error if the invoice is not found.
+ * Records a payment against an invoice.
+ * @param data - The payment data including amount, method, and date.
+ * @returns A promise that resolves to an `ActionResult` with the invoice's ID, status, and receipt number upon success.
  */
-export async function markInvoiceAsPaid(
-  data: MarkInvoiceAsPaidInput,
-): Promise<ActionResult<{ id: string }>> {
+export async function recordPayment(
+  data: RecordPaymentInput,
+): Promise<ActionResult<{ id: string; status: string; receiptNumber?: string | null }>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
 
   try {
-    const validatedData = MarkInvoiceAsPaidSchema.parse(data);
+    const validatedData = RecordPaymentSchema.parse(data);
 
-    const invoice = await invoiceRepo.markAsPaid(
+    const invoice = await invoiceRepo.addPayment(
       validatedData.id,
-      validatedData.paidDate,
+      validatedData.amount,
       validatedData.paymentMethod,
+      validatedData.paidDate,
+      validatedData.notes,
     );
 
     if (!invoice) {
@@ -305,9 +307,16 @@ export async function markInvoiceAsPaid(
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${validatedData.id}`);
 
-    return { success: true, data: { id: invoice.id } };
+    return {
+      success: true,
+      data: {
+        id: invoice.id,
+        status: invoice.status,
+        receiptNumber: invoice.receiptNumber,
+      }
+    };
   } catch (error) {
-    return handleActionError(error, 'Failed to mark invoice as paid');
+    return handleActionError(error, 'Failed to record payment');
   }
 }
 
@@ -372,23 +381,22 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
         context: 'sendInvoiceReceipt',
         metadata: { invoiceId: id },
       });
-      
+
       // Generate receipt number if missing
-      const { generateReceiptNumber } = await import('@/features/finances/invoices/utils/invoice-helpers');
-      const receiptNumber = await generateReceiptNumber();
-      
+      const receiptNumber = await invoiceRepo.generateReceiptNumber();
+
       // Update invoice with receipt number
       await prisma.invoice.update({
         where: { id },
         data: { receiptNumber },
       });
-      
+
       // Refetch invoice with receipt number
       const updatedInvoice = await invoiceRepo.findByIdWithDetails(id);
       if (!updatedInvoice) {
         return { success: false, error: 'Failed to update invoice' };
       }
-      
+
       invoice = updatedInvoice;
     }
 
@@ -460,12 +468,24 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
   }
 }
 
-/**
- * Sends a reminder for an invoice.
- * @param id - The ID of the invoice to send a reminder for.
- * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
- * or an error if the invoice is not found.
- */
+export async function bulkUpdateInvoiceStatus(
+  ids: string[],
+  status: InvoiceStatus,
+): Promise<ActionResult<{ count: number }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    await invoiceRepo.bulkUpdateStatus(ids, status);
+    revalidatePath('/finances/invoices');
+    return { success: true, data: { count: ids.length } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to update invoices');
+  }
+}
+
 export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user) {
@@ -513,6 +533,8 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
         currency: invoice.currency,
         dueDate: invoice.dueDate,
         daysOverdue,
+        amountPaid: invoice.amountPaid,
+        amountDue: invoice.amountDue,
       },
       pdfUrl,
     });
@@ -573,10 +595,11 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
 
 /**
  * Soft deletes an invoice by setting its `deletedAt` timestamp.
+ * Only DRAFT invoices can be deleted. For other statuses, use cancelInvoice instead.
  * The invoice is not permanently removed from the database.
  * @param id - The ID of the invoice to delete.
  * @returns A promise that resolves to an `ActionResult` with the ID of the soft-deleted invoice,
- * or an error if the invoice is not found.
+ * or an error if the invoice is not found or is not in DRAFT status.
  */
 export async function deleteInvoice(id: string): Promise<ActionResult<{ id: string }>> {
   const session = await auth();

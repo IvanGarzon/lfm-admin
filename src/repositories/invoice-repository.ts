@@ -31,8 +31,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   }
 
   /**
-   * Search and paginate invoices with filters
-   * Follows the same pattern as employeeRepository.searchAndPaginate
+   * Search and paginate invoices with advanced filtering capabilities.
+   * Supports full-text search across invoice number and customer details,
+   * status filtering, sorting, and pagination.
+   * @param params - Filter parameters for the search
+   * @param params.search - Optional search term to filter by invoice number or customer name/email
+   * @param params.status - Optional array of invoice statuses to filter by
+   * @param params.page - Page number for pagination (1-indexed)
+   * @param params.perPage - Number of items per page
+   * @param params.sort - Optional array of sort criteria with id and desc properties
+   * @returns A promise that resolves to paginated invoice results with metadata
+   * @example
+   * const result = await repo.searchAndPaginate({
+   *   search: "John",
+   *   status: ["PENDING", "OVERDUE"],
+   *   page: 1,
+   *   perPage: 20,
+   *   sort: [{ id: "dueDate", desc: true }]
+   * });
    */
   async searchAndPaginate(params: InvoiceFilters): Promise<InvoicePagination> {
     const { search, status, page, perPage, sort } = params;
@@ -137,6 +153,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       customerEmail: invoice.customer.email,
       status: invoice.status,
       amount: Number(invoice.amount),
+      amountPaid: Number(invoice.amountPaid),
+      amountDue: Number(invoice.amountDue),
       currency: invoice.currency,
       issuedDate: invoice.issuedDate,
       dueDate: invoice.dueDate,
@@ -174,8 +192,21 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         cancelledDate: true,
         cancelReason: true,
         notes: true,
+        amountPaid: true,
+        amountDue: true,
         createdAt: true,
         updatedAt: true,
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            date: true,
+            method: true,
+            reference: true,
+            notes: true,
+          },
+          orderBy: { date: 'desc' },
+        },
         customer: {
           select: {
             id: true,
@@ -215,7 +246,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       amount: Number(invoice.amount),
       gst: Number(invoice.gst),
       discount: Number(invoice.discount),
+      amountPaid: Number(invoice.amountPaid),
+      amountDue: Number(invoice.amountDue),
       notes: invoice.notes ?? undefined,
+      payments: invoice.payments.map((p) => ({
+        ...p,
+        amount: Number(p.amount),
+      })),
       items: invoice.items.map((item) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
@@ -373,6 +410,38 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   }
 
   /**
+   * Generates a unique receipt number in the format: XXXX-XXXX-XXXX
+   * Uses only numbers for simplicity and uniqueness.
+   * @returns A promise that resolves to the generated receipt number
+   * @example "1234-5678-9012"
+   */
+  async generateReceiptNumber(): Promise<string> {
+    let receiptNumber = '';
+    let isUnique = false;
+
+    const generateNumberSegment = () => Math.floor(1000 + Math.random() * 9000);
+
+    while (!isUnique) {
+      // Generate 12 random digits
+      const part1 = generateNumberSegment();
+      const part2 = generateNumberSegment();
+      const part3 = generateNumberSegment();
+
+      receiptNumber = `${part1}-${part2}-${part3}`;
+
+      // Check if this number already exists
+      const existing = await this.prisma.invoice.findUnique({
+        where: { receiptNumber },
+        select: { id: true },
+      });
+
+      isUnique = !existing;
+    }
+
+    return receiptNumber;
+  }
+
+  /**
    * Create a new invoice with associated line items in a single transaction.
    * Automatically generates invoice number and calculates total amount.
    * Retries up to 3 times if invoice number collision occurs.
@@ -393,10 +462,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         const invoiceNumber = await this.generateInvoiceNumber();
 
         // Calculate total amount
-        const totalAmount = data.items.reduce(
+        const subtotal = data.items.reduce(
           (sum, item) => sum + item.quantity * item.unitPrice,
           0,
         );
+        const gstPercentage = Number(data.gst || 0);
+        const gstAmount = (subtotal * gstPercentage) / 100;
+        const totalAmount = subtotal + gstAmount - Number(data.discount || 0);
 
         return await this.model.create({
           data: {
@@ -404,6 +476,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             customerId: data.customerId,
             status: data.status,
             amount: totalAmount,
+            amountDue: totalAmount, // Initial amountDue is full amount
+            amountPaid: 0,
             currency: data.currency,
             gst: data.gst,
             discount: data.discount,
@@ -452,14 +526,17 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param data - The updated invoice data including items
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    * @throws {Error} If invoice is not found
-   * @throws {Error} If attempting to change invoice status (use markAsPaid, cancel, etc. instead)
+   * @throws {Error} If attempting to change invoice status (use cancel, etc. instead)
    */
   async updateInvoiceWithItems(
     id: string,
     data: UpdateInvoiceInput,
   ): Promise<InvoiceWithDetails | null> {
     // Calculate total amount
-    const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const gstPercentage = Number(data.gst || 0);
+    const gstAmount = (subtotal * gstPercentage) / 100;
+    const totalAmount = subtotal + gstAmount - Number(data.discount || 0);
     
     // Update invoice with items in a transaction
     const updatedInvoice = await this.prisma.$transaction(async (tx) => {
@@ -497,13 +574,6 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           customerId: data.customerId,
           status: data.status,
           amount: totalAmount,
-          currency: data.currency,
-          gst: data.gst,
-          discount: data.discount,
-          issuedDate: data.issuedDate,
-          dueDate: data.dueDate,
-          notes: data.notes ?? null,
-          updatedAt: new Date(),
         },
       });
 
@@ -547,59 +617,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     }
 
     return await this.findByIdWithDetails(updatedInvoice.id);
-  }
-
-  /**
-   * Mark an invoice as paid and record payment details.
-   * Validates status transition before updating (prevents marking already paid/cancelled invoices).
-   * @param id - The unique identifier of the invoice
-   * @param paidDate - The date the payment was received
-   * @param paymentMethod - The method used for payment (e.g., "Bank Transfer", "Credit Card")
-   * @returns A promise that resolves to the updated invoice with details, or null if not found
-   * @throws {Error} If the status transition is invalid (e.g., trying to mark CANCELLED as PAID)
-   */
-  async markAsPaid(
-    id: string,
-    paidDate: Date,
-    paymentMethod: string,
-  ): Promise<InvoiceWithDetails | null> {
-    // Get current invoice to validate status transition
-    const currentInvoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
-      select: { status: true, receiptNumber: true },
-    });
-
-    if (!currentInvoice) {
-      return null;
-    }
-
-    // Validate status transition
-    validateInvoiceStatusTransition(currentInvoice.status, InvoiceStatus.PAID);
-
-    // Generate receipt number if not already set
-    let receiptNumber = currentInvoice.receiptNumber;
-    if (!receiptNumber) {
-      const { generateReceiptNumber } = await import('@/features/finances/invoices/utils/invoice-helpers');
-      receiptNumber = await generateReceiptNumber();
-    }
-
-    const updated = await this.prisma.invoice.update({
-      where: { id, deletedAt: null },
-      data: {
-        status: InvoiceStatus.PAID,
-        paidDate,
-        paymentMethod,
-        receiptNumber,
-        updatedAt: new Date(),
-      },
-    });
-
-    if (!updated) {
-      return null;
-    }
-
-    return this.findByIdWithDetails(updated.id);
-  }
+  }  
 
   /**
    * Mark an invoice as pending (revert from OVERDUE or DRAFT status).
@@ -702,11 +720,27 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
   /**
    * Soft delete an invoice by setting the deletedAt timestamp.
+   * Only DRAFT invoices can be deleted. For other statuses, use the cancel method instead.
    * Soft deleted invoices are excluded from normal queries but retained for audit purposes.
    * @param id - The unique identifier of the invoice to soft delete
    * @returns A promise that resolves to true if deletion was successful, false otherwise
+   * @throws {Error} If invoice is not found or is not in DRAFT status
    */
   async softDelete(id: string): Promise<boolean> {
+    // First check if the invoice exists and is in DRAFT status
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id, deletedAt: null },
+      select: { status: true },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    if (invoice.status !== InvoiceStatus.DRAFT) {
+      throw new Error('Only DRAFT invoices can be deleted. Use cancel for other statuses.');
+    }
+
     const result = await this.prisma.invoice.update({
       where: { id, deletedAt: null },
       data: {
@@ -737,5 +771,103 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const count = await this.prisma.invoice.count({ where });
     return count > 0;
+  }
+
+  /**
+   * Add a payment to an invoice and update invoice status accordingly.
+   * Creates a payment record and updates amountPaid, amountDue, and status.
+   * Automatically generates receipt number if invoice becomes fully paid.
+   * Status transitions: PENDING/OVERDUE -> PARTIALLY_PAID -> PAID
+   * @param invoiceId - The unique identifier of the invoice
+   * @param amount - The payment amount
+   * @param method - The payment method (e.g., "Bank Transfer", "Cash", "Credit Card")
+   * @param date - The date the payment was received
+   * @param notes - Optional notes about the payment
+   * @returns A promise that resolves to the updated invoice with details
+   * @throws {Error} If invoice is not found
+   */
+  async addPayment(
+    invoiceId: string,
+    amount: number,
+    method: string,
+    date: Date,
+    notes?: string,
+  ): Promise<InvoiceWithDetails | null> {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
+
+    if (!invoice) {
+        throw new Error('Invoice not found');
+    }
+
+    const newAmountPaid = Number(invoice.amountPaid) + amount;
+    const newAmountDue = Number(invoice.amount) - newAmountPaid;
+
+    // Determine new status
+    let newStatus = invoice.status;
+    if (newAmountDue <= 0.01) { // Floating point tolerance
+        newStatus = InvoiceStatus.PAID;
+    } else if (newAmountDue > 0 && newAmountPaid > 0) {
+        newStatus = InvoiceStatus.PARTIALLY_PAID;
+    }
+
+    // Generate receipt number if invoice will be fully paid and doesn't have one yet
+    let receiptNumber = invoice.receiptNumber;
+    if (newStatus === InvoiceStatus.PAID && !receiptNumber) {
+      receiptNumber = await this.generateReceiptNumber();
+    }
+
+    // Transaction to create payment and update invoice
+    const result = await this.prisma.$transaction(async (tx) => {
+      await tx.payment.create({
+        data: {
+          invoiceId,
+          amount,
+          method,
+          date,
+          notes,
+        },
+      });
+
+      return await tx.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          amountPaid: newAmountPaid,
+          amountDue: newAmountDue,
+          status: newStatus,
+          updatedAt: new Date(),
+          // If fully paid, set paidDate, paymentMethod, and receiptNumber
+          ...(newStatus === InvoiceStatus.PAID ? {
+              paidDate: date,
+              paymentMethod: method,
+              receiptNumber,
+          } : {}),
+        },
+      });
+    });
+
+    return this.findByIdWithDetails(result.id);
+  }
+
+  /**
+   * Update the status of multiple invoices in bulk.
+   * Updates the status field for all specified invoices in a single operation.
+   * WARNING: This bypasses status transition validation - use with caution.
+   * Consider using specific status methods (markAsPending, cancel, etc.) for safer transitions.
+   * @param ids - Array of invoice IDs to update
+   * @param status - The new status to set for all invoices
+   * @returns A promise that resolves when all invoices are updated
+   */
+  async bulkUpdateStatus(ids: string[], status: InvoiceStatus) {
+    await this.prisma.invoice.updateMany({
+      where: {
+        id: { in: ids },
+      },
+      data: {
+        status,
+        updatedAt: new Date(),
+      },
+    });
   }
 }

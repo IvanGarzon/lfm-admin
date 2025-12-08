@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import { InvoiceStatus } from '@/prisma/client';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ const defaultFormState: CreateInvoiceInput = {
   customerId: '',
   gst: 10,
   discount: 0,
-  status: InvoiceStatusSchema.enum.DRAFT,
+  status: InvoiceStatus.DRAFT,
   issuedDate: new Date(),
   dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   currency: 'AUD',
@@ -145,7 +145,7 @@ export function InvoiceForm({
   useUnsavedChanges(form.formState.isDirty);
 
   const isLocked = useMemo(() => {
-    return mode === 'update' && invoice?.status !== InvoiceStatusSchema.enum.DRAFT;
+    return mode === 'update' && invoice?.status !== InvoiceStatus.DRAFT;
   }, [mode, invoice?.status]);
 
   const onSubmit: SubmitHandler<InvoiceFormInput> = useCallback(

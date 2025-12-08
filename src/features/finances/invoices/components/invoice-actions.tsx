@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { X, Eye, Mail, Check, Timer, FileDown, AlertCircle, MoreHorizontal } from 'lucide-react';
-
+import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal } from 'lucide-react';
+import { InvoiceStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import {
@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
 import type { InvoiceListItem } from '@/features/finances/invoices/types';
 import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
@@ -23,7 +22,7 @@ interface InvoiceActionsProps {
   onDelete: (id: string, invoiceNumber: string) => void;
   onSendReminder: (id: string) => void;
   onMarkAsPending: (id: string) => void;
-  onMarkAsPaid: (id: string, invoiceNumber: string) => void;
+  onRecordPayment: (id: string, invoiceNumber: string, invoice: InvoiceListItem) => void;
   onCancel: (id: string, invoiceNumber: string) => void;
   onDownloadPdf: (id: string) => void;
   onSendReceipt?: (id: string) => void;
@@ -34,7 +33,7 @@ export function InvoiceActions({
   onDelete,
   onSendReminder,
   onMarkAsPending,
-  onMarkAsPaid,
+  onRecordPayment,
   onCancel,
   onDownloadPdf,
   onSendReceipt,
@@ -71,43 +70,56 @@ export function InvoiceActions({
               View invoice
             </Link>
           </DropdownMenuItem>
-          {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
+          {invoice.status === InvoiceStatus.DRAFT && (
             <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id)}>
-              <Timer className="h-4 w-4" />
+              <Hourglass className="h-4 w-4" />
               Mark as pending
             </DropdownMenuItem>
           )}
-          {(invoice.status === InvoiceStatusSchema.enum.PENDING ||
-            invoice.status === InvoiceStatusSchema.enum.OVERDUE) && (
+          {(invoice.status === InvoiceStatus.PENDING ||
+            invoice.status === InvoiceStatus.OVERDUE ||
+            invoice.status === InvoiceStatus.PARTIALLY_PAID) && (
             <>
-              <DropdownMenuItem onClick={() => onMarkAsPaid(invoice.id, invoice.invoiceNumber)}>
-                <Check className="h-4 w-4" />
-                Mark as paid
+              <DropdownMenuItem onClick={() => onRecordPayment(invoice.id, invoice.invoiceNumber, invoice)}>
+                <CreditCard className="h-4 w-4" />
+                Record payment
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onSendReminder(invoice.id)}>
-                <Mail className="h-4 w-4" />
+                <BellRing className="h-4 w-4" />
                 Send reminder
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}>
-                <X className="h-4 w-4" />
-                Cancel invoice
-              </DropdownMenuItem>
+              <>              
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}
+                  className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                >
+                  <Ban className="h-4 w-4" />
+                  Cancel invoice
+                </DropdownMenuItem>
+              </>
             </>
           )}
-          {invoice.status === InvoiceStatusSchema.enum.PAID && onSendReceipt && (
+
+          {invoice.status === InvoiceStatus.PAID && onSendReceipt ? (
             <DropdownMenuItem onClick={() => onSendReceipt(invoice.id)}>
-              <Mail className="h-4 w-4" />
+              <Receipt className="h-4 w-4" />
               Send receipt
             </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => onDelete(invoice.id, invoice.invoiceNumber)}
-            className="text-destructive focus:text-destructive"
-          >
-            <AlertCircle className="h-4 w-4" />
-            Delete invoice
-          </DropdownMenuItem>
+          ) : null}
+
+          {invoice.status === InvoiceStatus.DRAFT ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onDelete(invoice.id, invoice.invoiceNumber)}
+                className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+              >
+                <AlertCircle className="h-4 w-4" />
+                Delete invoice
+              </DropdownMenuItem>
+            </>
+          ): null}
         </DropdownMenuContent>
       </DropdownMenu>
     </Box>

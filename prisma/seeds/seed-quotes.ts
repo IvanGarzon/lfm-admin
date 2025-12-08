@@ -84,7 +84,7 @@ export async function seedQuotes() {
 
     for (let j = 0; j < itemCount; j++) {
       const quantity = faker.number.int({ min: 1, max: 20 });
-      const unitPrice = faker.number.float({ min: 50, max: 3000, multipleOf: 0.01 });
+      const unitPrice = faker.number.float({ min: 50, max: 3000, multipleOf: 0.5 });
       const total = quantity * unitPrice;
       totalAmount += total;
 
@@ -137,13 +137,16 @@ export async function seedQuotes() {
     ]);
 
     const gst = 10; // Standard 10% GST
+    const subtotal = totalAmount;
+    const gstAmount = (subtotal * gst) / 100;
+    const finalAmount = subtotal + gstAmount - discount;
 
     // Create quote data
     const quoteData: Quote = {
-      quoteNumber: `QT-2024-${String(i + 1).padStart(4, '0')}`,
+      quoteNumber: `QT-2025-${String(i + 1).padStart(4, '0')}`,
       customerId: customer.id,
       status,
-      amount: totalAmount,
+      amount: finalAmount,
       currency: 'AUD',
       discount,
       gst,

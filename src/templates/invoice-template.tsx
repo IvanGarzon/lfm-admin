@@ -1,8 +1,9 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+
+import { InvoiceStatus } from '@/prisma/client';
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
-import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 
 type InvoicePreviewProps = {
@@ -163,6 +164,83 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     width: 80,
+    textAlign: 'right',
+  },
+  amountPaidRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+    width: '50%',
+    paddingTop: 10,
+  },
+  amountPaidLabel: {
+    fontSize: 10,
+    color: '#16a34a',
+    flex: 1,
+    textAlign: 'right',
+    marginRight: 20,
+  },
+  amountPaidValue: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#16a34a',
+    width: 80,
+    textAlign: 'right',
+  },
+  amountDueRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    width: '50%',
+  },
+  amountDueLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'right',
+    marginRight: 20,
+  },
+  amountDueValue: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    width: 80,
+    textAlign: 'right',
+  },
+  paymentHistorySection: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  paymentHistoryTable: {
+    marginTop: 10,
+  },
+  paymentHistoryHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    padding: 8,
+    fontWeight: 'bold',
+    fontSize: 9,
+    color: '#666',
+  },
+  paymentHistoryRow: {
+    flexDirection: 'row',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  paymentCol1: {
+    width: '25%',
+  },
+  paymentCol2: {
+    width: '25%',
+  },
+  paymentCol3: {
+    width: '30%',
+  },
+  paymentCol4: {
+    width: '20%',
     textAlign: 'right',
   },
   notes: {
@@ -330,7 +408,50 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
             <Text style={styles.totalLabel}>Invoice Total</Text>
             <Text style={styles.totalValue}>{formatCurrency({ number: total })}</Text>
           </View>
+
+          {invoice.amountPaid > 0 ? (
+            <>
+              <View style={styles.amountPaidRow}>
+                <Text style={styles.amountPaidLabel}>Amount Paid</Text>
+                <Text style={styles.amountPaidValue}>
+                  -{formatCurrency({ number: invoice.amountPaid })}
+                </Text>
+              </View>
+              <View style={styles.amountDueRow}>
+                <Text style={styles.amountDueLabel}>Amount Due</Text>
+                <Text style={styles.amountDueValue}>
+                  {formatCurrency({ number: invoice.amountDue })}
+                </Text>
+              </View>
+            </>
+          ): null}
         </View>
+
+        {/* Payment History */}
+        {invoice.payments && invoice.payments.length > 0 ? (
+          <View style={styles.paymentHistorySection} wrap={false}>
+            <Text style={styles.sectionTitle}>Payment History</Text>
+            <View style={styles.paymentHistoryTable}>
+              {/* Table Header */}
+              <View style={styles.paymentHistoryHeader}>
+                <Text style={styles.paymentCol1}>Date</Text>
+                <Text style={styles.paymentCol2}>Method</Text>
+                <Text style={styles.paymentCol3}>Notes</Text>
+                <Text style={styles.paymentCol4}>Amount</Text>
+              </View>
+
+              {/* Table Rows */}
+              {invoice.payments.map((payment) => (
+                <View key={payment.id} style={styles.paymentHistoryRow}>
+                  <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
+                  <Text style={styles.paymentCol2}>{payment.method}</Text>
+                  <Text style={styles.paymentCol3}>{payment.notes || '-'}</Text>
+                  <Text style={styles.paymentCol4}>{formatCurrency({ number: payment.amount })}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ): null}
 
         {/* Payment Details */}
         <View style={styles.paymentDetails} wrap={false}>
@@ -369,7 +490,7 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           <View style={styles.footerContent}>
             <Text style={styles.footerLeft}>
               {invoice.invoiceNumber} · {formatCurrency({ number: total })}{' '}
-              {invoice.status === InvoiceStatusSchema.enum.PAID && invoice.paidDate
+              {invoice.status === InvoiceStatus.PAID && invoice.paidDate
                 ? `paid on ${format(invoice.paidDate, 'MMM d, yyyy')}`
                 : `· Due on ${format(invoice.dueDate, 'MMM d, yyyy')}`}
             </Text>

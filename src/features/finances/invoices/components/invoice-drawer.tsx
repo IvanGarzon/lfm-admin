@@ -4,19 +4,21 @@ import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   X,
-  Check,
+  Ban,
+  Receipt,
+  CreditCard,
   AlertCircle,
   Eye,
   EyeOff,
   Download,
   MoreHorizontalIcon,
   Save,
-  Timer,
-  Mail,
+  Hourglass,
+  BellRing,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas';
+import { InvoiceStatus } from '@/prisma/client';
 import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
 import { Box } from '@/components/ui/box';
 import {
@@ -66,8 +68,7 @@ export function InvoiceDrawer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: invoice, isLoading, error, isError } = useInvoice(id);
-
-  const { openDelete, openMarkAsPaid, openCancel, openSendReceipt } = useInvoiceActions();
+  const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
@@ -166,12 +167,12 @@ export function InvoiceDrawer({
     setShowPreview((prev) => !prev);
   }, []);
 
-  const handleMarkAsPaidDialog = useCallback(() => {
+  const handleRecordPaymentDialog = useCallback(() => {
     if (!invoice) return;
-    openMarkAsPaid(invoice.id, invoice.invoiceNumber, () => {
-      openSendReceipt(invoice.id, invoice);
+    openRecordPayment(invoice.id, invoice.invoiceNumber, invoice, () => {
+      // Optional success callback (e.g., could open receipt dialog if fully paid)
     });
-  }, [invoice, openMarkAsPaid, openSendReceipt]);
+  }, [invoice, openRecordPayment]);
 
   const handleCancelDialog = useCallback(() => {
     if (!invoice) return;
@@ -285,7 +286,7 @@ export function InvoiceDrawer({
 
                   {mode === 'edit' && invoice ? (
                     <>
-                      {invoice.status !== InvoiceStatusSchema.enum.PAID ? (
+                      {invoice.status !== InvoiceStatus.PAID ? (
                         <Button
                           type="submit"
                           form="form-rhf-invoice"
@@ -313,50 +314,56 @@ export function InvoiceDrawer({
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end" className="w-52">
-                          {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
+                          {invoice.status === InvoiceStatus.DRAFT && (
                             <DropdownMenuItem onClick={handleMarkAsPending}>
-                              <Timer className="h-4 w-4" />
+                              <Hourglass className="h-4 w-4" />
                               Mark as pending
                             </DropdownMenuItem>
                           )}
-                          {invoice.status === InvoiceStatusSchema.enum.PENDING ||
-                          invoice.status === InvoiceStatusSchema.enum.OVERDUE ? (
+                          {invoice.status === InvoiceStatus.PENDING ||
+                          invoice.status === InvoiceStatus.OVERDUE ||
+                          invoice.status === InvoiceStatus.PARTIALLY_PAID ? (
                             <>
-                              <DropdownMenuItem onClick={handleMarkAsPaidDialog}>
-                                <Check className="h-4 w-4" />
-                                Mark as paid
+                              <DropdownMenuItem onClick={handleRecordPaymentDialog}>
+                                <CreditCard className="h-4 w-4" />
+                                Record payment
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={handleSendReminder}>
-                                <Mail className="h-4 w-4" />
+                                <BellRing className="h-4 w-4" />
                                 Send reminder
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleCancelDialog}>
-                                <X className="h-4 w-4" />
+                              <DropdownMenuItem 
+                                onClick={handleCancelDialog}
+                                className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                              >
+                                <Ban className="h-4 w-4" />
                                 Cancel invoice
                               </DropdownMenuItem>
                             </>
                           ) : null}
 
-                          {invoice.status === InvoiceStatusSchema.enum.PAID ? (
+                          {invoice.status === InvoiceStatus.PAID ? (
                             <>
                               <DropdownMenuItem onClick={handleDownloadPdf}>
                                 <Download className="h-4 w-4" />
                                 Download invoice
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={handleOpenReceiptDialog}>
-                                <Mail className="h-4 w-4" />
+                                <Receipt className="h-4 w-4" />
                                 Send receipt
                               </DropdownMenuItem>
                             </>
                           ) : null}
 
-                          <DropdownMenuItem
-                            onClick={handleDeleteDialog}
-                            className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-                          >
-                            <AlertCircle className="h-4 w-4" />
-                            Delete invoice
-                          </DropdownMenuItem>
+                          {invoice.status === InvoiceStatus.DRAFT && (
+                            <DropdownMenuItem
+                              onClick={handleDeleteDialog}
+                              className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                            >
+                              <AlertCircle className="h-4 w-4" />
+                              Delete invoice
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </>

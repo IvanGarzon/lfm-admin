@@ -52,36 +52,38 @@ export const UpdateInvoiceSchema = InvoiceSchema.safeExtend({
 });
 
 /**
- * Mark Invoice as Paid Schema
+ * Record Payment Schema
  */
-export const MarkInvoiceAsPaidSchema = z.object({
-  id: z.string().min(1, { error: 'Invoice ID is required' }),
+export const RecordPaymentSchema = z.object({
+  id: z.cuid(),
+  amount: z.number().positive(),
   paidDate: z.date(),
   paymentMethod: z
     .string()
     .trim()
     .min(1, { error: 'Payment method is required' })
     .max(100, { error: 'Payment method must be less than 100 characters' }),
+  notes: z.string().max(500).optional(),
 });
 
 /**
  * Mark Invoice as Pending Schema
  */
 export const MarkInvoiceAsPendingSchema = z.object({
-  id: z.string().min(1, { error: 'Invoice ID is required' }),
+  id: z.cuid({ error: 'Invoice ID is required' }),
 });
 
 /**
  * Cancel Invoice Schema
  */
 export const CancelInvoiceSchema = z.object({
-  id: z.string().min(1, { error: 'Invoice ID is required' }),
+  id: z.cuid({ error: 'Invoice ID is required' }),
   cancelledDate: z.date(),
   cancelReason: z
     .string()
     .trim()
-    .min(1, { message: 'Cancellation reason is required' })
-    .max(500, { message: 'Reason must be less than 500 characters' }),
+    .min(1, { error: 'Cancellation reason is required' })
+    .max(500, { error: 'Reason must be less than 500 characters' }),
 });
 
 const sortingItemSchema = z.object({
@@ -146,6 +148,8 @@ export const SendReminderEmailSchema = z.object({
     currency: z.string(),
     dueDate: z.coerce.date(),
     daysOverdue: z.number().int().positive(),
+    amountPaid: z.number().nonnegative().optional(),
+    amountDue: z.number().nonnegative().optional(),
   }),
   pdfUrl: z.url().optional(),
 });
@@ -167,7 +171,7 @@ export const SendReceiptEmailSchema = z.object({
 
 export type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>;
 export type UpdateInvoiceInput = z.infer<typeof UpdateInvoiceSchema>;
-export type MarkInvoiceAsPaidInput = z.infer<typeof MarkInvoiceAsPaidSchema>;
+export type RecordPaymentInput = z.infer<typeof RecordPaymentSchema>;
 export type MarkInvoiceAsPendingInput = z.infer<typeof MarkInvoiceAsPendingSchema>;
 export type CancelInvoiceInput = z.infer<typeof CancelInvoiceSchema>;
 export type SendInvoiceEmailInput = z.infer<typeof SendInvoiceEmailSchema>;

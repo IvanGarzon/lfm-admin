@@ -5,9 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -27,48 +29,52 @@ import {
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 
-import { MarkInvoiceAsPaidSchema, type MarkInvoiceAsPaidInput } from '@/schemas/invoices';
+import { RecordPaymentSchema, type RecordPaymentInput } from '@/schemas/invoices';
 
-interface MarkAsPaidDialogProps {
+interface RecordPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (data: MarkInvoiceAsPaidInput) => void;
+  onConfirm: (data: RecordPaymentInput) => void;
   invoiceId: string;
   invoiceNumber: string;
+  amountDue: number;
+  invoiceTotal: number;
   isPending?: boolean;
 }
 
 const PAYMENT_METHODS = [
+  { value: 'Bank Transfer', label: 'Bank Transfer' },
   { value: 'Cash', label: 'Cash' },
   { value: 'Credit Card', label: 'Credit Card' },
   { value: 'Debit Card', label: 'Debit Card' },
-  { value: 'Bank Transfer', label: 'Bank Transfer' },
   { value: 'Check', label: 'Check' },
   { value: 'PayPal', label: 'PayPal' },
   { value: 'Other', label: 'Other' },
 ];
 
-export function MarkAsPaidDialog({
+export function RecordPaymentDialog({
   open,
   onOpenChange,
   onConfirm,
   invoiceId,
   invoiceNumber,
+  amountDue,
+  invoiceTotal,
   isPending = false,
-}: MarkAsPaidDialogProps) {
-  const form = useForm<MarkInvoiceAsPaidInput>({
-    resolver: zodResolver(MarkInvoiceAsPaidSchema),
+}: RecordPaymentDialogProps) {
+  const form = useForm<RecordPaymentInput>({
+    resolver: zodResolver(RecordPaymentSchema),
     defaultValues: {
       id: invoiceId,
+      amount: amountDue,
       paidDate: new Date(),
       paymentMethod: 'Bank Transfer',
+      notes: '',
     },
   });
 
-  const handleSubmit = (data: MarkInvoiceAsPaidInput) => {
+  const handleSubmit = (data: RecordPaymentInput) => {
     onConfirm(data);
-    form.reset();
-    onOpenChange(false);
   };
 
   const handleCancel = () => {
@@ -76,19 +82,62 @@ export function MarkAsPaidDialog({
     onOpenChange(false);
   };
 
+  const setFullAmount = () => {
+    form.setValue('amount', amountDue);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Mark Invoice as Paid</DialogTitle>
-          <DialogDescription>Mark invoice {invoiceNumber} as paid.</DialogDescription>
+          <DialogTitle>Record Payment</DialogTitle>
+          <DialogDescription>
+            Record a payment for invoice <strong>{invoiceNumber}</strong>.
+            <br />
+            <span className="flex items-center gap-4 mt-2">
+              <span>Total: <strong>{formatCurrency({ number: invoiceTotal })}</strong></span>
+              <span>Balance: <strong>{formatCurrency({ number: amountDue })}</strong></span>
+            </span>
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            id="mark-as-paid-form"
+            id="record-payment-form"
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
+             <FieldGroup>
+              <Controller
+                name="amount"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                    <FieldContent className="flex items-center justify-between">
+                      <FieldLabel htmlFor="record-payment-form-amount">Amount</FieldLabel>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        onClick={setFullAmount}
+                      >
+                        Set to full amount
+                      </Button>
+                    </FieldContent>
+                    <Input
+                        id="record-payment-form-amount"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
             <FieldGroup>
               <Controller
                 name="paidDate"
@@ -96,7 +145,7 @@ export function MarkAsPaidDialog({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="mark-as-paid-form-paid-date">Payment Date</FieldLabel>
+                      <FieldLabel htmlFor="record-payment-form-paid-date">Payment Date</FieldLabel>
                     </FieldContent>
 
                     <Popover>
@@ -118,6 +167,7 @@ export function MarkAsPaidDialog({
                           selected={field.value}
                           onSelect={field.onChange}
                           autoFocus
+                          disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                         />
                       </PopoverContent>
                     </Popover>
@@ -134,7 +184,7 @@ export function MarkAsPaidDialog({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="mark-as-paid-form-payment-method">
+                      <FieldLabel htmlFor="record-payment-form-payment-method">
                         Payment Method
                       </FieldLabel>
                     </FieldContent>
@@ -156,12 +206,33 @@ export function MarkAsPaidDialog({
               />
             </FieldGroup>
 
+            <FieldGroup>
+              <Controller
+                name="notes"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                    <FieldContent>
+                      <FieldLabel htmlFor="record-payment-form-notes">Notes (Optional)</FieldLabel>
+                    </FieldContent>
+                    <Textarea
+                        id="record-payment-form-notes"
+                        placeholder="Additional notes about this payment..."
+                        className="resize-none"
+                        {...field}
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Marking as Paid...' : 'Mark as Paid'}
+                {isPending ? 'Recording...' : 'Record Payment'}
               </Button>
             </DialogFooter>
           </form>

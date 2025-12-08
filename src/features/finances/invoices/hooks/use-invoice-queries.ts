@@ -6,22 +6,21 @@ import {
   getInvoiceStatistics,
   createInvoice,
   updateInvoice,
-  markInvoiceAsPaid,
   markInvoiceAsPending,
   cancelInvoice,
   sendInvoiceReminder,
   deleteInvoice,
   getInvoicePdfUrl,
   getReceiptPdfUrl,
+  bulkUpdateInvoiceStatus,
 } from '@/actions/invoices';
 import type {
   InvoiceFilters,
   InvoiceWithDetails,
-  MarkInvoiceAsPaidData,
   CancelInvoiceData,
 } from '@/features/finances/invoices/types';
 
-import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
+import type { CreateInvoiceInput, UpdateInvoiceInput, RecordPaymentInput } from '@/schemas/invoices';
 import { toast } from 'sonner';
 
 export const INVOICE_KEYS = {
@@ -194,12 +193,14 @@ export function useUpdateInvoice() {
   });
 }
 
-export function useMarkInvoiceAsPaid() {
+export function useRecordPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: MarkInvoiceAsPaidData) => {
-      const result = await markInvoiceAsPaid(data);
+    mutationFn: async (data: RecordPaymentInput) => {
+      // Dynamically import to separate server actions if needed, or import at top
+      const { recordPayment } = await import('@/actions/invoices');
+      const result = await recordPayment(data);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -218,11 +219,38 @@ export function useMarkInvoiceAsPaid() {
         INVOICE_KEYS.detail(newData.id),
         (old: InvoiceWithDetails | undefined) => {
           if (!old) return old;
+          
+          const newAmountPaid = Number(old.amountPaid) + newData.amount;
+          const newAmountDue = Number(old.amount) - newAmountPaid;
+          
+          let newStatus = old.status;
+          if (newAmountDue <= 0.01) {
+             newStatus = InvoiceStatus.PAID;
+          } else if (newAmountDue > 0 && newAmountPaid > 0) {
+             newStatus = InvoiceStatus.PARTIALLY_PAID;
+          }
+
           return {
             ...old,
-            status: InvoiceStatus.PAID,
-            paidDate: newData.paidDate,
-            paymentMethod: newData.paymentMethod,
+            status: newStatus,
+            amountPaid: newAmountPaid,
+            amountDue: newAmountDue,
+            // If fully paid, set these for compatibility, though we should prefer the payments array
+            ...(newStatus === InvoiceStatus.PAID ? {
+                paidDate: newData.paidDate,
+                paymentMethod: newData.paymentMethod,
+            }: {}),
+            payments: [
+                {
+                    id: 'temp-' + Date.now(),
+                    amount: newData.amount,
+                    date: newData.paidDate,
+                    method: newData.paymentMethod,
+                    reference: null,
+                    notes: newData.notes ?? null,
+                },
+                ...old.payments,
+            ]
           };
         },
       );
@@ -235,7 +263,7 @@ export function useMarkInvoiceAsPaid() {
       if (context?.previousInvoice) {
         queryClient.setQueryData(INVOICE_KEYS.detail(newData.id), context.previousInvoice);
       }
-      toast.error(err.message || 'Failed to mark invoice as paid');
+      toast.error(err.message || 'Failed to record payment');
     },
     onSettled: (data, error, variables) => {
       // Always refetch after error or success:
@@ -244,7 +272,7 @@ export function useMarkInvoiceAsPaid() {
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
     },
     onSuccess: () => {
-      toast.success('Invoice marked as paid');
+      toast.success('Payment recorded successfully');
     },
   });
 }
@@ -493,8 +521,29 @@ export function useDownloadReceiptPdf() {
     onSuccess: () => {
       toast.success('Receipt downloaded successfully');
     },
+  });
+}
+
+export function useBulkUpdateInvoiceStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: InvoiceStatus }) => {
+      const result = await bulkUpdateInvoiceStatus(ids, status);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      toast.success(
+        data.count > 1 ? `${data.count} invoices updated` : 'Invoice updated',
+      );
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
+    },
     onError: (error) => {
-      toast.error(error.message || 'Failed to download receipt');
+      toast.error(error.message || 'Failed to update invoices');
     },
   });
 }

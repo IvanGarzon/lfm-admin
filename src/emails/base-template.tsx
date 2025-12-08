@@ -1,6 +1,7 @@
 import React from 'react';
 import { Body, Container, Head, Html, Preview, Img } from '@react-email/components';
 // import { EmailFooter } from './footer';
+import { absoluteUrl } from '@/lib/utils';
 import { styles as emailStyles } from './styles';
 
 export function BaseTemplateEmail({
@@ -11,6 +12,8 @@ export function BaseTemplateEmail({
   previewText: string;
 }): React.ReactElement {
   const { main, container, logo } = emailStyles;
+  const logoUrl = absoluteUrl('/static/logo-green-800.png');
+
   return (
     <Html>
       <Head />
@@ -23,14 +26,14 @@ export function BaseTemplateEmail({
             maxWidth: '600px',
             margin: '0 auto',
           }}
-        >          
+        >
         </Container>
         <Container style={{ ...container }}>
             <Img
-            src={`/static/logo-green-800.png`}
-            width="97"
-            height="32"
-            alt="duke"
+            src={logoUrl}
+            width='150'
+            height='150'
+            alt="Las Flores Melbourne"
             style={{ ...logo }}
           />
             {children}

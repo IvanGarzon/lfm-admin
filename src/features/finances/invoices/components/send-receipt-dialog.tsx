@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, Mail } from 'lucide-react';
+import { Download, Receipt, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -95,12 +94,20 @@ export function SendReceiptDialog({
                 onClick={handleDownload}
                 disabled={isDownloading}
               >
-                <Download className="h-4 w-4 mr-1" />
-                {isDownloading ? 'Downloading...' : 'Download PDF'}
+                {isDownloading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}                
+                {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
               <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail}>
-                <Mail className="h-4 w-4 mr-1" />
-                {isSendingEmail ? 'Sending...' : 'Send Email'}
+                {isSendingEmail ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Receipt className="h-4 w-4 mr-2" />
+                )}
+                {isSendingEmail ? 'Sending...' : 'Send Receipt'}
               </Button>
             </Box>
           </Box>

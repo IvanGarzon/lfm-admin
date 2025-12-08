@@ -1,14 +1,13 @@
-import { X, Check, AlertCircle, CircleDashed, Timer } from 'lucide-react';
-
-import type { InvoiceStatusType } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import { Ban, CircleCheckBig, Hourglass, CircleDashed, Timer, SquareDashedTopSolid } from 'lucide-react';
+import { InvoiceStatus } from '@/prisma/client';
 import { Badge } from '@/components/ui/badge';
 
 type StatusBadgeProps = {
-  status: InvoiceStatusType;
+  status: InvoiceStatus;
 };
 
 const statusConfig: Record<
-  InvoiceStatusType,
+  InvoiceStatus,
   {
     label: string;
     variant: 'default' | 'secondary' | 'destructive' | 'outline';
@@ -26,19 +25,19 @@ const statusConfig: Record<
     label: 'Pending',
     variant: 'outline',
     className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    icon: <AlertCircle className="h-4 w-4" />,
+    icon: <Hourglass className="h-4 w-4" />,
   },
   PAID: {
     label: 'Paid',
     variant: 'outline',
     className: 'bg-green-50 text-green-700 border-green-200',
-    icon: <Check className="h-4 w-4" />,
+    icon: <CircleCheckBig className="h-4 w-4" />,
   },
-  CANCELLED: {
-    label: 'Cancelled',
+   PARTIALLY_PAID: {
+    label: 'Partially Paid',
     variant: 'outline',
-    className: 'bg-red-50 text-red-700 border-red-200',
-    icon: <X className="h-4 w-4" />,
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    icon: <SquareDashedTopSolid className="h-4 w-4" />,
   },
   OVERDUE: {
     label: 'Overdue',
@@ -46,6 +45,12 @@ const statusConfig: Record<
     className: 'bg-purple-50 text-purple-700 border-purple-200',
     icon: <Timer className="h-4 w-4" />,
   },
+  CANCELLED: {
+    label: 'Cancelled',
+    variant: 'outline',
+    className: 'bg-red-50 text-red-700 border-red-200',
+    icon: <Ban className="h-4 w-4" />,
+  }, 
 };
 
 export function InvoiceStatusBadge({ status }: StatusBadgeProps) {

@@ -15,6 +15,8 @@ export type InvoiceListItem = {
   issuedDate: Date;
   dueDate: Date;
   itemCount: number;
+  amountPaid: number;
+  amountDue: number;
 };
 
 export type InvoiceWithDetails = {
@@ -34,6 +36,16 @@ export type InvoiceWithDetails = {
   cancelledDate?: Date | null;
   cancelReason?: string | null;
   notes?: string;
+  amountPaid: number;
+  amountDue: number;
+  payments: {
+    id: string;
+    amount: number;
+    date: Date;
+    method: string;
+    reference: string | null;
+    notes: string | null;
+  }[];
   customer: {
     id: string;
     firstName: string;

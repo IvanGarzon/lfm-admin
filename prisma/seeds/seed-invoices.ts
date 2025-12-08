@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { InvoiceStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+import { InvoiceRepository } from '@/repositories/invoice-repository';
 
 interface InvoiceItem {
   description: string;
@@ -15,12 +16,14 @@ interface Invoice {
   customerId: string;
   status: InvoiceStatus;
   amount: number;
+  amountDue: number;
+  amountPaid: number;
   currency: string;
   discount: number;
   gst: number;
   issuedDate: Date;
   dueDate: Date;
-  notes: string | null | undefined;
+  notes: string | null;
   items: {
     create: InvoiceItem[];
   };
@@ -40,6 +43,9 @@ interface Invoice {
 export async function seedInvoices() {
   console.log('🌱 Seeding invoices...');
 
+  // Initialize invoice repository
+  const invoiceRepository = new InvoiceRepository(prisma);
+
   // Get existing customers
   const customers = await prisma.customer.findMany({
     take: 20,
@@ -55,7 +61,7 @@ export async function seedInvoices() {
     take: 10,
   });
 
-  const statuses: InvoiceStatus[] = ['DRAFT', 'PENDING', 'PAID', 'CANCELLED', 'OVERDUE'];
+  const statuses: InvoiceStatus[] = [InvoiceStatus.DRAFT, InvoiceStatus.PENDING, InvoiceStatus.PAID, InvoiceStatus.CANCELLED, InvoiceStatus.OVERDUE];
   const paymentMethods = ['Bank Transfer', 'Credit Card', 'PayPal', 'Cash', 'Cheque'];
   const cancelReasons = [
     'Client Request',
@@ -85,7 +91,7 @@ export async function seedInvoices() {
 
     for (let j = 0; j < itemCount; j++) {
       const quantity = faker.number.int({ min: 1, max: 10 });
-      const unitPrice = faker.number.float({ min: 50, max: 5000, multipleOf: 0.01 });
+      const unitPrice = faker.number.float({ min: 50, max: 5000, multipleOf: 0.5 });
       const total = quantity * unitPrice;
       totalAmount += total;
 
@@ -131,13 +137,19 @@ export async function seedInvoices() {
     ]);
 
     const gst = 10; // Standard 10% GST
+    
+    const subtotal = totalAmount;
+    const gstAmount = (subtotal * gst) / 100;    
+    const finalAmount = subtotal + gstAmount - discount;
 
     // Create invoice data based on status
     const invoiceData: Invoice = {
       invoiceNumber: `INV-2025-${String(i + 1).padStart(4, '0')}`,
       customerId: customer.id,
       status,
-      amount: totalAmount,
+      amount: finalAmount,
+      amountDue: finalAmount,
+      amountPaid: 0,
       currency: 'AUD',
       discount,
       gst,
@@ -146,25 +158,26 @@ export async function seedInvoices() {
       notes: faker.helpers.maybe(
         () => faker.lorem.sentence(),
         { probability: 0.3 },
-      ),
+      ) ?? null,
       items: {
         create: items,
       },
     };
 
     // Add status-specific fields
-    if (status === 'PENDING' || status === 'OVERDUE') {
+    if (status === InvoiceStatus.PENDING || status === InvoiceStatus.OVERDUE) {
       invoiceData.remindersSent = faker.number.int({ min: 0, max: 3 });
-    } else if (status === 'PAID') {
+    } else if (status === InvoiceStatus.PAID) {
       const paidDate = faker.date.between({
         from: issuedDate,
         to: dueDate,
       });
       invoiceData.paidDate = paidDate;
       invoiceData.paymentMethod = faker.helpers.arrayElement(paymentMethods);
-      // Add receipt number for paid invoices
-      invoiceData.receiptNumber = `RCP-2024-${String(i + 1).padStart(4, '0')}`;      
-    } else if (status === 'CANCELLED') {
+      invoiceData.amountPaid = finalAmount;
+      invoiceData.amountDue = 0;
+      invoiceData.receiptNumber = await invoiceRepository.generateReceiptNumber();
+    } else if (status === InvoiceStatus.CANCELLED) {
       const cancelledDate = faker.date.between({
         from: issuedDate,
         to: new Date(),

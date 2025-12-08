@@ -4,7 +4,6 @@ import { absoluteUrl } from '@/lib/utils';
 import { generatePdfBuffer } from '@/lib/pdf';
 import { InvoiceDocument } from '@/templates/invoice-template';
 import { ReceiptDocument } from '@/templates/receipt-template';
-import { prisma } from '@/lib/prisma';
 import { InvoiceStatus } from '@/prisma/client';
 import type { InvoiceListItem, InvoiceWithDetails } from '@/features/finances/invoices/types';
 
@@ -77,11 +76,27 @@ export function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice
           total: item.total.toString(),
         })),
         notes: invoice.notes,
+        amountPaid: invoice.amountPaid.toString(),
+        amountDue: invoice.amountDue.toString(),
+        payments: invoice.payments?.map(payment => ({
+          id: payment.id,
+          amount: payment.amount.toString(),
+          date: payment.date.toISOString(),
+          method: payment.method,
+          notes: payment.notes,
+        })) || [],
       }
     : {
         ...baseData,
         paidDate: invoice.paidDate?.toISOString(),
         paymentMethod: invoice.paymentMethod,
+        payments: invoice.payments?.map(payment => ({
+          id: payment.id,
+          amount: payment.amount.toString(),
+          date: payment.date.toISOString(),
+          method: payment.method,
+          notes: payment.notes,
+        })) || [],
       };
 
   return crypto
@@ -107,18 +122,25 @@ export const VALID_INVOICE_STATUS_TRANSITIONS: Record<
     InvoiceStatus.CANCELLED,
   ],
   [InvoiceStatus.PENDING]: [
+    InvoiceStatus.PARTIALLY_PAID,
     InvoiceStatus.PAID,
     InvoiceStatus.OVERDUE,
     InvoiceStatus.CANCELLED,
-    InvoiceStatus.DRAFT, // Allow reverting to draft for corrections
+    InvoiceStatus.DRAFT,
+  ],
+  [InvoiceStatus.PARTIALLY_PAID]: [
+    InvoiceStatus.PAID,
+    InvoiceStatus.OVERDUE,
+    InvoiceStatus.CANCELLED,
   ],
   [InvoiceStatus.OVERDUE]: [
     InvoiceStatus.PAID,
+    InvoiceStatus.PARTIALLY_PAID,
     InvoiceStatus.CANCELLED,
-    InvoiceStatus.PENDING, // Allow reverting if due date extended
+    InvoiceStatus.PENDING,
   ],
-  [InvoiceStatus.PAID]: [], // Terminal state - cannot change once paid
-  [InvoiceStatus.CANCELLED]: [], // Terminal state - cannot reactivate cancelled invoice
+  [InvoiceStatus.PAID]: [],
+  [InvoiceStatus.CANCELLED]: [],
 };
 
 /**
@@ -173,40 +195,6 @@ export function validateInvoiceStatusTransition(
 }
 
 // ============================================================================
-// RECEIPT NUMBER GENERATION
-// ============================================================================
-
-/**
- * Generates a unique receipt number in the format: XXXX-XXXX-XXXX
- * Uses only numbers for simplicity and uniqueness.
- */
-export async function generateReceiptNumber(): Promise<string> {
-  let receiptNumber = '';
-  let isUnique = false;
-
-  const generateNumberSegment = () => Math.floor(1000 + Math.random() * 9000);
-
-  while (!isUnique) {
-    // Generate 12 random digits
-    const part1 = generateNumberSegment();
-    const part2 = generateNumberSegment();
-    const part3 = generateNumberSegment();
-
-    receiptNumber = `${part1}-${part2}-${part3}`;
-
-    // Check if this number already exists
-    const existing = await prisma.invoice.findUnique({
-      where: { receiptNumber },
-      select: { id: true },
-    });
-
-    isUnique = !existing;
-  }
-
-  return receiptNumber;
-}
-
-// ============================================================================
 // DUE DATE UTILITIES
 // ============================================================================
 
@@ -220,11 +208,21 @@ export function daysUntilDue(dueDate: Date): number {
 /**
  * Check if invoice is overdue
  */
+/**
+ * Check if invoice is overdue
+ */
 export function isOverdue(invoice: InvoiceListItem): boolean {
-  if (invoice.status === 'PAID' || invoice.status === 'CANCELLED') {
+  // If status is explicitly OVERDUE, it is overdue
+  if (invoice.status === InvoiceStatus.OVERDUE) {
+    return true;
+  }
+  
+  // Paid or Cancelled are never overdue
+  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
     return false;
   }
 
+  // Otherwise check the date
   return isAfter(new Date(), invoice.dueDate);
 }
 
@@ -240,8 +238,14 @@ export function getOverdueDays(dueDate: Date): number {
  * Check if invoice needs reminder
  */
 export function needsReminder(invoice: InvoiceListItem): boolean {
-  if (invoice.status !== 'PENDING') {
+  // Don't send reminders for paid or cancelled
+  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED || invoice.status === InvoiceStatus.DRAFT) {
     return false;
+  }
+
+  // Always remind if overdue
+  if (invoice.status === InvoiceStatus.OVERDUE || isOverdue(invoice)) {
+    return true;
   }
 
   const daysUntil = daysUntilDue(invoice.dueDate);
@@ -252,12 +256,18 @@ export function needsReminder(invoice: InvoiceListItem): boolean {
  * Get urgency level
  */
 export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' | 'critical' {
-  if (invoice.status !== 'PENDING') {
+  // Paid or cancelled has no urgency
+  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED || invoice.status === InvoiceStatus.DRAFT) {
     return 'low';
   }
 
+  // Explicit overdue status or past due date is critical
+  if (invoice.status === InvoiceStatus.OVERDUE || isOverdue(invoice)) {
+    return 'critical';
+  }
+
   const daysUntil = daysUntilDue(invoice.dueDate);
-  if (daysUntil < 0) return 'critical';
+  
   if (daysUntil <= 3) return 'high';
   if (daysUntil <= 7) return 'medium';
 

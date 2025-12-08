@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
@@ -196,6 +196,40 @@ const styles = StyleSheet.create({
     width: 80,
     textAlign: 'right',
   },
+  paymentHistorySection: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  paymentHistoryTable: {
+    marginTop: 10,
+  },
+  paymentHistoryHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    padding: 8,
+    fontWeight: 'bold',
+    fontSize: 9,
+    color: '#666',
+  },
+  paymentHistoryRow: {
+    flexDirection: 'row',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  paymentCol1: {
+    width: '25%',
+  },
+  paymentCol2: {
+    width: '25%',
+  },
+  paymentCol3: {
+    width: '30%',
+  },
+  paymentCol4: {
+    width: '20%',
+    textAlign: 'right',
+  },
   notes: {
     marginTop: 30,
     padding: 12,
@@ -369,6 +403,32 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
             <Text style={styles.totalValue}>{formatCurrency({ number: total })}</Text>
           </View>
         </View>
+
+        {/* Payment History */}
+        {invoice.payments && invoice.payments.length > 0 && (
+          <View style={styles.paymentHistorySection} wrap={false}>
+            <Text style={styles.sectionTitle}>Payment History</Text>
+            <View style={styles.paymentHistoryTable}>
+              {/* Table Header */}
+              <View style={styles.paymentHistoryHeader}>
+                <Text style={styles.paymentCol1}>Date</Text>
+                <Text style={styles.paymentCol2}>Method</Text>
+                <Text style={styles.paymentCol3}>Notes</Text>
+                <Text style={styles.paymentCol4}>Amount</Text>
+              </View>
+
+              {/* Table Rows */}
+              {invoice.payments.map((payment) => (
+                <View key={payment.id} style={styles.paymentHistoryRow}>
+                  <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
+                  <Text style={styles.paymentCol2}>{payment.method}</Text>
+                  <Text style={styles.paymentCol3}>{payment.notes || '-'}</Text>
+                  <Text style={styles.paymentCol4}>{formatCurrency({ number: payment.amount })}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Notes */}
         {invoice.notes ? (

@@ -17,6 +17,8 @@ interface ReminderEmailProps {
     currency: string;
     dueDate: Date;
     daysOverdue: number;
+    amountPaid?: number;
+    amountDue?: number;
   };
   pdfUrl?: string;
 }
@@ -29,12 +31,25 @@ const overdueCell = {
 };
 
 export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) => {
-  const { invoiceNumber, customerName, amount, currency, dueDate, daysOverdue } = reminderData;
+  const { invoiceNumber, customerName, amount, currency, dueDate, daysOverdue, amountPaid, amountDue } = reminderData;
+
+  const hasPaymentHistory = amountPaid !== undefined && amountPaid > 0;
+  const displayAmountDue = hasPaymentHistory ? amountDue ?? amount : amount;
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
   }).format(amount);
+
+  const formattedAmountPaid = hasPaymentHistory ? new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amountPaid) : null;
+
+  const formattedAmountDue = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(displayAmountDue);
 
   const formattedDueDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
@@ -67,10 +82,27 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
               <td style={styles.labelCell}>Days Overdue:</td>
               <td style={overdueCell}>{daysOverdue} day{daysOverdue > 1 ? 's' : ''}</td>
             </tr>
-            <tr>
-              <td style={styles.labelCell}>Amount Due:</td>
-              <td style={styles.amountCell}>{formattedAmount}</td>
-            </tr>
+            {hasPaymentHistory ? (
+              <>
+                <tr>
+                  <td style={styles.labelCell}>Invoice Total:</td>
+                  <td style={styles.valueCell}>{formattedAmount}</td>
+                </tr>
+                <tr>
+                  <td style={styles.labelCell}>Amount Paid:</td>
+                  <td style={{ ...styles.valueCell, color: '#16a34a' }}>{formattedAmountPaid}</td>
+                </tr>
+                <tr>
+                  <td style={styles.labelCell}>Amount Due:</td>
+                  <td style={{ ...styles.amountCell, color: '#333' }}>{formattedAmountDue}</td>
+                </tr>
+              </>
+            ) : (
+              <tr>
+                <td style={styles.labelCell}>Amount Due:</td>
+                <td style={{ ...styles.amountCell, color: '#333' }}>{formattedAmountDue}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </Section>

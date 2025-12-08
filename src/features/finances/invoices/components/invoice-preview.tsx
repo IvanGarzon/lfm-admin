@@ -166,8 +166,56 @@ export function InvoicePreview({ invoice }: InvoiceHtmlPreviewProps) {
                   {formatCurrency({ number: total })}
                 </p>
               </Box>
+
+              {invoice.amountPaid > 0 ? (
+                <>
+                  <Box className="flex justify-between items-center text-green-600 dark:text-green-400">
+                    <p className="text-sm">Amount Paid</p>
+                    <p className="text-sm font-semibold">
+                      -{formatCurrency({ number: invoice.amountPaid })}
+                    </p>
+                  </Box>
+                  <Box className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-50">Amount Due</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-50">
+                      {formatCurrency({ number: invoice.amountDue })}
+                    </p>
+                  </Box>
+                </>
+              ): null}
             </Box>
           </Box>
+
+          {/* Payment History */}
+          {invoice.payments && invoice.payments.length > 0 ? (
+             <Box className="mb-8">
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Payment History</p>
+                 <Box className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Date</th>
+                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Method</th>
+                         <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Notes</th>
+                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Amount</th>
+                      </tr>
+                    </thead>
+                     <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                      {invoice.payments.map((payment) => (
+                        <tr key={payment.id}>
+                          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{format(payment.date, 'MMM dd, yyyy')}</td>
+                          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{payment.method}</td>
+                           <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 text-xs italic">{payment.notes || '-'}</td>
+                          <td className="px-4 py-2 text-sm font-medium text-right text-gray-900 dark:text-gray-100">
+                            {formatCurrency({ number: payment.amount })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                   </table>
+                 </Box>
+             </Box>
+          ) : null}
 
           {/* Payment Details */}
           <Box className="grid gap-8 mb-8">
