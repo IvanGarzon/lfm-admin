@@ -682,12 +682,41 @@ export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: 
     const result = await getOrGenerateReceiptPdf(invoice, {
       context: 'getReceiptPdfUrl',
       skipDownload: true,
-    });    
+    });
 
     const { pdfUrl } = result;
 
     return { success: true, data: { url: pdfUrl } };
   } catch (error) {
     return handleActionError(error, 'Failed to get receipt PDF URL');
+  }
+}
+
+/**
+ * Duplicates an existing invoice creating a new DRAFT invoice.
+ * Copies all invoice details and items but resets payment-related fields.
+ * The new invoice gets a fresh invoice number and starts in DRAFT status.
+ * @param id - The ID of the invoice to duplicate.
+ * @returns A promise that resolves to an `ActionResult` with the new invoice's ID and number.
+ */
+export async function duplicateInvoice(
+  id: string,
+): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const result = await invoiceRepo.duplicate(id);
+
+    revalidatePath('/finances/invoices');
+
+    return {
+      success: true,
+      data: { id: result.id, invoiceNumber: result.invoiceNumber },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to duplicate invoice');
   }
 }

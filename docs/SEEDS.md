@@ -17,7 +17,7 @@ All seed files are located in the `seeds/` directory. Each entity has its own de
 
 ### Master Seed File
 
-- **[seeds/seed-all.ts](seeds/seed-all.ts)** - Orchestrates all seed scripts in the correct order
+- **[seed.ts](seed.ts)** - Orchestrates all seed scripts in the correct order
 
 ## Product Categories
 
@@ -56,7 +56,7 @@ The florist products include:
 ### Run All Seeds
 
 ```bash
-pnpm prisma.seed.all
+pnpm prisma:seed
 ```
 
 This will run all seed scripts in order:
@@ -93,10 +93,10 @@ pnpm exec tsx prisma/seeds/seed-quotes.ts
 
 ```bash
 # This will DROP all data and recreate from migrations
-npx prisma migrate reset
+pnpm prisma:reset
 
 # Then run seeds
-pnpm prisma.seed.all
+pnpm prisma:seed
 ```
 
 ## Data Characteristics

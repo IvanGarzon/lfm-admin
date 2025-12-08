@@ -15,6 +15,7 @@ import {
   Save,
   Hourglass,
   BellRing,
+  Copy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,6 +44,7 @@ import {
   useUpdateInvoice,
   useSendInvoiceReminder,
   useDownloadInvoicePdf,
+  useDuplicateInvoice,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { InvoiceForm } from '@/features/finances/invoices/components//invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
@@ -75,6 +77,7 @@ export function InvoiceDrawer({
   const markAsPending = useMarkInvoiceAsPending();
   const sendReminder = useSendInvoiceReminder();
   const downloadPdf = useDownloadInvoicePdf();
+  const duplicateInvoice = useDuplicateInvoice();
 
   const router = useRouter();
   const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
@@ -197,6 +200,18 @@ export function InvoiceDrawer({
     setHasUnsavedChanges(isDirty);
   }, []);
 
+  const handleDuplicate = useCallback(() => {
+    if (!invoice) return;
+    duplicateInvoice.mutate(invoice.id, {
+      onSuccess: (data) => {
+        // Navigate to the new duplicated invoice
+        const basePath = `/finances/invoices/${data.id}`;
+        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+        router.push(targetPath);
+      },
+    });
+  }, [invoice, duplicateInvoice, router, queryString]);
+
   const getDrawerHeader = () => {
     if (mode === 'create') {
       return {
@@ -314,6 +329,10 @@ export function InvoiceDrawer({
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onClick={handleDuplicate}>
+                            <Copy className="h-4 w-4" />
+                            Duplicate invoice
+                          </DropdownMenuItem>
                           {invoice.status === InvoiceStatus.DRAFT && (
                             <DropdownMenuItem onClick={handleMarkAsPending}>
                               <Hourglass className="h-4 w-4" />

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal } from 'lucide-react';
+import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal, Copy } from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -26,6 +26,7 @@ interface InvoiceActionsProps {
   onCancel: (id: string, invoiceNumber: string) => void;
   onDownloadPdf: (id: string) => void;
   onSendReceipt?: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 export function InvoiceActions({
@@ -37,6 +38,7 @@ export function InvoiceActions({
   onCancel,
   onDownloadPdf,
   onSendReceipt,
+  onDuplicate,
 }: InvoiceActionsProps) {
   const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
   const basePath = `/finances/invoices/${invoice.id}`;
@@ -69,6 +71,10 @@ export function InvoiceActions({
               <Eye className="h-4 w-4" />
               View invoice
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDuplicate(invoice.id)}>
+            <Copy className="h-4 w-4" />
+            Duplicate invoice
           </DropdownMenuItem>
           {invoice.status === InvoiceStatus.DRAFT && (
             <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id)}>

@@ -15,6 +15,7 @@ import {
   useMarkInvoiceAsPending,
   useDownloadInvoicePdf,
   useBulkUpdateInvoiceStatus,
+  useDuplicateInvoice,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import dynamic from 'next/dynamic';
 import { InvoiceStats } from '@/features/finances/invoices/components/invoice-stats';
@@ -70,6 +71,7 @@ export function InvoiceList({
   const markAsPending = useMarkInvoiceAsPending();
   const downloadPdf = useDownloadInvoicePdf();
   const bulkUpdateStatus = useBulkUpdateInvoiceStatus();
+  const duplicateInvoice = useDuplicateInvoice();
 
   const handleShowCreateModal = () => {
     setShowCreateModal((prev) => !prev);
@@ -85,6 +87,7 @@ export function InvoiceList({
         (id, number) => openCancel(id, number),
         (id) => downloadPdf.mutate(id),
         (id) => openSendReceipt(id),
+        (id) => duplicateInvoice.mutate(id),
       ),
     [
       sendReminder,
@@ -94,6 +97,7 @@ export function InvoiceList({
       openRecordPayment,
       openCancel,
       openSendReceipt,
+      duplicateInvoice,
     ],
   );
 

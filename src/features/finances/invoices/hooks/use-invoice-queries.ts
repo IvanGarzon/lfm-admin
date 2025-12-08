@@ -13,6 +13,7 @@ import {
   getInvoicePdfUrl,
   getReceiptPdfUrl,
   bulkUpdateInvoiceStatus,
+  duplicateInvoice,
 } from '@/actions/invoices';
 import type {
   InvoiceFilters,
@@ -544,6 +545,28 @@ export function useBulkUpdateInvoiceStatus() {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update invoices');
+    },
+  });
+}
+
+export function useDuplicateInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await duplicateInvoice(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`Invoice duplicated as ${data.invoiceNumber}`);
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to duplicate invoice');
     },
   });
 }

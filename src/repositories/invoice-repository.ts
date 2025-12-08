@@ -870,4 +870,86 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       },
     });
   }
+
+  /**
+   * Duplicate an existing invoice creating a new DRAFT invoice.
+   * Copies all invoice details and items but resets payment-related fields.
+   * The new invoice gets a fresh invoice number and starts in DRAFT status.
+   * @param id - The unique identifier of the invoice to duplicate
+   * @returns A promise that resolves to an object with the new invoice ID and number
+   * @throws {Error} If the source invoice is not found
+   */
+  async duplicate(id: string): Promise<{ id: string; invoiceNumber: string }> {
+    // Get the original invoice with all details
+    const original = await this.prisma.invoice.findUnique({
+      where: { id, deletedAt: null },
+      include: {
+        items: {
+          select: {
+            description: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+            productId: true,
+          },
+        },
+      },
+    });
+
+    if (!original) {
+      throw new Error('Invoice not found');
+    }
+
+    // Generate new invoice number
+    const invoiceNumber = await this.generateInvoiceNumber();
+
+    // Calculate total amount from items
+    const totalAmount = Number(original.amount);
+
+    // Set issued date to today and due date to 30 days from now
+    const issuedDate = new Date();
+    const dueDate = new Date(issuedDate);
+    dueDate.setDate(dueDate.getDate() + 30);
+
+    // Create the duplicate invoice with DRAFT status
+    const duplicate = await this.prisma.invoice.create({
+      data: {
+        invoiceNumber,
+        customerId: original.customerId,
+        status: InvoiceStatus.DRAFT,
+        amount: totalAmount,
+        amountDue: totalAmount,
+        amountPaid: 0,
+        currency: original.currency,
+        gst: original.gst,
+        discount: original.discount,
+        issuedDate,
+        dueDate,
+        notes: original.notes,
+        remindersSent: 0,
+        // Reset payment-related fields
+        paidDate: null,
+        paymentMethod: null,
+        receiptNumber: null,
+        cancelledDate: null,
+        cancelReason: null,
+        // Copy items
+        items: {
+          create: original.items.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            productId: item.productId,
+          })),
+        },
+      },
+      select: {
+        id: true,
+        invoiceNumber: true,
+      },
+    });
+
+    return duplicate;
+  }
 }
