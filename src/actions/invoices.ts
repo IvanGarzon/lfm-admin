@@ -211,55 +211,28 @@ export async function markInvoiceAsPending(
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Generate or retrieve PDF using DocumentService
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
-    const result = await getOrGenerateInvoicePdf(invoice, {
-      context: 'markInvoiceAsPending',
-      skipDownload: false,
-    });
-    const { pdfBuffer, pdfUrl, pdfFilename } = result;
-
-    const validatedInvoiceEmailSchema: SendInvoiceEmailInput = SendInvoiceEmailSchema.parse({
-      invoiceId: invoice.id,
-      to: invoice.customer.email,
-      invoiceData: {
-        invoiceNumber: invoice.invoiceNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: invoice.amount,
-        currency: invoice.currency,
-        dueDate: invoice.dueDate,
-        issuedDate: invoice.issuedDate,
+    // Trigger background job for PDF generation and email
+    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
+    
+    // Fire-and-forget pattern
+    fetch(backgroundUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
-      pdfUrl,
+      body: JSON.stringify({
+        invoiceId: invoice.id,
+        type: 'pending_notification',
+      }),
+    }).catch(err => {
+      logger.error('Failed to trigger background email', err, { 
+        context: 'markInvoiceAsPending',
+        metadata: { invoiceId: invoice.id } 
+      });
     });
 
-    // Send invoice email with PDF link and attachment in background
-    const { sendEmailNotification } = await import('@/lib/email-service');
-
-    sendEmailNotification({ 
-      to: validatedInvoiceEmailSchema.to,
-      subject: `Invoice ${validatedInvoiceEmailSchema.invoiceData.invoiceNumber}`,
-      template: 'invoice',
-      props: {
-        invoiceData: {
-          ...validatedInvoiceEmailSchema.invoiceData,
-        },
-        pdfUrl,
-      },
-      ...(pdfBuffer
-        ? {
-            attachments: [
-              {
-                filename: pdfFilename,
-                content: pdfBuffer,
-              },
-            ],
-          }
-        : {}
-      ),
-    });
-
-    logger.info('Invoice email sent successfully with PDF attachment', {
+    logger.info('Invoice marked as pending, background email task triggered', {
       context: 'markInvoiceAsPending',
       metadata: {
         invoiceId: invoice.id,
@@ -400,55 +373,28 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       invoice = updatedInvoice;
     }
 
-    // Generate or retrieve PDF using centralized service
-    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
-    const result = await getOrGenerateReceiptPdf(invoice, {
-      context: 'sendInvoiceReceipt',
-      skipDownload: false,
-    });
+    // Trigger background job for PDF generation and email
+    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
     
-    const { pdfBuffer, pdfFilename } = result;
-
-    const validatedReceiptEmailSchem: SendReceiptEmailInput = SendReceiptEmailSchema.parse({
-      invoiceId: invoice.id,
-      to: invoice.customer.email,
-      receiptData: {
-        invoiceNumber: invoice.invoiceNumber,
-        receiptNumber: invoice.receiptNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: invoice.amount,
-        currency: invoice.currency,
-        paidDate: invoice.paidDate || new Date(),
-        paymentMethod: invoice.paymentMethod || 'Not specified',
+    // Fire-and-forget pattern
+    fetch(backgroundUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
+      body: JSON.stringify({
+        invoiceId: invoice.id,
+        type: 'receipt',
+      }),
+    }).catch(err => {
+      logger.error('Failed to trigger background receipt', err, { 
+        context: 'sendInvoiceReceipt',
+        metadata: { invoiceId: invoice.id } 
+      });
     });
 
-    // Send receipt email with PDF attachment
-    const { sendEmailNotification } = await import('@/lib/email-service');
-
-    await sendEmailNotification({
-      to: validatedReceiptEmailSchem.to,
-      subject: `Payment Receipt ${validatedReceiptEmailSchem.receiptData.receiptNumber || validatedReceiptEmailSchem.receiptData.invoiceNumber}`,
-      template: 'receipt',
-      props: {
-        receiptData: {
-          ...validatedReceiptEmailSchem.receiptData,
-        },
-      },
-      ...(pdfBuffer
-        ? {
-            attachments: [
-              {
-                filename: pdfFilename,
-                content: pdfBuffer,
-              },
-            ],
-          }
-        : {}
-      ),
-    });
-
-    logger.info('Receipt email sent successfully with PDF attachment', {
+    logger.info('Background receipt email triggered', {
       context: 'sendInvoiceReceipt',
       metadata: {
         invoiceId: id,
@@ -513,56 +459,26 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       return { success: false, error: 'Cannot send reminder for invoice that is not overdue' };
     }
 
-    // Generate or retrieve PDF using centralized service
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
-    const result = await getOrGenerateInvoicePdf(invoice, {
-      context: 'sendInvoiceReminder',
-      skipDownload: false, // Need buffer for email attachment
-    });
-    const { pdfBuffer, pdfUrl, pdfFilename } = result;
-
-    // Note: Document creation/update is handled inside getOrGenerateInvoicePdf via DocumentService
-
-    const validatedReminderEmailSchema: SendReminderEmailInput = SendReminderEmailSchema.parse({
-      invoiceId: invoice.id,
-      to: invoice.customer.email,
-      reminderData: {
-        invoiceNumber: invoice.invoiceNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: invoice.amount,
-        currency: invoice.currency,
-        dueDate: invoice.dueDate,
-        daysOverdue,
-        amountPaid: invoice.amountPaid,
-        amountDue: invoice.amountDue,
+    // Trigger background job for PDF generation and email
+    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
+    console.debug('Background URL:', backgroundUrl);
+    
+    // Fire-and-forget pattern
+    fetch(backgroundUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
-      pdfUrl,
-    });
-
-    // Send reminder email with PDF attachment and link
-    const { sendEmailNotification } = await import('@/lib/email-service');
-
-    await sendEmailNotification({
-      to: validatedReminderEmailSchema.to,
-      subject: `Payment Reminder: Invoice ${validatedReminderEmailSchema.reminderData.invoiceNumber} - ${validatedReminderEmailSchema.reminderData.daysOverdue} Days Overdue`,
-      template: 'reminder',
-      props: {
-        reminderData: {
-          ...validatedReminderEmailSchema.reminderData,
-        },
-        pdfUrl: validatedReminderEmailSchema.pdfUrl,
-      },
-      ...(pdfBuffer
-        ? {
-            attachments: [
-              {
-                filename: pdfFilename,
-                content: pdfBuffer,
-              },
-            ],
-          }
-        : {}
-      ),
+      body: JSON.stringify({
+        invoiceId: invoice.id,
+        type: 'reminder',
+      }),
+    }).catch(err => {
+      logger.error('Failed to trigger background reminder', err, { 
+        context: 'sendInvoiceReminder',
+        metadata: { invoiceId: invoice.id } 
+      });
     });
 
     const updatedInvoice = await invoiceRepo.incrementReminderCount(id);
@@ -570,7 +486,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       return { success: false, error: 'Failed to update reminder count' };
     }
 
-    logger.info('Reminder email sent successfully with PDF attachment', {
+    logger.info('Background reminder emai triggered', {
       context: 'sendInvoiceReminder',
       metadata: {
         invoiceId: id,

@@ -32,10 +32,12 @@ export default auth(async (req: NextRequest & { auth: Session | null | undefined
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isTestS3ApiRoute = nextUrl.pathname.startsWith('/api/test-s3');
+  const isCronRoute = nextUrl.pathname.startsWith('/api/cron');
+  const isBackgroundRoute = nextUrl.pathname.startsWith('/api/background');
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isApiAuthRoute || isTestS3ApiRoute) {
+  if (isApiAuthRoute || isTestS3ApiRoute || isCronRoute || isBackgroundRoute) {
     return;
   }
 

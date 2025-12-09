@@ -28,6 +28,7 @@ export const env = createEnv({
     AWS_S3_BUCKET_NAME: z.string().min(1),
     AWS_ENDPOINT_URL: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
+    CRON_SECRET: z.string().min(1),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -50,5 +51,6 @@ export const env = createEnv({
     AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
     AWS_ENDPOINT_URL: process.env.AWS_ENDPOINT_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    CRON_SECRET: process.env.CRON_SECRET,
   },
 });

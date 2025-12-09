@@ -50,12 +50,13 @@ const nextConfig: NextConfig = {
   //   ];
   // },
   // experimental: {
-  //   serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
-  //   turbo: {
-  //     resolveAlias: {
-  //       '.prisma/client/index-browser': './prisma/generated/client/index-browser.js',
-  //     },
-  //   },
+    // serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+    // turbo: {
+    //   resolveAlias: {
+    //     '.prisma/client/index-browser': './prisma/generated/client/index-browser.js',
+    //   },
+    // },
+    // instrumentationHook: true,
   // },
   // webpack: (config, { isServer }) => {
   //   if (isServer) {
