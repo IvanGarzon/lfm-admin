@@ -140,11 +140,12 @@ export const authConfig = {
         // We need to fetch our internal user to get the correct ID
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email! },
-          select: { id: true },
+          select: { id: true, role: true },
         });
 
         if (dbUser) {
           token.sub = dbUser.id; // Set the token's subject to our internal user ID
+          token.role = dbUser.role;
         }
       }
       return token;
@@ -163,6 +164,7 @@ export const authConfig = {
             name: token.name || session.user.name,
             email: token.email || session.user.email,
             image: token.picture || session.user.image,
+            role: token.role || 'USER',
           },
         };
       }

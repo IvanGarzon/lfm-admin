@@ -516,7 +516,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Calculate total amount
-    const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const gstPercentage = Number(data.gst || 0);
+    const gstAmount = (subtotal * gstPercentage) / 100;
+    const totalAmount = subtotal + gstAmount - Number(data.discount || 0);
 
     // Update quote with items in a transaction
     const updatedQuote = await this.prisma.$transaction(async (tx) => {

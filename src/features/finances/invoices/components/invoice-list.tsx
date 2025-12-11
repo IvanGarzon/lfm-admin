@@ -83,7 +83,7 @@ export function InvoiceList({
         (id, number) => openDelete(id, number),
         (id) => sendReminder.mutate(id),
         (id) => markAsPending.mutate(id),
-        (id, number, invoice) => openRecordPayment(id, number, invoice),
+        (id, number) => openRecordPayment(id, number),
         (id, number) => openCancel(id, number),
         (id) => downloadPdf.mutate(id),
         (id) => openSendReceipt(id),

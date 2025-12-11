@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
+import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -82,8 +83,9 @@ export function RecordPaymentDialog({
     onOpenChange(false);
   };
 
-  const setFullAmount = () => {
-    form.setValue('amount', amountDue);
+  const setPercentageAmount = (percentage: number) => {
+    const amount = (amountDue * percentage) / 100;
+    form.setValue('amount', Number(amount.toFixed(2)));
   };
 
   return (
@@ -96,7 +98,9 @@ export function RecordPaymentDialog({
             <br />
             <span className="flex items-center gap-4 mt-2">
               <span>Total: <strong>{formatCurrency({ number: invoiceTotal })}</strong></span>
-              <span>Balance: <strong>{formatCurrency({ number: amountDue })}</strong></span>
+              {amountDue !== invoiceTotal ? (
+                <span>Balance: <strong>{formatCurrency({ number: amountDue })}</strong></span>
+              ): null}
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -112,25 +116,32 @@ export function RecordPaymentDialog({
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
-                    <FieldContent className="flex items-center justify-between">
-                      <FieldLabel htmlFor="record-payment-form-amount">Amount</FieldLabel>
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-xs"
-                        onClick={setFullAmount}
-                      >
-                        Set to full amount
-                      </Button>
+                    <FieldContent>
+                      <Box className="flex items-center justify-between">
+                        <FieldLabel htmlFor="record-payment-form-amount">Amount</FieldLabel>
+                        <Box className="flex items-center gap-2">
+                          {[25, 50, 75, 100].map((percentage) => (
+                            <Button
+                              key={percentage}
+                              type="button"
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-xs"
+                              onClick={() => setPercentageAmount(percentage)}
+                            >
+                              {percentage}%
+                            </Button>
+                          ))}
+                        </Box>
+                      </Box>
                     </FieldContent>
                     <Input
-                        id="record-payment-form-amount"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      id="record-payment-form-amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>

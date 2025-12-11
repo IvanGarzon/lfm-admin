@@ -3,6 +3,15 @@ import type { InvoiceStatusType } from '@/zod/inputTypeSchemas/InvoiceStatusSche
 
 export type InvoiceFormInput = CreateInvoiceInput | UpdateInvoiceInput;
 
+export type InvoiceStatusHistoryItem = {
+  id: string;
+  status: InvoiceStatusType;
+  previousStatus: InvoiceStatusType | null;
+  changedAt: Date;
+  changedBy: string | null;
+  notes: string | null;
+};
+
 export type InvoiceListItem = {
   id: string;
   invoiceNumber: string;
@@ -46,6 +55,7 @@ export type InvoiceWithDetails = {
     reference: string | null;
     notes: string | null;
   }[];
+  statusHistory: InvoiceStatusHistoryItem[];
   customer: {
     id: string;
     firstName: string;

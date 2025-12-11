@@ -22,7 +22,7 @@ interface InvoiceActionsProps {
   onDelete: (id: string, invoiceNumber: string) => void;
   onSendReminder: (id: string) => void;
   onMarkAsPending: (id: string) => void;
-  onRecordPayment: (id: string, invoiceNumber: string, invoice: InvoiceListItem) => void;
+  onRecordPayment: (id: string, invoiceNumber: string) => void;
   onCancel: (id: string, invoiceNumber: string) => void;
   onDownloadPdf: (id: string) => void;
   onSendReceipt?: (id: string) => void;
@@ -86,7 +86,7 @@ export function InvoiceActions({
             invoice.status === InvoiceStatus.OVERDUE ||
             invoice.status === InvoiceStatus.PARTIALLY_PAID) && (
             <>
-              <DropdownMenuItem onClick={() => onRecordPayment(invoice.id, invoice.invoiceNumber, invoice)}>
+              <DropdownMenuItem onClick={() => onRecordPayment(invoice.id, invoice.invoiceNumber)}>
                 <CreditCard className="h-4 w-4" />
                 Record payment
               </DropdownMenuItem>

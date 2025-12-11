@@ -21,7 +21,7 @@ interface ModalState {
 
 interface InvoiceActionContextType {
   openDelete: (id: string, invoiceNumber?: string, onSuccess?: () => void) => void;
-  openRecordPayment: (id: string, invoiceNumber: string, invoice: InvoiceWithDetails, onSuccess?: () => void) => void;
+  openRecordPayment: (id: string, invoiceNumber: string, invoice?: InvoiceWithDetails, onSuccess?: () => void) => void;
   openCancel: (id: string, invoiceNumber: string, onSuccess?: () => void) => void;
   openSendReceipt: (id: string, invoice?: InvoiceWithDetails, onSuccess?: () => void) => void;
   close: () => void;
@@ -47,7 +47,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     setState({ type: 'DELETE', id, invoiceNumber, onSuccess });
   }, []);
 
-  const openRecordPayment = useCallback((id: string, invoiceNumber: string, invoice: InvoiceWithDetails, onSuccess?: () => void) => {
+  const openRecordPayment = useCallback((id: string, invoiceNumber: string, invoice?: InvoiceWithDetails, onSuccess?: () => void) => {
     setState({ type: 'RECORD_PAYMENT', id, invoiceNumber, invoice, onSuccess });
   }, []);
 

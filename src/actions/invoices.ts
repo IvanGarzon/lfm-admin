@@ -14,17 +14,11 @@ import {
   MarkInvoiceAsPendingSchema,
   CancelInvoiceSchema,
   InvoiceFiltersSchema,
-  SendInvoiceEmailSchema,
-  SendReminderEmailSchema,
-  SendReceiptEmailSchema,
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
   type RecordPaymentInput,
   type MarkInvoiceAsPendingInput,
-  type CancelInvoiceInput,
-  type SendInvoiceEmailInput,
-  type SendReminderEmailInput,
-  type SendReceiptEmailInput,
+  type CancelInvoiceInput,  
 } from '@/schemas/invoices';
 import type {
   InvoiceFilters,
@@ -33,6 +27,7 @@ import type {
   InvoicePagination,
 } from '@/features/finances/invoices/types';
 import type { ActionResult } from '@/types/actions';
+import { requirePermission } from '@/lib/permissions';
 import { InvoiceStatus } from '@/prisma/client';
 
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -138,9 +133,11 @@ export async function createInvoice(
     return { success: false, error: 'Unauthorized' };
   }
 
-  try {
+  try {    
+    requirePermission(session.user, 'canManageInvoices');
     const validatedData = CreateInvoiceSchema.parse(data);
-    const invoice = await invoiceRepo.createInvoiceWithItems(validatedData);
+    
+    const invoice = await invoiceRepo.createInvoiceWithItems(validatedData, session.user.id);
 
     revalidatePath('/finances/invoices');
 
@@ -205,34 +202,37 @@ export async function markInvoiceAsPending(
 
   try {
     const validatedInvoice = MarkInvoiceAsPendingSchema.parse(data);
-    const invoice = await invoiceRepo.markAsPending(validatedInvoice.id);
+    const invoice = await invoiceRepo.markAsPending(validatedInvoice.id, session.user.id);
 
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Trigger background job for PDF generation and email
-    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
-    
-    // Fire-and-forget pattern
-    fetch(backgroundUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+    // Queue email for background processing via Inngest
+    const { queueInvoiceEmail } = await import('@/services/email-queue.service');
+
+    queueInvoiceEmail({
+      invoiceId: invoice.id,
+      customerId: invoice.customer.id,
+      type: 'pending',
+      recipient: invoice.customer.email,
+      subject: `Invoice ${invoice.invoiceNumber}`,
+      emailData: {
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: Number(invoice.amount),
+        currency: invoice.currency,
+        dueDate: invoice.dueDate,
+        issuedDate: invoice.issuedDate,
       },
-      body: JSON.stringify({
-        invoiceId: invoice.id,
-        type: 'pending_notification',
-      }),
     }).catch(err => {
-      logger.error('Failed to trigger background email', err, { 
+      logger.error('Failed to queue invoice email', err, {
         context: 'markInvoiceAsPending',
-        metadata: { invoiceId: invoice.id } 
+        metadata: { invoiceId: invoice.id }
       });
     });
 
-    logger.info('Invoice marked as pending, background email task triggered', {
+    logger.info('Invoice marked as pending, email queued', {
       context: 'markInvoiceAsPending',
       metadata: {
         invoiceId: invoice.id,
@@ -263,6 +263,8 @@ export async function recordPayment(
   }
 
   try {
+    // Check permission to record payments
+    requirePermission(session.user, 'canRecordPayments');
     const validatedData = RecordPaymentSchema.parse(data);
 
     const invoice = await invoiceRepo.addPayment(
@@ -271,6 +273,7 @@ export async function recordPayment(
       validatedData.paymentMethod,
       validatedData.paidDate,
       validatedData.notes,
+      session.user.id,
     );
 
     if (!invoice) {
@@ -302,13 +305,20 @@ export async function recordPayment(
 export async function cancelInvoice(
   data: CancelInvoiceInput,
 ): Promise<ActionResult<{ id: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
+    requirePermission(session.user, 'canManageInvoices');
     const validatedData = CancelInvoiceSchema.parse(data);
 
     const invoice = await invoiceRepo.cancel(
       validatedData.id,
       validatedData.cancelledDate,
       validatedData.cancelReason,
+      session.user.id,
     );
 
     if (!invoice) {
@@ -373,28 +383,32 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       invoice = updatedInvoice;
     }
 
-    // Trigger background job for PDF generation and email
-    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
-    
-    // Fire-and-forget pattern
-    fetch(backgroundUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+    // Queue receipt email for background processing via Inngest
+    const { queueInvoiceEmail } = await import('@/services/email-queue.service');
+
+    queueInvoiceEmail({
+      invoiceId: invoice.id,
+      customerId: invoice.customer.id,
+      type: 'receipt',
+      recipient: invoice.customer.email,
+      subject: `Payment Receipt ${invoice.receiptNumber || invoice.invoiceNumber}`,
+      emailData: {
+        invoiceNumber: invoice.invoiceNumber,
+        receiptNumber: invoice.receiptNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: Number(invoice.amount),
+        currency: invoice.currency,
+        paidDate: invoice.paidDate || new Date(),
+        paymentMethod: invoice.paymentMethod || 'Not specified',
       },
-      body: JSON.stringify({
-        invoiceId: invoice.id,
-        type: 'receipt',
-      }),
     }).catch(err => {
-      logger.error('Failed to trigger background receipt', err, { 
+      logger.error('Failed to queue receipt email', err, {
         context: 'sendInvoiceReceipt',
-        metadata: { invoiceId: invoice.id } 
+        metadata: { invoiceId: invoice.id }
       });
     });
 
-    logger.info('Background receipt email triggered', {
+    logger.info('Receipt email queued', {
       context: 'sendInvoiceReceipt',
       metadata: {
         invoiceId: id,
@@ -426,6 +440,7 @@ export async function bulkUpdateInvoiceStatus(
   try {
     await invoiceRepo.bulkUpdateStatus(ids, status);
     revalidatePath('/finances/invoices');
+
     return { success: true, data: { count: ids.length } };
   } catch (error) {
     return handleActionError(error, 'Failed to update invoices');
@@ -459,25 +474,29 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       return { success: false, error: 'Cannot send reminder for invoice that is not overdue' };
     }
 
-    // Trigger background job for PDF generation and email
-    const backgroundUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/background/invoices/email-notification`;
-    console.debug('Background URL:', backgroundUrl);
-    
-    // Fire-and-forget pattern
-    fetch(backgroundUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+    // Queue reminder email for background processing via Inngest
+    const { queueInvoiceEmail } = await import('@/services/email-queue.service');
+
+    queueInvoiceEmail({
+      invoiceId: invoice.id,
+      customerId: invoice.customer.id,
+      type: 'reminder',
+      recipient: invoice.customer.email,
+      subject: `Payment Reminder: Invoice ${invoice.invoiceNumber} - ${daysOverdue} Days Overdue`,
+      emailData: {
+        invoiceNumber: invoice.invoiceNumber,
+        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+        amount: Number(invoice.amount),
+        currency: invoice.currency,
+        dueDate: invoice.dueDate,
+        daysOverdue,
+        amountPaid: Number(invoice.amountPaid),
+        amountDue: Number(invoice.amountDue),
       },
-      body: JSON.stringify({
-        invoiceId: invoice.id,
-        type: 'reminder',
-      }),
     }).catch(err => {
-      logger.error('Failed to trigger background reminder', err, { 
+      logger.error('Failed to queue reminder email', err, {
         context: 'sendInvoiceReminder',
-        metadata: { invoiceId: invoice.id } 
+        metadata: { invoiceId: invoice.id }
       });
     });
 
@@ -486,7 +505,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       return { success: false, error: 'Failed to update reminder count' };
     }
 
-    logger.info('Background reminder emai triggered', {
+    logger.info('Reminder email queued', {
       context: 'sendInvoiceReminder',
       metadata: {
         invoiceId: id,
@@ -524,6 +543,7 @@ export async function deleteInvoice(id: string): Promise<ActionResult<{ id: stri
   }
 
   try {
+    requirePermission(session.user, 'canManageInvoices');
     const success = await invoiceRepo.softDelete(id);
 
     if (!success) {

@@ -23,7 +23,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.debug(body);
     
     const { invoiceId, type } = body;
 
@@ -50,6 +49,9 @@ export async function POST(request: Request) {
           },
         },
         payments: true,
+        statusHistory: {
+          orderBy: { changedAt: 'asc' },
+        },
       },
     });
 
@@ -70,11 +72,12 @@ export async function POST(request: Request) {
       amountDue: Number(invoice.amountDue),
       notes: invoice.notes || undefined,
       items: invoice.items.map(i => ({ ...i, unitPrice: Number(i.unitPrice), total: Number(i.total) })),
-      payments: invoice.payments.map(p => ({ 
-        ...p, 
-        amount: Number(p.amount), 
+      payments: invoice.payments.map(p => ({
+        ...p,
+        amount: Number(p.amount),
         notes: p.notes, // Keep as is from prisma (string | null)
       })),
+      statusHistory: invoice.statusHistory,
     };
 
     // Lazy load heavy dependencies

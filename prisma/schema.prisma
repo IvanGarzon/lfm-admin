@@ -55,7 +55,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  // role                  UserRole               @default(User)
+  role                  UserRole               @default(USER)
   // isTwoFactorEnabled    Boolean                @default(false)
   // twoFactorConfirmation TwoFactorConfirmation?
 
@@ -94,8 +94,9 @@ model Customer {
   updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
 
-  invoices Invoice[]
-  quotes   Quote[]
+  invoices   Invoice[]
+  quotes     Quote[]
+  emailAudit EmailAudit[]
 
   @@map(name: "customers")
 }
@@ -207,9 +208,11 @@ model Invoice {
 
   notes String? @db.Text
 
-  items     InvoiceItem[]
-  payments  Payment[]
-  documents Document[]
+  items         InvoiceItem[]
+  payments      Payment[]
+  statusHistory InvoiceStatusHistory[]
+  emailAudit    EmailAudit[]
+  documents     Document[]
 
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
@@ -240,6 +243,21 @@ model InvoiceItem {
 
   @@index([invoiceId])
   @@map(name: "invoice_items")
+}
+
+model InvoiceStatusHistory {
+  id             String        @id @default(cuid())
+  invoiceId      String        @map(name: "invoice_id")
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  status         InvoiceStatus
+  previousStatus InvoiceStatus?
+  changedAt      DateTime      @default(now()) @map(name: "changed_at") @db.Timestamptz()
+  changedBy      String?       @map(name: "changed_by")
+  notes          String?       @db.Text
+
+  @@index([invoiceId, changedAt])
+  @@map(name: "invoice_status_history")
 }
 
 model Payment {
@@ -289,6 +307,7 @@ model Quote {
   documents     Document[]
   attachments   QuoteAttachment[]
   statusHistory QuoteStatusHistory[]
+  emailAudit    EmailAudit[]
 
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
@@ -415,6 +434,55 @@ model Document {
   @@map("documents")
 }
 
+model EmailAudit {
+  id String @id @default(cuid())
+
+  // Polymorphic relations - can be associated with different entities
+  invoiceId  String?   @map("invoice_id")
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  quoteId    String?   @map("quote_id")
+  quote      Quote?    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  customerId String?   @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  // Email details
+  emailType    String  @map("email_type")     // 'invoice', 'quote', 'reminder', 'receipt', 'report', etc.
+  templateName String  @map("template_name")  // Email template used
+  recipient    String                         // Email address
+  subject      String
+
+  // Email status tracking
+  status       EmailStatus @default(QUEUED)
+  queuedAt     DateTime    @default(now()) @map("queued_at") @db.Timestamptz()
+  sentAt       DateTime?   @map("sent_at") @db.Timestamptz()
+  failedAt     DateTime?   @map("failed_at") @db.Timestamptz()
+
+  // Error tracking
+  errorMessage String? @map("error_message") @db.Text
+  retryCount   Int     @default(0) @map("retry_count")
+
+  // Inngest metadata for cross-referencing
+  inngestEventId String? @map("inngest_event_id")
+  inngestRunId   String? @map("inngest_run_id")
+
+  // Additional metadata (attachments info, custom data, etc.)
+  metadata Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([invoiceId])
+  @@index([quoteId])
+  @@index([customerId])
+  @@index([status])
+  @@index([emailType])
+  @@index([queuedAt])
+  @@index([inngestEventId])
+  @@map("email_audit")
+}
+
 
 enum Gender {
   MALE
@@ -481,5 +549,16 @@ enum DocumentKind {
   QUOTE
 }
 
+enum EmailStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  RETRYING
+}
 
-
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}

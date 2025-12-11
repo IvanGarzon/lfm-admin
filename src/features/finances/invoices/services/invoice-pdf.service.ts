@@ -69,48 +69,67 @@ export async function getOrGenerateInvoicePdf(
 
   // Step 3: Determine if regeneration is needed
   // Only regenerate if content hash changed
-  const needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
+  let needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
 
   let pdfBuffer: Buffer | null = null;
-  let s3Key: string;
-  let s3Url: string;
-  let pdfUrl: string;
-  let pdfFileSize: number;
-  let wasRegenerated: boolean;
+  let s3Key = '';
+  let s3Url = '';
+  let pdfUrl = '';
+  let pdfFileSize = 0;
+  let wasRegenerated = false;
 
-  if (!needsRegeneration && existingDoc) {
-    // REUSE EXISTING - Content hasn't changed
-    s3Key = existingDoc.s3Key;
-    s3Url = existingDoc.s3Url;
-    pdfFileSize = existingDoc.fileSize;
-    
-    // Get signed URL
-    pdfUrl = await getDocumentUrl(existingDoc.id);
+  // Determine if we should try to reuse existing
+  const shouldTryReuse = !needsRegeneration && existingDoc;
+  let reuseSuccessful = false;
 
-    // Download buffer if requested
-    if (!skipDownload) {
-      const { downloadFileFromS3 } = await import('@/lib/s3');
-      pdfBuffer = await downloadFileFromS3(s3Key);
+  if (shouldTryReuse && existingDoc) {
+    try {
+      s3Key = existingDoc.s3Key;
+      s3Url = existingDoc.s3Url;
+      pdfFileSize = existingDoc.fileSize;
+
+      // Get signed URL
+      pdfUrl = await getDocumentUrl(existingDoc.id);
+
+      // Download buffer if requested
+      if (!skipDownload) {
+        const { downloadFileFromS3 } = await import('@/lib/s3');
+        pdfBuffer = await downloadFileFromS3(s3Key);
+      }
+
+      wasRegenerated = false;
+      reuseSuccessful = true;
+
+      logger.info('Reused existing PDF (content unchanged)', {
+        context,
+        metadata: {
+          invoiceId: invoice.id,
+          documentId: existingDoc.id,
+          contentHash,
+          skipDownload,
+        },
+      });
+    } catch (error) {
+      // If S3 file is missing, regenerate the PDF
+      logger.warn('S3 file missing for existing document, regenerating PDF', {
+        context,
+        metadata: {
+          invoiceId: invoice.id,
+          s3Key: existingDoc?.s3Key,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
     }
+  }
 
-    wasRegenerated = false;
-
-    logger.info('Reused existing PDF (content unchanged)', {
+  // Generate new PDF if reuse wasn't successful
+  if (!reuseSuccessful) {
+    // GENERATE NEW - Content changed or S3 file missing
+    logger.info('Generating new PDF', {
       context,
       metadata: {
         invoiceId: invoice.id,
-        documentId: existingDoc.id,
-        contentHash,
-        skipDownload,
-      },
-    });
-  } else {
-    // GENERATE NEW - Content changed
-    logger.info('Generating new PDF (content changed)', {
-      context,
-      metadata: {
-        invoiceId: invoice.id,
-        reason: !existingDoc ? 'first_generation' : 'content_changed',
+        reason: !existingDoc ? 'first_generation' : 'content_changed_or_missing',
         oldHash: existingDoc?.fileHash,
         newHash: contentHash,
       },
@@ -134,7 +153,7 @@ export async function getOrGenerateInvoicePdf(
 
     s3Key = newDoc.s3Key;
     s3Url = newDoc.s3Url;
-    
+
     // Get signed URL
     pdfUrl = await getDocumentUrl(newDoc.id);
 
@@ -185,41 +204,56 @@ export async function getOrGenerateReceiptPdf(
   );
 
   // Step 3: Determine if regeneration is needed
-  const needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
+  let needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
 
   let pdfBuffer: Buffer | null = null;
-  let s3Key: string;
-  let s3Url: string;
-  let pdfUrl: string;
-  let pdfFileSize: number;
-  let wasRegenerated: boolean;
+  let s3Key = '';
+  let s3Url = '';
+  let pdfUrl = '';
+  let pdfFileSize = 0;
+  let wasRegenerated = false;
 
   if (!needsRegeneration && existingDoc) {
-    // REUSE EXISTING
-    s3Key = existingDoc.s3Key;
-    s3Url = existingDoc.s3Url;
-    pdfFileSize = existingDoc.fileSize;
+    // REUSE EXISTING - but verify file exists in S3
+    try {
+      s3Key = existingDoc.s3Key;
+      s3Url = existingDoc.s3Url;
+      pdfFileSize = existingDoc.fileSize;
 
-    // Get signed URL
-    pdfUrl = await getDocumentUrl(existingDoc.id);
+      // Get signed URL
+      pdfUrl = await getDocumentUrl(existingDoc.id);
 
-    // Download buffer if requested
-    if (!skipDownload) {
-      const { downloadFileFromS3 } = await import('@/lib/s3');
-      pdfBuffer = await downloadFileFromS3(s3Key);
+      // Download buffer if requested
+      if (!skipDownload) {
+        const { downloadFileFromS3 } = await import('@/lib/s3');
+        pdfBuffer = await downloadFileFromS3(s3Key);
+      }
+
+      wasRegenerated = false;
+
+      logger.info('Reused existing receipt PDF from DocumentService', {
+        context,
+        metadata: {
+          invoiceId: invoice.id,
+          documentId: existingDoc.id,
+          skipDownload,
+        },
+      });
+    } catch (error) {
+      // If S3 file is missing, regenerate the PDF
+      logger.warn('S3 file missing for existing document, regenerating PDF', {
+        context,
+        metadata: {
+          invoiceId: invoice.id,
+          s3Key: existingDoc.s3Key,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      });
+      needsRegeneration = true;
     }
+  }
 
-    wasRegenerated = false;
-
-    logger.info('Reused existing receipt PDF from DocumentService', {
-      context,
-      metadata: {
-        invoiceId: invoice.id,
-        documentId: existingDoc.id,
-        skipDownload,
-      },
-    });
-  } else {
+  if (needsRegeneration || !existingDoc) {
     // GENERATE NEW
     logger.info('Generating new receipt PDF', {
       context,
@@ -256,6 +290,11 @@ export async function getOrGenerateReceiptPdf(
     }
 
     wasRegenerated = true;
+  }
+
+  // TypeScript flow analysis safety check (should never happen)
+  if (!s3Key || !s3Url || !pdfUrl || pdfFileSize === undefined || wasRegenerated === undefined) {
+    throw new Error('PDF generation failed: variables not properly assigned');
   }
 
   return {

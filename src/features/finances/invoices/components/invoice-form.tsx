@@ -41,6 +41,7 @@ import type { InvoiceWithDetails, InvoiceFormInput } from '@/features/finances/i
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
+import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 const defaultFormState: CreateInvoiceInput = {
@@ -145,7 +146,22 @@ export function InvoiceForm({
   useUnsavedChanges(form.formState.isDirty);
 
   const isLocked = useMemo(() => {
-    return mode === 'update' && invoice?.status !== InvoiceStatus.DRAFT;
+    if (mode === 'create') {
+      return false;
+    }
+    
+    if (!invoice) {
+      return false;
+    }
+    
+    // Lock only if PAID, PARTIALLY_PAID, or CANCELLED
+    const lockedStatuses: InvoiceStatus[] = [
+      InvoiceStatus.PAID, 
+      InvoiceStatus.PARTIALLY_PAID, 
+      InvoiceStatus.CANCELLED
+    ];
+    
+    return lockedStatuses.includes(invoice.status);
   }, [mode, invoice?.status]);
 
   const onSubmit: SubmitHandler<InvoiceFormInput> = useCallback(
@@ -468,6 +484,13 @@ export function InvoiceForm({
               )}
             />
           </FieldGroup>
+
+          {/* Status History - Only show for existing invoices */}
+          {invoice?.statusHistory && invoice.statusHistory.length > 0 ? (
+            <FieldGroup>
+              <InvoiceStatusHistory history={invoice.statusHistory} />
+            </FieldGroup>
+          ): null}
         </Box>
 
         {/* Total Summary */}

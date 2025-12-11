@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
-import { formatFileSize } from '@/lib/s3';
+import { formatFileSize } from '@/lib/file-constants';
 
 type TestResult = {
   type: 'success' | 'error' | 'info';

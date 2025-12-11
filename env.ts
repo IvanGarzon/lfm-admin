@@ -29,6 +29,16 @@ export const env = createEnv({
     AWS_ENDPOINT_URL: z.string().min(1),
     RESEND_API_KEY: z.string().min(1),
     CRON_SECRET: z.string().min(1),
+    INNGEST_APP_ID: z.string().min(1),
+    INNGEST_EVENT_KEY: z.string().optional(),
+    INNGEST_SIGNING_KEY: z.string().optional(),
+
+    // Email testing
+    EMAIL_TEST_MODE: z
+      .string()
+      .optional()
+      .transform((s) => s === 'true'),
+    EMAIL_TEST_RECIPIENT: z.string().email().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -52,5 +62,10 @@ export const env = createEnv({
     AWS_ENDPOINT_URL: process.env.AWS_ENDPOINT_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
+    INNGEST_APP_ID: process.env.INNGEST_APP_ID,
+    INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
+    INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
+    EMAIL_TEST_MODE: process.env.EMAIL_TEST_MODE,
+    EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
   },
 });

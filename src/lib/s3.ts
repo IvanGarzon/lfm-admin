@@ -26,7 +26,7 @@ const isLocalStack = isDevelopment && !!env.AWS_ENDPOINT_URL;
 const AWS_REGION = env.AWS_REGION;
 const AWS_ACCESS_KEY_ID = env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = env.AWS_SECRET_ACCESS_KEY;
-const AWS_ENDPOINT_URL = env.AWS_ENDPOINT_URL; // e.g., http://localhost:4566
+const AWS_ENDPOINT_URL = env.AWS_ENDPOINT_URL;
 
 export const BUCKET_NAME = env.AWS_S3_BUCKET_NAME;
 
