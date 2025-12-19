@@ -25,6 +25,10 @@ import type {
   InvoiceStatistics,
   InvoiceWithDetails,
   InvoicePagination,
+  InvoiceBasic,
+  InvoiceItemDetail,
+  InvoicePaymentItem,
+  InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
 import type { ActionResult } from '@/types/actions';
 import { requirePermission } from '@/lib/permissions';
@@ -65,7 +69,11 @@ export async function getInvoices(
 
     return { success: true, data: result };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoices');
+    return handleActionError(error, 'Failed to fetch invoices', {
+      action: 'getInvoices',
+      userId: session.user.id,
+      filters: parseResult.data,
+    });
   }
 }
 
@@ -95,6 +103,87 @@ export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWi
   }
 }
 
+/**
+ * Retrieves basic invoice details without relations, but with relationship counts.
+ * Useful for fast initial loading.
+ * @param id - The ID of the invoice to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing basic invoice details.
+ */
+export async function getInvoiceBasicById(id: string): Promise<ActionResult<InvoiceBasic>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const invoice = await invoiceRepo.findInvoiceBasicById(id);
+
+    if (!invoice) {
+      return { success: false, error: 'Invoice not found' };
+    }
+
+    return { success: true, data: invoice };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch basic invoice details');
+  }
+}
+
+/**
+ * Retrieves all items for a specific invoice.
+ * @param id - The ID of the invoice.
+ * @returns A promise that resolves to an `ActionResult` containing the invoice items.
+ */
+export async function getInvoiceItems(id: string): Promise<ActionResult<InvoiceItemDetail[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const items = await invoiceRepo.findInvoiceItems(id);
+    return { success: true, data: items };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch invoice items');
+  }
+}
+
+/**
+ * Retrieves all payments for a specific invoice.
+ * @param id - The ID of the invoice.
+ * @returns A promise that resolves to an `ActionResult` containing the invoice payments.
+ */
+export async function getInvoicePayments(id: string): Promise<ActionResult<InvoicePaymentItem[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const payments = await invoiceRepo.findInvoicePayments(id);
+    return { success: true, data: payments };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch invoice payments');
+  }
+}
+
+/**
+ * Retrieves the status history for a specific invoice.
+ * @param id - The ID of the invoice.
+ * @returns A promise that resolves to an `ActionResult` containing the status history events.
+ */
+export async function getInvoiceStatusHistory(id: string): Promise<ActionResult<InvoiceStatusHistoryItem[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const history = await invoiceRepo.findInvoiceStatusHistory(id);
+    return { success: true, data: history };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch invoice status history');
+  }
+}
 /**
  * Retrieves statistics about invoices, such as counts for different statuses.
  * Can be filtered by a date range.
@@ -292,7 +381,12 @@ export async function recordPayment(
       }
     };
   } catch (error) {
-    return handleActionError(error, 'Failed to record payment');
+    return handleActionError(error, 'Failed to record payment', {
+      action: 'recordPayment',
+      userId: session.user.id,
+      invoiceId: data.id,
+      amount: data.amount,
+    });
   }
 }
 
@@ -431,17 +525,28 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
 export async function bulkUpdateInvoiceStatus(
   ids: string[],
   status: InvoiceStatus,
-): Promise<ActionResult<{ count: number }>> {
+): Promise<ActionResult<{ successCount: number; failureCount: number; results: { id: string; success: boolean; error?: string }[] }>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
 
   try {
-    await invoiceRepo.bulkUpdateStatus(ids, status);
+    const results = await invoiceRepo.bulkUpdateStatus(ids, status, session.user.id);
+    
+    const successCount = results.filter(r => r.success).length;
+    const failureCount = results.filter(r => !r.success).length;
+    
     revalidatePath('/finances/invoices');
 
-    return { success: true, data: { count: ids.length } };
+    return { 
+      success: true, 
+      data: { 
+        successCount, 
+        failureCount,
+        results 
+      } 
+    };
   } catch (error) {
     return handleActionError(error, 'Failed to update invoices');
   }

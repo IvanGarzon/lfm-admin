@@ -25,11 +25,13 @@ import type { ActionResult } from '@/types/actions';
  * Handles errors in server actions and returns a standardized ActionResult
  * @param error - The error that was thrown
  * @param fallbackMessage - The default error message to use if no specific message is available
+ * @param context - Optional context metadata for debugging (e.g., user ID, request params)
  * @returns ActionResult with success: false and appropriate error message
  */
 export function handleActionError<T = never>(
   error: unknown,
   fallbackMessage = 'An unexpected error occurred',
+  context?: Record<string, unknown>,
 ): ActionResult<T> {
   // Handle Zod validation errors
   if (error instanceof ZodError) {
@@ -39,7 +41,7 @@ export function handleActionError<T = never>(
 
     logger.warn('Validation error in server action', {
       context: 'handleActionError',
-      metadata: { errors: error.issues },
+      metadata: { errors: error.issues, ...context },
     });
 
     return {
@@ -50,11 +52,20 @@ export function handleActionError<T = never>(
 
   // Handle Prisma errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (context) {
+      logger.error('Prisma error with context', error, {
+        context: 'handleActionError',
+        metadata: context,
+      });
+    }
     return handlePrismaError(error);
   }
 
   if (error instanceof Prisma.PrismaClientValidationError) {
-    logger.error('Prisma validation error', error);
+    logger.error('Prisma validation error', error, {
+      context: 'handleActionError',
+      metadata: context,
+    });
     return {
       success: false,
       error: 'Database validation error. Please check your input.',
@@ -65,7 +76,7 @@ export function handleActionError<T = never>(
   if (error instanceof Error) {
     logger.error('Error in server action', error, {
       context: 'handleActionError',
-      metadata: { message: error.message },
+      metadata: { message: error.message, ...context },
     });
 
     return {
@@ -75,7 +86,10 @@ export function handleActionError<T = never>(
   }
 
   // Handle unknown errors
-  logger.error('Unknown error in server action', error);
+  logger.error('Unknown error in server action', error, {
+    context: 'handleActionError',
+    metadata: context,
+  });
   
   return {
     success: false,

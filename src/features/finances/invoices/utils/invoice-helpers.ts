@@ -6,6 +6,7 @@ import { InvoiceDocument } from '@/templates/invoice-template';
 import { ReceiptDocument } from '@/templates/receipt-template';
 import { InvoiceStatus } from '@/prisma/client';
 import type { InvoiceListItem, InvoiceWithDetails } from '@/features/finances/invoices/types';
+import { INVOICE_CONFIG } from '../config/invoice-config';
 
 // ============================================================================
 // PDF GENERATION
@@ -129,6 +130,7 @@ export const VALID_INVOICE_STATUS_TRANSITIONS: Record<
     InvoiceStatus.DRAFT,
   ],
   [InvoiceStatus.PARTIALLY_PAID]: [
+    InvoiceStatus.PARTIALLY_PAID,
     InvoiceStatus.PAID,
     InvoiceStatus.OVERDUE,
     InvoiceStatus.CANCELLED,
@@ -249,7 +251,7 @@ export function needsReminder(invoice: InvoiceListItem): boolean {
   }
 
   const daysUntil = daysUntilDue(invoice.dueDate);
-  return daysUntil <= 7;
+  return daysUntil <= INVOICE_CONFIG.REMINDER_THRESHOLD_DAYS;
 }
 
 /**
@@ -268,8 +270,8 @@ export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' 
 
   const daysUntil = daysUntilDue(invoice.dueDate);
   
-  if (daysUntil <= 3) return 'high';
-  if (daysUntil <= 7) return 'medium';
+  if (daysUntil <= INVOICE_CONFIG.URGENCY_HIGH_DAYS) return 'high';
+  if (daysUntil <= INVOICE_CONFIG.URGENCY_MEDIUM_DAYS) return 'medium';
 
   return 'low';
 }

@@ -13,13 +13,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Box } from '@/components/ui/box';
-import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
+import type { InvoiceWithDetails, InvoiceBasic, InvoiceItemDetail, InvoicePaymentItem } from '@/features/finances/invoices/types';
 import { ReceiptPreview } from '@/features/finances/invoices/components/receipt-preview';
 
 interface SendReceiptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: InvoiceWithDetails;
+  invoice: InvoiceBasic | InvoiceWithDetails;
+  items?: InvoiceItemDetail[];
+  payments?: InvoicePaymentItem[];
+  isLoadingItems?: boolean;
+  isLoadingPayments?: boolean;
   onDownload: () => Promise<void>;
   onSendEmail?: () => Promise<void>;
 }
@@ -28,6 +32,10 @@ export function SendReceiptDialog({
   open,
   onOpenChange,
   invoice,
+  items = [],
+  payments = [],
+  isLoadingItems = false,
+  isLoadingPayments = false,
   onDownload,
   onSendEmail,
 }: SendReceiptDialogProps) {
@@ -79,7 +87,13 @@ export function SendReceiptDialog({
         </DialogHeader>
 
         <Box className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-hidden">
-          <ReceiptPreview invoice={invoice} />
+          <ReceiptPreview 
+            invoice={invoice} 
+            items={items} 
+            payments={payments} 
+            isLoadingItems={isLoadingItems}
+            isLoadingPayments={isLoadingPayments}
+          />
         </Box>
 
         <DialogFooter className="px-6 py-4 border-t bg-gray-50 dark:bg-gray-900/50">

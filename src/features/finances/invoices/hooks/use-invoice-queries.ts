@@ -1,8 +1,14 @@
+'use client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { InvoiceStatus } from '@/prisma/client'
+import { InvoiceStatus } from '@/prisma/client';
 import {
   getInvoices,
   getInvoiceById,
+  getInvoiceBasicById,
+  getInvoiceItems,
+  getInvoicePayments,
+  getInvoiceStatusHistory,
   getInvoiceStatistics,
   createInvoice,
   updateInvoice,
@@ -30,6 +36,9 @@ export const INVOICE_KEYS = {
   list: (filters: InvoiceFilters) => [...INVOICE_KEYS.lists(), { filters }] as const,
   details: () => [...INVOICE_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...INVOICE_KEYS.details(), id] as const,
+  items: (id: string) => [...INVOICE_KEYS.detail(id), 'items'] as const,
+  payments: (id: string) => [...INVOICE_KEYS.detail(id), 'payments'] as const,
+  history: (id: string) => [...INVOICE_KEYS.detail(id), 'history'] as const,
   statistics: () => [...INVOICE_KEYS.all, 'statistics'] as const,
 };
 
@@ -66,6 +75,78 @@ export function useInvoice(id: string | undefined) {
         throw new Error('Invoice ID is required');
       }
       const result = await getInvoiceById(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useInvoiceBasic(id: string | undefined) {
+  return useQuery({
+    queryKey: [...INVOICE_KEYS.detail(id ?? ''), 'basic'],
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Invoice ID is required');
+      }
+      const result = await getInvoiceBasicById(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useInvoiceItems(id: string | undefined) {
+  return useQuery({
+    queryKey: INVOICE_KEYS.items(id ?? ''),
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Invoice ID is required');
+      }
+      const result = await getInvoiceItems(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useInvoicePayments(id: string | undefined) {
+  return useQuery({
+    queryKey: INVOICE_KEYS.payments(id ?? ''),
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Invoice ID is required');
+      }
+      const result = await getInvoicePayments(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useInvoiceHistory(id: string | undefined) {
+  return useQuery({
+    queryKey: INVOICE_KEYS.history(id ?? ''),
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Invoice ID is required');
+      }
+      const result = await getInvoiceStatusHistory(id);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -538,7 +619,7 @@ export function useBulkUpdateInvoiceStatus() {
     },
     onSuccess: (data) => {
       toast.success(
-        data.count > 1 ? `${data.count} invoices updated` : 'Invoice updated',
+        data.successCount > 1 ? `${data.successCount} invoices updated` : 'Invoice updated',
       );
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });

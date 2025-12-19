@@ -28,6 +28,33 @@ export type InvoiceListItem = {
   amountDue: number;
 };
 
+export type InvoicePaymentItem = {
+  id: string;
+  amount: number;
+  date: Date;
+  method: string;
+  reference: string | null;
+  notes: string | null;
+};
+
+export type InvoiceItemDetail = {
+  id: string;
+  invoiceId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  productId: string | null;
+};
+
+export type InvoiceBasic = Omit<InvoiceWithDetails, 'payments' | 'statusHistory' | 'items'> & {
+  _count?: {
+    payments: number;
+    statusHistory: number;
+    items: number;
+  };
+};
+
 export type InvoiceWithDetails = {
   id: string;
   invoiceNumber: string;
@@ -47,14 +74,7 @@ export type InvoiceWithDetails = {
   notes?: string;
   amountPaid: number;
   amountDue: number;
-  payments: {
-    id: string;
-    amount: number;
-    date: Date;
-    method: string;
-    reference: string | null;
-    notes: string | null;
-  }[];
+  payments: InvoicePaymentItem[];
   statusHistory: InvoiceStatusHistoryItem[];
   customer: {
     id: string;
@@ -67,15 +87,7 @@ export type InvoiceWithDetails = {
       name: string;
     } | null;
   };
-  items: {
-    id: string;
-    invoiceId: string;
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    total: number;
-    productId: string | null;
-  }[];
+  items: InvoiceItemDetail[];
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

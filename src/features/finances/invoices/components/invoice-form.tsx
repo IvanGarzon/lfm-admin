@@ -37,7 +37,7 @@ import {
   type UpdateInvoiceInput,
 } from '@/schemas/invoices';
 import { CustomerSelect } from '@/components/shared/customer-select';
-import type { InvoiceWithDetails, InvoiceFormInput } from '@/features/finances/invoices/types';
+import type { InvoiceWithDetails, InvoiceFormInput, InvoiceBasic, InvoiceItemDetail, InvoiceStatusHistoryItem } from '@/features/finances/invoices/types';
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
@@ -63,7 +63,10 @@ const defaultFormState: CreateInvoiceInput = {
   ],
 };
 
-const mapInvoiceToFormValues = (invoice: InvoiceWithDetails): UpdateInvoiceInput => {
+const mapInvoiceToFormValues = (
+  invoice: InvoiceBasic,
+  items: InvoiceItemDetail[] = []
+): UpdateInvoiceInput => {
   return {
     id: invoice.id,
     customerId: invoice.customer.id,
@@ -74,7 +77,7 @@ const mapInvoiceToFormValues = (invoice: InvoiceWithDetails): UpdateInvoiceInput
     dueDate: invoice.dueDate,
     currency: invoice.currency,
     notes: invoice.notes ?? '',
-    items: invoice.items.map((item) => ({
+    items: items.map((item) => ({
       description: item.description,
       quantity: item.quantity,
       unitPrice: Number(item.unitPrice),
@@ -85,17 +88,25 @@ const mapInvoiceToFormValues = (invoice: InvoiceWithDetails): UpdateInvoiceInput
 
 export function InvoiceForm({
   invoice,
+  items,
+  statusHistory,
   onCreate,
   onUpdate,
   isCreating = false,
   isUpdating = false,
+  isLoadingItems = false,
+  isLoadingHistory = false,
   onDirtyStateChange,
 }: {
-  invoice?: InvoiceWithDetails | null;
+  invoice?: InvoiceBasic | null;
+  items?: InvoiceItemDetail[];
+  statusHistory?: InvoiceStatusHistoryItem[];
   onCreate?: (data: CreateInvoiceInput) => void;
   onUpdate?: (data: UpdateInvoiceInput) => void;
   isCreating?: boolean;
   isUpdating?: boolean;
+  isLoadingItems?: boolean;
+  isLoadingHistory?: boolean;
   onDirtyStateChange?: (isDirty: boolean) => void;
 }) {
   const mode = invoice ? 'update' : 'create';
@@ -107,7 +118,7 @@ export function InvoiceForm({
     mode === 'create'
       ? defaultFormState
       : invoice
-        ? mapInvoiceToFormValues(invoice)
+        ? mapInvoiceToFormValues(invoice, items)
         : defaultFormState;
 
   const createResolver: Resolver<InvoiceFormInput> = (values, context, options) => {
@@ -131,10 +142,10 @@ export function InvoiceForm({
 
   useEffect(() => {
     if (mode === 'update' && invoice) {
-      const formValues = mapInvoiceToFormValues(invoice);
+      const formValues = mapInvoiceToFormValues(invoice, items);
       form.reset(formValues);
     }
-  }, [invoice, mode]);
+  }, [invoice, items, mode]);
 
   useEffect(() => {
     if (onDirtyStateChange) {
@@ -376,13 +387,20 @@ export function InvoiceForm({
           </Box>
 
           {/* Items details */}
-          <InvoiceItemsList
-            form={form}
-            fieldArray={itemsFieldArray}
-            products={products}
-            isLoadingProducts={isLoadingProducts}
-            isLocked={isLocked}
-          />
+          {isLoadingItems ? (
+            <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
+               <Loader2 className="h-6 w-6 animate-spin text-primary" />
+               <p className="text-sm text-muted-foreground">Loading invoice items...</p>
+            </Box>
+          ) : (
+            <InvoiceItemsList
+              form={form}
+              fieldArray={itemsFieldArray}
+              products={products}
+              isLoadingProducts={isLoadingProducts}
+              isLocked={isLocked}
+            />
+          )}
 
           {/* GST and Discount */}
           <Box className="grid grid-cols-2 gap-4">
@@ -486,9 +504,14 @@ export function InvoiceForm({
           </FieldGroup>
 
           {/* Status History - Only show for existing invoices */}
-          {invoice?.statusHistory && invoice.statusHistory.length > 0 ? (
+          {isLoadingHistory ? (
+            <Box className="py-4 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Loading history...</span>
+            </Box>
+          ) : (statusHistory && statusHistory.length > 0) ? (
             <FieldGroup>
-              <InvoiceStatusHistory history={invoice.statusHistory} />
+              <InvoiceStatusHistory history={statusHistory} />
             </FieldGroup>
           ): null}
         </Box>

@@ -38,7 +38,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  useInvoice,
+  useInvoiceBasic,
+  useInvoiceItems,
+  useInvoiceHistory,
+  useInvoicePayments,
   useCreateInvoice,
   useMarkInvoiceAsPending,
   useUpdateInvoice,
@@ -46,7 +49,7 @@ import {
   useDownloadInvoicePdf,
   useDuplicateInvoice,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import { InvoiceForm } from '@/features/finances/invoices/components//invoice-form';
+import { InvoiceForm } from '@/features/finances/invoices/components/invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
 import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
@@ -69,7 +72,10 @@ export function InvoiceDrawer({
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  const { data: invoice, isLoading, error, isError } = useInvoice(id);
+  const { data: invoice, isLoading, error, isError } = useInvoiceBasic(id);
+  const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id);
+  const { data: history, isLoading: isLoadingHistory } = useInvoiceHistory(id);
+  const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id);
   const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const createInvoice = useCreateInvoice();
@@ -412,8 +418,12 @@ export function InvoiceDrawer({
                     ) : (
                       <InvoiceForm
                         invoice={invoice}
+                        items={items}
+                        statusHistory={history}
                         onUpdate={handleUpdate}
                         isUpdating={updateInvoice.isPending}
+                        isLoadingItems={isLoadingItems}
+                        isLoadingHistory={isLoadingHistory}
                         onDirtyStateChange={handleUnsavedChanges}
                       />
                     )}
@@ -440,7 +450,13 @@ export function InvoiceDrawer({
 
                       {/* HTML Preview Content */}
                       <Box className="flex-1 overflow-hidden">
-                        <InvoicePreview invoice={invoice} />
+                        <InvoicePreview 
+                          invoice={invoice} 
+                          items={items}
+                          payments={payments}
+                          isLoadingItems={isLoadingItems}
+                          isLoadingPayments={isLoadingPayments}
+                        />
                       </Box>
                     </Box>
                   ) : null}

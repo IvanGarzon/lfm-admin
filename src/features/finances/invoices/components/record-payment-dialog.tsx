@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -73,6 +74,13 @@ export function RecordPaymentDialog({
       notes: '',
     },
   });
+
+  // Sync form with amountDue when it changes (initial fetch completion)
+  useEffect(() => {
+    if (!form.formState.isDirty && amountDue > 0) {
+      form.setValue('amount', amountDue);
+    }
+  }, [amountDue, form]);
 
   const handleSubmit = (data: RecordPaymentInput) => {
     onConfirm(data);

@@ -221,6 +221,10 @@ model Invoice {
   @@index([customerId])
   @@index([status])
   @@index([issuedDate])
+  @@index([status, deletedAt]) // Composite index for filtered queries
+  @@index([receiptNumber])     // Index for receipt lookups
+  @@index([customerId, status]) // Composite for customer-specific status queries
+  @@index([dueDate])            // Index for overdue calculations and sorting
   @@map(name: "invoices")
 }
 
@@ -271,6 +275,8 @@ model Payment {
   method    String
   reference String?
   notes     String?   @db.Text
+  
+  idempotencyKey String? @unique @map(name: "idempotency_key") // Prevents duplicate payments
 
   createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()

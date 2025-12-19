@@ -302,8 +302,12 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           <View style={styles.headerLeft}>
             <Text style={styles.title}>Receipt</Text>
             <View style={styles.paymentHeaderRow}>
+              <Text style={styles.labelHeader}>Invoice Number: </Text>
+              <Text style={styles.subtitleHeader}>#{invoice.invoiceNumber}</Text>
+            </View>
+            <View style={styles.paymentHeaderRow}>
               <Text style={styles.labelHeader}>Receipt Number: </Text>
-              <Text style={styles.subtitleHeader}>#{invoice.receiptNumber || invoice.invoiceNumber}</Text>
+              <Text style={styles.subtitleHeader}>#{invoice.receiptNumber}</Text>
             </View>
             <View style={styles.paymentHeaderRow}>
               <Text style={styles.labelHeader}>Payment Method: </Text>
