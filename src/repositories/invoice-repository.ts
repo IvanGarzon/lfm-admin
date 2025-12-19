@@ -15,6 +15,8 @@ import type {
   InvoiceItemDetail,
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
+  RevenueTrend,
+  TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
 import { getPaginationMetadata } from '@/lib/utils';
 
@@ -418,10 +420,34 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       if (dateFilter.startDate) {
         whereClause.issuedDate.gte = dateFilter.startDate;
       }
-
       if (dateFilter.endDate) {
         whereClause.issuedDate.lte = dateFilter.endDate;
       }
+    }
+
+    // Determine previous period for growth comparison
+    let previousWhereClause: Prisma.InvoiceWhereInput | null = null;
+    if (dateFilter?.startDate && dateFilter?.endDate) {
+      const duration = dateFilter.endDate.getTime() - dateFilter.startDate.getTime();
+      previousWhereClause = {
+        deletedAt: null,
+        issuedDate: {
+          gte: new Date(dateFilter.startDate.getTime() - duration),
+          lte: new Date(dateFilter.endDate.getTime() - duration),
+        },
+      };
+    } else if (!dateFilter?.startDate && !dateFilter?.endDate) {
+      // Default: Compare this month to last month
+      const now = new Date();
+      const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      previousWhereClause = {
+        deletedAt: null,
+        issuedDate: {
+          gte: firstDayLastMonth,
+          lt: firstDayThisMonth,
+        },
+      };
     }
 
     // Build raw SQL query for average (money type doesn't support avg in Prisma aggregate)
@@ -435,82 +461,119 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     if (dateFilter?.startDate) {
       avgQuery = Prisma.sql`${avgQuery} AND issued_date >= ${dateFilter.startDate}`;
     }
-
     if (dateFilter?.endDate) {
       avgQuery = Prisma.sql`${avgQuery} AND issued_date <= ${dateFilter.endDate}`;
     }
 
-    // Optimized: Run only 2 queries instead of 5, with retry logic for transient failures
-    const [statusGroupData, avgInvoiceData] = await withDatabaseRetry(() =>
+    // Run queries in parallel
+    const [statusGroupData, avgInvoiceData, prevData, revenueTrend, topDebtors] = await withDatabaseRetry(() =>
       Promise.all([
-        // Query 1: Group by status to get counts AND sums per status in one query
         this.prisma.invoice.groupBy({
           by: ['status'],
           where: whereClause,
           _count: true,
-          _sum: {
-            amount: true,
-          },
+          _sum: { amount: true },
         }),
-
-        // Query 2: Get average for PAID invoices using raw SQL (money type doesn't support avg in aggregate)
         this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
+        previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
+        this.getMonthlyRevenueTrend(12),
+        this.getTopDebtors(5),
       ])
     );
 
-    // Extract status-specific revenue sums from grouped data
+    // Process current period data
     let totalRevenue = 0;
     let pendingRevenue = 0;
     let totalCount = 0;
 
-    statusGroupData.forEach((group) => {
-      totalCount += group._count;
-
-      if (group.status === InvoiceStatus.PAID) {
-        totalRevenue = Number(group._sum.amount ?? 0);
-      } else if (
-        group.status === InvoiceStatus.PENDING ||
-        group.status === InvoiceStatus.OVERDUE
-      ) {
-        pendingRevenue += Number(group._sum.amount ?? 0);
-      }
-    });
-
     const stats: InvoiceStatistics = {
-      total: totalCount,
+      total: 0,
       draft: 0,
       pending: 0,
       paid: 0,
       cancelled: 0,
       overdue: 0,
-      totalRevenue,
-      pendingRevenue,
+      totalRevenue: 0,
+      pendingRevenue: 0,
       avgInvoiceValue: Number(avgInvoiceData[0]?.avg ?? 0),
+      revenueTrend,
+      topDebtors,
     };
 
-    // Map status counts
-    statusGroupData.forEach((item) => {
-      switch (item.status) {
-        case InvoiceStatus.DRAFT:
-          stats.draft = item._count;
-          break;
-        case InvoiceStatus.PENDING:
-          stats.pending = item._count;
-          break;
-        case InvoiceStatus.PAID:
-          stats.paid = item._count;
-          break;
-        case InvoiceStatus.CANCELLED:
-          stats.cancelled = item._count;
-          break;
-        case InvoiceStatus.OVERDUE:
-          stats.overdue = item._count;
-          break;
+    statusGroupData.forEach((group) => {
+      totalCount += group._count;
+      const amount = Number(group._sum.amount ?? 0);
+
+      if (group.status === InvoiceStatus.PAID) {
+        totalRevenue = amount;
+      } else if (
+        group.status === InvoiceStatus.PENDING ||
+        group.status === InvoiceStatus.OVERDUE ||
+        group.status === InvoiceStatus.PARTIALLY_PAID
+      ) {
+        pendingRevenue += amount;
+      }
+
+      switch (group.status) {
+        case InvoiceStatus.DRAFT: stats.draft = group._count; break;
+        case InvoiceStatus.PENDING: stats.pending = group._count; break;
+        case InvoiceStatus.PAID: stats.paid = group._count; break;
+        case InvoiceStatus.CANCELLED: stats.cancelled = group._count; break;
+        case InvoiceStatus.OVERDUE: stats.overdue = group._count; break;
       }
     });
 
+    stats.total = totalCount;
+    stats.totalRevenue = totalRevenue;
+    stats.pendingRevenue = pendingRevenue;
+
+    // Calculate growth metrics
+    if (prevData) {
+      stats.totalRevenueGrowth = this.calculateGrowth(totalRevenue, prevData.totalRevenue);
+      stats.pendingRevenueGrowth = this.calculateGrowth(pendingRevenue, prevData.pendingRevenue);
+      stats.invoiceCountGrowth = this.calculateGrowth(totalCount, prevData.total);
+    }
+
     return stats;
   }
+
+  /**
+   * Helper to get basic stats for growth comparison.
+   */
+  private async getBasicStats(where: Prisma.InvoiceWhereInput) {
+    const data = await this.prisma.invoice.groupBy({
+      by: ['status'],
+      where,
+      _count: true,
+      _sum: { amount: true },
+    });
+
+    let totalRevenue = 0;
+    let pendingRevenue = 0;
+    let total = 0;
+
+    data.forEach((group) => {
+      total += group._count;
+      const amount = Number(group._sum.amount ?? 0);
+      if (group.status === InvoiceStatus.PAID) {
+        totalRevenue = amount;
+      } else if (
+        group.status === InvoiceStatus.PENDING ||
+        group.status === InvoiceStatus.OVERDUE ||
+        group.status === InvoiceStatus.PARTIALLY_PAID
+      ) {
+        pendingRevenue += amount;
+      }
+    });
+
+    return { total, totalRevenue, pendingRevenue };
+  }
+
+  private calculateGrowth(current: number, previous: number): number {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Number(((current - previous) / previous * 100).toFixed(1));
+  }
+
 
   /**
    * Generate a unique invoice number with format: INV-YYYY-####
@@ -1234,5 +1297,64 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     });
 
     return duplicate;
+  }
+  /**
+   * Get monthly revenue trend for the last N months.
+   * @param limit - Number of months to retrieve. Defaults to 12.
+   */
+  async getMonthlyRevenueTrend(limit: number = 12): Promise<RevenueTrend[]> {
+    const data = await withDatabaseRetry(() =>
+      this.prisma.$queryRaw<any[]>(Prisma.sql`
+        SELECT 
+          to_char(issued_date, 'Mon') as month,
+          extract(month from issued_date) as month_num,
+          extract(year from issued_date) as year,
+          SUM(amount::numeric)::float as total,
+          SUM(CASE WHEN status::text = ${InvoiceStatus.PAID} THEN amount::numeric ELSE 0 END)::float as paid
+        FROM invoices
+        WHERE deleted_at IS NULL
+        GROUP BY year, month_num, month
+        ORDER BY year DESC, month_num DESC
+        LIMIT ${limit}
+      `)
+    );
+
+    return data
+      .map((item) => ({
+        month: `${item.month} ${item.year}`,
+        total: item.total,
+        paid: item.paid,
+      }))
+      .reverse();
+  }
+
+  /**
+   * Get top customers by outstanding balance.
+   * @param limit - Number of debtors to retrieve. Defaults to 5.
+   */
+  async getTopDebtors(limit: number = 5): Promise<TopCustomerDebtor[]> {
+    const data = await withDatabaseRetry(() =>
+      this.prisma.$queryRaw<any[]>(Prisma.sql`
+        SELECT 
+          c.id as "customerId",
+          concat(c.first_name, ' ', c.last_name) as "customerName",
+          SUM(i.amount::numeric - COALESCE((SELECT SUM(amount::numeric) FROM payments p WHERE p.invoice_id = i.id), 0))::float as "amountDue",
+          COUNT(i.id)::int as "invoiceCount"
+        FROM invoices i
+        JOIN customers c ON i.customer_id = c.id
+        WHERE i.deleted_at IS NULL 
+        AND i.status::text IN (${InvoiceStatus.PENDING}, ${InvoiceStatus.OVERDUE}, ${InvoiceStatus.PARTIALLY_PAID})
+        GROUP BY c.id, "customerName"
+        ORDER BY "amountDue" DESC
+        LIMIT ${limit}
+      `)
+    );
+
+    return data.map((item) => ({
+      customerId: item.customerId,
+      customerName: item.customerName,
+      amountDue: item.amountDue,
+      invoiceCount: item.invoiceCount,
+    }));
   }
 }

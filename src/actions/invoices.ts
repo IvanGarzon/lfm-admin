@@ -29,6 +29,8 @@ import type {
   InvoiceItemDetail,
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
+  RevenueTrend,
+  TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
 import type { ActionResult } from '@/types/actions';
 import { requirePermission } from '@/lib/permissions';
@@ -205,6 +207,40 @@ export async function getInvoiceStatistics(dateFilter?: {
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
+  }
+}
+
+/**
+ * Retrieves the monthly revenue trend.
+ */
+export async function getMonthlyRevenueTrend(limit: number = 12): Promise<ActionResult<RevenueTrend[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const trend = await invoiceRepo.getMonthlyRevenueTrend(limit);
+    return { success: true, data: trend };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch revenue trend');
+  }
+}
+
+/**
+ * Retrieves the top customer debtors.
+ */
+export async function getTopDebtors(limit: number = 5): Promise<ActionResult<TopCustomerDebtor[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const debtors = await invoiceRepo.getTopDebtors(limit);
+    return { success: true, data: debtors };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch top debtors');
   }
 }
 

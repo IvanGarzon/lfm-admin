@@ -139,6 +139,19 @@ export type SendInvoiceReminderData = {
 /**
  * Statistics
  */
+export type RevenueTrend = {
+  month: string;
+  total: number;
+  paid: number;
+};
+
+export type TopCustomerDebtor = {
+  customerId: string;
+  customerName: string;
+  amountDue: number;
+  invoiceCount: number;
+};
+
 export type InvoiceStatistics = {
   total: number;
   draft: number;
@@ -149,6 +162,13 @@ export type InvoiceStatistics = {
   totalRevenue: number;
   pendingRevenue: number;
   avgInvoiceValue: number;
+  // Growth indicators (percentage change)
+  totalRevenueGrowth?: number;
+  pendingRevenueGrowth?: number;
+  invoiceCountGrowth?: number;
+  // Trends and rankings
+  revenueTrend?: RevenueTrend[];
+  topDebtors?: TopCustomerDebtor[];
 };
 
 export type StatsDateFilter = {

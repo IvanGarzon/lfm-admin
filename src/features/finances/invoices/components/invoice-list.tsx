@@ -9,6 +9,8 @@ import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
 import {
   useInvoiceStatistics,
   useSendInvoiceReminder,
@@ -121,39 +123,60 @@ export function InvoiceList({
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Box className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-muted-foreground text-sm">Manage and track all your invoices</p>
-        </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Box className="flex items-center gap-2">
-            <Switch id="show-stats" checked={showStats} onCheckedChange={setShowStats} />
-            <Label htmlFor="show-stats" className="cursor-pointer text-sm whitespace-nowrap">
-              Show Statistics
-            </Label>
+      <Tabs defaultValue="list" className="w-full">
+        <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <Box className="min-w-0">
+            <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+            <p className="text-muted-foreground text-sm">Manage and track all your invoices</p>
           </Box>
-          <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            New Invoice
-          </Button>
+          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+            <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
+              <TabsTrigger value="list">List</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
+            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              New Invoice
+            </Button>
+          </Box>
         </Box>
-      </Box>
 
-      {showStats ? (
-        <Box className="space-y-3 min-w-0">
-          <InvoiceStatsFilters onFilterChange={setStatsDateFilter} />
-          <InvoiceStats stats={stats} isLoading={statsLoading} error={statsError} />
-        </Box>
-      ) : null}
+        <TabsContent
+          value="list"
+          className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+        >
+          <Box className="flex items-center justify-between">
+            <Box className="flex items-center gap-2">
+              <Switch id="show-stats" checked={showStats} onCheckedChange={setShowStats} />
+              <Label htmlFor="show-stats" className="cursor-pointer text-sm whitespace-nowrap">
+                Show Summary
+              </Label>
+            </Box>
+          </Box>
 
-      <BulkActionsBar
-        table={table}
-        onUpdateStatus={handleBulkUpdateStatus}
-        isPending={bulkUpdateStatus.isPending}
-      />
+          {showStats ? (
+            <Box className="space-y-3 min-w-0">
+              <InvoiceStatsFilters onFilterChange={setStatsDateFilter} />
+              <InvoiceStats stats={stats} isLoading={statsLoading} error={statsError} />
+            </Box>
+          ) : null}
 
-      <InvoiceTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
+          <BulkActionsBar
+            table={table}
+            onUpdateStatus={handleBulkUpdateStatus}
+            isPending={bulkUpdateStatus.isPending}
+          />
+
+          <InvoiceTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
+        </TabsContent>
+
+        <TabsContent
+          value="analytics"
+          className="pt-2 border-none p-0 outline-none focus-visible:ring-0"
+        >
+          <InvoiceAnalytics />
+        </TabsContent>
+      </Tabs>
 
       {showCreateModal ? (
         <InvoiceDrawer open={showCreateModal} onClose={handleShowCreateModal} />
@@ -161,3 +184,4 @@ export function InvoiceList({
     </Box>
   );
 }
+
