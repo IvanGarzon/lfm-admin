@@ -165,11 +165,13 @@ export function InvoiceForm({
       return false;
     }
     
-    // Lock only if PAID, PARTIALLY_PAID, or CANCELLED
+    // Lock if PAID, PARTIALLY_PAID, CANCELLED, PENDING, or OVERDUE
     const lockedStatuses: InvoiceStatus[] = [
       InvoiceStatus.PAID, 
       InvoiceStatus.PARTIALLY_PAID, 
-      InvoiceStatus.CANCELLED
+      InvoiceStatus.CANCELLED,
+      InvoiceStatus.PENDING,
+      InvoiceStatus.OVERDUE,
     ];
     
     return lockedStatuses.includes(invoice.status);

@@ -493,6 +493,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       paid: 0,
       cancelled: 0,
       overdue: 0,
+      partiallyPaid: 0,
       totalRevenue: 0,
       pendingRevenue: 0,
       avgInvoiceValue: Number(avgInvoiceData[0]?.avg ?? 0),
@@ -520,6 +521,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         case InvoiceStatus.PAID: stats.paid = group._count; break;
         case InvoiceStatus.CANCELLED: stats.cancelled = group._count; break;
         case InvoiceStatus.OVERDUE: stats.overdue = group._count; break;
+        case InvoiceStatus.PARTIALLY_PAID: stats.partiallyPaid = group._count; break;
       }
     });
 
@@ -740,20 +742,76 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     
     // Update invoice with items in a transaction
     const updatedInvoice = await this.prisma.$transaction(async (tx) => {
-      // Get current quote to check for status changes
+      // 1. Fetch current invoice to check status and locking
       const currentInvoice = await tx.invoice.findUnique({
-        where: { id },
+        where: { id, deletedAt: null },
         select: { status: true, amountPaid: true },
-      }); 
+      });
 
-      if(!currentInvoice) {
+      if (!currentInvoice) {
         throw new Error('Invoice not found');
       }
 
+      // 2. Determine if the invoice content is locked.
+      // Invoices in PENDING, OVERDUE, PAID, PARTIALLY_PAID, or CANCELLED are locked.
+      const lockedStatuses: InvoiceStatus[] = [
+        InvoiceStatus.PENDING,
+        InvoiceStatus.OVERDUE,
+        InvoiceStatus.PAID,
+        InvoiceStatus.PARTIALLY_PAID,
+        InvoiceStatus.CANCELLED,
+      ];
+
+      const isLocked = lockedStatuses.includes(currentInvoice.status);
+
+      // 3. If locked, we only allow status transitions (like to CANCELLED), 
+      // not editing of content (items, gst, discount, customer).
+      if (isLocked) {
+        // Only allow status update if no other relevant fields are changing.
+        // We compare against the original invoice data (implicitly handled by omission in the update)
+        // but we should explicitly check if the caller tried to change content.
+        
+        // Items change is detected if any items are passed (simplified check)
+        const hasContentChanges = 
+          (data.customerId && data.customerId !== undefined) || 
+          (data.gst !== undefined) || 
+          (data.discount !== undefined) || 
+          (data.items && data.items.length > 0);
+          
+        if (hasContentChanges) {
+          throw new Error(`This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`);
+        }
+        
+        // If they only wanted to change status
+        if (data.status && data.status !== currentInvoice.status) {
+          validateInvoiceStatusTransition(currentInvoice.status, data.status);
+          
+          await tx.invoice.update({
+            where: { id },
+            data: { 
+              status: data.status,
+              updatedAt: new Date(),
+            },
+          });
+          
+          await tx.invoiceStatusHistory.create({
+            data: {
+              invoiceId: id,
+              status: data.status,
+              previousStatus: currentInvoice.status,
+              changedAt: new Date(),
+              notes: `Status updated via edit: ${data.status}`,
+            },
+          });
+        }
+        
+        return { id }; 
+      }
+
+      // 4. Regular update for non-locked (DRAFT) invoices
       const statusChanged = currentInvoice.status !== data.status;
       const previousStatus = currentInvoice.status;
 
-      // Validate status transition if status is changing
       if (statusChanged) {
         validateInvoiceStatusTransition(previousStatus, data.status);
       }
@@ -767,7 +825,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       const newItems = data.items.filter((item) => !item.id);
       const existingItemIds = existingItems.map((item) => item.id!);
 
-      // Delete items that are no longer in the list (preserves attachments for kept items)
+      // Delete items that are no longer in the list
       await tx.invoiceItem.deleteMany({
         where: {
           invoiceId: data.id,
@@ -780,9 +838,16 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         where: { id },
         data: {
           customerId: data.customerId,
-          status: data.status,
+          status: data.status || currentInvoice.status,
           amount: totalAmount,
+          currency: data.currency,
+          issuedDate: data.issuedDate,
+          dueDate: data.dueDate,
+          notes: data.notes,
+          gst: data.gst,
+          discount: data.discount,
           amountDue,
+          updatedAt: new Date(),
         },
       });
 
@@ -868,6 +933,55 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           changedAt: new Date(),
           changedBy,
           notes: 'Marked as pending',
+        },
+      });
+
+      return invoice;
+    });
+
+    if (!updated) {
+      return null;
+    }
+
+    return this.findByIdWithDetails(updated.id);
+  }
+
+  /**
+   * Revert an invoice to draft status.
+   * Only possible from PENDING or OVERDUE status.
+   * @param id - The unique identifier of the invoice
+   * @param changedBy - Optional user ID who triggered this change
+   * @returns A promise that resolves to the updated invoice with details, or null if not found
+   */
+  async markAsDraft(id: string, changedBy?: string): Promise<InvoiceWithDetails | null> {
+    const currentInvoice = await this.prisma.invoice.findUnique({
+      where: { id, deletedAt: null },
+      select: { status: true },
+    });
+
+    if (!currentInvoice) {
+      return null;
+    }
+
+    validateInvoiceStatusTransition(currentInvoice.status, InvoiceStatus.DRAFT);
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.update({
+        where: { id, deletedAt: null },
+        data: {
+          status: InvoiceStatus.DRAFT,
+          updatedAt: new Date(),
+        },
+      });
+
+      await tx.invoiceStatusHistory.create({
+        data: {
+          invoiceId: id,
+          status: InvoiceStatus.DRAFT,
+          previousStatus: currentInvoice.status,
+          changedAt: new Date(),
+          changedBy,
+          notes: 'Reverted to draft',
         },
       });
 

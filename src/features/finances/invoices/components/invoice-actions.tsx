@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal, Copy } from 'lucide-react';
+import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal, Copy, RotateCcw } from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -27,6 +27,7 @@ interface InvoiceActionsProps {
   onDownloadPdf: (id: string) => void;
   onSendReceipt?: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onMarkAsDraft: (id: string) => void;
 }
 
 export function InvoiceActions({
@@ -39,6 +40,7 @@ export function InvoiceActions({
   onDownloadPdf,
   onSendReceipt,
   onDuplicate,
+  onMarkAsDraft,
 }: InvoiceActionsProps) {
   const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
   const basePath = `/finances/invoices/${invoice.id}`;
@@ -96,6 +98,12 @@ export function InvoiceActions({
               </DropdownMenuItem>
               <>              
                 <DropdownMenuSeparator />
+                {invoice.status === InvoiceStatus.PENDING && (
+                  <DropdownMenuItem onClick={() => onMarkAsDraft(invoice.id)}>
+                    <RotateCcw className="h-4 w-4" />
+                    Revert to draft
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}
                   className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"

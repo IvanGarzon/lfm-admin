@@ -79,6 +79,7 @@ export const createInvoiceColumns = (
   onRecordPayment: (id: string, invoiceNumber: string) => void,
   onCancel: (id: string, invoiceNumber: string) => void,
   onDownloadPdf: (id: string) => void,
+  onMarkAsDraft: (id: string) => void,
   onSendReceipt?: (id: string) => void,
   onDuplicate?: (id: string) => void,
 ): ColumnDef<InvoiceListItem>[] => [
@@ -274,6 +275,7 @@ export const createInvoiceColumns = (
         onDownloadPdf={onDownloadPdf}
         onSendReceipt={onSendReceipt}
         onDuplicate={onDuplicate ?? (() => {})}
+        onMarkAsDraft={onMarkAsDraft}
       />
     ),
     enableHiding: false,

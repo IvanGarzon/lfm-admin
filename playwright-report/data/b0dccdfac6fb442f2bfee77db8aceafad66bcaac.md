@@ -1,0 +1,84 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Login" [level=3] [ref=e6]
+        - paragraph [ref=e7]: This demo uses GitHub for authentication.
+      - generic [ref=e8]:
+        - button "Google Continue with Google" [ref=e10] [cursor=pointer]:
+          - img "Google"
+          - text: Continue with Google
+        - generic [ref=e15]: Or continue with
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]: Email
+            - textbox "Email" [ref=e19]:
+              - /placeholder: m@example.com
+          - generic [ref=e20]:
+            - generic [ref=e21]: Password
+            - textbox "Password" [ref=e22]
+          - button "Sign In" [ref=e23]
+  - region "Notifications alt+T"
+  - complementary "Tanstack query devtools" [ref=e24]:
+    - button "Close tanstack query devtools" [ref=e26] [cursor=pointer]:
+      - img [ref=e27]
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - button "Close Tanstack query devtools" [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: TANSTACK
+            - generic [ref=e34]: React Query v5
+          - radiogroup [ref=e35]:
+            - group [ref=e36]:
+              - radio "Queries" [checked] [ref=e37]
+              - generic "Toggle Queries View" [ref=e38] [cursor=pointer]: Queries
+            - group [ref=e39]:
+              - radio "Mutations" [ref=e40]
+              - generic "Toggle Mutations View" [ref=e41] [cursor=pointer]: Mutations
+        - generic [ref=e42]:
+          - button "Fresh 0" [disabled] [ref=e43]:
+            - generic [ref=e45]: Fresh
+            - generic [ref=e46]: "0"
+          - button "Fetching 0" [disabled] [ref=e47]:
+            - generic [ref=e49]: Fetching
+            - generic [ref=e50]: "0"
+          - button "Paused 0" [disabled] [ref=e51]:
+            - generic [ref=e53]: Paused
+            - generic [ref=e54]: "0"
+          - button "Stale 0" [disabled] [ref=e55]:
+            - generic [ref=e57]: Stale
+            - generic [ref=e58]: "0"
+          - button "Inactive 0" [disabled] [ref=e59]:
+            - generic [ref=e61]: Inactive
+            - generic [ref=e62]: "0"
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - img [ref=e66]
+            - textbox "Filter queries by query key" [ref=e68]:
+              - /placeholder: Filter
+          - generic [ref=e69]:
+            - combobox [ref=e70]:
+              - option "Sort by status" [selected]
+              - option "Sort by query hash"
+              - option "Sort by last updated"
+            - img [ref=e71]
+          - button "Sort order ascending" [ref=e73] [cursor=pointer]:
+            - generic [ref=e74]: Asc
+            - img [ref=e75]
+        - generic [ref=e77]:
+          - button "Clear query cache" [ref=e78] [cursor=pointer]:
+            - img [ref=e79]
+          - button "Mock offline behavior" [ref=e81] [cursor=pointer]:
+            - img [ref=e82]
+          - button "Open in picture-in-picture mode" [ref=e85] [cursor=pointer]:
+            - img [ref=e86]
+          - button "Open settings menu" [ref=e88] [cursor=pointer]:
+            - img [ref=e89]
+  - button "Open Next.js Dev Tools" [ref=e98] [cursor=pointer]:
+    - img [ref=e99]
+  - alert [ref=e102]
+```

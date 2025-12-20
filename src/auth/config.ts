@@ -3,6 +3,9 @@ import { handleSignIn } from '@/services/authService';
 import { prisma } from '@/lib/prisma';
 import { getClientDetails } from '@/lib/agent';
 import { env } from '@/env';
+import { generateSessionName } from '@/features/sessions/utils/session-icons';
+import { getSessionLimit } from '@/config/session';
+import { SessionRepository } from '@/repositories/session-repository';
 
 export interface SignInArgs {
   account: Account | null; // Account can be null for credential logins
@@ -39,18 +42,20 @@ export const authConfig = {
     },
 
     async signOut(params) {
-      // Mark sessions as inactive when user signs out (JWT strategy)
+      // Mark only the current session as inactive when user signs out (JWT strategy)
       try {
         // With JWT strategy, we get token in params
         const token = 'token' in params ? params.token : null;
-        if (token?.sub) {
+        if (token?.sessionToken) {
+          // Only deactivate the current session, not all sessions for this user
           await prisma.session.updateMany({
             where: {
-              userId: token.sub,
+              sessionToken: token.sessionToken as string,
               isActive: true,
             },
             data: {
               isActive: false,
+              expires: new Date(),
             },
           });
         }
@@ -60,8 +65,29 @@ export const authConfig = {
     },
   },
   callbacks: {
-    authorized({ auth }) {
-      return !!auth?.user;
+    async authorized({ auth }) {
+      if (!auth?.user) return false;
+
+      // Verify session is still active in database
+      const sessionToken = auth.sessionToken;
+      if (sessionToken) {
+        try {
+          const session = await prisma.session.findUnique({
+            where: { sessionToken },
+            select: { isActive: true, expires: true },
+          });
+
+          // If session was revoked or expired, deny access
+          if (!session || !session.isActive || session.expires < new Date()) {
+            return false;
+          }
+        } catch (error) {
+          console.error('Failed to verify session:', error);
+          return false;
+        }
+      }
+
+      return true;
     },
 
     async signIn({ user, account, profile }): Promise<boolean> {
@@ -99,10 +125,20 @@ export const authConfig = {
           // Get the user ID for session creation
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
-            select: { id: true },
+            select: { id: true, role: true },
           });
 
           if (dbUser) {
+            // Enforce session limits
+            const sessionRepo = new SessionRepository(prisma);
+            const activeCount = await sessionRepo.countActiveSessions(dbUser.id);
+            const limit = getSessionLimit(dbUser.role);
+
+            if (activeCount >= limit) {
+              // Revoke oldest session to make room
+              await sessionRepo.revokeOldestSession(dbUser.id);
+            }
+
             // 3. Create session record for tracking
             const details = await getClientDetails();
             const sessionData = {
@@ -118,7 +154,17 @@ export const authConfig = {
               osVersion: details.os?.version,
               browserName: details.browser?.name,
               browserVersion: details.browser?.version,
-              deviceName: 'Default Device',
+              
+              // Location info
+              country: details.country,
+              region: details.region,
+              city: details.city,
+              timezone: details.timezone,
+              latitude: details.latitude,
+              longitude: details.longitude,
+
+              deviceName: generateSessionName(details.os?.name, details.browser?.name, details.device?.type),
+              lastActiveAt: new Date(), // Initialize last active timestamp
             };
 
             await prisma.session.create({
@@ -146,12 +192,41 @@ export const authConfig = {
         if (dbUser) {
           token.sub = dbUser.id; // Set the token's subject to our internal user ID
           token.role = dbUser.role;
+
+          // Get the most recent session token for this user to identify the current session
+          const latestSession = await prisma.session.findFirst({
+            where: { userId: dbUser.id, isActive: true },
+            orderBy: { createdAt: 'desc' },
+            select: { sessionToken: true },
+          });
+
+          if (latestSession) {
+            token.sessionToken = latestSession.sessionToken;
+          }
         }
       }
       return token;
     },
 
     async session({ session, token }) {
+      // Verify session is still active in database before returning session data
+      if (token.sessionToken) {
+        try {
+          const dbSession = await prisma.session.findUnique({
+            where: { sessionToken: token.sessionToken as string },
+            select: { isActive: true, expires: true },
+          });
+
+          // If session was revoked or expired, throw error to invalidate the session
+          if (!dbSession || !dbSession.isActive || dbSession.expires < new Date()) {
+            throw new Error('Session has been revoked');
+          }
+        } catch (error) {
+          console.error('Session validation failed:', error);
+          throw error; // Re-throw to force session invalidation
+        }
+      }
+
       // For JWT strategy, we can use token data directly without database lookups
       // This makes auth much faster for API routes
       if (session.user && token?.sub) {
@@ -166,6 +241,8 @@ export const authConfig = {
             image: token.picture || session.user.image,
             role: token.role || 'USER',
           },
+          // Include session token for identifying current session in database
+          sessionToken: token.sessionToken as string | undefined,
         };
       }
 

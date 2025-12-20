@@ -7,26 +7,21 @@ import { SearchParams } from 'nuqs/server';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
+import { InvoiceTable } from '@/features/finances/invoices/components/invoice-table';
+import { BulkActionsBar } from '@/features/finances/invoices/components/bulk-actions-bar';
 import {
-  useInvoiceStatistics,
   useSendInvoiceReminder,
   useMarkInvoiceAsPending,
   useDownloadInvoicePdf,
   useBulkUpdateInvoiceStatus,
   useDuplicateInvoice,
+  useMarkInvoiceAsDraft,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import dynamic from 'next/dynamic';
-import { InvoiceStats } from '@/features/finances/invoices/components/invoice-stats';
-import { InvoiceStatsFilters } from '@/features/finances/invoices/components/invoice-stats-filters';
-import { InvoiceTable } from '@/features/finances/invoices/components/invoice-table';
-import { BulkActionsBar } from '@/features/finances/invoices/components/bulk-actions-bar';
 import type {
   InvoicePagination,
-  StatsDateFilter,
   InvoiceListItem,
 } from '@/features/finances/invoices/types';
 import { createInvoiceColumns } from '@/features/finances/invoices/components/invoice-columns';
@@ -55,25 +50,19 @@ export function InvoiceList({
   hideCreateDrawer?: boolean;
 }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [showStats, setShowStats] = useState<boolean>(true);
-  const [statsDateFilter, setStatsDateFilter] = useState<StatsDateFilter>({});
+  const [activeTab, setActiveTab] = useState<string>('list');
 
   const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.pagination.totalItems / perPage);
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    error: statsError,
-  } = useInvoiceStatistics(statsDateFilter);
-
   const sendReminder = useSendInvoiceReminder();
   const markAsPending = useMarkInvoiceAsPending();
   const downloadPdf = useDownloadInvoicePdf();
   const bulkUpdateStatus = useBulkUpdateInvoiceStatus();
   const duplicateInvoice = useDuplicateInvoice();
+  const markAsDraft = useMarkInvoiceAsDraft();
 
   const handleShowCreateModal = () => {
     setShowCreateModal((prev) => !prev);
@@ -88,6 +77,7 @@ export function InvoiceList({
         (id, number) => openRecordPayment(id, number),
         (id, number) => openCancel(id, number),
         (id) => downloadPdf.mutate(id),
+        (id) => markAsDraft.mutate(id),
         (id) => openSendReceipt(id),
         (id) => duplicateInvoice.mutate(id),
       ),
@@ -100,6 +90,7 @@ export function InvoiceList({
       openCancel,
       openSendReceipt,
       duplicateInvoice,
+      markAsDraft,
     ],
   );
 
@@ -123,7 +114,7 @@ export function InvoiceList({
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
-      <Tabs defaultValue="list" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
           <Box className="min-w-0">
             <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
@@ -145,22 +136,6 @@ export function InvoiceList({
           value="list"
           className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
         >
-          <Box className="flex items-center justify-between">
-            <Box className="flex items-center gap-2">
-              <Switch id="show-stats" checked={showStats} onCheckedChange={setShowStats} />
-              <Label htmlFor="show-stats" className="cursor-pointer text-sm whitespace-nowrap">
-                Show Summary
-              </Label>
-            </Box>
-          </Box>
-
-          {showStats ? (
-            <Box className="space-y-3 min-w-0">
-              <InvoiceStatsFilters onFilterChange={setStatsDateFilter} />
-              <InvoiceStats stats={stats} isLoading={statsLoading} error={statsError} />
-            </Box>
-          ) : null}
-
           <BulkActionsBar
             table={table}
             onUpdateStatus={handleBulkUpdateStatus}
@@ -174,7 +149,7 @@ export function InvoiceList({
           value="analytics"
           className="pt-2 border-none p-0 outline-none focus-visible:ring-0"
         >
-          <InvoiceAnalytics />
+          {activeTab === 'analytics' && <InvoiceAnalytics />}
         </TabsContent>
       </Tabs>
 

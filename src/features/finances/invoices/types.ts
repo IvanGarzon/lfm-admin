@@ -159,6 +159,7 @@ export type InvoiceStatistics = {
   paid: number;
   cancelled: number;
   overdue: number;
+  partiallyPaid: number;
   totalRevenue: number;
   pendingRevenue: number;
   avgInvoiceValue: number;

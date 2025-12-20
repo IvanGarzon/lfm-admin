@@ -172,10 +172,17 @@ model Session {
   city           String?
   latitude       Float?
   longitude      Float?
+  timezone       String?
 
-  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime @default(now()) @map(name: "updated_at") @db.Timestamptz()
+  createdAt    DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
+  updatedAt    DateTime  @default(now()) @map(name: "updated_at") @db.Timestamptz()
+  lastActiveAt DateTime? @map(name: "last_active_at") @db.Timestamptz()
 
+  // Indexes for optimizing common queries
+  @@index([userId, isActive]) // For fetching active sessions by user
+  @@index([userId, lastActiveAt]) // For cleanup and activity tracking
+  @@index([expires, isActive]) // For finding expired sessions
+  @@index([isActive, lastActiveAt]) // For auto-cleanup job
   @@map(name: "sessions")
 }
 

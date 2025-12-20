@@ -4,10 +4,25 @@ import { env } from 'env';
 export interface SessionDeviceLocation {
   ipAddress?: string;
   userAgent?: string;
-  device?: UAParser.IDevice; // Includes vendor, model, type (console, mobile, tablet, smarttv, wearable, embedded)
-  os?: UAParser.IOS;
-  browser?: UAParser.IBrowser;
+  device?: Partial<UAParser.IDevice>; // Includes vendor, model, type (console, mobile, tablet, smarttv, wearable, embedded)
+  os?: Partial<UAParser.IOS>;
+  browser?: Partial<UAParser.IBrowser>;
+  // Location details
+  country?: string;
+  region?: string;
+  city?: string;
+  timezone?: string;
+  latitude?: number;
+  longitude?: number;
 }
+
+const FAKE_LOCATIONS: Record<string, SessionDeviceLocation> = {
+  '103.1.206.0': { country: 'Australia', region: 'New South Wales', city: 'Sydney', timezone: 'Australia/Sydney', latitude: -33.8688, longitude: 151.2093 },
+  '8.8.8.8': { country: 'United States', region: 'California', city: 'Mountain View', timezone: 'America/Los_Angeles', latitude: 37.3860, longitude: -122.0838 },
+  '81.2.69.160': { country: 'United Kingdom', region: 'England', city: 'London', timezone: 'Europe/London', latitude: 51.5074, longitude: -0.1278 },
+  '133.130.91.218': { country: 'Japan', region: 'Tokyo', city: 'Tokyo', timezone: 'Asia/Tokyo', latitude: 35.6762, longitude: 139.6503 },
+  '49.207.182.118': { country: 'India', region: 'Karnataka', city: 'Bangalore', timezone: 'Asia/Kolkata', latitude: 12.9716, longitude: 77.5946 },
+};
 
 export async function getClientDetails(): Promise<SessionDeviceLocation> {
   try {
@@ -30,10 +45,11 @@ async function getDetailsFromUserAgent(userAgent: string | null): Promise<Sessio
     getUserAgentDetails(userAgent);
 
   // For now, use a simple IP approach since we can't reliably get headers
-  const ipAddress = env.NODE_ENV === 'development' ? getRandomFakeIP() : undefined;
+  const isDev = env.NODE_ENV === 'development';
+  const ipAddress = isDev ? getRandomFakeIP() : undefined;
 
   // Extract location details from IP
-  const { country, region, city, latitude, longitude } = await getLocationFromIP(ipAddress);
+  const location = await getLocationFromIP(ipAddress);
 
   return {
     ipAddress,
@@ -51,18 +67,12 @@ async function getDetailsFromUserAgent(userAgent: string | null): Promise<Sessio
       name: browserName,
       version: browserVersion,
     },
+    ...location,
   };
 }
 
 function getRandomFakeIP() {
-  const devIPs = [
-    '103.1.206.0', // Australia
-    '8.8.8.8', // US
-    '81.2.69.160', // UK
-    '133.130.91.218', // Japan
-    '49.207.182.118', // India
-  ];
-
+  const devIPs = Object.keys(FAKE_LOCATIONS);
   const index = Math.floor(Math.random() * devIPs.length);
   return devIPs[index];
 }
@@ -98,11 +108,17 @@ function getUserAgentDetails(userAgent: string | null) {
 async function getLocationFromIP(ip: string | undefined) {
   if (!ip) return {};
 
+  // Use fake data for dev IPs to avoid API rate limits
+  if (FAKE_LOCATIONS[ip]) {
+    return FAKE_LOCATIONS[ip];
+  }
+
   if (isLocalhost(ip)) {
     return {
       country: 'localhost',
       region: '',
       city: '',
+      timezone: '',
       latitude: 0,
       longitude: 0,
     };
@@ -110,13 +126,17 @@ async function getLocationFromIP(ip: string | undefined) {
 
   try {
     const res = await fetch(`https://ipapi.co/${ip}/json/`);
-    if (!res.ok) return {};
+    if (!res.ok) {
+        console.warn('IP lookup failed status:', res.status);
+        return {};
+    }
     const data = await res.json();
 
     return {
-      country: data.country,
+      country: data.country_name || data.country,
       region: data.region,
       city: data.city,
+      timezone: data.timezone,
       latitude: data.latitude,
       longitude: data.longitude,
     };

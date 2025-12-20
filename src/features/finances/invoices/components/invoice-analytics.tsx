@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useInvoiceStatistics } from '../hooks/use-invoice-queries';
 import { StatCard } from './analytics/stat-card';
 import { RevenueTrendChart } from './analytics/revenue-trend-chart';
 import { TopDebtorsList } from './analytics/top-debtors-list';
-import { DollarSign, Clock, CheckCircle, TrendingUp, Download } from 'lucide-react';
+import { StatusDistributionChart } from './analytics/status-distribution-chart';
+import { DollarSign, Clock, CheckCircle, TrendingUp, Download, Percent, FileEdit } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,28 @@ export function InvoiceAnalytics() {
     startDate: dateRange?.from,
     endDate: dateRange?.to,
   });
+
+  const getComparisonLabel = () => {
+    if (!dateRange?.from || !dateRange?.to) return 'vs. previous period';
+    
+    const diffInDays = Math.round(
+      (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
+    ) + 1; // +1 to include both ends
+    
+    if (diffInDays === 1) return 'vs. previous day';
+    if (diffInDays === 7) return 'vs. last week';
+    if (diffInDays === 30 || diffInDays === 31) return 'vs. last month';
+    
+    return `vs. previous ${diffInDays} days`;
+  };
+
+  const comparisonLabel = getComparisonLabel();
+
+  const collectionRate = useMemo(() => {
+    if (!stats) return 0;
+    const totalPotential = stats.totalRevenue + stats.pendingRevenue;
+    return totalPotential > 0 ? (stats.totalRevenue / totalPotential) * 100 : 0;
+  }, [stats]);
 
   const handleExport = () => {
     // Placeholder for export functionality
@@ -48,11 +71,12 @@ export function InvoiceAnalytics() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard
           title="Total Revenue"
           value={formatCurrency({ number: stats?.totalRevenue ?? 0, maxFractionDigits: 0 })}
-          description="Collected revenue in period"
+          description="Collected revenue"
+          comparisonLabel={comparisonLabel}
           icon={DollarSign}
           growth={stats?.totalRevenueGrowth}
           isLoading={isLoading}
@@ -62,19 +86,19 @@ export function InvoiceAnalytics() {
           title="Outstanding"
           value={formatCurrency({ number: stats?.pendingRevenue ?? 0, maxFractionDigits: 0 })}
           description="Awaiting payment"
+          comparisonLabel={comparisonLabel}
           icon={Clock}
           growth={stats?.pendingRevenueGrowth}
           isLoading={isLoading}
           color="text-yellow-500"
         />
         <StatCard
-          title="Total Invoices"
-          value={stats?.total ?? 0}
-          description="Invoices issued"
-          icon={TrendingUp}
-          growth={stats?.invoiceCountGrowth}
+          title="Collection Rate"
+          value={`${collectionRate.toFixed(0)}%`}
+          description="Revenue collected"
+          icon={Percent}
           isLoading={isLoading}
-          color="text-blue-500"
+          color="text-green-500"
         />
         <StatCard
           title="Average Value"
@@ -84,16 +108,29 @@ export function InvoiceAnalytics() {
           isLoading={isLoading}
           color="text-indigo-500"
         />
+        <StatCard
+          title="Drafts"
+          value={stats?.draft ?? 0}
+          description="Awaiting review"
+          icon={FileEdit}
+          isLoading={isLoading}
+          color="text-slate-400"
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="lg:col-span-4">
           <RevenueTrendChart data={stats?.revenueTrend} isLoading={isLoading} />
         </div>
         <div className="lg:col-span-3">
-          <TopDebtorsList debtors={stats?.topDebtors} isLoading={isLoading} />
+          <StatusDistributionChart stats={stats} isLoading={isLoading} />
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+        <TopDebtorsList debtors={stats?.topDebtors} isLoading={isLoading} />
       </div>
     </Box>
   );
 }
+

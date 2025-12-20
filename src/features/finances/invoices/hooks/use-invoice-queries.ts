@@ -20,6 +20,7 @@ import {
   getReceiptPdfUrl,
   bulkUpdateInvoiceStatus,
   duplicateInvoice,
+  markInvoiceAsDraft,
 } from '@/actions/invoices';
 import type {
   InvoiceFilters,
@@ -157,7 +158,10 @@ export function useInvoiceHistory(id: string | undefined) {
   });
 }
 
-export function useInvoiceStatistics(dateFilter?: { startDate?: Date; endDate?: Date }) {
+export function useInvoiceStatistics(
+  dateFilter?: { startDate?: Date; endDate?: Date },
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: [...INVOICE_KEYS.statistics(), dateFilter],
     queryFn: async () => {
@@ -168,6 +172,7 @@ export function useInvoiceStatistics(dateFilter?: { startDate?: Date; endDate?: 
       return result.data;
     },
     staleTime: 60_000, // 1 minute
+    enabled: options?.enabled,
   });
 }
 
@@ -407,6 +412,56 @@ export function useMarkInvoiceAsPending() {
     },
     onSuccess: () => {
       toast.success('Invoice marked as pending');
+    },
+  });
+}
+
+export function useMarkInvoiceAsDraft() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await markInvoiceAsDraft(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: INVOICE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(INVOICE_KEYS.detail(id), (old: InvoiceWithDetails | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: InvoiceStatus.DRAFT,
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousInvoice, id };
+    },
+    onError: (err, id, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousInvoice) {
+        queryClient.setQueryData(INVOICE_KEYS.detail(id), context.previousInvoice);
+      }
+      toast.error(err.message || 'Failed to revert invoice to draft');
+    },
+    onSettled: (_data, _error, id) => {
+      // Always refetch after error or success
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.statistics() });
+    },
+    onSuccess: () => {
+      toast.success('Invoice reverted to draft');
     },
   });
 }

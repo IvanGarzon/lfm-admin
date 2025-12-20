@@ -10,6 +10,7 @@ interface StatCardProps {
   title: string;
   value: string | number;
   description?: string;
+  comparisonLabel?: string;
   icon: LucideIcon;
   growth?: number;
   color?: string;
@@ -20,6 +21,7 @@ export function StatCard({
   title,
   value,
   description,
+  comparisonLabel,
   icon: Icon,
   growth,
   color,
@@ -60,9 +62,10 @@ export function StatCard({
                 <TrendingDown className="h-3 w-3 mr-1" />
               ) : null}
               {growth > 0 ? '+' : ''}{growth}%
+              {comparisonLabel && <span className="ml-1 font-normal opacity-80 text-muted-foreground">{comparisonLabel}</span>}
             </div>
           )}
-          {description && <p className="text-xs text-muted-foreground truncate">{description}</p>}
+          {description && !growth && <p className="text-xs text-muted-foreground truncate">{description}</p>}
         </Box>
       </CardContent>
     </Card>

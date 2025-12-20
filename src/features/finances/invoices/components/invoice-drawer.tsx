@@ -16,6 +16,7 @@ import {
   Hourglass,
   BellRing,
   Copy,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,6 +45,7 @@ import {
   useInvoicePayments,
   useCreateInvoice,
   useMarkInvoiceAsPending,
+  useMarkInvoiceAsDraft,
   useUpdateInvoice,
   useSendInvoiceReminder,
   useDownloadInvoicePdf,
@@ -84,6 +86,7 @@ export function InvoiceDrawer({
   const sendReminder = useSendInvoiceReminder();
   const downloadPdf = useDownloadInvoicePdf();
   const duplicateInvoice = useDuplicateInvoice();
+  const markAsDraft = useMarkInvoiceAsDraft();
 
   const router = useRouter();
   const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
@@ -171,6 +174,14 @@ export function InvoiceDrawer({
 
     markAsPending.mutate(invoice.id);
   }, [invoice, markAsPending]);
+
+  const handleMarkAsDraft = useCallback(() => {
+    if (!invoice) {
+      return;
+    }
+
+    markAsDraft.mutate(invoice.id);
+  }, [invoice, markAsDraft]);
 
   const handleTogglePreview = useCallback(() => {
     setShowPreview((prev) => !prev);
@@ -343,6 +354,12 @@ export function InvoiceDrawer({
                             <DropdownMenuItem onClick={handleMarkAsPending}>
                               <Hourglass className="h-4 w-4" />
                               Mark as pending
+                            </DropdownMenuItem>
+                          )}
+                          {invoice.status === InvoiceStatus.PENDING && (
+                            <DropdownMenuItem onClick={handleMarkAsDraft}>
+                              <RotateCcw className="h-4 w-4" />
+                              Revert to draft
                             </DropdownMenuItem>
                           )}
                           {invoice.status === InvoiceStatus.PENDING ||
