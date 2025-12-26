@@ -8,6 +8,7 @@ import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
+import { requirePermission } from '@/lib/permissions';
 import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
@@ -64,12 +65,14 @@ export async function getQuotes(
     return { success: false, error: 'Unauthorized' };
   }
 
-  const parseResult = QuoteFiltersSchema.safeParse(searchParams);
-  if (!parseResult.success) {
-    return { success: false, error: 'Invalid query parameters' };
-  }
-
   try {
+    requirePermission(session.user, 'canReadQuotes');
+
+    const parseResult = QuoteFiltersSchema.safeParse(searchParams);
+    if (!parseResult.success) {
+      return { success: false, error: 'Invalid query parameters' };
+    }
+
     const repoParams: QuoteFilters = {
       search: parseResult.data.search,
       status: parseResult.data.status,
@@ -99,6 +102,8 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
       return { success: false, error: 'Unauthorized' };
     }
 
+    requirePermission(session.user, 'canReadQuotes');
+
     const quote = await quoteRepo.findByIdWithDetails(id);
 
     if (!quote) {
@@ -122,6 +127,13 @@ export async function getQuoteStatistics(dateFilter?: {
   endDate?: Date;
 }): Promise<ActionResult<QuoteStatistics>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
     const stats = await quoteRepo.getStatistics(dateFilter);
     return { success: true, data: stats };
   } catch (error) {
@@ -144,6 +156,8 @@ export async function createQuote(
   }
 
   try {
+    requirePermission(session.user, 'canManageQuotes');
+
     // Validate input
     const validatedData = CreateQuoteSchema.parse(data);
     const quote = await quoteRepo.createQuoteWithItems(validatedData, session.user.id);
@@ -171,6 +185,8 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
   }
 
   try {
+    requirePermission(session.user, 'canManageQuotes');
+
     // Validate input
     const validatedData = UpdateQuoteSchema.parse(data);
 
@@ -214,6 +230,8 @@ export async function markQuoteAsAccepted(
       return { success: false, error: 'Unauthorized' };
     }
 
+    requirePermission(session.user, 'canManageQuotes');
+
     const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
     const quote = await quoteRepo.markAsAccepted(validatedData.id, session?.user?.id);
     
@@ -244,7 +262,9 @@ export async function markQuoteAsRejected(
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
-    
+
+    requirePermission(session.user, 'canManageQuotes');
+
     const validatedData = MarkQuoteAsRejectedSchema.parse(data);
     const quote = await quoteRepo.markAsRejected(
       validatedData.id,
@@ -278,6 +298,8 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
       return { success: false, error: 'Unauthorized' };
     }
 
+    requirePermission(session.user, 'canManageQuotes');
+
     const quote = await quoteRepo.markAsSent(id, session?.user?.id);
 
     if (!quote) {
@@ -307,7 +329,9 @@ export async function markQuoteAsOnHold(
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
-    
+
+    requirePermission(session.user, 'canManageQuotes');
+
     const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
     const quote = await quoteRepo.markAsOnHold(
       validatedData.id,
@@ -342,7 +366,9 @@ export async function markQuoteAsCancelled(
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
-    
+
+    requirePermission(session.user, 'canManageQuotes');
+
     const validatedData = MarkQuoteAsCancelledSchema.parse(data);
     const quote = await quoteRepo.markAsCancelled(
       validatedData.id,
@@ -379,6 +405,8 @@ export async function convertQuoteToInvoice(
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
+
+    requirePermission(session.user, 'canManageQuotes');
 
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
     const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
@@ -437,7 +465,9 @@ export async function deleteQuote(id: string): Promise<ActionResult<{ id: string
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
-    
+
+    requirePermission(session.user, 'canManageQuotes');
+
     const success = await quoteRepo.softDelete(id);
 
     if (!success) {
@@ -465,6 +495,8 @@ export async function uploadQuoteAttachment(
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
+
+  requirePermission(session.user, 'canManageQuotes');
 
   try {
     const quoteId = formData.get('quoteId');
@@ -555,6 +587,8 @@ export async function deleteQuoteAttachment(data: {
     return { success: false, error: 'Unauthorized' };
   }
 
+  requirePermission(session.user, 'canManageQuotes');
+
   try {
     const validatedData = DeleteAttachmentSchema.parse(data);
 
@@ -590,6 +624,13 @@ export async function getQuoteAttachments(
   quoteId: string,
 ): Promise<ActionResult<QuoteAttachment[]>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
     const attachments = await quoteRepo.getQuoteAttachments(quoteId);
 
     return {
@@ -621,6 +662,13 @@ export async function getAttachmentDownloadUrl(
   attachmentId: string,
 ): Promise<ActionResult<{ url: string; fileName: string }>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
     // Get attachment details
     const attachment = await quoteRepo.getAttachmentById(attachmentId);
     if (!attachment) {
@@ -655,6 +703,8 @@ export async function uploadQuoteItemAttachment(
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
+
+  requirePermission(session.user, 'canManageQuotes');
 
   try {
     const quoteItemId = formData.get('quoteItemId');
@@ -750,7 +800,9 @@ export async function deleteQuoteItemAttachment(data: {
     return { success: false, error: 'Unauthorized' };
   }
 
-  try {
+  requirePermission(session.user, 'canManageQuotes');
+
+  try{
     const validatedData = DeleteItemAttachmentSchema.parse(data);
 
     // Get attachment details
@@ -793,6 +845,8 @@ export async function updateQuoteItemNotes(data: {
     return { success: false, error: 'Unauthorized' };
   }
 
+  requirePermission(session.user, 'canManageQuotes');
+
   try {
     // Update notes in database
     const quoteItem = await quoteRepo.updateQuoteItemNotes(data.quoteItemId, data.notes);
@@ -827,6 +881,8 @@ export async function updateQuoteItemColors(data: {
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
+
+  requirePermission(session.user, 'canManageQuotes');
 
   try {
     // Validate that colors are valid hex codes
@@ -867,6 +923,13 @@ export async function getQuoteItemAttachments(
   quoteItemId: string,
 ): Promise<ActionResult<QuoteItemAttachment[]>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
     const attachments = await quoteRepo.getQuoteItemAttachments(quoteItemId);
 
     return {
@@ -898,6 +961,13 @@ export async function getItemAttachmentDownloadUrl(
   attachmentId: string,
 ): Promise<ActionResult<{ url: string; fileName: string }>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
     // Get attachment details
     const attachment = await quoteRepo.getItemAttachmentById(attachmentId);
     if (!attachment) {
@@ -944,6 +1014,8 @@ export async function getQuoteVersions(quoteId: string): Promise<
       return { success: false, error: 'Unauthorized' };
     }
 
+    requirePermission(session.user, 'canReadQuotes');
+
     const versions = await quoteRepo.getQuoteVersions(quoteId);
 
     // Convert Decimal to number
@@ -974,6 +1046,8 @@ export async function createQuoteVersion(
     if (!session?.user) {
       return { success: false, error: 'Unauthorized' };
     }
+
+    requirePermission(session.user, 'canManageQuotes');
 
     const validatedData = CreateVersionSchema.parse(data);
 
