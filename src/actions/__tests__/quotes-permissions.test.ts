@@ -140,7 +140,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.getQuotes({});
 
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toBe('Unauthorized');
+        }
       });
     });
 
@@ -186,7 +188,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.createQuote(validQuoteData);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toContain('Unauthorized');
+        }
       });
 
       it('should ALLOW MANAGER role to create quotes', async () => {
@@ -233,7 +237,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.updateQuote(updateData);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toContain('Unauthorized');
+        }
       });
 
       it('should ALLOW MANAGER role to update quotes', async () => {
@@ -252,7 +258,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.deleteQuote('quote-1');
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toContain('Unauthorized');
+        }
       });
 
       it('should ALLOW MANAGER role to delete quotes', async () => {
@@ -279,7 +287,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.markQuoteAsAccepted({ id: 'quote-1' });
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toContain('Unauthorized');
+        }
       });
 
       it('should ALLOW MANAGER role to mark quotes as accepted', async () => {
@@ -305,7 +315,9 @@ describe('Quote Actions - Permission Tests', () => {
         const result = await quoteActions.convertQuoteToInvoice(conversionData);
 
         expect(result.success).toBe(false);
-        expect(result.error).toContain('Unauthorized');
+        if (!result.success) {
+          expect(result.error).toContain('Unauthorized');
+        }
       });
 
       it('should ALLOW MANAGER role to convert quotes', async () => {
@@ -329,7 +341,9 @@ describe('Quote Actions - Permission Tests', () => {
       const result = await quoteActions.getQuotes({});
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Unauthorized');
+      if (!result.success) {
+        expect(result.error).toBe('Unauthorized');
+      }
     });
 
     it('should handle invalid role', async () => {
@@ -337,7 +351,7 @@ describe('Quote Actions - Permission Tests', () => {
         user: {
           id: 'test',
           email: 'test@example.com',
-          role: 'INVALID_ROLE' as any,
+          role: 'INVALID_ROLE' as const,
         },
       } as any);
 
@@ -345,11 +359,25 @@ describe('Quote Actions - Permission Tests', () => {
         customerId: 'customer-1',
         issuedDate: new Date(),
         validUntil: new Date(),
-        items: [],
+        status: 'DRAFT' as const,
+        currency: 'AUD',
+        gst: 10,
+        discount: 0,
+        items: [
+          {
+            description: 'Test Item',
+            quantity: 1,
+            unitPrice: 100,
+            productId: null,
+            colors: [],
+          },
+        ],
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Unauthorized');
+      if (!result.success) {
+        expect(result.error).toContain('Unauthorized');
+      }
     });
   });
 });

@@ -5,7 +5,7 @@
   - main [ref=e2]:
     - generic [ref=e4]:
       - generic [ref=e5]:
-        - heading "Login" [level=3] [ref=e6]
+        - heading "Login Test" [level=3] [ref=e6]
         - paragraph [ref=e7]: This demo uses GitHub for authentication.
       - generic [ref=e8]:
         - button "Google Continue with Google" [ref=e10] [cursor=pointer]:
@@ -17,9 +17,10 @@
             - generic [ref=e18]: Email
             - textbox "Email" [ref=e19]:
               - /placeholder: m@example.com
+              - text: test@example.com
           - generic [ref=e20]:
             - generic [ref=e21]: Password
-            - textbox "Password" [ref=e22]
+            - textbox "Password" [ref=e22]: password
           - button "Sign In" [ref=e23]
   - region "Notifications alt+T"
   - complementary "Tanstack query devtools" [ref=e24]:
