@@ -9,9 +9,14 @@
  * Run with: npm test quotes-permissions
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import type { Session } from 'next-auth';
 import * as quoteActions from '../quotes';
 import { auth } from '@/auth';
+
+// Type for the mocked auth function
+type AuthFunction = () => Promise<Session | null>;
+const mockAuth = auth as unknown as MockedFunction<AuthFunction>;
 
 // Mock Next.js functions
 vi.mock('next/cache', () => ({
@@ -20,7 +25,7 @@ vi.mock('next/cache', () => ({
 
 // Mock the auth module
 vi.mock('@/auth', () => ({
-  auth: vi.fn(),
+  auth: vi.fn<() => Promise<Session | null>>(),
 }));
 
 // Mock the repositories to avoid actual database calls
@@ -58,7 +63,8 @@ vi.mock('@/lib/s3', () => ({
 }));
 
 // Mock users with different roles
-const mockUserRole = {
+const mockUserRole: Session = {
+  id: 'session-user',
   user: {
     id: 'test-user-id',
     email: 'test-user@example.com',
@@ -66,9 +72,11 @@ const mockUserRole = {
     lastName: 'User',
     role: 'USER' as const,
   },
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
-const mockManagerRole = {
+const mockManagerRole: Session = {
+  id: 'session-manager',
   user: {
     id: 'test-manager-id',
     email: 'test-manager@example.com',
@@ -76,9 +84,11 @@ const mockManagerRole = {
     lastName: 'Manager',
     role: 'MANAGER' as const,
   },
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
-const mockAdminRole = {
+const mockAdminRole: Session = {
+  id: 'session-admin',
   user: {
     id: 'test-admin-id',
     email: 'test-admin@example.com',
@@ -86,6 +96,7 @@ const mockAdminRole = {
     lastName: 'Admin',
     role: 'ADMIN' as const,
   },
+  expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
 describe('Quote Actions - Permission Tests', () => {
@@ -100,7 +111,7 @@ describe('Quote Actions - Permission Tests', () => {
   describe('Query Actions (canReadQuotes)', () => {
     describe('getQuotes', () => {
       it('should allow USER role to read quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.getQuotes({});
 
@@ -108,7 +119,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should allow MANAGER role to read quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.getQuotes({});
 
@@ -116,7 +127,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should allow ADMIN role to read quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockAdminRole as any);
+        mockAuth.mockResolvedValue(mockAdminRole);
 
         const result = await quoteActions.getQuotes({});
 
@@ -124,7 +135,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should deny unauthenticated users', async () => {
-        vi.mocked(auth).mockResolvedValue(null);
+        mockAuth.mockResolvedValue(null);
 
         const result = await quoteActions.getQuotes({});
 
@@ -135,7 +146,7 @@ describe('Quote Actions - Permission Tests', () => {
 
     describe('getQuoteById', () => {
       it('should allow USER role to read quote details', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.getQuoteById('test-id');
 
@@ -170,7 +181,7 @@ describe('Quote Actions - Permission Tests', () => {
       };
 
       it('should DENY USER role from creating quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.createQuote(validQuoteData);
 
@@ -179,7 +190,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW MANAGER role to create quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.createQuote(validQuoteData);
 
@@ -187,7 +198,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW ADMIN role to create quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockAdminRole as any);
+        mockAuth.mockResolvedValue(mockAdminRole);
 
         const result = await quoteActions.createQuote(validQuoteData);
 
@@ -217,7 +228,7 @@ describe('Quote Actions - Permission Tests', () => {
       };
 
       it('should DENY USER role from updating quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.updateQuote(updateData);
 
@@ -226,7 +237,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW MANAGER role to update quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.updateQuote(updateData);
 
@@ -236,7 +247,7 @@ describe('Quote Actions - Permission Tests', () => {
 
     describe('deleteQuote', () => {
       it('should DENY USER role from deleting quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.deleteQuote('quote-1');
 
@@ -245,7 +256,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW MANAGER role to delete quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.deleteQuote('quote-1');
 
@@ -253,7 +264,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW ADMIN role to delete quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockAdminRole as any);
+        mockAuth.mockResolvedValue(mockAdminRole);
 
         const result = await quoteActions.deleteQuote('quote-1');
 
@@ -263,7 +274,7 @@ describe('Quote Actions - Permission Tests', () => {
 
     describe('markQuoteAsAccepted', () => {
       it('should DENY USER role from marking quotes as accepted', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.markQuoteAsAccepted({ id: 'quote-1' });
 
@@ -272,7 +283,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW MANAGER role to mark quotes as accepted', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.markQuoteAsAccepted({ id: 'quote-1' });
 
@@ -289,7 +300,7 @@ describe('Quote Actions - Permission Tests', () => {
       };
 
       it('should DENY USER role from converting quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockUserRole as any);
+        mockAuth.mockResolvedValue(mockUserRole);
 
         const result = await quoteActions.convertQuoteToInvoice(conversionData);
 
@@ -298,7 +309,7 @@ describe('Quote Actions - Permission Tests', () => {
       });
 
       it('should ALLOW MANAGER role to convert quotes', async () => {
-        vi.mocked(auth).mockResolvedValue(mockManagerRole as any);
+        mockAuth.mockResolvedValue(mockManagerRole);
 
         const result = await quoteActions.convertQuoteToInvoice(conversionData);
 
@@ -313,7 +324,7 @@ describe('Quote Actions - Permission Tests', () => {
 
   describe('Edge Cases', () => {
     it('should handle missing user session', async () => {
-      vi.mocked(auth).mockResolvedValue({ user: null } as any);
+      mockAuth.mockResolvedValue({ user: null } as any);
 
       const result = await quoteActions.getQuotes({});
 
@@ -322,7 +333,7 @@ describe('Quote Actions - Permission Tests', () => {
     });
 
     it('should handle invalid role', async () => {
-      vi.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: {
           id: 'test',
           email: 'test@example.com',
