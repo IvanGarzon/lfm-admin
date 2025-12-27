@@ -253,6 +253,7 @@ model InvoiceItem {
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
 
   @@index([invoiceId])
+  @@index([productId])  // Product-based queries
   @@map(name: "invoice_items")
 }
 
@@ -289,6 +290,7 @@ model Payment {
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
 
   @@index([invoiceId])
+  @@index([invoiceId, date])  // Payment history queries
   @@map(name: "payments")
 }
 
@@ -329,6 +331,12 @@ model Quote {
   @@index([customerId])
   @@index([status])
   @@index([issuedDate])
+  @@index([customerId, status])           // HIGH PRIORITY: Customer-filtered status queries
+  @@index([status, deletedAt])            // HIGH PRIORITY: Status with soft delete filtering
+  @@index([validUntil])                   // HIGH PRIORITY: Expiration checks
+  @@index([parentQuoteId])                // HIGH PRIORITY: Version chain queries
+  @@index([customerId, issuedDate(sort: Desc)])  // MEDIUM PRIORITY: Recent quotes per customer
+  @@index([deletedAt])                    // MEDIUM PRIORITY: Soft delete filtering
   @@map(name: "quotes")
 }
 
@@ -361,6 +369,7 @@ model QuoteItem {
 
   @@index([quoteId])
   @@index([quoteId, order])
+  @@index([productId])  // Product-based queries
   @@map(name: "quote_items")
 }
 
@@ -444,6 +453,7 @@ model Document {
 
   @@index([invoiceId])
   @@index([quoteId])
+  @@index([kind])  // Document type filtering
   @@map("documents")
 }
 
