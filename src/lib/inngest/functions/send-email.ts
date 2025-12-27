@@ -12,6 +12,7 @@ import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { processInvoiceEmail } from '@/features/finances/invoices/services/invoice-email.service';
+import { processQuoteEmail } from '@/features/finances/quotes/services/quote-email.service';
 import type { QueueEmailPayload } from '@/types/email';
 
 export const sendEmailFunction = inngest.createFunction(
@@ -141,17 +142,21 @@ async function processInvoiceEmailHandler(email: any): Promise<{ emailId?: strin
 }
 
 /**
- * Process quote emails (to be implemented)
+ * Process quote emails
  */
 async function processQuoteEmailHandler(email: any): Promise<{ emailId?: string }> {
-  logger.warn('Quote email processing not yet implemented', {
-    context: 'inngest-send-email',
-    metadata: { emailType: email.emailType },
-  });
+  const type = email.emailType.replace('quote.', '') as
+    | 'sent'
+    | 'reminder'
+    | 'accepted'
+    | 'rejected'
+    | 'expired'
+    | 'followup';
 
-  // TODO: Implement quote email processing
-  // Similar to processInvoiceEmail but for quotes
-  return { emailId: undefined };
+  // Map email types directly (no mapping needed, types match)
+  const processorType = type as 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
+
+  return await processQuoteEmail(email.entityId, processorType);
 }
 
 /**

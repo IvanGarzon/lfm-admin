@@ -84,6 +84,8 @@ export const createQuoteColumns = (
   onCancel: (id: string, quoteNumber: string) => void,
   onConvert: (id: string, quoteNumber: string, gst: number, discount: number) => void,
   onDownloadPdf: (id: string) => void,
+  onSendEmail: (id: string) => void,
+  onSendFollowUp: (id: string) => void,
   onCreateVersion: (id: string) => void,
 ): ColumnDef<QuoteListItem>[] => [
   {
@@ -191,6 +193,8 @@ export const createQuoteColumns = (
         onCancel={onCancel}
         onConvert={onConvert}
         onDownloadPdf={onDownloadPdf}
+        onSendEmail={onSendEmail}
+        onSendFollowUp={onSendFollowUp}
         onCreateVersion={onCreateVersion}
       />
     ),

@@ -3,8 +3,6 @@ import {
   getQuotes,
   getQuoteById,
   getQuoteStatistics,
-  getQuoteAttachments,
-  getAttachmentDownloadUrl,
   getQuoteItemAttachments,
   getItemAttachmentDownloadUrl,
   getQuoteVersions,
@@ -27,8 +25,6 @@ const { mockRepoInstance } = vi.hoisted(() => ({
     searchAndPaginate: vi.fn(),
     findByIdWithDetails: vi.fn(),
     getStatistics: vi.fn(),
-    getQuoteAttachments: vi.fn(),
-    getAttachmentById: vi.fn(),
     getQuoteItemAttachments: vi.fn(),
     getItemAttachmentById: vi.fn(),
     getQuoteVersions: vi.fn(),
@@ -206,78 +202,6 @@ describe('Quote Queries', () => {
       (auth as any).mockResolvedValue(null);
       const result = await getQuoteStatistics();
       expect(result.success).toBe(false);
-    });
-  });
-
-  describe('getQuoteAttachments', () => {
-    it('returns quote attachments successfully', async () => {
-      const mockAttachments = [
-        {
-          id: 'att-1',
-          quoteId: 'quote-1',
-          fileName: 'document.pdf',
-          fileSize: 1024,
-          mimeType: 'application/pdf',
-          s3Key: 'key-1',
-          s3Url: 'url-1',
-          uploadedBy: 'user-1',
-          uploadedAt: new Date(),
-        },
-      ];
-
-      mockRepoInstance.getQuoteAttachments.mockResolvedValue(mockAttachments);
-
-      const result = await getQuoteAttachments('quote-1');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toHaveLength(1);
-        expect(result.data[0].fileName).toBe('document.pdf');
-      }
-      expect(requirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
-    });
-
-    it('returns empty array when no attachments', async () => {
-      mockRepoInstance.getQuoteAttachments.mockResolvedValue([]);
-
-      const result = await getQuoteAttachments('quote-1');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toEqual([]);
-      }
-    });
-  });
-
-  describe('getAttachmentDownloadUrl', () => {
-    it('returns signed download URL successfully', async () => {
-      const mockAttachment = {
-        id: 'att-1',
-        s3Key: 'quotes/quote-1/document.pdf',
-        fileName: 'document.pdf',
-      };
-
-      mockRepoInstance.getAttachmentById.mockResolvedValue(mockAttachment);
-
-      const result = await getAttachmentDownloadUrl('att-1');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.url).toBe('https://signed-url.com/file.pdf');
-        expect(result.data.fileName).toBe('document.pdf');
-      }
-      expect(requirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
-    });
-
-    it('returns error when attachment not found', async () => {
-      mockRepoInstance.getAttachmentById.mockResolvedValue(null);
-
-      const result = await getAttachmentDownloadUrl('non-existent');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Attachment not found');
-      }
     });
   });
 

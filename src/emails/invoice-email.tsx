@@ -102,3 +102,17 @@ export function InvoiceEmail(props: InvoiceEmailProps): React.ReactElement {
     </BaseTemplateEmail>
   );
 }
+
+InvoiceEmail.PreviewProps = {
+  invoiceData: {
+    invoiceNumber: 'INV-2025-001',
+    customerName: 'John Smith',
+    amount: 2500.00,
+    currency: 'AUD',
+    issuedDate: new Date('2025-01-15'),
+    dueDate: new Date('2025-02-15'),
+  },
+  pdfUrl: 'https://example.com/invoice.pdf',
+} satisfies InvoiceEmailProps;
+
+export default InvoiceEmail;

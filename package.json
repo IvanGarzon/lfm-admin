@@ -22,6 +22,7 @@
     "start": "next start",
     "lint": "next lint",
     "preview": "next build && next start",
+    "email:dev": "SKIP_ENV_VALIDATION=true email dev --dir src/emails --port 3001",
     "prisma:studio": "npx prisma studio",
     "prisma:reset": "prisma migrate reset",
     "prisma:reset:noseed": "prisma migrate reset --skip-seed",
@@ -168,6 +169,7 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.1",
     "@playwright/test": "^1.57.0",
+    "@react-email/preview-server": "5.1.1",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/addon-onboarding": "^10.1.2",
     "@storybook/blocks": "^8.6.14",
@@ -211,5 +213,6 @@
     "*.{ts,tsx,yaml,yml,css,md,html}": [
       "prettier --write --ignore-unknown"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.26.2+sha512.0e308ff2005fc7410366f154f625f6631ab2b16b1d2e70238444dd6ae9d630a8482d92a451144debc492416896ed16f7b114a86ec68b8404b2443869e68ffda6"
 }

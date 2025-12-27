@@ -10,8 +10,6 @@ import {
   convertQuoteToInvoice,
   checkAndExpireQuotes,
   deleteQuote,
-  uploadQuoteAttachment,
-  deleteQuoteAttachment,
   uploadQuoteItemAttachment,
   deleteQuoteItemAttachment,
   updateQuoteItemNotes,
@@ -352,95 +350,6 @@ describe('Quote Mutations', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBe('Quote not found');
-      }
-    });
-  });
-
-  describe('uploadQuoteAttachment', () => {
-    it('uploads attachment successfully', async () => {
-      const formData = new FormData();
-      const file = new File(['content'], 'document.pdf', { type: 'application/pdf' });
-      formData.append('file', file);
-      formData.append('quoteId', 'quote-123');
-
-      mockQuoteRepo.findById.mockResolvedValue({ id: 'quote-123' });
-      mockQuoteRepo.createAttachment.mockResolvedValue({
-        id: 'att-123',
-        quoteId: 'quote-123',
-        fileName: 'document.pdf',
-        fileSize: 1024,
-        mimeType: 'application/pdf',
-        s3Key: 'test-key',
-        s3Url: 'https://test.s3.amazonaws.com/test-key',
-        uploadedBy: 'user_123',
-        uploadedAt: new Date(),
-      });
-
-      const result = await uploadQuoteAttachment(formData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.fileName).toBe('document.pdf');
-      }
-      expect(requirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
-      expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes/quote-123');
-    });
-
-    it('returns error when quote not found', async () => {
-      const formData = new FormData();
-      const file = new File(['content'], 'document.pdf', { type: 'application/pdf' });
-      formData.append('file', file);
-      formData.append('quoteId', 'non-existent');
-
-      mockQuoteRepo.findById.mockResolvedValue(null);
-
-      const result = await uploadQuoteAttachment(formData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Quote not found');
-      }
-    });
-
-    it('returns error when missing required fields', async () => {
-      const formData = new FormData();
-
-      const result = await uploadQuoteAttachment(formData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Missing required fields');
-      }
-    });
-  });
-
-  describe('deleteQuoteAttachment', () => {
-    it('deletes attachment successfully', async () => {
-      mockQuoteRepo.getAttachmentById.mockResolvedValue({
-        id: 'att-123',
-        quoteId: 'quote-123',
-        s3Key: 'test-key',
-      });
-      mockQuoteRepo.deleteAttachment.mockResolvedValue(true);
-
-      const result = await deleteQuoteAttachment({ attachmentId: 'att-123' });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.id).toBe('att-123');
-      }
-      expect(requirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
-      expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes/quote-123');
-    });
-
-    it('returns error when attachment not found', async () => {
-      mockQuoteRepo.getAttachmentById.mockResolvedValue(null);
-
-      const result = await deleteQuoteAttachment({ attachmentId: 'non-existent' });
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Attachment not found');
       }
     });
   });

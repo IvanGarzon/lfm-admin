@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { X, Eye, Send, Check, FileCheck, FileDown, MoreHorizontal, Copy, AlertCircle, Pause, Ban } from 'lucide-react';
+import { X, Eye, Send, Check, FileCheck, FileDown, MoreHorizontal, Copy, AlertCircle, Pause, Ban, Mail } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -28,6 +28,8 @@ interface QuoteActionsProps {
   onCancel: (id: string, quoteNumber: string) => void;
   onConvert: (id: string, quoteNumber: string, gst: number, discount: number) => void;
   onDownloadPdf: (id: string) => void;
+  onSendEmail: (id: string) => void;
+  onSendFollowUp: (id: string) => void;
   onCreateVersion: (id: string) => void;
 }
 
@@ -41,6 +43,8 @@ export function QuoteActions({
   onCancel,
   onConvert,
   onDownloadPdf,
+  onSendEmail,
+  onSendFollowUp,
   onCreateVersion,
 }: QuoteActionsProps) {
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
@@ -128,6 +132,16 @@ export function QuoteActions({
               Create new version
             </DropdownMenuItem>
           ) : null}
+
+          <DropdownMenuItem onClick={() => onSendEmail(quote.id)}>
+            <Mail className="h-4 w-4" />
+            Send Email
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={() => onSendFollowUp(quote.id)}>
+            <Send className="h-4 w-4" />
+            Send Follow-up
+          </DropdownMenuItem>
 
           {canDelete ? (
             <>

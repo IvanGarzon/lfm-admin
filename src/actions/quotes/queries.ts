@@ -112,81 +112,6 @@ export async function getQuoteStatistics(dateFilter?: {
 }
 
 /**
- * Retrieves all attachments associated with a specific quote.
- * @param quoteId - The ID of the quote.
- * @returns A promise that resolves to an `ActionResult` containing an array of quote attachments.
- */
-export async function getQuoteAttachments(
-  quoteId: string,
-): Promise<ActionResult<QuoteAttachment[]>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
-    const attachments = await quoteRepo.getQuoteAttachments(quoteId);
-
-    return {
-      success: true,
-      data: attachments.map((attachment) => ({
-        id: attachment.id,
-        quoteId: attachment.quoteId,
-        fileName: attachment.fileName,
-        fileSize: attachment.fileSize,
-        mimeType: attachment.mimeType,
-        s3Key: attachment.s3Key,
-        s3Url: attachment.s3Url,
-        uploadedBy: attachment.uploadedBy,
-        uploadedAt: attachment.uploadedAt,
-      })),
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch attachments');
-  }
-}
-
-/**
- * Generates a temporary, signed URL for downloading a quote attachment from S3.
- * @param attachmentId - The ID of the attachment.
- * @returns A promise that resolves to an `ActionResult` containing the signed URL and the original file name,
- * or an error if the attachment is not found.
- */
-export async function getAttachmentDownloadUrl(
-  attachmentId: string,
-): Promise<ActionResult<{ url: string; fileName: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
-    // Get attachment details
-    const attachment = await quoteRepo.getAttachmentById(attachmentId);
-    if (!attachment) {
-      return { success: false, error: 'Attachment not found' };
-    }
-
-    // Generate signed URL
-    const url = await getSignedDownloadUrl(attachment.s3Key);
-
-    return {
-      success: true,
-      data: {
-        url,
-        fileName: attachment.fileName,
-      },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to generate download URL');
-  }
-}
-
-/**
  * Retrieves all attachments associated with a specific quote item.
  * @param quoteItemId - The ID of the quote item.
  * @returns A promise that resolves to an `ActionResult` containing an array of quote item attachments.
@@ -299,5 +224,44 @@ export async function getQuoteVersions(quoteId: string): Promise<
     return { success: true, data: normalizedVersions };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch quote versions');
+  }
+}
+
+/**
+ * Get or generate a quote PDF and return the signed download URL.
+ * @param id - The ID of the quote.
+ * @returns A promise that resolves to an `ActionResult` containing the PDF URL and filename.
+ */
+export async function getQuotePdfUrl(
+  id: string,
+): Promise<ActionResult<{ url: string; filename: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canReadQuotes');
+
+    const quote = await quoteRepo.findByIdWithDetails(id);
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    // Generate or retrieve PDF using centralized service
+    // Note: skipDownload=true since we only need the URL, not the buffer
+    const { getOrGenerateQuotePdf } = await import(
+      '@/features/finances/quotes/services/quote-pdf.service'
+    );
+    const result = await getOrGenerateQuotePdf(quote, {
+      context: 'getQuotePdfUrl',
+      skipDownload: true,
+    });
+
+    const { pdfUrl, pdfFilename } = result;
+
+    return { success: true, data: { url: pdfUrl, filename: pdfFilename } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to get quote PDF URL');
   }
 }

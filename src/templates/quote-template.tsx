@@ -1,5 +1,3 @@
-'use client';
-
 import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { lasFloresAccount } from '@/constants/data';
@@ -301,7 +299,11 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
   const subtotal = quote.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * quote.gst) / 100;
   const total = subtotal + gstAmount - quote.discount;
-  const isExpired = new Date() > new Date(quote.validUntil);
+
+  // Only show expired watermark if status is EXPIRED, or if SENT and past validUntil
+  const isExpired =
+    quote.status === QuoteStatusSchema.enum.EXPIRED ||
+    (quote.status === QuoteStatusSchema.enum.SENT && new Date() > new Date(quote.validUntil));
 
   // react-pdf/renderer only supports JPG and PNG images, not WebP
   const isSupportedImageFormat = (mimeType: string) => {
@@ -316,7 +318,7 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
             <Text>Draft</Text>
           </View>
         ) : null}
-        {quote.status === QuoteStatusSchema.enum.EXPIRED || isExpired ? (
+        {isExpired ? (
           <View style={styles.watermark}>
             <Text>Expired</Text>
           </View>

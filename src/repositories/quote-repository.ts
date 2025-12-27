@@ -127,7 +127,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         _count: {
           select: {
             items: true,
-            attachments: true,
           },
         },
       },
@@ -155,7 +154,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       issuedDate: quote.issuedDate,
       validUntil: quote.validUntil,
       itemCount: quote._count.items,
-      attachmentCount: quote._count.attachments,
       versionNumber: quote.versionNumber,
       parentQuoteId: quote.parentQuoteId,
     }));
@@ -235,20 +233,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             },
           },
           orderBy: { order: 'asc' },
-        },
-        attachments: {
-          select: {
-            id: true,
-            quoteId: true,
-            fileName: true,
-            fileSize: true,
-            mimeType: true,
-            s3Key: true,
-            s3Url: true,
-            uploadedBy: true,
-            uploadedAt: true,
-          },
-          orderBy: { uploadedAt: 'desc' },
         },
         statusHistory: {
           select: {
@@ -1204,92 +1188,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     const count = await this.prisma.quote.count({ where });
     return count > 0;
-  }
-
-  /**
-   * Get all file attachments associated with a specific quote.
-   * Results are ordered by upload date (newest first).
-   *
-   * @param quoteId - The ID of the quote
-   * @returns A promise that resolves to an array of quote attachments
-   */
-  async getQuoteAttachments(quoteId: string) {
-    return this.prisma.quoteAttachment.findMany({
-      where: { quoteId },
-      orderBy: { uploadedAt: 'desc' },
-    });
-  }
-
-  /**
-   * Create a new attachment record for a quote.
-   * The file should already be uploaded to S3 before calling this method.
-   *
-   * @param data - The attachment data including S3 information and file metadata
-   * @returns A promise that resolves to the created attachment record
-   */
-  async createAttachment(data: {
-    quoteId: string;
-    fileName: string;
-    fileSize: number;
-    mimeType: string;
-    s3Key: string;
-    s3Url: string;
-    uploadedBy?: string;
-  }) {
-    return this.prisma.quoteAttachment.create({
-      data: {
-        quoteId: data.quoteId,
-        fileName: data.fileName,
-        fileSize: data.fileSize,
-        mimeType: data.mimeType,
-        s3Key: data.s3Key,
-        s3Url: data.s3Url,
-        uploadedBy: data.uploadedBy ?? null,
-        uploadedAt: new Date(),
-      },
-    });
-  }
-
-  /**
-   * Get a single quote attachment by its ID.
-   *
-   * @param attachmentId - The ID of the attachment
-   * @returns A promise that resolves to the attachment record, or null if not found
-   */
-  async getAttachmentById(attachmentId: string) {
-    return this.prisma.quoteAttachment.findUnique({
-      where: { id: attachmentId },
-    });
-  }
-
-  /**
-   * Delete a quote attachment record from the database.
-   * Note: This does not delete the file from S3 - that should be handled separately.
-   *
-   * @param attachmentId - The ID of the attachment to delete
-   * @returns A promise that resolves to true if deletion was successful, false otherwise
-   */
-  async deleteAttachment(attachmentId: string): Promise<boolean> {
-    try {
-      await this.prisma.quoteAttachment.delete({
-        where: { id: attachmentId },
-      });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Count the total number of attachments for a specific quote.
-   *
-   * @param quoteId - The ID of the quote
-   * @returns A promise that resolves to the count of attachments
-   */
-  async countQuoteAttachments(quoteId: string): Promise<number> {
-    return this.prisma.quoteAttachment.count({
-      where: { quoteId },
-    });
   }
 
   /**

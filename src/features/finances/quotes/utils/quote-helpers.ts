@@ -1,4 +1,7 @@
 import { isAfter, differenceInDays, startOfToday } from 'date-fns';
+import crypto from 'crypto';
+import { generatePdfBuffer } from '@/lib/pdf';
+import { QuoteDocument } from '@/templates/quote-template';
 import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
 import { QuoteStatus } from '@/prisma/client';
 
@@ -176,10 +179,61 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
 // ============================================================================
 
 /**
- * Download quote as PDF
+ * Generate quote filename
  */
-export async function downloadQuotePdf(quote: QuoteWithDetails): Promise<void> {
-  // TODO: Implement PDF download
+export function generateQuoteFilename(quoteNumber: string): string {
+  return `${quoteNumber}.pdf`;
+}
+
+/**
+ * Generate quote PDF as Buffer (server-side)
+ */
+export async function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
+  const pdfDoc = QuoteDocument({ quote });
+  return generatePdfBuffer(pdfDoc);
+}
+
+/**
+ * Calculate hash of PDF content for deduplication.
+ * Only includes fields that affect the visual PDF output.
+ *
+ * @param quote - The quote data
+ */
+export function calculateContentHash(quote: QuoteWithDetails): string {
+  const relevantData = {
+    quoteNumber: quote.quoteNumber,
+    amount: quote.amount.toString(),
+    discount: quote.discount.toString(),
+    gst: quote.gst.toString(),
+    issuedDate: quote.issuedDate.toISOString(),
+    validUntil: quote.validUntil.toISOString(),
+    customer: {
+      firstName: quote.customer.firstName,
+      lastName: quote.customer.lastName,
+      email: quote.customer.email,
+    },
+    items: quote.items.map(item => ({
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice.toString(),
+      total: item.total.toString(),
+      colors: item.colors,
+      notes: item.notes,
+      order: item.order,
+      attachments: item.attachments.map(att => ({
+        id: att.id,
+        fileName: att.fileName,
+        s3Url: att.s3Url,
+      })),
+    })),
+    notes: quote.notes,
+    terms: quote.terms,
+  };
+
+  return crypto
+    .createHash('sha256')
+    .update(JSON.stringify(relevantData))
+    .digest('hex');
 }
 
 // ============================================================================

@@ -13,10 +13,6 @@ import {
   convertQuoteToInvoice,
   checkAndExpireQuotes,
   deleteQuote,
-  uploadQuoteAttachment,
-  deleteQuoteAttachment,
-  getQuoteAttachments,
-  getAttachmentDownloadUrl,
   uploadQuoteItemAttachment,
   deleteQuoteItemAttachment,
   updateQuoteItemNotes,
@@ -25,6 +21,9 @@ import {
   updateQuoteItemColors,
   createQuoteVersion,
   getQuoteVersions,
+  getQuotePdfUrl,
+  sendQuoteEmail,
+  sendQuoteFollowUp,
 } from '@/actions/quotes';
 import type {
   QuoteFilters,
@@ -46,7 +45,6 @@ export const QUOTE_KEYS = {
   details: () => [...QUOTE_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...QUOTE_KEYS.details(), id] as const,
   statistics: () => [...QUOTE_KEYS.all, 'statistics'] as const,
-  attachments: (quoteId: string) => [...QUOTE_KEYS.detail(quoteId), 'attachments'] as const,
   itemAttachments: (quoteItemId: string) =>
     [...QUOTE_KEYS.all, 'item-attachments', quoteItemId] as const,
   versions: (quoteId: string) => [...QUOTE_KEYS.detail(quoteId), 'versions'] as const,
@@ -649,154 +647,67 @@ export function useCreateQuoteVersion() {
 }
 
 export function useDownloadQuotePdf() {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (id: string) => {
-      const quoteData = await queryClient.fetchQuery({
-        queryKey: QUOTE_KEYS.detail(id),
-        queryFn: async () => {
-          const result = await getQuoteById(id);
-          if (!result.success) {
-            throw new Error(result.error);
-          }
-          return result.data;
-        },
-      });
-
-      // const { downloadQuotePdf } = await import('@/features/finances/quotes/utils/quote-helpers.tsx');
-      //return await downloadQuotePdf(quoteData);
-
-      return await true;
+    mutationFn: async (quoteId: string) => {
+      const result = await getQuotePdfUrl(quoteId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      // Open PDF in new tab
+      window.open(result.data.url, '_blank');
+      return result.data.url;
     },
     onSuccess: () => {
       toast.success('PDF downloaded successfully');
     },
-    onError: () => {
-      // Error is thrown from downloadQuotePdf, which already shows toast
-      toast.error('Failed to download quote');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to download PDF');
     },
   });
 }
 
-export function useQuoteAttachments(quoteId: string | undefined) {
-  return useQuery({
-    queryKey: QUOTE_KEYS.attachments(quoteId ?? ''),
-    queryFn: async () => {
-      if (!quoteId) {
-        throw new Error('Quote ID is required');
-      }
-      const result = await getQuoteAttachments(quoteId);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    enabled: Boolean(quoteId),
-  });
-}
-
-export function useUploadQuoteAttachment() {
+export function useSendQuoteEmail() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { quoteId: string; file: File }) => {
-      const formData = new FormData();
-      formData.append('quoteId', data.quoteId);
-      formData.append('file', data.file);
-
-      const result = await uploadQuoteAttachment(formData);
+    mutationFn: async (data: { quoteId: string; type: 'sent' | 'reminder' | 'accepted' | 'rejected' }) => {
+      const result = await sendQuoteEmail(data);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      // Invalidate attachments for this quote and the quote detail
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.attachments(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      toast.success(`${data.fileName} uploaded successfully`);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: QUOTE_KEYS.detail(variables.quoteId)
+      });
+      toast.success('Email queued successfully');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to upload attachment');
+      toast.error(error.message || 'Failed to send email');
     },
   });
 }
 
-export function useDeleteQuoteAttachment() {
+export function useSendQuoteFollowUp() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { attachmentId: string; quoteId: string }) => {
-      const result = await deleteQuoteAttachment({ attachmentId: data.attachmentId });
+    mutationFn: async (quoteId: string) => {
+      const result = await sendQuoteFollowUp(quoteId);
       if (!result.success) {
         throw new Error(result.error);
       }
-      return { ...result.data, quoteId: data.quoteId };
-    },
-    onMutate: async (data) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.attachments(data.quoteId) });
-      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-
-      // Snapshot the previous values
-      const previousAttachments = queryClient.getQueryData(QUOTE_KEYS.attachments(data.quoteId));
-      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(data.quoteId));
-
-      // Optimistically remove attachment from quote detail
-      queryClient.setQueryData(
-        QUOTE_KEYS.detail(data.quoteId),
-        (old: QuoteWithDetails | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            attachments: old.attachments.filter((att) => att.id !== data.attachmentId),
-          };
-        },
-      );
-
-      return { previousAttachments, previousQuote };
-    },
-    onError: (error: Error, data, context) => {
-      // Rollback optimistic update
-      if (context?.previousAttachments) {
-        queryClient.setQueryData(QUOTE_KEYS.attachments(data.quoteId), context.previousAttachments);
-      }
-      if (context?.previousQuote) {
-        queryClient.setQueryData(QUOTE_KEYS.detail(data.quoteId), context.previousQuote);
-      }
-      toast.error(error.message || 'Failed to delete attachment');
-    },
-    onSettled: (_data, _error, variables) => {
-      // Always refetch to ensure cache consistency
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.attachments(variables.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-    },
-    onSuccess: () => {
-      toast.success('Attachment deleted successfully');
-    },
-  });
-}
-
-export function useGetAttachmentDownloadUrl() {
-  return useMutation({
-    mutationFn: async (attachmentId: string) => {
-      const result = await getAttachmentDownloadUrl(attachmentId);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
       return result.data;
     },
-    onSuccess: (data) => {
-      // Open in new tab
-      window.open(data.url, '_blank', 'noopener,noreferrer');
-      toast.success('Opening attachment');
+    onSuccess: (_, quoteId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUOTE_KEYS.detail(quoteId)
+      });
+      toast.success('Follow-up email queued successfully');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to download attachment');
+      toast.error(error.message || 'Failed to send follow-up');
     },
   });
 }

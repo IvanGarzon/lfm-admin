@@ -15,8 +15,6 @@ import {
   MarkQuoteAsOnHoldSchema,
   MarkQuoteAsCancelledSchema,
   ConvertQuoteToInvoiceSchema,
-  UploadAttachmentSchema,
-  DeleteAttachmentSchema,
   UploadItemAttachmentSchema,
   DeleteItemAttachmentSchema,
   CreateVersionSchema,
@@ -30,7 +28,6 @@ import {
   type CreateVersionInput,
 } from '@/schemas/quotes';
 import type {
-  QuoteAttachment,
   QuoteItemAttachment,
 } from '@/features/finances/quotes/types';
 import type { ActionResult } from '@/types/actions';
@@ -39,6 +36,7 @@ import {
   deleteFileFromS3,
   ALLOWED_IMAGE_MIME_TYPES,
 } from '@/lib/s3';
+import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.service';
 
 const quoteRepo = new QuoteRepository(prisma);
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -208,6 +206,14 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
       return { success: false, error: 'Quote not found' };
     }
 
+    // Auto-send email when quote is marked as SENT
+    try {
+      await sendQuoteEmail({ quoteId: id, type: 'sent' });
+    } catch (emailError) {
+      // Log error but don't fail the status update
+      console.error('Failed to queue quote email:', emailError);
+    }
+
     revalidatePath('/finances/quotes');
     revalidatePath(`/finances/quotes/${id}`);
 
@@ -325,6 +331,31 @@ export async function convertQuoteToInvoice(
       session?.user?.id,
     );
 
+    // Auto-send invoice email to customer
+    try {
+      const invoice = await invoiceRepo.findByIdWithDetails(result.invoiceId);
+      if (invoice) {
+        await queueInvoiceEmail({
+          invoiceId: invoice.id,
+          customerId: invoice.customer.id,
+          type: 'pending',
+          recipient: invoice.customer.email,
+          subject: `Invoice ${invoice.invoiceNumber}`,
+          emailData: {
+            invoiceNumber: invoice.invoiceNumber,
+            customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+            amount: invoice.amount,
+            currency: invoice.currency,
+            dueDate: invoice.dueDate,
+            issuedDate: invoice.issuedDate,
+          },
+        });
+      }
+    } catch (emailError) {
+      // Log error but don't fail the conversion
+      console.error('Failed to queue invoice email:', emailError);
+    }
+
     revalidatePath('/finances/quotes');
     revalidatePath(`/finances/quotes/${validatedData.id}`);
     revalidatePath('/finances/invoices');
@@ -381,139 +412,6 @@ export async function deleteQuote(id: string): Promise<ActionResult<{ id: string
     return { success: true, data: { id } };
   } catch (error) {
     return handleActionError(error, 'Failed to delete quote');
-  }
-}
-
-/**
- * Uploads a file attachment for a specific quote.
- * The file is stored in S3 and a corresponding record is created in the database.
- * @param formData - The form data containing the file and the quote ID.
- * @returns A promise that resolves to an `ActionResult` with the new attachment's data.
- */
-export async function uploadQuoteAttachment(
-  formData: FormData,
-): Promise<ActionResult<QuoteAttachment>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  requirePermission(session.user, 'canManageQuotes');
-
-  try {
-    const quoteId = formData.get('quoteId');
-    const fileEntry = formData.get('file');
-
-    if (typeof quoteId !== 'string' || !(fileEntry instanceof File)) {
-      return { success: false, error: 'Missing required fields' };
-    }
-
-    const file: File = fileEntry;
-
-    // Validate inputs with file properties
-    const validatedData = UploadAttachmentSchema.parse({
-      quoteId,
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-    });
-
-    // Check if quote exists
-    const quote = await quoteRepo.findById(validatedData.quoteId);
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const params = {
-      file: buffer,
-      fileName: validatedData.fileName,
-      mimeType: validatedData.mimeType,
-      quoteId: validatedData.quoteId,
-    };
-
-    const { s3Key, s3Url } = await uploadFileToS3({
-      ...params,
-      resourceType: 'quotes',
-      resourceId: params.quoteId,
-      subPath: 'attachments',
-      metadata: { quoteId: params.quoteId },
-    });
-
-    // Create database record
-    const attachment = await quoteRepo.createAttachment({
-      quoteId: validatedData.quoteId,
-      fileName: validatedData.fileName,
-      fileSize: validatedData.fileSize,
-      mimeType: validatedData.mimeType,
-      s3Key,
-      s3Url,
-      uploadedBy: session.user.id,
-    });
-
-    revalidatePath(`/finances/quotes/${validatedData.quoteId}`);
-
-    return {
-      success: true,
-      data: {
-        id: attachment.id,
-        quoteId: attachment.quoteId,
-        fileName: attachment.fileName,
-        fileSize: attachment.fileSize,
-        mimeType: attachment.mimeType,
-        s3Key: attachment.s3Key,
-        s3Url: attachment.s3Url,
-        uploadedBy: attachment.uploadedBy,
-        uploadedAt: attachment.uploadedAt,
-      },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to upload attachment');
-  }
-}
-
-/**
- * Deletes a quote attachment from both S3 and the database.
- * @param data - An object containing the `attachmentId` of the attachment to be deleted.
- * @returns A promise that resolves to an `ActionResult` with the ID of the deleted attachment,
- * or an error if the attachment is not found.
- */
-export async function deleteQuoteAttachment(data: {
-  attachmentId: string;
-}): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  requirePermission(session.user, 'canManageQuotes');
-
-  try {
-    const validatedData = DeleteAttachmentSchema.parse(data);
-
-    // Get attachment details
-    const attachment = await quoteRepo.getAttachmentById(validatedData.attachmentId);
-    if (!attachment) {
-      return { success: false, error: 'Attachment not found' };
-    }
-
-    // Delete from S3
-    await deleteFileFromS3(attachment.s3Key);
-
-    // Delete from database
-    const success = await quoteRepo.deleteAttachment(validatedData.attachmentId);
-    if (!success) {
-      return { success: false, error: 'Failed to delete attachment record' };
-    }
-
-    revalidatePath(`/finances/quotes/${attachment.quoteId}`);
-
-    return { success: true, data: { id: validatedData.attachmentId } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete attachment');
   }
 }
 
@@ -785,5 +683,147 @@ export async function createQuoteVersion(
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create quote version');
+  }
+}
+
+/**
+ * Queues a quote email for background processing via Inngest.
+ * @param data - An object containing the quote ID and email type.
+ * @returns A promise that resolves to an `ActionResult` with the email audit ID.
+ */
+export async function sendQuoteEmail(data: {
+  quoteId: string;
+  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'followup';
+}): Promise<ActionResult<{ auditId: string; eventId: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canManageQuotes');
+
+    // Fetch quote with customer details
+    const quote = await quoteRepo.findByIdWithDetails(data.quoteId);
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    // Prepare email data
+    const emailData = {
+      quoteNumber: quote.quoteNumber,
+      customerName: `${quote.customer.firstName} ${quote.customer.lastName}`,
+      amount: quote.amount,
+      currency: quote.currency,
+      issuedDate: quote.issuedDate,
+      validUntil: quote.validUntil,
+      itemCount: quote.items.length,
+    };
+
+    // Generate subject based on type
+    const subjects = {
+      sent: `Quote ${quote.quoteNumber} from Las Flores`,
+      reminder: `Reminder: Quote ${quote.quoteNumber} expiring soon`,
+      accepted: `Quote ${quote.quoteNumber} Accepted - Thank You!`,
+      rejected: `Quote ${quote.quoteNumber} - We Value Your Feedback`,
+      followup: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
+    };
+
+    // Queue email via Inngest
+    const result = await queueQuoteEmail({
+      quoteId: quote.id,
+      customerId: quote.customer.id,
+      type: data.type,
+      recipient: quote.customer.email,
+      subject: subjects[data.type],
+      emailData,
+    });
+
+    revalidatePath(`/finances/quotes/${data.quoteId}`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    return handleActionError(error, 'Failed to queue quote email');
+  }
+}
+
+/**
+ * Sends a follow-up email for a quote with rate limiting (1 per 24h)
+ * @param quoteId - The ID of the quote to send follow-up for
+ * @returns A promise that resolves to an `ActionResult` with the email audit ID
+ */
+export async function sendQuoteFollowUp(
+  quoteId: string
+): Promise<ActionResult<{ auditId: string; eventId: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canManageQuotes');
+
+    // Fetch quote with customer details
+    const quote = await quoteRepo.findByIdWithDetails(quoteId);
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    // Check rate limiting - no follow-up sent in last 24 hours
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const recentFollowUp = await prisma.emailAudit.findFirst({
+      where: {
+        quoteId: quoteId,
+        emailType: 'quote.followup',
+        status: 'SENT',
+        sentAt: {
+          gte: twentyFourHoursAgo,
+        },
+      },
+      orderBy: {
+        sentAt: 'desc',
+      },
+    });
+
+    if (recentFollowUp) {
+      const hoursSinceLastFollowUp = Math.floor(
+        (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60)
+      );
+      const hoursRemaining = 24 - hoursSinceLastFollowUp;
+
+      return {
+        success: false,
+        error: `Please wait ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} before sending another follow-up`,
+      };
+    }
+
+    // Prepare email data
+    const emailData = {
+      quoteNumber: quote.quoteNumber,
+      customerName: `${quote.customer.firstName} ${quote.customer.lastName}`,
+      amount: quote.amount,
+      currency: quote.currency,
+      issuedDate: quote.issuedDate,
+      validUntil: quote.validUntil,
+      itemCount: quote.items.length,
+    };
+
+    // Queue follow-up email via Inngest
+    const result = await queueQuoteEmail({
+      quoteId: quote.id,
+      customerId: quote.customer.id,
+      type: 'followup' as any, // Will be handled as 'quote.followup'
+      recipient: quote.customer.email,
+      subject: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
+      emailData,
+    });
+
+    revalidatePath(`/finances/quotes/${quoteId}`);
+
+    return { success: true, data: result };
+  } catch (error) {
+    return handleActionError(error, 'Failed to send quote follow-up');
   }
 }

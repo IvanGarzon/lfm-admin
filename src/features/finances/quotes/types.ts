@@ -17,7 +17,6 @@ export type QuoteListItem = {
   issuedDate: Date;
   validUntil: Date;
   itemCount: number;
-  attachmentCount: number;
   versionNumber: number;
   parentQuoteId: string | null;
 };
@@ -71,20 +70,7 @@ export type QuoteWithDetails = {
     createdAt: Date;
     attachments: QuoteItemAttachment[];
   }[];
-  attachments: QuoteAttachment[];
   statusHistory: QuoteStatusHistoryItem[];
-};
-
-export type QuoteAttachment = {
-  id: string;
-  quoteId: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  s3Key: string;
-  s3Url: string;
-  uploadedBy: string | null;
-  uploadedAt: Date;
 };
 
 export type QuoteItemAttachment = {

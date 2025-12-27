@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Pause,
   Ban,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,8 +48,11 @@ import {
   useMarkQuoteAsSent,
   useCreateQuoteVersion,
   useQuoteVersions,
+  useDownloadQuotePdf,
+  useSendQuoteEmail,
+  useSendQuoteFollowUp,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { downloadQuotePdf, getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
+import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
@@ -82,6 +86,9 @@ export function QuoteDrawer({
   const markAsAccepted = useMarkQuoteAsAccepted();
   const markAsSent = useMarkQuoteAsSent();
   const createVersion = useCreateQuoteVersion();
+  const downloadPdf = useDownloadQuotePdf();
+  const sendEmail = useSendQuoteEmail();
+  const sendFollowUp = useSendQuoteFollowUp();
 
   const router = useRouter();
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
@@ -207,7 +214,7 @@ export function QuoteDrawer({
     [router, hasUnsavedChanges],
   );
 
-  const handleDownloadPdf = useCallback(async () => {
+  const handleDownloadPdf = useCallback(() => {
     if (!quote) {
       return;
     }
@@ -231,8 +238,64 @@ export function QuoteDrawer({
       return;
     }
 
-    await downloadQuotePdf(quote);
-  }, [quote, hasUnsavedChanges]);
+    downloadPdf.mutate(quote.id);
+  }, [quote, hasUnsavedChanges, downloadPdf]);
+
+  const handleSendEmail = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      toast.warning('You have unsaved changes', {
+        description:
+          'Please save your changes before sending the email to ensure it reflects the latest data.',
+        duration: 5000,
+        action: {
+          label: 'Save Now',
+          onClick: () => {
+            const form = document.getElementById('form-rhf-quote');
+            if (form && form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          },
+        },
+      });
+
+      return;
+    }
+
+    // Determine email type based on quote status
+    const emailType = quote.status === QuoteStatus.SENT ? 'sent' : 'sent';
+    sendEmail.mutate({ quoteId: quote.id, type: emailType });
+  }, [quote, hasUnsavedChanges, sendEmail]);
+
+  const handleSendFollowUp = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      toast.warning('You have unsaved changes', {
+        description:
+          'Please save your changes before sending the follow-up to ensure it reflects the latest data.',
+        duration: 5000,
+        action: {
+          label: 'Save Now',
+          onClick: () => {
+            const form = document.getElementById('form-rhf-quote');
+            if (form && form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          },
+        },
+      });
+
+      return;
+    }
+
+    sendFollowUp.mutate(quote.id);
+  }, [quote, hasUnsavedChanges, sendFollowUp]);
 
   // Get permissions based on quote status
   const { canAccept, canReject, canSend, canPutOnHold, canCancel, canConvert, canDelete, canCreateVersion } =
@@ -448,6 +511,16 @@ export function QuoteDrawer({
                           <DropdownMenuItem onClick={handleDownloadPdf}>
                             <Download className="h-4 w-4" />
                             Download PDF
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={handleSendEmail}>
+                            <Mail className="h-4 w-4" />
+                            Send Email
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={handleSendFollowUp}>
+                            <Send className="h-4 w-4" />
+                            Send Follow-up
                           </DropdownMenuItem>
 
                           {canDelete ? (

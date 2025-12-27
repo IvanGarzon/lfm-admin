@@ -14,6 +14,8 @@ import {
   useMarkQuoteAsAccepted,
   useMarkQuoteAsSent,
   useDownloadQuotePdf,
+  useSendQuoteEmail,
+  useSendQuoteFollowUp,
   useCreateQuoteVersion,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { QuoteStats } from '@/features/finances/quotes/components/quote-stats';
@@ -52,6 +54,8 @@ export function QuoteList({
   const markAsAccepted = useMarkQuoteAsAccepted();
   const markAsSent = useMarkQuoteAsSent();
   const downloadPdf = useDownloadQuotePdf();
+  const sendEmail = useSendQuoteEmail();
+  const sendFollowUp = useSendQuoteFollowUp();
   const createVersion = useCreateQuoteVersion();
 
   const handleShowCreateModal = () => {
@@ -69,12 +73,16 @@ export function QuoteList({
         (id, number) => openCancel(id, number),
         (id, number, gst, discount) => openConvert(id, number, gst, discount),
         (id) => downloadPdf.mutate(id),
+        (id) => sendEmail.mutate({ quoteId: id, type: 'sent' }),
+        (id) => sendFollowUp.mutate(id),
         (id) => createVersion.mutate(id),
       ),
     [
       markAsAccepted,
       markAsSent,
       downloadPdf,
+      sendEmail,
+      sendFollowUp,
       createVersion,
       openDelete,
       openReject,

@@ -161,53 +161,6 @@ export const QuoteFiltersSchema = z.object({
 });
 
 /**
- * Quote Attachment Schemas
- */
-export const QuoteAttachmentSchema = z.object({
-  id: z.string(),
-  quoteId: z.string(),
-  fileName: z.string(),
-  fileSize: z.number().int().positive(),
-  mimeType: z.string(),
-  s3Key: z.string(),
-  s3Url: z.string().url(),
-  uploadedBy: z.string().nullable(),
-  uploadedAt: z.date(),
-});
-
-/**
- * Upload Attachment Schema (for server-side validation)
- */
-export const UploadAttachmentSchema = z.object({
-  quoteId: z.string().min(1, { error: 'Quote ID is required' }),
-  fileName: z.string().min(1, { error: 'File name is required' }),
-  fileSize: z
-    .number()
-    .int()
-    .positive({ error: 'File size must be positive' })
-    .max(MAX_FILE_SIZE, {
-      error: `File size must not exceed ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-    }),
-  mimeType: z.string().refine((type) => ALLOWED_MIME_TYPES.includes(type as any), {
-    error: `File type must be one of: ${ALLOWED_MIME_TYPES.join(', ')}`,
-  }),
-});
-
-/**
- * Delete Attachment Schema
- */
-export const DeleteAttachmentSchema = z.object({
-  attachmentId: z.string().min(1, { error: 'Attachment ID is required' }),
-});
-
-/**
- * Attachment Type Inference
- */
-export type QuoteAttachmentInput = z.infer<typeof QuoteAttachmentSchema>;
-export type UploadAttachmentInput = z.infer<typeof UploadAttachmentSchema>;
-export type DeleteAttachmentInput = z.infer<typeof DeleteAttachmentSchema>;
-
-/**
  * Quote Item Attachment Schemas
  */
 export const QuoteItemAttachmentSchema = z.object({
@@ -262,3 +215,23 @@ export const CreateVersionSchema = z.object({
 });
 
 export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
+
+/**
+ * Send Quote Email Schema
+ */
+export const SendQuoteEmailSchema = z.object({
+  quoteId: z.string().cuid(),
+  to: z.string().email(),
+  quoteData: z.object({
+    quoteNumber: z.string(),
+    customerName: z.string(),
+    amount: z.number().positive(),
+    currency: z.string(),
+    issuedDate: z.coerce.date(),
+    validUntil: z.coerce.date(),
+    itemCount: z.number().int().nonnegative(),
+  }),
+  pdfUrl: z.string().url().optional(),
+});
+
+export type SendQuoteEmailInput = z.infer<typeof SendQuoteEmailSchema>;

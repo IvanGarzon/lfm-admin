@@ -144,3 +144,19 @@ export function ReminderEmail(props: ReminderEmailProps): React.ReactElement {
   );
 }
 
+ReminderEmail.PreviewProps = {
+  reminderData: {
+    invoiceNumber: 'INV-2025-001',
+    customerName: 'Michael Brown',
+    amount: 3000.00,
+    currency: 'AUD',
+    dueDate: new Date('2025-01-01'),
+    daysOverdue: 15,
+    amountPaid: 1000.00,
+    amountDue: 2000.00,
+  },
+  pdfUrl: 'https://example.com/invoice.pdf',
+} satisfies ReminderEmailProps;
+
+export default ReminderEmail;
+

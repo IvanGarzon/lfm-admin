@@ -12,7 +12,19 @@ export function BaseTemplateEmail({
   previewText: string;
 }): React.ReactElement {
   const { main, container, logo } = emailStyles;
-  const logoUrl = absoluteUrl('/static/logo-green-800.png');
+
+  // Use absoluteUrl in production, fallback to localhost for email preview
+  let logoUrl: string;
+  try {
+    const url = absoluteUrl('/static/logo-green-800.png');
+    // Check if the URL is valid (not undefined or empty)
+    logoUrl = url && url.startsWith('http')
+      ? url
+      : 'http://localhost:3000/static/logo-green-800.png';
+  } catch {
+    // Fallback for email preview server when env vars aren't available
+    logoUrl = 'http://localhost:3000/static/logo-green-800.png';
+  }
 
   return (
     <Html>

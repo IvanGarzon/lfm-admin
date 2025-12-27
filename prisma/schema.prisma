@@ -320,7 +320,6 @@ model Quote {
 
   items         QuoteItem[]
   documents     Document[]
-  attachments   QuoteAttachment[]
   statusHistory QuoteStatusHistory[]
   emailAudit    EmailAudit[]
 
@@ -371,24 +370,6 @@ model QuoteItem {
   @@index([quoteId, order])
   @@index([productId])  // Product-based queries
   @@map(name: "quote_items")
-}
-
-model QuoteAttachment {
-  id      String @id @default(cuid())
-  quoteId String @map(name: "quote_id")
-  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-
-  fileName String @map(name: "file_name")
-  fileSize Int    @map(name: "file_size")
-  mimeType String @map(name: "mime_type")
-  s3Key    String @unique @map(name: "s3_key")
-  s3Url    String @map(name: "s3_url")
-
-  uploadedBy String?  @map(name: "uploaded_by")
-  uploadedAt DateTime @default(now()) @map(name: "uploaded_at") @db.Timestamptz()
-
-  @@index([quoteId])
-  @@map(name: "quote_attachments")
 }
 
 model QuoteItemAttachment {

@@ -94,3 +94,18 @@ export function ReceiptEmail(props: ReceiptEmailProps): React.ReactElement {
   );
 }
 
+ReceiptEmail.PreviewProps = {
+  receiptData: {
+    invoiceNumber: 'INV-2025-001',
+    receiptNumber: 'REC-2025-001',
+    customerName: 'Emma Wilson',
+    amount: 2500.00,
+    currency: 'AUD',
+    paidDate: new Date('2025-01-20'),
+    paymentMethod: 'Credit Card',
+  },
+  pdfUrl: 'https://example.com/receipt.pdf',
+} satisfies ReceiptEmailProps;
+
+export default ReceiptEmail;
+

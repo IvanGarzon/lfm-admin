@@ -286,43 +286,6 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                 `This quote is valid for the period specified above. Prices are in ${quote.currency} and are subject to change after the expiration date. Acceptance of this quote constitutes agreement to these terms. Please retain this quote for your records.`}
             </p>
           </Box>
-
-          {/* Attachments Section */}
-          {quote.attachments && quote.attachments.length > 0 ? (
-            <Box className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <Box className="flex items-center gap-2 mb-4">
-                <Paperclip className="size-4 text-gray-600 dark:text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  Attachments ({quote.attachments.length})
-                </h3>
-              </Box>
-              <Box className="grid grid-cols-1 gap-2">
-                {quote.attachments.map((attachment) => (
-                  <Box
-                    key={attachment.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
-                  >
-                    <Box className="shrink-0">
-                      {isImageFile(attachment.mimeType) ? (
-                        <ImageIcon className="size-5 text-blue-500" />
-                      ) : (
-                        <FileIcon className="size-5 text-gray-400" />
-                      )}
-                    </Box>
-                    <Box className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
-                        {attachment.fileName}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        {formatFileSize(attachment.fileSize)} •{' '}
-                        {format(new Date(attachment.uploadedAt), 'MMM d, yyyy')}
-                      </p>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          ) : null}
         </Box>
       </Box>
     </Box>
