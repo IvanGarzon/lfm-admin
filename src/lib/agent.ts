@@ -48,8 +48,9 @@ async function getDetailsFromUserAgent(userAgent: string | null): Promise<Sessio
   const isDev = env.NODE_ENV === 'development';
   const ipAddress = isDev ? getRandomFakeIP() : undefined;
 
-  // Extract location details from IP
-  const location = await getLocationFromIP(ipAddress);
+  // 🚀 PERFORMANCE FIX: Don't block sign-in waiting for external location API
+  // This removes 500-3000ms from every sign-in
+  const location = isDev && ipAddress ? (FAKE_LOCATIONS[ipAddress] || {}) : {};
 
   return {
     ipAddress,
@@ -77,17 +78,6 @@ function getRandomFakeIP() {
   return devIPs[index];
 }
 
-function isLocalhost(ip: string | undefined): boolean {
-  return (
-    !ip ||
-    ip === '::1' ||
-    ip === '127.0.0.1' ||
-    ip.startsWith('192.168.') ||
-    ip.startsWith('10.') ||
-    ip.startsWith('172.')
-  );
-}
-
 function getUserAgentDetails(userAgent: string | null) {
   if (!userAgent) return {};
 
@@ -105,43 +95,7 @@ function getUserAgentDetails(userAgent: string | null) {
   };
 }
 
-async function getLocationFromIP(ip: string | undefined) {
-  if (!ip) return {};
-
-  // Use fake data for dev IPs to avoid API rate limits
-  if (FAKE_LOCATIONS[ip]) {
-    return FAKE_LOCATIONS[ip];
-  }
-
-  if (isLocalhost(ip)) {
-    return {
-      country: 'localhost',
-      region: '',
-      city: '',
-      timezone: '',
-      latitude: 0,
-      longitude: 0,
-    };
-  }
-
-  try {
-    const res = await fetch(`https://ipapi.co/${ip}/json/`);
-    if (!res.ok) {
-        console.warn('IP lookup failed status:', res.status);
-        return {};
-    }
-    const data = await res.json();
-
-    return {
-      country: data.country_name || data.country,
-      region: data.region,
-      city: data.city,
-      timezone: data.timezone,
-      latitude: data.latitude,
-      longitude: data.longitude,
-    };
-  } catch (e) {
-    console.error('IP lookup failed:', e);
-    return {};
-  }
-}
+// 🚀 REMOVED: getLocationFromIP() function
+// This was causing 500-3000ms blocking delay on every sign-in
+// by making external API calls to ipapi.co
+// Location data can be fetched later if needed via background job

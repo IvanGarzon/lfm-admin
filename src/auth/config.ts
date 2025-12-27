@@ -170,6 +170,16 @@ export const authConfig = {
             await prisma.session.create({
               data: sessionData,
             });
+
+            // 🚀 PERFORMANCE: Update location in background (non-blocking)
+            // This happens AFTER sign-in completes, so no delay for user
+            if (env.NODE_ENV === 'production' && details.ipAddress) {
+              // Dynamic import to avoid circular deps, fire and forget
+              import('@/lib/location-service').then(({ updateSessionLocation }) => {
+                updateSessionLocation(sessionData.sessionToken, details.ipAddress!)
+                  .catch(err => console.error('Background location update failed:', err));
+              }).catch(err => console.error('Failed to load location service:', err));
+            }
           }
         }
       } catch (error) {
