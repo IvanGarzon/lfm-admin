@@ -1,21 +1,17 @@
 import { X, Ban, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
-
 import type { QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge, type StatusBadgeConfig } from '@/features/finances/shared';
 
-type StatusBadgeProps = {
+type QuoteStatusBadgeProps = {
   status: QuoteStatusType;
+  className?: string;
 };
 
-const statusConfig: Record<
-  QuoteStatusType,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-    className?: string;
-    icon?: React.ReactNode;
-  }
-> = {
+/**
+ * Configuration for quote status badges
+ * Maps each quote status to its visual representation
+ */
+const QUOTE_STATUS_CONFIG: Record<QuoteStatusType, StatusBadgeConfig> = {
   DRAFT: {
     label: 'Draft',
     variant: 'outline',
@@ -66,13 +62,12 @@ const statusConfig: Record<
   },
 };
 
-export function QuoteStatusBadge({ status }: StatusBadgeProps) {
-  const config = statusConfig[status];
-
-  return (
-    <Badge variant={config.variant} className={config.className}>
-      {config.icon}
-      {config.label}
-    </Badge>
-  );
+/**
+ * Quote status badge component
+ *
+ * Displays a visual badge for quote statuses with appropriate colors and icons.
+ * Now uses the shared StatusBadge component for consistency across finance modules.
+ */
+export function QuoteStatusBadge({ status, className }: QuoteStatusBadgeProps) {
+  return <StatusBadge status={status} config={QUOTE_STATUS_CONFIG} className={className} />;
 }

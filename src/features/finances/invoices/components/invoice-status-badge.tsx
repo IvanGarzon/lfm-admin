@@ -1,20 +1,17 @@
 import { Ban, CircleCheckBig, Hourglass, CircleDashed, Timer, SquareDashedTopSolid } from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge, type StatusBadgeConfig } from '@/features/finances/shared';
 
-type StatusBadgeProps = {
+type InvoiceStatusBadgeProps = {
   status: InvoiceStatus;
+  className?: string;
 };
 
-const statusConfig: Record<
-  InvoiceStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
-    className?: string;
-    icon?: React.ReactNode;
-  }
-> = {
+/**
+ * Configuration for invoice status badges
+ * Maps each invoice status to its visual representation
+ */
+const INVOICE_STATUS_CONFIG: Record<InvoiceStatus, StatusBadgeConfig> = {
   DRAFT: {
     label: 'Draft',
     variant: 'outline',
@@ -33,7 +30,7 @@ const statusConfig: Record<
     className: 'bg-green-50 text-green-700 border-green-200',
     icon: <CircleCheckBig className="h-4 w-4" />,
   },
-   PARTIALLY_PAID: {
+  PARTIALLY_PAID: {
     label: 'Partially Paid',
     variant: 'outline',
     className: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -50,16 +47,15 @@ const statusConfig: Record<
     variant: 'outline',
     className: 'bg-red-50 text-red-700 border-red-200',
     icon: <Ban className="h-4 w-4" />,
-  }, 
+  },
 };
 
-export function InvoiceStatusBadge({ status }: StatusBadgeProps) {
-  const config = statusConfig[status];
-
-  return (
-    <Badge variant={config.variant} className={config.className}>
-      {config.icon}
-      {config.label}
-    </Badge>
-  );
+/**
+ * Invoice status badge component
+ *
+ * Displays a visual badge for invoice statuses with appropriate colors and icons.
+ * Now uses the shared StatusBadge component for consistency across finance modules.
+ */
+export function InvoiceStatusBadge({ status, className }: InvoiceStatusBadgeProps) {
+  return <StatusBadge status={status} config={INVOICE_STATUS_CONFIG} className={className} />;
 }
