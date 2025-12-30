@@ -54,6 +54,7 @@ model User {
   password      String?
   accounts      Account[]
   sessions      Session[]
+  taskExecutions TaskExecution[]
 
   role                  UserRole               @default(USER)
   // isTwoFactorEnabled    Boolean                @default(false)
@@ -488,6 +489,86 @@ model EmailAudit {
 }
 
 
+model ScheduledTask {
+  id        String   @id @default(cuid())
+
+  // Function metadata (synced from code)
+  functionId   String   @unique @map("function_id")
+  functionName String   @map("function_name")
+  description  String?
+
+  // Execution configuration
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+  scheduleType ScheduleType @default(CRON) @map("schedule_type")
+  cronSchedule String?  @map("cron_schedule")
+  eventName    String?  @map("event_name")
+
+  // Retry & concurrency configuration
+  retries         Int?     @default(0)
+  concurrencyLimit Int?    @default(1) @map("concurrency_limit")
+  timeout         Int?
+
+  // Metadata
+  category     TaskCategory @default(SYSTEM)
+  metadata     Json?
+
+  // Sync tracking
+  lastSyncedAt DateTime  @default(now()) @map("last_synced_at") @db.Timestamptz()
+  codeVersion  String?   @map("code_version")
+
+  // Audit
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  executions TaskExecution[]
+
+  @@index([functionId])
+  @@index([isEnabled])
+  @@index([category])
+  @@index([scheduleType])
+  @@map("scheduled_tasks")
+}
+
+model TaskExecution {
+  id String @id @default(cuid())
+
+  taskId String @map("task_id")
+  task   ScheduledTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  // Execution tracking
+  status         ExecutionStatus @default(RUNNING)
+  triggeredBy    TriggerSource   @default(SCHEDULE) @map("triggered_by")
+  triggeredByUser String?        @map("triggered_by_user")
+  user           User?           @relation(fields: [triggeredByUser], references: [id], onDelete: SetNull)
+
+  // Inngest cross-reference
+  inngestRunId   String?  @unique @map("inngest_run_id")
+  inngestEventId String?  @map("inngest_event_id")
+
+  // Timing
+  startedAt   DateTime  @default(now()) @map("started_at") @db.Timestamptz()
+  completedAt DateTime? @map("completed_at") @db.Timestamptz()
+  duration    Int?
+
+  // Results
+  result       Json?
+  error        String?   @db.Text
+  stackTrace   String?   @map("stack_trace") @db.Text
+  retryCount   Int       @default(0) @map("retry_count")
+
+  // Step-level logs
+  steps        Json?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@index([taskId])
+  @@index([taskId, startedAt(sort: Desc)])
+  @@index([status])
+  @@index([inngestRunId])
+  @@index([startedAt])
+  @@map("task_executions")
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -565,4 +646,33 @@ enum UserRole {
   ADMIN
   MANAGER
   USER
+}
+
+enum ScheduleType {
+  CRON
+  EVENT
+  HYBRID
+}
+
+enum TaskCategory {
+  SYSTEM
+  EMAIL
+  CLEANUP
+  FINANCE
+  CUSTOM
+}
+
+enum ExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  TIMEOUT
+}
+
+enum TriggerSource {
+  SCHEDULE
+  MANUAL
+  EVENT
+  RETRY
 }

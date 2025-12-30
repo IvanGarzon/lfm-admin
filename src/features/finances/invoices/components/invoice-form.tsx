@@ -37,7 +37,13 @@ import {
   type UpdateInvoiceInput,
 } from '@/schemas/invoices';
 import { CustomerSelect } from '@/components/shared/customer-select';
-import type { InvoiceWithDetails, InvoiceFormInput, InvoiceBasic, InvoiceItemDetail, InvoiceStatusHistoryItem } from '@/features/finances/invoices/types';
+import type {
+  InvoiceWithDetails,
+  InvoiceFormInput,
+  InvoiceBasic,
+  InvoiceItemDetail,
+  InvoiceStatusHistoryItem,
+} from '@/features/finances/invoices/types';
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
@@ -65,7 +71,7 @@ const defaultFormState: CreateInvoiceInput = {
 
 const mapInvoiceToFormValues = (
   invoice: InvoiceBasic,
-  items: InvoiceItemDetail[] = []
+  items: InvoiceItemDetail[] = [],
 ): UpdateInvoiceInput => {
   return {
     id: invoice.id,
@@ -160,20 +166,20 @@ export function InvoiceForm({
     if (mode === 'create') {
       return false;
     }
-    
+
     if (!invoice) {
       return false;
     }
-    
+
     // Lock if PAID, PARTIALLY_PAID, CANCELLED, PENDING, or OVERDUE
     const lockedStatuses: InvoiceStatus[] = [
-      InvoiceStatus.PAID, 
-      InvoiceStatus.PARTIALLY_PAID, 
+      InvoiceStatus.PAID,
+      InvoiceStatus.PARTIALLY_PAID,
       InvoiceStatus.CANCELLED,
       InvoiceStatus.PENDING,
       InvoiceStatus.OVERDUE,
     ];
-    
+
     return lockedStatuses.includes(invoice.status);
   }, [mode, invoice?.status]);
 
@@ -391,8 +397,8 @@ export function InvoiceForm({
           {/* Items details */}
           {isLoadingItems ? (
             <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
-               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-               <p className="text-sm text-muted-foreground">Loading invoice items...</p>
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Loading invoice items...</p>
             </Box>
           ) : (
             <InvoiceItemsList
@@ -511,11 +517,11 @@ export function InvoiceForm({
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">Loading history...</span>
             </Box>
-          ) : (statusHistory && statusHistory.length > 0) ? (
+          ) : statusHistory && statusHistory.length > 0 ? (
             <FieldGroup>
               <InvoiceStatusHistory history={statusHistory} />
             </FieldGroup>
-          ): null}
+          ) : null}
         </Box>
 
         {/* Total Summary */}

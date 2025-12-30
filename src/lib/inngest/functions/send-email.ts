@@ -24,7 +24,10 @@ export const sendEmailFunction = inngest.createFunction(
       limit: 10, // Process up to 10 emails concurrently
     },
   },
-  { event: 'email/send' },
+  [
+    { event: 'email/send' },
+    { event: 'send-email/manual' }, // Manual trigger
+  ],
   async ({ event, step }) => {
     const { auditId, email } = event.data as { auditId: string; email: QueueEmailPayload };
 
@@ -116,7 +119,7 @@ export const sendEmailFunction = inngest.createFunction(
 
       throw error; // Re-throw to trigger Inngest retry
     }
-  }
+  },
 );
 
 /**
@@ -154,7 +157,13 @@ async function processQuoteEmailHandler(email: any): Promise<{ emailId?: string 
     | 'followup';
 
   // Map email types directly (no mapping needed, types match)
-  const processorType = type as 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
+  const processorType = type as
+    | 'sent'
+    | 'reminder'
+    | 'accepted'
+    | 'rejected'
+    | 'expired'
+    | 'followup';
 
   return await processQuoteEmail(email.entityId, processorType);
 }

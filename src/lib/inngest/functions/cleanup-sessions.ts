@@ -18,7 +18,10 @@ export const cleanupSessionsFunction = inngest.createFunction(
     id: 'cleanup-sessions',
     name: 'Cleanup Inactive Sessions',
   },
-  { cron: '0 0 * * *' },
+  [
+    { cron: '0 0 * * *' }, // Daily at midnight
+    { event: 'cleanup-sessions/manual' }, // Manual trigger
+  ],
   async ({ step }) => {
     logger.info('Inngest function triggered - cleanup inactive sessions', {
       context: 'inngest-cleanup-sessions',
@@ -42,5 +45,5 @@ export const cleanupSessionsFunction = inngest.createFunction(
     });
 
     return { success: true, deactivatedCount };
-  }
+  },
 );

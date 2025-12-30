@@ -79,7 +79,6 @@ async function createTestUsers() {
     console.log('   3. Login as test-admin@example.com');
     console.log('      - Should have FULL ACCESS ✓');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
   } catch (error) {
     console.error('❌ Error creating test users:', error);
     throw error;

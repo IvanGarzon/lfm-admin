@@ -180,7 +180,7 @@ export function useUpdateQuote() {
           // Calculate new total amount from items
           const totalAmount = newData.items.reduce(
             (sum, item) => sum + item.quantity * item.unitPrice,
-            0
+            0,
           );
 
           return {
@@ -636,9 +636,7 @@ export function useCreateQuoteVersion() {
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.details() });
-      toast.success(
-        `Version ${data.versionNumber} created successfully (${data.quoteNumber})`,
-      );
+      toast.success(`Version ${data.versionNumber} created successfully (${data.quoteNumber})`);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create quote version');
@@ -676,7 +674,10 @@ export function useSendQuoteEmail() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { quoteId: string; type: 'sent' | 'reminder' | 'accepted' | 'rejected' }) => {
+    mutationFn: async (data: {
+      quoteId: string;
+      type: 'sent' | 'reminder' | 'accepted' | 'rejected';
+    }) => {
       const result = await sendQuoteEmail(data);
       if (!result.success) {
         throw new Error(result.error);
@@ -685,7 +686,7 @@ export function useSendQuoteEmail() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: QUOTE_KEYS.detail(variables.quoteId)
+        queryKey: QUOTE_KEYS.detail(variables.quoteId),
       });
       toast.success('Email queued successfully');
     },
@@ -708,7 +709,7 @@ export function useSendQuoteFollowUp() {
     },
     onSuccess: (_, quoteId) => {
       queryClient.invalidateQueries({
-        queryKey: QUOTE_KEYS.detail(quoteId)
+        queryKey: QUOTE_KEYS.detail(quoteId),
       });
       toast.success('Follow-up email queued successfully');
     },
@@ -826,7 +827,9 @@ export function useDeleteQuoteItemAttachment() {
     },
     onSettled: (_data, _error, variables) => {
       // Always refetch to ensure cache consistency
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId) });
+      queryClient.invalidateQueries({
+        queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId),
+      });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
     },
@@ -932,7 +935,7 @@ export function useUploadQuoteItemColorPalette() {
       const result = await updateQuoteItemColors({
         quoteItemId: data.quoteItemId,
         quoteId: data.quoteId,
-        colors: data.colors
+        colors: data.colors,
       });
 
       if (!result.success) {

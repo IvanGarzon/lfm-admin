@@ -1,10 +1,4 @@
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
@@ -23,7 +17,8 @@ type QuoteFollowUpEmailProps = {
 };
 
 export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailProps) => {
-  const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } = quoteData;
+  const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } =
+    quoteData;
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -49,14 +44,14 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
       <Text style={styles.text}>Hi {customerName},</Text>
 
       <Text style={styles.text}>
-        We wanted to follow up on Quote <strong>{quoteNumber}</strong> that we sent to you.
-        We hope you've had a chance to review it and would love to answer any questions you might have.
+        We wanted to follow up on Quote <strong>{quoteNumber}</strong> that we sent to you. We hope
+        you've had a chance to review it and would love to answer any questions you might have.
       </Text>
 
       <Text style={styles.text}>
-        At Las Flores Melbourne, we're committed to creating beautiful floral arrangements
-        that bring your vision to life. Our team is here to help with any customizations or
-        adjustments you might need.
+        At Las Flores Melbourne, we're committed to creating beautiful floral arrangements that
+        bring your vision to life. Our team is here to help with any customizations or adjustments
+        you might need.
       </Text>
 
       <Hr style={styles.hr} />
@@ -78,7 +73,9 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
             </tr>
             <tr>
               <td style={styles.labelCell}>Items:</td>
-              <td style={styles.valueCell}>{itemCount} {itemCount === 1 ? 'item' : 'items'}</td>
+              <td style={styles.valueCell}>
+                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              </td>
             </tr>
             <tr>
               <td style={styles.labelCell}>Total Amount:</td>
@@ -99,8 +96,8 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
       ) : null}
 
       <Text style={styles.text}>
-        If you have any questions about the quote or would like to discuss modifications,
-        please don't hesitate to reach out. We're here to help!
+        If you have any questions about the quote or would like to discuss modifications, please
+        don't hesitate to reach out. We're here to help!
       </Text>
 
       <Text style={styles.text}>
@@ -118,7 +115,9 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
 
 export function QuoteFollowUpEmail(props: QuoteFollowUpEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Following up on Quote ${props.quoteData.quoteNumber} from Las Flores Melbourne`}>
+    <BaseTemplateEmail
+      previewText={`Following up on Quote ${props.quoteData.quoteNumber} from Las Flores Melbourne`}
+    >
       <QuoteFollowUpContent {...props} />
     </BaseTemplateEmail>
   );

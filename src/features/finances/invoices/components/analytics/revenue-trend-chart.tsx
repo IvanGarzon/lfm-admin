@@ -2,13 +2,13 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  ChartConfig, 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent, 
-  ChartLegend, 
-  ChartLegendContent 
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { RevenueTrend } from '@/features/finances/invoices/types';
@@ -68,24 +68,24 @@ export function RevenueTrendChart({ data, isLoading }: RevenueTrendChartProps) {
               tickLine={false}
               axisLine={false}
               fontSize={12}
-              tickFormatter={(value) => 
+              tickFormatter={(value) =>
                 formatCurrency({ number: value, maxFractionDigits: 0 }).replace('$', '$')
               }
             />
             <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Bar 
-              dataKey="total" 
+            <Bar
+              dataKey="total"
               name="Invoiced"
-              fill="var(--color-total)" 
-              radius={[4, 4, 0, 0]} 
+              fill="var(--color-total)"
+              radius={[4, 4, 0, 0]}
               barSize={32}
             />
-            <Bar 
-              dataKey="paid" 
+            <Bar
+              dataKey="paid"
               name="Collected"
-              fill="var(--color-paid)" 
-              radius={[4, 4, 0, 0]} 
+              fill="var(--color-paid)"
+              radius={[4, 4, 0, 0]}
               barSize={32}
             />
           </BarChart>

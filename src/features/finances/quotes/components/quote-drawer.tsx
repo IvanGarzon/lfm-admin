@@ -96,7 +96,8 @@ export function QuoteDrawer({
   // Version navigation
   const currentVersionIndex = versions?.findIndex((v) => v.id === id) ?? -1;
   const hasPreviousVersion = currentVersionIndex > 0;
-  const hasNextVersion = currentVersionIndex >= 0 && currentVersionIndex < (versions?.length ?? 0) - 1;
+  const hasNextVersion =
+    currentVersionIndex >= 0 && currentVersionIndex < (versions?.length ?? 0) - 1;
   const previousVersionId = hasPreviousVersion ? versions?.[currentVersionIndex - 1]?.id : null;
   const nextVersionId = hasNextVersion ? versions?.[currentVersionIndex + 1]?.id : null;
 
@@ -190,7 +191,7 @@ export function QuoteDrawer({
     if (!quote) {
       return;
     }
-    
+
     createVersion.mutate(quote.id, {
       onSuccess: (data) => {
         // Navigate to the newly created version
@@ -298,8 +299,16 @@ export function QuoteDrawer({
   }, [quote, hasUnsavedChanges, sendFollowUp]);
 
   // Get permissions based on quote status
-  const { canAccept, canReject, canSend, canPutOnHold, canCancel, canConvert, canDelete, canCreateVersion } =
-    getQuotePermissions(quote?.status);
+  const {
+    canAccept,
+    canReject,
+    canSend,
+    canPutOnHold,
+    canCancel,
+    canConvert,
+    canDelete,
+    canCreateVersion,
+  } = getQuotePermissions(quote?.status);
 
   const getDrawerHeader = () => {
     if (mode === 'create') {
@@ -318,7 +327,7 @@ export function QuoteDrawer({
     };
   };
 
-  const { title, status} = getDrawerHeader();
+  const { title, status } = getDrawerHeader();
 
   return (
     <>
@@ -368,7 +377,9 @@ export function QuoteDrawer({
                           variant="outline"
                           size="icon"
                           className="h-6 w-6"
-                          onClick={() => previousVersionId && handleNavigateToVersion(previousVersionId)}
+                          onClick={() =>
+                            previousVersionId && handleNavigateToVersion(previousVersionId)
+                          }
                           disabled={!hasPreviousVersion || hasUnsavedChanges}
                           title="Previous version"
                         >

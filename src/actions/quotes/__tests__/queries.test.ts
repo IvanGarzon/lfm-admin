@@ -114,7 +114,7 @@ describe('Quote Queries', () => {
       expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalledWith(
         expect.objectContaining({
           search: 'test',
-        })
+        }),
       );
     });
   });

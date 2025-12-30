@@ -6,6 +6,7 @@
 
 import { Inngest } from 'inngest';
 import { env } from '@/env';
+import { taskInterceptor } from './middleware/task-interceptor';
 
 /**
  * Inngest client instance
@@ -20,4 +21,7 @@ export const inngest = new Inngest({
 
   //  Event key for production security (optional)
   eventKey: env.INNGEST_EVENT_KEY,
+
+  // Middleware for task management
+  middleware: [taskInterceptor()],
 });

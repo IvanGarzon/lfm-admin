@@ -36,19 +36,19 @@ export async function seedEmployees() {
       email,
       phone: `04${faker.string.numeric(8)}`,
       gender,
-      dob: faker.helpers.maybe(
-        () => faker.date.birthdate({ min: 18, max: 65, mode: 'age' }),
-        { probability: 0.9 },
-      ) ?? null,
+      dob:
+        faker.helpers.maybe(() => faker.date.birthdate({ min: 18, max: 65, mode: 'age' }), {
+          probability: 0.9,
+        }) ?? null,
       rate: faker.number.float({ min: 25, max: 150, multipleOf: 0.25 }),
       status: faker.helpers.weightedArrayElement([
         { value: 'ACTIVE', weight: 0.85 },
         { value: 'INACTIVE', weight: 0.15 },
       ]),
-      avatarUrl: faker.helpers.maybe(
-        () => `https://api.slingacademy.com/public/sample-users/${i + 1}.png`,
-        { probability: 0.7 },
-      ) ?? null,
+      avatarUrl:
+        faker.helpers.maybe(() => `https://api.slingacademy.com/public/sample-users/${i + 1}.png`, {
+          probability: 0.7,
+        }) ?? null,
     };
 
     employees.push(employee);

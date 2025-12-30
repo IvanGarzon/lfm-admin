@@ -38,7 +38,10 @@ import {
 } from '@/schemas/quotes';
 import { CustomerSelect } from '@/components/shared/customer-select';
 import type { QuoteWithDetails, QuoteFormInput } from '@/features/finances/quotes/types';
-import { getQuoteStatusLabel, getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
+import {
+  getQuoteStatusLabel,
+  getQuotePermissions,
+} from '@/features/finances/quotes/utils/quote-helpers';
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
@@ -67,7 +70,7 @@ const defaultFormState: CreateQuoteInput = {
       quantity: 1,
       unitPrice: 0,
       productId: null,
-      colors: []
+      colors: [],
     },
   ],
 };
@@ -90,7 +93,7 @@ const mapQuoteToFormValues = (quote: QuoteWithDetails): UpdateQuoteInput => {
       quantity: item.quantity,
       unitPrice: Number(item.unitPrice),
       productId: item.productId,
-      colors: item.colors
+      colors: item.colors,
     })),
   };
 };
@@ -237,7 +240,8 @@ export function QuoteForm({
           <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
             <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              This quote is {quote?.status ? getQuoteStatusLabel(quote.status) : 'locked'} and cannot be edited.
+              This quote is {quote?.status ? getQuoteStatusLabel(quote.status) : 'locked'} and
+              cannot be edited.
             </span>
           </Box>
         ) : null}
@@ -552,7 +556,7 @@ export function QuoteForm({
             <FieldGroup>
               <QuoteStatusHistory history={quote.statusHistory} />
             </FieldGroup>
-          ): null}
+          ) : null}
 
           {/* Version History - Only show for existing quotes with versions */}
           {quote?.id ? (

@@ -48,7 +48,7 @@ export function handleActionError<T = never>(
       success: false,
       error: `Invalid ${fieldName}: ${message}`,
     };
-  } 
+  }
 
   // Handle Prisma errors
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -90,7 +90,7 @@ export function handleActionError<T = never>(
     context: 'handleActionError',
     metadata: context,
   });
-  
+
   return {
     success: false,
     error: fallbackMessage,
@@ -113,7 +113,7 @@ function handlePrismaError<T = never>(
   switch (error.code) {
     // Unique constraint violation
     case 'P2002': {
-      const target: string[] = error.meta?.target; 
+      const target: string[] = error.meta?.target;
       const field = target?.join(', ') || 'field';
       return {
         success: false,
@@ -123,13 +123,11 @@ function handlePrismaError<T = never>(
 
     // Foreign key constraint violation
     case 'P2003': {
-      const fieldName: string[] = error.meta?.target; 
+      const fieldName: string[] = error.meta?.target;
       const field = fieldName?.join(', ') || 'field';
       return {
         success: false,
-        error: field
-          ? `Related ${field} not found`
-          : 'Related record not found',
+        error: field ? `Related ${field} not found` : 'Related record not found',
       };
     }
 
@@ -191,9 +189,7 @@ function handlePrismaError<T = never>(
  * @param error - The error to check
  * @returns true if the error is a Prisma error
  */
-export function isPrismaError(
-  error: unknown,
-): error is Prisma.PrismaClientKnownRequestError {
+export function isPrismaError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
   return error instanceof Prisma.PrismaClientKnownRequestError;
 }
 

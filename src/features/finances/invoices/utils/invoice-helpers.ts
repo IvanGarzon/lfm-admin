@@ -30,7 +30,7 @@ export function generateReceiptFilename(receiptNumber: string): string {
  * Generate invoice PDF as Buffer (server-side)
  */
 export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<Buffer> {
-  const logoUrl = absoluteUrl("/static/logo-green-800.png");
+  const logoUrl = absoluteUrl('/static/logo-green-800.png');
   const pdfDoc = InvoiceDocument({ invoice, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
@@ -39,7 +39,7 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<B
  * Generate receipt PDF as Buffer (server-side)
  */
 export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<Buffer> {
-  const logoUrl = absoluteUrl("/static/logo-green-800.png");
+  const logoUrl = absoluteUrl('/static/logo-green-800.png');
   const pdfDoc = ReceiptDocument({ invoice, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
@@ -51,7 +51,10 @@ export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<B
  * @param invoice - The invoice data
  * @param type - The document type ('invoice' or 'receipt')
  */
-export function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice' | 'receipt' = 'invoice'): string {
+export function calculateContentHash(
+  invoice: InvoiceWithDetails,
+  type: 'invoice' | 'receipt' = 'invoice',
+): string {
   const baseData = {
     invoiceNumber: invoice.invoiceNumber,
     amount: invoice.amount.toString(),
@@ -63,47 +66,47 @@ export function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice
   };
 
   // Add type-specific fields
-  const relevantData = type === 'invoice'
-    ? {
-        ...baseData,
-        discount: invoice.discount.toString(),
-        gst: invoice.gst.toString(),
-        issuedDate: invoice.issuedDate.toISOString(),
-        dueDate: invoice.dueDate.toISOString(),
-        items: invoice.items.map(item => ({
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice.toString(),
-          total: item.total.toString(),
-        })),
-        notes: invoice.notes,
-        amountPaid: invoice.amountPaid.toString(),
-        amountDue: invoice.amountDue.toString(),
-        payments: invoice.payments?.map(payment => ({
-          id: payment.id,
-          amount: payment.amount.toString(),
-          date: payment.date.toISOString(),
-          method: payment.method,
-          notes: payment.notes,
-        })) || [],
-      }
-    : {
-        ...baseData,
-        paidDate: invoice.paidDate?.toISOString(),
-        paymentMethod: invoice.paymentMethod,
-        payments: invoice.payments?.map(payment => ({
-          id: payment.id,
-          amount: payment.amount.toString(),
-          date: payment.date.toISOString(),
-          method: payment.method,
-          notes: payment.notes,
-        })) || [],
-      };
+  const relevantData =
+    type === 'invoice'
+      ? {
+          ...baseData,
+          discount: invoice.discount.toString(),
+          gst: invoice.gst.toString(),
+          issuedDate: invoice.issuedDate.toISOString(),
+          dueDate: invoice.dueDate.toISOString(),
+          items: invoice.items.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice.toString(),
+            total: item.total.toString(),
+          })),
+          notes: invoice.notes,
+          amountPaid: invoice.amountPaid.toString(),
+          amountDue: invoice.amountDue.toString(),
+          payments:
+            invoice.payments?.map((payment) => ({
+              id: payment.id,
+              amount: payment.amount.toString(),
+              date: payment.date.toISOString(),
+              method: payment.method,
+              notes: payment.notes,
+            })) || [],
+        }
+      : {
+          ...baseData,
+          paidDate: invoice.paidDate?.toISOString(),
+          paymentMethod: invoice.paymentMethod,
+          payments:
+            invoice.payments?.map((payment) => ({
+              id: payment.id,
+              amount: payment.amount.toString(),
+              date: payment.date.toISOString(),
+              method: payment.method,
+              notes: payment.notes,
+            })) || [],
+        };
 
-  return crypto
-    .createHash('sha256')
-    .update(JSON.stringify(relevantData))
-    .digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify(relevantData)).digest('hex');
 }
 
 // ============================================================================
@@ -114,14 +117,8 @@ export function calculateContentHash(invoice: InvoiceWithDetails, type: 'invoice
  * Valid status transitions for invoices.
  * Each key represents the current status, and the array contains valid next statuses.
  */
-export const VALID_INVOICE_STATUS_TRANSITIONS: Record<
-  InvoiceStatus,
-  InvoiceStatus[]
-> = {
-  [InvoiceStatus.DRAFT]: [
-    InvoiceStatus.PENDING,
-    InvoiceStatus.CANCELLED,
-  ],
+export const VALID_INVOICE_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
+  [InvoiceStatus.DRAFT]: [InvoiceStatus.PENDING, InvoiceStatus.CANCELLED],
   [InvoiceStatus.PENDING]: [
     InvoiceStatus.PARTIALLY_PAID,
     InvoiceStatus.PAID,
@@ -164,9 +161,7 @@ export function canTransitionInvoiceStatus(
 /**
  * Get all valid next statuses for a given current status.
  */
-export function getValidNextInvoiceStatuses(
-  currentStatus: InvoiceStatus,
-): InvoiceStatus[] {
+export function getValidNextInvoiceStatuses(currentStatus: InvoiceStatus): InvoiceStatus[] {
   return VALID_INVOICE_STATUS_TRANSITIONS[currentStatus];
 }
 
@@ -218,7 +213,7 @@ export function isOverdue(invoice: InvoiceListItem): boolean {
   if (invoice.status === InvoiceStatus.OVERDUE) {
     return true;
   }
-  
+
   // Paid or Cancelled are never overdue
   if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
     return false;
@@ -241,7 +236,11 @@ export function getOverdueDays(dueDate: Date): number {
  */
 export function needsReminder(invoice: InvoiceListItem): boolean {
   // Don't send reminders for paid or cancelled
-  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED || invoice.status === InvoiceStatus.DRAFT) {
+  if (
+    invoice.status === InvoiceStatus.PAID ||
+    invoice.status === InvoiceStatus.CANCELLED ||
+    invoice.status === InvoiceStatus.DRAFT
+  ) {
     return false;
   }
 
@@ -259,7 +258,11 @@ export function needsReminder(invoice: InvoiceListItem): boolean {
  */
 export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' | 'critical' {
   // Paid or cancelled has no urgency
-  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED || invoice.status === InvoiceStatus.DRAFT) {
+  if (
+    invoice.status === InvoiceStatus.PAID ||
+    invoice.status === InvoiceStatus.CANCELLED ||
+    invoice.status === InvoiceStatus.DRAFT
+  ) {
     return 'low';
   }
 
@@ -269,7 +272,7 @@ export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' 
   }
 
   const daysUntil = daysUntilDue(invoice.dueDate);
-  
+
   if (daysUntil <= INVOICE_CONFIG.URGENCY_HIGH_DAYS) return 'high';
   if (daysUntil <= INVOICE_CONFIG.URGENCY_MEDIUM_DAYS) return 'medium';
 

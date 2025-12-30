@@ -27,7 +27,7 @@ interface BenchmarkResult {
 async function benchmarkQuery(
   name: string,
   queryFn: () => Promise<any>,
-  iterations = 10
+  iterations = 10,
 ): Promise<BenchmarkResult> {
   const times: number[] = [];
 
@@ -60,15 +60,15 @@ async function benchmarkQuery(
  */
 function formatResults(results: BenchmarkResult[]): void {
   console.log('\n📊 Query Performance Benchmark Results\n');
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log(
-    `${'Query'.padEnd(50)} ${'Avg (ms)'.padStart(10)} ${'Min (ms)'.padStart(10)} ${'Max (ms)'.padStart(10)}`
+    `${'Query'.padEnd(50)} ${'Avg (ms)'.padStart(10)} ${'Min (ms)'.padStart(10)} ${'Max (ms)'.padStart(10)}`,
   );
   console.log('='.repeat(80));
 
   results.forEach((result) => {
     console.log(
-      `${result.query.padEnd(50)} ${result.avgTime.toFixed(2).padStart(10)} ${result.minTime.toFixed(2).padStart(10)} ${result.maxTime.toFixed(2).padStart(10)}`
+      `${result.query.padEnd(50)} ${result.avgTime.toFixed(2).padStart(10)} ${result.minTime.toFixed(2).padStart(10)} ${result.maxTime.toFixed(2).padStart(10)}`,
     );
   });
 
@@ -107,7 +107,7 @@ async function runBenchmarks() {
           perPage: 20,
           status: ['SENT'],
         });
-      })
+      }),
     );
 
     // Benchmark 2: Status with soft delete filtering (uses status + deletedAt index)
@@ -122,7 +122,7 @@ async function runBenchmarks() {
           take: 20,
           orderBy: { createdAt: 'desc' },
         });
-      })
+      }),
     );
 
     // Benchmark 3: Expiring quotes (uses validUntil index)
@@ -146,7 +146,7 @@ async function runBenchmarks() {
           take: 50,
           orderBy: { validUntil: 'asc' },
         });
-      })
+      }),
     );
 
     // Benchmark 4: Quote versions (uses parentQuoteId index)
@@ -160,7 +160,7 @@ async function runBenchmarks() {
       results.push(
         await benchmarkQuery('Quote versions', async () => {
           await repo.getQuoteVersions(sampleQuote.parentQuoteId!);
-        })
+        }),
       );
     } else {
       console.log('   ⚠️  Skipped (no versioned quotes found)');
@@ -175,7 +175,7 @@ async function runBenchmarks() {
           take: 10,
           orderBy: { issuedDate: 'desc' },
         });
-      })
+      }),
     );
 
     // Benchmark 6: Soft-deleted quotes (uses deletedAt index)
@@ -188,7 +188,7 @@ async function runBenchmarks() {
           },
           take: 20,
         });
-      })
+      }),
     );
 
     // Benchmark 7: Product-based quote item queries (uses productId index)
@@ -205,7 +205,7 @@ async function runBenchmarks() {
             include: { quote: true },
             take: 50,
           });
-        })
+        }),
       );
     } else {
       console.log('   ⚠️  Skipped (no products found)');
@@ -229,7 +229,7 @@ async function runBenchmarks() {
             where: { invoiceId: sampleInvoice.id },
             orderBy: { date: 'desc' },
           });
-        })
+        }),
       );
     } else {
       console.log('   ⚠️  Skipped (no invoices with payments found)');

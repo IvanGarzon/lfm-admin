@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { 
-  InvoiceItemSchema, 
-  InvoiceSchema, 
-  RecordPaymentSchema, 
+import {
+  InvoiceItemSchema,
+  InvoiceSchema,
+  RecordPaymentSchema,
   CancelInvoiceSchema,
-  InvoiceFiltersSchema
+  InvoiceFiltersSchema,
 } from './invoices';
 
 describe('Invoice Schemas', () => {
@@ -14,7 +14,7 @@ describe('Invoice Schemas', () => {
         description: 'Web Development',
         quantity: 1,
         unitPrice: 100,
-        productId: 'prod_123'
+        productId: 'prod_123',
       };
       const result = InvoiceItemSchema.safeParse(validItem);
       expect(result.success).toBe(true);
@@ -23,7 +23,7 @@ describe('Invoice Schemas', () => {
     it('fails when description is missing', () => {
       const invalidItem = {
         quantity: 1,
-        unitPrice: 100
+        unitPrice: 100,
       };
       const result = InvoiceItemSchema.safeParse(invalidItem);
       expect(result.success).toBe(false);
@@ -33,7 +33,7 @@ describe('Invoice Schemas', () => {
       const invalidItem = {
         description: 'Test',
         quantity: 0,
-        unitPrice: 100
+        unitPrice: 100,
       };
       const result = InvoiceItemSchema.safeParse(invalidItem);
       expect(result.success).toBe(false);
@@ -54,9 +54,9 @@ describe('Invoice Schemas', () => {
           description: 'Item 1',
           quantity: 1,
           unitPrice: 100,
-          productId: null
-        }
-      ]
+          productId: null,
+        },
+      ],
     };
 
     it('validates a correct invoice', () => {
@@ -67,7 +67,7 @@ describe('Invoice Schemas', () => {
     it('fails when due date is before issued date', () => {
       const invalidInvoice = {
         ...validInvoice,
-        dueDate: new Date('2023-12-31')
+        dueDate: new Date('2023-12-31'),
       };
       const result = InvoiceSchema.safeParse(invalidInvoice);
       expect(result.success).toBe(false);
@@ -79,7 +79,7 @@ describe('Invoice Schemas', () => {
     it('fails when no items are provided', () => {
       const invalidInvoice = {
         ...validInvoice,
-        items: []
+        items: [],
       };
       const result = InvoiceSchema.safeParse(invalidInvoice);
       expect(result.success).toBe(false);
@@ -92,7 +92,7 @@ describe('Invoice Schemas', () => {
         id: 'clv123456000008l28z3z4x5c', // valid cuid
         amount: 50,
         paidDate: new Date(),
-        paymentMethod: 'Credit Card'
+        paymentMethod: 'Credit Card',
       };
       const result = RecordPaymentSchema.safeParse(validPayment);
       expect(result.success).toBe(true);
@@ -103,7 +103,7 @@ describe('Invoice Schemas', () => {
         id: 'clv123456000008l28z3z4x5c',
         amount: -10,
         paidDate: new Date(),
-        paymentMethod: 'Cash'
+        paymentMethod: 'Cash',
       };
       const result = RecordPaymentSchema.safeParse(invalidPayment);
       expect(result.success).toBe(false);
@@ -115,7 +115,7 @@ describe('Invoice Schemas', () => {
       const validCancel = {
         id: 'clv123456000008l28z3z4x5c',
         cancelledDate: new Date(),
-        cancelReason: 'Customer changed mind'
+        cancelReason: 'Customer changed mind',
       };
       const result = CancelInvoiceSchema.safeParse(validCancel);
       expect(result.success).toBe(true);
@@ -125,7 +125,7 @@ describe('Invoice Schemas', () => {
   describe('InvoiceFiltersSchema', () => {
     it('transforms status string to array of parsed statuses', () => {
       const filters = {
-        status: 'PENDING,PAID'
+        status: 'PENDING,PAID',
       };
       const result = InvoiceFiltersSchema.safeParse(filters);
       expect(result.success).toBe(true);
@@ -136,7 +136,7 @@ describe('Invoice Schemas', () => {
 
     it('handles empty status string', () => {
       const filters = {
-        status: ''
+        status: '',
       };
       const result = InvoiceFiltersSchema.safeParse(filters);
       expect(result.success).toBe(true);

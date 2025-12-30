@@ -72,7 +72,6 @@ export async function deleteSessions(
   }
 }
 
-
 /**
  * Updates the device name for a specific session.
  * @param data - An object containing the session ID and new device name.
@@ -90,10 +89,7 @@ export async function updateSessionName(
     const validatedData = UpdateSessionNameSchema.parse(data);
 
     // Verify ownership
-    const isOwner = await sessionRepo.verifyOwnership(
-      validatedData.sessionId,
-      session.user.id,
-    );
+    const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
 
     if (!isOwner) {
       return { success: false, error: 'You can only update your own sessions' };
@@ -133,10 +129,7 @@ export async function deleteSession(
     const validatedData = DeleteSessionSchema.parse(data);
 
     // Verify ownership
-    const isOwner = await sessionRepo.verifyOwnership(
-      validatedData.sessionId,
-      session.user.id,
-    );
+    const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
 
     if (!isOwner) {
       return { success: false, error: 'Session not found or access denied' };
@@ -226,7 +219,6 @@ export async function updateSessionHeartbeat(): Promise<ActionResult<{ updated: 
   }
 }
 
-
 const ExtendSessionSchema = z.object({
   sessionId: z.string().min(1, 'Session ID is required'),
 });
@@ -250,10 +242,7 @@ export async function extendSession(
     const validatedData = ExtendSessionSchema.parse(data);
 
     // Verify ownership
-    const isOwner = await sessionRepo.verifyOwnership(
-      validatedData.sessionId,
-      session.user.id,
-    );
+    const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
 
     if (!isOwner) {
       return { success: false, error: 'Session not found or access denied' };
@@ -263,10 +252,7 @@ export async function extendSession(
     const newExpiry = new Date();
     newExpiry.setDate(newExpiry.getDate() + 30);
 
-    const updatedSession = await sessionRepo.extendSession(
-      validatedData.sessionId,
-      newExpiry,
-    );
+    const updatedSession = await sessionRepo.extendSession(validatedData.sessionId, newExpiry);
 
     revalidatePath('/sessions');
 

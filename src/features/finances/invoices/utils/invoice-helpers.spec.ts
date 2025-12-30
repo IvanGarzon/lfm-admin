@@ -28,8 +28,8 @@ vi.mock('@/lib/pdf', () => ({
   generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test')),
 }));
 
-import { 
-  generateInvoiceFilename, 
+import {
+  generateInvoiceFilename,
   generateReceiptFilename,
   canTransitionInvoiceStatus,
   getValidNextInvoiceStatuses,
@@ -40,7 +40,7 @@ import {
   getOverdueDays,
   needsReminder,
   getUrgency,
-  calculateContentHash
+  calculateContentHash,
 } from './invoice-helpers';
 import { InvoiceStatus } from '@/prisma/client';
 import { addDays, subDays } from 'date-fns';
@@ -83,14 +83,17 @@ describe('invoice-helpers', () => {
     });
 
     it('validates transition and throws if invalid', () => {
-      expect(() => validateInvoiceStatusTransition(InvoiceStatus.PAID, InvoiceStatus.PENDING))
-        .toThrow(/terminal state/);
-      
-      expect(() => validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PAID))
-        .toThrow(/Invalid status transition/);
-      
-      expect(() => validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PENDING))
-        .not.toThrow();
+      expect(() =>
+        validateInvoiceStatusTransition(InvoiceStatus.PAID, InvoiceStatus.PENDING),
+      ).toThrow(/terminal state/);
+
+      expect(() =>
+        validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PAID),
+      ).toThrow(/Invalid status transition/);
+
+      expect(() =>
+        validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PENDING),
+      ).not.toThrow();
     });
   });
 
@@ -110,7 +113,10 @@ describe('invoice-helpers', () => {
       const futureDue = addDays(new Date(), 1);
 
       const overdueInvoice = { status: InvoiceStatus.PENDING, dueDate: pastDue } as InvoiceListItem;
-      const notOverdueInvoice = { status: InvoiceStatus.PENDING, dueDate: futureDue } as InvoiceListItem;
+      const notOverdueInvoice = {
+        status: InvoiceStatus.PENDING,
+        dueDate: futureDue,
+      } as InvoiceListItem;
       const paidInvoice = { status: InvoiceStatus.PAID, dueDate: pastDue } as InvoiceListItem;
 
       expect(isOverdue(overdueInvoice)).toBe(true);
@@ -121,15 +127,24 @@ describe('invoice-helpers', () => {
     it('calculates overdue days correctly', () => {
       const pastDue = subDays(new Date(), 3);
       expect(getOverdueDays(pastDue)).toBe(3);
-      
+
       const futureDue = addDays(new Date(), 1);
       expect(getOverdueDays(futureDue)).toBe(0);
     });
 
     it('determines if reminder is needed', () => {
-      const overdueInvoice = { status: InvoiceStatus.PENDING, dueDate: subDays(new Date(), 1) } as InvoiceListItem;
-      const soonDueInvoice = { status: InvoiceStatus.PENDING, dueDate: addDays(new Date(), 2) } as InvoiceListItem;
-      const farDueInvoice = { status: InvoiceStatus.PENDING, dueDate: addDays(new Date(), 10) } as InvoiceListItem;
+      const overdueInvoice = {
+        status: InvoiceStatus.PENDING,
+        dueDate: subDays(new Date(), 1),
+      } as InvoiceListItem;
+      const soonDueInvoice = {
+        status: InvoiceStatus.PENDING,
+        dueDate: addDays(new Date(), 2),
+      } as InvoiceListItem;
+      const farDueInvoice = {
+        status: InvoiceStatus.PENDING,
+        dueDate: addDays(new Date(), 10),
+      } as InvoiceListItem;
 
       expect(needsReminder(overdueInvoice)).toBe(true);
       expect(needsReminder(soonDueInvoice)).toBe(true); // default threshold is often 3-7 days
@@ -137,10 +152,22 @@ describe('invoice-helpers', () => {
     });
 
     it('gets urgency levels', () => {
-      const farDue = { status: InvoiceStatus.PENDING, dueDate: addDays(new Date(), 30) } as InvoiceListItem;
-      const mediumDue = { status: InvoiceStatus.PENDING, dueDate: addDays(new Date(), 7) } as InvoiceListItem;
-      const highDue = { status: InvoiceStatus.PENDING, dueDate: addDays(new Date(), 2) } as InvoiceListItem;
-      const overdue = { status: InvoiceStatus.PENDING, dueDate: subDays(new Date(), 1) } as InvoiceListItem;
+      const farDue = {
+        status: InvoiceStatus.PENDING,
+        dueDate: addDays(new Date(), 30),
+      } as InvoiceListItem;
+      const mediumDue = {
+        status: InvoiceStatus.PENDING,
+        dueDate: addDays(new Date(), 7),
+      } as InvoiceListItem;
+      const highDue = {
+        status: InvoiceStatus.PENDING,
+        dueDate: addDays(new Date(), 2),
+      } as InvoiceListItem;
+      const overdue = {
+        status: InvoiceStatus.PENDING,
+        dueDate: subDays(new Date(), 1),
+      } as InvoiceListItem;
 
       expect(getUrgency(farDue)).toBe('low');
       expect(getUrgency(mediumDue)).toBe('medium');
@@ -161,7 +188,7 @@ describe('invoice-helpers', () => {
       items: [{ description: 'Item 1', quantity: 1, unitPrice: 100, total: 100 }],
       amountPaid: 0,
       amountDue: 110,
-      payments: []
+      payments: [],
     } as unknown as InvoiceWithDetails;
 
     it('generates a consistent hash', () => {

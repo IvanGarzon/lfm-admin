@@ -10,7 +10,6 @@ import { lasFloresAccount } from '@/constants/data';
 import { formatFileSize, isImageFile } from '@/lib/file-constants';
 import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
 
-
 type QuoteHtmlPreviewProps = {
   quote: QuoteWithDetails;
 };
@@ -185,14 +184,22 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
           </Box>
 
           {/* Item Images and Notes Section */}
-          {quote.items.some((item) => item.attachments.length > 0 || item.notes || (item.colors && item.colors.length > 0)) && (
+          {quote.items.some(
+            (item) =>
+              item.attachments.length > 0 || item.notes || (item.colors && item.colors.length > 0),
+          ) && (
             <Box className="mb-8">
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                 Item Details
               </p>
               <Box className="space-y-6">
                 {quote.items
-                  .filter((item) => item.attachments.length > 0 || item.notes || (item.colors && item.colors.length > 0))
+                  .filter(
+                    (item) =>
+                      item.attachments.length > 0 ||
+                      item.notes ||
+                      (item.colors && item.colors.length > 0),
+                  )
                   .sort((a, b) => a.order - b.order)
                   .map((item) => (
                     <Box
@@ -203,8 +210,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                         {item.description}
                         {item.colors && item.colors.length > 0 ? (
                           <span className="text-xs font-normal text-gray-500 dark:text-gray-500 ml-2">
-                            ({item.colors.length}{' '}
-                            {item.colors.length === 1 ? 'color' : 'colors'})
+                            ({item.colors.length} {item.colors.length === 1 ? 'color' : 'colors'})
                           </span>
                         ) : null}
 
@@ -213,7 +219,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                             ({item.attachments.length}{' '}
                             {item.attachments.length === 1 ? 'image' : 'images'})
                           </span>
-                        ) : null}                        
+                        ) : null}
                       </h4>
 
                       {/* Color Palette */}
@@ -228,7 +234,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                             />
                           ))}
                         </Box>
-                      ): null}
+                      ) : null}
 
                       {/* Item Images Grid */}
                       {item.attachments.length > 0 ? (
@@ -264,7 +270,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
                   ))}
               </Box>
             </Box>
-          )}          
+          )}
 
           {/* Notes Section */}
           {quote.notes ? (

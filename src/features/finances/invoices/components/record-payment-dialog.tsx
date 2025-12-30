@@ -105,10 +105,14 @@ export function RecordPaymentDialog({
             Record a payment for invoice <strong>{invoiceNumber}</strong>.
             <br />
             <span className="flex items-center gap-4 mt-2">
-              <span>Total: <strong>{formatCurrency({ number: invoiceTotal })}</strong></span>
+              <span>
+                Total: <strong>{formatCurrency({ number: invoiceTotal })}</strong>
+              </span>
               {amountDue !== invoiceTotal ? (
-                <span>Balance: <strong>{formatCurrency({ number: amountDue })}</strong></span>
-              ): null}
+                <span>
+                  Balance: <strong>{formatCurrency({ number: amountDue })}</strong>
+                </span>
+              ) : null}
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -118,7 +122,7 @@ export function RecordPaymentDialog({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
-             <FieldGroup>
+            <FieldGroup>
               <Controller
                 name="amount"
                 control={form.control}
@@ -235,10 +239,10 @@ export function RecordPaymentDialog({
                       <FieldLabel htmlFor="record-payment-form-notes">Notes (Optional)</FieldLabel>
                     </FieldContent>
                     <Textarea
-                        id="record-payment-form-notes"
-                        placeholder="Additional notes about this payment..."
-                        className="resize-none"
-                        {...field}
+                      id="record-payment-form-notes"
+                      placeholder="Additional notes about this payment..."
+                      className="resize-none"
+                      {...field}
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>

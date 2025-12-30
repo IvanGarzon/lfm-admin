@@ -1,10 +1,4 @@
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
@@ -23,7 +17,8 @@ interface QuoteEmailProps {
 }
 
 export const QuoteContent = ({ quoteData, pdfUrl }: QuoteEmailProps) => {
-  const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } = quoteData;
+  const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } =
+    quoteData;
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -69,7 +64,9 @@ export const QuoteContent = ({ quoteData, pdfUrl }: QuoteEmailProps) => {
             </tr>
             <tr>
               <td style={styles.labelCell}>Items:</td>
-              <td style={styles.valueCell}>{itemCount} {itemCount === 1 ? 'item' : 'items'}</td>
+              <td style={styles.valueCell}>
+                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              </td>
             </tr>
             <tr>
               <td style={styles.labelCell}>Total Amount:</td>
@@ -85,24 +82,25 @@ export const QuoteContent = ({ quoteData, pdfUrl }: QuoteEmailProps) => {
             View Quote PDF
           </Button>
         </Section>
-      ): null}
+      ) : null}
 
       <Hr style={styles.hr} />
 
       <Text style={styles.footer}>
-        This quote is valid until {formattedValidUntil}. Please review and let us know if you have any questions.
+        This quote is valid until {formattedValidUntil}. Please review and let us know if you have
+        any questions.
       </Text>
 
-      <Text style={styles.footer}>
-        We look forward to working with you!
-      </Text>
+      <Text style={styles.footer}>We look forward to working with you!</Text>
     </>
   );
 };
 
 export function QuoteEmail(props: QuoteEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Quote ${props.quoteData.quoteNumber} - Total: ${props.quoteData.amount}`}>
+    <BaseTemplateEmail
+      previewText={`Quote ${props.quoteData.quoteNumber} - Total: ${props.quoteData.amount}`}
+    >
       <QuoteContent {...props} />
     </BaseTemplateEmail>
   );
@@ -112,7 +110,7 @@ QuoteEmail.PreviewProps = {
   quoteData: {
     quoteNumber: 'QT-2025-001',
     customerName: 'Sarah Johnson',
-    amount: 1250.00,
+    amount: 1250.0,
     currency: 'AUD',
     issuedDate: new Date('2025-01-15'),
     validUntil: new Date('2025-02-15'),

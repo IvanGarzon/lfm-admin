@@ -12,19 +12,16 @@ import {
   FaShieldAlt,
 } from 'react-icons/fa';
 
-import {
-  HiOutlineDevicePhoneMobile,
-  HiOutlineDeviceTablet,
-} from 'react-icons/hi2';
+import { HiOutlineDevicePhoneMobile, HiOutlineDeviceTablet } from 'react-icons/hi2';
 
 import { MdMonitor, MdLaptop } from 'react-icons/md';
 
 /**
  * Returns the appropriate device icon based on the device type.
- * 
+ *
  * @param deviceType - The device type string (e.g., "mobile", "tablet", "desktop")
  * @returns React icon component for the device type
- * 
+ *
  * @example
  * ```tsx
  * const Icon = getDeviceIcon("mobile");
@@ -54,10 +51,10 @@ export function getDeviceIcon(deviceType?: string | null): IconType {
 
 /**
  * Returns the appropriate operating system icon.
- * 
+ *
  * @param osName - The OS name string (e.g., "Windows", "macOS", "Linux", "iOS", "Android")
  * @returns React icon component for the operating system
- * 
+ *
  * @example
  * ```tsx
  * const Icon = getOSIcon("macOS");
@@ -90,10 +87,10 @@ export function getOSIcon(osName?: string | null): IconType {
 
 /**
  * Returns the appropriate browser icon.
- * 
+ *
  * @param browserName - The browser name string (e.g., "Chrome", "Firefox", "Safari", "Edge", "Brave")
  * @returns React icon component for the browser
- * 
+ *
  * @example
  * ```tsx
  * const Icon = getBrowserIcon("Chrome");
@@ -130,10 +127,10 @@ export function getBrowserIcon(browserName?: string | null): IconType {
 
 /**
  * Returns OS display information including icon, label, and styling colors.
- * 
+ *
  * @param osName - The OS name string
  * @returns Object containing Icon component, label, text color, and background color classes
- * 
+ *
  * @example
  * ```tsx
  * const { Icon, label, color, bgColor } = getOSDisplay("macOS");
@@ -217,10 +214,10 @@ export function getOSDisplay(osName?: string | null): {
 
 /**
  * Returns browser display information including icon, label, and styling colors.
- * 
+ *
  * @param browserName - The browser name string
  * @returns Object containing Icon component, label, text color, and background color classes
- * 
+ *
  * @example
  * ```tsx
  * const { Icon, label, color, bgColor } = getBrowserDisplay("Chrome");
@@ -304,10 +301,10 @@ export function getBrowserDisplay(browserName?: string | null): {
 
 /**
  * Returns device type display information including icon, label, and styling colors.
- * 
+ *
  * @param deviceType - The device type string
  * @returns Object containing Icon component, label, text color, and background color classes
- * 
+ *
  * @example
  * ```tsx
  * const { Icon, label, color, bgColor } = getDeviceTypeDisplay("mobile");
@@ -373,12 +370,12 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
 /**
  * Generates a human-readable session name from device information.
  * Combines OS, browser, and device type into a descriptive string.
- * 
+ *
  * @param osName - The operating system name
  * @param browserName - The browser name
  * @param deviceType - The device type
  * @returns A formatted session name string (e.g., "Mac Chrome - Web Browser")
- * 
+ *
  * @example
  * ```tsx
  * const sessionName = generateSessionName("macOS", "Chrome", "desktop");
@@ -388,7 +385,7 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
 export function generateSessionName(
   osName?: string | null,
   browserName?: string | null,
-  deviceType?: string | null
+  deviceType?: string | null,
 ): string {
   // Get OS display name
   let os = 'Unknown';

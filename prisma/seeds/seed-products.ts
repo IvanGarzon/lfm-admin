@@ -137,18 +137,20 @@ export async function seedProducts() {
           max: item.priceRange[1],
           multipleOf: 5,
         }),
-        stock: typeof item.stock === 'number'
-          ? item.stock
-          : faker.number.int({ min: item.stock[0], max: item.stock[1] }),
+        stock:
+          typeof item.stock === 'number'
+            ? item.stock
+            : faker.number.int({ min: item.stock[0], max: item.stock[1] }),
         status: faker.helpers.weightedArrayElement([
           { value: 'ACTIVE', weight: 0.9 },
           { value: 'INACTIVE', weight: 0.05 },
           { value: 'OUT_OF_STOCK', weight: 0.05 },
         ]),
-        imageUrl: faker.helpers.maybe(
-          () => `https://picsum.photos/seed/${faker.string.alphanumeric(10)}/400/300`,
-          { probability: 0.7 },
-        ) ?? null,
+        imageUrl:
+          faker.helpers.maybe(
+            () => `https://picsum.photos/seed/${faker.string.alphanumeric(10)}/400/300`,
+            { probability: 0.7 },
+          ) ?? null,
         availableAt: faker.date.recent({ days: 30 }),
       };
 
@@ -164,4 +166,3 @@ export async function seedProducts() {
 
   console.log(`✅ Created ${createdProducts.count} florist products`);
 }
-

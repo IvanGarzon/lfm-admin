@@ -30,7 +30,7 @@ function getEmailRecipient(originalRecipient: string): string {
 
     return env.EMAIL_TEST_RECIPIENT;
   }
-  
+
   return originalRecipient;
 }
 
@@ -39,13 +39,13 @@ function getEmailRecipient(originalRecipient: string): string {
  */
 export async function processInvoiceEmail(
   invoiceId: string,
-  type: 'pending_notification' | 'receipt' | 'reminder'
+  type: 'pending_notification' | 'receipt' | 'reminder',
 ): Promise<{ success: true; emailId?: string }> {
   const invoice = await invoiceRepository.findByIdWithDetails(invoiceId);
 
   if (!invoice) {
     throw new Error('Invoice not found');
-  } 
+  }
 
   if (type === 'pending_notification') {
     return await processPendingNotification(invoice);
@@ -62,11 +62,10 @@ export async function processInvoiceEmail(
  * Process pending notification email
  */
 async function processPendingNotification(
-  invoice: InvoiceWithDetails
+  invoice: InvoiceWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateInvoicePdf } = await import(
-    '@/features/finances/invoices/services/invoice-pdf.service'
-  );
+  const { getOrGenerateInvoicePdf } =
+    await import('@/features/finances/invoices/services/invoice-pdf.service');
 
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateInvoicePdf(invoice, {
@@ -118,11 +117,10 @@ async function processPendingNotification(
  * Process receipt email
  */
 async function processReceipt(
-  invoice: InvoiceWithDetails
+  invoice: InvoiceWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateReceiptPdf } = await import(
-    '@/features/finances/invoices/services/invoice-pdf.service'
-  );
+  const { getOrGenerateReceiptPdf } =
+    await import('@/features/finances/invoices/services/invoice-pdf.service');
 
   // 1. Generate PDF
   const { pdfBuffer, pdfFilename } = await getOrGenerateReceiptPdf(invoice, {
@@ -174,16 +172,15 @@ async function processReceipt(
  * Process reminder email
  */
 async function processReminder(
-  invoice: InvoiceWithDetails
+  invoice: InvoiceWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateInvoicePdf } = await import(
-    '@/features/finances/invoices/services/invoice-pdf.service'
-  );
+  const { getOrGenerateInvoicePdf } =
+    await import('@/features/finances/invoices/services/invoice-pdf.service');
 
   // Calculate days overdue
   const daysOverdue = Math.max(
     0,
-    Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24))
+    Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
   );
 
   // 1. Generate PDF

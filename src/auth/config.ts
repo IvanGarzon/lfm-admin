@@ -154,7 +154,7 @@ export const authConfig = {
               osVersion: details.os?.version,
               browserName: details.browser?.name,
               browserVersion: details.browser?.version,
-              
+
               // Location info
               country: details.country,
               region: details.region,
@@ -163,7 +163,11 @@ export const authConfig = {
               latitude: details.latitude,
               longitude: details.longitude,
 
-              deviceName: generateSessionName(details.os?.name, details.browser?.name, details.device?.type),
+              deviceName: generateSessionName(
+                details.os?.name,
+                details.browser?.name,
+                details.device?.type,
+              ),
               lastActiveAt: new Date(), // Initialize last active timestamp
             };
 
@@ -175,10 +179,13 @@ export const authConfig = {
             // This happens AFTER sign-in completes, so no delay for user
             if (env.NODE_ENV === 'production' && details.ipAddress) {
               // Dynamic import to avoid circular deps, fire and forget
-              import('@/lib/location-service').then(({ updateSessionLocation }) => {
-                updateSessionLocation(sessionData.sessionToken, details.ipAddress!)
-                  .catch(err => console.error('Background location update failed:', err));
-              }).catch(err => console.error('Failed to load location service:', err));
+              import('@/lib/location-service')
+                .then(({ updateSessionLocation }) => {
+                  updateSessionLocation(sessionData.sessionToken, details.ipAddress!).catch((err) =>
+                    console.error('Background location update failed:', err),
+                  );
+                })
+                .catch((err) => console.error('Failed to load location service:', err));
             }
           }
         }

@@ -164,7 +164,9 @@ export const createQuoteColumns = (
       const validUntil: Date = row.getValue('validUntil');
       const quoteHasExpired = isExpired(quoteStatus, validUntil);
       return (
-        <span className={quoteHasExpired ? 'text-sm text-red-600' : 'text-sm text-muted-foreground'}>
+        <span
+          className={quoteHasExpired ? 'text-sm text-red-600' : 'text-sm text-muted-foreground'}
+        >
           {format(validUntil, 'MMM dd, yyyy')}
         </span>
       );

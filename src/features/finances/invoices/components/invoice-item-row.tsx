@@ -67,22 +67,26 @@ export function InvoiceItemRow({
       {
         shouldValidate: true,
         shouldDirty: true,
-      }
+      },
     );
 
     setProductSearchOpen(false);
   };
 
   const handleClearProduct = () => {
-    form.setValue(`items.${index}`, {
-      ...form.getValues(`items.${index}`),
-      productId: null,
-      description: '',
-      unitPrice: 0,
-    }, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    form.setValue(
+      `items.${index}`,
+      {
+        ...form.getValues(`items.${index}`),
+        productId: null,
+        description: '',
+        unitPrice: 0,
+      },
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      },
+    );
   };
 
   const selectedProductId = form.watch(`items.${index}.productId`);
@@ -154,22 +158,19 @@ export function InvoiceItemRow({
                         >
                           <X />
                         </InputGroupButton>
-                      ) : (
-                        products &&
-                        products.length > 0 ? (
-                          <InputGroupButton
-                            type="button"
-                            onClick={() => setProductSearchOpen(true)}
-                            aria-label="Browse products"
-                            title="Browse products"
-                            size="icon-xs"
-                            className="cursor-pointer hover:text-primary"
-                            disabled={isLocked}
-                          >
-                            <Package />
-                          </InputGroupButton>
-                        ) : null
-                      )}
+                      ) : products && products.length > 0 ? (
+                        <InputGroupButton
+                          type="button"
+                          onClick={() => setProductSearchOpen(true)}
+                          aria-label="Browse products"
+                          title="Browse products"
+                          size="icon-xs"
+                          className="cursor-pointer hover:text-primary"
+                          disabled={isLocked}
+                        >
+                          <Package />
+                        </InputGroupButton>
+                      ) : null}
                     </InputGroupAddon>
                   </InputGroup>
                 </FormControl>
@@ -270,7 +271,7 @@ export function InvoiceItemRow({
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          ): null}
+          ) : null}
         </Box>
       </Box>
 

@@ -9,24 +9,20 @@
 
 import { serve } from 'inngest/next';
 import { inngest } from '@/lib/inngest/client';
-import { sendEmailFunction } from '@/lib/inngest/functions/send-email';
-import { cleanupSessionsFunction } from '@/lib/inngest/functions/cleanup-sessions';
-import { quoteExpiryReminderFunction } from '@/lib/inngest/functions/quote-expiry-reminder';
-import { checkExpiredQuotesFunction } from '@/lib/inngest/functions/check-expired-quotes';
+import { getAllInngestFunctions } from '@/tasks';
 
 /**
- * Register all Inngest functions here
+ * Get all Inngest functions from the task registry
+ *
+ * Tasks are now defined in /src/tasks with clean TypeScript definitions.
+ * The task registry automatically extracts Inngest functions for registration.
+ *
+ * To add a new task:
+ * 1. Create a task definition in /src/tasks
+ * 2. Add it to the task registry in /src/tasks/index.ts
+ * 3. Call POST /api/tasks/sync to sync to database
  */
-const functions = [
-  sendEmailFunction,
-  cleanupSessionsFunction,
-  quoteExpiryReminderFunction,
-  checkExpiredQuotesFunction,
-  // Add more functions as needed:
-  // generateReportFunction,
-  // cleanupOldDataFunction,
-  // etc.
-];
+const functions = getAllInngestFunctions();
 
 /**
  * Serve Inngest functions

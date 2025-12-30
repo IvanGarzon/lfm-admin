@@ -24,7 +24,7 @@ export const QuoteItemSchema = z.object({
     .array(
       z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
         message: 'Color must be a valid hex code (e.g., #FF5733 or #F00)',
-      })
+      }),
     )
     .max(10, { error: 'Maximum 10 colors allowed' }),
 });
@@ -85,7 +85,11 @@ export const MarkQuoteAsRejectedSchema = z.object({
  */
 export const MarkQuoteAsOnHoldSchema = z.object({
   id: z.string().min(1, { error: 'Quote ID is required' }),
-  reason: z.string().trim().max(500, { error: 'Reason must be less than 500 characters' }).optional(),
+  reason: z
+    .string()
+    .trim()
+    .max(500, { error: 'Reason must be less than 500 characters' })
+    .optional(),
 });
 
 /**
@@ -93,7 +97,11 @@ export const MarkQuoteAsOnHoldSchema = z.object({
  */
 export const MarkQuoteAsCancelledSchema = z.object({
   id: z.string().min(1, { error: 'Quote ID is required' }),
-  reason: z.string().trim().max(500, { error: 'Reason must be less than 500 characters' }).optional(),
+  reason: z
+    .string()
+    .trim()
+    .max(500, { error: 'Reason must be less than 500 characters' })
+    .optional(),
 });
 
 /**

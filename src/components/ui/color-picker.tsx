@@ -37,7 +37,12 @@ const PRESET_COLORS = [
   '#6B7280', // Gray
 ];
 
-export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false }: ColorPickerProps) {
+export function ColorPicker({
+  colors,
+  onChange,
+  maxColors = 10,
+  disabled = false,
+}: ColorPickerProps) {
   const [customColor, setCustomColor] = useState('#3a3d13');
   const [r, setR] = useState(58);
   const [g, setG] = useState(61);
@@ -45,18 +50,25 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
+      : null;
   };
 
   const rgbToHex = (r: number, g: number, b: number) => {
-    return '#' + [r, g, b].map(x => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('');
+    return (
+      '#' +
+      [r, g, b]
+        .map((x) => {
+          const hex = x.toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        })
+        .join('')
+    );
   };
 
   const updateFromHex = (hex: string) => {
@@ -102,10 +114,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
           </Box>
           <Box className="flex flex-wrap gap-1">
             {colors.map((color, index) => (
-              <Box
-                key={`${color}-${index}`}
-                className="relative group"
-              >
+              <Box key={`${color}-${index}`} className="relative group">
                 <Box
                   className="w-12 h-12 rounded-sm border-2 border-gray-200 dark:border-gray-700"
                   style={{ backgroundColor: color }}
@@ -125,7 +134,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
             ))}
           </Box>
         </Box>
-      ): null}
+      ) : null}
 
       {/* Color Picker Section */}
       {colors.length < maxColors && !disabled && (
@@ -138,9 +147,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
             <Box className="flex gap-4">
               {/* Custom Color - Left Side */}
               <Box className="shrink-0">
-                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  Custom Color
-                </Box>
+                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">Custom Color</Box>
                 <Box className="h-[100px]">
                   <Input
                     type="color"
@@ -153,9 +160,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
 
               {/* Preset Colors - Right Side in 2 Rows */}
               <Box className="flex-1">
-                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  Preset Colors
-                </Box>
+                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">Preset Colors</Box>
                 <Box className="grid grid-cols-10 gap-1">
                   {PRESET_COLORS.map((color) => (
                     <button
@@ -164,11 +169,11 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
                       onClick={() => addColor(color)}
                       disabled={colors.includes(color) || colors.length >= maxColors}
                       className={cn(
-                        "w-full aspect-square rounded-sm transition-all hover:scale-110",
+                        'w-full aspect-square rounded-sm transition-all hover:scale-110',
                         colors.includes(color)
-                          ? "border-gray-400 opacity-50 cursor-not-allowed"
-                          : "border-gray-200 dark:border-gray-700 hover:border-gray-400 cursor-pointer",
-                        color === '#FFFFFF' && "border-gray-300"
+                          ? 'border-gray-400 opacity-50 cursor-not-allowed'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 cursor-pointer',
+                        color === '#FFFFFF' && 'border-gray-300',
                       )}
                       style={{ backgroundColor: color }}
                       aria-label={`Add ${color}`}
@@ -182,9 +187,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
             <Box className="flex gap-2 items-end">
               {/* HEX Input */}
               <Box className="flex-1">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                  HEX
-                </label>
+                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">HEX</label>
                 <Input
                   type="text"
                   value={customColor}
@@ -197,9 +200,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
 
               {/* R Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                  R
-                </label>
+                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">R</label>
                 <Input
                   type="number"
                   value={r}
@@ -212,9 +213,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
 
               {/* G Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                  G
-                </label>
+                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">G</label>
                 <Input
                   type="number"
                   value={g}
@@ -227,9 +226,7 @@ export function ColorPicker({ colors, onChange, maxColors = 10, disabled = false
 
               {/* B Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
-                  B
-                </label>
+                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">B</label>
                 <Input
                   type="number"
                   value={b}

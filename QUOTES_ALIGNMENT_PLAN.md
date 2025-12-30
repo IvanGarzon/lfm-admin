@@ -1,4 +1,5 @@
 # Quotes Feature Alignment Plan
+
 ## Aligning Quotes with Invoices Standards & Patterns
 
 **Date:** 2024-12-24
@@ -34,26 +35,27 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 
 ## Feature Comparison Matrix
 
-| Aspect | Invoices | Quotes | Status | Priority |
-|--------|----------|--------|--------|----------|
-| **🚨 Authorization Checks** | ✅ requirePermission() on all actions | ❌ No permission checks | ❌ **SECURITY VULNERABILITY** | **CRITICAL** |
-| **Actions Organization** | Split: queries.ts + mutations.ts | Monolithic: quotes.ts (1004 lines) | ⚠️ Inconsistent | HIGH |
-| **Analytics Dashboard** | ✅ Full analytics with charts | ❌ Basic statistics only | ⚠️ Missing | HIGH |
-| **Email Integration** | ✅ Inngest + EmailAudit | ❌ No email system | ❌ Critical Gap | CRITICAL |
-| **PDF Generation** | ✅ Invoice + Receipt PDFs | ❌ No PDF system | ❌ Critical Gap | CRITICAL |
-| **Payment Tracking** | ✅ Full payment history | N/A | ✅ N/A | - |
-| **Status Transitions** | 6 states, strict rules | 8 states, strict rules | ✅ Similar | LOW |
-| **Repository Pattern** | ✅ 1474 lines, well-structured | ✅ 1563 lines, well-structured | ✅ Consistent | LOW |
-| **Bulk Actions** | ✅ Bulk status updates | ❌ No bulk operations | ⚠️ Missing | MEDIUM |
-| **Document Management** | ✅ S3 + Document table | ✅ Attachments only | ⚠️ Different | MEDIUM |
-| **Versioning** | ❌ No versioning | ✅ Parent-child versions | ✅ Quote-specific | - |
-| **Item Features** | Basic items | Items + Colors + Attachments | ✅ Quote-specific | - |
-| **Tests** | ✅ mutations.spec.ts | ❌ No test files | ❌ Missing | HIGH |
-| **Soft Delete** | ✅ deletedAt field | ✅ deletedAt field | ✅ Consistent | LOW |
-| **Optimistic Updates** | ✅ React Query optimistic | ✅ React Query optimistic | ✅ Consistent | LOW |
-| **Context Management** | ✅ InvoiceActionContext | ✅ QuoteActionContext | ✅ Consistent | LOW |
+| Aspect                      | Invoices                              | Quotes                             | Status                        | Priority     |
+| --------------------------- | ------------------------------------- | ---------------------------------- | ----------------------------- | ------------ |
+| **🚨 Authorization Checks** | ✅ requirePermission() on all actions | ❌ No permission checks            | ❌ **SECURITY VULNERABILITY** | **CRITICAL** |
+| **Actions Organization**    | Split: queries.ts + mutations.ts      | Monolithic: quotes.ts (1004 lines) | ⚠️ Inconsistent               | HIGH         |
+| **Analytics Dashboard**     | ✅ Full analytics with charts         | ❌ Basic statistics only           | ⚠️ Missing                    | HIGH         |
+| **Email Integration**       | ✅ Inngest + EmailAudit               | ❌ No email system                 | ❌ Critical Gap               | CRITICAL     |
+| **PDF Generation**          | ✅ Invoice + Receipt PDFs             | ❌ No PDF system                   | ❌ Critical Gap               | CRITICAL     |
+| **Payment Tracking**        | ✅ Full payment history               | N/A                                | ✅ N/A                        | -            |
+| **Status Transitions**      | 6 states, strict rules                | 8 states, strict rules             | ✅ Similar                    | LOW          |
+| **Repository Pattern**      | ✅ 1474 lines, well-structured        | ✅ 1563 lines, well-structured     | ✅ Consistent                 | LOW          |
+| **Bulk Actions**            | ✅ Bulk status updates                | ❌ No bulk operations              | ⚠️ Missing                    | MEDIUM       |
+| **Document Management**     | ✅ S3 + Document table                | ✅ Attachments only                | ⚠️ Different                  | MEDIUM       |
+| **Versioning**              | ❌ No versioning                      | ✅ Parent-child versions           | ✅ Quote-specific             | -            |
+| **Item Features**           | Basic items                           | Items + Colors + Attachments       | ✅ Quote-specific             | -            |
+| **Tests**                   | ✅ mutations.spec.ts                  | ❌ No test files                   | ❌ Missing                    | HIGH         |
+| **Soft Delete**             | ✅ deletedAt field                    | ✅ deletedAt field                 | ✅ Consistent                 | LOW          |
+| **Optimistic Updates**      | ✅ React Query optimistic             | ✅ React Query optimistic          | ✅ Consistent                 | LOW          |
+| **Context Management**      | ✅ InvoiceActionContext               | ✅ QuoteActionContext              | ✅ Consistent                 | LOW          |
 
 **Legend:**
+
 - ✅ Implemented & Consistent
 - ⚠️ Partially Implemented or Inconsistent
 - ❌ Missing or Critical Gap
@@ -65,6 +67,7 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 ### Invoices: Comprehensive Financial Management
 
 **Capabilities:**
+
 - ✅ Full invoice lifecycle (DRAFT → PENDING → PAID/OVERDUE/CANCELLED)
 - ✅ Payment recording with partial payment support
 - ✅ **PDF generation** for invoices and receipts
@@ -77,6 +80,7 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 - ✅ Idempotency protection for payments
 
 **Business Logic Strengths:**
+
 - Payment tolerance (0.01 for floating point)
 - Automatic overdue detection via cron jobs
 - Rich audit trail via `InvoiceStatusHistory`
@@ -85,6 +89,7 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 ### Quotes: Basic Quote Management
 
 **Capabilities:**
+
 - ✅ Quote lifecycle (DRAFT → SENT → ON_HOLD → ACCEPTED → CONVERTED/REJECTED/EXPIRED/CANCELLED)
 - ✅ **Quote versioning** (parent-child relationships)
 - ✅ **Item-level customization** (colors, notes, attachments)
@@ -99,6 +104,7 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 - ✅ Status history tracking
 
 **Business Logic Strengths:**
+
 - Sophisticated versioning system (unique to quotes)
 - Item-level color palettes for flower arrangements
 - Multi-level attachment system (quote + item level)
@@ -106,23 +112,25 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 
 ### Key Differences
 
-| Feature | Invoices | Quotes | Impact |
-|---------|----------|--------|--------|
-| **Email Notifications** | Inngest background jobs | None | **CRITICAL** - Quotes can't be sent to customers |
-| **PDF Generation** | Invoice + Receipt | None | **CRITICAL** - No printable quotes |
-| **Analytics** | Revenue trends, charts, metrics | Basic stats | **HIGH** - No business insights |
-| **Reminders** | Scheduled with rate limits | None | **MEDIUM** - Can't follow up |
-| **Bulk Actions** | Status updates | None | **MEDIUM** - Inefficient for many quotes |
-| **Duplication** | Yes | No | **LOW** - Manual recreation needed |
+| Feature                 | Invoices                        | Quotes      | Impact                                           |
+| ----------------------- | ------------------------------- | ----------- | ------------------------------------------------ |
+| **Email Notifications** | Inngest background jobs         | None        | **CRITICAL** - Quotes can't be sent to customers |
+| **PDF Generation**      | Invoice + Receipt               | None        | **CRITICAL** - No printable quotes               |
+| **Analytics**           | Revenue trends, charts, metrics | Basic stats | **HIGH** - No business insights                  |
+| **Reminders**           | Scheduled with rate limits      | None        | **MEDIUM** - Can't follow up                     |
+| **Bulk Actions**        | Status updates                  | None        | **MEDIUM** - Inefficient for many quotes         |
+| **Duplication**         | Yes                             | No          | **LOW** - Manual recreation needed               |
 
 ### Recommendation
 
 **Priority 1: Add Email & PDF to Quotes**
+
 - Implement quote PDF generation using similar template pattern as invoices
 - Integrate Inngest for sending quotes to customers
 - Add "Send Quote" functionality with email templates
 
 **Priority 2: Build Quotes Analytics Dashboard**
+
 - Quote value trends over time
 - Conversion rate tracking (quotes → invoices)
 - Win/loss analysis
@@ -130,6 +138,7 @@ This document provides a comprehensive comparison of the Invoices and Quotes fea
 - Customer quote patterns
 
 **Priority 3: Add Bulk Operations**
+
 - Bulk status updates (mark as sent, cancel multiple)
 - Bulk expiration checks
 - Bulk quote generation from template
@@ -235,20 +244,21 @@ QuoteAttachment {
 
 ### Key Differences
 
-| Aspect | Invoices | Quotes | Issue |
-|--------|----------|--------|-------|
-| **Payment Tracking** | Separate `Payment` model | None | ✅ Correct - Quotes don't need this |
-| **Email Audit** | Fully utilized | Defined but unused | ⚠️ Quotes should use EmailAudit |
-| **Document Storage** | `Document` model with `kind` enum | Separate `QuoteAttachment` | ⚠️ Inconsistent - should use Document |
-| **PDF Caching** | Hash-based with metadata | None | ❌ Quotes should cache PDFs |
-| **Item Metadata** | Basic | Colors + Notes + Attachments | ✅ Quote-specific, appropriate |
-| **Versioning** | None | Parent-child with version numbers | ✅ Quote-specific, appropriate |
-| **Reminders** | `remindersSent` counter | None | ⚠️ Quotes could track follow-ups |
-| **Date Fields** | `dueDate`, `paidDate` | `validUntil` | ✅ Different domain logic |
+| Aspect               | Invoices                          | Quotes                            | Issue                                 |
+| -------------------- | --------------------------------- | --------------------------------- | ------------------------------------- |
+| **Payment Tracking** | Separate `Payment` model          | None                              | ✅ Correct - Quotes don't need this   |
+| **Email Audit**      | Fully utilized                    | Defined but unused                | ⚠️ Quotes should use EmailAudit       |
+| **Document Storage** | `Document` model with `kind` enum | Separate `QuoteAttachment`        | ⚠️ Inconsistent - should use Document |
+| **PDF Caching**      | Hash-based with metadata          | None                              | ❌ Quotes should cache PDFs           |
+| **Item Metadata**    | Basic                             | Colors + Notes + Attachments      | ✅ Quote-specific, appropriate        |
+| **Versioning**       | None                              | Parent-child with version numbers | ✅ Quote-specific, appropriate        |
+| **Reminders**        | `remindersSent` counter           | None                              | ⚠️ Quotes could track follow-ups      |
+| **Date Fields**      | `dueDate`, `paidDate`             | `validUntil`                      | ✅ Different domain logic             |
 
 ### Database Indexes
 
 **Invoices:**
+
 ```prisma
 @@index([customerId])
 @@index([status])
@@ -260,6 +270,7 @@ QuoteAttachment {
 ```
 
 **Quotes:**
+
 ```prisma
 @@index([customerId])
 @@index([status])
@@ -288,6 +299,7 @@ Document {
 ```
 
 **Benefits:**
+
 - Consistent pattern across features
 - Centralized file management
 - Easier to implement global file cleanup
@@ -300,6 +312,7 @@ Document {
 **Problem:** `EmailAudit` relation exists but is never populated.
 
 **Solution:** Start using `EmailAudit` when quote email features are implemented:
+
 - Send quote emails
 - Follow-up reminders
 - Quote acceptance notifications
@@ -345,6 +358,7 @@ CANCELLED    → [] // Terminal
 ```
 
 **Characteristics:**
+
 - Simpler state machine (6 states)
 - Payment-driven transitions
 - Automatic state changes (OVERDUE via cron)
@@ -364,6 +378,7 @@ CONVERTED    → [] // Terminal
 ```
 
 **Characteristics:**
+
 - More complex state machine (8 states)
 - Customer-response-driven transitions
 - ON_HOLD intermediate state (unique)
@@ -372,29 +387,31 @@ CONVERTED    → [] // Terminal
 
 ### Validation Patterns
 
-| Aspect | Invoices | Quotes | Consistency |
-|--------|----------|--------|-------------|
-| **Schema Library** | Zod | Zod | ✅ |
-| **Transition Validation** | `validateInvoiceStatusTransition()` | `validateQuoteStatusTransition()` | ✅ |
-| **Terminal State Check** | `isTerminalInvoiceStatus()` | `isTerminalQuoteStatus()` | ✅ |
-| **Permission Guards** | Implicit in actions | `getQuotePermissions()` | ⚠️ Different |
-| **Date Validation** | `dueDate >= issuedDate` | `validUntil >= issuedDate` | ✅ |
-| **Amount Validation** | Payment ≤ amountDue | N/A | ✅ |
-| **Item Validation** | 1-100 items | 1-100 items | ✅ |
+| Aspect                    | Invoices                            | Quotes                            | Consistency  |
+| ------------------------- | ----------------------------------- | --------------------------------- | ------------ |
+| **Schema Library**        | Zod                                 | Zod                               | ✅           |
+| **Transition Validation** | `validateInvoiceStatusTransition()` | `validateQuoteStatusTransition()` | ✅           |
+| **Terminal State Check**  | `isTerminalInvoiceStatus()`         | `isTerminalQuoteStatus()`         | ✅           |
+| **Permission Guards**     | Implicit in actions                 | `getQuotePermissions()`           | ⚠️ Different |
+| **Date Validation**       | `dueDate >= issuedDate`             | `validUntil >= issuedDate`        | ✅           |
+| **Amount Validation**     | Payment ≤ amountDue                 | N/A                               | ✅           |
+| **Item Validation**       | 1-100 items                         | 1-100 items                       | ✅           |
 
 ### Permission Control Differences
 
 **Invoices:** Implicit permission checks in server actions
+
 ```typescript
 // Check happens in each action
-requirePermission(session.user, 'canManageInvoices')
-requirePermission(session.user, 'canRecordPayments')
+requirePermission(session.user, 'canManageInvoices');
+requirePermission(session.user, 'canRecordPayments');
 ```
 
 **Quotes:** Explicit permission helper function
+
 ```typescript
 // Central function returns permission object
-const permissions = getQuotePermissions(quote.status)
+const permissions = getQuotePermissions(quote.status);
 // Returns: { canEdit, canSend, canAccept, canReject, ... }
 ```
 
@@ -418,11 +435,12 @@ function getInvoicePermissions(status: InvoiceStatus): InvoicePermissions {
     canSendReminder: status === 'OVERDUE',
     canSendReceipt: status === 'PAID',
     canMarkAsDraft: status === 'PENDING',
-  }
+  };
 }
 ```
 
 **Benefits:**
+
 - Single source of truth for permissions
 - Easier to test
 - UI can query permissions declaratively
@@ -440,12 +458,13 @@ export const VALIDATION_ERRORS = {
   TERMINAL_STATE: (type) => `Cannot modify ${type} in terminal state`,
   INVALID_AMOUNT: 'Amount must be positive and less than total',
   // ...
-}
+};
 ```
 
 #### 3. Unify Status History Approach
 
 Both features track status history well. Consider adding:
+
 - System-generated vs user-initiated flag
 - More detailed change metadata (what fields changed)
 - Snapshot of key values at each transition
@@ -495,6 +514,7 @@ components/
 ```
 
 **Key Features:**
+
 - ✅ **Tab-based layout** (List + Analytics)
 - ✅ **Analytics dashboard** with charts
 - ✅ **Bulk action bar**
@@ -543,6 +563,7 @@ components/
 ```
 
 **Key Features:**
+
 - ❌ **No analytics tab** (only basic stats)
 - ❌ **No bulk operations**
 - ✅ **Attachment workflows** (quote + item level)
@@ -552,21 +573,22 @@ components/
 
 ### Workflow Comparison
 
-| Workflow | Invoices | Quotes | Gap |
-|----------|----------|--------|-----|
-| **Create & Edit** | ✅ Full form with items | ✅ Full form with items + colors | ✅ Consistent |
-| **Send to Customer** | ✅ Email with PDF | ❌ Manual copy-paste | **CRITICAL** |
-| **Status Updates** | ✅ Via dialogs | ✅ Via dialogs | ✅ Consistent |
-| **Bulk Operations** | ✅ Bulk status change | ❌ None | **MEDIUM** |
-| **Analytics** | ✅ Full dashboard | ❌ Basic stats | **HIGH** |
-| **Version Management** | N/A | ✅ Create versions | ✅ Quote-specific |
-| **Attachment Upload** | N/A | ✅ S3 upload | ✅ Quote-specific |
-| **PDF Generation** | ✅ Invoice + Receipt | ❌ None | **CRITICAL** |
-| **Payment Recording** | ✅ Detailed workflow | N/A | ✅ Invoice-specific |
+| Workflow               | Invoices                | Quotes                           | Gap                 |
+| ---------------------- | ----------------------- | -------------------------------- | ------------------- |
+| **Create & Edit**      | ✅ Full form with items | ✅ Full form with items + colors | ✅ Consistent       |
+| **Send to Customer**   | ✅ Email with PDF       | ❌ Manual copy-paste             | **CRITICAL**        |
+| **Status Updates**     | ✅ Via dialogs          | ✅ Via dialogs                   | ✅ Consistent       |
+| **Bulk Operations**    | ✅ Bulk status change   | ❌ None                          | **MEDIUM**          |
+| **Analytics**          | ✅ Full dashboard       | ❌ Basic stats                   | **HIGH**            |
+| **Version Management** | N/A                     | ✅ Create versions               | ✅ Quote-specific   |
+| **Attachment Upload**  | N/A                     | ✅ S3 upload                     | ✅ Quote-specific   |
+| **PDF Generation**     | ✅ Invoice + Receipt    | ❌ None                          | **CRITICAL**        |
+| **Payment Recording**  | ✅ Detailed workflow    | N/A                              | ✅ Invoice-specific |
 
 ### User Journey Analysis
 
 #### Invoice Journey (Mature)
+
 1. Create invoice → Add items → Preview
 2. **Send to customer** (Email with PDF) ← Automated
 3. Track status (Pending → Overdue)
@@ -576,6 +598,7 @@ components/
 7. View analytics (revenue, trends, debtors)
 
 #### Quote Journey (Gaps)
+
 1. Create quote → Add items + colors + attachments → Preview
 2. ❌ **Manually send** (copy-paste) ← Manual, error-prone
 3. Track status (Sent → On Hold)
@@ -590,6 +613,7 @@ components/
 Create `quote-analytics.tsx` with:
 
 **Key Metrics:**
+
 - Total Quoted Value (all time + filtered period)
 - Accepted Quote Value
 - Conversion Rate (Accepted / Sent)
@@ -598,6 +622,7 @@ Create `quote-analytics.tsx` with:
 - Average Quote Value
 
 **Charts:**
+
 - Quote Value Trend (monthly, last 12 months)
 - Status Distribution (pie/donut chart)
 - Win/Loss Reasons (bar chart)
@@ -606,6 +631,7 @@ Create `quote-analytics.tsx` with:
 - Conversion Funnel (DRAFT → SENT → ACCEPTED → CONVERTED)
 
 **Implementation:**
+
 ```typescript
 // src/features/finances/quotes/components/analytics/
 ├── quote-analytics.tsx          // Main container
@@ -617,6 +643,7 @@ Create `quote-analytics.tsx` with:
 ```
 
 Add tab to `quote-list.tsx`:
+
 ```tsx
 <Tabs defaultValue="list">
   <TabsList>
@@ -635,25 +662,29 @@ Add tab to `quote-list.tsx`:
 #### 2. Add Bulk Operations (MEDIUM PRIORITY)
 
 Implement `bulk-actions-bar.tsx` for quotes:
+
 - Bulk mark as sent
 - Bulk cancel with reason
 - Bulk delete (drafts only)
 - Bulk export to PDF
 
 Pattern:
+
 ```tsx
 // Selection state in quote-table.tsx
-const [rowSelection, setRowSelection] = useState({})
+const [rowSelection, setRowSelection] = useState({});
 
 // Bulk actions bar shows when selection count > 0
-{selectedCount > 0 && (
-  <BulkActionsBar
-    selectedCount={selectedCount}
-    onMarkAsSent={() => bulkUpdateStatus('SENT')}
-    onCancel={() => openBulkCancelDialog()}
-    onDelete={() => openBulkDeleteDialog()}
-  />
-)}
+{
+  selectedCount > 0 && (
+    <BulkActionsBar
+      selectedCount={selectedCount}
+      onMarkAsSent={() => bulkUpdateStatus('SENT')}
+      onCancel={() => openBulkCancelDialog()}
+      onDelete={() => openBulkDeleteDialog()}
+    />
+  );
+}
 ```
 
 #### 3. Implement Quote Email Workflow (CRITICAL PRIORITY)
@@ -661,6 +692,7 @@ const [rowSelection, setRowSelection] = useState({})
 Add "Send Quote" functionality:
 
 **Components:**
+
 ```typescript
 // send-quote-dialog.tsx
 - Email recipient (prefilled from customer)
@@ -671,6 +703,7 @@ Add "Send Quote" functionality:
 ```
 
 **Backend:**
+
 ```typescript
 // mutations.ts
 export async function sendQuote(id: string) {
@@ -684,6 +717,7 @@ export async function sendQuote(id: string) {
 ```
 
 **Email Template:**
+
 ```tsx
 // emails/quote-email.tsx
 Dear {customerName},
@@ -726,6 +760,7 @@ export class QuotePdfService {
 ```
 
 **Template:**
+
 ```tsx
 // templates/quote-template.tsx
 export function QuoteTemplate({ quote }: QuoteTemplateProps) {
@@ -741,11 +776,12 @@ export function QuoteTemplate({ quote }: QuoteTemplateProps) {
         {/* Item attachments (thumbnails) */}
       </Page>
     </Document>
-  )
+  );
 }
 ```
 
 Pattern to match invoices:
+
 - Use `@react-pdf/renderer`
 - Store in `Document` table with `kind: QUOTE`
 - Cache with content hash
@@ -760,6 +796,7 @@ Pattern to match invoices:
 #### Invoices: Split Architecture (MODERN)
 
 **Recent Refactoring** (commit `4ad2a0a0a`):
+
 ```
 src/actions/invoices/
 ├── index.ts              // Barrel exports (backward compatibility)
@@ -768,6 +805,7 @@ src/actions/invoices/
 ```
 
 **Benefits:**
+
 - ✅ Clear separation of concerns (CQS pattern)
 - ✅ Easier to find specific operations
 - ✅ Better code organization
@@ -775,6 +813,7 @@ src/actions/invoices/
 - ✅ Easier to test (can mock queries independently)
 
 **Queries:**
+
 ```typescript
 getInvoices(searchParams)
 getInvoiceById(id)
@@ -790,18 +829,19 @@ getReceiptPdfUrl(id)
 ```
 
 **Mutations:**
+
 ```typescript
-createInvoice(data)
-updateInvoice(data)
-markInvoiceAsPending(data)
-markInvoiceAsDraft(id)
-cancelInvoice(data)
-recordPayment(data)
-sendInvoiceReceipt(id)
-sendInvoiceReminder(id)
-bulkUpdateInvoiceStatus(ids, status)
-deleteInvoice(id)
-duplicateInvoice(id)
+createInvoice(data);
+updateInvoice(data);
+markInvoiceAsPending(data);
+markInvoiceAsDraft(id);
+cancelInvoice(data);
+recordPayment(data);
+sendInvoiceReceipt(id);
+sendInvoiceReminder(id);
+bulkUpdateInvoiceStatus(ids, status);
+deleteInvoice(id);
+duplicateInvoice(id);
 ```
 
 #### Quotes: Monolithic Architecture (LEGACY)
@@ -812,6 +852,7 @@ src/actions/
 ```
 
 **Issues:**
+
 - ⚠️ Single file with 1000+ lines
 - ⚠️ Queries and mutations mixed
 - ⚠️ Harder to navigate
@@ -819,6 +860,7 @@ src/actions/
 - ⚠️ Harder to selectively import
 
 **All Actions in One File:**
+
 - Queries: `getQuotes`, `getQuoteById`, `getQuoteStatistics`, `getQuoteVersions`, `getQuoteAttachments`, etc.
 - Mutations: `createQuote`, `updateQuote`, `markQuoteAs*`, `convertQuoteToInvoice`, `deleteQuote`, etc.
 - Attachment operations: `uploadQuoteAttachment`, `deleteQuoteAttachment`, etc.
@@ -832,29 +874,28 @@ Both features follow similar patterns within actions:
 export async function actionName(data) {
   try {
     // 1. Auth check
-    const session = await auth()
+    const session = await auth();
     if (!session?.user) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: 'Unauthorized' };
     }
 
     // 2. Permission check
-    requirePermission(session.user, 'canManage*')
+    requirePermission(session.user, 'canManage*');
 
     // 3. Input validation
-    const validated = Schema.parse(data)
+    const validated = Schema.parse(data);
 
     // 4. Repository operation
-    const result = await repo.method(validated)
+    const result = await repo.method(validated);
 
     // 5. Cache revalidation
-    revalidatePath('/path')
+    revalidatePath('/path');
 
     // 6. Success response
-    return { success: true, data: result }
-
+    return { success: true, data: result };
   } catch (error) {
     // 7. Error handling
-    return handleActionError(error, 'Friendly message')
+    return handleActionError(error, 'Friendly message');
   }
 }
 ```
@@ -865,17 +906,17 @@ export async function actionName(data) {
 
 Both have well-structured repositories:
 
-| Metric | InvoiceRepository | QuoteRepository | Assessment |
-|--------|------------------|-----------------|------------|
-| **Lines of Code** | 1474 | 1563 | ✅ Similar complexity |
-| **Base Class** | BaseRepository | BaseRepository | ✅ Consistent |
-| **Search & Pagination** | `searchAndPaginate()` | `searchAndPaginate()` | ✅ Consistent |
-| **Detail Fetching** | Multiple levels (basic, full) | Full only | ⚠️ Minor difference |
-| **Status Changes** | Dedicated methods | Dedicated methods | ✅ Consistent |
-| **Transactions** | Yes (create, update, status) | Yes (create, update, status) | ✅ Consistent |
-| **Number Generation** | `generateInvoiceNumber()` | `generateQuoteNumber()` | ✅ Consistent |
-| **Soft Delete** | `softDelete()` | `softDelete()` | ✅ Consistent |
-| **Analytics** | 3 methods (stats, trend, debtors) | 1 method (stats only) | ⚠️ Quotes missing analytics |
+| Metric                  | InvoiceRepository                 | QuoteRepository              | Assessment                  |
+| ----------------------- | --------------------------------- | ---------------------------- | --------------------------- |
+| **Lines of Code**       | 1474                              | 1563                         | ✅ Similar complexity       |
+| **Base Class**          | BaseRepository                    | BaseRepository               | ✅ Consistent               |
+| **Search & Pagination** | `searchAndPaginate()`             | `searchAndPaginate()`        | ✅ Consistent               |
+| **Detail Fetching**     | Multiple levels (basic, full)     | Full only                    | ⚠️ Minor difference         |
+| **Status Changes**      | Dedicated methods                 | Dedicated methods            | ✅ Consistent               |
+| **Transactions**        | Yes (create, update, status)      | Yes (create, update, status) | ✅ Consistent               |
+| **Number Generation**   | `generateInvoiceNumber()`         | `generateQuoteNumber()`      | ✅ Consistent               |
+| **Soft Delete**         | `softDelete()`                    | `softDelete()`               | ✅ Consistent               |
+| **Analytics**           | 3 methods (stats, trend, debtors) | 1 method (stats only)        | ⚠️ Quotes missing analytics |
 
 **Assessment:** Repository layer is well-aligned. Main gap is analytics queries.
 
@@ -885,51 +926,51 @@ Both have well-structured repositories:
 
 ```typescript
 // Queries
-useInvoices(searchParams)
-useInvoice(id)
-useInvoiceItems(id)
-useInvoicePayments(id)
-useInvoiceStatusHistory(id)
-useInvoiceStatistics(dateFilter)
-useMonthlyRevenueTrend()
-useTopDebtors()
+useInvoices(searchParams);
+useInvoice(id);
+useInvoiceItems(id);
+useInvoicePayments(id);
+useInvoiceStatusHistory(id);
+useInvoiceStatistics(dateFilter);
+useMonthlyRevenueTrend();
+useTopDebtors();
 
 // Mutations
-useCreateInvoice()
-useUpdateInvoice()
-useMarkInvoiceAsPending()
-useMarkInvoiceAsDraft()
-useCancelInvoice()
-useRecordPayment()
-useSendInvoiceReceipt()
-useSendInvoiceReminder()
-useBulkUpdateInvoiceStatus()    // ← Bulk operation
-useDeleteInvoice()
-useDuplicateInvoice()           // ← Duplication
+useCreateInvoice();
+useUpdateInvoice();
+useMarkInvoiceAsPending();
+useMarkInvoiceAsDraft();
+useCancelInvoice();
+useRecordPayment();
+useSendInvoiceReceipt();
+useSendInvoiceReminder();
+useBulkUpdateInvoiceStatus(); // ← Bulk operation
+useDeleteInvoice();
+useDuplicateInvoice(); // ← Duplication
 ```
 
 #### Quote Hooks (`use-quote-queries.ts` - ~600 lines estimated)
 
 ```typescript
 // Queries
-useQuotes(searchParams)
-useQuote(id)
-useQuoteStatistics(dateFilter)
-useQuoteVersions(quoteId)
+useQuotes(searchParams);
+useQuote(id);
+useQuoteStatistics(dateFilter);
+useQuoteVersions(quoteId);
 
 // Mutations
-useCreateQuote()
-useUpdateQuote()
-useMarkQuoteAsAccepted()
-useMarkQuoteAsRejected()
-useMarkQuoteAsSent()
-useMarkQuoteAsOnHold()
-useMarkQuoteAsCancelled()
-useConvertQuoteToInvoice()
-useDeleteQuote()
-useCreateQuoteVersion()         // ← Versioning (unique)
-useUploadQuoteAttachment()
-useDeleteQuoteAttachment()
+useCreateQuote();
+useUpdateQuote();
+useMarkQuoteAsAccepted();
+useMarkQuoteAsRejected();
+useMarkQuoteAsSent();
+useMarkQuoteAsOnHold();
+useMarkQuoteAsCancelled();
+useConvertQuoteToInvoice();
+useDeleteQuote();
+useCreateQuoteVersion(); // ← Versioning (unique)
+useUploadQuoteAttachment();
+useDeleteQuoteAttachment();
 // (No bulk operations)
 // (No duplication)
 // (No analytics beyond basic stats)
@@ -944,6 +985,7 @@ useDeleteQuoteAttachment()
 **Goal:** Match the Invoice pattern
 
 **Structure:**
+
 ```
 src/actions/quotes/
 ├── index.ts              // Re-exports for backward compatibility
@@ -978,12 +1020,14 @@ src/actions/quotes/
    - Future: Bulk operations
 
 4. Create `index.ts` barrel export:
+
 ```typescript
-export * from './queries'
-export * from './mutations'
+export * from './queries';
+export * from './mutations';
 ```
 
 **Benefits:**
+
 - Consistent with Invoice pattern
 - Easier navigation
 - Clearer intent (read vs write)
@@ -997,22 +1041,25 @@ export * from './mutations'
 #### 2. Add Missing Hooks
 
 **Quote Analytics Hooks** (when analytics implemented):
+
 ```typescript
-useQuoteValueTrend(limit = 12)
-useQuoteConversionRate(dateFilter)
-useTopCustomersByQuotedValue(limit = 5)
+useQuoteValueTrend((limit = 12));
+useQuoteConversionRate(dateFilter);
+useTopCustomersByQuotedValue((limit = 5));
 ```
 
 **Bulk Operation Hooks:**
+
 ```typescript
-useBulkUpdateQuoteStatus()
-useBulkDeleteQuotes()
-useBulkSendQuotes()  // When email implemented
+useBulkUpdateQuoteStatus();
+useBulkDeleteQuotes();
+useBulkSendQuotes(); // When email implemented
 ```
 
 **Duplication Hook:**
+
 ```typescript
-useDuplicateQuote()  // Copy quote to new draft
+useDuplicateQuote(); // Copy quote to new draft
 ```
 
 #### 3. Add Repository Analytics Methods
@@ -1053,10 +1100,11 @@ async getAverageTimeToDecision() {
 ### 🚨 CRITICAL SECURITY VULNERABILITY (Fix Immediately)
 
 **0. ❌ No Authorization Checks on Quote Actions**
-   - Quotes only check authentication (logged in), not authorization (has permission)
-   - Any logged-in user can create, edit, delete ALL quotes
-   - Missing `requirePermission(session.user, 'canManageQuotes')` in all actions
-   - **Impact:** Major security breach - unauthorized access to sensitive business data
+
+- Quotes only check authentication (logged in), not authorization (has permission)
+- Any logged-in user can create, edit, delete ALL quotes
+- Missing `requirePermission(session.user, 'canManageQuotes')` in all actions
+- **Impact:** Major security breach - unauthorized access to sensitive business data
 
 ### Critical Gaps (Must Fix)
 
@@ -1172,10 +1220,12 @@ src/features/finances/shared/
 Migrate Quotes to use shared `Document` model:
 
 **Current:**
+
 - Invoices: `Document` with `kind: INVOICE | RECEIPT`
 - Quotes: Separate `QuoteAttachment` + `QuoteItemAttachment`
 
 **Target:**
+
 ```prisma
 enum DocumentKind {
   INVOICE
@@ -1201,6 +1251,7 @@ Document {
 ```
 
 **Migration Steps:**
+
 1. Add new enum values to `DocumentKind`
 2. Add `quoteId` and `quoteItemId` fields to `Document`
 3. Create migration to copy `QuoteAttachment` → `Document`
@@ -1208,6 +1259,7 @@ Document {
 5. Remove `QuoteAttachment` and `QuoteItemAttachment` models
 
 **Benefits:**
+
 - Unified file management
 - Centralized cleanup jobs
 - Consistent PDF caching
@@ -1218,12 +1270,14 @@ Document {
 Quotes should use existing Inngest email infrastructure:
 
 **Already Available:**
+
 - `EmailAudit` table (relation exists)
 - Inngest client
 - `send-email` function
 - Email templates pattern
 
 **What to Add:**
+
 - Quote email templates
 - Quote-specific email types in `emailType` field
 - Send quote action
@@ -1236,10 +1290,12 @@ Quotes should use existing Inngest email infrastructure:
 Extract reusable analytics components from Invoices:
 
 **Already Reusable:**
+
 - `stat-card.tsx` ✅
 - Chart components (with props)
 
 **Create Generic Versions:**
+
 ```tsx
 // src/features/finances/shared/components/analytics/
 
@@ -1270,6 +1326,7 @@ Extract reusable analytics components from Invoices:
 **Current:** `quotes.ts` (1004 lines)
 
 **Target:**
+
 ```
 quotes/
 ├── index.ts
@@ -1288,10 +1345,10 @@ quotes/
 ```typescript
 // mutations.ts
 export async function sendQuote(data: {
-  quoteId: string
-  recipientEmail?: string  // Override customer email
-  message?: string         // Custom message
-  attachPdf: boolean
+  quoteId: string;
+  recipientEmail?: string; // Override customer email
+  message?: string; // Custom message
+  attachPdf: boolean;
 }) {
   // 1. Validate quote is ready
   // 2. Generate PDF
@@ -1312,12 +1369,14 @@ export async function sendQuoteFollowUp(quoteId: string) {
 ```
 
 **Email Types:**
+
 - `quote-pending` - Initial quote send
 - `quote-follow-up` - Reminder
 - `quote-accepted` - Confirmation to customer
 - `quote-converted` - Notification that invoice created
 
 **Templates:**
+
 ```tsx
 // emails/quote-email.tsx
 // emails/quote-follow-up-email.tsx
@@ -1325,6 +1384,7 @@ export async function sendQuoteFollowUp(quoteId: string) {
 ```
 
 **Inngest Functions:**
+
 ```typescript
 // lib/inngest/functions/send-quote-email.ts
 export const sendQuoteEmail = inngest.createFunction(
@@ -1332,8 +1392,8 @@ export const sendQuoteEmail = inngest.createFunction(
   { event: 'quote/send.requested' },
   async ({ event, step }) => {
     // Similar pattern to invoice emails
-  }
-)
+  },
+);
 ```
 
 **Effort:** MEDIUM
@@ -1350,24 +1410,24 @@ export const sendQuoteEmail = inngest.createFunction(
 export class QuotePdfService {
   async generateQuotePdf(quoteId: string): Promise<Document> {
     // 1. Fetch quote with full details
-    const quote = await quoteRepo.findByIdWithDetails(quoteId)
+    const quote = await quoteRepo.findByIdWithDetails(quoteId);
 
     // 2. Calculate content hash
-    const hash = this.calculateQuoteHash(quote)
+    const hash = this.calculateQuoteHash(quote);
 
     // 3. Check if PDF already exists
-    const existing = await this.findDocumentByHash(hash)
+    const existing = await this.findDocumentByHash(hash);
     if (existing) {
       // Update lastAccessedAt
-      return existing
+      return existing;
     }
 
     // 4. Generate PDF from template
-    const pdf = await this.renderQuotePdf(quote)
+    const pdf = await this.renderQuotePdf(quote);
 
     // 5. Upload to S3
-    const s3Key = `quotes/${quoteId}/${hash}.pdf`
-    const s3Url = await uploadToS3(pdf, s3Key)
+    const s3Key = `quotes/${quoteId}/${hash}.pdf`;
+    const s3Url = await uploadToS3(pdf, s3Key);
 
     // 6. Save Document record
     return await prisma.document.create({
@@ -1380,8 +1440,8 @@ export class QuotePdfService {
         s3Url,
         generatedAt: new Date(),
         lastAccessedAt: new Date(),
-      }
-    })
+      },
+    });
   }
 
   private calculateQuoteHash(quote: Quote): string {
@@ -1397,6 +1457,7 @@ export class QuotePdfService {
 ```
 
 **Template:**
+
 ```tsx
 // templates/quote-template.tsx
 
@@ -1422,9 +1483,7 @@ export function QuoteTemplate({ quote }: QuoteTemplateProps) {
         <ItemsTable items={quote.items} />
 
         {/* Color palettes (if any) */}
-        {quote.items.some(i => i.colors?.length > 0) && (
-          <ColorPalettes items={quote.items} />
-        )}
+        {quote.items.some((i) => i.colors?.length > 0) && <ColorPalettes items={quote.items} />}
 
         {/* Financial summary */}
         <FinancialSummary
@@ -1442,7 +1501,7 @@ export function QuoteTemplate({ quote }: QuoteTemplateProps) {
         <QuoteFooter />
       </Page>
     </Document>
-  )
+  );
 }
 ```
 
@@ -1514,11 +1573,11 @@ async getTopCustomersByQuotedValue(limit: number = 5) {
 // components/analytics/quote-analytics.tsx
 
 export function QuoteAnalytics() {
-  const [dateRange, setDateRange] = useState<DateRange>()
+  const [dateRange, setDateRange] = useState<DateRange>();
 
-  const { data: analytics } = useQuoteAnalytics(dateRange)
-  const { data: trend } = useQuoteValueTrend()
-  const { data: topCustomers } = useTopCustomersByQuotedValue()
+  const { data: analytics } = useQuoteAnalytics(dateRange);
+  const { data: trend } = useQuoteValueTrend();
+  const { data: topCustomers } = useTopCustomersByQuotedValue();
 
   return (
     <div className="space-y-6">
@@ -1542,10 +1601,7 @@ export function QuoteAnalytics() {
           value={formatPercent(analytics.winRate)}
           description="Accepted / (Accepted + Rejected)"
         />
-        <StatCard
-          title="Avg Quote Value"
-          value={formatCurrency(analytics.averageQuoteValue)}
-        />
+        <StatCard title="Avg Quote Value" value={formatCurrency(analytics.averageQuoteValue)} />
       </div>
 
       {/* Charts */}
@@ -1559,7 +1615,7 @@ export function QuoteAnalytics() {
         <TopCustomersQuotedTable data={topCustomers} />
       </div>
     </div>
-  )
+  );
 }
 ```
 
@@ -1578,8 +1634,8 @@ export async function bulkUpdateQuoteStatus(
   quoteIds: string[],
   status: QuoteStatus,
   metadata?: {
-    reason?: string  // For cancellations
-  }
+    reason?: string; // For cancellations
+  },
 ) {
   // 1. Auth & permission check
   // 2. Validate all transitions are valid
@@ -1609,26 +1665,25 @@ export async function bulkSendQuotes(quoteIds: string[]) {
 ```tsx
 // components/bulk-actions-bar.tsx
 
-export function QuoteBulkActionsBar({
-  selectedQuoteIds,
-  onComplete,
-}) {
-  const bulkUpdateStatus = useBulkUpdateQuoteStatus()
-  const bulkDelete = useBulkDeleteQuotes()
-  const bulkSend = useBulkSendQuotes()
+export function QuoteBulkActionsBar({ selectedQuoteIds, onComplete }) {
+  const bulkUpdateStatus = useBulkUpdateQuoteStatus();
+  const bulkDelete = useBulkDeleteQuotes();
+  const bulkSend = useBulkSendQuotes();
 
   return (
     <div className="flex items-center gap-2">
       <Badge>{selectedQuoteIds.length} selected</Badge>
 
-      <Button onClick={() => bulkSend.mutate(selectedQuoteIds)}>
-        Send All
-      </Button>
+      <Button onClick={() => bulkSend.mutate(selectedQuoteIds)}>Send All</Button>
 
-      <Button onClick={() => bulkUpdateStatus.mutate({
-        ids: selectedQuoteIds,
-        status: 'CANCELLED'
-      })}>
+      <Button
+        onClick={() =>
+          bulkUpdateStatus.mutate({
+            ids: selectedQuoteIds,
+            status: 'CANCELLED',
+          })
+        }
+      >
         Cancel All
       </Button>
 
@@ -1636,7 +1691,7 @@ export function QuoteBulkActionsBar({
         Delete All
       </Button>
     </div>
-  )
+  );
 }
 ```
 
@@ -1775,8 +1830,8 @@ CREATE INDEX "Quote_status_validUntil_idx" ON "Quote"("status", "validUntil");
 // src/actions/quotes/index.ts
 // Maintains backward compatibility for existing imports
 
-export * from './queries'
-export * from './mutations'
+export * from './queries';
+export * from './mutations';
 
 // Before: import { getQuotes } from '@/actions/quotes'
 // After:  import { getQuotes } from '@/actions/quotes' // Still works!
@@ -1792,8 +1847,8 @@ During transition period, support both old and new APIs:
 
 // Add adapter during migration
 export async function getQuoteAttachments(quoteId: string) {
-  const documents = await getQuoteDocuments(quoteId)
-  return documents.map(documentToAttachmentAdapter)
+  const documents = await getQuoteDocuments(quoteId);
+  return documents.map(documentToAttachmentAdapter);
 }
 
 // After all consumers updated, deprecate old function
@@ -1809,7 +1864,7 @@ When refactoring components, maintain prop compatibility:
 
 // Create wrapper during transition
 export function QuoteStatusBadge(props) {
-  return <StatusBadge type="quote" {...props} />
+  return <StatusBadge type="quote" {...props} />;
 }
 ```
 
@@ -1856,6 +1911,7 @@ export function QuoteStatusBadge(props) {
 **Problem Identified:** The Quotes feature has a **critical security vulnerability**. All quote actions only check authentication (user is logged in) but do NOT check authorization (user has permission to manage quotes).
 
 **Current Code:**
+
 ```typescript
 // quotes.ts - Lines 212-214 (and ~20 other actions)
 const session = await auth();
@@ -1938,6 +1994,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Communicate to team about permission requirements
 
 **Deliverables:**
+
 - ✅ All quote mutations protected by `canManageQuotes` permission
 - ✅ All quote queries protected by `canReadQuotes` permission
 - ✅ Role-based access control enforced
@@ -1946,6 +2003,7 @@ export async function [anyQuoteQuery](params) {
 **Risk:** NONE - Pure addition, no breaking changes
 
 **Validation Checklist:**
+
 - [ ] User without permissions sees "You do not have permission" error
 - [ ] User with permissions can perform actions normally
 - [ ] No regressions in existing functionality
@@ -1987,6 +2045,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Set up test database seeding
 
 **Deliverables:**
+
 - ✅ Consistent action file structure
 - ✅ Shared component library started
 - ✅ Improved database performance
@@ -2043,6 +2102,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Test workflow
 
 **Deliverables:**
+
 - ✅ Professional PDF quotes
 - ✅ Automated email sending
 - ✅ Follow-up reminder system
@@ -2051,6 +2111,7 @@ export async function [anyQuoteQuery](params) {
 **Risk:** MEDIUM - New integrations, but using proven patterns from Invoices
 
 **Validation:**
+
 - [ ] Can send quote email with PDF attachment
 - [ ] Can send follow-up reminders
 - [ ] EmailAudit records created correctly
@@ -2104,6 +2165,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Write tests
 
 **Deliverables:**
+
 - ✅ Quote analytics dashboard
 - ✅ Revenue trend visualization
 - ✅ Conversion funnel analysis
@@ -2112,6 +2174,7 @@ export async function [anyQuoteQuery](params) {
 **Risk:** LOW - Proven analytics pattern from Invoices
 
 **Validation:**
+
 - [ ] Analytics load quickly (<2s)
 - [ ] Charts render correctly
 - [ ] Date filtering works
@@ -2172,6 +2235,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Mobile responsiveness check
 
 **Deliverables:**
+
 - ✅ Bulk operations
 - ✅ Quote duplication
 - ✅ Unified permission system
@@ -2181,6 +2245,7 @@ export async function [anyQuoteQuery](params) {
 **Risk:** LOW - Incremental improvements
 
 **Validation:**
+
 - [ ] All tests passing
 - [ ] No performance regressions
 - [ ] Documentation complete
@@ -2223,6 +2288,7 @@ export async function [anyQuoteQuery](params) {
    - [ ] Final stakeholder review
 
 **Deliverables:**
+
 - ✅ Clean codebase
 - ✅ Deprecated code removed
 - ✅ Production-ready
@@ -2244,6 +2310,7 @@ export async function [anyQuoteQuery](params) {
 **Impact:** HIGH
 
 **Mitigation:**
+
 - Test migration on production snapshot
 - Implement migration in batches (1000 records at a time)
 - Add migration progress tracking
@@ -2251,6 +2318,7 @@ export async function [anyQuoteQuery](params) {
 - Schedule during low-traffic window
 
 **Rollback Plan:**
+
 ```sql
 -- Rollback: restore QuoteAttachment tables
 CREATE TABLE "QuoteAttachment" AS
@@ -2266,6 +2334,7 @@ SELECT * FROM "Document" WHERE kind = 'QUOTE';
 **Impact:** MEDIUM
 
 **Mitigation:**
+
 - Implement test mode for emails (send to override address)
 - Add retry logic (already in Inngest)
 - Monitor EmailAudit for failed sends
@@ -2273,10 +2342,11 @@ SELECT * FROM "Document" WHERE kind = 'QUOTE';
 - Add manual retry button in UI
 
 **Monitoring:**
+
 ```typescript
 // Alert when failure rate > 5%
 if (failedEmails / totalEmails > 0.05) {
-  sendAlert('Email delivery degraded')
+  sendAlert('Email delivery degraded');
 }
 ```
 
@@ -2288,6 +2358,7 @@ if (failedEmails / totalEmails > 0.05) {
 **Impact:** MEDIUM
 
 **Mitigation:**
+
 - Implement content-based caching (fileHash)
 - Generate PDFs asynchronously (background job)
 - Add PDF generation queue
@@ -2295,11 +2366,12 @@ if (failedEmails / totalEmails > 0.05) {
 - Monitor generation time (alert if >5s)
 
 **Optimization:**
+
 ```typescript
 // Pre-generate PDF on quote status change to SENT
 onQuoteStatusChange(quote, 'SENT', async () => {
-  await quotePdfService.generateQuotePdf(quote.id) // Background job
-})
+  await quotePdfService.generateQuotePdf(quote.id); // Background job
+});
 ```
 
 #### Risk 4: Breaking Changes During Refactor
@@ -2310,6 +2382,7 @@ onQuoteStatusChange(quote, 'SENT', async () => {
 **Impact:** HIGH
 
 **Mitigation:**
+
 - Maintain backward compatibility via barrel exports
 - Use TypeScript to catch import errors
 - Run full test suite before merging
@@ -2317,6 +2390,7 @@ onQuoteStatusChange(quote, 'SENT', async () => {
 - Have feature flag for rollback
 
 **Validation:**
+
 ```bash
 # Find all imports of quote actions
 grep -r "from '@/actions/quotes'" src/
@@ -2331,6 +2405,7 @@ grep -r "from '@/actions/quotes'" src/
 **Impact:** MEDIUM
 
 **Mitigation:**
+
 - Add composite indexes for common queries
 - Use database aggregations (not application-level)
 - Cache analytics results (React Query with 60s stale time)
@@ -2339,6 +2414,7 @@ grep -r "from '@/actions/quotes'" src/
 - Monitor query performance
 
 **Optimization:**
+
 ```typescript
 // Use database aggregation instead of fetching all records
 const stats = await prisma.quote.aggregate({
@@ -2346,7 +2422,7 @@ const stats = await prisma.quote.aggregate({
   _avg: { amount: true },
   _count: true,
   where: dateFilter,
-})
+});
 ```
 
 ### Business Risks
@@ -2359,6 +2435,7 @@ const stats = await prisma.quote.aggregate({
 **Impact:** LOW
 
 **Mitigation:**
+
 - Create video tutorials
 - Add in-app tooltips for new features
 - Send announcement email with feature guide
@@ -2366,6 +2443,7 @@ const stats = await prisma.quote.aggregate({
 - Create FAQ document
 
 **Training Plan:**
+
 - Week 1: Email announcement with video
 - Week 2: In-app onboarding tooltips
 - Week 3: Office hours session
@@ -2379,12 +2457,14 @@ const stats = await prisma.quote.aggregate({
 **Impact:** LOW
 
 **Mitigation:**
+
 - Clearly document feature differences
 - Explain domain-specific rationale (e.g., no payments on quotes)
 - Gather user feedback on desired features
 - Prioritize based on value
 
 **Communication:**
+
 - "Quotes and Invoices serve different purposes. Here's what makes each unique..."
 
 ### Trade-offs
@@ -2394,15 +2474,18 @@ const stats = await prisma.quote.aggregate({
 **Decision:** Create shared components but allow feature-specific overrides
 
 **Pros:**
+
 - ✅ Consistent UX
 - ✅ Less code duplication
 - ✅ Easier maintenance
 
 **Cons:**
+
 - ⚠️ Shared components can become complex with many conditional props
 - ⚠️ Changes affect multiple features
 
 **Approach:**
+
 - Extract truly generic components (StatCard, charts)
 - Keep feature-specific components separate (payment recording, versioning)
 - Use composition over inheritance
@@ -2412,11 +2495,13 @@ const stats = await prisma.quote.aggregate({
 **Decision:** Unify on Document model with `kind` enum
 
 **Pros:**
+
 - ✅ Single file management system
 - ✅ Centralized cleanup jobs
 - ✅ Consistent S3 strategy
 
 **Cons:**
+
 - ⚠️ More complex queries (filter by kind)
 - ⚠️ Migration effort required
 
@@ -2427,11 +2512,13 @@ const stats = await prisma.quote.aggregate({
 **Decision:** Split actions into queries and mutations
 
 **Pros:**
+
 - ✅ Better code organization
 - ✅ Consistent with CQRS principles
 - ✅ Easier to find specific operations
 
 **Cons:**
+
 - ⚠️ More files to manage
 - ⚠️ Slightly more complex imports (mitigated by barrel exports)
 
@@ -2442,11 +2529,13 @@ const stats = await prisma.quote.aggregate({
 **Decision:** Build comprehensive analytics despite implementation cost
 
 **Pros:**
+
 - ✅ Data-driven decision making
 - ✅ Business insights
 - ✅ Competitive feature
 
 **Cons:**
+
 - ⚠️ Development time
 - ⚠️ Query performance considerations
 - ⚠️ UI complexity
@@ -2458,11 +2547,13 @@ const stats = await prisma.quote.aggregate({
 **Decision:** Provide automated email with manual override option
 
 **Pros:**
+
 - ✅ Workflow efficiency
 - ✅ Consistency
 - ✅ Professional delivery
 
 **Cons:**
+
 - ⚠️ Less control for users who want to customize heavily
 - ⚠️ Dependency on email service
 
@@ -2517,6 +2608,7 @@ const stats = await prisma.quote.aggregate({
 The Invoices feature represents a mature, well-architected implementation with recent enhancements that set a high standard. The Quotes feature, while functional, has a **critical security vulnerability** (missing authorization checks) and significant gaps in critical areas (email, PDF, analytics) plus structural inconsistencies (monolithic actions file).
 
 **This alignment plan provides a clear path to:**
+
 1. ✅ Match Invoice code quality and organization
 2. ✅ Add missing critical features (email, PDF)
 3. ✅ Implement business-value analytics
@@ -2529,6 +2621,7 @@ The Invoices feature represents a mature, well-architected implementation with r
 **Security Risk:** CRITICAL (Phase 0 must be deployed immediately)
 
 **Recommendation:**
+
 1. **IMMEDIATE:** Deploy Phase 0 (security fix) as hotfix - cannot wait
 2. **Then proceed:** Phase 1 (foundation) to establish consistency
 3. **Followed by:** Phase 2 (critical features) to close major capability gaps
@@ -2536,6 +2629,7 @@ The Invoices feature represents a mature, well-architected implementation with r
 ---
 
 **Next Steps:**
+
 1. **🚨 IMMEDIATE:** Deploy Phase 0 security fix (1 day - hotfix branch)
 2. Review and approve full alignment plan
 3. Allocate engineering resources for Phases 1-5

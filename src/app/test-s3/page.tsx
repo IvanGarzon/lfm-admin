@@ -142,22 +142,22 @@ export default function TestS3Page() {
   const filesByResourceType = s3Files.reduce(
     (acc, file) => {
       if (!file.resourceType) return acc;
-      
+
       if (!acc[file.resourceType]) {
         acc[file.resourceType] = {};
       }
-      
+
       // Group by resourceId
       if (!acc[file.resourceType][file.resourceId]) {
         acc[file.resourceType][file.resourceId] = {};
       }
-      
+
       // Group by subPath (e.g., "items", "attachments", "pdfs")
       const subPathKey = file.subPath || '_root';
       if (!acc[file.resourceType][file.resourceId][subPathKey]) {
         acc[file.resourceType][file.resourceId][subPathKey] = [];
       }
-      
+
       acc[file.resourceType][file.resourceId][subPathKey].push(file);
       return acc;
     },
@@ -787,7 +787,8 @@ export default function TestS3Page() {
                       <Box className="min-w-0 flex-1">
                         <p className="font-medium truncate">{file.fileName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {file.resourceType}/{file.resourceId} • {file.fileType} • {formatFileSize(file.size)} •{' '}
+                          {file.resourceType}/{file.resourceId} • {file.fileType} •{' '}
+                          {formatFileSize(file.size)} •{' '}
                           {new Date(file.lastModified).toLocaleString()}
                         </p>
                         <p className="text-xs text-muted-foreground truncate mt-1">{file.key}</p>
@@ -817,10 +818,10 @@ export default function TestS3Page() {
               Object.entries(filesByResourceType).map(([resourceType, resourceFolders]) => {
                 const resourceTypeId = resourceType;
                 const isResourceTypeExpanded = expandedFolders.has(resourceTypeId);
-                
+
                 // Calculate totals across all subfolders
-                const allFiles = Object.values(resourceFolders).flatMap(subPaths => 
-                  Object.values(subPaths).flat()
+                const allFiles = Object.values(resourceFolders).flatMap((subPaths) =>
+                  Object.values(subPaths).flat(),
                 );
                 const totalFiles = allFiles.length;
                 const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
@@ -845,7 +846,9 @@ export default function TestS3Page() {
                         )}
                         <span className="font-bold capitalize text-lg">{resourceType}/</span>
                         <span className="text-sm text-muted-foreground">
-                          ({Object.keys(resourceFolders).length} folder{Object.keys(resourceFolders).length !== 1 ? 's' : ''}, {totalFiles} file{totalFiles !== 1 ? 's' : ''})
+                          ({Object.keys(resourceFolders).length} folder
+                          {Object.keys(resourceFolders).length !== 1 ? 's' : ''}, {totalFiles} file
+                          {totalFiles !== 1 ? 's' : ''})
                         </span>
                       </Box>
                       <span className="text-sm text-muted-foreground font-medium">
@@ -859,11 +862,14 @@ export default function TestS3Page() {
                         {Object.entries(resourceFolders).map(([resourceId, subPaths]) => {
                           const resourceIdFolderId = `${resourceType}/${resourceId}`;
                           const isResourceIdExpanded = expandedFolders.has(resourceIdFolderId);
-                          
+
                           const resourceIdFiles = Object.values(subPaths).flat();
                           const resourceIdFileCount = resourceIdFiles.length;
-                          const resourceIdSize = resourceIdFiles.reduce((sum, f) => sum + f.size, 0);
-                          
+                          const resourceIdSize = resourceIdFiles.reduce(
+                            (sum, f) => sum + f.size,
+                            0,
+                          );
+
                           return (
                             <Box key={resourceIdFolderId} className="border-t">
                               {/* Resource ID Header */}
@@ -887,7 +893,8 @@ export default function TestS3Page() {
                                   )}
                                   <span className="font-medium">{resourceId}/</span>
                                   <span className="text-sm text-muted-foreground">
-                                    ({resourceIdFileCount} file{resourceIdFileCount !== 1 ? 's' : ''})
+                                    ({resourceIdFileCount} file
+                                    {resourceIdFileCount !== 1 ? 's' : ''})
                                   </span>
                                 </Box>
                                 <span className="text-xs text-muted-foreground">
@@ -902,7 +909,7 @@ export default function TestS3Page() {
                                     const subPathFolderId = `${resourceType}/${resourceId}/${subPath}`;
                                     const isSubPathExpanded = expandedFolders.has(subPathFolderId);
                                     const subPathSize = files.reduce((sum, f) => sum + f.size, 0);
-                                    
+
                                     return (
                                       <Box key={subPathFolderId} className="border-t">
                                         {/* SubPath Header */}
@@ -924,7 +931,9 @@ export default function TestS3Page() {
                                             ) : (
                                               <Folder className="h-4 w-4 text-green-600 dark:text-green-500" />
                                             )}
-                                            <span className="text-sm font-medium">{subPath === '_root' ? '(root)' : subPath}/</span>
+                                            <span className="text-sm font-medium">
+                                              {subPath === '_root' ? '(root)' : subPath}/
+                                            </span>
                                             <span className="text-xs text-muted-foreground">
                                               ({files.length} file{files.length !== 1 ? 's' : ''})
                                             </span>
@@ -946,10 +955,15 @@ export default function TestS3Page() {
                                                   <Box className="flex items-center gap-3 flex-1 min-w-0 pl-20">
                                                     <FileIcon className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                                                     <Box className="min-w-0 flex-1">
-                                                      <p className="font-medium truncate text-sm">{file.fileName}</p>
+                                                      <p className="font-medium truncate text-sm">
+                                                        {file.fileName}
+                                                      </p>
                                                       <p className="text-xs text-muted-foreground">
-                                                        {file.fileType} • {formatFileSize(file.size)} •{' '}
-                                                        {new Date(file.lastModified).toLocaleString()}
+                                                        {file.fileType} •{' '}
+                                                        {formatFileSize(file.size)} •{' '}
+                                                        {new Date(
+                                                          file.lastModified,
+                                                        ).toLocaleString()}
                                                       </p>
                                                     </Box>
                                                   </Box>
@@ -957,14 +971,18 @@ export default function TestS3Page() {
                                                     <Button
                                                       variant="outline"
                                                       size="sm"
-                                                      onClick={() => downloadFileFromExplorer(file.key)}
+                                                      onClick={() =>
+                                                        downloadFileFromExplorer(file.key)
+                                                      }
                                                     >
                                                       <Download className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                       variant="outline"
                                                       size="sm"
-                                                      onClick={() => deleteFileFromExplorer(file.key)}
+                                                      onClick={() =>
+                                                        deleteFileFromExplorer(file.key)
+                                                      }
                                                     >
                                                       <Trash2 className="h-4 w-4" />
                                                     </Button>

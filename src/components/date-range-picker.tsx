@@ -13,10 +13,10 @@ interface CalendarDateRangePickerProps extends React.HTMLAttributes<HTMLDivEleme
   onDateChange?: (date: DateRange | undefined) => void;
 }
 
-export function CalendarDateRangePicker({ 
+export function CalendarDateRangePicker({
   className,
   date: externalDate,
-  onDateChange
+  onDateChange,
 }: CalendarDateRangePickerProps) {
   const [internalDate, setInternalDate] = React.useState<DateRange | undefined>({
     from: new Date(),

@@ -125,4 +125,3 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
     throw error;
   }
 }
-

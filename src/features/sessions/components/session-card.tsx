@@ -15,7 +15,10 @@ import {
 import { useExtendSession } from '@/features/sessions/hooks/use-sessions';
 
 // Helper function to format last active time
-function formatLastActive(lastActiveAt: Date | string | null | undefined, isCurrent: boolean): string {
+function formatLastActive(
+  lastActiveAt: Date | string | null | undefined,
+  isCurrent: boolean,
+): string {
   if (!lastActiveAt) return 'Never active';
 
   const lastActive = new Date(lastActiveAt);
@@ -46,7 +49,7 @@ export function SessionCard({
 }) {
   const isCurrent = session.isCurrent || false;
   const { mutate: extendSession, isPending: isExtending } = useExtendSession();
-  
+
   // Calculate expiration status
   const expiresAt = new Date(session.expires);
   const now = new Date();
@@ -69,8 +72,8 @@ export function SessionCard({
         selected
           ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100'
           : isCurrent
-          ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/20'
-          : 'bg-white border-gray-200 hover:border-gray-300'
+            ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/20'
+            : 'bg-white border-gray-200 hover:border-gray-300'
       }`}
     >
       {/* Card Header - Session Name and Badge/Action */}
@@ -87,10 +90,13 @@ export function SessionCard({
             {session.deviceName || session.deviceModel || deviceTypeDisplay.label}
           </h6>
         </Box>
-        
+
         <Box className="flex items-center gap-2">
           {isCurrent ? (
-            <Badge variant="default" className="shrink-0 bg-primary text-white text-xs whitespace-nowrap">
+            <Badge
+              variant="default"
+              className="shrink-0 bg-primary text-white text-xs whitespace-nowrap"
+            >
               Current Session
             </Badge>
           ) : (
@@ -126,11 +132,17 @@ export function SessionCard({
         <Box className="flex-1 min-w-0 space-y-3">
           {/* OS and Browser Badges */}
           <Box className="flex items-center gap-2">
-            <Badge variant="outline" className={`shrink-0 flex items-center gap-1 ${osDisplay.bgColor} border-0`}>
+            <Badge
+              variant="outline"
+              className={`shrink-0 flex items-center gap-1 ${osDisplay.bgColor} border-0`}
+            >
               <osDisplay.Icon className={`w-3 h-3 ${osDisplay.color}`} />
               <span className={`text-xs ${osDisplay.color}`}>{osDisplay.label}</span>
             </Badge>
-            <Badge variant="outline" className={`shrink-0 flex items-center gap-1 ${browserDisplay.bgColor} border-0`}>
+            <Badge
+              variant="outline"
+              className={`shrink-0 flex items-center gap-1 ${browserDisplay.bgColor} border-0`}
+            >
               <browserDisplay.Icon className={`w-3 h-3 ${browserDisplay.color}`} />
               <span className={`text-xs ${browserDisplay.color}`}>{browserDisplay.label}</span>
             </Badge>
@@ -141,25 +153,22 @@ export function SessionCard({
             <p className="text-xs text-gray-500 truncate font-medium" suppressHydrationWarning>
               {formatLastActive(session.lastActiveAt, isCurrent)}
             </p>
-            
+
             <p className="text-xs text-gray-500 truncate" title="Location">
-              {[session.city, session.region, session.country].filter(Boolean).join(', ') || 'Location unknown'}
+              {[session.city, session.region, session.country].filter(Boolean).join(', ') ||
+                'Location unknown'}
             </p>
-            
+
             <p className="text-xs text-gray-400 truncate" suppressHydrationWarning>
               Created {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
             </p>
-            
+
             <Box className="flex gap-2 text-xs text-gray-400 truncate">
-              {session.ipAddress ? (
-                <span>IP: {session.ipAddress}</span>
-              ): null}
-              {session.timezone ? (
-                <span>• {session.timezone}</span>
-              ): null}
+              {session.ipAddress ? <span>IP: {session.ipAddress}</span> : null}
+              {session.timezone ? <span>• {session.timezone}</span> : null}
             </Box>
           </Box>
-          
+
           {/* Expiration & Extension */}
           <Box className="flex items-center justify-between pt-2 border-t border-dashed">
             <Box className="flex items-center gap-1.5">
@@ -168,11 +177,14 @@ export function SessionCard({
               ) : (
                 <Clock className="w-3.5 h-3.5 text-gray-400" />
               )}
-              <span className={`text-xs ${isExpiringSoon ? 'text-amber-600 font-medium' : 'text-gray-500'}`} suppressHydrationWarning>
+              <span
+                className={`text-xs ${isExpiringSoon ? 'text-amber-600 font-medium' : 'text-gray-500'}`}
+                suppressHydrationWarning
+              >
                 Expires {formatDistanceToNow(expiresAt, { addSuffix: true })}
               </span>
             </Box>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -180,9 +192,7 @@ export function SessionCard({
               disabled={isExtending}
               className="h-6 px-2 text-xs hover:bg-primary/5 text-primary"
             >
-              {isExtending ? (
-                <Loader2 className="w-3 h-3 animate-spin mr-1" />
-              ) : null}
+              {isExtending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
               Extend Session
             </Button>
           </Box>

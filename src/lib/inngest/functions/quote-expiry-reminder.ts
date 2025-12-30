@@ -16,7 +16,10 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
     name: 'Send Quote Expiry Reminders',
     retries: 3,
   },
-  { cron: '0 9 * * *' }, // Daily at 9 AM
+  [
+    { cron: '0 9 * * *' }, // Daily at 9 AM
+    { event: 'quote-expiry-reminder/manual' }, // Manual trigger
+  ],
   async ({ step }) => {
     logger.info('Inngest function triggered - quote expiry reminder', {
       context: 'inngest-quote-expiry-reminder',
@@ -98,5 +101,5 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
     });
 
     return { success: true, total: expiringQuotes.length, queued: queuedCount };
-  }
+  },
 );

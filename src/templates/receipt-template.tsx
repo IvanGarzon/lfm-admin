@@ -325,7 +325,7 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Image src={logoUrl || "/static/logo-green-800.png"} style={styles.logo} />
+            <Image src={logoUrl || '/static/logo-green-800.png'} style={styles.logo} />
           </View>
         </View>
 
@@ -427,7 +427,9 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
                   <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
                   <Text style={styles.paymentCol2}>{payment.method}</Text>
                   <Text style={styles.paymentCol3}>{payment.notes || '-'}</Text>
-                  <Text style={styles.paymentCol4}>{formatCurrency({ number: payment.amount })}</Text>
+                  <Text style={styles.paymentCol4}>
+                    {formatCurrency({ number: payment.amount })}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -455,7 +457,8 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           <View style={styles.footerLine} />
           <View style={styles.footerContent}>
             <Text style={styles.footerLeft}>
-              Receipt #{invoice.receiptNumber || invoice.invoiceNumber} · {formatCurrency({ number: total })} paid on{' '}
+              Receipt #{invoice.receiptNumber || invoice.invoiceNumber} ·{' '}
+              {formatCurrency({ number: total })} paid on{' '}
               {invoice.paidDate ? format(invoice.paidDate, 'MMM d, yyyy') : 'N/A'}
             </Text>
             <Text

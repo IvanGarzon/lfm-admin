@@ -374,7 +374,7 @@ export function InvoiceDrawer({
                                 <BellRing className="h-4 w-4" />
                                 Send reminder
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={handleCancelDialog}
                                 className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
                               >
@@ -467,8 +467,8 @@ export function InvoiceDrawer({
 
                       {/* HTML Preview Content */}
                       <Box className="flex-1 overflow-hidden">
-                        <InvoicePreview 
-                          invoice={invoice} 
+                        <InvoicePreview
+                          invoice={invoice}
                           items={items}
                           payments={payments}
                           isLoadingItems={isLoadingItems}

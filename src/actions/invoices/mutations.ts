@@ -16,7 +16,7 @@ import {
   type UpdateInvoiceInput,
   type RecordPaymentInput,
   type MarkInvoiceAsPendingInput,
-  type CancelInvoiceInput,  
+  type CancelInvoiceInput,
 } from '@/schemas/invoices';
 import { requirePermission } from '@/lib/permissions';
 import { InvoiceStatus } from '@/prisma/client';
@@ -38,10 +38,10 @@ export async function createInvoice(
     return { success: false, error: 'Unauthorized' };
   }
 
-  try {    
+  try {
     requirePermission(session.user, 'canManageInvoices');
     const validatedData = CreateInvoiceSchema.parse(data);
-    
+
     const invoice = await invoiceRepo.createInvoiceWithItems(validatedData, session.user.id);
 
     revalidatePath('/finances/invoices');
@@ -118,34 +118,41 @@ export async function markInvoiceAsPending(
     // Queue email for background processing via Inngest
     const { queueInvoiceEmail } = await import('@/services/email-queue.service');
 
-    queueInvoiceEmail({
-      invoiceId: invoice.id,
-      customerId: invoice.customer.id,
-      type: 'pending',
-      recipient: invoice.customer.email,
-      subject: `Invoice ${invoice.invoiceNumber}`,
-      emailData: {
-        invoiceNumber: invoice.invoiceNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: Number(invoice.amount),
-        currency: invoice.currency,
-        dueDate: invoice.dueDate,
-        issuedDate: invoice.issuedDate,
-      },
-    }).catch(err => {
+    try {
+      await queueInvoiceEmail({
+        invoiceId: invoice.id,
+        customerId: invoice.customer.id,
+        type: 'pending',
+        recipient: invoice.customer.email,
+        subject: `Invoice ${invoice.invoiceNumber}`,
+        emailData: {
+          invoiceNumber: invoice.invoiceNumber,
+          customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+          amount: Number(invoice.amount),
+          currency: invoice.currency,
+          dueDate: invoice.dueDate,
+          issuedDate: invoice.issuedDate,
+        },
+      });
+
+      logger.info('Invoice marked as pending, email queued', {
+        context: 'markInvoiceAsPending',
+        metadata: {
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+        },
+      });
+    } catch (err) {
       logger.error('Failed to queue invoice email', err, {
         context: 'markInvoiceAsPending',
-        metadata: { invoiceId: invoice.id }
+        metadata: { invoiceId: invoice.id },
       });
-    });
 
-    logger.info('Invoice marked as pending, email queued', {
-      context: 'markInvoiceAsPending',
-      metadata: {
-        invoiceId: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
-      },
-    });
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Failed to queue invoice email',
+      };
+    }
 
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${invoice.id}`);
@@ -224,7 +231,7 @@ export async function recordPayment(
         id: invoice.id,
         status: invoice.status,
         receiptNumber: invoice.receiptNumber,
-      }
+      },
     };
   } catch (error) {
     return handleActionError(error, 'Failed to record payment', {
@@ -288,7 +295,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
   try {
     // Get full invoice details
     let invoice = await invoiceRepo.findByIdWithDetails(id);
-    
+
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };
     }
@@ -326,36 +333,43 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
     // Queue receipt email for background processing via Inngest
     const { queueInvoiceEmail } = await import('@/services/email-queue.service');
 
-    queueInvoiceEmail({
-      invoiceId: invoice.id,
-      customerId: invoice.customer.id,
-      type: 'receipt',
-      recipient: invoice.customer.email,
-      subject: `Payment Receipt ${invoice.receiptNumber || invoice.invoiceNumber}`,
-      emailData: {
-        invoiceNumber: invoice.invoiceNumber,
-        receiptNumber: invoice.receiptNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: Number(invoice.amount),
-        currency: invoice.currency,
-        paidDate: invoice.paidDate || new Date(),
-        paymentMethod: invoice.paymentMethod || 'Not specified',
-      },
-    }).catch(err => {
+    try {
+      await queueInvoiceEmail({
+        invoiceId: invoice.id,
+        customerId: invoice.customer.id,
+        type: 'receipt',
+        recipient: invoice.customer.email,
+        subject: `Payment Receipt ${invoice.receiptNumber || invoice.invoiceNumber}`,
+        emailData: {
+          invoiceNumber: invoice.invoiceNumber,
+          receiptNumber: invoice.receiptNumber,
+          customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+          amount: Number(invoice.amount),
+          currency: invoice.currency,
+          paidDate: invoice.paidDate || new Date(),
+          paymentMethod: invoice.paymentMethod || 'Not specified',
+        },
+      });
+
+      logger.info('Receipt email queued', {
+        context: 'sendInvoiceReceipt',
+        metadata: {
+          invoiceId: id,
+          invoiceNumber: invoice.invoiceNumber,
+          receiptNumber: invoice.receiptNumber,
+        },
+      });
+    } catch (err) {
       logger.error('Failed to queue receipt email', err, {
         context: 'sendInvoiceReceipt',
-        metadata: { invoiceId: invoice.id }
+        metadata: { invoiceId: invoice.id },
       });
-    });
 
-    logger.info('Receipt email queued', {
-      context: 'sendInvoiceReceipt',
-      metadata: {
-        invoiceId: id,
-        invoiceNumber: invoice.invoiceNumber,
-        receiptNumber: invoice.receiptNumber,
-      },
-    });
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Failed to queue receipt email',
+      };
+    }
 
     return { success: true, data: { id: invoice.id } };
   } catch (error) {
@@ -372,13 +386,19 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
  * Updates the status of multiple invoices in a single operation.
  * @param ids - An array of invoice IDs to update.
  * @param status - The new status to apply to the invoices.
- * @returns A promise that resolves to an `ActionResult` containing bulk update results, 
+ * @returns A promise that resolves to an `ActionResult` containing bulk update results,
  * including success and failure counts and individual operation results.
  */
 export async function bulkUpdateInvoiceStatus(
   ids: string[],
   status: InvoiceStatus,
-): Promise<ActionResult<{ successCount: number; failureCount: number; results: { id: string; success: boolean; error?: string }[] }>> {
+): Promise<
+  ActionResult<{
+    successCount: number;
+    failureCount: number;
+    results: { id: string; success: boolean; error?: string }[];
+  }>
+> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -386,19 +406,19 @@ export async function bulkUpdateInvoiceStatus(
 
   try {
     const results = await invoiceRepo.bulkUpdateStatus(ids, status, session.user.id);
-    
-    const successCount = results.filter(r => r.success).length;
-    const failureCount = results.filter(r => !r.success).length;
-    
+
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
     revalidatePath('/finances/invoices');
 
-    return { 
-      success: true, 
-      data: { 
-        successCount, 
+    return {
+      success: true,
+      data: {
+        successCount,
         failureCount,
-        results 
-      } 
+        results,
+      },
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update invoices');
@@ -429,7 +449,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
     const today = new Date();
     const daysOverdue = Math.max(
       0,
-      Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
+      Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
     // Only send reminder if invoice is actually overdue
@@ -473,49 +493,57 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
     if (lastCustomerReminder) {
       return {
         success: false,
-        error: 'A reminder was recently sent to this customer for another invoice. Please wait at least an hour before sending another one.',
+        error:
+          'A reminder was recently sent to this customer for another invoice. Please wait at least an hour before sending another one.',
       };
     }
 
     // Queue reminder email for background processing via Inngest
     const { queueInvoiceEmail } = await import('@/services/email-queue.service');
 
-    queueInvoiceEmail({
-      invoiceId: invoice.id,
-      customerId: invoice.customer.id,
-      type: 'reminder',
-      recipient: invoice.customer.email,
-      subject: `Payment Reminder: Invoice ${invoice.invoiceNumber} - ${daysOverdue} Days Overdue`,
-      emailData: {
-        invoiceNumber: invoice.invoiceNumber,
-        customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
-        amount: Number(invoice.amount),
-        currency: invoice.currency,
-        dueDate: invoice.dueDate,
-        daysOverdue,
-        amountPaid: Number(invoice.amountPaid),
-        amountDue: Number(invoice.amountDue),
-      },
-    }).catch(err => {
+    try {
+      await queueInvoiceEmail({
+        invoiceId: invoice.id,
+        customerId: invoice.customer.id,
+        type: 'reminder',
+        recipient: invoice.customer.email,
+        subject: `Payment Reminder: Invoice ${invoice.invoiceNumber} - ${daysOverdue} Days Overdue`,
+        emailData: {
+          invoiceNumber: invoice.invoiceNumber,
+          customerName: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+          amount: Number(invoice.amount),
+          currency: invoice.currency,
+          dueDate: invoice.dueDate,
+          daysOverdue,
+          amountPaid: Number(invoice.amountPaid),
+          amountDue: Number(invoice.amountDue),
+        },
+      });
+
+      logger.info('Reminder email queued', {
+        context: 'sendInvoiceReminder',
+        metadata: {
+          invoiceId: id,
+          invoiceNumber: invoice.invoiceNumber,
+          daysOverdue,
+        },
+      });
+    } catch (err) {
       logger.error('Failed to queue reminder email', err, {
         context: 'sendInvoiceReminder',
-        metadata: { invoiceId: invoice.id }
+        metadata: { invoiceId: invoice.id },
       });
-    });
+
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Failed to queue reminder email',
+      };
+    }
 
     const updatedInvoice = await invoiceRepo.incrementReminderCount(id);
     if (!updatedInvoice) {
       return { success: false, error: 'Failed to update reminder count' };
     }
-
-    logger.info('Reminder email queued', {
-      context: 'sendInvoiceReminder',
-      metadata: {
-        invoiceId: id,
-        invoiceNumber: invoice.invoiceNumber,
-        daysOverdue,
-      },
-    });
 
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${id}`);

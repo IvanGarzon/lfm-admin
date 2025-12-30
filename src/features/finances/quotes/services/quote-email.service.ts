@@ -31,7 +31,7 @@ function getEmailRecipient(originalRecipient: string): string {
  */
 export async function processQuoteEmail(
   quoteId: string,
-  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup'
+  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup',
 ): Promise<{ success: true; emailId?: string }> {
   const quote = await quoteRepository.findByIdWithDetails(quoteId);
 
@@ -60,11 +60,10 @@ export async function processQuoteEmail(
  * Process sent notification email (when quote is marked as SENT)
  */
 async function processSentNotification(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
@@ -112,16 +111,15 @@ async function processSentNotification(
  * Process reminder email (quote expiring soon)
  */
 async function processReminder(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // Calculate days until expiry
   const daysUntilExpiry = Math.max(
     0,
-    Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
   );
 
   // 1. Generate PDF
@@ -171,11 +169,10 @@ async function processReminder(
  * Process accepted confirmation email
  */
 async function processAccepted(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // 1. Generate PDF (use cached version, no regeneration needed)
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
@@ -223,11 +220,10 @@ async function processAccepted(
  * Process rejected notification email
  */
 async function processRejected(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
@@ -275,12 +271,11 @@ async function processRejected(
  * Process expired notification email
  */
 async function processExpired(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
   // For expired quotes, we can skip PDF attachment to reduce overhead
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // 1. Generate PDF URL only (no buffer download)
   const { pdfUrl } = await getOrGenerateQuotePdf(quote, {
@@ -328,11 +323,10 @@ async function processExpired(
  * Process follow-up email (manual follow-up with customer)
  */
 async function processFollowUp(
-  quote: QuoteWithDetails
+  quote: QuoteWithDetails,
 ): Promise<{ success: true; emailId?: string }> {
-  const { getOrGenerateQuotePdf } = await import(
-    '@/features/finances/quotes/services/quote-pdf.service'
-  );
+  const { getOrGenerateQuotePdf } =
+    await import('@/features/finances/quotes/services/quote-pdf.service');
 
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {

@@ -3,6 +3,7 @@
 ## ✅ Completed Features
 
 ### Core Functionality
+
 - [x] Session listing with user details
 - [x] Session creation on login (automatic)
 - [x] Device information tracking (browser, OS, device type)
@@ -12,6 +13,7 @@
 - [x] Sort sessions (current session at top)
 
 ### Session Management
+
 - [x] Individual session sign-out
 - [x] Current session sign-out (with redirect)
 - [x] Bulk sign-out all devices
@@ -19,6 +21,7 @@
 - [x] Custom modal dialogs (replace browser defaults)
 
 ### Security
+
 - [x] Session validation on each request
 - [x] Automatic logout when session revoked remotely
 - [x] JWT-based authentication with database session tracking
@@ -26,6 +29,7 @@
 - [x] Only allow users to manage their own sessions
 
 ### UI/UX
+
 - [x] Visual indicators for current session
 - [x] Badge showing "Current Session"
 - [x] CheckCircle icon on current session
@@ -40,12 +44,14 @@
 ## 🔄 High Priority Enhancements
 
 ### Performance & Optimization
+
 - [ ] Add caching for session validation queries
 - [ ] Implement Redis for session validation (reduce DB load)
 - [ ] Optimize session queries with proper indexes
 - [ ] Add pagination for users with many sessions
 
 ### Security Improvements
+
 - [x] **Last Active Timestamp** ⭐ RECOMMENDED
   - Track when each session was last used
   - Display "Active now" vs "Last active X ago"
@@ -65,6 +71,7 @@
   - Add user preference to enable/disable notifications
 
 ### Testing
+
 - [ ] Write unit tests for session API endpoints
 - [ ] Add integration tests for session management
 - [ ] E2E tests for sign-out flows
@@ -76,6 +83,7 @@
 ## 📋 Medium Priority Features
 
 ### Enhanced Session Details
+
 - [x] **Better Device Icons**
   - Show device type icon (📱 mobile, 💻 desktop, 📟 tablet)
   - Display OS logos (Windows, macOS, Linux, iOS, Android)
@@ -94,6 +102,7 @@
   - [ ] Add accuracy indicator for geolocation
 
 ### Management Features
+
 - [x] **Session Limits**
   - [x] Set maximum concurrent sessions per user
   - [x] Auto-revoke oldest session when limit reached
@@ -118,6 +127,7 @@
 ## 🚀 Future Enhancements
 
 ### Advanced Security
+
 - [ ] **Suspicious Activity Detection**
   - Flag sessions from unusual locations
   - Detect impossible travel (rapid location changes)
@@ -145,6 +155,7 @@
   - Step-up authentication
 
 ### Analytics & Reporting
+
 - [ ] **Session Dashboard**
   - Charts showing login patterns over time
   - Peak activity times heatmap
@@ -171,6 +182,7 @@
   - Custom date ranges for exports
 
 ### Advanced Features
+
 - [ ] **Session Comparison**
   - Compare current session with historical patterns
   - Highlight unusual access times or locations

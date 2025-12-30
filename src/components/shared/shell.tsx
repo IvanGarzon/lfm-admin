@@ -19,8 +19,7 @@ const shellVariants = cva('grid items-center gap-8 pt-6 pb-8 md:px-6 md:py-8', {
 });
 
 interface ShellProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof shellVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof shellVariants> {
   as?: React.ElementType;
   scrollable?: boolean;
 }

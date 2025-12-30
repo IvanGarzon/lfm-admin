@@ -1,10 +1,4 @@
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
@@ -31,20 +25,31 @@ const overdueCell = {
 };
 
 export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) => {
-  const { invoiceNumber, customerName, amount, currency, dueDate, daysOverdue, amountPaid, amountDue } = reminderData;
+  const {
+    invoiceNumber,
+    customerName,
+    amount,
+    currency,
+    dueDate,
+    daysOverdue,
+    amountPaid,
+    amountDue,
+  } = reminderData;
 
   const hasPaymentHistory = amountPaid !== undefined && amountPaid > 0;
-  const displayAmountDue = hasPaymentHistory ? amountDue ?? amount : amount;
+  const displayAmountDue = hasPaymentHistory ? (amountDue ?? amount) : amount;
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
   }).format(amount);
 
-  const formattedAmountPaid = hasPaymentHistory ? new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(amountPaid) : null;
+  const formattedAmountPaid = hasPaymentHistory
+    ? new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+      }).format(amountPaid)
+    : null;
 
   const formattedAmountDue = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -64,7 +69,8 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
       <Text style={styles.text}>Hello {customerName},</Text>
 
       <Text style={styles.text}>
-        This is a friendly reminder that Invoice {invoiceNumber} is now {daysOverdue} day{daysOverdue > 1 ? 's' : ''} overdue.
+        This is a friendly reminder that Invoice {invoiceNumber} is now {daysOverdue} day
+        {daysOverdue > 1 ? 's' : ''} overdue.
       </Text>
 
       <Section style={styles.receiptDetails}>
@@ -80,7 +86,9 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
             </tr>
             <tr>
               <td style={styles.labelCell}>Days Overdue:</td>
-              <td style={overdueCell}>{daysOverdue} day{daysOverdue > 1 ? 's' : ''}</td>
+              <td style={overdueCell}>
+                {daysOverdue} day{daysOverdue > 1 ? 's' : ''}
+              </td>
             </tr>
             {hasPaymentHistory ? (
               <>
@@ -108,7 +116,8 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
       </Section>
 
       <Text style={styles.text}>
-        Please submit your payment as soon as possible to avoid any late fees or service interruptions.
+        Please submit your payment as soon as possible to avoid any late fees or service
+        interruptions.
       </Text>
 
       {pdfUrl ? (
@@ -117,7 +126,7 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
             View Invoice PDF
           </Button>
         </Section>
-      ): null}
+      ) : null}
 
       <Hr style={styles.hr} />
 
@@ -126,19 +135,20 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
       </Text>
 
       <Text style={styles.footer}>
-        If you have any questions or need to discuss payment arrangements, please contact us immediately.
+        If you have any questions or need to discuss payment arrangements, please contact us
+        immediately.
       </Text>
 
-      <Text style={styles.footer}>
-        Thank you for your prompt attention to this matter.
-      </Text>
+      <Text style={styles.footer}>Thank you for your prompt attention to this matter.</Text>
     </>
   );
 };
 
 export function ReminderEmail(props: ReminderEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Payment Reminder: Invoice ${props.reminderData.invoiceNumber} is ${props.reminderData.daysOverdue} days overdue`}>
+    <BaseTemplateEmail
+      previewText={`Payment Reminder: Invoice ${props.reminderData.invoiceNumber} is ${props.reminderData.daysOverdue} days overdue`}
+    >
       <ReminderContent {...props} />
     </BaseTemplateEmail>
   );
@@ -148,15 +158,14 @@ ReminderEmail.PreviewProps = {
   reminderData: {
     invoiceNumber: 'INV-2025-001',
     customerName: 'Michael Brown',
-    amount: 3000.00,
+    amount: 3000.0,
     currency: 'AUD',
     dueDate: new Date('2025-01-01'),
     daysOverdue: 15,
-    amountPaid: 1000.00,
-    amountDue: 2000.00,
+    amountPaid: 1000.0,
+    amountDue: 2000.0,
   },
   pdfUrl: 'https://example.com/invoice.pdf',
 } satisfies ReminderEmailProps;
 
 export default ReminderEmail;
-

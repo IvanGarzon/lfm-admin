@@ -29,7 +29,7 @@ async function fixDataIssues() {
       console.log(`   Found ${invalidDateInvoices.length} invoice(s) with invalid dates:`);
       invalidDateInvoices.forEach((inv) => {
         console.log(
-          `   - ${inv.invoice_number}: issued=${inv.issued_date.toISOString().split('T')[0]}, due=${inv.due_date.toISOString().split('T')[0]}`
+          `   - ${inv.invoice_number}: issued=${inv.issued_date.toISOString().split('T')[0]}, due=${inv.due_date.toISOString().split('T')[0]}`,
         );
       });
 
@@ -64,9 +64,7 @@ async function fixDataIssues() {
     if (overpaidInvoices.length > 0) {
       console.log(`   Found ${overpaidInvoices.length} overpaid invoice(s):`);
       overpaidInvoices.forEach((inv) => {
-        console.log(
-          `   - ${inv.invoice_number}: amount=${inv.amount}, paid=${inv.amount_paid}`
-        );
+        console.log(`   - ${inv.invoice_number}: amount=${inv.amount}, paid=${inv.amount_paid}`);
       });
 
       // Fix: Set amount_paid = amount for these invoices

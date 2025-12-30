@@ -59,9 +59,7 @@ export function QuoteVersions({ quoteId, currentVersionId }: QuoteVersionsProps)
                 key={version.id}
                 className={cn(
                   'w-full p-3 rounded-lg border',
-                  isCurrent
-                    ? 'bg-primary/5 border-primary'
-                    : 'border-border',
+                  isCurrent ? 'bg-primary/5 border-primary' : 'border-border',
                 )}
               >
                 <Box className="flex items-start justify-between gap-2">
@@ -73,11 +71,9 @@ export function QuoteVersions({ quoteId, currentVersionId }: QuoteVersionsProps)
                           <Check className="h-3 w-3" />
                           Current
                         </span>
-                      ): null}
+                      ) : null}
                     </Box>
-                    <Box className="text-xs text-muted-foreground mb-2">
-                      {version.quoteNumber}
-                    </Box>
+                    <Box className="text-xs text-muted-foreground mb-2">{version.quoteNumber}</Box>
                     <Box className="flex flex-wrap items-center gap-2">
                       <QuoteStatusBadge status={version.status} />
                       <span className="text-xs text-muted-foreground">

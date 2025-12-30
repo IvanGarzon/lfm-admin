@@ -76,9 +76,7 @@ export function CancelQuoteDialog({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="cancel-quote-form-reason">
-                        Reason (Optional)
-                      </FieldLabel>
+                      <FieldLabel htmlFor="cancel-quote-form-reason">Reason (Optional)</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}

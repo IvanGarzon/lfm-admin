@@ -383,7 +383,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     // Calculate conversion rate after status counts are populated
     // Conversion rate = accepted / (all quotes that were sent to customers)
-    const totalSentQuotes = stats.sent + stats.accepted + stats.rejected + stats.expired + stats.converted;
+    const totalSentQuotes =
+      stats.sent + stats.accepted + stats.rejected + stats.expired + stats.converted;
     stats.conversionRate = totalSentQuotes > 0 ? (stats.accepted / totalSentQuotes) * 100 : 0;
 
     return stats;
@@ -413,7 +414,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         const quoteNumber = await this.generateQuoteNumber();
 
         // Calculate total amount
-        const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+        const totalAmount = data.items.reduce(
+          (sum, item) => sum + item.quantity * item.unitPrice,
+          0,
+        );
 
         const createdDate = new Date();
 
@@ -465,7 +469,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         });
       } catch (error: unknown) {
         // Type narrow first, then check the code property
-         // Handle unique constraint violation (invoice number collision)
+        // Handle unique constraint violation (invoice number collision)
         if (isPrismaError(error) && error.code === 'P2002') {
           attempts++;
           if (attempts === maxAttempts) {
@@ -720,7 +724,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid
    */
-  async markAsOnHold(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsOnHold(
+    id: string,
+    reason?: string,
+    changedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -781,7 +789,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid
    */
-  async markAsCancelled(id: string, reason?: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsCancelled(
+    id: string,
+    reason?: string,
+    changedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -1356,9 +1368,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             { id: parentQuoteId },
             { parentQuoteId: parentQuoteId },
             {
-              parentQuoteId: parentQuote.parentQuoteId
-                ? parentQuote.parentQuoteId
-                : undefined,
+              parentQuoteId: parentQuote.parentQuoteId ? parentQuote.parentQuoteId : undefined,
             },
           ],
           deletedAt: null,

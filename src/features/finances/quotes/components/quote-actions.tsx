@@ -1,7 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { X, Eye, Send, Check, FileCheck, FileDown, MoreHorizontal, Copy, AlertCircle, Pause, Ban, Mail } from 'lucide-react';
+import {
+  X,
+  Eye,
+  Send,
+  Check,
+  FileCheck,
+  FileDown,
+  MoreHorizontal,
+  Copy,
+  AlertCircle,
+  Pause,
+  Ban,
+  Mail,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -52,8 +65,16 @@ export function QuoteActions({
   const quoteUrl = queryString ? `${basePath}?${queryString}` : basePath;
 
   // Get permissions based on quote status
-  const { canAccept, canReject, canSend, canPutOnHold, canCancel, canConvert, canDelete, canCreateVersion } =
-    getQuotePermissions(quote.status);
+  const {
+    canAccept,
+    canReject,
+    canSend,
+    canPutOnHold,
+    canCancel,
+    canConvert,
+    canDelete,
+    canCreateVersion,
+  } = getQuotePermissions(quote.status);
 
   return (
     <Box className="flex items-center gap-1 justify-end">
@@ -120,7 +141,11 @@ export function QuoteActions({
           ) : null}
 
           {canConvert ? (
-            <DropdownMenuItem onClick={() => onConvert(quote.id, quote.quoteNumber, Number(quote.gst), Number(quote.discount))}>
+            <DropdownMenuItem
+              onClick={() =>
+                onConvert(quote.id, quote.quoteNumber, Number(quote.gst), Number(quote.discount))
+              }
+            >
               <FileCheck className="h-4 w-4" />
               Convert to invoice
             </DropdownMenuItem>

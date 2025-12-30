@@ -7,7 +7,11 @@ import { LogOut } from 'lucide-react';
 import { deleteSession, deleteOtherSessions } from '@/actions/sessions';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
-import { useDeleteSession, useDeleteOtherSessions, useDeleteSessions } from '@/features/sessions/hooks/use-sessions';
+import {
+  useDeleteSession,
+  useDeleteOtherSessions,
+  useDeleteSessions,
+} from '@/features/sessions/hooks/use-sessions';
 import { DeleteSessionDialog } from '@/features/sessions/components/delete-session-dialog';
 import { DeleteOtherSessionsDialog } from '@/features/sessions/components/delete-other-sessions-dialog';
 import { SessionCard } from '@/features/sessions/components/session-card';
@@ -152,13 +156,13 @@ export function SessionsList({ initialData = [] }: { initialData?: SessionWithUs
                   checked={sessions.length > 0 && selectedIds.size === sessions.length}
                   onChange={toggleSelectAll}
                 />
-              ): null}
+              ) : null}
               <h2 className="text-xl font-bold">Your Active Sessions</h2>
               <span className="text-sm font-normal text-muted-foreground bg-white px-2 py-0.5 rounded border">
                 {totalSessionsCount} / {sessionLimit}
               </span>
             </Box>
-            
+
             <Box className="flex items-center gap-2">
               {isSelectionMode ? (
                 <>
@@ -185,11 +189,7 @@ export function SessionsList({ initialData = [] }: { initialData?: SessionWithUs
               ) : (
                 <>
                   {totalSessionsCount > 1 && (
-                    <Button
-                      onClick={() => setIsSelectionMode(true)}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button onClick={() => setIsSelectionMode(true)} variant="outline" size="sm">
                       Select Multiple
                     </Button>
                   )}
@@ -227,6 +227,6 @@ export function SessionsList({ initialData = [] }: { initialData?: SessionWithUs
         sessionCount={totalSessionsCount}
         isPending={deleteOthersMutation.isPending}
       />
-      </>
+    </>
   );
 }

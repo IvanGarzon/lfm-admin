@@ -7,9 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
-import {
-  useUpdateQuoteItemNotes,
-} from '@/features/finances/quotes/hooks/use-quote-queries';
+import { useUpdateQuoteItemNotes } from '@/features/finances/quotes/hooks/use-quote-queries';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { formatFileSize } from '@/lib/file-constants';
 import { DeleteItemImageDialog } from './delete-item-image-dialog';
@@ -61,10 +59,11 @@ export function QuoteItemDetails({
     }
 
     return items
-      .filter((item) =>
-        (item.attachments && item.attachments.length > 0) ||
-        (item.colors && item.colors.length > 0) ||
-        item.notes
+      .filter(
+        (item) =>
+          (item.attachments && item.attachments.length > 0) ||
+          (item.colors && item.colors.length > 0) ||
+          item.notes,
       )
       .sort((a, b) => a.order - b.order);
   }, [items]);
@@ -74,7 +73,7 @@ export function QuoteItemDetails({
     if (!items) return;
 
     const newLoadingImages = new Set<string>();
-    
+
     items.forEach((item) => {
       item.attachments?.forEach((attachment) => {
         // Only add to loading state if it hasn't been loaded yet
@@ -90,7 +89,7 @@ export function QuoteItemDetails({
   const handleImageLoadComplete = useCallback((attachmentId: string) => {
     // Mark this image as loaded
     loadedImagesRef.current.add(attachmentId);
-    
+
     // Remove from loading state
     setLoadingImages((prev) => {
       const next = new Set(prev);
@@ -141,12 +140,14 @@ export function QuoteItemDetails({
     <>
       <Card className="p-6 my-6">
         <Box className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">Item Colors & Images</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+            Item Colors & Images
+          </h3>
 
           {itemsWithContent.map((item) => {
             const hasColors = item.colors && item.colors.length > 0;
             const hasImages = item.attachments && item.attachments.length > 0;
-            
+
             return (
               <Box key={item.id} className="space-y-3">
                 {/* Item Title */}
@@ -156,13 +157,14 @@ export function QuoteItemDetails({
                     <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
                       ({item.colors.length} {item.colors.length === 1 ? 'color' : 'colors'})
                     </span>
-                  ): null}
+                  ) : null}
 
                   {hasImages ? (
                     <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
-                      ({item.attachments.length} {item.attachments.length === 1 ? 'image' : 'images'})
+                      ({item.attachments.length}{' '}
+                      {item.attachments.length === 1 ? 'image' : 'images'})
                     </span>
-                  ): null}
+                  ) : null}
                 </p>
 
                 {/* Color Palette */}
@@ -181,132 +183,135 @@ export function QuoteItemDetails({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setEditingColors({
-                          quoteItemId: item.id,
-                          itemDescription: item.description,
-                          colors: item.colors,
-                        })}
+                        onClick={() =>
+                          setEditingColors({
+                            quoteItemId: item.id,
+                            itemDescription: item.description,
+                            colors: item.colors,
+                          })
+                        }
                         className="w-16 h-16 px-4"
                       >
-                        <Edit className="h-4 w-4" />                        
+                        <Edit className="h-4 w-4" />
                       </Button>
-                    ): null}
+                    ) : null}
                   </Box>
-                ): null}
+                ) : null}
 
                 {/* Images Grid */}
                 {hasImages ? (
                   <Box className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {item.attachments.map((attachment) => (
-                    <Box
-                      key={attachment.id}
-                      className="relative group rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden"
-                    >
-                      {/* Image Preview */}
-                      <Box className="aspect-square bg-gray-100 dark:bg-gray-800 relative">
-                        {/* Loading Spinner */}
-                        {loadingImages.has(attachment.id) ? (
-                          <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
-                            <Loader2 className="size-8 animate-spin text-gray-400" />
-                          </Box>
-                        ): null}
-                        <Image
-                          src={attachment.s3Url}
-                          alt={attachment.fileName}
-                          fill
-                          className={`object-cover transition-opacity duration-300 ${
-                            loadingImages.has(attachment.id) ? 'opacity-0' : 'opacity-100'
-                          }`}
-                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          onLoadingComplete={() => handleImageLoadComplete(attachment.id)}
-                        />
+                    {item.attachments.map((attachment) => (
+                      <Box
+                        key={attachment.id}
+                        className="relative group rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden"
+                      >
+                        {/* Image Preview */}
+                        <Box className="aspect-square bg-gray-100 dark:bg-gray-800 relative">
+                          {/* Loading Spinner */}
+                          {loadingImages.has(attachment.id) ? (
+                            <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
+                              <Loader2 className="size-8 animate-spin text-gray-400" />
+                            </Box>
+                          ) : null}
+                          <Image
+                            src={attachment.s3Url}
+                            alt={attachment.fileName}
+                            fill
+                            className={`object-cover transition-opacity duration-300 ${
+                              loadingImages.has(attachment.id) ? 'opacity-0' : 'opacity-100'
+                            }`}
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            onLoadingComplete={() => handleImageLoadComplete(attachment.id)}
+                          />
 
-                        {/* Hover Overlay */}
-                        <Box className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() =>
-                              setPreviewImage({
-                                url: attachment.s3Url,
-                                fileName: attachment.fileName,
-                                itemDescription: item.description,
-                              })
-                            }
-                            className="h-8 w-8 p-0"
-                          >
-                            <Eye className="size-4" />
-                            <span className="sr-only">View</span>
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => onDownloadImage(attachment.id)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Download className="size-4" />
-                            <span className="sr-only">Download</span>
-                          </Button>
-
-                          {!readOnly ? (
+                          {/* Hover Overlay */}
+                          <Box className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             <Button
                               type="button"
-                              variant="destructive"
+                              variant="secondary"
                               size="sm"
                               onClick={() =>
-                                setDeleteItemAttachment({
-                                  attachmentId: attachment.id,
-                                  quoteItemId: item.id,
+                                setPreviewImage({
+                                  url: attachment.s3Url,
+                                  fileName: attachment.fileName,
+                                  itemDescription: item.description,
                                 })
                               }
-                              disabled={isDeleting}
                               className="h-8 w-8 p-0"
                             >
-                              <Trash2 className="size-4" />
-                              <span className="sr-only">Delete</span>
+                              <Eye className="size-4" />
+                              <span className="sr-only">View</span>
                             </Button>
-                          ) : null}
+
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => onDownloadImage(attachment.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Download className="size-4" />
+                              <span className="sr-only">Download</span>
+                            </Button>
+
+                            {!readOnly ? (
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() =>
+                                  setDeleteItemAttachment({
+                                    attachmentId: attachment.id,
+                                    quoteItemId: item.id,
+                                  })
+                                }
+                                disabled={isDeleting}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="size-4" />
+                                <span className="sr-only">Delete</span>
+                              </Button>
+                            ) : null}
+                          </Box>
+                        </Box>
+
+                        {/* Image Info */}
+                        <Box className="p-2 bg-white dark:bg-gray-900">
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-50 truncate">
+                            {attachment.fileName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            {formatFileSize(attachment.fileSize)}
+                          </p>
                         </Box>
                       </Box>
-
-                      {/* Image Info */}
-                      <Box className="p-2 bg-white dark:bg-gray-900">
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-50 truncate">
-                          {attachment.fileName}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                          {formatFileSize(attachment.fileSize)}
-                        </p>
-                      </Box>
-                    </Box>
-                  ))}
+                    ))}
                   </Box>
-                ): null}
+                ) : null}
 
                 {/* Notes Editor - Only show if there are colors OR images OR notes */}
                 {hasColors || hasImages || item.notes ? (
                   !readOnly ? (
-                  <Box>
-                    <RichTextEditor
-                      key={`editor-${item.id}`}
-                      placeholder="Add notes about these colors and images..."
-                      value={editingNotes[item.id] ?? item.notes ?? ''}
-                      onChange={(value) => handleNotesChange(item.id, value)}
-                      onBlur={() => handleNotesBlur(item.id, item.notes)}
-                      editable={true}
-                    />
-                  </Box>
-                ) : item.notes ? (
-                  <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
-                    <RichTextEditor
-                      key={`editor-readonly-${item.id}`}
-                      value={item.notes ?? ''}
-                      editable={false}
-                    />
-                  </Box>) : null
+                    <Box>
+                      <RichTextEditor
+                        key={`editor-${item.id}`}
+                        placeholder="Add notes about these colors and images..."
+                        value={editingNotes[item.id] ?? item.notes ?? ''}
+                        onChange={(value) => handleNotesChange(item.id, value)}
+                        onBlur={() => handleNotesBlur(item.id, item.notes)}
+                        editable={true}
+                      />
+                    </Box>
+                  ) : item.notes ? (
+                    <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
+                      <RichTextEditor
+                        key={`editor-readonly-${item.id}`}
+                        value={item.notes ?? ''}
+                        editable={false}
+                      />
+                    </Box>
+                  ) : null
                 ) : null}
               </Box>
             );

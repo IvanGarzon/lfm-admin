@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  createInvoice, 
+import {
+  createInvoice,
   updateInvoice,
   markInvoiceAsPending,
   deleteInvoice,
   recordPayment,
-  cancelInvoice
+  cancelInvoice,
 } from './mutations';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
@@ -34,13 +34,13 @@ const { mockRepoInstance } = vi.hoisted(() => ({
     markAsDraft: vi.fn(),
     addPayment: vi.fn(),
     cancel: vi.fn(),
-  }
+  },
 }));
 
 // Mock InvoiceRepository
 vi.mock('@/repositories/invoice-repository', () => {
   return {
-    InvoiceRepository: vi.fn().mockImplementation(function() {
+    InvoiceRepository: vi.fn().mockImplementation(function () {
       return mockRepoInstance;
     }),
   };
@@ -75,14 +75,15 @@ describe('Invoice mutations', () => {
       currency: 'AUD',
       gst: 10,
       discount: 0,
-      items: [
-        { description: 'Item 1', quantity: 1, unitPrice: 100, productId: null }
-      ]
+      items: [{ description: 'Item 1', quantity: 1, unitPrice: 100, productId: null }],
     };
 
     it('creates an invoice successfully when authorized', async () => {
-      mockRepoInstance.createInvoiceWithItems.mockResolvedValue({ id: 'clv123456000008l28z3z4x5c', invoiceNumber: 'INV-001' });
-      
+      mockRepoInstance.createInvoiceWithItems.mockResolvedValue({
+        id: 'clv123456000008l28z3z4x5c',
+        invoiceNumber: 'INV-001',
+      });
+
       const result = await createInvoice(validData);
 
       expect(result.success).toBe(true);
@@ -115,8 +116,8 @@ describe('Invoice mutations', () => {
           id: 'clv123456000008l28z3z4x5d',
           firstName: 'John',
           lastName: 'Doe',
-          email: 'john@example.com'
-        }
+          email: 'john@example.com',
+        },
       };
       mockRepoInstance.markAsPending.mockResolvedValue(mockInvoice);
 
@@ -133,9 +134,12 @@ describe('Invoice mutations', () => {
         id: 'clv123456000008l28z3z4x5c',
         amount: 50,
         paidDate: new Date(),
-        paymentMethod: 'Credit Card'
+        paymentMethod: 'Credit Card',
       };
-      mockRepoInstance.addPayment.mockResolvedValue({ id: 'clv123456000008l28z3z4x5c', status: 'PAID' });
+      mockRepoInstance.addPayment.mockResolvedValue({
+        id: 'clv123456000008l28z3z4x5c',
+        status: 'PAID',
+      });
 
       const result = await recordPayment(paymentData);
 
@@ -149,9 +153,12 @@ describe('Invoice mutations', () => {
       const cancelData = {
         id: 'clv123456000008l28z3z4x5c',
         cancelledDate: new Date(),
-        cancelReason: 'Mistake'
+        cancelReason: 'Mistake',
       };
-      mockRepoInstance.cancel.mockResolvedValue({ id: 'clv123456000008l28z3z4x5c', status: 'CANCELLED' });
+      mockRepoInstance.cancel.mockResolvedValue({
+        id: 'clv123456000008l28z3z4x5c',
+        status: 'CANCELLED',
+      });
 
       const result = await cancelInvoice(cancelData);
 

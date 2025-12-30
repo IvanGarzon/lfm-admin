@@ -24,21 +24,25 @@ All seed files are located in the `seeds/` directory. Each entity has its own de
 The florist products include:
 
 ### Fresh Flowers
+
 - Premium Roses (Red, White, Pink, Yellow)
 - Tulips, Lilies, Orchids, Peonies
 - Sunflowers, Hydrangeas, Gerberas, Carnations
 
 ### Bouquets & Arrangements
+
 - Hand-Tied Bouquets
 - Bridal & Bridesmaid Bouquets
 - Sympathy, Birthday, Get Well bouquets
 
 ### Event Services
+
 - **Wedding Services**: Full packages, ceremony arches, centerpieces, bridal party flowers
 - **Corporate Services**: Event centerpieces, office weekly service, conference arrangements
 - **Funeral Services**: Wreaths, casket sprays, standing sprays, sympathy baskets
 
 ### Specialty Items
+
 - Preserved Rose Boxes
 - Succulent Gardens
 - Potted Orchids
@@ -46,6 +50,7 @@ The florist products include:
 - Flower Subscriptions
 
 ### Add-ons & Extras
+
 - Gift wrapping, message cards
 - Decorative vases (glass & ceramic)
 - Flower care kits
@@ -60,6 +65,7 @@ pnpm prisma:seed
 ```
 
 This will run all seed scripts in order:
+
 1. Organizations (10 records)
 2. Customers (50 records)
 3. Products (~80 florist items)
@@ -102,27 +108,32 @@ pnpm prisma:seed
 ## Data Characteristics
 
 ### Organizations
+
 - 10 florist industry related businesses
 - Spread across all Australian states
 - Wedding planners, event coordinators, hotels
 
 ### Customers
+
 - 50 individual customers
 - 30% linked to organizations
 - Australian phone numbers and realistic data
 
 ### Products
+
 - ~80 florist products and services
 - Realistic pricing (AUD)
 - Mix of physical stock items and services
 - Categories: Fresh Flowers, Bouquets, Wedding/Corporate/Funeral Services, Specialty Items, Add-ons
 
 ### Employees
+
 - 30 employee records
 - Hourly rates, avatars, contact info
 - Australian phone numbers
 
 ### Invoices
+
 - 60 invoices with various statuses
 - DRAFT, PENDING, PAID, CANCELLED, OVERDUE
 - 1-5 items per invoice
@@ -131,6 +142,7 @@ pnpm prisma:seed
 - Florist-specific item descriptions
 
 ### Quotes
+
 - 40 quotes with various statuses
 - Color palettes for flower arrangements
 - Notes and terms fields
@@ -140,6 +152,7 @@ pnpm prisma:seed
 ## Smart Skipping
 
 The master seed script ([seed-all.ts](seed-all.ts)) checks if data already exists before running each seed:
+
 - If data exists, it skips that seed
 - Shows a summary of existing counts
 - Only seeds what's missing
@@ -147,6 +160,7 @@ The master seed script ([seed-all.ts](seed-all.ts)) checks if data already exist
 ## Australian Data
 
 All data follows Australian conventions:
+
 - Phone numbers: `04XXXXXXXX` or `+614XXXXXXXX`
 - States: VIC, NSW, QLD, WA, SA, TAS, ACT, NT
 - Currency: AUD

@@ -1,12 +1,24 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { useDeleteInvoice, useRecordPayment, useCancelInvoice, useDownloadReceiptPdf, useInvoiceBasic, useInvoiceItems, useInvoicePayments } from '@/features/finances/invoices/hooks/use-invoice-queries';
+import {
+  useDeleteInvoice,
+  useRecordPayment,
+  useCancelInvoice,
+  useDownloadReceiptPdf,
+  useInvoiceBasic,
+  useInvoiceItems,
+  useInvoicePayments,
+} from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { DeleteInvoiceDialog } from '@/features/finances/invoices/components/delete-invoice-dialog';
 import { RecordPaymentDialog } from '@/features/finances/invoices/components/record-payment-dialog';
 import { CancelInvoiceDialog } from '@/features/finances/invoices/components/cancel-invoice-dialog';
 import { SendReceiptDialog } from '@/features/finances/invoices/components/send-receipt-dialog';
-import type { InvoiceWithDetails, InvoiceBasic, CancelInvoiceData } from '@/features/finances/invoices/types';
+import type {
+  InvoiceWithDetails,
+  InvoiceBasic,
+  CancelInvoiceData,
+} from '@/features/finances/invoices/types';
 import type { RecordPaymentInput } from '@/schemas/invoices';
 
 type ModalType = 'DELETE' | 'RECORD_PAYMENT' | 'CANCEL' | 'SEND_RECEIPT';
@@ -21,9 +33,18 @@ interface ModalState {
 
 interface InvoiceActionContextType {
   openDelete: (id: string, invoiceNumber?: string, onSuccess?: () => void) => void;
-  openRecordPayment: (id: string, invoiceNumber: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => void;
+  openRecordPayment: (
+    id: string,
+    invoiceNumber: string,
+    invoice?: InvoiceWithDetails | InvoiceBasic,
+    onSuccess?: () => void,
+  ) => void;
   openCancel: (id: string, invoiceNumber: string, onSuccess?: () => void) => void;
-  openSendReceipt: (id: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => void;
+  openSendReceipt: (
+    id: string,
+    invoice?: InvoiceWithDetails | InvoiceBasic,
+    onSuccess?: () => void,
+  ) => void;
   close: () => void;
 }
 
@@ -39,7 +60,8 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
 
   // Fetch basic invoice details if needed (e.g. for Send Receipt dialog if opened from list)
   // useInvoiceBasic is much lighter than useInvoice as it skips items and history
-  const shouldFetchInvoice = (state?.type === 'SEND_RECEIPT' || state?.type === 'RECORD_PAYMENT') && !state.invoice;
+  const shouldFetchInvoice =
+    (state?.type === 'SEND_RECEIPT' || state?.type === 'RECORD_PAYMENT') && !state.invoice;
   const { data: fetchedInvoice } = useInvoiceBasic(shouldFetchInvoice ? state?.id : undefined);
 
   // Fetch items and payments if needed (specifically for Send Receipt dialog)
@@ -55,17 +77,28 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     setState({ type: 'DELETE', id, invoiceNumber, onSuccess });
   }, []);
 
-  const openRecordPayment = useCallback((id: string, invoiceNumber: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => {
-    setState({ type: 'RECORD_PAYMENT', id, invoiceNumber, invoice, onSuccess });
-  }, []);
+  const openRecordPayment = useCallback(
+    (
+      id: string,
+      invoiceNumber: string,
+      invoice?: InvoiceWithDetails | InvoiceBasic,
+      onSuccess?: () => void,
+    ) => {
+      setState({ type: 'RECORD_PAYMENT', id, invoiceNumber, invoice, onSuccess });
+    },
+    [],
+  );
 
   const openCancel = useCallback((id: string, invoiceNumber: string, onSuccess?: () => void) => {
     setState({ type: 'CANCEL', id, invoiceNumber, onSuccess });
   }, []);
 
-  const openSendReceipt = useCallback((id: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => {
-    setState({ type: 'SEND_RECEIPT', id, invoice, onSuccess });
-  }, []);
+  const openSendReceipt = useCallback(
+    (id: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => {
+      setState({ type: 'SEND_RECEIPT', id, invoice, onSuccess });
+    },
+    [],
+  );
 
   const close = useCallback(() => {
     setState(null);
@@ -82,29 +115,35 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     }
   }, [state, deleteInvoice, close]);
 
-  const handleConfirmRecordPayment = useCallback(async (data: RecordPaymentInput) => {
-    const result = await recordPayment.mutateAsync(data);
+  const handleConfirmRecordPayment = useCallback(
+    async (data: RecordPaymentInput) => {
+      const result = await recordPayment.mutateAsync(data);
 
-    // If the payment resulted in a fully paid invoice with a receipt number, open the receipt dialog
-    if (result.status === 'PAID' && result.receiptNumber) {
-      close();
-      // Open the send receipt dialog
-      openSendReceipt(data.id, undefined, state?.onSuccess);
-    } else {
-      // For partial payments or other cases, just close
-      close();
-      state?.onSuccess?.();
-    }
-  }, [recordPayment, state, close, openSendReceipt]);
-
-  const handleConfirmCancel = useCallback((data: CancelInvoiceData) => {
-    cancelInvoice.mutate(data, {
-      onSuccess: () => {
+      // If the payment resulted in a fully paid invoice with a receipt number, open the receipt dialog
+      if (result.status === 'PAID' && result.receiptNumber) {
+        close();
+        // Open the send receipt dialog
+        openSendReceipt(data.id, undefined, state?.onSuccess);
+      } else {
+        // For partial payments or other cases, just close
         close();
         state?.onSuccess?.();
-      },
-    });
-  }, [cancelInvoice, state, close]);
+      }
+    },
+    [recordPayment, state, close, openSendReceipt],
+  );
+
+  const handleConfirmCancel = useCallback(
+    (data: CancelInvoiceData) => {
+      cancelInvoice.mutate(data, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [cancelInvoice, state, close],
+  );
 
   const handleDownloadReceipt = useCallback(async () => {
     if (state?.id) {
@@ -131,13 +170,16 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     state.onSuccess?.();
   }, [state, close]);
 
-  const value = useMemo(() => ({
-    openDelete,
-    openRecordPayment,
-    openCancel,
-    openSendReceipt,
-    close,
-  }), [openDelete, openRecordPayment, openCancel, openSendReceipt, close]);
+  const value = useMemo(
+    () => ({
+      openDelete,
+      openRecordPayment,
+      openCancel,
+      openSendReceipt,
+      close,
+    }),
+    [openDelete, openRecordPayment, openCancel, openSendReceipt, close],
+  );
 
   return (
     <InvoiceActionContext.Provider value={value}>
@@ -182,8 +224,12 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
           invoice={activeInvoice}
           items={activeItems}
           payments={activePayments}
-          isLoadingItems={state?.type === 'SEND_RECEIPT' && !state.invoice && activeItems === undefined}
-          isLoadingPayments={state?.type === 'SEND_RECEIPT' && !state.invoice && activePayments === undefined}
+          isLoadingItems={
+            state?.type === 'SEND_RECEIPT' && !state.invoice && activeItems === undefined
+          }
+          isLoadingPayments={
+            state?.type === 'SEND_RECEIPT' && !state.invoice && activePayments === undefined
+          }
           onDownload={handleDownloadReceipt}
           onSendEmail={handleSendEmailReceipt}
         />

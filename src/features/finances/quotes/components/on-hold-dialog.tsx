@@ -64,11 +64,7 @@ export function OnHoldDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            id="on-hold-form"
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form id="on-hold-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FieldGroup>
               <Controller
                 name="reason"
@@ -76,9 +72,7 @@ export function OnHoldDialog({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="on-hold-form-reason">
-                        Reason (Optional)
-                      </FieldLabel>
+                      <FieldLabel htmlFor="on-hold-form-reason">Reason (Optional)</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}

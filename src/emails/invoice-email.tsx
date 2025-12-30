@@ -1,10 +1,4 @@
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
@@ -80,7 +74,7 @@ export const InvoiceContent = ({ invoiceData, pdfUrl }: InvoiceEmailProps) => {
             View Invoice PDF
           </Button>
         </Section>
-      ): null}
+      ) : null}
 
       <Hr style={styles.hr} />
 
@@ -88,16 +82,16 @@ export const InvoiceContent = ({ invoiceData, pdfUrl }: InvoiceEmailProps) => {
         If you have any questions about this invoice, please don't hesitate to contact us.
       </Text>
 
-      <Text style={styles.footer}>
-        Thank you for your business!
-      </Text>
+      <Text style={styles.footer}>Thank you for your business!</Text>
     </>
   );
 };
 
 export function InvoiceEmail(props: InvoiceEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Invoice ${props.invoiceData.invoiceNumber} - Amount Due: ${props.invoiceData.amount}`}>
+    <BaseTemplateEmail
+      previewText={`Invoice ${props.invoiceData.invoiceNumber} - Amount Due: ${props.invoiceData.amount}`}
+    >
       <InvoiceContent {...props} />
     </BaseTemplateEmail>
   );
@@ -107,7 +101,7 @@ InvoiceEmail.PreviewProps = {
   invoiceData: {
     invoiceNumber: 'INV-2025-001',
     customerName: 'John Smith',
-    amount: 2500.00,
+    amount: 2500.0,
     currency: 'AUD',
     issuedDate: new Date('2025-01-15'),
     dueDate: new Date('2025-02-15'),

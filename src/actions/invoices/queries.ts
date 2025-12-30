@@ -5,9 +5,7 @@ import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import {
-  InvoiceFiltersSchema,
-} from '@/schemas/invoices';
+import { InvoiceFiltersSchema } from '@/schemas/invoices';
 import type {
   InvoiceFilters,
   InvoiceStatistics,
@@ -159,7 +157,9 @@ export async function getInvoicePayments(id: string): Promise<ActionResult<Invoi
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the status history events.
  */
-export async function getInvoiceStatusHistory(id: string): Promise<ActionResult<InvoiceStatusHistoryItem[]>> {
+export async function getInvoiceStatusHistory(
+  id: string,
+): Promise<ActionResult<InvoiceStatusHistoryItem[]>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -202,7 +202,9 @@ export async function getInvoiceStatistics(dateFilter?: {
  * @param limit - The maximum number of months to retrieve. Defaults to 12.
  * @returns A promise that resolves to an `ActionResult` containing an array of `RevenueTrend` objects.
  */
-export async function getMonthlyRevenueTrend(limit: number = 12): Promise<ActionResult<RevenueTrend[]>> {
+export async function getMonthlyRevenueTrend(
+  limit: number = 12,
+): Promise<ActionResult<RevenueTrend[]>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -256,12 +258,13 @@ export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: 
 
     // Generate or retrieve PDF using centralized service
     // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateInvoicePdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
+    const { getOrGenerateInvoicePdf } =
+      await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateInvoicePdf(invoice, {
       context: 'getInvoicePdfUrl',
       skipDownload: true,
     });
-    
+
     const { pdfUrl } = result;
 
     return { success: true, data: { url: pdfUrl } };
@@ -291,7 +294,8 @@ export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: 
 
     // Generate or retrieve PDF using centralized service
     // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateReceiptPdf } = await import('@/features/finances/invoices/services/invoice-pdf.service');
+    const { getOrGenerateReceiptPdf } =
+      await import('@/features/finances/invoices/services/invoice-pdf.service');
     const result = await getOrGenerateReceiptPdf(invoice, {
       context: 'getReceiptPdfUrl',
       skipDownload: true,

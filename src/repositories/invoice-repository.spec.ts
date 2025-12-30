@@ -34,22 +34,22 @@ describe('InvoiceRepository', () => {
 
   describe('findByIdWithDetails', () => {
     it('returns an invoice with details when it exists', async () => {
-      const mockInvoice = { 
-        id: 'inv_123', 
+      const mockInvoice = {
+        id: 'inv_123',
         invoiceNumber: 'INV-001',
         customer: { firstName: 'John', lastName: 'Doe' },
         items: [],
         payments: [],
-        amount: "100",
-        gst: "10",
-        discount: "0",
-        amountPaid: "0",
-        amountDue: "100"
+        amount: '100',
+        gst: '10',
+        discount: '0',
+        amountPaid: '0',
+        amountDue: '100',
       };
       mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
 
       const result = await repository.findByIdWithDetails('inv_123');
-      
+
       expect(result?.invoiceNumber).toBe('INV-001');
       expect(mockPrisma.invoice.findUnique).toHaveBeenCalled();
     });
@@ -70,7 +70,7 @@ describe('InvoiceRepository', () => {
         search: 'INV-001',
         status: [InvoiceStatus.PENDING],
         page: 1,
-        perPage: 10
+        perPage: 10,
       };
 
       await repository.searchAndPaginate(filters);
@@ -79,11 +79,11 @@ describe('InvoiceRepository', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             OR: expect.any(Array),
-            status: { in: [InvoiceStatus.PENDING] }
+            status: { in: [InvoiceStatus.PENDING] },
           }),
           take: 10,
-          skip: 0
-        })
+          skip: 0,
+        }),
       );
     });
   });
@@ -92,18 +92,24 @@ describe('InvoiceRepository', () => {
     it('updates status and creates history entry', async () => {
       const mockInvoice = { id: 'inv_123', status: InvoiceStatus.DRAFT };
       mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
-      mockPrisma.invoice.update.mockResolvedValue({ ...mockInvoice, status: InvoiceStatus.PENDING });
-      
+      mockPrisma.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        status: InvoiceStatus.PENDING,
+      });
+
       // Need to mock findByIdWithDetails which is called at the end
-      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue({ id: 'inv_123', status: InvoiceStatus.PENDING } as any);
+      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue({
+        id: 'inv_123',
+        status: InvoiceStatus.PENDING,
+      } as any);
 
       await repository.markAsPending('inv_123', 'user_123');
 
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'inv_123', deletedAt: null },
-          data: expect.objectContaining({ status: InvoiceStatus.PENDING })
-        })
+          data: expect.objectContaining({ status: InvoiceStatus.PENDING }),
+        }),
       );
     });
   });
@@ -117,9 +123,13 @@ describe('InvoiceRepository', () => {
       ];
       mockPrisma.invoice.groupBy.mockResolvedValue(mockStatusData);
       mockPrisma.$queryRaw.mockResolvedValue([{ avg: 150 }]);
-      
+
       // Mock internal methods
-      vi.spyOn(repository as any, 'getBasicStats').mockResolvedValue({ total: 0, totalRevenue: 0, pendingRevenue: 0 });
+      vi.spyOn(repository as any, 'getBasicStats').mockResolvedValue({
+        total: 0,
+        totalRevenue: 0,
+        pendingRevenue: 0,
+      });
       vi.spyOn(repository, 'getMonthlyRevenueTrend').mockResolvedValue([]);
       vi.spyOn(repository, 'getTopDebtors').mockResolvedValue([]);
 

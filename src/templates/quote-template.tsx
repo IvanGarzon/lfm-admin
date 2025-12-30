@@ -391,8 +391,8 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           ))}
         </View>
 
-         {/* Summary Section */}
-         <View style={styles.summarySection} wrap={false}>
+        {/* Summary Section */}
+        <View style={styles.summarySection} wrap={false}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
             <Text style={styles.summaryValue}>{formatCurrency({ number: subtotal })}</Text>
@@ -417,11 +417,19 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
         </View>
 
         {/* Item Details (colors, attachments and notes) */}
-        {quote.items.some((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0)) ? (
+        {quote.items.some(
+          (item) =>
+            item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0),
+        ) ? (
           <View style={styles.itemDetailsSection}>
             <Text style={styles.sectionTitle}>Item Details</Text>
             {quote.items
-              .filter((item) => item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0))
+              .filter(
+                (item) =>
+                  item.attachments?.length > 0 ||
+                  item.notes ||
+                  (item.colors && item.colors.length > 0),
+              )
               .sort((a, b) => a.order - b.order)
               .map((item) => (
                 <View key={item.id} style={styles.itemDetailBox}>

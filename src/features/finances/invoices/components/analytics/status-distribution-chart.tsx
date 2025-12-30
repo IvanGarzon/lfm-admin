@@ -57,7 +57,7 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
   }, [stats]);
 
   const totalInvoices = stats?.total ?? 0;
-  
+
   const chartConfig = {
     count: { label: 'Invoices' },
     draft: { label: 'Draft', color: 'rgb(229, 231, 235)' },
@@ -87,25 +87,13 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
         <CardTitle>Status Distribution</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
-        >
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
           <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="count"
-              nameKey="status"
-              innerRadius={60}
-              strokeWidth={5}
-            >
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <Pie data={chartData} dataKey="count" nameKey="status" innerRadius={60} strokeWidth={5}>
               <Label
                 content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
                     return (
                       <text
                         x={viewBox.cx}
@@ -128,7 +116,7 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
                           Invoices
                         </tspan>
                       </text>
-                    )
+                    );
                   }
                 }}
               />
@@ -139,10 +127,7 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
       <Box className="flex flex-wrap items-center justify-center gap-4 py-4 px-6 border-t mt-auto">
         {chartData.map((item) => (
           <Box key={item.status} className="flex items-center gap-2">
-            <Box 
-              className="h-2 w-2 rounded-full" 
-              style={{ backgroundColor: item.fill }} 
-            />
+            <Box className="h-2 w-2 rounded-full" style={{ backgroundColor: item.fill }} />
             <span className="text-[10px] uppercase font-medium text-muted-foreground">
               {item.status} ({((item.count / (totalInvoices || 1)) * 100).toFixed(0)}%)
             </span>

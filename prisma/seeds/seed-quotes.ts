@@ -54,7 +54,15 @@ export async function seedQuotes() {
     take: 15,
   });
 
-  const statuses: QuoteStatus[] = ['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'ON_HOLD', 'CANCELLED'];
+  const statuses: QuoteStatus[] = [
+    'DRAFT',
+    'SENT',
+    'ACCEPTED',
+    'REJECTED',
+    'EXPIRED',
+    'ON_HOLD',
+    'CANCELLED',
+  ];
 
   // Color palettes for quote items (flower arrangements)
   const colorPalettes = [
@@ -89,10 +97,10 @@ export async function seedQuotes() {
       totalAmount += total;
 
       // Random color palette for this item
-      const colors = faker.helpers.maybe(
-        () => faker.helpers.arrayElement(colorPalettes),
-        { probability: 0.6 },
-      ) || [];
+      const colors =
+        faker.helpers.maybe(() => faker.helpers.arrayElement(colorPalettes), {
+          probability: 0.6,
+        }) || [];
 
       items.push({
         description: faker.helpers.arrayElement([
@@ -112,17 +120,19 @@ export async function seedQuotes() {
         total,
         order: j,
         colors,
-        notes: faker.helpers.maybe(
-          () => faker.helpers.arrayElement([
-            'Client prefers pastel colors',
-            'Include seasonal flowers',
-            'Eco-friendly packaging requested',
-            'Fragrance-free arrangement',
-            'Long-lasting varieties preferred',
-            'Specific delivery time required',
-          ]),
-          { probability: 0.3 },
-        ) ?? null,
+        notes:
+          faker.helpers.maybe(
+            () =>
+              faker.helpers.arrayElement([
+                'Client prefers pastel colors',
+                'Include seasonal flowers',
+                'Eco-friendly packaging requested',
+                'Fragrance-free arrangement',
+                'Long-lasting varieties preferred',
+                'Specific delivery time required',
+              ]),
+            { probability: 0.3 },
+          ) ?? null,
         productId:
           products.length > 0 && faker.datatype.boolean({ probability: 0.4 })
             ? faker.helpers.arrayElement(products).id
@@ -152,14 +162,12 @@ export async function seedQuotes() {
       gst,
       issuedDate,
       validUntil,
-      notes: faker.helpers.maybe(
-        () => faker.lorem.paragraph(),
-        { probability: 0.5 },
-      ) ?? null,
-      terms: faker.helpers.maybe(
-        () => 'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
-        { probability: 0.7 },
-      ) ?? null,
+      notes: faker.helpers.maybe(() => faker.lorem.paragraph(), { probability: 0.5 }) ?? null,
+      terms:
+        faker.helpers.maybe(
+          () => 'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
+          { probability: 0.7 },
+        ) ?? null,
       items: {
         create: items,
       },

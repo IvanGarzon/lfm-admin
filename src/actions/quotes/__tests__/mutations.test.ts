@@ -60,14 +60,14 @@ const { mockQuoteRepo, mockInvoiceRepo } = vi.hoisted(() => ({
 
 // Mock QuoteRepository
 vi.mock('@/repositories/quote-repository', () => ({
-  QuoteRepository: vi.fn().mockImplementation(function() {
+  QuoteRepository: vi.fn().mockImplementation(function () {
     return mockQuoteRepo;
   }),
 }));
 
 // Mock InvoiceRepository
 vi.mock('@/repositories/invoice-repository', () => ({
-  InvoiceRepository: vi.fn().mockImplementation(function() {
+  InvoiceRepository: vi.fn().mockImplementation(function () {
     return mockInvoiceRepo;
   }),
 }));
@@ -152,7 +152,9 @@ describe('Quote Mutations', () => {
       currency: 'AUD',
       gst: 10,
       discount: 0,
-      items: [{ description: 'Updated Item', quantity: 2, unitPrice: 150, productId: null, colors: [] }],
+      items: [
+        { description: 'Updated Item', quantity: 2, unitPrice: 150, productId: null, colors: [] },
+      ],
     };
 
     it('updates a quote successfully when authorized', async () => {
@@ -231,7 +233,7 @@ describe('Quote Mutations', () => {
       expect(mockQuoteRepo.markAsRejected).toHaveBeenCalledWith(
         'quote-123',
         'Price too high',
-        mockSession.user.id
+        mockSession.user.id,
       );
     });
   });
@@ -260,7 +262,7 @@ describe('Quote Mutations', () => {
       expect(mockQuoteRepo.markAsOnHold).toHaveBeenCalledWith(
         'quote-123',
         'Pending customer approval',
-        mockSession.user.id
+        mockSession.user.id,
       );
     });
   });

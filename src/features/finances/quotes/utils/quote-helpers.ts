@@ -19,7 +19,7 @@ export function getQuoteStatusLabel(status: QuoteStatus): string {
     CANCELLED: 'cancelled',
     CONVERTED: 'converted',
   };
-  
+
   return labels[status];
 }
 
@@ -45,14 +45,8 @@ export const VALID_QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> 
     QuoteStatus.EXPIRED,
     QuoteStatus.CANCELLED,
   ],
-  [QuoteStatus.ON_HOLD]: [
-    QuoteStatus.ACCEPTED,
-    QuoteStatus.CANCELLED,
-  ],
-  [QuoteStatus.ACCEPTED]: [
-    QuoteStatus.CONVERTED,
-    QuoteStatus.CANCELLED,
-  ],
+  [QuoteStatus.ON_HOLD]: [QuoteStatus.ACCEPTED, QuoteStatus.CANCELLED],
+  [QuoteStatus.ACCEPTED]: [QuoteStatus.CONVERTED, QuoteStatus.CANCELLED],
   [QuoteStatus.REJECTED]: [QuoteStatus.CANCELLED], // Can create version from rejected
   [QuoteStatus.EXPIRED]: [QuoteStatus.CANCELLED], // Can create version from expired
   [QuoteStatus.CANCELLED]: [], // Terminal state
@@ -62,10 +56,7 @@ export const VALID_QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> 
 /**
  * Check if a status transition is valid.
  */
-export function canTransitionQuoteStatus(
-  fromStatus: QuoteStatus,
-  toStatus: QuoteStatus,
-): boolean {
+export function canTransitionQuoteStatus(fromStatus: QuoteStatus, toStatus: QuoteStatus): boolean {
   // If statuses are the same, no transition needed
   if (fromStatus === toStatus) {
     return true;
@@ -102,7 +93,7 @@ export function validateQuoteStatusTransition(
         `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`,
       );
     }
-    
+
     throw new Error(
       `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_QUOTE_STATUS_TRANSITIONS[fromStatus].join(', ')}`,
     );
@@ -169,8 +160,7 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
       status === QuoteStatus.ACCEPTED ||
       status === QuoteStatus.REJECTED ||
       status === QuoteStatus.EXPIRED,
-    canEdit:
-      status === QuoteStatus.DRAFT,
+    canEdit: status === QuoteStatus.DRAFT,
   };
 }
 
@@ -212,7 +202,7 @@ export function calculateContentHash(quote: QuoteWithDetails): string {
       lastName: quote.customer.lastName,
       email: quote.customer.email,
     },
-    items: quote.items.map(item => ({
+    items: quote.items.map((item) => ({
       description: item.description,
       quantity: item.quantity,
       unitPrice: item.unitPrice.toString(),
@@ -220,7 +210,7 @@ export function calculateContentHash(quote: QuoteWithDetails): string {
       colors: item.colors,
       notes: item.notes,
       order: item.order,
-      attachments: item.attachments.map(att => ({
+      attachments: item.attachments.map((att) => ({
         id: att.id,
         fileName: att.fileName,
         s3Url: att.s3Url,
@@ -230,10 +220,7 @@ export function calculateContentHash(quote: QuoteWithDetails): string {
     terms: quote.terms,
   };
 
-  return crypto
-    .createHash('sha256')
-    .update(JSON.stringify(relevantData))
-    .digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify(relevantData)).digest('hex');
 }
 
 // ============================================================================

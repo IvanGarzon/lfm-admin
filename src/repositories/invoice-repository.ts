@@ -61,7 +61,6 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async searchAndPaginate(params: InvoiceFilters): Promise<InvoicePagination> {
     const { search, status, page, perPage, sort } = params;
 
-
     const whereClause: Prisma.InvoiceWhereInput = {
       deletedAt: null,
     };
@@ -347,7 +346,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       orderBy: { createdAt: 'asc' },
     });
 
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
@@ -373,7 +372,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       orderBy: { date: 'desc' },
     });
 
-    return payments.map(p => ({
+    return payments.map((p) => ({
       ...p,
       amount: Number(p.amount),
     }));
@@ -466,20 +465,21 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     }
 
     // Run queries in parallel
-    const [statusGroupData, avgInvoiceData, prevData, revenueTrend, topDebtors] = await withDatabaseRetry(() =>
-      Promise.all([
-        this.prisma.invoice.groupBy({
-          by: ['status'],
-          where: whereClause,
-          _count: true,
-          _sum: { amount: true },
-        }),
-        this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
-        previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
-        this.getMonthlyRevenueTrend(12),
-        this.getTopDebtors(5),
-      ])
-    );
+    const [statusGroupData, avgInvoiceData, prevData, revenueTrend, topDebtors] =
+      await withDatabaseRetry(() =>
+        Promise.all([
+          this.prisma.invoice.groupBy({
+            by: ['status'],
+            where: whereClause,
+            _count: true,
+            _sum: { amount: true },
+          }),
+          this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
+          previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
+          this.getMonthlyRevenueTrend(12),
+          this.getTopDebtors(5),
+        ]),
+      );
 
     // Process current period data
     let totalRevenue = 0;
@@ -516,12 +516,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       }
 
       switch (group.status) {
-        case InvoiceStatus.DRAFT: stats.draft = group._count; break;
-        case InvoiceStatus.PENDING: stats.pending = group._count; break;
-        case InvoiceStatus.PAID: stats.paid = group._count; break;
-        case InvoiceStatus.CANCELLED: stats.cancelled = group._count; break;
-        case InvoiceStatus.OVERDUE: stats.overdue = group._count; break;
-        case InvoiceStatus.PARTIALLY_PAID: stats.partiallyPaid = group._count; break;
+        case InvoiceStatus.DRAFT:
+          stats.draft = group._count;
+          break;
+        case InvoiceStatus.PENDING:
+          stats.pending = group._count;
+          break;
+        case InvoiceStatus.PAID:
+          stats.paid = group._count;
+          break;
+        case InvoiceStatus.CANCELLED:
+          stats.cancelled = group._count;
+          break;
+        case InvoiceStatus.OVERDUE:
+          stats.overdue = group._count;
+          break;
+        case InvoiceStatus.PARTIALLY_PAID:
+          stats.partiallyPaid = group._count;
+          break;
       }
     });
 
@@ -573,9 +585,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
   private calculateGrowth(current: number, previous: number): number {
     if (previous === 0) return current > 0 ? 100 : 0;
-    return Number(((current - previous) / previous * 100).toFixed(1));
+    return Number((((current - previous) / previous) * 100).toFixed(1));
   }
-
 
   /**
    * Generate a unique invoice number with format: INV-YYYY-####
@@ -648,10 +659,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         const invoiceNumber = await this.generateInvoiceNumber();
 
         // Calculate total amount
-        const subtotal = data.items.reduce(
-          (sum, item) => sum + item.quantity * item.unitPrice,
-          0,
-        );
+        const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
         const gstPercentage = Number(data.gst || 0);
         const gstAmount = (subtotal * gstPercentage) / 100;
         const totalAmount = subtotal + gstAmount - Number(data.discount || 0);
@@ -739,7 +747,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     const gstPercentage = Number(data.gst || 0);
     const gstAmount = (subtotal * gstPercentage) / 100;
     const totalAmount = subtotal + gstAmount - Number(data.discount || 0);
-    
+
     // Update invoice with items in a transaction
     const updatedInvoice = await this.prisma.$transaction(async (tx) => {
       // 1. Fetch current invoice to check status and locking
@@ -764,36 +772,38 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
       const isLocked = lockedStatuses.includes(currentInvoice.status);
 
-      // 3. If locked, we only allow status transitions (like to CANCELLED), 
+      // 3. If locked, we only allow status transitions (like to CANCELLED),
       // not editing of content (items, gst, discount, customer).
       if (isLocked) {
         // Only allow status update if no other relevant fields are changing.
         // We compare against the original invoice data (implicitly handled by omission in the update)
         // but we should explicitly check if the caller tried to change content.
-        
+
         // Items change is detected if any items are passed (simplified check)
-        const hasContentChanges = 
-          (data.customerId && data.customerId !== undefined) || 
-          (data.gst !== undefined) || 
-          (data.discount !== undefined) || 
+        const hasContentChanges =
+          (data.customerId && data.customerId !== undefined) ||
+          data.gst !== undefined ||
+          data.discount !== undefined ||
           (data.items && data.items.length > 0);
-          
+
         if (hasContentChanges) {
-          throw new Error(`This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`);
+          throw new Error(
+            `This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`,
+          );
         }
-        
+
         // If they only wanted to change status
         if (data.status && data.status !== currentInvoice.status) {
           validateInvoiceStatusTransition(currentInvoice.status, data.status);
-          
+
           await tx.invoice.update({
             where: { id },
-            data: { 
+            data: {
               status: data.status,
               updatedAt: new Date(),
             },
           });
-          
+
           await tx.invoiceStatusHistory.create({
             data: {
               invoiceId: id,
@@ -804,8 +814,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             },
           });
         }
-        
-        return { id }; 
+
+        return { id };
       }
 
       // 4. Regular update for non-locked (DRAFT) invoices
@@ -891,7 +901,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     }
 
     return await this.findByIdWithDetails(updatedInvoice.id);
-  }  
+  }
 
   /**
    * Mark an invoice as pending (revert from OVERDUE or DRAFT status).
@@ -1152,19 +1162,19 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     idempotencyKey?: string,
   ): Promise<InvoiceWithDetails> {
     const invoice = await this.prisma.invoice.findUnique({
-        where: { id: invoiceId, deletedAt: null },
-        select: {
-            id: true,
-            status: true,
-            amount: true,
-            amountPaid: true,
-            receiptNumber: true,
-            currency: true, // Added currency to select for notes
-        },
+      where: { id: invoiceId, deletedAt: null },
+      select: {
+        id: true,
+        status: true,
+        amount: true,
+        amountPaid: true,
+        receiptNumber: true,
+        currency: true, // Added currency to select for notes
+      },
     });
 
     if (!invoice) {
-        throw new Error('Invoice not found');
+      throw new Error('Invoice not found');
     }
 
     const previousStatus = invoice.status;
@@ -1173,10 +1183,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     // Determine new status
     let newStatus = invoice.status;
-    if (newAmountDue <= INVOICE_CONFIG.PAYMENT_TOLERANCE) { // Floating point tolerance
-        newStatus = InvoiceStatus.PAID;
+    if (newAmountDue <= INVOICE_CONFIG.PAYMENT_TOLERANCE) {
+      // Floating point tolerance
+      newStatus = InvoiceStatus.PAID;
     } else if (newAmountDue > 0 && newAmountPaid > 0) {
-        newStatus = InvoiceStatus.PARTIALLY_PAID;
+      newStatus = InvoiceStatus.PARTIALLY_PAID;
     }
 
     const statusChanged = previousStatus !== newStatus;
@@ -1199,7 +1210,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         const existingPayment = await tx.payment.findUnique({
           where: { idempotencyKey },
         });
-        
+
         if (existingPayment) {
           // Payment already recorded, just return early from transaction
           return;
@@ -1225,11 +1236,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           status: newStatus,
           updatedAt: new Date(),
           // If fully paid, set paidDate, paymentMethod, and receiptNumber
-          ...(newStatus === InvoiceStatus.PAID ? {
-              paidDate: date,
-              paymentMethod: method,
-              receiptNumber,
-          } : {}),
+          ...(newStatus === InvoiceStatus.PAID
+            ? {
+                paidDate: date,
+                paymentMethod: method,
+                receiptNumber,
+              }
+            : {}),
         },
       });
 
@@ -1250,7 +1263,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     if (!updated) {
       throw new Error('Failed to retrieve updated invoice');
     }
-    
+
     return updated;
   }
 
@@ -1294,7 +1307,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           try {
             validateInvoiceStatusTransition(invoice.status, status);
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Invalid status transition';
+            const errorMessage =
+              error instanceof Error ? error.message : 'Invalid status transition';
             results.push({ id, success: false, error: errorMessage });
             continue;
           }
@@ -1430,7 +1444,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         GROUP BY year, month_num, month
         ORDER BY year DESC, month_num DESC
         LIMIT ${limit}
-      `)
+      `),
     );
 
     return data
@@ -1461,7 +1475,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         GROUP BY c.id, "customerName"
         ORDER BY "amountDue" DESC
         LIMIT ${limit}
-      `)
+      `),
     );
 
     return data.map((item) => ({

@@ -6,7 +6,15 @@ import { StatCard } from './analytics/stat-card';
 import { RevenueTrendChart } from './analytics/revenue-trend-chart';
 import { TopDebtorsList } from './analytics/top-debtors-list';
 import { StatusDistributionChart } from './analytics/status-distribution-chart';
-import { DollarSign, Clock, CheckCircle, TrendingUp, Download, Percent, FileEdit } from 'lucide-react';
+import {
+  DollarSign,
+  Clock,
+  CheckCircle,
+  TrendingUp,
+  Download,
+  Percent,
+  FileEdit,
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -27,15 +35,14 @@ export function InvoiceAnalytics() {
 
   const getComparisonLabel = () => {
     if (!dateRange?.from || !dateRange?.to) return 'vs. previous period';
-    
-    const diffInDays = Math.round(
-      (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
-    ) + 1; // +1 to include both ends
-    
+
+    const diffInDays =
+      Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 to include both ends
+
     if (diffInDays === 1) return 'vs. previous day';
     if (diffInDays === 7) return 'vs. last week';
     if (diffInDays === 30 || diffInDays === 31) return 'vs. last month';
-    
+
     return `vs. previous ${diffInDays} days`;
   };
 
@@ -57,13 +64,12 @@ export function InvoiceAnalytics() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Invoice Analytics</h2>
-          <p className="text-muted-foreground">Comprehensive overview of your invoicing performance.</p>
+          <p className="text-muted-foreground">
+            Comprehensive overview of your invoicing performance.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <CalendarDateRangePicker 
-            date={dateRange} 
-            onDateChange={setDateRange} 
-          />
+          <CalendarDateRangePicker date={dateRange} onDateChange={setDateRange} />
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -133,4 +139,3 @@ export function InvoiceAnalytics() {
     </Box>
   );
 }
-

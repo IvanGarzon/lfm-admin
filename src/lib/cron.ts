@@ -12,19 +12,19 @@ export async function initCronJobs() {
       const response = await fetch(`${env.NEXT_PUBLIC_APP_URL}/api/cron/invoices/update-status`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${env.CRON_SECRET}`,
+          Authorization: `Bearer ${env.CRON_SECRET}`,
         },
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update invoices');
       }
 
-      logger.info('Daily overdue check completed', { 
+      logger.info('Daily overdue check completed', {
         context: 'CronJob',
-        metadata: { result: data }
+        metadata: { result: data },
       });
     } catch (error) {
       logger.error('Daily overdue check failed', error, { context: 'CronJob' });

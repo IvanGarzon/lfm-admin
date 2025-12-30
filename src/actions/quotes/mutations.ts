@@ -27,15 +27,9 @@ import {
   type ConvertQuoteToInvoiceInput,
   type CreateVersionInput,
 } from '@/schemas/quotes';
-import type {
-  QuoteItemAttachment,
-} from '@/features/finances/quotes/types';
+import type { QuoteItemAttachment } from '@/features/finances/quotes/types';
 import type { ActionResult } from '@/types/actions';
-import {
-  uploadFileToS3,
-  deleteFileFromS3,
-  ALLOWED_IMAGE_MIME_TYPES,
-} from '@/lib/s3';
+import { uploadFileToS3, deleteFileFromS3, ALLOWED_IMAGE_MIME_TYPES } from '@/lib/s3';
 import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.service';
 
 const quoteRepo = new QuoteRepository(prisma);
@@ -527,7 +521,7 @@ export async function deleteQuoteItemAttachment(data: {
 
   requirePermission(session.user, 'canManageQuotes');
 
-  try{
+  try {
     const validatedData = DeleteItemAttachmentSchema.parse(data);
 
     // Get attachment details
@@ -645,10 +639,13 @@ export async function updateQuoteItemColors(data: {
  * @param data - An object containing the quote ID to create a version from.
  * @returns A promise that resolves to an `ActionResult` with the new version's details.
  */
-export async function createQuoteVersion(
-  data: CreateVersionInput,
-): Promise<
-  ActionResult<{ id: string; quoteNumber: string; versionNumber: number; parentQuoteNumber: string }>
+export async function createQuoteVersion(data: CreateVersionInput): Promise<
+  ActionResult<{
+    id: string;
+    quoteNumber: string;
+    versionNumber: number;
+    parentQuoteNumber: string;
+  }>
 > {
   try {
     const session = await auth();
@@ -753,7 +750,7 @@ export async function sendQuoteEmail(data: {
  * @returns A promise that resolves to an `ActionResult` with the email audit ID
  */
 export async function sendQuoteFollowUp(
-  quoteId: string
+  quoteId: string,
 ): Promise<ActionResult<{ auditId: string; eventId: string }>> {
   try {
     const session = await auth();
@@ -789,7 +786,7 @@ export async function sendQuoteFollowUp(
 
     if (recentFollowUp) {
       const hoursSinceLastFollowUp = Math.floor(
-        (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60)
+        (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60),
       );
       const hoursRemaining = 24 - hoursSinceLastFollowUp;
 

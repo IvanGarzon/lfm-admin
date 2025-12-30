@@ -52,12 +52,7 @@ export type EmailTemplate = z.infer<typeof EmailTemplateEnum>;
 /**
  * Entity types that can have emails associated
  */
-export const EmailEntityTypeEnum = z.enum([
-  'invoice',
-  'quote',
-  'customer',
-  'report',
-]);
+export const EmailEntityTypeEnum = z.enum(['invoice', 'quote', 'customer', 'report']);
 
 export type EmailEntityType = z.infer<typeof EmailEntityTypeEnum>;
 
@@ -84,11 +79,15 @@ export const QueueEmailSchema = z.object({
   emailData: z.record(z.any()),
 
   // Attachments
-  attachments: z.array(z.object({
-    filename: z.string(),
-    url: z.string().optional(),
-    generatePdf: z.boolean().optional(), // If true, generate PDF from entity
-  })).optional(),
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string(),
+        url: z.string().optional(),
+        generatePdf: z.boolean().optional(), // If true, generate PDF from entity
+      }),
+    )
+    .optional(),
 
   // Priority (for future use)
   priority: z.enum(['high', 'normal', 'low']).default('normal'),

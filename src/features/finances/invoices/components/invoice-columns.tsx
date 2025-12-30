@@ -3,7 +3,16 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { Text, Ban, CircleCheckBig, Hourglass, CircleDashed, Timer, Bell, SquareDashedTopSolid } from 'lucide-react';
+import {
+  Text,
+  Ban,
+  CircleCheckBig,
+  Hourglass,
+  CircleDashed,
+  Timer,
+  Bell,
+  SquareDashedTopSolid,
+} from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -37,7 +46,7 @@ const StatusOptions: {
     label: 'Pending',
     value: InvoiceStatus.PENDING,
     icon: Hourglass,
-  },   
+  },
   {
     label: 'Paid',
     value: InvoiceStatus.PAID,
@@ -170,13 +179,15 @@ export const createInvoiceColumns = (
       // We can also show amountDue if it differs
       const amountDue = row.original.amountDue;
       const amountPaid = row.original.amountPaid;
-      
+
       return (
         <Box className="flex flex-col">
           <span className="font-semibold">{formatCurrency({ number: amount })}</span>
           {amountDue > 0 && amountPaid > 0 && amountDue < amount ? (
-            <span className="text-xs text-muted-foreground font-medium">Due: {formatCurrency({ number: amountDue })}</span>
-          ): null}
+            <span className="text-xs text-muted-foreground font-medium">
+              Due: {formatCurrency({ number: amountDue })}
+            </span>
+          ) : null}
         </Box>
       );
     },
@@ -200,33 +211,33 @@ export const createInvoiceColumns = (
     cell: ({ row }) => {
       const dueDate: Date = row.getValue('dueDate');
       const invoice = row.original;
-      
+
       // Calculate urgency and derived values
       const urgency = getUrgency(invoice);
       const isOverdueItem = isOverdue(invoice);
       const daysDiff = daysUntilDue(dueDate);
-      const daysOverdue = getOverdueDays(dueDate);      
+      const daysOverdue = getOverdueDays(dueDate);
       const showReminder = needsReminder(invoice);
-      
+
       // Determine color and icon based on urgency
-      let colorClass = "text-muted-foreground";
+      let colorClass = 'text-muted-foreground';
       let Icon = null;
       let statusText = null;
-      
+
       if (urgency === 'critical') {
-        colorClass = "text-destructive";
+        colorClass = 'text-destructive';
         Icon = Timer;
         statusText = `Overdue by ${daysOverdue} days`;
       } else if (urgency === 'high') {
-        colorClass = "text-orange-600";
+        colorClass = 'text-orange-600';
         Icon = Timer;
         statusText = `Due in ${daysDiff} days`;
       } else if (urgency === 'medium') {
-        colorClass = "text-yellow-600";
+        colorClass = 'text-yellow-600';
         Icon = Timer;
         statusText = `Due in ${daysDiff} days`;
       }
-      
+
       // Don't show overdue/due status for paid/cancelled invoices
       if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
         return (
@@ -237,24 +248,25 @@ export const createInvoiceColumns = (
       }
 
       // Determine the date color based on urgency and status
-      const dateColorClass = invoice.status === InvoiceStatus.PENDING && urgency !== 'critical'
-        ? "text-gray-600"
-        : colorClass;
+      const dateColorClass =
+        invoice.status === InvoiceStatus.PENDING && urgency !== 'critical'
+          ? 'text-gray-600'
+          : colorClass;
 
       return (
         <Box className="flex flex-col">
           <Box className="flex items-center gap-2">
-            <span className={`${dateColorClass} ${statusText ? "font-semibold" : ""}`}>{format(dueDate, 'MMM dd, yyyy')}</span>
-            {showReminder ? (
-              <Bell className="h-3 w-3 text-blue-500 animate-pulse" />
-            ): null}
+            <span className={`${dateColorClass} ${statusText ? 'font-semibold' : ''}`}>
+              {format(dueDate, 'MMM dd, yyyy')}
+            </span>
+            {showReminder ? <Bell className="h-3 w-3 text-blue-500 animate-pulse" /> : null}
           </Box>
           {statusText ? (
             <div className={`flex items-center text-xs ${colorClass}`}>
-              {Icon ? <Icon className="mr-1 h-3 w-3" />: null}
+              {Icon ? <Icon className="mr-1 h-3 w-3" /> : null}
               <span>{statusText}</span>
             </div>
-          ): null}
+          ) : null}
         </Box>
       );
     },

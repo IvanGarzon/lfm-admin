@@ -250,9 +250,8 @@ export async function getQuotePdfUrl(
 
     // Generate or retrieve PDF using centralized service
     // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateQuotePdf } = await import(
-      '@/features/finances/quotes/services/quote-pdf.service'
-    );
+    const { getOrGenerateQuotePdf } =
+      await import('@/features/finances/quotes/services/quote-pdf.service');
     const result = await getOrGenerateQuotePdf(quote, {
       context: 'getQuotePdfUrl',
       skipDownload: true,

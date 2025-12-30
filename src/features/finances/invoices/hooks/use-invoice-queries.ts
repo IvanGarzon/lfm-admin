@@ -28,7 +28,11 @@ import type {
   CancelInvoiceData,
 } from '@/features/finances/invoices/types';
 
-import type { CreateInvoiceInput, UpdateInvoiceInput, RecordPaymentInput } from '@/schemas/invoices';
+import type {
+  CreateInvoiceInput,
+  UpdateInvoiceInput,
+  RecordPaymentInput,
+} from '@/schemas/invoices';
 import { toast } from 'sonner';
 
 export const INVOICE_KEYS = {
@@ -160,7 +164,7 @@ export function useInvoiceHistory(id: string | undefined) {
 
 export function useInvoiceStatistics(
   dateFilter?: { startDate?: Date; endDate?: Date },
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) {
   return useQuery({
     queryKey: [...INVOICE_KEYS.statistics(), dateFilter],
@@ -231,7 +235,7 @@ export function useUpdateInvoice() {
           // Calculate new total amount from items
           const totalAmount = newData.items.reduce(
             (sum, item) => sum + item.quantity * item.unitPrice,
-            0
+            0,
           );
 
           return {
@@ -306,15 +310,15 @@ export function useRecordPayment() {
         INVOICE_KEYS.detail(newData.id),
         (old: InvoiceWithDetails | undefined) => {
           if (!old) return old;
-          
+
           const newAmountPaid = Number(old.amountPaid) + newData.amount;
           const newAmountDue = Number(old.amount) - newAmountPaid;
-          
+
           let newStatus = old.status;
           if (newAmountDue <= 0.01) {
-             newStatus = InvoiceStatus.PAID;
+            newStatus = InvoiceStatus.PAID;
           } else if (newAmountDue > 0 && newAmountPaid > 0) {
-             newStatus = InvoiceStatus.PARTIALLY_PAID;
+            newStatus = InvoiceStatus.PARTIALLY_PAID;
           }
 
           return {
@@ -323,21 +327,23 @@ export function useRecordPayment() {
             amountPaid: newAmountPaid,
             amountDue: newAmountDue,
             // If fully paid, set these for compatibility, though we should prefer the payments array
-            ...(newStatus === InvoiceStatus.PAID ? {
-                paidDate: newData.paidDate,
-                paymentMethod: newData.paymentMethod,
-            }: {}),
+            ...(newStatus === InvoiceStatus.PAID
+              ? {
+                  paidDate: newData.paidDate,
+                  paymentMethod: newData.paymentMethod,
+                }
+              : {}),
             payments: [
-                {
-                    id: 'temp-' + Date.now(),
-                    amount: newData.amount,
-                    date: newData.paidDate,
-                    method: newData.paymentMethod,
-                    reference: null,
-                    notes: newData.notes ?? null,
-                },
-                ...old.payments,
-            ]
+              {
+                id: 'temp-' + Date.now(),
+                amount: newData.amount,
+                date: newData.paidDate,
+                method: newData.paymentMethod,
+                reference: null,
+                notes: newData.notes ?? null,
+              },
+              ...old.payments,
+            ],
           };
         },
       );
@@ -541,16 +547,13 @@ export function useSendInvoiceReminder() {
       const previousInvoice = queryClient.getQueryData(INVOICE_KEYS.detail(id));
 
       // Optimistically update to increment remindersSent
-      queryClient.setQueryData(
-        INVOICE_KEYS.detail(id),
-        (old: InvoiceWithDetails | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            remindersSent: (old.remindersSent ?? 0) + 1,
-          };
-        },
-      );
+      queryClient.setQueryData(INVOICE_KEYS.detail(id), (old: InvoiceWithDetails | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          remindersSent: (old.remindersSent ?? 0) + 1,
+        };
+      });
 
       // Return a context object with the snapshotted value
       return { previousInvoice, id };

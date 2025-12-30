@@ -15,7 +15,16 @@ export async function createDocument(data: {
   mimeType?: string;
   metadata?: Record<string, unknown>;
 }) {
-  const { kind, invoiceId, quoteId, buffer, fileName, fileHash, mimeType = 'application/pdf', metadata } = data;
+  const {
+    kind,
+    invoiceId,
+    quoteId,
+    buffer,
+    fileName,
+    fileHash,
+    mimeType = 'application/pdf',
+    metadata,
+  } = data;
 
   // Validate that at least one ID is provided
   if (!invoiceId && !quoteId) {
@@ -63,10 +72,7 @@ export async function createDocument(data: {
 /**
  * Retrieves the latest document of a specific type for a given entity.
  */
-export async function getLatestDocument(
-  entityId: string,
-  kind: DocumentKind,
-) {
+export async function getLatestDocument(entityId: string, kind: DocumentKind) {
   if (kind === DocumentKind.INVOICE || kind === DocumentKind.RECEIPT) {
     return prisma.document.findFirst({
       where: {

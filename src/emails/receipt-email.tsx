@@ -1,10 +1,4 @@
-import {
-  Button,
-  Heading,
-  Hr,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
@@ -25,7 +19,8 @@ interface ReceiptEmailProps {
 }
 
 function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
-  const { invoiceNumber, receiptNumber, customerName, amount, currency, paidDate, paymentMethod } = receiptData;
+  const { invoiceNumber, receiptNumber, customerName, amount, currency, paidDate, paymentMethod } =
+    receiptData;
 
   return (
     <>
@@ -67,7 +62,7 @@ function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.React
             Download Receipt PDF
           </Button>
         </Section>
-      ): null}
+      ) : null}
 
       <Hr style={styles.hr} />
 
@@ -79,16 +74,16 @@ function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.React
         If you have any questions, please don't hesitate to contact us.
       </Text>
 
-      <Text style={styles.footer}>
-        Thank you for your business!
-      </Text>
+      <Text style={styles.footer}>Thank you for your business!</Text>
     </>
   );
 }
 
 export function ReceiptEmail(props: ReceiptEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText={`Payment Receipt ${props.receiptData.receiptNumber || props.receiptData.invoiceNumber}`}>
+    <BaseTemplateEmail
+      previewText={`Payment Receipt ${props.receiptData.receiptNumber || props.receiptData.invoiceNumber}`}
+    >
       <ReceiptContent {...props} />
     </BaseTemplateEmail>
   );
@@ -99,7 +94,7 @@ ReceiptEmail.PreviewProps = {
     invoiceNumber: 'INV-2025-001',
     receiptNumber: 'REC-2025-001',
     customerName: 'Emma Wilson',
-    amount: 2500.00,
+    amount: 2500.0,
     currency: 'AUD',
     paidDate: new Date('2025-01-20'),
     paymentMethod: 'Credit Card',
@@ -108,4 +103,3 @@ ReceiptEmail.PreviewProps = {
 } satisfies ReceiptEmailProps;
 
 export default ReceiptEmail;
-

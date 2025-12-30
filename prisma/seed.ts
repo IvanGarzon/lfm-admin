@@ -28,7 +28,7 @@ async function main() {
       console.log('');
     }
 
-     // Step 2: Seed customers
+    // Step 2: Seed customers
     const customerCount = await prisma.customer.count();
     if (customerCount === 0) {
       console.log('📋 Step 2: Seeding customers...');
@@ -63,7 +63,7 @@ async function main() {
       console.log(`   Employees: ${employeeCount}`);
       console.log('');
     }
-    
+
     // Step 5: Seed invoices
     const invoiceCount = await prisma.invoice.count();
     if (invoiceCount === 0) {
@@ -75,7 +75,7 @@ async function main() {
       console.log(`   Invoices: ${invoiceCount}`);
       console.log('');
     }
-    
+
     // Step 6: Seed quotes
     const quoteCount = await prisma.quote.count();
     if (quoteCount === 0) {

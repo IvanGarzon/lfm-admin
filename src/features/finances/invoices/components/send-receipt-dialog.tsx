@@ -13,7 +13,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Box } from '@/components/ui/box';
-import type { InvoiceWithDetails, InvoiceBasic, InvoiceItemDetail, InvoicePaymentItem } from '@/features/finances/invoices/types';
+import type {
+  InvoiceWithDetails,
+  InvoiceBasic,
+  InvoiceItemDetail,
+  InvoicePaymentItem,
+} from '@/features/finances/invoices/types';
 import { ReceiptPreview } from '@/features/finances/invoices/components/receipt-preview';
 
 interface SendReceiptDialogProps {
@@ -87,10 +92,10 @@ export function SendReceiptDialog({
         </DialogHeader>
 
         <Box className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-hidden">
-          <ReceiptPreview 
-            invoice={invoice} 
-            items={items} 
-            payments={payments} 
+          <ReceiptPreview
+            invoice={invoice}
+            items={items}
+            payments={payments}
             isLoadingItems={isLoadingItems}
             isLoadingPayments={isLoadingPayments}
           />
@@ -112,7 +117,7 @@ export function SendReceiptDialog({
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <Download className="h-4 w-4 mr-2" />
-                )}                
+                )}
                 {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
               <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail}>

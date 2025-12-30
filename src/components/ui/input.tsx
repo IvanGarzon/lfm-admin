@@ -31,8 +31,7 @@ const inputVariants = cva(
 );
 
 export interface InputProps
-  extends Omit<React.ComponentProps<'input'>, 'size'>,
-    VariantProps<typeof inputVariants> {}
+  extends Omit<React.ComponentProps<'input'>, 'size'>, VariantProps<typeof inputVariants> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, inputSize, hasError, enableStepper = true, ...props }, ref) => {

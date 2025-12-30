@@ -15,12 +15,15 @@ Action/Feature → queueEmail() → Inngest → Background Function → PDF + Em
 ## Files Created
 
 ### 1. Database
+
 - `prisma/schema.prisma` - EmailAudit model with polymorphic relations
 
 ### 2. Types
+
 - `src/types/email.ts` - Generic email types and schemas
 
 ### 3. Infrastructure
+
 - `src/lib/inngest/client.ts` - Inngest client configuration
 - `src/services/email-queue.service.ts` - Email queuing service
 - `src/lib/inngest/functions/send-email.ts` - Background email processing function (to be created)
@@ -48,7 +51,7 @@ import { queueInvoiceEmail } from '@/services/email-queue.service';
 await queueInvoiceEmail({
   invoiceId: invoice.id,
   customerId: invoice.customerId,
-  type: 'pending',  // or 'reminder', 'receipt', 'overdue'
+  type: 'pending', // or 'reminder', 'receipt', 'overdue'
   recipient: customer.email,
   subject: `Invoice ${invoice.invoiceNumber}`,
   emailData: {
@@ -89,18 +92,22 @@ await queueEmail({
   templateName: 'report',
   recipient: user.email,
   subject: 'Monthly Report',
-  emailData: { /* report data */ },
+  emailData: {
+    /* report data */
+  },
 });
 ```
 
 ## Migration Steps
 
 1. Run Prisma migration:
+
 ```bash
 pnpm prisma:migrate:dev
 ```
 
 2. Sign up for Inngest (free tier):
+
 - Go to https://app.inngest.com
 - Create an account
 - Create a new app
@@ -125,6 +132,7 @@ pnpm prisma:migrate:dev
 ## Dashboard
 
 View email status at:
+
 - **Inngest**: https://app.inngest.com (events, retries, errors)
 - **Database**: Query `EmailAudit` table for audit history
 

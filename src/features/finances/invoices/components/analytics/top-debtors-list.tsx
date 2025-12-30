@@ -47,12 +47,18 @@ export function TopDebtorsList({ debtors, isLoading }: TopDebtorsListProps) {
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-muted text-xs">
-                    {debtor.customerName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {debtor.customerName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">{debtor.customerName}</p>
-                  <p className="text-xs text-muted-foreground">{debtor.invoiceCount} unpaid invoices</p>
+                  <p className="text-xs text-muted-foreground">
+                    {debtor.invoiceCount} unpaid invoices
+                  </p>
                 </div>
               </div>
               <div className="text-sm font-bold text-red-600">
@@ -61,7 +67,9 @@ export function TopDebtorsList({ debtors, isLoading }: TopDebtorsListProps) {
             </div>
           ))}
           {debtors && debtors.length === 0 && (
-            <p className="text-sm text-center text-muted-foreground py-4">No outstanding balances!</p>
+            <p className="text-sm text-center text-muted-foreground py-4">
+              No outstanding balances!
+            </p>
           )}
         </div>
       </CardContent>

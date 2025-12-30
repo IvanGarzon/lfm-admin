@@ -8,6 +8,7 @@
 import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repository';
 import type { QueueEmailPayload } from '@/types/email';
 
 /**
@@ -40,8 +41,29 @@ import type { QueueEmailPayload } from '@/types/email';
  * });
  * ```
  */
-export async function queueEmail(payload: QueueEmailPayload): Promise<{ auditId: string; eventId: string }> {
+export async function queueEmail(
+  payload: QueueEmailPayload,
+): Promise<{ auditId: string; eventId: string }> {
   try {
+    // Check if send-email task is enabled
+    const taskRepo = new ScheduledTaskRepository(prisma);
+    const sendEmailTask = await taskRepo.findByFunctionId('send-email');
+
+    if (sendEmailTask && !sendEmailTask.isEnabled) {
+      logger.warn('send-email task is disabled, blocking email queue', {
+        context: 'email-queue',
+        metadata: {
+          emailType: payload.emailType,
+          recipient: payload.recipient,
+          taskId: sendEmailTask.id,
+        },
+      });
+
+      throw new Error(
+        'Email sending is currently disabled. Please enable the send-email task to send emails.',
+      );
+    }
+
     // Create email audit record
     const emailAudit = await prisma.emailAudit.create({
       data: {
@@ -127,7 +149,8 @@ export async function queueInvoiceEmail(params: {
     entityType: 'invoice',
     entityId: params.invoiceId,
     emailType: `invoice.${params.type}` as any,
-    templateName: params.type === 'receipt' ? 'receipt' : params.type === 'reminder' ? 'reminder' : 'invoice',
+    templateName:
+      params.type === 'receipt' ? 'receipt' : params.type === 'reminder' ? 'reminder' : 'invoice',
     recipient: params.recipient,
     subject: params.subject,
     customerId: params.customerId,

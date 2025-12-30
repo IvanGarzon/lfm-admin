@@ -79,8 +79,12 @@ vi.mock('@/prisma/client', () => ({
   Prisma: {
     Decimal: class {
       public value: any;
-      constructor(v: any) { this.value = v; }
-      toString() { return String(this.value); }
+      constructor(v: any) {
+        this.value = v;
+      }
+      toString() {
+        return String(this.value);
+      }
     },
     sql: vi.fn((strings: TemplateStringsArray, ...values: any[]) => ({
       strings,

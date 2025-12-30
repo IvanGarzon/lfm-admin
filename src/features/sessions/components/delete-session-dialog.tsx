@@ -42,9 +42,10 @@ export function DeleteSessionDialog({
             ) : (
               'this session'
             )}
-            . {isCurrentSession ?
-              "You'll be redirected to the sign-in page." :
-              "You'll need to sign in again on that device to access your account."}
+            .{' '}
+            {isCurrentSession
+              ? "You'll be redirected to the sign-in page."
+              : "You'll need to sign in again on that device to access your account."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

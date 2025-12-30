@@ -1,7 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { Ban, Eye, Receipt, CreditCard, Hourglass, FileDown, BellRing, AlertCircle, MoreHorizontal, Copy, RotateCcw } from 'lucide-react';
+import {
+  Ban,
+  Eye,
+  Receipt,
+  CreditCard,
+  Hourglass,
+  FileDown,
+  BellRing,
+  AlertCircle,
+  MoreHorizontal,
+  Copy,
+  RotateCcw,
+} from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -96,7 +108,7 @@ export function InvoiceActions({
                 <BellRing className="h-4 w-4" />
                 Send reminder
               </DropdownMenuItem>
-              <>              
+              <>
                 <DropdownMenuSeparator />
                 {invoice.status === InvoiceStatus.PENDING && (
                   <DropdownMenuItem onClick={() => onMarkAsDraft(invoice.id)}>
@@ -104,7 +116,7 @@ export function InvoiceActions({
                     Revert to draft
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}
                   className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
                 >
@@ -133,7 +145,7 @@ export function InvoiceActions({
                 Delete invoice
               </DropdownMenuItem>
             </>
-          ): null}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </Box>

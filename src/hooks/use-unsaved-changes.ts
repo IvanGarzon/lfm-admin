@@ -36,10 +36,7 @@ interface UseUnsavedChangesOptions {
  * @param isDirty - Whether the form has unsaved changes
  * @param options - Configuration options
  */
-export function useUnsavedChanges(
-  isDirty: boolean,
-  options: UseUnsavedChangesOptions = {},
-) {
+export function useUnsavedChanges(isDirty: boolean, options: UseUnsavedChangesOptions = {}) {
   const {
     warnOnRouteChange = true,
     message = 'You have unsaved changes. Are you sure you want to leave?',
@@ -83,9 +80,7 @@ export function useUnsavedChangesCallback(
   hasUnsavedChanges: () => boolean,
   options: UseUnsavedChangesOptions = {},
 ) {
-  const {
-    message = 'You have unsaved changes. Are you sure you want to leave?',
-  } = options;
+  const { message = 'You have unsaved changes. Are you sure you want to leave?' } = options;
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

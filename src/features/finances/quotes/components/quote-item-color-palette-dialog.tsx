@@ -13,9 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Box } from '@/components/ui/box';
-import {
-  useUploadQuoteItemColorPalette
-} from '@/features/finances/quotes/hooks/use-quote-queries';
+import { useUploadQuoteItemColorPalette } from '@/features/finances/quotes/hooks/use-quote-queries';
 
 interface QuoteItemColorPaletteDialogProps {
   open: boolean;
@@ -85,7 +83,7 @@ export function QuoteItemColorPaletteDialog({
                   onSuccess: () => {
                     onOpenChange(false);
                   },
-                }
+                },
               );
             }}
             disabled={uploadMutation.isPending}
@@ -96,9 +94,7 @@ export function QuoteItemColorPaletteDialog({
                 Saving...
               </>
             ) : (
-              <>
-                Save colors
-              </>
+              <>Save colors</>
             )}
           </Button>
         </DialogFooter>

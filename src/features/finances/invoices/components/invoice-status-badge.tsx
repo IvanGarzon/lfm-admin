@@ -1,4 +1,11 @@
-import { Ban, CircleCheckBig, Hourglass, CircleDashed, Timer, SquareDashedTopSolid } from 'lucide-react';
+import {
+  Ban,
+  CircleCheckBig,
+  Hourglass,
+  CircleDashed,
+  Timer,
+  SquareDashedTopSolid,
+} from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
 import { StatusBadge, type StatusBadgeConfig } from '@/features/finances/shared';
 

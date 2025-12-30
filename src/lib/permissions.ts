@@ -20,7 +20,7 @@ export const PERMISSIONS = {
   canRecordPayments: {
     label: 'Can record payments',
   },
-  
+
   // Quote Permissions (for future expansion)
   canReadQuotes: {
     label: 'Can view quotes',
@@ -43,7 +43,7 @@ type RolePolicy = {
   // High-level permissions for UI/business logic
   allow: PermissionKey[];
   deny: PermissionKey[];
-  
+
   // API endpoint-level permissions for server actions
   // Use action names like 'invoices.create', 'invoices.update', etc.
   actions: {
@@ -56,10 +56,7 @@ type RolePolicy = {
  * USER role: Read-only access to invoices and quotes
  */
 const USER: RolePolicy = {
-  allow: [
-    'canReadInvoices',
-    'canReadQuotes',
-  ],
+  allow: ['canReadInvoices', 'canReadQuotes'],
   deny: [],
   actions: {
     allow: [
@@ -68,7 +65,7 @@ const USER: RolePolicy = {
       'invoices.getInvoiceById',
       'invoices.getInvoiceStatistics',
       'invoices.getInvoicePdfUrl',
-      
+
       // Quote read actions
       'quotes.getQuotes',
       'quotes.getQuoteById',
@@ -83,17 +80,12 @@ const USER: RolePolicy = {
  * Inherits from USER and adds management and payment permissions
  */
 const MANAGER: RolePolicy = {
-  allow: [
-    ...USER.allow,
-    'canManageInvoices',
-    'canManageQuotes',
-    'canRecordPayments',
-  ],
+  allow: [...USER.allow, 'canManageInvoices', 'canManageQuotes', 'canRecordPayments'],
   deny: [],
   actions: {
     allow: [
       ...USER.actions.allow,
-      
+
       // Invoice management actions
       'invoices.createInvoice',
       'invoices.updateInvoice',
@@ -103,10 +95,10 @@ const MANAGER: RolePolicy = {
       'invoices.bulkUpdateInvoiceStatus',
       'invoices.sendInvoiceReminder',
       'invoices.sendInvoiceReceipt',
-      
+
       // Payment actions
       'invoices.recordPayment',
-      
+
       // Quote management actions
       'quotes.createQuote',
       'quotes.updateQuote',
@@ -123,14 +115,12 @@ const MANAGER: RolePolicy = {
  * Same as MANAGER plus deletion permissions
  */
 const ADMIN: RolePolicy = {
-  allow: [
-    ...MANAGER.allow,
-  ],
+  allow: [...MANAGER.allow],
   deny: [],
   actions: {
     allow: [
       ...MANAGER.actions.allow,
-      
+
       // Admin-only actions (deletion)
       'invoices.deleteInvoice',
       'quotes.deleteQuote',
@@ -160,7 +150,7 @@ export const RolePolicies: Record<UserRole, RolePolicy> = {
  */
 export function hasPermission(
   user: Session['user'] | undefined,
-  permission: PermissionKey
+  permission: PermissionKey,
 ): boolean {
   if (!user || !user.role) {
     return false;
@@ -188,7 +178,7 @@ export function hasPermission(
  */
 export function requirePermission(
   user: Session['user'] | undefined,
-  permission: PermissionKey
+  permission: PermissionKey,
 ): void {
   if (!hasPermission(user, permission)) {
     const permissionLabel = PERMISSIONS[permission]?.label || permission;
@@ -223,10 +213,7 @@ export function getUserPermissions(user: Session['user'] | undefined): Permissio
  * @param action - The action identifier (e.g., 'invoices.createInvoice').
  * @returns true if the user can execute the action, false otherwise.
  */
-export function hasActionPermission(
-  user: Session['user'] | undefined,
-  action: string
-): boolean {
+export function hasActionPermission(user: Session['user'] | undefined, action: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -251,10 +238,7 @@ export function hasActionPermission(
  * @param action - The action identifier to check.
  * @throws Error if access is denied.
  */
-export function requireActionPermission(
-  user: Session['user'] | undefined,
-  action: string
-): void {
+export function requireActionPermission(user: Session['user'] | undefined, action: string): void {
   if (!hasActionPermission(user, action)) {
     throw new Error(`Unauthorized: Cannot execute ${action}`);
   }

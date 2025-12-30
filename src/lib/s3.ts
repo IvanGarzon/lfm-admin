@@ -229,7 +229,6 @@ export async function getFileMetadata(s3Key: string): Promise<{
   }
 }
 
-
 /**
  * Download a file from S3 as a Buffer
  */

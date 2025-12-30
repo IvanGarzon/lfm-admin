@@ -18,9 +18,8 @@ export function BaseTemplateEmail({
   try {
     const url = absoluteUrl('/static/logo-green-800.png');
     // Check if the URL is valid (not undefined or empty)
-    logoUrl = url && url.startsWith('http')
-      ? url
-      : 'http://localhost:3000/static/logo-green-800.png';
+    logoUrl =
+      url && url.startsWith('http') ? url : 'http://localhost:3000/static/logo-green-800.png';
   } catch {
     // Fallback for email preview server when env vars aren't available
     logoUrl = 'http://localhost:3000/static/logo-green-800.png';
@@ -38,18 +37,17 @@ export function BaseTemplateEmail({
             maxWidth: '600px',
             margin: '0 auto',
           }}
-        >
-        </Container>
+        ></Container>
         <Container style={{ ...container }}>
-            <Img
+          <Img
             src={logoUrl}
-            width='150'
-            height='150'
+            width="150"
+            height="150"
             alt="Las Flores Melbourne"
             style={{ ...logo }}
           />
-            {children}
-            </Container>
+          {children}
+        </Container>
         {/* <Container>
           <EmailFooter />
         </Container> */}

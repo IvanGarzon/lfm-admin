@@ -7,7 +7,7 @@ import {
   generateReceiptFilename,
   calculateContentHash,
   generateInvoicePDF,
-  generateReceiptPDF
+  generateReceiptPDF,
 } from '../utils/invoice-helpers';
 
 export interface PdfResult {
@@ -43,18 +43,15 @@ export interface GetPdfOptions {
  * 1. Calculate hash of invoice content (only PDF-relevant fields).
  * 2. Check if a document with the same hash exists.
  * 3. If yes, reuse it. If no, generate new PDF and save.
- * 
+ *
  * This prevents duplicate PDFs when only non-visual fields change
  * (e.g., status, updatedAt, notes that don't appear in PDF).
  */
 export async function getOrGenerateInvoicePdf(
   invoice: InvoiceWithDetails,
-  options: GetPdfOptions = {}
+  options: GetPdfOptions = {},
 ): Promise<PdfResult> {
-  const {
-    skipDownload = false,
-    context = 'getOrGenerateInvoicePdf',
-  } = options;
+  const { skipDownload = false, context = 'getOrGenerateInvoicePdf' } = options;
 
   const pdfFilename = generateInvoiceFilename(invoice.invoiceNumber);
 
@@ -62,10 +59,7 @@ export async function getOrGenerateInvoicePdf(
   const contentHash = calculateContentHash(invoice, 'invoice');
 
   // Step 2: Check for existing document with same hash
-  const existingDoc = await getLatestDocument(
-    invoice.id,
-    DocumentKind.INVOICE,
-  );
+  const existingDoc = await getLatestDocument(invoice.id, DocumentKind.INVOICE);
 
   // Step 3: Determine if regeneration is needed
   // Only regenerate if content hash changed
@@ -185,12 +179,9 @@ export async function getOrGenerateInvoicePdf(
  */
 export async function getOrGenerateReceiptPdf(
   invoice: InvoiceWithDetails,
-  options: GetPdfOptions = {}
+  options: GetPdfOptions = {},
 ): Promise<PdfResult> {
-  const {
-    skipDownload = false,
-    context = 'getOrGenerateReceiptPdf',
-  } = options;
+  const { skipDownload = false, context = 'getOrGenerateReceiptPdf' } = options;
 
   const pdfFilename = generateReceiptFilename(invoice.receiptNumber || invoice.invoiceNumber);
 
@@ -198,10 +189,7 @@ export async function getOrGenerateReceiptPdf(
   const contentHash = calculateContentHash(invoice, 'receipt');
 
   // Step 2: Check for existing document
-  const existingDoc = await getLatestDocument(
-    invoice.id,
-    DocumentKind.RECEIPT,
-  );
+  const existingDoc = await getLatestDocument(invoice.id, DocumentKind.RECEIPT);
 
   // Step 3: Determine if regeneration is needed
   let needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;

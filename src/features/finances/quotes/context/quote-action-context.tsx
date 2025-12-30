@@ -30,7 +30,13 @@ interface QuoteActionContextType {
   openReject: (id: string, quoteNumber: string, onSuccess?: () => void) => void;
   openOnHold: (id: string, quoteNumber: string, onSuccess?: () => void) => void;
   openCancel: (id: string, quoteNumber: string, onSuccess?: () => void) => void;
-  openConvert: (id: string, quoteNumber: string, gst: number, discount: number, onSuccess?: () => void) => void;
+  openConvert: (
+    id: string,
+    quoteNumber: string,
+    gst: number,
+    discount: number,
+    onSuccess?: () => void,
+  ) => void;
   close: () => void;
 }
 
@@ -61,67 +67,88 @@ export function QuoteActionProvider({ children }: { children: React.ReactNode })
     setState({ type: 'CANCEL', id, quoteNumber, onSuccess });
   }, []);
 
-  const openConvert = useCallback((id: string, quoteNumber: string, gst: number, discount: number, onSuccess?: () => void) => {
-    setState({ type: 'CONVERT', id, quoteNumber, gst, discount, onSuccess });
-  }, []);
+  const openConvert = useCallback(
+    (id: string, quoteNumber: string, gst: number, discount: number, onSuccess?: () => void) => {
+      setState({ type: 'CONVERT', id, quoteNumber, gst, discount, onSuccess });
+    },
+    [],
+  );
 
   const close = useCallback(() => {
     setState(null);
   }, []);
 
-  const handleConfirmDelete = useCallback((quoteId: string) => {
-    deleteQuote.mutate(quoteId, {
-      onSuccess: () => {
-        close();
-        state?.onSuccess?.();
-      },
-    });
-  }, [state, deleteQuote, close]);
+  const handleConfirmDelete = useCallback(
+    (quoteId: string) => {
+      deleteQuote.mutate(quoteId, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [state, deleteQuote, close],
+  );
 
-  const handleConfirmReject = useCallback((data: { id: string; rejectReason: string }) => {
-    markAsRejected.mutate(data, {
-      onSuccess: () => {
-        close();
-        state?.onSuccess?.();
-      },
-    });
-  }, [markAsRejected, state, close]);
+  const handleConfirmReject = useCallback(
+    (data: { id: string; rejectReason: string }) => {
+      markAsRejected.mutate(data, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [markAsRejected, state, close],
+  );
 
-  const handleConfirmOnHold = useCallback((data: { id: string; reason?: string }) => {
-    markAsOnHold.mutate(data, {
-      onSuccess: () => {
-        close();
-        state?.onSuccess?.();
-      },
-    });
-  }, [markAsOnHold, state, close]);
+  const handleConfirmOnHold = useCallback(
+    (data: { id: string; reason?: string }) => {
+      markAsOnHold.mutate(data, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [markAsOnHold, state, close],
+  );
 
-  const handleConfirmCancel = useCallback((data: { id: string; reason?: string }) => {
-    markAsCancelled.mutate(data, {
-      onSuccess: () => {
-        close();
-        state?.onSuccess?.();
-      },
-    });
-  }, [markAsCancelled, state, close]);
+  const handleConfirmCancel = useCallback(
+    (data: { id: string; reason?: string }) => {
+      markAsCancelled.mutate(data, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [markAsCancelled, state, close],
+  );
 
-  const handleConfirmConvert = useCallback((data: { id: string; dueDate: Date; gst: number; discount: number }) => {
-    convertToInvoice.mutate(data, {
-      onSuccess: () => {
-        close();
-        state?.onSuccess?.();
-      },
-    });
-  }, [convertToInvoice, state, close]);
+  const handleConfirmConvert = useCallback(
+    (data: { id: string; dueDate: Date; gst: number; discount: number }) => {
+      convertToInvoice.mutate(data, {
+        onSuccess: () => {
+          close();
+          state?.onSuccess?.();
+        },
+      });
+    },
+    [convertToInvoice, state, close],
+  );
 
-  const value = useMemo(() => ({
-    openDelete,
-    openReject,
-    openOnHold,
-    openCancel,
-    openConvert,
-    close,
-  }), [openDelete, openReject, openOnHold, openCancel, openConvert, close]);
+  const value = useMemo(
+    () => ({
+      openDelete,
+      openReject,
+      openOnHold,
+      openCancel,
+      openConvert,
+      close,
+    }),
+    [openDelete, openReject, openOnHold, openCancel, openConvert, close],
+  );
 
   return (
     <QuoteActionContext.Provider value={value}>

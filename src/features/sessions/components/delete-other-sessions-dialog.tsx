@@ -33,8 +33,8 @@ export function DeleteOtherSessionsDialog({
           <AlertDialogTitle>Sign Out All Devices?</AlertDialogTitle>
           <AlertDialogDescription>
             This will sign out <span className="font-semibold text-foreground">{sessionCount}</span>{' '}
-            {sessionCount === 1 ? 'session' : 'sessions'} including this device. You&apos;ll need to sign
-            in again to access your account.
+            {sessionCount === 1 ? 'session' : 'sessions'} including this device. You&apos;ll need to
+            sign in again to access your account.
             <br />
             <br />
             You will be redirected to the sign-in page.
@@ -50,7 +50,9 @@ export function DeleteOtherSessionsDialog({
             disabled={isPending}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
           >
-            {isPending ? 'Signing Out...' : `Sign Out ${sessionCount} ${sessionCount === 1 ? 'Session' : 'Sessions'}`}
+            {isPending
+              ? 'Signing Out...'
+              : `Sign Out ${sessionCount} ${sessionCount === 1 ? 'Session' : 'Sessions'}`}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

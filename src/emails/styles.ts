@@ -9,7 +9,7 @@ export const styles = {
   main: {
     backgroundColor: '#f6f9fc',
     fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+      '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
   },
   container: {
     justifyContent: 'start',
@@ -48,7 +48,7 @@ export const styles = {
     fontSize: '14px',
     color: '#666',
     fontWeight: '600',
-  },  
+  },
   valueCell,
   amountCell: {
     ...valueCell,
@@ -83,4 +83,4 @@ export const styles = {
     lineHeight: '24px',
     padding: '0 40px',
   },
-}
+};

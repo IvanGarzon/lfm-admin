@@ -3,14 +3,7 @@
 import type { UseFormReturn, FieldArrayWithId } from 'react-hook-form';
 import { useState } from 'react';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
-import {
-  GripVertical,
-  Package,
-  Trash2,
-  X,
-  ImagePlus,
-  Palette,
-} from 'lucide-react';
+import { GripVertical, Package, Trash2, X, ImagePlus, Palette } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { ActiveProduct } from '@/features/products/types';
@@ -67,9 +60,9 @@ export function QuoteItemRow({
     if (!product) {
       return;
     }
-  
+
     const current = form.getValues(`items.${index}`);
-  
+
     form.setValue(
       `items.${index}`,
       {
@@ -81,22 +74,26 @@ export function QuoteItemRow({
       {
         shouldValidate: true,
         shouldDirty: true,
-      }
+      },
     );
-  
+
     setProductSearchOpen(false);
   };
 
   const handleClearProduct = () => {
-    form.setValue(`items.${index}`, {
-      ...form.getValues(`items.${index}`),
-      productId: null,
-      description: '',
-      unitPrice: 0,
-    }, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    form.setValue(
+      `items.${index}`,
+      {
+        ...form.getValues(`items.${index}`),
+        productId: null,
+        description: '',
+        unitPrice: 0,
+      },
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      },
+    );
   };
 
   const selectedProductId = form.watch(`items.${index}.productId`);
@@ -164,22 +161,19 @@ export function QuoteItemRow({
                         >
                           <X />
                         </InputGroupButton>
-                      ) : (
-                        products &&
-                        products.length > 0 ? (
-                          <InputGroupButton
-                            type="button"
-                            onClick={() => setProductSearchOpen(true)}
-                            aria-label="Browse products"
-                            title="Browse products"
-                            size="icon-xs"
-                            className="cursor-pointer hover:text-primary"
-                            disabled={isLocked}
-                          >
-                            <Package />
-                          </InputGroupButton>
-                        ) : null
-                      )}
+                      ) : products && products.length > 0 ? (
+                        <InputGroupButton
+                          type="button"
+                          onClick={() => setProductSearchOpen(true)}
+                          aria-label="Browse products"
+                          title="Browse products"
+                          size="icon-xs"
+                          className="cursor-pointer hover:text-primary"
+                          disabled={isLocked}
+                        >
+                          <Package />
+                        </InputGroupButton>
+                      ) : null}
                     </InputGroupAddon>
                   </InputGroup>
                 </FormControl>
@@ -235,7 +229,7 @@ export function QuoteItemRow({
                       min="0"
                       className="text-left"
                       disabled={isLocked}
-                    />                    
+                    />
                   </InputGroup>
                 </FormControl>
               </FormItem>

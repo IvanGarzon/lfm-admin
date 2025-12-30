@@ -12,8 +12,12 @@ export const InvoiceStatus = {
 export const Prisma = {
   Decimal: class {
     public value: any;
-    constructor(v: any) { this.value = v; }
-    toString() { return String(this.value); }
+    constructor(v: any) {
+      this.value = v;
+    }
+    toString() {
+      return String(this.value);
+    }
   },
   PrismaClient: class PrismaClient {
     public invoice = {

@@ -61,7 +61,13 @@ export async function seedInvoices() {
     take: 10,
   });
 
-  const statuses: InvoiceStatus[] = [InvoiceStatus.DRAFT, InvoiceStatus.PENDING, InvoiceStatus.PAID, InvoiceStatus.CANCELLED, InvoiceStatus.OVERDUE];
+  const statuses: InvoiceStatus[] = [
+    InvoiceStatus.DRAFT,
+    InvoiceStatus.PENDING,
+    InvoiceStatus.PAID,
+    InvoiceStatus.CANCELLED,
+    InvoiceStatus.OVERDUE,
+  ];
   const paymentMethods = ['Bank Transfer', 'Credit Card', 'PayPal', 'Cash', 'Cheque'];
   const cancelReasons = [
     'Client Request',
@@ -137,9 +143,9 @@ export async function seedInvoices() {
     ]);
 
     const gst = 10; // Standard 10% GST
-    
+
     const subtotal = totalAmount;
-    const gstAmount = (subtotal * gst) / 100;    
+    const gstAmount = (subtotal * gst) / 100;
     const finalAmount = subtotal + gstAmount - discount;
 
     // Create invoice data based on status
@@ -155,10 +161,7 @@ export async function seedInvoices() {
       gst,
       issuedDate,
       dueDate,
-      notes: faker.helpers.maybe(
-        () => faker.lorem.sentence(),
-        { probability: 0.3 },
-      ) ?? null,
+      notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
       items: {
         create: items,
       },

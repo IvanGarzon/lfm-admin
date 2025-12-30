@@ -41,7 +41,7 @@ export function ProductSearchDialog({
     return products.filter(
       (product) =>
         product.name.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query)
+        product.description?.toLowerCase().includes(query),
     );
   }, [products, searchQuery]);
 
@@ -108,7 +108,7 @@ export function ProductSearchDialog({
                       </Box>
                       {selectedProductId === product.id ? (
                         <Check className="h-5 w-5 text-primary shrink-0" />
-                      ): null}
+                      ) : null}
                     </button>
                   ))}
                 </Box>

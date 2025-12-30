@@ -76,9 +76,7 @@ export function RejectQuoteDialog({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="reject-quote-form-reason">
-                        Rejection Reason
-                      </FieldLabel>
+                      <FieldLabel htmlFor="reject-quote-form-reason">Rejection Reason</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}

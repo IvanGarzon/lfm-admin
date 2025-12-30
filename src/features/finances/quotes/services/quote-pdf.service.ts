@@ -47,12 +47,9 @@ export interface GetPdfOptions {
  */
 export async function getOrGenerateQuotePdf(
   quote: QuoteWithDetails,
-  options: GetPdfOptions = {}
+  options: GetPdfOptions = {},
 ): Promise<PdfResult> {
-  const {
-    skipDownload = false,
-    context = 'getOrGenerateQuotePdf',
-  } = options;
+  const { skipDownload = false, context = 'getOrGenerateQuotePdf' } = options;
 
   const pdfFilename = generateQuoteFilename(quote.quoteNumber);
 
@@ -60,10 +57,7 @@ export async function getOrGenerateQuotePdf(
   const contentHash = calculateContentHash(quote);
 
   // Step 2: Check for existing document with same hash
-  const existingDoc = await getLatestDocument(
-    quote.id,
-    DocumentKind.QUOTE,
-  );
+  const existingDoc = await getLatestDocument(quote.id, DocumentKind.QUOTE);
 
   // Step 3: Determine if regeneration is needed
   // Only regenerate if content hash changed

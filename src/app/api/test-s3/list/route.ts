@@ -27,7 +27,7 @@ export async function GET() {
       // Handle different S3 key structures:
       // New: [resourceType]/[resourceId]/[subPath]/[filename]
       // Old: quotes/[QUOTE_ID]/attachments/[filename] or quotes/[QUOTE_ID]/items/[ITEM_ID]/[filename]
-      
+
       let resourceType = '';
       let resourceId = '';
       let subPath = '';
@@ -36,7 +36,7 @@ export async function GET() {
       if (keyParts.length >= 2) {
         resourceType = keyParts[0]; // 'quotes', 'invoices', etc.
         resourceId = keyParts[1]; // quote ID, invoice ID, etc.
-        
+
         if (keyParts.length > 2) {
           subPath = keyParts.slice(2, -1).join('/');
         }
@@ -71,20 +71,26 @@ export async function GET() {
     });
 
     // Generate summary statistics
-    const summary = files.reduce((acc, file) => {
-      const key = `${file.resourceType}/${file.fileType}`;
-      if (!acc[key]) {
-        acc[key] = {
-          resourceType: file.resourceType,
-          fileType: file.fileType,
-          count: 0,
-          totalSize: 0,
-        };
-      }
-      acc[key].count++;
-      acc[key].totalSize += file.size;
-      return acc;
-    }, {} as Record<string, { resourceType: string; fileType: string; count: number; totalSize: number }>);
+    const summary = files.reduce(
+      (acc, file) => {
+        const key = `${file.resourceType}/${file.fileType}`;
+        if (!acc[key]) {
+          acc[key] = {
+            resourceType: file.resourceType,
+            fileType: file.fileType,
+            count: 0,
+            totalSize: 0,
+          };
+        }
+        acc[key].count++;
+        acc[key].totalSize += file.size;
+        return acc;
+      },
+      {} as Record<
+        string,
+        { resourceType: string; fileType: string; count: number; totalSize: number }
+      >,
+    );
 
     return NextResponse.json({
       success: true,

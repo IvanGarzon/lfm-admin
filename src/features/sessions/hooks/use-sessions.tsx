@@ -1,8 +1,4 @@
-import {
-  useQueryClient,
-  QueryFunction,
-  useMutation,
-} from '@tanstack/react-query';
+import { useQueryClient, QueryFunction, useMutation } from '@tanstack/react-query';
 import {
   getSessions as getSessionsAction,
   deleteSession,
@@ -40,11 +36,11 @@ type QueryOptions<T, E = Error> = {
 /**
  * Creates query options for fetching all sessions.
  * This function is used internally by useSessions and can be used with useQuery or useSuspenseQuery.
- * 
+ *
  * @param queryParams - Query parameters (currently unused, reserved for future filtering)
  * @returns Query options object with queryKey and queryFn
  * @throws {Error} If the session fetch fails
- * 
+ *
  * @example
  * ```ts
  * const { data } = useQuery(getSessions({}));
@@ -71,10 +67,10 @@ export const getSessions = (queryParams: {}): Pick<
 /**
  * Hook to fetch and manage all active sessions for the current user.
  * Automatically refetches when window regains focus to keep data synchronized across tabs.
- * 
+ *
  * @param params - Query parameters (currently unused, reserved for future filtering)
  * @returns Query options with session data, loading state, and error handling
- * 
+ *
  * @example
  * ```tsx
  * const { data: sessions, isLoading, error } = useQuery(useSessions({}));
@@ -86,7 +82,8 @@ export function useSessions(params: {}): QueryOptions<SessionWithUser[], Error> 
   return {
     ...getSessions({}),
     placeholderData: (previousData) => previousData,
-    initialData: () => queryClient.getQueryData<SessionWithUser[]>([QueryKeys.SESSION.GET_ALL]) || undefined,
+    initialData: () =>
+      queryClient.getQueryData<SessionWithUser[]>([QueryKeys.SESSION.GET_ALL]) || undefined,
     refetchOnWindowFocus: true, // Refetch when window gets focus to sync across browsers
     staleTime: 0, // Always consider data stale to ensure fresh data
   };
@@ -95,13 +92,13 @@ export function useSessions(params: {}): QueryOptions<SessionWithUser[], Error> 
 /**
  * Hook to delete (deactivate) a specific session.
  * Automatically invalidates the sessions cache and shows toast notifications.
- * 
+ *
  * @returns Mutation object with mutate function and loading/error states
- * 
+ *
  * @example
  * ```tsx
  * const { mutate: deleteSession, isPending } = useDeleteSession();
- * 
+ *
  * const handleSignOut = (sessionId: string) => {
  *   deleteSession(sessionId);
  * };
@@ -136,13 +133,13 @@ export function useDeleteSession() {
 /**
  * Hook to delete all sessions except the current one.
  * Useful for "Sign out all other devices" functionality.
- * 
+ *
  * @returns Mutation object with mutate function and loading/error states
- * 
+ *
  * @example
  * ```tsx
  * const { mutate: deleteOthers, isPending } = useDeleteOtherSessions();
- * 
+ *
  * const handleSignOutAll = (currentSessionId: string) => {
  *   deleteOthers(currentSessionId);
  * };
@@ -177,13 +174,13 @@ export function useDeleteOtherSessions() {
 /**
  * Hook to extend a session's expiration by 30 days.
  * Useful when users want to stay logged in longer without re-authenticating.
- * 
+ *
  * @returns Mutation object with mutate function and loading/error states
- * 
+ *
  * @example
  * ```tsx
  * const { mutate: extendSession, isPending } = useExtendSession();
- * 
+ *
  * const handleExtend = (sessionId: string) => {
  *   extendSession(sessionId);
  * };
@@ -218,13 +215,13 @@ export function useExtendSession() {
 /**
  * Hook to delete multiple sessions at once (bulk operation).
  * Used for selecting and signing out multiple sessions simultaneously.
- * 
+ *
  * @returns Mutation object with mutate function and loading/error states
- * 
+ *
  * @example
  * ```tsx
  * const { mutate: deleteSessions, isPending } = useDeleteSessions();
- * 
+ *
  * const handleBulkSignOut = (sessionIds: string[]) => {
  *   deleteSessions(sessionIds);
  * };

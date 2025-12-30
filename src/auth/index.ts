@@ -16,10 +16,7 @@ if (process.env.NODE_ENV !== 'production') {
       },
       async authorize(credentials) {
         console.log('Authorize called with:', credentials?.email);
-        if (
-          credentials?.email === 'test@example.com' &&
-          credentials?.password === 'password'
-        ) {
+        if (credentials?.email === 'test@example.com' && credentials?.password === 'password') {
           console.log('Credentials matched');
           // Upsert test user
           const user = await prisma.user.upsert({
@@ -38,7 +35,7 @@ if (process.env.NODE_ENV !== 'production') {
         }
         return null;
       },
-    })
+    }),
   );
 }
 

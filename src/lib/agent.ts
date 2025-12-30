@@ -17,11 +17,46 @@ export interface SessionDeviceLocation {
 }
 
 const FAKE_LOCATIONS: Record<string, SessionDeviceLocation> = {
-  '103.1.206.0': { country: 'Australia', region: 'New South Wales', city: 'Sydney', timezone: 'Australia/Sydney', latitude: -33.8688, longitude: 151.2093 },
-  '8.8.8.8': { country: 'United States', region: 'California', city: 'Mountain View', timezone: 'America/Los_Angeles', latitude: 37.3860, longitude: -122.0838 },
-  '81.2.69.160': { country: 'United Kingdom', region: 'England', city: 'London', timezone: 'Europe/London', latitude: 51.5074, longitude: -0.1278 },
-  '133.130.91.218': { country: 'Japan', region: 'Tokyo', city: 'Tokyo', timezone: 'Asia/Tokyo', latitude: 35.6762, longitude: 139.6503 },
-  '49.207.182.118': { country: 'India', region: 'Karnataka', city: 'Bangalore', timezone: 'Asia/Kolkata', latitude: 12.9716, longitude: 77.5946 },
+  '103.1.206.0': {
+    country: 'Australia',
+    region: 'New South Wales',
+    city: 'Sydney',
+    timezone: 'Australia/Sydney',
+    latitude: -33.8688,
+    longitude: 151.2093,
+  },
+  '8.8.8.8': {
+    country: 'United States',
+    region: 'California',
+    city: 'Mountain View',
+    timezone: 'America/Los_Angeles',
+    latitude: 37.386,
+    longitude: -122.0838,
+  },
+  '81.2.69.160': {
+    country: 'United Kingdom',
+    region: 'England',
+    city: 'London',
+    timezone: 'Europe/London',
+    latitude: 51.5074,
+    longitude: -0.1278,
+  },
+  '133.130.91.218': {
+    country: 'Japan',
+    region: 'Tokyo',
+    city: 'Tokyo',
+    timezone: 'Asia/Tokyo',
+    latitude: 35.6762,
+    longitude: 139.6503,
+  },
+  '49.207.182.118': {
+    country: 'India',
+    region: 'Karnataka',
+    city: 'Bangalore',
+    timezone: 'Asia/Kolkata',
+    latitude: 12.9716,
+    longitude: 77.5946,
+  },
 };
 
 export async function getClientDetails(): Promise<SessionDeviceLocation> {
@@ -50,7 +85,7 @@ async function getDetailsFromUserAgent(userAgent: string | null): Promise<Sessio
 
   // 🚀 PERFORMANCE FIX: Don't block sign-in waiting for external location API
   // This removes 500-3000ms from every sign-in
-  const location = isDev && ipAddress ? (FAKE_LOCATIONS[ipAddress] || {}) : {};
+  const location = isDev && ipAddress ? FAKE_LOCATIONS[ipAddress] || {} : {};
 
   return {
     ipAddress,

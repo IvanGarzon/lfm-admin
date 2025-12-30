@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Gender, CustomerStatus} from '@/prisma/client';
+import { Gender, CustomerStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
 
 interface Customer {
@@ -33,27 +33,29 @@ export async function seedCustomers() {
 
     // 30% of customers belong to an organization
     const hasOrganization = faker.datatype.boolean({ probability: 0.3 });
-    const organizationId = hasOrganization && organizations.length > 0
-      ? faker.helpers.arrayElement(organizations).id
-      : null;
+    const organizationId =
+      hasOrganization && organizations.length > 0
+        ? faker.helpers.arrayElement(organizations).id
+        : null;
 
     const customer: Customer = {
       firstName,
       lastName,
       gender,
       email,
-      phone: faker.helpers.maybe(
-        () => {
-          // Australian phone numbers
-          const mobile = faker.helpers.arrayElement([
-            `04${faker.string.numeric(8)}`,
-            `+614${faker.string.numeric(8)}`,
-          ]);
-          
-          return mobile;
-        },
-        { probability: 0.8 },
-      ) ?? null,
+      phone:
+        faker.helpers.maybe(
+          () => {
+            // Australian phone numbers
+            const mobile = faker.helpers.arrayElement([
+              `04${faker.string.numeric(8)}`,
+              `+614${faker.string.numeric(8)}`,
+            ]);
+
+            return mobile;
+          },
+          { probability: 0.8 },
+        ) ?? null,
       status: faker.helpers.weightedArrayElement([
         { value: 'ACTIVE', weight: 0.9 },
         { value: 'INACTIVE', weight: 0.1 },

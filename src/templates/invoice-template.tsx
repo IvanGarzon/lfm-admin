@@ -314,7 +314,7 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>        
+      <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -322,7 +322,7 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
             <Text style={styles.invoiceNumber}>Invoice Number #{invoice.invoiceNumber}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Image src={logoUrl || "/static/logo-green-800.png"} style={styles.logo} />
+            <Image src={logoUrl || '/static/logo-green-800.png'} style={styles.logo} />
           </View>
         </View>
 
@@ -424,7 +424,7 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
                 </Text>
               </View>
             </>
-          ): null}
+          ) : null}
         </View>
 
         {/* Payment History */}
@@ -446,12 +446,14 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
                   <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
                   <Text style={styles.paymentCol2}>{payment.method}</Text>
                   <Text style={styles.paymentCol3}>{payment.notes || '-'}</Text>
-                  <Text style={styles.paymentCol4}>{formatCurrency({ number: payment.amount })}</Text>
+                  <Text style={styles.paymentCol4}>
+                    {formatCurrency({ number: payment.amount })}
+                  </Text>
                 </View>
               ))}
             </View>
           </View>
-        ): null}
+        ) : null}
 
         {/* Payment Details */}
         <View style={styles.paymentDetails} wrap={false}>

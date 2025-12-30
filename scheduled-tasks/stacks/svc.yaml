@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Scheduled Tasks service'
+Parameters:
+  Environment:
+    Description: Environment for resources
+    Type: String
+    Default: 'local'
+  PackageName:
+    Description: Package name from package.json without the scope
+    Type: String
+    Default: ''
+  PackagePath:
+    Description: Relative path for this package, often used to scope SSM Parameters
+    Type: String
+  CommitHash:
+    Type: 'String'
+    Description: 'Commit Hash'
+  SSMParameterStoreTier:
+    Description: SSM parameter store tier
+    Type: String
+    Default: Standard
+    AllowedValues:
+      - Advanced
+      - Intelligent-Tiering
+      - Standard
+  BuildAccountId:
+    Type: Number
+    Default: 011528267220
+  LambdaStorageBucketName:
+    Type: String
+    Default: 'duke-hq-infra-build-pipeline-lambda-storage'
+
+Conditions:
+  IsProduction: !Equals [!Ref Environment, 'production']
+
+Resources:
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: !Sub '${Environment}-${PackageName}'
+      Code:
+        S3Bucket: !Ref LambdaStorageBucketName
+        S3Key: !Sub '${PackagePath}/${CommitHash}/function.zip'
+      Architectures:
+        - arm64
+      MemorySize: 4096
+      Timeout: 900
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          BUCKET_NAME: !Sub 'duke-hq-${Environment}-${PackageName}'
+          AWS_LAMBDA_EXEC_WRAPPER: /opt/otel-handler
+          OTEL_SERVICE_NAME: DukeHqSvcTaskScheduler
+          HONEYCOMB_API_KEY: !Sub '{{resolve:ssm:/vendor/honeycomb-api-key}}'
+          OTEL_EXPORTER_OTLP_HEADERS: !Sub '{{resolve:ssm:/vendor/honeycomb-otel-header}}'
+          OTEL_EXPORTER_OTLP_ENDPOINT: 'https://api.honeycomb.io'
+          OTEL_PROPAGATOR: tracecontext,baggage,xray-lambda
+          OTEL_TRACES_SAMPLER: always_on
+          ENVIRONMENT: !Sub ${Environment}
+          PRISMA_QUERY_ENGINE_LIBRARY: libquery_engine-linux-arm64-openssl-3.0.x.so.node
+      VpcConfig:
+        SecurityGroupIds:
+          # TODO: This is temporary, and will be replaced before the end of September 2025
+          # We have two security groups which grant access to the RDS database.
+          # Most likely, we can move this value to ssm.
+          - !If
+            - IsProduction
+            - sg-081f734564b9dbedc
+            - sg-0a45c1e532d5fd1de
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - '{{resolve:ssm:/subnet/private/a/id}}'
+          - '{{resolve:ssm:/subnet/private/b/id}}'
+      Layers:
+        - arn:aws:lambda:ap-southeast-2:901920570463:layer:aws-otel-nodejs-arm64-ver-1-18-1:4
+
+  LambdaSchedulerRule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub '${Environment}-${PackageName}-scheduler'
+      Description: 'Run task scheduler'
+      # every 15 minutes, 24/7 (TaskScheduler controls which tasks run based on their cron schedules)
+      ScheduleExpression: 'cron(*/15 * * * ? *)'
+      ScheduleExpressionTimezone: Australia/Sydney
+      FlexibleTimeWindow:
+        MaximumWindowInMinutes: 30
+        Mode: 'FLEXIBLE'
+      State: 'ENABLED'
+      Target:
+        Arn: !GetAtt LambdaFunction.Arn
+        RoleArn: !GetAtt EventBridgeSchedulerRole.Arn
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: 'scheduler.amazonaws.com'
+      SourceArn: !GetAtt LambdaSchedulerRule.Arn
+
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+
+  LambdaExecutionRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub '${Environment}-${PackageName}-RolePolicy'
+      Roles:
+        - !Ref LambdaExecutionRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::duke-hq-${Environment}-${PackageName}'
+              - !Sub 'arn:aws:s3:::duke-hq-${Environment}-${PackageName}/*'
+          - Sid: SSMLimitedRead
+            Action:
+              - ssm:GetParameter
+            Effect: Allow
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*'
+
+  EventBridgeSchedulerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !GetAtt LambdaFunction.Arn
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${Environment}-${PackageName}-lambda-sg
+      VpcId: '{{resolve:ssm:/vpc/id}}'
+      SecurityGroupEgress:
+        # Allow HTTPS outbound for internet access
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: 'HTTPS outbound to internet'
+        # Allow all traffic within VPC for internal communication
+        - IpProtocol: -1
+          CidrIp: 10.0.0.0/8
+          Description: 'All traffic within VPC'

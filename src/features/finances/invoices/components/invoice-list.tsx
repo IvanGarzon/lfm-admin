@@ -20,10 +20,7 @@ import {
   useMarkInvoiceAsDraft,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import dynamic from 'next/dynamic';
-import type {
-  InvoicePagination,
-  InvoiceListItem,
-} from '@/features/finances/invoices/types';
+import type { InvoicePagination, InvoiceListItem } from '@/features/finances/invoices/types';
 import { createInvoiceColumns } from '@/features/finances/invoices/components/invoice-columns';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
 
@@ -159,4 +156,3 @@ export function InvoiceList({
     </Box>
   );
 }
-

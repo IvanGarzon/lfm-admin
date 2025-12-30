@@ -30,12 +30,12 @@ function defaultShouldRetry(error: unknown): boolean {
 
 /**
  * Executes a function with exponential backoff retry logic.
- * 
+ *
  * @param fn - The async function to execute
  * @param options - Retry configuration options
  * @returns Promise resolving to the function's return value
  * @throws The last error encountered if all retries fail
- * 
+ *
  * @example
  * ```typescript
  * const result = await withRetry(
@@ -44,10 +44,7 @@ function defaultShouldRetry(error: unknown): boolean {
  * );
  * ```
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {},
-): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const {
     maxRetries = 3,
     baseDelay = 100,
@@ -82,7 +79,7 @@ export async function withRetry<T>(
         : baseDelay;
 
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
