@@ -104,8 +104,8 @@ export async function getDocumentUrl(documentId: string) {
     data: { lastAccessedAt: new Date() },
   });
 
-  // Generate signed URL
-  return getSignedDownloadUrl(document.s3Key);
+  // Generate signed URL with filename to force download
+  return getSignedDownloadUrl(document.s3Key, 24 * 60 * 60, document.fileName);
 }
 
 /**

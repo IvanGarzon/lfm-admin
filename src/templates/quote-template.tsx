@@ -289,9 +289,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 100,
     fontWeight: 'bold',
-    color: 'rgba(0, 0, 0, 0.1)',
+    color: 'rgba(0, 0, 0, 0.08)',
     transform: 'rotate(-45deg)',
-    zIndex: -1,
   },
 });
 

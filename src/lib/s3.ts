@@ -167,11 +167,16 @@ export async function deleteFileFromS3(s3Key: string): Promise<void> {
 export async function getSignedDownloadUrl(
   s3Key: string,
   expiresIn: number = 24 * 60 * 60, // 24 hours in seconds
+  filename?: string,
 ): Promise<string> {
   try {
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
       Key: s3Key,
+      // Force download with Content-Disposition header
+      ...(filename && {
+        ResponseContentDisposition: `attachment; filename="${filename}"`,
+      }),
     });
 
     const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });

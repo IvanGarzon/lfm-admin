@@ -653,11 +653,17 @@ export function useDownloadQuotePdf() {
       if (!result.success) {
         throw new Error(result.error);
       }
-      // Open PDF in new tab
-      window.open(result.data.url, '_blank');
-      return result.data.url;
+      return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Force download instead of opening in new tab
+      const link = document.createElement('a');
+      link.href = data.url;
+      link.download = data.filename;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast.success('PDF downloaded successfully');
     },
     onError: (error: Error) => {

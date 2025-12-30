@@ -171,8 +171,8 @@ export async function getItemAttachmentDownloadUrl(
       return { success: false, error: 'Attachment not found' };
     }
 
-    // Generate signed URL
-    const url = await getSignedDownloadUrl(attachment.s3Key);
+    // Generate signed URL with filename to force download
+    const url = await getSignedDownloadUrl(attachment.s3Key, 24 * 60 * 60, attachment.fileName);
 
     return {
       success: true,
