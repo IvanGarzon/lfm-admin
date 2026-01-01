@@ -167,7 +167,7 @@ export async function queueInvoiceEmail(params: {
 export async function queueQuoteEmail(params: {
   quoteId: string;
   customerId: string;
-  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired';
+  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
   recipient: string;
   subject: string;
   emailData: Record<string, any>;

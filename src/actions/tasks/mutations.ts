@@ -15,7 +15,32 @@ const taskRepo = new ScheduledTaskRepository(prisma);
 const executionRepo = new TaskExecutionRepository(prisma);
 
 /**
- * Update task configuration
+ * Updates the configuration of a scheduled task
+ *
+ * Allows administrators to modify task settings including scheduling, execution limits,
+ * and custom metadata. This operation revalidates affected pages and requires ADMIN role.
+ *
+ * @param taskId - The unique identifier of the task to update
+ * @param data - Partial task configuration to update
+ * @param data.isEnabled - Whether the task is enabled for execution
+ * @param data.cronSchedule - Cron expression for scheduled execution (e.g., "0 0 * * *")
+ * @param data.retries - Maximum number of retry attempts on failure
+ * @param data.concurrencyLimit - Maximum number of concurrent executions allowed
+ * @param data.timeout - Execution timeout in milliseconds
+ * @param data.metadata - Custom metadata object for the task
+ *
+ * @returns Promise resolving to ActionResult containing the updated task or error
+ *
+ * @throws Returns error if user is not authenticated or lacks ADMIN role
+ *
+ * @example
+ * ```ts
+ * const result = await updateTask('task-123', {
+ *   isEnabled: true,
+ *   cronSchedule: '0 0 * * *',
+ *   retries: 3
+ * });
+ * ```
  */
 export async function updateTask(
   taskId: string,
@@ -56,7 +81,27 @@ export async function updateTask(
 }
 
 /**
- * Enable or disable a task
+ * Enables or disables a scheduled task
+ *
+ * Controls whether a task can be executed. Disabled tasks will not run on their schedule
+ * and cannot be manually triggered. This is useful for temporarily pausing tasks without
+ * deleting them. Requires ADMIN role.
+ *
+ * @param taskId - The unique identifier of the task
+ * @param isEnabled - True to enable the task, false to disable it
+ *
+ * @returns Promise resolving to ActionResult containing the updated task or error
+ *
+ * @throws Returns error if user is not authenticated or lacks ADMIN role
+ *
+ * @example
+ * ```ts
+ * // Disable a task
+ * const result = await setTaskEnabled('task-123', false);
+ *
+ * // Enable a task
+ * const result = await setTaskEnabled('task-123', true);
+ * ```
  */
 export async function setTaskEnabled(
   taskId: string,
@@ -91,7 +136,30 @@ export async function setTaskEnabled(
 }
 
 /**
- * Manually trigger a task execution via Inngest event
+ * Manually triggers a task execution via Inngest event
+ *
+ * Immediately executes a scheduled task outside of its normal schedule. Creates an execution
+ * record, sends an Inngest event, and tracks the user who triggered it. The task must be
+ * enabled to execute. Requires ADMIN or MANAGER role.
+ *
+ * @param taskId - The unique identifier of the task to execute
+ *
+ * @returns Promise resolving to ActionResult containing execution and task IDs or error
+ *
+ * @throws Returns error if:
+ * - User is not authenticated or lacks ADMIN/MANAGER role
+ * - Task is not found in the database
+ * - Task is disabled
+ * - Inngest event fails to send
+ *
+ * @example
+ * ```ts
+ * // Manually trigger a task
+ * const result = await executeTask('task-123');
+ * if (result.success) {
+ *   console.log(`Execution started: ${result.data.executionId}`);
+ * }
+ * ```
  */
 export async function executeTask(taskId: string): Promise<
   ActionResult<{
@@ -174,7 +242,32 @@ export async function executeTask(taskId: string): Promise<
 }
 
 /**
- * Sync tasks from code definitions to database
+ * Synchronizes task definitions from code to the database
+ *
+ * Scans all task definitions registered in the codebase and syncs them with the database.
+ * Creates new task records for any tasks that don't exist, and updates existing records
+ * with the latest configuration from code. This ensures the database reflects the current
+ * state of task definitions in the application. Requires ADMIN role.
+ *
+ * @returns Promise resolving to ActionResult containing sync statistics or error
+ * @returns {number} data.synced - Total number of tasks synchronized
+ * @returns {number} data.created - Number of new tasks created
+ * @returns {number} data.updated - Number of existing tasks updated
+ *
+ * @throws Returns error if:
+ * - User is not authenticated or lacks ADMIN role
+ * - Task registry service fails to sync
+ * - Database operation fails
+ *
+ * @example
+ * ```ts
+ * // Sync all tasks
+ * const result = await syncTasks();
+ * if (result.success) {
+ *   console.log(`Synced ${result.data.synced} tasks`);
+ *   console.log(`Created: ${result.data.created}, Updated: ${result.data.updated}`);
+ * }
+ * ```
  */
 export async function syncTasks(): Promise<
   ActionResult<{

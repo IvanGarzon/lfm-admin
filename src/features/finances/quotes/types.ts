@@ -164,6 +164,43 @@ export type StatsDateFilter = {
 };
 
 /**
+ * Analytics Types
+ */
+export type QuoteValueTrend = {
+  month: string;
+  total: number;
+  accepted: number;
+  converted: number;
+};
+
+export type TopCustomerByQuotedValue = {
+  customerId: string;
+  customerName: string;
+  totalQuotedValue: number;
+  acceptedValue: number;
+  quoteCount: number;
+  conversionRate: number;
+};
+
+export type ConversionFunnelData = {
+  sent: number;
+  onHold: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+  converted: number;
+  sentValue: number;
+  acceptedValue: number;
+  convertedValue: number;
+};
+
+export type AverageTimeToDecision = {
+  avgDaysToAccept: number;
+  avgDaysToReject: number;
+  avgDaysToDecision: number; // Combined average for accept/reject
+};
+
+/**
  * Attachment Actions
  */
 export type UploadAttachmentData = {

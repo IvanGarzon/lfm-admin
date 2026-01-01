@@ -10,12 +10,12 @@ import {
   FileDown,
   MoreHorizontal,
   Copy,
+  Files,
   AlertCircle,
   Pause,
   Ban,
   Mail,
 } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import {
@@ -44,6 +44,7 @@ interface QuoteActionsProps {
   onSendEmail: (id: string) => void;
   onSendFollowUp: (id: string) => void;
   onCreateVersion: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
 export function QuoteActions({
@@ -59,6 +60,7 @@ export function QuoteActions({
   onSendEmail,
   onSendFollowUp,
   onCreateVersion,
+  onDuplicate,
 }: QuoteActionsProps) {
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quote.id}`;
@@ -69,12 +71,27 @@ export function QuoteActions({
     canAccept,
     canReject,
     canSend,
+    canSendQuote,
     canPutOnHold,
     canCancel,
     canConvert,
     canDelete,
     canCreateVersion,
   } = getQuotePermissions(quote.status);
+
+  // Check if follow-up should be available
+  // Only show when status is SENT and within 3 days of validUntil
+  const showFollowUp = (() => {
+    if (quote.status !== 'SENT') return false;
+
+    const now = new Date();
+    const validUntil = new Date(quote.validUntil);
+    const daysUntilExpiry = Math.ceil(
+      (validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    return daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
+  })();
 
   return (
     <Box className="flex items-center gap-1 justify-end">
@@ -108,7 +125,7 @@ export function QuoteActions({
           {canSend ? (
             <DropdownMenuItem onClick={() => onSend(quote.id)}>
               <Send className="h-4 w-4" />
-              Mark as sent
+              Send Quote
             </DropdownMenuItem>
           ) : null}
 
@@ -158,15 +175,24 @@ export function QuoteActions({
             </DropdownMenuItem>
           ) : null}
 
-          <DropdownMenuItem onClick={() => onSendEmail(quote.id)}>
-            <Mail className="h-4 w-4" />
-            Send Email
+          <DropdownMenuItem onClick={() => onDuplicate(quote.id)}>
+            <Files className="h-4 w-4" />
+            Duplicate quote
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => onSendFollowUp(quote.id)}>
-            <Send className="h-4 w-4" />
-            Send Follow-up
-          </DropdownMenuItem>
+          {canSendQuote ? (
+            <DropdownMenuItem onClick={() => onSendEmail(quote.id)}>
+              <Mail className="h-4 w-4" />
+              Resend Quote
+            </DropdownMenuItem>
+          ) : null}
+
+          {showFollowUp ? (
+            <DropdownMenuItem onClick={() => onSendFollowUp(quote.id)}>
+              <Send className="h-4 w-4" />
+              Send Follow-up
+            </DropdownMenuItem>
+          ) : null}
 
           {canDelete ? (
             <>

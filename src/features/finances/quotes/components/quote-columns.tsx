@@ -1,5 +1,6 @@
 'use client';
 
+import { Checkbox } from '@/components/ui/checkbox';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -87,7 +88,33 @@ export const createQuoteColumns = (
   onSendEmail: (id: string) => void,
   onSendFollowUp: (id: string) => void,
   onCreateVersion: (id: string) => void,
+  onDuplicate: (id: string) => void,
 ): ColumnDef<QuoteListItem>[] => [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    meta: {
+      label: 'Select',
+      variant: 'text',
+    },
+  },
   {
     id: 'search',
     accessorKey: 'quoteNumber',
@@ -198,6 +225,7 @@ export const createQuoteColumns = (
         onSendEmail={onSendEmail}
         onSendFollowUp={onSendFollowUp}
         onCreateVersion={onCreateVersion}
+        onDuplicate={onDuplicate}
       />
     ),
   },

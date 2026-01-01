@@ -111,6 +111,7 @@ export interface QuotePermissions {
   canAccept: boolean;
   canReject: boolean;
   canSend: boolean;
+  canSendQuote: boolean;
   canPutOnHold: boolean;
   canConvert: boolean;
   canCancel: boolean;
@@ -128,6 +129,7 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
       canAccept: false,
       canReject: false,
       canSend: false,
+      canSendQuote: false,
       canPutOnHold: false,
       canConvert: false,
       canCancel: false,
@@ -141,6 +143,11 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
     canAccept: status === QuoteStatus.SENT || status === QuoteStatus.ON_HOLD,
     canReject: status === QuoteStatus.SENT,
     canSend: status === QuoteStatus.DRAFT,
+    canSendQuote:
+      status === QuoteStatus.SENT ||
+      status === QuoteStatus.ACCEPTED ||
+      status === QuoteStatus.EXPIRED ||
+      status === QuoteStatus.ON_HOLD,
     canPutOnHold: status === QuoteStatus.SENT,
     canConvert: status === QuoteStatus.ACCEPTED,
     canCancel:

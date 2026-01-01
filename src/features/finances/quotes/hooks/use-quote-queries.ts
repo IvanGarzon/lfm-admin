@@ -1,3 +1,4 @@
+import { QuoteStatus } from '@/prisma/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getQuotes,
@@ -12,6 +13,8 @@ import {
   markQuoteAsCancelled,
   convertQuoteToInvoice,
   checkAndExpireQuotes,
+  bulkUpdateQuoteStatus,
+  bulkDeleteQuotes,
   deleteQuote,
   uploadQuoteItemAttachment,
   deleteQuoteItemAttachment,
@@ -20,10 +23,15 @@ import {
   getItemAttachmentDownloadUrl,
   updateQuoteItemColors,
   createQuoteVersion,
+  duplicateQuote,
   getQuoteVersions,
   getQuotePdfUrl,
   sendQuoteEmail,
   sendQuoteFollowUp,
+  getMonthlyQuoteValueTrend,
+  getConversionFunnel,
+  getTopCustomersByQuotedValue,
+  getAverageTimeToDecision,
 } from '@/actions/quotes';
 import type {
   QuoteFilters,
@@ -48,6 +56,15 @@ export const QUOTE_KEYS = {
   itemAttachments: (quoteItemId: string) =>
     [...QUOTE_KEYS.all, 'item-attachments', quoteItemId] as const,
   versions: (quoteId: string) => [...QUOTE_KEYS.detail(quoteId), 'versions'] as const,
+  analytics: {
+    all: () => [...QUOTE_KEYS.all, 'analytics'] as const,
+    valueTrend: (limit?: number) => [...QUOTE_KEYS.analytics.all(), 'value-trend', limit] as const,
+    conversionFunnel: (dateFilter?: { startDate?: Date; endDate?: Date }) =>
+      [...QUOTE_KEYS.analytics.all(), 'conversion-funnel', dateFilter] as const,
+    topCustomers: (limit?: number) =>
+      [...QUOTE_KEYS.analytics.all(), 'top-customers', limit] as const,
+    avgTimeToDecision: () => [...QUOTE_KEYS.analytics.all(), 'avg-time-to-decision'] as const,
+  },
 };
 
 export function useQuotes(filters: QuoteFilters) {
@@ -644,6 +661,35 @@ export function useCreateQuoteVersion() {
   });
 }
 
+/**
+ * Hook to duplicate a quote.
+ * Creates an independent copy (not a version) with a new quote number and DRAFT status.
+ * Useful for reusing quote structures as templates or creating similar quotes for different customers.
+ *
+ * @returns Mutation hook for duplicating quotes.
+ */
+export function useDuplicateQuote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const result = await duplicateQuote(quoteId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      toast.success(`Quote duplicated successfully (${data.quoteNumber})`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to duplicate quote');
+    },
+  });
+}
+
 export function useDownloadQuotePdf() {
   return useMutation({
     mutationFn: async (quoteId: string) => {
@@ -986,6 +1032,149 @@ export function useUploadQuoteItemColorPalette() {
     },
     onSuccess: () => {
       toast.success('Color palette updated successfully');
+    },
+  });
+}
+
+// ============================================================================
+// ANALYTICS HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch monthly quote value trend data.
+ * @param limit - Number of months to retrieve. Defaults to 12.
+ * @returns Query result with monthly quote value trends.
+ */
+export function useQuoteValueTrend(limit?: number) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.analytics.valueTrend(limit),
+    queryFn: async () => {
+      const result = await getMonthlyQuoteValueTrend(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch conversion funnel data.
+ * @param dateFilter - Optional date range filter.
+ * @returns Query result with conversion funnel data.
+ */
+export function useConversionFunnel(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.analytics.conversionFunnel(dateFilter),
+    queryFn: async () => {
+      const result = await getConversionFunnel(dateFilter);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch top customers by quoted value.
+ * @param limit - Number of customers to retrieve. Defaults to 5.
+ * @returns Query result with top customers data.
+ */
+export function useTopCustomersByQuotedValue(limit?: number) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.analytics.topCustomers(limit),
+    queryFn: async () => {
+      const result = await getTopCustomersByQuotedValue(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch average time to decision metrics.
+ * @returns Query result with average time to decision data.
+ */
+export function useAverageTimeToDecision() {
+  return useQuery({
+    queryKey: QUOTE_KEYS.analytics.avgTimeToDecision(),
+    queryFn: async () => {
+      const result = await getAverageTimeToDecision();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useBulkUpdateQuoteStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: QuoteStatus }) => {
+      const result = await bulkUpdateQuoteStatus(ids, status);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      if (data.failureCount > 0) {
+        toast.warning(
+          `${data.successCount} quotes updated, ${data.failureCount} failed. Check console for details.`,
+        );
+        console.warn(
+          'Bulk update failures:',
+          data.results.filter((r) => !r.success),
+        );
+      } else {
+        toast.success(
+          data.successCount > 1 ? `${data.successCount} quotes updated` : 'Quote updated',
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update quotes');
+    },
+  });
+}
+
+export function useBulkDeleteQuotes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const result = await bulkDeleteQuotes(ids);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (data) => {
+      if (data.failureCount > 0) {
+        toast.warning(
+          `${data.successCount} quotes deleted, ${data.failureCount} failed (likely not in DRAFT status).`,
+        );
+      } else {
+        toast.success(
+          data.successCount > 1 ? `${data.successCount} quotes deleted` : 'Quote deleted',
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete quotes');
     },
   });
 }

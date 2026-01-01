@@ -6,7 +6,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 // import Placeholder from '@tiptap/extension-placeholder';
 // import Document from '@tiptap/extension-document';
 
-import { extensions } from './extensions';
+import { createExtensions } from './extensions';
 import { Header } from './header';
 
 // import {
@@ -64,7 +64,7 @@ export function RichTextEditor({
   // ],
 
   const editor = useEditor({
-    extensions: extensions,
+    extensions: createExtensions(placeholder),
     content: value || '',
     editable,
     immediatelyRender: false,

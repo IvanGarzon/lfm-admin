@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
+import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { requirePermission } from '@/lib/permissions';
@@ -530,8 +531,18 @@ export async function deleteQuoteItemAttachment(data: {
       return { success: false, error: 'Attachment not found' };
     }
 
-    // Delete from S3
-    await deleteFileFromS3(attachment.s3Key);
+    // Check if other attachments use the same S3 key (e.g. from duplicated quotes)
+    const usageCount = await prisma.quoteItemAttachment.count({
+      where: {
+        s3Key: attachment.s3Key,
+        id: { not: attachment.id }, // Exclude current attachment
+      },
+    });
+
+    // Only delete from S3 if no other records reference this file
+    if (usageCount === 0) {
+      await deleteFileFromS3(attachment.s3Key);
+    }
 
     // Delete from database
     const success = await quoteRepo.deleteItemAttachment(validatedData.attachmentId);
@@ -822,5 +833,129 @@ export async function sendQuoteFollowUp(
     return { success: true, data: result };
   } catch (error) {
     return handleActionError(error, 'Failed to send quote follow-up');
+  }
+}
+
+/**
+ * Duplicates an existing quote to create an independent copy.
+ * Unlike creating a version, this creates a completely independent quote with:
+ * - New quote number
+ * - DRAFT status
+ * - No parent-child relationship
+ * - Same customer (can be changed after duplication)
+ * - All items, colors, and attachment references copied
+ *
+ * Use this for templating or creating similar quotes for different customers.
+ *
+ * @param id - The ID of the quote to duplicate
+ * @returns A promise that resolves to an `ActionResult` with the duplicate quote's ID and number
+ */
+export async function duplicateQuote(
+  id: string,
+): Promise<ActionResult<{ id: string; quoteNumber: string }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canManageQuotes');
+
+    const result = await quoteRepo.duplicate(id);
+
+    revalidatePath('/finances/quotes');
+
+    return {
+      success: true,
+      data: { id: result.id, quoteNumber: result.quoteNumber },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to duplicate quote');
+  }
+}
+
+/**
+ * Updates the status of multiple quotes in a single operation.
+ * @param ids - An array of quote IDs to update.
+ * @param status - The new status to apply to the quotes.
+ * @returns A promise that resolves to an `ActionResult` containing bulk update results,
+ * including success and failure counts and individual operation results.
+ */
+export async function bulkUpdateQuoteStatus(
+  ids: string[],
+  status: QuoteStatus,
+): Promise<
+  ActionResult<{
+    successCount: number;
+    failureCount: number;
+    results: { id: string; success: boolean; error?: string }[];
+  }>
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canManageQuotes');
+
+    const results = await quoteRepo.bulkUpdateStatus(ids, status, session.user.id);
+
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    revalidatePath('/finances/quotes');
+
+    return {
+      success: true,
+      data: {
+        successCount,
+        failureCount,
+        results,
+      },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to update quotes');
+  }
+}
+
+/**
+ * Bulk deletes multiple quotes.
+ * Only quotes in DRAFT status can be deleted.
+ * @param ids - An array of quote IDs to delete.
+ * @returns A promise that resolves to an `ActionResult` containing bulk deletion results.
+ */
+export async function bulkDeleteQuotes(ids: string[]): Promise<
+  ActionResult<{
+    successCount: number;
+    failureCount: number;
+    results: { id: string; success: boolean; error?: string }[];
+  }>
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canManageQuotes');
+
+    const results = await quoteRepo.bulkSoftDelete(ids);
+
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.filter((r) => !r.success).length;
+
+    revalidatePath('/finances/quotes');
+
+    return {
+      success: true,
+      data: {
+        successCount,
+        failureCount,
+        results,
+      },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to delete quotes');
   }
 }

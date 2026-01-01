@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   X,
   Ban,
@@ -53,11 +54,27 @@ import {
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { InvoiceForm } from '@/features/finances/invoices/components/invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
-import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
 import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
+
+// Lazy load the preview component to reduce initial bundle size
+// InvoicePreview doesn't use TipTap but we lazy load it for consistency and to reduce initial drawer size
+const InvoicePreview = dynamic(
+  () =>
+    import('@/features/finances/invoices/components/invoice-preview').then(
+      (mod) => mod.InvoicePreview,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Box className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Loading preview...</p>
+      </Box>
+    ),
+  },
+);
 
 type DrawerMode = 'edit' | 'create';
 

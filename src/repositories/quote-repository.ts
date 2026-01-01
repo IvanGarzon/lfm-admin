@@ -1,6 +1,5 @@
-import { Prisma, PrismaClient } from '@/prisma/client';
+import { Prisma, PrismaClient, QuoteStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { isPrismaError } from '@/lib/error-handler';
 
 import type {
@@ -9,6 +8,11 @@ import type {
   QuoteWithDetails,
   QuoteFilters,
   QuotePagination,
+  QuoteValueTrend,
+  TopCustomerByQuotedValue,
+  ConversionFunnelData,
+  AverageTimeToDecision,
+  StatsDateFilter,
 } from '@/features/finances/quotes/types';
 import { getPaginationMetadata } from '@/lib/utils';
 import { validateQuoteStatusTransition } from '@/features/finances/quotes/utils/quote-helpers';
@@ -352,29 +356,29 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const sum = Number(group._sum.amount ?? 0);
 
       switch (group.status) {
-        case QuoteStatusSchema.enum.DRAFT:
+        case QuoteStatus.DRAFT:
           stats.draft = count;
           break;
-        case QuoteStatusSchema.enum.SENT:
+        case QuoteStatus.SENT:
           stats.sent = count;
           break;
-        case QuoteStatusSchema.enum.ON_HOLD:
+        case QuoteStatus.ON_HOLD:
           stats.onHold = count;
           break;
-        case QuoteStatusSchema.enum.ACCEPTED:
+        case QuoteStatus.ACCEPTED:
           stats.accepted = count;
           stats.totalAcceptedValue = sum;
           break;
-        case QuoteStatusSchema.enum.REJECTED:
+        case QuoteStatus.REJECTED:
           stats.rejected = count;
           break;
-        case QuoteStatusSchema.enum.EXPIRED:
+        case QuoteStatus.EXPIRED:
           stats.expired = count;
           break;
-        case QuoteStatusSchema.enum.CANCELLED:
+        case QuoteStatus.CANCELLED:
           stats.cancelled = count;
           break;
-        case QuoteStatusSchema.enum.CONVERTED:
+        case QuoteStatus.CONVERTED:
           stats.converted = count;
           stats.totalConvertedValue = sum;
           break;
@@ -678,7 +682,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const changedAt = new Date();
 
     // Validate status transition
-    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.ACCEPTED);
+    validateQuoteStatusTransition(previousStatus, QuoteStatus.ACCEPTED);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -686,7 +690,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const updatedQuote = await tx.quote.update({
         where: { id, deletedAt: null },
         data: {
-          status: QuoteStatusSchema.enum.ACCEPTED,
+          status: QuoteStatus.ACCEPTED,
           updatedAt: changedAt,
         },
       });
@@ -695,7 +699,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: id,
-          status: QuoteStatusSchema.enum.ACCEPTED,
+          status: QuoteStatus.ACCEPTED,
           previousStatus,
           changedAt,
           changedBy,
@@ -743,7 +747,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const changedAt = new Date();
 
     // Validate status transition
-    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.ON_HOLD);
+    validateQuoteStatusTransition(previousStatus, QuoteStatus.ON_HOLD);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -751,7 +755,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const updatedQuote = await tx.quote.update({
         where: { id, deletedAt: null },
         data: {
-          status: QuoteStatusSchema.enum.ON_HOLD,
+          status: QuoteStatus.ON_HOLD,
           updatedAt: changedAt,
         },
       });
@@ -760,7 +764,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: id,
-          status: QuoteStatusSchema.enum.ON_HOLD,
+          status: QuoteStatus.ON_HOLD,
           previousStatus,
           changedAt,
           changedBy,
@@ -808,7 +812,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const changedAt = new Date();
 
     // Validate status transition
-    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.CANCELLED);
+    validateQuoteStatusTransition(previousStatus, QuoteStatus.CANCELLED);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -816,7 +820,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const updatedQuote = await tx.quote.update({
         where: { id, deletedAt: null },
         data: {
-          status: QuoteStatusSchema.enum.CANCELLED,
+          status: QuoteStatus.CANCELLED,
           updatedAt: changedAt,
         },
       });
@@ -825,7 +829,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: id,
-          status: QuoteStatusSchema.enum.CANCELLED,
+          status: QuoteStatus.CANCELLED,
           previousStatus,
           changedAt,
           changedBy,
@@ -873,7 +877,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const changedAt = new Date();
 
     // Validate status transition
-    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.REJECTED);
+    validateQuoteStatusTransition(previousStatus, QuoteStatus.REJECTED);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -881,7 +885,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const updatedQuote = await tx.quote.update({
         where: { id, deletedAt: null },
         data: {
-          status: QuoteStatusSchema.enum.REJECTED,
+          status: QuoteStatus.REJECTED,
           updatedAt: changedAt,
         },
       });
@@ -890,7 +894,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: id,
-          status: QuoteStatusSchema.enum.REJECTED,
+          status: QuoteStatus.REJECTED,
           previousStatus,
           changedAt,
           changedBy,
@@ -929,7 +933,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const sentDate = new Date();
 
     // Validate status transition
-    validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.SENT);
+    validateQuoteStatusTransition(previousStatus, QuoteStatus.SENT);
 
     // Update quote and create status history in a transaction
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -937,7 +941,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const updatedQuote = await tx.quote.update({
         where: { id, deletedAt: null },
         data: {
-          status: QuoteStatusSchema.enum.SENT,
+          status: QuoteStatus.SENT,
           updatedAt: sentDate,
         },
       });
@@ -946,7 +950,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: id,
-          status: QuoteStatusSchema.enum.SENT,
+          status: QuoteStatus.SENT,
           previousStatus,
           changedAt: sentDate,
           changedBy,
@@ -1008,7 +1012,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const convertedDate = new Date();
 
       // Validate status transition (ACCEPTED -> CONVERTED)
-      validateQuoteStatusTransition(previousStatus, QuoteStatusSchema.enum.CONVERTED);
+      validateQuoteStatusTransition(previousStatus, QuoteStatus.CONVERTED);
 
       // Create invoice from quote with PENDING status
       const invoice = await tx.invoice.create({
@@ -1039,7 +1043,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quote.update({
         where: { id: quoteId },
         data: {
-          status: QuoteStatusSchema.enum.CONVERTED,
+          status: QuoteStatus.CONVERTED,
           invoiceId: invoice.id,
         },
       });
@@ -1048,7 +1052,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: quoteId,
-          status: QuoteStatusSchema.enum.CONVERTED,
+          status: QuoteStatus.CONVERTED,
           previousStatus,
           changedAt: convertedDate,
           changedBy: changedBy,
@@ -1074,7 +1078,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const quotesToExpire = await this.prisma.quote.findMany({
       where: {
         status: {
-          in: [QuoteStatusSchema.enum.DRAFT, QuoteStatusSchema.enum.SENT],
+          in: [QuoteStatus.DRAFT, QuoteStatus.SENT],
         },
         validUntil: { lt: today },
         deletedAt: null,
@@ -1094,7 +1098,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         await tx.quote.update({
           where: { id: quote.id },
           data: {
-            status: QuoteStatusSchema.enum.EXPIRED,
+            status: QuoteStatus.EXPIRED,
             updatedAt: new Date(),
           },
         });
@@ -1103,7 +1107,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         await tx.quoteStatusHistory.create({
           data: {
             quoteId: quote.id,
-            status: QuoteStatusSchema.enum.EXPIRED,
+            status: QuoteStatus.EXPIRED,
             previousStatus: quote.status,
             changedAt: quote.validUntil,
             changedBy: null, // System-initiated
@@ -1384,18 +1388,22 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       const createdDate = new Date();
 
+      // Calculate new validUntil date (30 days from now) to ensure it's after issuedDate
+      const validUntil = new Date(createdDate);
+      validUntil.setDate(validUntil.getDate() + 30);
+
       // Create the new version
       const newVersion = await tx.quote.create({
         data: {
           quoteNumber: newQuoteNumber,
           customerId: parentQuote.customerId,
-          status: QuoteStatusSchema.enum.DRAFT, // New versions start as DRAFT
+          status: QuoteStatus.DRAFT, // New versions start as DRAFT
           amount: parentQuote.amount,
           currency: parentQuote.currency,
           gst: parentQuote.gst,
           discount: parentQuote.discount,
           issuedDate: createdDate,
-          validUntil: parentQuote.validUntil,
+          validUntil: validUntil,
           notes: parentQuote.notes,
           terms: parentQuote.terms,
           versionNumber: nextVersionNumber,
@@ -1435,7 +1443,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: newVersion.id,
-          status: QuoteStatusSchema.enum.DRAFT,
+          status: QuoteStatus.DRAFT,
           previousStatus: null,
           changedAt: createdDate,
           changedBy: createdBy,
@@ -1448,7 +1456,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quote.update({
         where: { id: parentQuoteId },
         data: {
-          status: QuoteStatusSchema.enum.CANCELLED,
+          status: QuoteStatus.CANCELLED,
           updatedAt: createdDate,
         },
       });
@@ -1457,7 +1465,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteStatusHistory.create({
         data: {
           quoteId: parentQuoteId,
-          status: QuoteStatusSchema.enum.CANCELLED,
+          status: QuoteStatus.CANCELLED,
           previousStatus: previousParentStatus,
           changedAt: createdDate,
           changedBy: createdBy,
@@ -1466,6 +1474,534 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       });
 
       return newVersion;
+    });
+  }
+
+  // ============================================================================
+  // ANALYTICS METHODS
+  // ============================================================================
+
+  /**
+   * Get monthly quote value trend over the last N months.
+   * Returns total quoted value, accepted value, and converted value for each month.
+   *
+   * @param limit - Number of months to retrieve. Defaults to 12.
+   * @returns A promise that resolves to an array of monthly quote value trends
+   */
+  async getMonthlyQuoteValueTrend(limit: number = 12): Promise<QuoteValueTrend[]> {
+    const data = await this.prisma.$queryRaw<
+      {
+        month: string;
+        month_num: number;
+        year: number;
+        total: number;
+        accepted: number;
+        converted: number;
+      }[]
+    >(Prisma.sql`
+      SELECT
+        to_char(issued_date, 'Mon') as month,
+        extract(month from issued_date) as month_num,
+        extract(year from issued_date) as year,
+        SUM(amount::numeric)::float as total,
+        SUM(CASE WHEN status::text = ${QuoteStatus.ACCEPTED} THEN amount::numeric ELSE 0 END)::float as accepted,
+        SUM(CASE WHEN status::text = ${QuoteStatus.CONVERTED} THEN amount::numeric ELSE 0 END)::float as converted
+      FROM quotes
+      WHERE deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM quotes child
+          WHERE child.parent_quote_id = quotes.id
+          AND child.deleted_at IS NULL
+        )
+      GROUP BY year, month_num, month
+      ORDER BY year DESC, month_num DESC
+      LIMIT ${limit}
+    `);
+
+    return data
+      .map((item) => ({
+        month: `${item.month} ${item.year}`,
+        total: item.total,
+        accepted: item.accepted,
+        converted: item.converted,
+      }))
+      .reverse();
+  }
+
+  /**
+   * Get conversion funnel data showing the flow from sent quotes to converted.
+   * Returns counts and values for each stage of the quote lifecycle.
+   *
+   * @param dateFilter - Optional date range filter
+   * @returns A promise that resolves to conversion funnel data
+   */
+  async getConversionFunnel(dateFilter?: StatsDateFilter): Promise<ConversionFunnelData> {
+    const whereClause: Prisma.QuoteWhereInput = {
+      deletedAt: null,
+      // Only count latest versions
+      versions: {
+        none: {
+          deletedAt: null,
+        },
+      },
+    };
+
+    // Add date filter if provided
+    if (dateFilter?.startDate || dateFilter?.endDate) {
+      whereClause.issuedDate = {};
+      if (dateFilter.startDate) {
+        whereClause.issuedDate.gte = dateFilter.startDate;
+      }
+
+      if (dateFilter.endDate) {
+        whereClause.issuedDate.lte = dateFilter.endDate;
+      }
+    }
+
+    const funnelData = await this.prisma.quote.groupBy({
+      by: ['status'],
+      where: whereClause,
+      _count: {
+        _all: true,
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const funnel: ConversionFunnelData = {
+      sent: 0,
+      onHold: 0,
+      accepted: 0,
+      rejected: 0,
+      expired: 0,
+      converted: 0,
+      sentValue: 0,
+      acceptedValue: 0,
+      convertedValue: 0,
+    };
+
+    funnelData.forEach((item) => {
+      const count = item._count._all;
+      const value = Number(item._sum.amount ?? 0);
+
+      switch (item.status) {
+        case QuoteStatus.SENT:
+          funnel.sent = count;
+          funnel.sentValue = value;
+          break;
+        case QuoteStatus.ON_HOLD:
+          funnel.onHold = count;
+          break;
+        case QuoteStatus.ACCEPTED:
+          funnel.accepted = count;
+          funnel.acceptedValue = value;
+          break;
+        case QuoteStatus.REJECTED:
+          funnel.rejected = count;
+          break;
+        case QuoteStatus.EXPIRED:
+          funnel.expired = count;
+          break;
+        case QuoteStatus.CONVERTED:
+          funnel.converted = count;
+          funnel.convertedValue = value;
+          break;
+      }
+    });
+
+    return funnel;
+  }
+
+  /**
+   * Get top customers by total quoted value.
+   * Returns customers with highest total quote value, including conversion metrics.
+   *
+   * @param limit - Number of customers to retrieve. Defaults to 5.
+   * @returns A promise that resolves to an array of top customers with quote metrics
+   */
+  async getTopCustomersByQuotedValue(limit: number = 5): Promise<TopCustomerByQuotedValue[]> {
+    const data = await this.prisma.$queryRaw<
+      {
+        customerId: string;
+        customerName: string;
+        totalQuotedValue: number;
+        acceptedValue: number;
+        quoteCount: number;
+      }[]
+    >(Prisma.sql`
+      SELECT
+        c.id as "customerId",
+        concat(c.first_name, ' ', c.last_name) as "customerName",
+        SUM(q.amount::numeric)::float as "totalQuotedValue",
+        SUM(CASE WHEN q.status::text IN (${QuoteStatus.ACCEPTED}, ${QuoteStatus.CONVERTED}) THEN q.amount::numeric ELSE 0 END)::float as "acceptedValue",
+        COUNT(q.id)::int as "quoteCount"
+      FROM quotes q
+      JOIN customers c ON q.customer_id = c.id
+      WHERE q.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM quotes child
+          WHERE child.parent_quote_id = q.id
+          AND child.deleted_at IS NULL
+        )
+      GROUP BY c.id, "customerName"
+      ORDER BY "totalQuotedValue" DESC
+      LIMIT ${limit}
+    `);
+
+    return data.map((item) => ({
+      customerId: item.customerId,
+      customerName: item.customerName,
+      totalQuotedValue: item.totalQuotedValue,
+      acceptedValue: item.acceptedValue,
+      quoteCount: item.quoteCount,
+      conversionRate:
+        item.totalQuotedValue > 0 ? (item.acceptedValue / item.totalQuotedValue) * 100 : 0,
+    }));
+  }
+
+  /**
+   * Get average time to decision for quotes.
+   * Calculates average days from SENT to ACCEPTED or REJECTED.
+   *
+   * @returns A promise that resolves to average time to decision metrics
+   */
+  async getAverageTimeToDecision(): Promise<AverageTimeToDecision> {
+    // Get quotes that were accepted or rejected, with their status history
+    const quotes = await this.prisma.quote.findMany({
+      where: {
+        deletedAt: null,
+        status: {
+          in: [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED],
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        statusHistory: {
+          select: {
+            status: true,
+            changedAt: true,
+          },
+          orderBy: {
+            changedAt: 'asc',
+          },
+        },
+      },
+    });
+
+    let totalDaysToAccept = 0;
+    let acceptCount = 0;
+    let totalDaysToReject = 0;
+    let rejectCount = 0;
+
+    quotes.forEach((quote) => {
+      // Find when it was marked as SENT
+      const sentHistory = quote.statusHistory.find((h) => h.status === QuoteStatus.SENT);
+
+      // Find when it was marked as ACCEPTED or REJECTED
+      const decisionHistory = quote.statusHistory.find(
+        (h) => h.status === QuoteStatus.ACCEPTED || h.status === QuoteStatus.REJECTED,
+      );
+
+      if (sentHistory && decisionHistory) {
+        const days = Math.ceil(
+          (decisionHistory.changedAt.getTime() - sentHistory.changedAt.getTime()) /
+            (1000 * 60 * 60 * 24),
+        );
+
+        if (quote.status === QuoteStatus.ACCEPTED) {
+          totalDaysToAccept += days;
+          acceptCount++;
+        } else {
+          totalDaysToReject += days;
+          rejectCount++;
+        }
+      }
+    });
+
+    const avgDaysToAccept = acceptCount > 0 ? totalDaysToAccept / acceptCount : 0;
+    const avgDaysToReject = rejectCount > 0 ? totalDaysToReject / rejectCount : 0;
+    const totalDecisions = acceptCount + rejectCount;
+    const avgDaysToDecision =
+      totalDecisions > 0 ? (totalDaysToAccept + totalDaysToReject) / totalDecisions : 0;
+
+    return {
+      avgDaysToAccept: Math.round(avgDaysToAccept * 10) / 10, // Round to 1 decimal place
+      avgDaysToReject: Math.round(avgDaysToReject * 10) / 10,
+      avgDaysToDecision: Math.round(avgDaysToDecision * 10) / 10,
+    };
+  }
+
+  /**
+   * Duplicate an existing quote to create an independent copy.
+   * Creates a new quote with DRAFT status, copying items (with colors and notes) and attachments.
+   * Unlike versioning, the duplicate is completely independent with no parent-child relationship.
+   * Useful for reusing quote structures as templates or creating similar quotes for different customers.
+   *
+   * @param id - The ID of the quote to duplicate
+   * @returns A promise that resolves to an object containing the duplicate quote's ID and number
+   * @throws {Error} If the quote is not found or duplication fails
+   */
+  async duplicate(id: string): Promise<{ id: string; quoteNumber: string }> {
+    // Get the original quote with all details
+    const original = await this.prisma.quote.findUnique({
+      where: { id, deletedAt: null },
+      include: {
+        items: {
+          select: {
+            description: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+            productId: true,
+            notes: true,
+            colors: true,
+            order: true,
+            attachments: {
+              select: {
+                fileName: true,
+                fileSize: true,
+                mimeType: true,
+                s3Key: true,
+                s3Url: true,
+                uploadedBy: true,
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!original) {
+      throw new Error('Quote not found');
+    }
+
+    // Generate new quote number with retry logic for unique constraint
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        const quoteNumber = await this.generateQuoteNumber();
+
+        // Calculate total amount from items
+        const totalAmount = Number(original.amount);
+
+        // Set issued date to today and valid until to 30 days from now
+        const issuedDate = new Date();
+        const validUntil = new Date(issuedDate);
+        validUntil.setDate(validUntil.getDate() + 30); // 30 days validity
+
+        // Create the duplicate quote with DRAFT status in a transaction
+        const duplicate = await this.prisma.$transaction(async (tx) => {
+          const newQuote = await tx.quote.create({
+            data: {
+              quoteNumber,
+              customerId: original.customerId,
+              status: QuoteStatus.DRAFT, // Always start as DRAFT
+              amount: totalAmount,
+              currency: original.currency,
+              gst: original.gst,
+              discount: original.discount,
+              issuedDate,
+              validUntil,
+              notes: original.notes,
+              terms: original.terms,
+              // Version fields NOT copied - this is an independent quote
+              versionNumber: 1,
+              parentQuoteId: null,
+              // Copy items with colors, notes, and attachments
+              items: {
+                create: original.items.map((item) => ({
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  total: item.total,
+                  productId: item.productId,
+                  notes: item.notes,
+                  colors: item.colors,
+                  order: item.order,
+                  // Copy attachment references (S3 files not duplicated, just referenced)
+                  attachments: {
+                    create: item.attachments.map((attachment) => ({
+                      fileName: attachment.fileName,
+                      fileSize: attachment.fileSize,
+                      mimeType: attachment.mimeType,
+                      s3Key: attachment.s3Key,
+                      s3Url: attachment.s3Url,
+                      uploadedBy: attachment.uploadedBy,
+                      uploadedAt: new Date(),
+                    })),
+                  },
+                })),
+              },
+            },
+            select: {
+              id: true,
+              quoteNumber: true,
+            },
+          });
+
+          // Create initial status history entry
+          await tx.quoteStatusHistory.create({
+            data: {
+              quoteId: newQuote.id,
+              status: QuoteStatus.DRAFT,
+              previousStatus: null,
+              changedAt: new Date(),
+              notes: `Duplicated from quote ${original.quoteNumber}`,
+            },
+          });
+
+          return newQuote;
+        });
+
+        return duplicate;
+      } catch (error: unknown) {
+        // Handle unique constraint violation (quote number collision)
+        if (isPrismaError(error) && error.code === 'P2002') {
+          attempts++;
+          if (attempts === maxAttempts) {
+            throw new Error('Failed to generate a unique quote number. Please try again.');
+          }
+          continue; // Retry with a new number
+        }
+
+        // Re-throw other errors
+        throw error;
+      }
+    }
+
+    throw new Error('Failed to duplicate quote');
+  }
+  /**
+   * Update the status of multiple quotes in bulk with proper validation and audit trail.
+   * Validates each status transition and creates history entries for successful updates.
+   * Skips quotes with invalid transitions instead of failing the entire operation.
+   * @param ids - Array of quote IDs to update
+   * @param status - The new status to set for all quotes
+   * @param changedBy - Optional user ID who triggered this change
+   * @returns A promise that resolves to results array with success/failure for each quote
+   */
+  async bulkUpdateStatus(
+    ids: string[],
+    status: QuoteStatus,
+    changedBy?: string,
+  ): Promise<{ id: string; success: boolean; error?: string }[]> {
+    return this.prisma.$transaction(async (tx) => {
+      const results: { id: string; success: boolean; error?: string }[] = [];
+
+      for (const id of ids) {
+        try {
+          // Fetch current quote status
+          const quote = await tx.quote.findUnique({
+            where: { id, deletedAt: null },
+            select: { status: true },
+          });
+
+          if (!quote) {
+            results.push({ id, success: false, error: 'Quote not found' });
+            continue;
+          }
+
+          // Skip if status is already the target status
+          if (quote.status === status) {
+            results.push({ id, success: true });
+            continue;
+          }
+
+          // Validate status transition
+          try {
+            validateQuoteStatusTransition(quote.status, status);
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : 'Invalid status transition';
+            results.push({ id, success: false, error: errorMessage });
+            continue;
+          }
+
+          // Update quote status
+          await tx.quote.update({
+            where: { id },
+            data: {
+              status,
+              updatedAt: new Date(),
+            },
+          });
+
+          // Create audit trail entry
+          await tx.quoteStatusHistory.create({
+            data: {
+              quoteId: id,
+              status,
+              previousStatus: quote.status,
+              changedAt: new Date(),
+              changedBy,
+              notes: 'Bulk status update',
+            },
+          });
+
+          results.push({ id, success: true });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          results.push({ id, success: false, error: errorMessage });
+        }
+      }
+
+      return results;
+    });
+  }
+
+  /**
+   * Soft delete multiple quotes in bulk.
+   * Only deletes quotes that are in DRAFT status.
+   * Skips quotes that cannot be deleted instead of failing the entire operation.
+   * @param ids - Array of quote IDs to delete
+   * @returns A promise that resolves to results array with success/failure for each quote
+   */
+  async bulkSoftDelete(ids: string[]): Promise<{ id: string; success: boolean; error?: string }[]> {
+    return this.prisma.$transaction(async (tx) => {
+      const results: { id: string; success: boolean; error?: string }[] = [];
+
+      for (const id of ids) {
+        try {
+          const quote = await tx.quote.findUnique({
+            where: { id, deletedAt: null },
+            select: { status: true },
+          });
+
+          if (!quote) {
+            results.push({ id, success: false, error: 'Quote not found' });
+            continue;
+          }
+
+          if (quote.status !== QuoteStatus.DRAFT) {
+            results.push({
+              id,
+              success: false,
+              error: 'Only DRAFT quotes can be deleted',
+            });
+            continue;
+          }
+
+          await tx.quote.update({
+            where: { id },
+            data: {
+              deletedAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+
+          results.push({ id, success: true });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          results.push({ id, success: false, error: errorMessage });
+        }
+      }
+
+      return results;
     });
   }
 }

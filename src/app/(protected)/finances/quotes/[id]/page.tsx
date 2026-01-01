@@ -1,8 +1,17 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { QuoteList } from '@/features/finances/quotes/components/quote-list';
-import { QuoteDrawer } from '@/features/finances/quotes/components/quote-drawer';
 import { getQuotes } from '@/actions/quotes';
+import dynamic from 'next/dynamic';
+
+// Lazy load QuoteDrawer to reduce initial bundle size
+const QuoteDrawer = dynamic(
+  () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 export default async function QuotePage({
   params,

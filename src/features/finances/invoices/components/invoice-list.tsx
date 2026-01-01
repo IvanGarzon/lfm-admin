@@ -8,7 +8,6 @@ import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
 import { InvoiceTable } from '@/features/finances/invoices/components/invoice-table';
 import { BulkActionsBar } from '@/features/finances/invoices/components/bulk-actions-bar';
 import {
@@ -32,6 +31,21 @@ const InvoiceDrawer = dynamic(
   {
     ssr: false,
     loading: () => null,
+  },
+);
+
+const InvoiceAnalytics = dynamic(
+  () =>
+    import('@/features/finances/invoices/components/invoice-analytics').then(
+      (mod) => mod.InvoiceAnalytics,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-sm text-muted-foreground">Loading analytics...</p>
+      </div>
+    ),
   },
 );
 

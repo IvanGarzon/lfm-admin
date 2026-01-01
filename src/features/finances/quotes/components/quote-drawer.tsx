@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   X,
   Check,
@@ -14,6 +15,7 @@ import {
   FileCheck,
   AlertCircle,
   Copy,
+  Files,
   ChevronLeft,
   ChevronRight,
   Pause,
@@ -51,15 +53,28 @@ import {
   useDownloadQuotePdf,
   useSendQuoteEmail,
   useSendQuoteFollowUp,
+  useDuplicateQuote,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
-import { QuotePreview } from '@/features/finances/quotes/components/quote-preview';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
+
+const QuotePreview = dynamic(
+  () =>
+    import('@/features/finances/quotes/components/quote-preview').then((mod) => mod.QuotePreview),
+  {
+    ssr: false,
+    loading: () => (
+      <Box className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Loading preview...</p>
+      </Box>
+    ),
+  },
+);
 
 type DrawerMode = 'edit' | 'create';
 
@@ -89,6 +104,7 @@ export function QuoteDrawer({
   const downloadPdf = useDownloadQuotePdf();
   const sendEmail = useSendQuoteEmail();
   const sendFollowUp = useSendQuoteFollowUp();
+  const duplicateQuote = useDuplicateQuote();
 
   const router = useRouter();
   const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
@@ -201,6 +217,39 @@ export function QuoteDrawer({
     });
   }, [quote, createVersion, router]);
 
+  const handleDuplicate = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    if (hasUnsavedChanges) {
+      toast.warning('You have unsaved changes', {
+        description:
+          'Please save your changes before duplicating to ensure the copy reflects the latest data.',
+        duration: 5000,
+        action: {
+          label: 'Save Now',
+          onClick: () => {
+            const form = document.getElementById('form-rhf-quote');
+            if (form && form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          },
+        },
+      });
+
+      return;
+    }
+
+    duplicateQuote.mutate(quote.id, {
+      onSuccess: (data) => {
+        // Navigate to the newly created duplicate
+        const targetPath = `/finances/quotes/${data.id}`;
+        router.push(targetPath);
+      },
+    });
+  }, [quote, duplicateQuote, router, hasUnsavedChanges]);
+
   const handleNavigateToVersion = useCallback(
     (versionId: string) => {
       if (hasUnsavedChanges) {
@@ -303,12 +352,27 @@ export function QuoteDrawer({
     canAccept,
     canReject,
     canSend,
+    canSendQuote,
     canPutOnHold,
     canCancel,
     canConvert,
     canDelete,
     canCreateVersion,
   } = getQuotePermissions(quote?.status);
+
+  // Check if follow-up should be available
+  // Only show when status is SENT and within 3 days of validUntil
+  const showFollowUp = (() => {
+    if (!quote || quote.status !== QuoteStatus.SENT) return false;
+
+    const now = new Date();
+    const validUntil = new Date(quote.validUntil);
+    const daysUntilExpiry = Math.ceil(
+      (validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    return daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
+  })();
 
   const getDrawerHeader = () => {
     if (mode === 'create') {
@@ -473,7 +537,7 @@ export function QuoteDrawer({
                           {canSend ? (
                             <DropdownMenuItem onClick={handleSend}>
                               <Send className="h-4 w-4" />
-                              Mark as sent
+                              Send Quote
                             </DropdownMenuItem>
                           ) : null}
 
@@ -519,20 +583,29 @@ export function QuoteDrawer({
                             </DropdownMenuItem>
                           ) : null}
 
+                          <DropdownMenuItem onClick={handleDuplicate}>
+                            <Files className="h-4 w-4" />
+                            Duplicate Quote
+                          </DropdownMenuItem>
+
                           <DropdownMenuItem onClick={handleDownloadPdf}>
                             <Download className="h-4 w-4" />
                             Download PDF
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={handleSendEmail}>
-                            <Mail className="h-4 w-4" />
-                            Send Email
-                          </DropdownMenuItem>
+                          {canSendQuote ? (
+                            <DropdownMenuItem onClick={handleSendEmail}>
+                              <Mail className="h-4 w-4" />
+                              Resend Quote
+                            </DropdownMenuItem>
+                          ) : null}
 
-                          <DropdownMenuItem onClick={handleSendFollowUp}>
-                            <Send className="h-4 w-4" />
-                            Send Follow-up
-                          </DropdownMenuItem>
+                          {showFollowUp ? (
+                            <DropdownMenuItem onClick={handleSendFollowUp}>
+                              <Send className="h-4 w-4" />
+                              Send Follow-up
+                            </DropdownMenuItem>
+                          ) : null}
 
                           {canDelete ? (
                             <DropdownMenuItem

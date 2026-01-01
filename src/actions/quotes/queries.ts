@@ -13,8 +13,12 @@ import type {
   QuoteStatistics,
   QuoteWithDetails,
   QuotePagination,
-  QuoteAttachment,
   QuoteItemAttachment,
+  QuoteValueTrend,
+  TopCustomerByQuotedValue,
+  ConversionFunnelData,
+  AverageTimeToDecision,
+  StatsDateFilter,
 } from '@/features/finances/quotes/types';
 import type { ActionResult } from '@/types/actions';
 import { getSignedDownloadUrl } from '@/lib/s3';
@@ -262,5 +266,94 @@ export async function getQuotePdfUrl(
     return { success: true, data: { url: pdfUrl, filename: pdfFilename } };
   } catch (error) {
     return handleActionError(error, 'Failed to get quote PDF URL');
+  }
+}
+
+/**
+ * Retrieves monthly quote value trend data for visualization.
+ * @param limit - Number of months to retrieve. Defaults to 12.
+ * @returns A promise that resolves to an `ActionResult` containing the monthly quote value trends.
+ */
+export async function getMonthlyQuoteValueTrend(
+  limit?: number,
+): Promise<ActionResult<QuoteValueTrend[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
+    const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit);
+    return { success: true, data: trend };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch quote value trend');
+  }
+}
+
+/**
+ * Retrieves conversion funnel data showing the flow from sent to converted quotes.
+ * @param dateFilter - Optional date range filter.
+ * @returns A promise that resolves to an `ActionResult` containing the conversion funnel data.
+ */
+export async function getConversionFunnel(
+  dateFilter?: StatsDateFilter,
+): Promise<ActionResult<ConversionFunnelData>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
+    const funnel = await quoteRepo.getConversionFunnel(dateFilter);
+    return { success: true, data: funnel };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch conversion funnel');
+  }
+}
+
+/**
+ * Retrieves top customers by total quoted value with conversion metrics.
+ * @param limit - Number of customers to retrieve. Defaults to 5.
+ * @returns A promise that resolves to an `ActionResult` containing the top customers.
+ */
+export async function getTopCustomersByQuotedValue(
+  limit?: number,
+): Promise<ActionResult<TopCustomerByQuotedValue[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
+    const topCustomers = await quoteRepo.getTopCustomersByQuotedValue(limit);
+    return { success: true, data: topCustomers };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch top customers');
+  }
+}
+
+/**
+ * Retrieves average time to decision metrics for quotes.
+ * @returns A promise that resolves to an `ActionResult` containing average time to decision data.
+ */
+export async function getAverageTimeToDecision(): Promise<ActionResult<AverageTimeToDecision>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+
+    const avgTime = await quoteRepo.getAverageTimeToDecision();
+    return { success: true, data: avgTime };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch average time to decision');
   }
 }

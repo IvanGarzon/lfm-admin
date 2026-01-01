@@ -5,6 +5,7 @@ import { Controller, useForm, useFieldArray, type Resolver, SubmitHandler } from
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
+import dynamic from 'next/dynamic';
 
 import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -45,7 +46,6 @@ import {
 import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
-import { QuoteItemDetails } from '@/features/finances/quotes/components/quote-item-details';
 import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
 import { QuoteVersions } from '@/features/finances/quotes/components/quote-versions';
 import {
@@ -53,6 +53,24 @@ import {
   useGetItemAttachmentDownloadUrl,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+
+// Lazy load QuoteItemDetails to avoid loading TipTap on every drawer open
+// This component uses RichTextEditor (TipTap) which is a heavy dependency (~1-2MB)
+// Only needed for existing quotes in edit mode, not for creating new quotes
+const QuoteItemDetails = dynamic(
+  () =>
+    import('@/features/finances/quotes/components/quote-item-details').then(
+      (mod) => mod.QuoteItemDetails,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Box className="p-4">
+        <p className="text-sm text-muted-foreground">Loading item details...</p>
+      </Box>
+    ),
+  },
+);
 
 const defaultFormState: CreateQuoteInput = {
   customerId: '',
