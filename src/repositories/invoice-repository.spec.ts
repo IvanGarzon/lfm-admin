@@ -16,6 +16,13 @@ const mockPrisma = {
   invoiceStatusHistory: {
     create: vi.fn(),
   },
+  payment: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+  },
+  transaction: {
+    create: vi.fn(),
+  },
   $transaction: vi.fn((input) => {
     if (Array.isArray(input)) return Promise.all(input);
     return input(mockPrisma);
@@ -139,6 +146,79 @@ describe('InvoiceRepository', () => {
       expect(stats.paid).toBe(1);
       expect(stats.pending).toBe(1);
       expect(stats.overdue).toBe(1);
+    });
+  });
+
+  describe('addPayment', () => {
+    it('creates payment, updates invoice, and creates transaction', async () => {
+      const mockInvoice = {
+        id: 'inv_123',
+        invoiceNumber: 'INV-001',
+        status: InvoiceStatus.PENDING,
+        amount: 100,
+        amountPaid: 0,
+        currency: 'USD',
+        customer: { firstName: 'John', lastName: 'Doe' },
+      };
+      mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
+      mockPrisma.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        status: InvoiceStatus.PAID,
+        amountPaid: 100,
+        amountDue: 0,
+      });
+
+      // Mock findByIdWithDetails which is called at the end
+      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue({
+        id: 'inv_123',
+        invoiceNumber: 'INV-001',
+        status: InvoiceStatus.PAID,
+      } as any);
+
+      const paymentDate = new Date();
+      await repository.addPayment(
+        'inv_123',
+        100,
+        'Bank Transfer',
+        paymentDate,
+        'Full payment',
+        'user_123',
+      );
+
+      // Verify payment creation
+      expect(mockPrisma.payment.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            invoiceId: 'inv_123',
+            amount: 100,
+            method: 'Bank Transfer',
+            date: paymentDate,
+          }),
+        }),
+      );
+
+      // Verify invoice update
+      expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'inv_123' },
+          data: expect.objectContaining({
+            status: InvoiceStatus.PAID,
+            amountPaid: 100,
+          }),
+        }),
+      );
+
+      // Verify transaction creation
+      expect(mockPrisma.transaction.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            type: 'INCOME',
+            amount: 100,
+            payee: 'John Doe',
+            categories: expect.anything(), // Now uses many-to-many categories
+          }),
+        }),
+      );
     });
   });
 });

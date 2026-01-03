@@ -1,4 +1,11 @@
-import { Invoice, InvoiceStatus, Prisma, PrismaClient } from '@/prisma/client';
+import {
+  Invoice,
+  InvoiceStatus,
+  Prisma,
+  PrismaClient,
+  TransactionType,
+  TransactionStatus,
+} from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { validateInvoiceStatusTransition } from '@/features/finances/invoices/utils/invoice-helpers';
 import { isPrismaError } from '@/lib/error-handler';
@@ -1165,11 +1172,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       where: { id: invoiceId, deletedAt: null },
       select: {
         id: true,
+        invoiceNumber: true,
         status: true,
         amount: true,
         amountPaid: true,
         receiptNumber: true,
-        currency: true, // Added currency to select for notes
+        currency: true,
+        customer: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     });
 
@@ -1255,6 +1269,32 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           changedAt: new Date(),
           changedBy,
           notes: `Payment of ${amount} ${invoice.currency} received. ${newStatus === InvoiceStatus.PAID ? 'Invoice fully paid.' : 'Invoice partially paid.'}`,
+        },
+      });
+
+      // Create income transaction with SALES category
+      const salesCategory = await tx.transactionCategory.findFirst({
+        where: { name: 'SALES' },
+      });
+
+      await tx.transaction.create({
+        data: {
+          type: TransactionType.INCOME,
+          date,
+          amount,
+          currency: invoice.currency,
+          description: `Payment for Invoice ${invoice.invoiceNumber}`,
+          payee: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+          status: TransactionStatus.COMPLETED,
+          invoiceId,
+          referenceId: receiptNumber || undefined,
+          categories: salesCategory
+            ? {
+                create: {
+                  categoryId: salesCategory.id,
+                },
+              }
+            : undefined,
         },
       });
     });
@@ -1426,6 +1466,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     return duplicate;
   }
+
   /**
    * Get monthly revenue trend for the last N months.
    * @param limit - Number of months to retrieve. Defaults to 12.

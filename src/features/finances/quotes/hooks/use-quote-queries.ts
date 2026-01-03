@@ -364,7 +364,7 @@ export function useMarkQuoteAsSent() {
       if (!result.success) {
         throw new Error(result.error);
       }
-      return result.data;
+      return { ...result.data, message: result.message };
     },
     onMutate: async (id: string) => {
       // Cancel any outgoing refetches
@@ -398,8 +398,15 @@ export function useMarkQuoteAsSent() {
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
     },
-    onSuccess: () => {
-      toast.success('Quote marked as sent');
+    onSuccess: (data) => {
+      if (data.message) {
+        toast.warning('Quote marked as sent, but email was not sent', {
+          description: data.message,
+          duration: 10000,
+        });
+      } else {
+        toast.success('Quote marked as sent');
+      }
     },
   });
 }

@@ -32,6 +32,7 @@ import {
   UserX2Icon,
   KeyRound,
   X,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -87,4 +88,5 @@ export const Icons = {
   check: Check,
   keyRound: KeyRound,
   fileText: FileText,
+  arrowLeftRight: ArrowLeftRight,
 };

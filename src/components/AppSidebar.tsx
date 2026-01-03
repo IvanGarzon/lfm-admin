@@ -1,4 +1,4 @@
-import { Package, LayoutDashboard, User, FileText, FileCheck } from 'lucide-react';
+import { Package, LayoutDashboard, User, FileText, FileCheck, ArrowLeftRight } from 'lucide-react';
 
 import {
   Sidebar,
@@ -37,6 +37,11 @@ const items = [
     title: 'Invoices',
     url: '/finances/invoices',
     icon: FileText,
+  },
+  {
+    title: 'Transactions',
+    url: '/finances/transactions',
+    icon: ArrowLeftRight,
   },
 ];
 

@@ -7,7 +7,7 @@
  * Provides consistent error handling across all actions
  */
 export type ActionResult<T> =
-  | { success: true; data: T }
+  | { success: true; data: T; message?: string }
   | { success: false; error: string; errors?: Record<string, string[]> };
 
 /**

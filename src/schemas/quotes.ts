@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
-import { ALLOWED_MIME_TYPES, ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
+import { ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
 
 export const QuoteItemSchema = z.object({
   id: z.string().optional(),
@@ -178,7 +178,7 @@ export const QuoteItemAttachmentSchema = z.object({
   fileSize: z.number().int().positive(),
   mimeType: z.string(),
   s3Key: z.string(),
-  s3Url: z.string().url(),
+  s3Url: z.url(),
   uploadedBy: z.string().nullable(),
   uploadedAt: z.date(),
 });

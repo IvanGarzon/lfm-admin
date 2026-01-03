@@ -7,9 +7,8 @@ import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { requirePermission } from '@/lib/permissions';
-import { QuoteFiltersSchema } from '@/schemas/quotes';
+import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
-  QuoteFilters,
   QuoteStatistics,
   QuoteWithDetails,
   QuotePagination,
@@ -42,20 +41,8 @@ export async function getQuotes(
   try {
     requirePermission(session.user, 'canReadQuotes');
 
-    const parseResult = QuoteFiltersSchema.safeParse(searchParams);
-    if (!parseResult.success) {
-      return { success: false, error: 'Invalid query parameters' };
-    }
-
-    const repoParams: QuoteFilters = {
-      search: parseResult.data.search,
-      status: parseResult.data.status,
-      page: parseResult.data.page,
-      perPage: parseResult.data.perPage,
-      sort: parseResult.data.sort,
-    };
-
-    const result = await quoteRepo.searchAndPaginate(repoParams);
+    const filters = searchParamsCache.parse(searchParams);
+    const result = await quoteRepo.searchAndPaginate(filters);
 
     return { success: true, data: result };
   } catch (error) {
@@ -77,7 +64,6 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
     }
 
     requirePermission(session.user, 'canReadQuotes');
-
     const quote = await quoteRepo.findByIdWithDetails(id);
 
     if (!quote) {

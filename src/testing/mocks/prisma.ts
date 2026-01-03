@@ -9,6 +9,17 @@ export const InvoiceStatus = {
   CANCELLED: 'CANCELLED',
 };
 
+export const TransactionType = {
+  INCOME: 'INCOME',
+  EXPENSE: 'EXPENSE',
+};
+
+export const TransactionStatus = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+};
+
 export const Prisma = {
   Decimal: class {
     public value: any;

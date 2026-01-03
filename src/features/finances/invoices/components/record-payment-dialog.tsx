@@ -92,8 +92,32 @@ export function RecordPaymentDialog({
   };
 
   const setPercentageAmount = (percentage: number) => {
-    const amount = (amountDue * percentage) / 100;
-    form.setValue('amount', Number(amount.toFixed(2)));
+    // Use amountDue if available, otherwise fall back to invoiceTotal
+    // This handles cases where the invoice might be fully paid but we still want to allow percentage selection
+    const baseAmount = Number(amountDue) > 0 ? Number(amountDue) : Number(invoiceTotal);
+
+    if (!baseAmount || baseAmount <= 0) {
+      console.error('No valid amount to calculate percentage from:', { amountDue, invoiceTotal });
+      return;
+    }
+
+    const amount = (baseAmount * percentage) / 100;
+    const roundedAmount = Number(amount.toFixed(2));
+
+    console.log('Setting percentage amount:', {
+      percentage,
+      amountDue,
+      invoiceTotal,
+      baseAmount,
+      calculated: amount,
+      rounded: roundedAmount,
+    });
+
+    form.setValue('amount', roundedAmount, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
   return (

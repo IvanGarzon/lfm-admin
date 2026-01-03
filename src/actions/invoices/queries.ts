@@ -4,10 +4,9 @@ import { auth } from '@/auth';
 import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
+import { requirePermission } from '@/lib/permissions';
 import { handleActionError } from '@/lib/error-handler';
-import { InvoiceFiltersSchema } from '@/schemas/invoices';
 import type {
-  InvoiceFilters,
   InvoiceStatistics,
   InvoiceWithDetails,
   InvoicePagination,
@@ -19,6 +18,7 @@ import type {
   TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
 import type { ActionResult } from '@/types/actions';
+import { searchParamsCache } from '@/filters/invoices/invoices-filters';
 
 const invoiceRepo = new InvoiceRepository(prisma);
 
@@ -37,29 +37,15 @@ export async function getInvoices(
     return { success: false, error: 'Unauthorized' };
   }
 
-  const parseResult = InvoiceFiltersSchema.safeParse(searchParams);
-  if (!parseResult.success) {
-    return { success: false, error: 'Invalid query parameters' };
-  }
-
   try {
-    const repoParams: InvoiceFilters = {
-      search: parseResult.data.search,
-      status: parseResult.data.status,
-      page: parseResult.data.page,
-      perPage: parseResult.data.perPage,
-      sort: parseResult.data.sort,
-    };
+    requirePermission(session.user, 'canReadInvoices');
 
-    const result = await invoiceRepo.searchAndPaginate(repoParams);
+    const filters = searchParamsCache.parse(searchParams);
+    const result = await invoiceRepo.searchAndPaginate(filters);
 
     return { success: true, data: result };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoices', {
-      action: 'getInvoices',
-      userId: session.user.id,
-      filters: parseResult.data,
-    });
+    return handleActionError(error, 'Failed to fetch invoices');
   }
 }
 
@@ -77,6 +63,7 @@ export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWi
   }
 
   try {
+    requirePermission(session.user, 'canReadInvoices');
     const invoice = await invoiceRepo.findByIdWithDetails(id);
 
     if (!invoice) {
@@ -102,6 +89,7 @@ export async function getInvoiceBasicById(id: string): Promise<ActionResult<Invo
   }
 
   try {
+    requirePermission(session.user, 'canReadInvoices');
     const invoice = await invoiceRepo.findInvoiceBasicById(id);
 
     if (!invoice) {

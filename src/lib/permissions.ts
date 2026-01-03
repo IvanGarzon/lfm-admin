@@ -21,12 +21,20 @@ export const PERMISSIONS = {
     label: 'Can record payments',
   },
 
-  // Quote Permissions (for future expansion)
+  // Quote Permissions
   canReadQuotes: {
     label: 'Can view quotes',
   },
   canManageQuotes: {
     label: 'Can create, edit, and delete quotes',
+  },
+
+  // Transaction Permissions
+  canReadTransactions: {
+    label: 'Can view transactions',
+  },
+  canManageTransactions: {
+    label: 'Can create, edit, and delete transactions',
   },
 } as const;
 

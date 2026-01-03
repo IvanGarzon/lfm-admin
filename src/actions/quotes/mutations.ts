@@ -195,24 +195,31 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
 
     requirePermission(session.user, 'canManageQuotes');
 
+    // Fetch quote with customer details
     const quote = await quoteRepo.markAsSent(id, session?.user?.id);
-
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
 
     // Auto-send email when quote is marked as SENT
+    let emailWarning: string | undefined;
     try {
-      await sendQuoteEmail({ quoteId: id, type: 'sent' });
+      const emailResult = await sendQuoteEmail({ quoteId: id, type: 'sent' });
+      if (!emailResult.success) {
+        emailWarning = emailResult.error;
+      }
     } catch (emailError) {
-      // Log error but don't fail the status update
-      console.error('Failed to queue quote email:', emailError);
+      emailWarning = 'Failed to queue automatic email';
     }
 
     revalidatePath('/finances/quotes');
     revalidatePath(`/finances/quotes/${id}`);
 
-    return { success: true, data: { id: quote.id } };
+    return {
+      success: true,
+      data: { id: quote.id },
+      message: emailWarning,
+    };
   } catch (error) {
     return handleActionError(error, 'Failed to mark quote as sent');
   }

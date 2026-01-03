@@ -38,6 +38,13 @@ export const navItems: NavItem[] = [
         shortcut: ['q', 'q'],
         authorizeOnly: ['*'],
       },
+      {
+        title: 'Transactions',
+        href: '/finances/transactions',
+        icon: 'arrowLeftRight',
+        shortcut: ['t', 't'],
+        authorizeOnly: ['*'],
+      },
     ],
   },
   {

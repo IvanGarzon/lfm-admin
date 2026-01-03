@@ -211,11 +211,12 @@ export function QuoteDrawer({
     createVersion.mutate(quote.id, {
       onSuccess: (data) => {
         // Navigate to the newly created version
-        const targetPath = `/finances/quotes/${data.id}`;
+        const basePath = `/finances/quotes/${data.id}`;
+        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
         router.push(targetPath);
       },
     });
-  }, [quote, createVersion, router]);
+  }, [quote, createVersion, router, queryString]);
 
   const handleDuplicate = useCallback(() => {
     if (!quote) {
@@ -244,11 +245,12 @@ export function QuoteDrawer({
     duplicateQuote.mutate(quote.id, {
       onSuccess: (data) => {
         // Navigate to the newly created duplicate
-        const targetPath = `/finances/quotes/${data.id}`;
+        const basePath = `/finances/quotes/${data.id}`;
+        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
         router.push(targetPath);
       },
     });
-  }, [quote, duplicateQuote, router, hasUnsavedChanges]);
+  }, [quote, duplicateQuote, router, hasUnsavedChanges, queryString]);
 
   const handleNavigateToVersion = useCallback(
     (versionId: string) => {
@@ -259,9 +261,11 @@ export function QuoteDrawer({
         });
         return;
       }
-      router.push(`/finances/quotes/${versionId}`);
+      const basePath = `/finances/quotes/${versionId}`;
+      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+      router.push(targetPath);
     },
-    [router, hasUnsavedChanges],
+    [router, hasUnsavedChanges, queryString],
   );
 
   const handleDownloadPdf = useCallback(() => {
