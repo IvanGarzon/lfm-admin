@@ -17,6 +17,17 @@ export type TransactionCategory =
   | 'TAXES'
   | 'OTHER';
 
+export type TransactionAttachment = {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  s3Key: string;
+  s3Url: string;
+  uploadedBy: string | null;
+  uploadedAt: Date;
+};
+
 export type Transaction = {
   id: string;
   type: TransactionTypeType;
@@ -26,6 +37,7 @@ export type Transaction = {
   description: string;
   payee: string;
   status: TransactionStatusType;
+  referenceNumber: string | null;
   referenceId: string | null;
   invoiceId: string | null;
   createdAt: Date;
@@ -36,6 +48,7 @@ export type Transaction = {
       name: string;
     };
   }[];
+  attachments?: TransactionAttachment[];
   invoice?: {
     id: string;
     invoiceNumber: string;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Drawer,
   DrawerBody,
@@ -19,6 +20,11 @@ import {
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { Loader2, X } from 'lucide-react';
 import { Box } from '@/components/ui/box';
+import { useTransactionQueryString } from '../hooks/use-transaction-query-string';
+import {
+  searchParams,
+  transactionSearchParamsDefaults,
+} from '@/filters/transactions/transactions-filters';
 
 export function TransactionDrawer({
   id,
@@ -32,17 +38,27 @@ export function TransactionDrawer({
   const { data: transaction, isLoading, error, isError } = useTransaction(id);
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
+  const router = useRouter();
+  const pathname = usePathname();
+  const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
 
   const mode = id ? 'edit' : 'create';
-  const isOpen = open ?? false;
+  const isOpen = id ? (pathname?.includes(`/transactions/${id}`) ?? false) : (open ?? false);
 
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
-        onClose?.();
+        if (id && pathname?.includes(`/transactions/${id}`)) {
+          // Navigate back to list preserving filters
+          const basePath = '/finances/transactions';
+          const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+          router.push(targetPath);
+        } else {
+          onClose?.();
+        }
       }
     },
-    [onClose],
+    [id, pathname, onClose, router, queryString],
   );
 
   const handleCreate = useCallback(

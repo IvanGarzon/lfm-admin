@@ -9,14 +9,8 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from './file-constants';
-export {
-  ALLOWED_IMAGE_MIME_TYPES,
-  ALLOWED_MIME_TYPES,
-  MAX_FILE_SIZE,
-  formatFileSize,
-  getFileExtension,
-  isImageFile,
-} from './file-constants';
+// No longer re-exporting from file-constants.ts to avoid accidental client-side imports of S3.
+// Import utilities directly from @/lib/file-constants instead.
 
 // Environment configuration
 const isDevelopment = env.NODE_ENV === 'development';

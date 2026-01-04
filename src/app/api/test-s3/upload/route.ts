@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadFileToS3, ALLOWED_MIME_TYPES } from '@/lib/s3';
+import { uploadFileToS3 } from '@/lib/s3';
+import { ALLOWED_MIME_TYPES } from '@/lib/file-constants';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client, generateS3Key, getS3Url } from '@/lib/s3';
 

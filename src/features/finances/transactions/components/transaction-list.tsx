@@ -44,9 +44,9 @@ export function TransactionList({
 
   const transactions = data.items;
 
-  const handleEdit = useCallback((transaction: Transaction) => {
-    setEditingTransactionId(transaction.id);
-    setShowCreateModal(true);
+  // Create modal is only for NEW transactions now, Edit uses URL navigation
+  const handleShowCreateModal = useCallback(() => {
+    setShowCreateModal((prev) => !prev);
   }, []);
 
   const handleDelete = useCallback(
@@ -58,20 +58,14 @@ export function TransactionList({
     [deleteMutation],
   );
 
-  const handleShowCreateModal = useCallback(() => {
-    setEditingTransactionId(undefined);
-    setShowCreateModal((prev) => !prev);
-  }, []);
+  // Remove handleShowCreateModal redundant logic
 
   const handleCloseDrawer = useCallback(() => {
     setShowCreateModal(false);
     setEditingTransactionId(undefined);
   }, []);
 
-  const columns = useMemo(
-    () => createTransactionColumns(handleEdit, handleDelete),
-    [handleEdit, handleDelete],
-  );
+  const columns = useMemo(() => createTransactionColumns(handleDelete), [handleDelete]);
 
   const { table } = useDataTable({
     data: transactions,

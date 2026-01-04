@@ -8,6 +8,8 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  uploadTransactionAttachment,
+  deleteTransactionAttachment,
 } from '@/actions/transactions';
 import { TransactionFilters } from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
@@ -172,6 +174,61 @@ export function useDeleteTransaction() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete transaction');
+    },
+  });
+}
+export function useUploadTransactionAttachment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      transactionId,
+      formData,
+    }: {
+      transactionId: string;
+      formData: FormData;
+    }) => {
+      const result = await uploadTransactionAttachment(transactionId, formData);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.transactionId) });
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
+      toast.success('Attachment uploaded successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to upload attachment');
+    },
+  });
+}
+
+export function useDeleteTransactionAttachment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      attachmentId,
+      transactionId,
+    }: {
+      attachmentId: string;
+      transactionId: string;
+    }) => {
+      const result = await deleteTransactionAttachment(attachmentId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.transactionId) });
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
+      toast.success('Attachment deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete attachment');
     },
   });
 }

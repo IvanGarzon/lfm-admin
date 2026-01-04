@@ -11,6 +11,7 @@ import { validateInvoiceStatusTransition } from '@/features/finances/invoices/ut
 import { isPrismaError } from '@/lib/error-handler';
 import { INVOICE_CONFIG } from '@/features/finances/invoices/config/invoice-config';
 import { withDatabaseRetry } from '@/lib/retry';
+import { TransactionRepository } from './transaction-repository';
 
 import type {
   InvoiceListItem,
@@ -1272,29 +1273,46 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         },
       });
 
-      // Create income transaction with SALES category
-      const salesCategory = await tx.transactionCategory.findFirst({
-        where: { name: 'SALES' },
+      // Transaction creation
+      const categoryName =
+        newStatus === InvoiceStatus.PAID ? 'Invoice Fully Payment' : 'Invoice Partial Payment';
+
+      // Find or create the transaction category
+      const category = await tx.transactionCategory.upsert({
+        where: { name: categoryName },
+        update: {},
+        create: {
+          name: categoryName,
+          description: `Automatically created for ${categoryName.toLowerCase()}`,
+        },
       });
+
+      // Generate transaction reference number
+      const referenceNumber = await TransactionRepository.generateReferenceNumber();
+
+      const customerName = invoice.customer
+        ? `${invoice.customer.firstName} ${invoice.customer.lastName}`
+        : 'Unknown Customer';
 
       await tx.transaction.create({
         data: {
           type: TransactionType.INCOME,
-          date,
-          amount,
-          currency: invoice.currency,
+          date: date,
+          amount: new Prisma.Decimal(amount),
+          currency: invoice.currency || 'AUD',
           description: `Payment for Invoice ${invoice.invoiceNumber}`,
-          payee: `${invoice.customer.firstName} ${invoice.customer.lastName}`,
+          payee: customerName,
           status: TransactionStatus.COMPLETED,
-          invoiceId,
+          referenceNumber: referenceNumber,
           referenceId: receiptNumber || undefined,
-          categories: salesCategory
-            ? {
-                create: {
-                  categoryId: salesCategory.id,
-                },
-              }
-            : undefined,
+          invoiceId: invoiceId,
+          categories: {
+            create: [
+              {
+                categoryId: category.id,
+              },
+            ],
+          },
         },
       });
     });

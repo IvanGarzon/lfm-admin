@@ -37,9 +37,10 @@ import {
   type UpdateTransactionInput,
 } from '@/schemas/transactions';
 
-import type { Transaction, TransactionFormInput } from '../types';
+import type { Transaction, TransactionFormInput, TransactionAttachment } from '../types';
 import { getTransactionCategories } from '@/actions/transactions/queries';
 import { CategoryMultiSelect, type Category } from './category-multi-select';
+import { TransactionAttachments } from './transaction-attachments';
 
 const defaultFormState: CreateTransactionInput = {
   type: TransactionType.INCOME,
@@ -69,6 +70,7 @@ const mapTransactionToFormValues = (transaction: Transaction): UpdateTransaction
     description: transaction.description,
     payee: transaction.payee,
     status: transaction.status,
+    referenceNumber: transaction.referenceNumber ?? null,
     referenceId: transaction.referenceId ?? null,
     invoiceId: transaction.invoiceId ?? null,
   };
@@ -89,7 +91,7 @@ export function TransactionForm({
   isUpdating?: boolean;
   onClose?: () => void;
 }) {
-  const mode = transaction ? 'update' : 'create';
+  const mode = transaction ? 'edit' : 'create';
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
@@ -132,13 +134,6 @@ export function TransactionForm({
     setCategories((prev) => [...prev, newCategory]);
   }, []);
 
-  useEffect(() => {
-    if (mode === 'update' && transaction) {
-      const formValues = mapTransactionToFormValues(transaction);
-      form.reset(formValues);
-    }
-  }, [transaction, mode, form]);
-
   const onSubmit: SubmitHandler<TransactionFormInput> = useCallback(
     (data: TransactionFormInput) => {
       if (mode === 'create') {
@@ -170,6 +165,17 @@ export function TransactionForm({
             </span>
           </Box>
         ) : null}
+
+        {mode === 'edit' && transaction?.referenceNumber && (
+          <Box className="px-6 py-2 bg-muted/30 border-b flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Reference Number
+            </span>
+            <span className="text-sm font-mono font-bold text-primary">
+              {transaction.referenceNumber}
+            </span>
+          </Box>
+        )}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           <Box className="grid grid-cols-3 gap-4">
@@ -407,6 +413,14 @@ export function TransactionForm({
               />
             </FieldGroup>
           </Box>
+
+          {/* Attachments */}
+          <TransactionAttachments
+            transactionId={transaction?.id}
+            attachments={transaction?.attachments || []}
+            disabled={isCreating || isUpdating}
+            mode={mode}
+          />
         </Box>
 
         {/* Action Buttons */}

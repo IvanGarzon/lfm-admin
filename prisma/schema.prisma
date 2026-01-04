@@ -489,7 +489,6 @@ model EmailAudit {
   @@map("email_audit")
 }
 
-
 model ScheduledTask {
   id        String   @id @default(cuid())
 
@@ -578,12 +577,14 @@ model Transaction {
   currency    String            @default("USD")
   description String
   payee       String
-  status      TransactionStatus @default(COMPLETED)
-  referenceId String?           @map(name: "reference_id")
+  status          TransactionStatus                 @default(COMPLETED)
+  referenceNumber String                           @unique @map(name: "reference_number")
+  referenceId     String?                           @map(name: "reference_id")
   invoiceId   String?           @map(name: "invoice_id")
   invoice     Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
-  categories TransactionCategoryOnTransaction[]
+  categories  TransactionCategoryOnTransaction[]
+  attachments TransactionAttachment[]
 
   createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
@@ -623,6 +624,25 @@ model TransactionCategoryOnTransaction {
   @@index([transactionId])
   @@index([categoryId])
   @@map(name: "transaction_category_on_transaction")
+}
+
+model TransactionAttachment {
+  id            String      @id @default(cuid())
+  transactionId String      @map(name: "transaction_id")
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  fileName String @map(name: "file_name")
+  fileSize Int    @map(name: "file_size")
+  mimeType String @map(name: "mime_type")
+  s3Key    String @map(name: "s3_key")
+  s3Url    String @map(name: "s3_url")
+
+  uploadedBy String?  @map(name: "uploaded_by")
+  uploadedAt DateTime @default(now()) @map(name: "uploaded_at") @db.Timestamptz()
+
+  @@index([transactionId])
+  @@index([s3Key])
+  @@map(name: "transaction_attachments")
 }
 
 enum Gender {

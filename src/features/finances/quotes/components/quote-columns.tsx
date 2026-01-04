@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { Text, X, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
 
+import { QuoteStatus } from '@/prisma/client';
 import { formatCurrency } from '@/lib/utils';
-import { QuoteStatusSchema, type QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import type { QuoteListItem } from '@/features/finances/quotes/types';
@@ -31,47 +31,47 @@ function QuoteLink({ quoteId, quoteNumber }: { quoteId: string; quoteNumber: str
 
 const StatusOptions: {
   label: string;
-  value: QuoteStatusType;
+  value: QuoteStatus;
   icon: React.FC;
 }[] = [
   {
     label: 'Draft',
-    value: QuoteStatusSchema.enum.DRAFT,
+    value: QuoteStatus.DRAFT,
     icon: CircleDashed,
   },
   {
     label: 'Sent',
-    value: QuoteStatusSchema.enum.SENT,
+    value: QuoteStatus.SENT,
     icon: Send,
   },
   {
     label: 'On Hold',
-    value: QuoteStatusSchema.enum.ON_HOLD,
+    value: QuoteStatus.ON_HOLD,
     icon: Pause,
   },
   {
     label: 'Accepted',
-    value: QuoteStatusSchema.enum.ACCEPTED,
+    value: QuoteStatus.ACCEPTED,
     icon: Check,
   },
   {
     label: 'Rejected',
-    value: QuoteStatusSchema.enum.REJECTED,
+    value: QuoteStatus.REJECTED,
     icon: X,
   },
   {
     label: 'Expired',
-    value: QuoteStatusSchema.enum.EXPIRED,
+    value: QuoteStatus.EXPIRED,
     icon: Clock,
   },
   {
     label: 'Cancelled',
-    value: QuoteStatusSchema.enum.CANCELLED,
+    value: QuoteStatus.CANCELLED,
     icon: X,
   },
   {
     label: 'Converted',
-    value: QuoteStatusSchema.enum.CONVERTED,
+    value: QuoteStatus.CONVERTED,
     icon: FileCheck,
   },
 ];
@@ -187,7 +187,7 @@ export const createQuoteColumns = (
     accessorKey: 'validUntil',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Valid Until" />,
     cell: ({ row }) => {
-      const quoteStatus: QuoteStatusType = row.getValue('status');
+      const quoteStatus: QuoteStatus = row.getValue('status');
       const validUntil: Date = row.getValue('validUntil');
       const quoteHasExpired = isExpired(quoteStatus, validUntil);
       return (

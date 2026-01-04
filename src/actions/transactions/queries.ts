@@ -65,6 +65,7 @@ export async function getTransactionById(id: string): Promise<ActionResult<Trans
       ...transaction,
       amount: Number(transaction.amount),
       categories: transaction.categories || [],
+      attachments: transaction.attachments || [],
       invoice: transaction.invoice || null,
     };
 

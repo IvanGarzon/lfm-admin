@@ -30,7 +30,8 @@ import {
 } from '@/schemas/quotes';
 import type { QuoteItemAttachment } from '@/features/finances/quotes/types';
 import type { ActionResult } from '@/types/actions';
-import { uploadFileToS3, deleteFileFromS3, ALLOWED_IMAGE_MIME_TYPES } from '@/lib/s3';
+import { uploadFileToS3, deleteFileFromS3 } from '@/lib/s3';
+import { ALLOWED_IMAGE_MIME_TYPES } from '@/lib/file-constants';
 import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.service';
 
 const quoteRepo = new QuoteRepository(prisma);

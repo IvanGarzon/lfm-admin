@@ -91,6 +91,21 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             },
           },
         },
+        attachments: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            mimeType: true,
+            s3Key: true,
+            s3Url: true,
+            uploadedBy: true,
+            uploadedAt: true,
+          },
+          orderBy: {
+            uploadedAt: 'desc',
+          },
+        },
         invoice: {
           select: {
             id: true,
@@ -144,6 +159,21 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             },
           },
         },
+        attachments: {
+          select: {
+            id: true,
+            fileName: true,
+            fileSize: true,
+            mimeType: true,
+            s3Key: true,
+            s3Url: true,
+            uploadedBy: true,
+            uploadedAt: true,
+          },
+          orderBy: {
+            uploadedAt: 'desc',
+          },
+        },
         invoice: {
           select: {
             id: true,
@@ -161,11 +191,26 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
+   * Generates a unique transaction reference number using UUID.
+   * Format: TRX-XXXXXXXX where X is uppercase hex from UUID.
+   * @returns A promise that resolves to the generated reference number
+   * @example "TRX-A1B2C3D4"
+   */
+  static async generateReferenceNumber(): Promise<string> {
+    const crypto = await import('crypto');
+    const uuid = crypto.randomUUID();
+    const shortId = uuid.replace(/-/g, '').substring(0, 8).toUpperCase();
+    return `TRX-${shortId}`;
+  }
+
+  /**
    * Create a new transaction
    * @param data - The transaction data
    * @returns A promise that resolves to the created transaction
    */
   async createTransaction(data: CreateTransactionInput): Promise<Transaction> {
+    const referenceNumber = await TransactionRepository.generateReferenceNumber();
+
     return this.prisma.transaction.create({
       data: {
         type: data.type,
@@ -175,6 +220,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         description: data.description,
         payee: data.payee,
         status: data.status,
+        referenceNumber,
         referenceId: data.referenceId,
         invoiceId: data.invoiceId,
         categories: data.categoryIds

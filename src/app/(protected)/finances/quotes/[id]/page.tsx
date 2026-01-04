@@ -8,7 +8,6 @@ import dynamic from 'next/dynamic';
 const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {
-    ssr: false,
     loading: () => null,
   },
 );

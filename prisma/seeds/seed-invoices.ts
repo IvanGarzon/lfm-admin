@@ -1,47 +1,15 @@
 import { prisma } from '@/lib/prisma';
-import { InvoiceStatus } from '@/prisma/client';
+import { InvoiceStatus, TransactionType, TransactionStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-  productId: string | null;
-}
-
-interface Invoice {
-  invoiceNumber: string;
-  customerId: string;
-  status: InvoiceStatus;
-  amount: number;
-  amountDue: number;
-  amountPaid: number;
-  currency: string;
-  discount: number;
-  gst: number;
-  issuedDate: Date;
-  dueDate: Date;
-  notes: string | null;
-  items: {
-    create: InvoiceItem[];
-  };
-  remindersSent?: number;
-  paidDate?: Date;
-  paymentMethod?: string;
-  receiptNumber?: string;
-  cancelledDate?: Date;
-  cancelReason?: string;
-}
-
 /**
  * Seed Invoice Data
- * Generates fake invoices with items for testing
+ * Generates fake invoices with items and follows the lifecycle flow
  */
 
 export async function seedInvoices() {
-  console.log('🌱 Seeding invoices...');
+  console.log('🌱 Seeding invoices with lifecycle history...');
 
   // Initialize invoice repository
   const invoiceRepository = new InvoiceRepository(prisma);
@@ -61,27 +29,13 @@ export async function seedInvoices() {
     take: 10,
   });
 
-  const statuses: InvoiceStatus[] = [
-    InvoiceStatus.DRAFT,
-    InvoiceStatus.PENDING,
-    InvoiceStatus.PAID,
-    InvoiceStatus.CANCELLED,
-    InvoiceStatus.OVERDUE,
-  ];
   const paymentMethods = ['Bank Transfer', 'Credit Card', 'PayPal', 'Cash', 'Cheque'];
-  const cancelReasons = [
-    'Client Request',
-    'Duplicate Invoice',
-    'Service Not Delivered',
-    'Pricing Error',
-    'Contract Cancelled',
-  ];
 
-  const invoices: Invoice[] = [];
+  const createdStandaloneIds: string[] = [];
 
-  for (let i = 0; i < 60; i++) {
+  // 1. Create 50 standalone DRAFT invoices
+  for (let i = 0; i < 50; i++) {
     const customer = faker.helpers.arrayElement(customers);
-    const status = faker.helpers.arrayElement(statuses);
     const issuedDate = faker.date.between({
       from: new Date(2025, 0, 1),
       to: new Date(),
@@ -92,14 +46,11 @@ export async function seedInvoices() {
 
     // Generate items
     const itemCount = faker.number.int({ min: 1, max: 5 });
-    const items: InvoiceItem[] = [];
-    let totalAmount = 0;
+    const items: any[] = [];
 
     for (let j = 0; j < itemCount; j++) {
       const quantity = faker.number.int({ min: 1, max: 10 });
       const unitPrice = faker.number.float({ min: 50, max: 5000, multipleOf: 0.5 });
-      const total = quantity * unitPrice;
-      totalAmount += total;
 
       items.push({
         description: faker.helpers.arrayElement([
@@ -114,21 +65,9 @@ export async function seedInvoices() {
           'Orchid Collection',
           'Tropical Arrangement',
           'Arrangement for funeral',
-          'Floral Arrangement Service',
-          'Wedding Bouquet Package',
-          'Corporate Event Flowers',
-          'Sympathy Arrangement',
-          'Birthday Flower Delivery',
-          'Anniversary Special',
-          'Seasonal Flower Box',
-          'Premium Rose Bouquet',
-          'Orchid Collection',
-          'Tropical Arrangement',
-          'Arrangement for funeral',
         ]),
         quantity,
         unitPrice,
-        total,
         productId:
           products.length > 0 && faker.datatype.boolean({ probability: 0.5 })
             ? faker.helpers.arrayElement(products).id
@@ -136,74 +75,128 @@ export async function seedInvoices() {
       });
     }
 
-    // Random discount and GST
-    const discount = faker.helpers.weightedArrayElement([
-      { value: 0, weight: 0.7 },
-      { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+    try {
+      // Create as DRAFT via repository to get initial history
+      const { id } = await invoiceRepository.createInvoiceWithItems({
+        customerId: customer.id,
+        status: InvoiceStatus.DRAFT,
+        currency: 'AUD',
+        discount: faker.helpers.weightedArrayElement([
+          { value: 0, weight: 0.7 },
+          { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+        ]),
+        gst: 10,
+        issuedDate,
+        dueDate,
+        items,
+        notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? undefined,
+      });
+      createdStandaloneIds.push(id);
+    } catch (error) {
+      console.error(`Failed to create standalone invoice:`, error);
+    }
+  }
+
+  console.log(`✅ Created ${createdStandaloneIds.length} standalone DRAFT invoices.`);
+
+  // 2. Fetch all non-DRAFT invoices (likely from Quote conversion) plus some standalone DRAFTs
+  const allProcessableInvoices = await prisma.invoice.findMany({
+    where: {
+      status: { in: [InvoiceStatus.DRAFT, InvoiceStatus.PENDING] },
+      deletedAt: null,
+    },
+    select: { id: true, status: true, amount: true, issuedDate: true },
+  });
+
+  console.log(`Processing transitions for ${allProcessableInvoices.length} invoices...`);
+
+  // 3. Move most DRAFTs to PENDING
+  for (const inv of allProcessableInvoices) {
+    if (inv.status === InvoiceStatus.DRAFT && faker.datatype.boolean({ probability: 0.8 })) {
+      try {
+        await invoiceRepository.markAsPending(inv.id);
+      } catch (e) {}
+    }
+  }
+
+  // 4. Record payments for some PENDING invoices (making them PAID or PARTIALLY_PAID)
+  const pendingInvoices = await prisma.invoice.findMany({
+    where: { status: InvoiceStatus.PENDING, deletedAt: null },
+    select: { id: true, amount: true, issuedDate: true },
+  });
+
+  const toPay = faker.helpers.arrayElements(pendingInvoices, {
+    min: Math.floor(pendingInvoices.length * 0.4),
+    max: Math.floor(pendingInvoices.length * 0.7),
+  });
+
+  for (const inv of toPay) {
+    try {
+      const isPartial = faker.datatype.boolean({ probability: 0.2 });
+      const amountToPay = isPartial ? Number(inv.amount) / 2 : Number(inv.amount);
+      const payDate = faker.date.between({ from: inv.issuedDate, to: new Date() });
+      const method = faker.helpers.arrayElement(paymentMethods);
+
+      await invoiceRepository.addPayment(
+        inv.id,
+        amountToPay,
+        method,
+        payDate,
+        isPartial ? 'Partial payment received' : 'Full payment received',
+      );
+
+      // If partial, maybe pay the rest
+      if (isPartial && faker.datatype.boolean({ probability: 0.5 })) {
+        await invoiceRepository.addPayment(
+          inv.id,
+          amountToPay, // Remaining half
+          method,
+          new Date(payDate.getTime() + 86400000), // Day after
+          'Final payment',
+        );
+      }
+    } catch (e) {
+      console.error(`Failed to record payment for invoice ${inv.id}:`, e);
+    }
+  }
+
+  // 5. Some PENDING move to CANCELLED or OVERDUE
+  const remainingInvoices = await prisma.invoice.findMany({
+    where: { status: InvoiceStatus.PENDING, deletedAt: null },
+    select: { id: true, issuedDate: true },
+  });
+
+  for (const inv of remainingInvoices) {
+    const action = faker.helpers.weightedArrayElement([
+      { value: 'CANCEL', weight: 0.1 },
+      { value: 'OVERDUE', weight: 0.2 },
+      { value: 'KEEP', weight: 0.7 },
     ]);
 
-    const gst = 10; // Standard 10% GST
-
-    const subtotal = totalAmount;
-    const gstAmount = (subtotal * gst) / 100;
-    const finalAmount = subtotal + gstAmount - discount;
-
-    // Create invoice data based on status
-    const invoiceData: Invoice = {
-      invoiceNumber: `INV-2025-${String(i + 1).padStart(4, '0')}`,
-      customerId: customer.id,
-      status,
-      amount: finalAmount,
-      amountDue: finalAmount,
-      amountPaid: 0,
-      currency: 'AUD',
-      discount,
-      gst,
-      issuedDate,
-      dueDate,
-      notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
-      items: {
-        create: items,
-      },
-    };
-
-    // Add status-specific fields
-    if (status === InvoiceStatus.PENDING || status === InvoiceStatus.OVERDUE) {
-      invoiceData.remindersSent = faker.number.int({ min: 0, max: 3 });
-    } else if (status === InvoiceStatus.PAID) {
-      const paidDate = faker.date.between({
-        from: issuedDate,
-        to: dueDate,
-      });
-      invoiceData.paidDate = paidDate;
-      invoiceData.paymentMethod = faker.helpers.arrayElement(paymentMethods);
-      invoiceData.amountPaid = finalAmount;
-      invoiceData.amountDue = 0;
-      invoiceData.receiptNumber = await invoiceRepository.generateReceiptNumber();
-    } else if (status === InvoiceStatus.CANCELLED) {
-      const cancelledDate = faker.date.between({
-        from: issuedDate,
-        to: new Date(),
-      });
-      invoiceData.cancelledDate = cancelledDate;
-      invoiceData.cancelReason = faker.helpers.arrayElement(cancelReasons);
-    }
-
-    invoices.push(invoiceData);
-  }
-
-  // Create invoices with items in transaction
-  let created = 0;
-  for (const invoiceData of invoices) {
     try {
-      await prisma.invoice.create({
-        data: invoiceData,
-      });
-      created++;
-    } catch (error) {
-      console.error(`Failed to create invoice:`, error);
-    }
+      if (action === 'CANCEL') {
+        await invoiceRepository.cancel(
+          inv.id,
+          new Date(),
+          faker.helpers.arrayElement(['Client Request', 'Duplicate Invoice', 'Pricing Error']),
+        );
+      } else if (action === 'OVERDUE') {
+        // Manually set to overdue to simulate background job
+        await prisma.invoice.update({
+          where: { id: inv.id },
+          data: { status: InvoiceStatus.OVERDUE },
+        });
+        await prisma.invoiceStatusHistory.create({
+          data: {
+            invoiceId: inv.id,
+            status: InvoiceStatus.OVERDUE,
+            previousStatus: InvoiceStatus.PENDING,
+            notes: 'Invoice marked as overdue (System)',
+          },
+        });
+      }
+    } catch (e) {}
   }
 
-  console.log(`✅ Created ${created} invoices`);
+  console.log(`✅ Invoice transitions completed.`);
 }

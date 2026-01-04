@@ -11,6 +11,7 @@ export const TransactionSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   payee: z.string().min(1, 'Payee is required'),
   status: TransactionStatusSchema,
+  referenceNumber: z.string().optional().nullable(),
   referenceId: z.string().optional().nullable(),
   invoiceId: z.string().optional().nullable(),
 });

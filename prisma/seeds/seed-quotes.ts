@@ -2,34 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { QuoteStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
 import { addDays } from 'date-fns';
-
-interface QuoteItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-  order: number;
-  colors: string[];
-  notes: string | null;
-  productId: string | null;
-}
-
-interface Quote {
-  quoteNumber: string;
-  customerId: string;
-  status: QuoteStatus;
-  amount: number;
-  currency: string;
-  discount: number;
-  gst: number;
-  issuedDate: Date;
-  validUntil: Date;
-  notes: string | null;
-  terms: string | null;
-  items: {
-    create: QuoteItem[];
-  };
-}
+import { QuoteRepository } from '@/repositories/quote-repository';
+import { InvoiceRepository } from '@/repositories/invoice-repository';
 
 /**
  * Seed Quote Data
@@ -37,7 +11,10 @@ interface Quote {
  */
 
 export async function seedQuotes() {
-  console.log('💰 Seeding quotes...');
+  console.log('💰 Seeding quotes with lifecycle history...');
+
+  const quoteRepo = new QuoteRepository(prisma);
+  const invoiceRepo = new InvoiceRepository(prisma);
 
   // Get existing customers
   const customers = await prisma.customer.findMany({
@@ -54,16 +31,6 @@ export async function seedQuotes() {
     take: 15,
   });
 
-  const statuses: QuoteStatus[] = [
-    'DRAFT',
-    'SENT',
-    'ACCEPTED',
-    'REJECTED',
-    'EXPIRED',
-    'ON_HOLD',
-    'CANCELLED',
-  ];
-
   // Color palettes for quote items (flower arrangements)
   const colorPalettes = [
     ['#FF6B6B', '#FFE66D', '#4ECDC4'],
@@ -74,11 +41,10 @@ export async function seedQuotes() {
     ['#BAE1FF', '#BAFFC9', '#FFFFBA'],
   ];
 
-  const quotes = [];
+  const createdQuoteIds: string[] = [];
 
   for (let i = 0; i < 40; i++) {
     const customer = faker.helpers.arrayElement(customers);
-    const status = faker.helpers.arrayElement(statuses);
     const issuedDate = faker.date.between({
       from: new Date(2024, 0, 1),
       to: new Date(),
@@ -87,16 +53,12 @@ export async function seedQuotes() {
 
     // Generate items
     const itemCount = faker.number.int({ min: 1, max: 6 });
-    const items: QuoteItem[] = [];
-    let totalAmount = 0;
+    const items: any[] = [];
 
     for (let j = 0; j < itemCount; j++) {
       const quantity = faker.number.int({ min: 1, max: 20 });
       const unitPrice = faker.number.float({ min: 50, max: 3000, multipleOf: 0.5 });
-      const total = quantity * unitPrice;
-      totalAmount += total;
 
-      // Random color palette for this item
       const colors =
         faker.helpers.maybe(() => faker.helpers.arrayElement(colorPalettes), {
           probability: 0.6,
@@ -117,22 +79,6 @@ export async function seedQuotes() {
         ]),
         quantity,
         unitPrice,
-        total,
-        order: j,
-        colors,
-        notes:
-          faker.helpers.maybe(
-            () =>
-              faker.helpers.arrayElement([
-                'Client prefers pastel colors',
-                'Include seasonal flowers',
-                'Eco-friendly packaging requested',
-                'Fragrance-free arrangement',
-                'Long-lasting varieties preferred',
-                'Specific delivery time required',
-              ]),
-            { probability: 0.3 },
-          ) ?? null,
         productId:
           products.length > 0 && faker.datatype.boolean({ probability: 0.4 })
             ? faker.helpers.arrayElement(products).id
@@ -140,65 +86,100 @@ export async function seedQuotes() {
       });
     }
 
-    // Random discount and GST
-    const discount = faker.helpers.weightedArrayElement([
-      { value: 0, weight: 0.7 },
-      { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
-    ]);
-
-    const gst = 10; // Standard 10% GST
-    const subtotal = totalAmount;
-    const gstAmount = (subtotal * gst) / 100;
-    const finalAmount = subtotal + gstAmount - discount;
-
-    // Create quote data
-    const quoteData: Quote = {
-      quoteNumber: `QT-2025-${String(i + 1).padStart(4, '0')}`,
-      customerId: customer.id,
-      status,
-      amount: finalAmount,
-      currency: 'AUD',
-      discount,
-      gst,
-      issuedDate,
-      validUntil,
-      notes: faker.helpers.maybe(() => faker.lorem.paragraph(), { probability: 0.5 }) ?? null,
-      terms:
-        faker.helpers.maybe(
-          () => 'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
-          { probability: 0.7 },
-        ) ?? null,
-      items: {
-        create: items,
-      },
-    };
-
-    quotes.push(quoteData);
-  }
-
-  // Create quotes with items
-  let created = 0;
-  for (const quoteData of quotes) {
     try {
-      const quote = await prisma.quote.create({
-        data: quoteData,
+      // Always create as DRAFT first
+      const { id } = await quoteRepo.createQuoteWithItems({
+        customerId: customer.id,
+        status: QuoteStatus.DRAFT,
+        currency: 'AUD',
+        discount: faker.helpers.weightedArrayElement([
+          { value: 0, weight: 0.7 },
+          { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+        ]),
+        gst: 10,
+        issuedDate,
+        validUntil,
+        items,
+        notes:
+          faker.helpers.maybe(() => faker.lorem.paragraph(), { probability: 0.5 }) ?? undefined,
+        terms:
+          faker.helpers.maybe(
+            () =>
+              'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
+            { probability: 0.7 },
+          ) ?? undefined,
       });
 
-      // Create initial status history entry
-      await prisma.quoteStatusHistory.create({
-        data: {
-          quoteId: quote.id,
-          status: quote.status,
-          previousStatus: null,
-          notes: 'Quote created',
-        },
-      });
-
-      created++;
+      createdQuoteIds.push(id);
     } catch (error) {
-      console.error(`Failed to create quote:`, error);
+      console.error(`Failed to create quote structure:`, error);
     }
   }
 
-  console.log(`✅ Created ${created} quotes`);
+  console.log(`✅ Created ${createdQuoteIds.length} DRAFT quotes. Processing transitions...`);
+
+  // Process transitions
+  // 1. Move some to SENT
+  const sentQuotes = faker.helpers.arrayElements(createdQuoteIds, { min: 25, max: 35 });
+  for (const id of sentQuotes) {
+    try {
+      await quoteRepo.markAsSent(id);
+    } catch (e) {
+      console.error(`Failed to mark quote ${id} as SENT:`, e);
+    }
+  }
+
+  // 2. Move some SENT to ACCEPTED, REJECTED, ON_HOLD, or CANCELLED
+  const processedSent = faker.helpers.arrayElements(sentQuotes, { min: 20, max: 25 });
+  for (const id of processedSent) {
+    const action = faker.helpers.weightedArrayElement([
+      { value: 'ACCEPTED', weight: 0.6 },
+      { value: 'REJECTED', weight: 0.15 },
+      { value: 'ON_HOLD', weight: 0.15 },
+      { value: 'CANCELLED', weight: 0.1 },
+    ]);
+
+    try {
+      if (action === 'ACCEPTED') {
+        await quoteRepo.markAsAccepted(id);
+      } else if (action === 'REJECTED') {
+        await quoteRepo.markAsRejected(
+          id,
+          faker.helpers.arrayElement(['Too expensive', 'No longer needed', 'Other quote selected']),
+        );
+      } else if (action === 'ON_HOLD') {
+        await quoteRepo.markAsOnHold(id, 'Waiting for venue confirmation');
+      } else if (action === 'CANCELLED') {
+        await quoteRepo.markAsCancelled(id, 'Client decided not to proceed');
+      }
+    } catch (e) {
+      // Ignore transition errors
+    }
+  }
+
+  // 3. Convert some ACCEPTED to INVOICE
+  const acceptedQuotes = await prisma.quote.findMany({
+    where: { id: { in: processedSent }, status: QuoteStatus.ACCEPTED },
+    select: { id: true, amount: true, gst: true, discount: true },
+  });
+
+  const toConvert = faker.helpers.arrayElements(acceptedQuotes, { min: 5, max: 10 });
+  for (const quote of toConvert) {
+    try {
+      const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14);
+
+      await quoteRepo.convertToInvoice(quote.id, {
+        invoiceNumber,
+        gst: Number(quote.gst),
+        discount: Number(quote.discount),
+        dueDate,
+      });
+    } catch (e) {
+      console.error(`Failed to convert quote ${quote.id} to invoice:`, e);
+    }
+  }
+
+  console.log(`✅ Quote transitions completed.`);
 }

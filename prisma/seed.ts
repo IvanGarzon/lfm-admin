@@ -8,9 +8,21 @@ import { seedQuotes } from './seeds/seed-quotes';
 
 async function main() {
   console.log('Cleaning up tables...');
+  await prisma.transactionCategoryOnTransaction.deleteMany();
+  await prisma.transactionAttachment.deleteMany();
+  await prisma.transaction.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.invoiceStatusHistory.deleteMany();
+  await prisma.invoiceItem.deleteMany();
+  await prisma.invoice.deleteMany();
+  await prisma.quoteStatusHistory.deleteMany();
+  await prisma.quoteItemAttachment.deleteMany();
+  await prisma.quoteItem.deleteMany();
+  await prisma.quote.deleteMany();
   await prisma.customer.deleteMany();
   await prisma.employee.deleteMany();
   await prisma.organization.deleteMany();
+  await prisma.product.deleteMany();
 
   console.log('🌱 Starting complete database seeding...');
   console.log('');
@@ -64,29 +76,15 @@ async function main() {
       console.log('');
     }
 
-    // Step 5: Seed invoices
-    const invoiceCount = await prisma.invoice.count();
-    if (invoiceCount === 0) {
-      console.log('📋 Step 5: Seeding invoices...');
-      await seedInvoices();
-      console.log('');
-    } else {
-      console.log('✅ Invoices already exist (skipping)');
-      console.log(`   Invoices: ${invoiceCount}`);
-      console.log('');
-    }
+    // Step 5: Seed quotes
+    console.log('📋 Step 5: Seeding quotes...');
+    await seedQuotes();
+    console.log('');
 
-    // Step 6: Seed quotes
-    const quoteCount = await prisma.quote.count();
-    if (quoteCount === 0) {
-      console.log('📋 Step 6: Seeding quotes...');
-      await seedQuotes();
-      console.log('');
-    } else {
-      console.log('✅ Quotes already exist (skipping)');
-      console.log(`   Quotes: ${quoteCount}`);
-      console.log('');
-    }
+    // Step 6: Seed invoices
+    console.log('📋 Step 6: Seeding invoices...');
+    await seedInvoices();
+    console.log('');
 
     console.log('🎉 All seeding completed!');
     console.log('');

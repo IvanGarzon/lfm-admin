@@ -225,44 +225,14 @@ export async function recordPayment(
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Auto-create a Transaction record for the payment (INCOME)
-    try {
-      // Get the "SALES" category
-      const salesCategory = await prisma.transactionCategory.findFirst({
-        where: { name: 'SALES' },
-      });
-
-      if (salesCategory) {
-        const customerName = `${invoice.customer.firstName} ${invoice.customer.lastName}`;
-
-        await transactionRepo.createTransaction({
-          type: TransactionType.INCOME,
-          date: validatedData.paidDate,
-          amount: validatedData.amount,
-          currency: invoice.currency,
-          categoryIds: [salesCategory.id],
-          description: `Payment for Invoice ${invoice.invoiceNumber}`,
-          payee: customerName,
-          status: TransactionStatus.COMPLETED,
-          referenceId: invoice.receiptNumber,
-          invoiceId: invoice.id,
-        });
-      }
-
-      logger.info('Transaction created for invoice payment', {
-        context: 'recordPayment',
-        metadata: {
-          invoiceId: invoice.id,
-          amount: validatedData.amount.toString(),
-        },
-      });
-    } catch (txError) {
-      logger.error('Failed to create transaction for payment', txError, {
-        context: 'recordPayment',
-        metadata: { invoiceId: invoice.id },
-      });
-      // Don't fail the payment if transaction creation fails
-    }
+    // Transaction creation is now handled atomically inside invoiceRepo.addPayment
+    logger.info('Payment recorded and transaction created', {
+      context: 'recordPayment',
+      metadata: {
+        invoiceId: invoice.id,
+        amount: validatedData.amount.toString(),
+      },
+    });
 
     revalidatePath('/finances/invoices');
     revalidatePath(`/finances/invoices/${validatedData.id}`);

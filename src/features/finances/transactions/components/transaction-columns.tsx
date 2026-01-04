@@ -10,7 +10,9 @@ import {
   CircleDashed,
   CheckCircle,
   XCircle,
+  Paperclip,
 } from 'lucide-react';
+import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +30,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { Transaction } from '../types';
 import { TransactionStatusBadge } from './transaction-status-badge';
 import { TransactionType, TransactionStatus } from '@/prisma/client';
+import {
+  searchParams,
+  transactionSearchParamsDefaults,
+} from '@/filters/transactions/transactions-filters';
+import { useTransactionQueryString } from '../hooks/use-transaction-query-string';
+import { TransactionActions } from './transaction-actions';
 
 const TypeOptions = [
   {
@@ -60,8 +68,25 @@ const StatusOptions = [
   },
 ];
 
+function TransactionLink({
+  transactionId,
+  referenceNumber,
+}: {
+  transactionId: string;
+  referenceNumber: string;
+}) {
+  const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
+  const basePath = `/finances/transactions/${transactionId}`;
+  const href = queryString ? `${basePath}?${queryString}` : basePath;
+
+  return (
+    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+      {referenceNumber}
+    </Link>
+  );
+}
+
 export const createTransactionColumns = (
-  onEdit: (transaction: Transaction) => void,
   onDelete: (id: string) => void,
 ): ColumnDef<Transaction>[] => [
   {
@@ -87,6 +112,26 @@ export const createTransactionColumns = (
     meta: {
       label: 'Select',
       variant: 'text',
+    },
+  },
+  {
+    id: 'referenceNumber',
+    accessorKey: 'referenceNumber',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Ref #" />,
+    cell: ({ row }) => {
+      return (
+        <Box className="flex flex-col">
+          <TransactionLink
+            transactionId={row.original.id}
+            referenceNumber={row.original.referenceNumber || ''}
+          />
+        </Box>
+      );
+    },
+    enableSorting: true,
+    enableColumnFilter: true,
+    meta: {
+      label: 'Ref #',
     },
   },
   {
@@ -207,6 +252,30 @@ export const createTransactionColumns = (
     },
   },
   {
+    id: 'attachments',
+    accessorKey: 'attachments',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Attachments" className="justify-center" />
+    ),
+    cell: ({ row }) => {
+      const attachments = row.original.attachments || [];
+      const count = attachments.length;
+
+      if (count === 0) return null;
+
+      return (
+        <Box className="flex items-center justify-center gap-1 text-muted-foreground">
+          <Paperclip className="h-4 w-4" />
+          <span className="text-xs font-medium">{count}</span>
+        </Box>
+      );
+    },
+    enableSorting: false,
+    meta: {
+      label: 'Attachments',
+    },
+  },
+  {
     id: 'status',
     accessorKey: 'status',
     header: 'Status',
@@ -224,34 +293,7 @@ export const createTransactionColumns = (
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const transaction = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-              Copy transaction ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onEdit(transaction)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onDelete(transaction.id)}
-              className="text-destructive focus:text-destructive"
-            >
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <TransactionActions transaction={row.original} onDelete={onDelete} />,
     enableHiding: false,
     meta: {
       className: 'text-right',
