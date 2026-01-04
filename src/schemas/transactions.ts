@@ -2,25 +2,23 @@ import { z } from 'zod';
 import { TransactionStatusSchema } from '@/zod/inputTypeSchemas/TransactionStatusSchema';
 import { TransactionTypeSchema } from '@/zod/inputTypeSchemas/TransactionTypeSchema';
 
-export const CreateTransactionSchema = z.object({
+export const TransactionSchema = z.object({
   type: TransactionTypeSchema,
   date: z.date(),
   amount: z.number().positive('Amount must be greater than 0'),
-  currency: z.string().default('USD'),
+  currency: z.string(),
   categoryIds: z.array(z.string()).min(1, 'At least one category is required').optional(),
   description: z.string().min(1, 'Description is required'),
   payee: z.string().min(1, 'Payee is required'),
-  status: TransactionStatusSchema.default('PENDING'),
+  status: TransactionStatusSchema,
   referenceId: z.string().optional().nullable(),
   invoiceId: z.string().optional().nullable(),
 });
 
-export const UpdateTransactionSchema = CreateTransactionSchema.extend({
-  id: z.string(),
+export const CreateTransactionSchema = TransactionSchema;
+export const UpdateTransactionSchema = TransactionSchema.safeExtend({
+  id: z.string().min(1, { error: 'Invalid transaction ID' }),
 });
-
-export type CreateTransactionInput = z.infer<typeof CreateTransactionSchema>;
-export type UpdateTransactionInput = z.infer<typeof UpdateTransactionSchema>;
 
 /**
  * Transaction Filters Schema
@@ -65,3 +63,6 @@ export const TransactionFiltersSchema = z.object({
   perPage: z.coerce.number().min(1).max(100).default(20),
   sort: sortingSchema.default([]),
 });
+
+export type CreateTransactionInput = z.infer<typeof CreateTransactionSchema>;
+export type UpdateTransactionInput = z.infer<typeof UpdateTransactionSchema>;

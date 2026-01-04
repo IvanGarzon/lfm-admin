@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
-import { Shell } from '@/components/shared/shell';
-import { constructMetadata } from '@/lib/utils';
 import { getTransactions } from '@/actions/transactions';
+import { constructMetadata } from '@/lib/utils';
+import { Shell } from '@/components/shared/shell';
 import { TransactionList } from '@/features/finances/transactions/components/transaction-list';
 
 export const metadata = constructMetadata({

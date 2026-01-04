@@ -38,7 +38,6 @@ import {
 } from '@/schemas/invoices';
 import { CustomerSelect } from '@/components/shared/customer-select';
 import type {
-  InvoiceWithDetails,
   InvoiceFormInput,
   InvoiceBasic,
   InvoiceItemDetail,

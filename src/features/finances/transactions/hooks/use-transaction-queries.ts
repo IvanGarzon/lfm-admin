@@ -9,7 +9,7 @@ import {
   updateTransaction,
   deleteTransaction,
 } from '@/actions/transactions';
-import type { TransactionFilters } from '@/repositories/transaction-repository';
+import { TransactionFilters } from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { toast } from 'sonner';
 
@@ -41,21 +41,21 @@ export function useTransactions(filters: Partial<TransactionFilters> = {}) {
         searchParams.status = filters.status;
       }
 
-      if (filters.startDate) {
-        searchParams.startDate = filters.startDate.toISOString();
-      }
+      // if (filters.startDate) {
+      //   searchParams.startDate = filters.startDate.toISOString();
+      // }
 
-      if (filters.endDate) {
-        searchParams.endDate = filters.endDate.toISOString();
-      }
+      // if (filters.endDate) {
+      //   searchParams.endDate = filters.endDate.toISOString();
+      // }
 
-      if (filters.minAmount !== undefined) {
-        searchParams.minAmount = String(filters.minAmount);
-      }
+      // if (filters.minAmount !== undefined) {
+      //   searchParams.minAmount = String(filters.minAmount);
+      // }
 
-      if (filters.maxAmount !== undefined) {
-        searchParams.maxAmount = String(filters.maxAmount);
-      }
+      // if (filters.maxAmount !== undefined) {
+      //   searchParams.maxAmount = String(filters.maxAmount);
+      // }
 
       if (filters.page) {
         searchParams.page = String(filters.page);

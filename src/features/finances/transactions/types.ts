@@ -1,6 +1,10 @@
 import type { TransactionStatusType } from '@/zod/inputTypeSchemas/TransactionStatusSchema';
 import type { TransactionTypeType } from '@/zod/inputTypeSchemas/TransactionTypeSchema';
 
+import { type CreateTransactionInput, type UpdateTransactionInput } from '@/schemas/transactions';
+
+export type TransactionFormInput = CreateTransactionInput | UpdateTransactionInput;
+
 export type TransactionCategory =
   | 'SALES'
   | 'OFFICE_SUPPLIES'

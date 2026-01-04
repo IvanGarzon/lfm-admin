@@ -5,6 +5,7 @@ import { Controller, useForm, type Resolver, SubmitHandler } from 'react-hook-fo
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, DollarSign, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { TransactionType, TransactionStatus } from '@/prisma/client';
 
 import { cn } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -38,25 +39,27 @@ import {
   type CreateTransactionInput,
   type UpdateTransactionInput,
 } from '@/schemas/transactions';
-import type { Transaction, TransactionType } from '../types';
+
+import type { Transaction, TransactionFormInput } from '../types';
 import { getTransactionCategories } from '@/actions/transactions/queries';
 
 const defaultFormState: CreateTransactionInput = {
-  type: 'INCOME',
+  type: TransactionType.INCOME,
   date: new Date(),
   amount: 0,
-  currency: 'USD',
+  currency: 'AUD',
   categoryIds: [],
   description: '',
   payee: '',
-  status: 'COMPLETED',
+  status: TransactionStatus.PENDING,
   referenceId: null,
   invoiceId: null,
 };
 
-const mapTransactionToFormValues = (transaction: any): UpdateTransactionInput => {
+const mapTransactionToFormValues = (transaction: Transaction): UpdateTransactionInput => {
   // Extract category IDs from the categories relation
-  const categoryIds = transaction.categories?.map((cat: any) => cat.category.id) || [];
+  const categoryIds =
+    transaction.categories?.map((cat: { category: { id: string } }) => cat.category.id) || [];
 
   return {
     id: transaction.id,
@@ -94,18 +97,21 @@ export function TransactionForm({
   >([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
-  const defaultValues: CreateTransactionInput | UpdateTransactionInput =
+  const defaultValues: TransactionFormInput =
     mode === 'create'
       ? defaultFormState
       : transaction
         ? mapTransactionToFormValues(transaction)
         : defaultFormState;
 
-  const form = useForm<CreateTransactionInput | UpdateTransactionInput>({
+  const createResolver: Resolver<TransactionFormInput> = (values, context, options) => {
+    const schema = mode === 'create' ? CreateTransactionSchema : UpdateTransactionSchema;
+    return zodResolver(schema)(values, context, options);
+  };
+
+  const form = useForm<TransactionFormInput>({
     mode: 'onChange',
-    resolver: zodResolver(
-      mode === 'create' ? CreateTransactionSchema : UpdateTransactionSchema,
-    ) as Resolver<CreateTransactionInput | UpdateTransactionInput>,
+    resolver: createResolver,
     defaultValues,
   });
 
@@ -132,15 +138,16 @@ export function TransactionForm({
     }
   }, [transaction, mode, form]);
 
-  const onSubmit: SubmitHandler<CreateTransactionInput | UpdateTransactionInput> = useCallback(
-    (data) => {
+  const onSubmit: SubmitHandler<TransactionFormInput> = useCallback(
+    (data: TransactionFormInput) => {
       if (mode === 'create') {
-        onCreate?.(data as CreateTransactionInput);
+        onCreate?.(data);
       } else {
         const updateData: UpdateTransactionInput = {
           ...data,
           id: transaction?.id ?? '',
-        } as UpdateTransactionInput;
+        };
+
         onUpdate?.(updateData);
       }
     },
@@ -354,7 +361,7 @@ export function TransactionForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
                     <FieldLabel htmlFor="form-rhf-payee">
-                      {transactionType === 'INCOME'
+                      {transactionType === TransactionType.INCOME
                         ? 'From (Customer/Client)'
                         : 'To (Vendor/Supplier)'}
                     </FieldLabel>
@@ -363,7 +370,7 @@ export function TransactionForm({
                     {...field}
                     id="form-rhf-input-payee"
                     aria-invalid={fieldState.invalid}
-                    placeholder={`Enter ${transactionType === 'INCOME' ? 'customer' : 'vendor'} name`}
+                    placeholder={`Enter ${transactionType === TransactionType.INCOME ? 'customer' : 'vendor'} name`}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>

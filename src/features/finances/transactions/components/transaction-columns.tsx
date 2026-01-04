@@ -117,7 +117,7 @@ export const createTransactionColumns = (
     header: 'Type',
     cell: ({ row }) => {
       const type = row.getValue('type') as string;
-      const isIncome = type === 'INCOME';
+      const isIncome = type === TransactionType.INCOME;
 
       return (
         <Box className="flex items-center gap-2">
@@ -162,7 +162,7 @@ export const createTransactionColumns = (
     header: 'Categories',
     cell: ({ row }) => {
       const transaction = row.original;
-      const categories = (transaction as any).categories || [];
+      const categories = transaction.categories || [];
 
       if (categories.length === 0) {
         return <Badge variant="outline">Uncategorized</Badge>;
@@ -170,7 +170,7 @@ export const createTransactionColumns = (
 
       return (
         <Box className="flex flex-wrap gap-1">
-          {categories.map((cat: any) => (
+          {categories.map((cat: { category: { id: string; name: string } }) => (
             <Badge key={cat.category.id} variant="outline" className="capitalize">
               {cat.category.name.toLowerCase().replace(/_/g, ' ')}
             </Badge>
@@ -190,7 +190,7 @@ export const createTransactionColumns = (
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
-      const isIncome = type === 'INCOME';
+      const isIncome = type === TransactionType.INCOME;
 
       return (
         <Box className="flex flex-col">
