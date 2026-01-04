@@ -6,9 +6,9 @@ import { SearchParams } from 'nuqs/server';
 import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import type { Transaction } from '@/prisma/client';
 import type { ActionResult } from '@/types/actions';
 import type {
+  Transaction,
   TransactionPagination,
   TransactionStatistics,
 } from '@/features/finances/transactions/types';
@@ -60,10 +60,12 @@ export async function getTransactionById(id: string): Promise<ActionResult<Trans
       return { success: false, error: 'Transaction not found' };
     }
 
-    // Convert Decimal to number for client components
-    const serializedTransaction = {
+    // Convert Decimal to number for client components and ensure type compatibility
+    const serializedTransaction: Transaction = {
       ...transaction,
       amount: Number(transaction.amount),
+      categories: transaction.categories || [],
+      invoice: transaction.invoice || null,
     };
 
     return { success: true, data: serializedTransaction };

@@ -1,31 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus, TrendingDown, TrendingUp } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
+import dynamic from 'next/dynamic';
 
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { formatCurrency } from '@/lib/utils';
 import type { TransactionPagination, Transaction } from '../types';
 import { createTransactionColumns } from './transaction-columns';
-import { TransactionForm } from './transaction-form';
 import { TransactionTable } from './transaction-table';
-import {
-  useTransactionStatistics,
-  useCreateTransaction,
-  useUpdateTransaction,
-  useDeleteTransaction,
-} from '../hooks/use-transaction-queries';
+import { useTransactionStatistics, useDeleteTransaction } from '../hooks/use-transaction-queries';
+
+const TransactionDrawer = dynamic(
+  () => import('./transaction-drawer').then((mod) => mod.TransactionDrawer),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -37,36 +33,45 @@ export function TransactionList({
   searchParams: SearchParams;
 }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingTransactionId, setEditingTransactionId] = useState<string | undefined>(undefined);
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.pagination.totalItems / perPage);
 
   const { data: stats, isLoading: isLoadingStats } = useTransactionStatistics();
 
-  const createMutation = useCreateTransaction();
-  const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
   const transactions = data.items;
 
-  const handleEdit = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
+  const handleEdit = useCallback((transaction: Transaction) => {
+    setEditingTransactionId(transaction.id);
     setShowCreateModal(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this transaction?')) {
-      deleteMutation.mutate(id);
-    }
-  };
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (confirm('Are you sure you want to delete this transaction?')) {
+        deleteMutation.mutate(id);
+      }
+    },
+    [deleteMutation],
+  );
 
-  const handleShowCreateModal = () => {
-    setEditingTransaction(null);
+  const handleShowCreateModal = useCallback(() => {
+    setEditingTransactionId(undefined);
     setShowCreateModal((prev) => !prev);
-  };
+  }, []);
 
-  const columns = useMemo(() => createTransactionColumns(handleEdit, handleDelete), []);
+  const handleCloseDrawer = useCallback(() => {
+    setShowCreateModal(false);
+    setEditingTransactionId(undefined);
+  }, []);
+
+  const columns = useMemo(
+    () => createTransactionColumns(handleEdit, handleDelete),
+    [handleEdit, handleDelete],
+  );
 
   const { table } = useDataTable({
     data: transactions,
@@ -138,38 +143,13 @@ export function TransactionList({
       />
 
       {/* Transaction Form Drawer */}
-      <Sheet open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editingTransaction ? 'Edit Transaction' : 'New Transaction'}</SheetTitle>
-            <SheetDescription>
-              {editingTransaction
-                ? 'Update the transaction details below.'
-                : 'Create a new income or expense transaction.'}
-            </SheetDescription>
-          </SheetHeader>
-          <Box className="mt-6">
-            <TransactionForm
-              transaction={editingTransaction}
-              onCreate={(data) => {
-                createMutation.mutate(data, {
-                  onSuccess: () => {
-                    setShowCreateModal(false);
-                  },
-                });
-              }}
-              onUpdate={(data) => {
-                updateMutation.mutate(data, {
-                  onSuccess: () => {
-                    setShowCreateModal(false);
-                  },
-                });
-              }}
-              onClose={() => setShowCreateModal(false)}
-            />
-          </Box>
-        </SheetContent>
-      </Sheet>
+      {showCreateModal ? (
+        <TransactionDrawer
+          id={editingTransactionId}
+          open={showCreateModal}
+          onClose={handleCloseDrawer}
+        />
+      ) : null}
     </Box>
   );
 }

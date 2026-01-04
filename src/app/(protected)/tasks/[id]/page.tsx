@@ -4,6 +4,7 @@ import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTask, useSetTaskEnabled, useExecuteTask } from '@/features/tasks/hooks/use-tasks';
 import { ExecutionHistoryTable } from '@/features/tasks/components/execution-history-table';
+import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -56,35 +57,35 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <Box className="container mx-auto py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <Box className="flex items-center justify-between">
+        <Box className="flex items-center gap-4">
           <Link href="/tasks">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div>
+          <Box>
             <h1 className="text-3xl font-bold">{task.functionName}</h1>
             {task.description && <p className="text-muted-foreground mt-1">{task.description}</p>}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          </Box>
+        </Box>
+        <Box className="flex items-center gap-4">
+          <Box className="flex items-center gap-2">
             <span className="text-sm font-medium">Enabled</span>
             <Switch
               checked={task.isEnabled}
               onCheckedChange={(checked) => setEnabled({ taskId: task.id, isEnabled: checked })}
               disabled={isTogglingEnabled}
             />
-          </div>
+          </Box>
           <Button onClick={() => executeMutate(task.id)} disabled={!task.isEnabled || isExecuting}>
             <Play className="h-4 w-4 mr-2" />
             Run Now
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       {/* Task Details Card */}
       <Card>
@@ -93,98 +94,98 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           <CardDescription>Configuration and metadata</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Category</div>
+          <Box className="grid grid-cols-2 gap-4">
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">Category</Box>
               <Badge className={getCategoryColor(task.category)} variant="secondary">
                 {task.category}
               </Badge>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Schedule Type</div>
+            </Box>
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">Schedule Type</Box>
               <Badge variant="outline">{task.scheduleType}</Badge>
-            </div>
-          </div>
+            </Box>
+          </Box>
 
           <Separator />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+          <Box className="grid grid-cols-2 gap-4">
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Cron Schedule
-              </div>
+              </Box>
               <code className="text-sm bg-muted px-2 py-1 rounded">
                 {task.cronSchedule || 'N/A'}
               </code>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Event Name</div>
+            </Box>
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">Event Name</Box>
               <code className="text-sm bg-muted px-2 py-1 rounded">{task.eventName || 'N/A'}</code>
-            </div>
-          </div>
+            </Box>
+          </Box>
 
           <Separator />
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Retries</div>
-              <div className="text-lg font-semibold">{task.retries || 0}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">
+          <Box className="grid grid-cols-3 gap-4">
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">Retries</Box>
+              <Box className="text-lg font-semibold">{task.retries || 0}</Box>
+            </Box>
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">
                 Concurrency Limit
-              </div>
-              <div className="text-lg font-semibold">{task.concurrencyLimit || 1}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Timeout</div>
-              <div className="text-lg font-semibold">
+              </Box>
+              <Box className="text-lg font-semibold">{task.concurrencyLimit || 1}</Box>
+            </Box>
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1">Timeout</Box>
+              <Box className="text-lg font-semibold">
                 {task.timeout ? `${task.timeout / 1000}s` : 'N/A'}
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
 
           <Separator />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+          <Box className="grid grid-cols-2 gap-4">
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
                 <Hash className="h-4 w-4" />
                 Function ID
-              </div>
+              </Box>
               <code className="text-sm bg-muted px-2 py-1 rounded">{task.functionId}</code>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+            </Box>
+            <Box>
+              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Last Synced
-              </div>
-              <div className="text-sm">
+              </Box>
+              <Box className="text-sm">
                 {formatDistanceToNow(new Date(task.lastSyncedAt), { addSuffix: true })}
-              </div>
-            </div>
-          </div>
+              </Box>
+            </Box>
+          </Box>
 
           {task._count && (
             <>
               <Separator />
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-1">
+              <Box>
+                <Box className="text-sm font-medium text-muted-foreground mb-1">
                   Total Executions
-                </div>
-                <div className="text-2xl font-bold">{task._count.executions}</div>
-              </div>
+                </Box>
+                <Box className="text-2xl font-bold">{task._count.executions}</Box>
+              </Box>
             </>
           )}
 
           {task.lastExecution && (
             <>
               <Separator />
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">Last Execution</div>
-                <div className="flex items-center justify-between">
-                  <div>
+              <Box>
+                <Box className="text-sm font-medium text-muted-foreground mb-2">Last Execution</Box>
+                <Box className="flex items-center justify-between">
+                  <Box>
                     <Badge
                       variant={
                         task.lastExecution.status === 'COMPLETED' ? 'default' : 'destructive'
@@ -192,12 +193,12 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     >
                       {task.lastExecution.status}
                     </Badge>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
+                  </Box>
+                  <Box className="text-sm text-muted-foreground">
                     {format(new Date(task.lastExecution.startedAt), 'MMM d, yyyy HH:mm:ss')}
-                  </div>
-                </div>
-              </div>
+                  </Box>
+                </Box>
+              </Box>
             </>
           )}
         </CardContent>
@@ -205,6 +206,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Execution History */}
       <ExecutionHistoryTable taskId={task.id} />
-    </div>
+    </Box>
   );
 }

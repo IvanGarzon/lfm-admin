@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useTaskExecutions } from '../hooks/use-tasks';
+import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/table';
 import { CheckCircle2, XCircle, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import type { ExecutionStatus } from '@/prisma/client';
+import { ExecutionStatus } from '@/prisma/client';
 
 interface ExecutionHistoryTableProps {
   taskId: string;
@@ -26,15 +27,15 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
 
   const getStatusIcon = (status: ExecutionStatus) => {
     switch (status) {
-      case 'COMPLETED':
+      case ExecutionStatus.COMPLETED:
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case 'FAILED':
+      case ExecutionStatus.FAILED:
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'RUNNING':
+      case ExecutionStatus.RUNNING:
         return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
-      case 'CANCELLED':
+      case ExecutionStatus.CANCELLED:
         return <AlertCircle className="h-4 w-4 text-orange-600" />;
-      case 'TIMEOUT':
+      case ExecutionStatus.TIMEOUT:
         return <Clock className="h-4 w-4 text-orange-600" />;
       default:
         return null;
@@ -93,10 +94,10 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
     return (
       <Card>
         <CardContent className="py-12">
-          <div className="text-center text-destructive">
+          <Box className="text-center text-destructive">
             <XCircle className="mx-auto h-12 w-12 mb-4" />
             <p>{error.message || 'Failed to load execution history'}</p>
-          </div>
+          </Box>
         </CardContent>
       </Card>
     );
@@ -109,22 +110,22 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
       <CardHeader>
         <CardTitle>Execution History</CardTitle>
         <CardDescription>
-          {stats && (
-            <div className="flex gap-4 mt-2">
+          {stats ? (
+            <Box className="flex gap-4 mt-2">
               <span>Total: {stats.total}</span>
               <span className="text-green-600">Completed: {stats.completed}</span>
               <span className="text-red-600">Failed: {stats.failed}</span>
               <span className="text-blue-600">Running: {stats.running}</span>
               {stats.avgDuration && <span>Avg Duration: {formatDuration(stats.avgDuration)}</span>}
-            </div>
-          )}
+            </Box>
+          ) : null}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {executions.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
+          <Box className="text-center text-muted-foreground py-8">
             <p>No execution history</p>
-          </div>
+          </Box>
         ) : (
           <Table>
             <TableHeader>
@@ -141,23 +142,23 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
               {executions.map((execution) => (
                 <TableRow key={execution.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <Box className="flex items-center gap-2">
                       {getStatusIcon(execution.status)}
                       {getStatusBadge(execution.status)}
-                    </div>
+                    </Box>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="text-sm">
+                    <Box>
+                      <Box className="text-sm">
                         {format(new Date(execution.startedAt), 'MMM d, yyyy')}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
+                      </Box>
+                      <Box className="text-xs text-muted-foreground">
                         {format(new Date(execution.startedAt), 'HH:mm:ss')}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
+                      </Box>
+                      <Box className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(execution.startedAt), { addSuffix: true })}
-                      </div>
-                    </div>
+                      </Box>
+                    </Box>
                   </TableCell>
                   <TableCell>{formatDuration(execution.duration)}</TableCell>
                   <TableCell>{getTriggerBadge(execution.triggeredBy)}</TableCell>
@@ -170,12 +171,12 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
                   </TableCell>
                   <TableCell>
                     {execution.error ? (
-                      <div
+                      <Box
                         className="max-w-md truncate text-sm text-destructive"
                         title={execution.error}
                       >
                         {execution.error}
-                      </div>
+                      </Box>
                     ) : (
                       '-'
                     )}

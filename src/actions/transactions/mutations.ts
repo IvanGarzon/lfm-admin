@@ -2,6 +2,7 @@
 
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
@@ -119,5 +120,74 @@ export async function deleteTransaction(id: string): Promise<ActionResult<{ succ
     return { success: true, data: { success: true } };
   } catch (error) {
     return handleActionError(error, 'Failed to delete transaction');
+  }
+}
+
+/**
+ * Creates a new transaction category.
+ * @param name - The name of the category to create.
+ * @returns A promise that resolves to an `ActionResult` with the new category data.
+ */
+export async function createTransactionCategory(
+  name: string,
+): Promise<ActionResult<{ id: string; name: string; description: string | null }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    // Validate category name
+    const schema = z
+      .string()
+      .trim()
+      .min(1, 'Category name is required')
+      .max(50, 'Category name is too long');
+    const validatedName = schema.parse(name);
+
+    // Check if category already exists
+    const existing = await prisma.transactionCategory.findFirst({
+      where: {
+        name: {
+          equals: validatedName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        success: true,
+        data: {
+          id: existing.id,
+          name: existing.name,
+          description: existing.description,
+        },
+      };
+    }
+
+    // Create new category
+    const category = await prisma.transactionCategory.create({
+      data: {
+        name: validatedName,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+      },
+    });
+
+    logger.info('Transaction category created', {
+      context: 'createTransactionCategory',
+      metadata: { categoryName: category.name },
+    });
+
+    revalidatePath('/finances/transactions');
+
+    return { success: true, data: category };
+  } catch (error) {
+    return handleActionError(error, 'Failed to create transaction category');
   }
 }

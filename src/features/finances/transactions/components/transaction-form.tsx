@@ -29,9 +29,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 
 import {
   CreateTransactionSchema,
@@ -42,6 +39,7 @@ import {
 
 import type { Transaction, TransactionFormInput } from '../types';
 import { getTransactionCategories } from '@/actions/transactions/queries';
+import { CategoryMultiSelect, type Category } from './category-multi-select';
 
 const defaultFormState: CreateTransactionInput = {
   type: TransactionType.INCOME,
@@ -92,9 +90,7 @@ export function TransactionForm({
   onClose?: () => void;
 }) {
   const mode = transaction ? 'update' : 'create';
-  const [categories, setCategories] = useState<
-    Array<{ id: string; name: string; description: string | null }>
-  >([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const defaultValues: TransactionFormInput =
@@ -129,6 +125,11 @@ export function TransactionForm({
     };
 
     fetchCategories();
+  }, []);
+
+  // Handle new category creation
+  const handleCategoryCreated = useCallback((newCategory: Category) => {
+    setCategories((prev) => [...prev, newCategory]);
   }, []);
 
   useEffect(() => {
@@ -171,63 +172,54 @@ export function TransactionForm({
         ) : null}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          {/* Transaction Type */}
-          <FieldGroup>
-            <Controller
-              name="type"
-              control={form.control}
-              render={({ field }) => (
-                <Box>
-                  <FieldLabel>Transaction Type</FieldLabel>
-                  <Tabs
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value as TransactionType)}
-                    className="w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="INCOME">Income</TabsTrigger>
-                      <TabsTrigger value="EXPENSE">Expense</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </Box>
-              )}
-            />
-          </FieldGroup>
-
-          {/* Date and Amount */}
-          <Box className="grid grid-cols-2 gap-4">
+          <Box className="grid grid-cols-3 gap-4">
             <FieldGroup>
               <Controller
-                name="date"
+                name="type"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-date">Date</FieldLabel>
+                      <FieldLabel htmlFor="form-rhf-type">Transaction Type</FieldLabel>
                     </FieldContent>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                          type="button"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="form-rhf-select-type" aria-invalid={fieldState.invalid}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INCOME">Income</SelectItem>
+                        <SelectItem value="EXPENSE">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="currency"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
+                    </FieldContent>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger
+                        id="form-rhf-select-currency"
+                        aria-invalid={fieldState.invalid}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD - US Dollar</SelectItem>
+                        <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                        <SelectItem value="EUR">EUR - Euro</SelectItem>
+                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
@@ -286,71 +278,19 @@ export function TransactionForm({
                       </span>
                     </Box>
                   ) : (
-                    <Box className="grid grid-cols-2 gap-3 p-4 border rounded-md max-h-48 overflow-y-auto">
-                      {categories.map((category) => {
-                        const isChecked = field.value?.includes(category.id) || false;
-                        return (
-                          <Box key={category.id} className="flex items-start space-x-2">
-                            <Checkbox
-                              id={`category-${category.id}`}
-                              checked={isChecked}
-                              onCheckedChange={(checked) => {
-                                const currentValue = field.value || [];
-                                if (checked) {
-                                  field.onChange([...currentValue, category.id]);
-                                } else {
-                                  field.onChange(currentValue.filter((id) => id !== category.id));
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={`category-${category.id}`}
-                              className="text-sm font-normal cursor-pointer"
-                            >
-                              {category.name.toLowerCase().replace(/_/g, ' ')}
-                            </Label>
-                          </Box>
-                        );
-                      })}
-                    </Box>
+                    <CategoryMultiSelect
+                      categories={categories}
+                      selectedIds={field.value || []}
+                      onChange={field.onChange}
+                      onCategoryCreated={handleCategoryCreated}
+                      disabled={isCreating || isUpdating}
+                    />
                   )}
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                 </Field>
               )}
             />
           </FieldGroup>
-
-          {/* Currency */}
-          <Box className="grid grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="currency"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger
-                        id="form-rhf-select-currency"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
 
           {/* Payee */}
           <FieldGroup>
@@ -403,36 +343,75 @@ export function TransactionForm({
             />
           </FieldGroup>
 
-          {/* Status */}
-          <FieldGroup>
-            <Controller
-              name="status"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
-                  </FieldContent>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="COMPLETED">Completed</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Field>
-              )}
-            />
-          </FieldGroup>
+          <Box className="grid grid-cols-2 gap-4">
+            <FieldGroup>
+              <Controller
+                name="date"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-date">Date</FieldLabel>
+                    </FieldContent>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !field.value && 'text-muted-foreground',
+                          )}
+                          type="button"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          autoFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="status"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
+                    </FieldContent>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="COMPLETED">Completed</SelectItem>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </Box>
         </Box>
 
         {/* Action Buttons */}
         <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
-          {onClose && (
+          {onClose ? (
             <Button
               type="button"
               variant="outline"
@@ -441,7 +420,7 @@ export function TransactionForm({
             >
               Cancel
             </Button>
-          )}
+          ) : null}
           <Button type="submit" disabled={isCreating || isUpdating}>
             {isCreating || isUpdating ? (
               <>
