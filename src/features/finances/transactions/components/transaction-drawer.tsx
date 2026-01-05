@@ -116,6 +116,7 @@ export function TransactionDrawer({
             <span className="sr-only">Close</span>
           </Button>
         </Box>
+
         <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
           <Box className="flex h-full">
             <Box className="overflow-y-auto w-full">

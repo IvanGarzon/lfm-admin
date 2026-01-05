@@ -5,6 +5,7 @@ import {
   PrismaClient,
   TransactionType,
   TransactionStatus,
+  DocumentKind,
 } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { validateInvoiceStatusTransition } from '@/features/finances/invoices/utils/invoice-helpers';
@@ -12,6 +13,10 @@ import { isPrismaError } from '@/lib/error-handler';
 import { INVOICE_CONFIG } from '@/features/finances/invoices/config/invoice-config';
 import { withDatabaseRetry } from '@/lib/retry';
 import { TransactionRepository } from './transaction-repository';
+import {
+  getOrGenerateInvoicePdf,
+  getOrGenerateReceiptPdf,
+} from '@/features/finances/invoices/services/invoice-pdf.service';
 
 import type {
   InvoiceListItem,
@@ -1218,6 +1223,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       receiptNumber = await this.generateReceiptNumber();
     }
 
+    // Store the transaction ID for later document attachment
+    let createdTransactionId: string | null = null;
+
     // Transaction to create payment and update invoice
     await this.prisma.$transaction(async (tx) => {
       // Check for existing payment with same idempotency key
@@ -1294,7 +1302,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         ? `${invoice.customer.firstName} ${invoice.customer.lastName}`
         : 'Unknown Customer';
 
-      await tx.transaction.create({
+      const createdTransaction = await tx.transaction.create({
         data: {
           type: TransactionType.INCOME,
           date: date,
@@ -1315,11 +1323,68 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           },
         },
       });
+
+      // Store transaction ID for document attachment after transaction completes
+      createdTransactionId = createdTransaction.id;
     });
 
+    // Fetch the updated invoice with full details
     const updated = await this.findByIdWithDetails(invoiceId);
     if (!updated) {
       throw new Error('Failed to retrieve updated invoice');
+    }
+
+    // Generate and attach the appropriate document to the transaction
+    // AFTER the transaction completes to avoid race conditions
+    if (createdTransactionId) {
+      try {
+        let documentKind: DocumentKind;
+
+        // Generate RECEIPT if fully paid, INVOICE if partially paid
+        if (newStatus === InvoiceStatus.PAID) {
+          await getOrGenerateReceiptPdf(updated, {
+            skipDownload: true,
+            context: 'addPayment',
+          });
+          documentKind = DocumentKind.RECEIPT;
+        } else {
+          await getOrGenerateInvoicePdf(updated, {
+            skipDownload: true,
+            context: 'addPayment',
+          });
+          documentKind = DocumentKind.INVOICE;
+        }
+
+        // Query for the generated document
+        const document = await this.prisma.document.findFirst({
+          where: {
+            invoiceId: invoiceId,
+            kind: documentKind,
+          },
+          orderBy: {
+            generatedAt: 'desc',
+          },
+        });
+
+        // Attach document to transaction
+        if (document) {
+          await this.prisma.transactionAttachment.create({
+            data: {
+              transactionId: createdTransactionId,
+              fileName: document.fileName,
+              fileSize: document.fileSize,
+              mimeType: document.mimeType,
+              s3Key: document.s3Key,
+              s3Url: document.s3Url,
+              uploadedBy: changedBy,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('[addPayment] Error stack:', error instanceof Error ? error.stack : error);
+      }
+    } else {
+      console.warn('[addPayment] No transaction ID available for document attachment');
     }
 
     return updated;
