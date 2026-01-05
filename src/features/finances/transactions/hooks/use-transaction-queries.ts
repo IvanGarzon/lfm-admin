@@ -5,6 +5,9 @@ import {
   getTransactions,
   getTransactionById,
   getTransactionStatistics,
+  getTransactionTrend,
+  getTransactionCategoryBreakdown,
+  getTopTransactionCategories,
   createTransaction,
   updateTransaction,
   deleteTransaction,
@@ -23,6 +26,11 @@ export const TRANSACTION_KEYS = {
   details: () => [...TRANSACTION_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...TRANSACTION_KEYS.details(), id] as const,
   statistics: () => [...TRANSACTION_KEYS.all, 'statistics'] as const,
+  analytics: () => [...TRANSACTION_KEYS.all, 'analytics'] as const,
+  trend: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'trend', { limit }] as const,
+  categoryBreakdown: (dateFilter?: { startDate?: Date; endDate?: Date }) =>
+    [...TRANSACTION_KEYS.analytics(), 'breakdown', { dateFilter }] as const,
+  topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const,
 };
 
 export function useTransactions(filters: Partial<TransactionFilters> = {}) {
@@ -230,5 +238,47 @@ export function useDeleteTransactionAttachment() {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete attachment');
     },
+  });
+}
+
+export function useTransactionTrend(limit: number = 12) {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.trend(limit),
+    queryFn: async () => {
+      const result = await getTransactionTrend(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.categoryBreakdown(dateFilter),
+    queryFn: async () => {
+      const result = await getTransactionCategoryBreakdown(dateFilter);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useTopCategories(limit: number = 5) {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.topCategories(limit),
+    queryFn: async () => {
+      const result = await getTopTransactionCategories(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

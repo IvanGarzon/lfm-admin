@@ -92,4 +92,36 @@ export interface TransactionStatistics {
   netCashFlow: number;
   pendingTransactions: number;
   completedTransactions: number;
+  // Growth indicators (compared to previous period)
+  totalIncomeGrowth?: number;
+  totalExpenseGrowth?: number;
+  netCashFlowGrowth?: number;
+  // Average transaction size
+  avgTransactionSize?: number;
+  // Analytics data (optional, loaded separately for performance)
+  transactionTrend?: TransactionTrend[];
+  categoryBreakdown?: TransactionCategoryBreakdown[];
+  topCategories?: TopTransactionCategory[];
 }
+
+export type TransactionTrend = {
+  month: string;
+  income: number;
+  expense: number;
+  net: number;
+};
+
+export type TransactionCategoryBreakdown = {
+  category: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+};
+
+export type TopTransactionCategory = {
+  categoryId: string;
+  categoryName: string;
+  totalAmount: number;
+  transactionCount: number;
+  avgTransactionAmount: number;
+};

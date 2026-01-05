@@ -11,6 +11,9 @@ import type {
   Transaction,
   TransactionPagination,
   TransactionStatistics,
+  TransactionTrend,
+  TransactionCategoryBreakdown,
+  TopTransactionCategory,
 } from '@/features/finances/transactions/types';
 import { searchParamsCache } from '@/filters/transactions/transactions-filters';
 
@@ -123,5 +126,69 @@ export async function getTransactionCategories(): Promise<
     return { success: true, data: categories };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch transaction categories');
+  }
+}
+
+/**
+ * Retrieves monthly transaction trend data showing income vs expense over time.
+ * @param limit - The number of months to retrieve. Defaults to 12.
+ * @returns A promise that resolves to an `ActionResult` containing the transaction trend data.
+ */
+export async function getTransactionTrend(
+  limit: number = 12,
+): Promise<ActionResult<TransactionTrend[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const trend = await transactionRepo.getMonthlyTransactionTrend(limit);
+    return { success: true, data: trend };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch transaction trend');
+  }
+}
+
+/**
+ * Retrieves transaction breakdown by category with percentages.
+ * @param dateFilter - An optional object with startDate and endDate to filter the data.
+ * @returns A promise that resolves to an `ActionResult` containing the category breakdown.
+ */
+export async function getTransactionCategoryBreakdown(dateFilter?: {
+  startDate?: Date;
+  endDate?: Date;
+}): Promise<ActionResult<TransactionCategoryBreakdown[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const breakdown = await transactionRepo.getCategoryBreakdown(dateFilter);
+    return { success: true, data: breakdown };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch category breakdown');
+  }
+}
+
+/**
+ * Retrieves a list of top transaction categories based on total amount.
+ * @param limit - The maximum number of categories to retrieve. Defaults to 5.
+ * @returns A promise that resolves to an `ActionResult` containing an array of top categories.
+ */
+export async function getTopTransactionCategories(
+  limit: number = 5,
+): Promise<ActionResult<TopTransactionCategory[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    const topCategories = await transactionRepo.getTopCategories(limit);
+    return { success: true, data: topCategories };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch top categories');
   }
 }

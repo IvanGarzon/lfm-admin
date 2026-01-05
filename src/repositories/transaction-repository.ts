@@ -13,6 +13,9 @@ import {
   TransactionPagination,
   TransactionStatistics,
   TransactionListItem,
+  TransactionTrend,
+  TransactionCategoryBreakdown,
+  TopTransactionCategory,
 } from '@/features/finances/transactions/types';
 
 /**
@@ -339,5 +342,125 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       pendingTransactions: pendingCount,
       completedTransactions: completedCount,
     };
+  }
+
+  /**
+   * Get monthly transaction trend showing income vs expense over time.
+   * @param limit - Number of months to retrieve. Defaults to 12.
+   * @returns A promise that resolves to an array of monthly transaction trends
+   */
+  async getMonthlyTransactionTrend(limit: number = 12): Promise<TransactionTrend[]> {
+    const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
+      SELECT
+        to_char(date, 'Mon') as month,
+        extract(month from date) as month_num,
+        extract(year from date) as year,
+        SUM(CASE WHEN type::text = ${TransactionType.INCOME} AND status::text = ${TransactionStatus.COMPLETED}
+          THEN amount::numeric ELSE 0 END)::float as income,
+        SUM(CASE WHEN type::text = ${TransactionType.EXPENSE} AND status::text = ${TransactionStatus.COMPLETED}
+          THEN amount::numeric ELSE 0 END)::float as expense
+      FROM transactions
+      GROUP BY year, month_num, month
+      ORDER BY year DESC, month_num DESC
+      LIMIT ${limit}
+    `);
+
+    return data
+      .map((item) => ({
+        month: `${item.month} ${item.year}`,
+        income: item.income,
+        expense: item.expense,
+        net: item.income - item.expense,
+      }))
+      .reverse();
+  }
+
+  /**
+   * Get transaction breakdown by category with percentages.
+   * @param dateFilter - Optional date range filter
+   * @returns A promise that resolves to an array of category breakdowns
+   */
+  async getCategoryBreakdown(dateFilter?: {
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<TransactionCategoryBreakdown[]> {
+    // Build WHERE clause for date filter
+    let dateCondition = '';
+    const params: any[] = [TransactionStatus.COMPLETED];
+
+    if (dateFilter?.startDate && dateFilter?.endDate) {
+      dateCondition = 'AND t.date >= $2 AND t.date <= $3';
+      params.push(dateFilter.startDate, dateFilter.endDate);
+    } else if (dateFilter?.startDate) {
+      dateCondition = 'AND t.date >= $2';
+      params.push(dateFilter.startDate);
+    } else if (dateFilter?.endDate) {
+      dateCondition = 'AND t.date <= $2';
+      params.push(dateFilter.endDate);
+    }
+
+    const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
+      WITH category_totals AS (
+        SELECT
+          tc.name as category,
+          SUM(t.amount::numeric)::float as amount,
+          COUNT(t.id)::int as transaction_count
+        FROM transactions t
+        JOIN transaction_category_on_transaction tcot ON t.id = tcot.transaction_id
+        JOIN transaction_categories tc ON tcot.category_id = tc.id
+        WHERE t.status::text = ${TransactionStatus.COMPLETED}
+          ${dateFilter?.startDate || dateFilter?.endDate ? Prisma.sql`AND t.date >= ${dateFilter.startDate || new Date(0)} AND t.date <= ${dateFilter.endDate || new Date()}` : Prisma.empty}
+        GROUP BY tc.name
+      ),
+      total_amount AS (
+        SELECT SUM(amount)::float as total FROM category_totals
+      )
+      SELECT
+        ct.category,
+        ct.amount,
+        (ct.amount / NULLIF(ta.total, 0) * 100)::float as percentage,
+        ct.transaction_count as "transactionCount"
+      FROM category_totals ct
+      CROSS JOIN total_amount ta
+      ORDER BY ct.amount DESC
+    `);
+
+    return data.map((item) => ({
+      category: item.category,
+      amount: item.amount || 0,
+      percentage: item.percentage || 0,
+      transactionCount: item.transactionCount || 0,
+    }));
+  }
+
+  /**
+   * Get top transaction categories by total amount.
+   * @param limit - Number of categories to retrieve. Defaults to 5.
+   * @returns A promise that resolves to an array of top categories
+   */
+  async getTopCategories(limit: number = 5): Promise<TopTransactionCategory[]> {
+    const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
+      SELECT
+        tc.id as "categoryId",
+        tc.name as "categoryName",
+        SUM(t.amount::numeric)::float as "totalAmount",
+        COUNT(t.id)::int as "transactionCount",
+        AVG(t.amount::numeric)::float as "avgTransactionAmount"
+      FROM transactions t
+      JOIN transaction_category_on_transaction tcot ON t.id = tcot.transaction_id
+      JOIN transaction_categories tc ON tcot.category_id = tc.id
+      WHERE t.status::text = ${TransactionStatus.COMPLETED}
+      GROUP BY tc.id, tc.name
+      ORDER BY "totalAmount" DESC
+      LIMIT ${limit}
+    `);
+
+    return data.map((item) => ({
+      categoryId: item.categoryId,
+      categoryName: item.categoryName,
+      totalAmount: item.totalAmount || 0,
+      transactionCount: item.transactionCount || 0,
+      avgTransactionAmount: item.avgTransactionAmount || 0,
+    }));
   }
 }
