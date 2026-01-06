@@ -82,58 +82,75 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
   }
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
         <CardTitle>Status Distribution</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
-          <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie data={chartData} dataKey="count" nameKey="status" innerRadius={60} strokeWidth={5}>
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-3xl font-bold"
-                        >
-                          {totalInvoices.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Invoices
-                        </tspan>
-                      </text>
-                    );
-                  }
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-      </CardContent>
-      <Box className="flex flex-wrap items-center justify-center gap-4 py-4 px-6 border-t mt-auto">
-        {chartData.map((item) => (
-          <Box key={item.status} className="flex items-center gap-2">
-            <Box className="h-2 w-2 rounded-full" style={{ backgroundColor: item.fill }} />
-            <span className="text-[10px] uppercase font-medium text-muted-foreground">
-              {item.status} ({((item.count / (totalInvoices || 1)) * 100).toFixed(0)}%)
-            </span>
+      {chartData.length === 0 ? (
+        <CardContent className="flex-1 flex flex-col items-center justify-center py-12">
+          <PieChartIcon className="h-16 w-16 text-muted-foreground/30 mb-4" />
+          <p className="text-sm text-muted-foreground text-center">
+            No invoices found for this period
+          </p>
+        </CardContent>
+      ) : (
+        <>
+          <CardContent className="flex-1 pb-0">
+            <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+              <PieChart>
+                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Pie
+                  data={chartData}
+                  dataKey="count"
+                  nameKey="status"
+                  innerRadius={60}
+                  strokeWidth={5}
+                >
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-foreground text-3xl font-bold"
+                            >
+                              {totalInvoices.toLocaleString()}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 24}
+                              className="fill-muted-foreground"
+                            >
+                              Invoices
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </Pie>
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+          <Box className="flex flex-wrap items-center justify-center gap-4 py-4 px-6 border-t mt-auto">
+            {chartData.map((item) => (
+              <Box key={item.status} className="flex items-center gap-2">
+                <Box className="h-2 w-2 rounded-full" style={{ backgroundColor: item.fill }} />
+                <span className="text-[10px] uppercase font-medium text-muted-foreground">
+                  {item.status} ({((item.count / (totalInvoices || 1)) * 100).toFixed(0)}%)
+                </span>
+              </Box>
+            ))}
           </Box>
-        ))}
-      </Box>
+        </>
+      )}
     </Card>
   );
 }

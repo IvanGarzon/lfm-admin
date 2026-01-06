@@ -2,7 +2,7 @@ import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { constructMetadata } from '@/lib/utils';
 import { getInvoices } from '@/actions/invoices';
-import { InvoiceList } from '@/features/finances/invoices/components/invoice-list';
+import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
 
 export const metadata = constructMetadata({
   title: 'Invoices – lfm dashboard',
@@ -23,7 +23,7 @@ export default async function InvoicesPage({
 
   return (
     <Shell scrollable>
-      <InvoiceList data={result.data} searchParams={searchParamsResolved} />
+      <InvoicesView initialData={result.data} searchParams={searchParamsResolved} />
     </Shell>
   );
 }

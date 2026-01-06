@@ -1,66 +1,27 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import dynamic from 'next/dynamic';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { SummaryCard } from './summary-card';
-import { AnalyticsSkeleton } from './analytics-skeleton';
+import { ModuleCard } from './module-card';
+import { CashFlowWaterfallChart } from './cash-flow-waterfall-chart';
+import { RecentActivity } from './recent-activity';
+import { FinancialHealth } from './financial-health';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
-import {
-  DollarSign,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  Receipt,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Activity,
-  FileCheck,
-  Percent,
-} from 'lucide-react';
+import { FileText, FileCheck, Receipt, DollarSign } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-
-// Dynamic imports for lazy loading
-const InvoiceAnalytics = dynamic(
-  () =>
-    import('@/features/finances/invoices/components/invoice-analytics').then((mod) => ({
-      default: mod.InvoiceAnalytics,
-    })),
-  { ssr: false, loading: () => <AnalyticsSkeleton /> },
-);
-
-const QuoteAnalytics = dynamic(
-  () =>
-    import('@/features/finances/quotes/components/quote-analytics').then((mod) => ({
-      default: mod.QuoteAnalytics,
-    })),
-  { ssr: false, loading: () => <AnalyticsSkeleton /> },
-);
-
-const TransactionAnalytics = dynamic(
-  () =>
-    import('@/features/finances/transactions/components/analytics/transaction-analytics').then(
-      (mod) => ({
-        default: mod.TransactionAnalytics,
-      }),
-    ),
-  { ssr: false, loading: () => <AnalyticsSkeleton /> },
-);
 
 export function FinancesOverview() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('invoices');
 
-  // Fetch summary statistics for overview
+  // Fetch summary statistics for all modules
   const { data: invoiceStats, isLoading: invoiceStatsLoading } = useInvoiceStatistics();
   const { data: quoteStats, isLoading: quoteStatsLoading } = useQuoteStatistics();
   const { data: transactionStats, isLoading: transactionStatsLoading } = useTransactionStatistics();
 
+  // Calculate metrics
   const collectionRate = invoiceStats
     ? (
         (invoiceStats.totalRevenue /
@@ -71,7 +32,56 @@ export function FinancesOverview() {
 
   const acceptanceRate = quoteStats ? (quoteStats.acceptanceRate?.toFixed(0) ?? '0') : '0';
 
-  const conversionRate = quoteStats ? (quoteStats.conversionRate?.toFixed(0) ?? '0') : '0';
+  // Prepare chart data for mini charts (last 30 days simulation)
+  const invoiceChartData = useMemo(() => {
+    if (!invoiceStats?.revenueTrend) return [];
+    return invoiceStats.revenueTrend.slice(-30).map((item) => ({ value: item.paid }));
+  }, [invoiceStats]);
+
+  const quoteChartData = useMemo(() => {
+    if (!quoteStats?.quoteTrend) return [];
+    return quoteStats.quoteTrend.slice(-30).map((item) => ({ value: item.totalValue }));
+  }, [quoteStats]);
+
+  const transactionChartData = useMemo(() => {
+    if (!transactionStats) return [];
+    // Generate sample data for demonstration
+    return Array.from({ length: 30 }, (_, i) => ({
+      value: ((transactionStats.totalIncome || 0) * (0.8 + Math.random() * 0.4)) / 30,
+    }));
+  }, [transactionStats]);
+
+  // Prepare financial health metrics
+  const healthMetrics = useMemo(() => {
+    if (!invoiceStats || !quoteStats || !transactionStats) return [];
+
+    return [
+      {
+        label: 'Collection Rate',
+        value: parseFloat(collectionRate),
+        max: 100,
+        percentage: parseFloat(collectionRate),
+        format: 'percentage' as const,
+      },
+      {
+        label: 'Quote Acceptance',
+        value: parseFloat(acceptanceRate),
+        max: 100,
+        percentage: parseFloat(acceptanceRate),
+        format: 'percentage' as const,
+      },
+      {
+        label: 'Cash Flow Health',
+        value: transactionStats.netCashFlow,
+        max: transactionStats.totalIncome || 1,
+        percentage: (transactionStats.netCashFlow / (transactionStats.totalIncome || 1)) * 100,
+        format: 'currency' as const,
+      },
+    ];
+  }, [invoiceStats, quoteStats, transactionStats, collectionRate, acceptanceRate]);
+
+  // TODO: Fetch recent activity from all modules
+  const recentActivity = useMemo(() => [], []);
 
   return (
     <div className="space-y-8">
@@ -99,128 +109,113 @@ export function FinancesOverview() {
         </div>
       </div>
 
-      {/* Summary Cards - 3x3 Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Invoice Summary */}
-        <SummaryCard
-          title="Total Revenue"
-          value={formatCurrency({ number: invoiceStats?.totalRevenue ?? 0, maxFractionDigits: 0 })}
+      {/* Module Cards - 3 Large Visual Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Invoices Module Card */}
+        <ModuleCard
+          title="Invoices"
+          icon={FileText}
+          iconColor="text-emerald-600"
+          primaryMetric={{
+            label: 'Total Revenue',
+            value: formatCurrency({
+              number: invoiceStats?.totalRevenue ?? 0,
+              maxFractionDigits: 0,
+            }),
+            growth: invoiceStats?.totalRevenueGrowth,
+          }}
+          secondaryMetrics={[
+            {
+              label: 'Outstanding',
+              value: formatCurrency({
+                number: invoiceStats?.pendingRevenue ?? 0,
+                maxFractionDigits: 0,
+              }),
+            },
+            {
+              label: 'Collection Rate',
+              value: `${collectionRate}%`,
+            },
+          ]}
+          chartData={invoiceChartData}
           href="/finances/invoices"
-          icon={DollarSign}
-          iconColor="text-emerald-500"
-          isLoading={invoiceStatsLoading}
-        />
-        <SummaryCard
-          title="Outstanding"
-          value={formatCurrency({
-            number: invoiceStats?.pendingRevenue ?? 0,
-            maxFractionDigits: 0,
-          })}
-          href="/finances/invoices"
-          icon={Clock}
-          iconColor="text-yellow-500"
-          isLoading={invoiceStatsLoading}
-        />
-        <SummaryCard
-          title="Collection Rate"
-          value={`${collectionRate}%`}
-          href="/finances/invoices"
-          icon={TrendingUp}
-          iconColor="text-green-500"
           isLoading={invoiceStatsLoading}
         />
 
-        {/* Quote Summary */}
-        <SummaryCard
-          title="Total Quoted"
-          value={formatCurrency({
-            number: quoteStats?.totalQuotedValue ?? 0,
-            maxFractionDigits: 0,
-          })}
-          href="/finances/quotes"
+        {/* Quotes Module Card */}
+        <ModuleCard
+          title="Quotes"
           icon={FileCheck}
-          iconColor="text-blue-500"
-          isLoading={quoteStatsLoading}
-        />
-        <SummaryCard
-          title="Acceptance Rate"
-          value={`${acceptanceRate}%`}
+          iconColor="text-blue-600"
+          primaryMetric={{
+            label: 'Total Quoted',
+            value: formatCurrency({
+              number: quoteStats?.totalQuotedValue ?? 0,
+              maxFractionDigits: 0,
+            }),
+            growth: quoteStats?.quotedValueGrowth,
+          }}
+          secondaryMetrics={[
+            {
+              label: 'Acceptance Rate',
+              value: `${acceptanceRate}%`,
+            },
+            {
+              label: 'Conversion Rate',
+              value: `${quoteStats?.conversionRate?.toFixed(0) ?? 0}%`,
+            },
+          ]}
+          chartData={quoteChartData}
           href="/finances/quotes"
-          icon={Percent}
-          iconColor="text-purple-500"
-          isLoading={quoteStatsLoading}
-        />
-        <SummaryCard
-          title="Conversion Rate"
-          value={`${conversionRate}%`}
-          href="/finances/quotes"
-          icon={TrendingUp}
-          iconColor="text-indigo-500"
           isLoading={quoteStatsLoading}
         />
 
-        {/* Transaction Summary */}
-        <SummaryCard
-          title="Total Income"
-          value={formatCurrency({
-            number: transactionStats?.totalIncome ?? 0,
-            maxFractionDigits: 0,
-          })}
+        {/* Transactions Module Card */}
+        <ModuleCard
+          title="Transactions"
+          icon={DollarSign}
+          iconColor="text-purple-600"
+          primaryMetric={{
+            label: 'Net Cash Flow',
+            value: formatCurrency({
+              number: transactionStats?.netCashFlow ?? 0,
+              maxFractionDigits: 0,
+            }),
+            growth: transactionStats?.netCashFlowGrowth,
+          }}
+          secondaryMetrics={[
+            {
+              label: 'Total Income',
+              value: formatCurrency({
+                number: transactionStats?.totalIncome ?? 0,
+                maxFractionDigits: 0,
+              }),
+            },
+            {
+              label: 'Total Expenses',
+              value: formatCurrency({
+                number: transactionStats?.totalExpense ?? 0,
+                maxFractionDigits: 0,
+              }),
+            },
+          ]}
+          chartData={transactionChartData}
           href="/finances/transactions"
-          icon={ArrowUpCircle}
-          iconColor="text-emerald-500"
-          isLoading={transactionStatsLoading}
-        />
-        <SummaryCard
-          title="Total Expenses"
-          value={formatCurrency({
-            number: transactionStats?.totalExpense ?? 0,
-            maxFractionDigits: 0,
-          })}
-          href="/finances/transactions"
-          icon={ArrowDownCircle}
-          iconColor="text-red-500"
-          isLoading={transactionStatsLoading}
-        />
-        <SummaryCard
-          title="Net Cash Flow"
-          value={formatCurrency({
-            number: transactionStats?.netCashFlow ?? 0,
-            maxFractionDigits: 0,
-          })}
-          href="/finances/transactions"
-          icon={Activity}
-          iconColor="text-blue-500"
           isLoading={transactionStatsLoading}
         />
       </div>
 
-      {/* Detailed Analytics Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="quotes">Quotes</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-        </TabsList>
+      {/* Combined Financial Chart */}
+      <CashFlowWaterfallChart />
 
-        <TabsContent value="invoices">
-          <Suspense fallback={<AnalyticsSkeleton />}>
-            <InvoiceAnalytics />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="quotes">
-          <Suspense fallback={<AnalyticsSkeleton />}>
-            <QuoteAnalytics />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="transactions">
-          <Suspense fallback={<AnalyticsSkeleton />}>
-            <TransactionAnalytics />
-          </Suspense>
-        </TabsContent>
-      </Tabs>
+      {/* Bottom Row: Recent Activity + Financial Health */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <RecentActivity items={recentActivity} isLoading={false} />
+        <FinancialHealth
+          metrics={healthMetrics}
+          isLoading={invoiceStatsLoading || quoteStatsLoading || transactionStatsLoading}
+        />
+      </div>
     </div>
   );
 }

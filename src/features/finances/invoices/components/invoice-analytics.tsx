@@ -1,59 +1,32 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useInvoiceStatistics } from '../hooks/use-invoice-queries';
-import { StatCard } from './analytics/stat-card';
-import { RevenueTrendChart } from './analytics/revenue-trend-chart';
-import { TopDebtorsList } from './analytics/top-debtors-list';
-import { StatusDistributionChart } from './analytics/status-distribution-chart';
-import {
-  DollarSign,
-  Clock,
-  CheckCircle,
-  TrendingUp,
-  Download,
-  Percent,
-  FileEdit,
-} from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { CheckCircle, Download, FileEdit } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { DateRange } from 'react-day-picker';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
-import { subDays } from 'date-fns';
+import { InvoiceStatistics } from '@/features/finances/invoices/types';
+import { RevenueTrendChart } from '@/features/finances/invoices/components/analytics/revenue-trend-chart';
+import { TopDebtorsList } from '@/features/finances/invoices/components/analytics/top-debtors-list';
+import { StatusDistributionChart } from '@/features/finances/invoices/components/analytics/status-distribution-chart';
+import { StatCard } from '@/features/finances/invoices/components/analytics/stat-card';
 
-export function InvoiceAnalytics() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
+interface InvoiceAnalyticsProps {
+  stats?: InvoiceStatistics;
+  isLoading: boolean;
+  dateRange?: DateRange;
+  onDateRangeChange: (range: DateRange | undefined) => void;
+  comparisonLabel: string;
+}
 
-  const { data: stats, isLoading } = useInvoiceStatistics({
-    startDate: dateRange?.from,
-    endDate: dateRange?.to,
-  });
-
-  const getComparisonLabel = () => {
-    if (!dateRange?.from || !dateRange?.to) return 'vs. previous period';
-
-    const diffInDays =
-      Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 to include both ends
-
-    if (diffInDays === 1) return 'vs. previous day';
-    if (diffInDays === 7) return 'vs. last week';
-    if (diffInDays === 30 || diffInDays === 31) return 'vs. last month';
-
-    return `vs. previous ${diffInDays} days`;
-  };
-
-  const comparisonLabel = getComparisonLabel();
-
-  const collectionRate = useMemo(() => {
-    if (!stats) return 0;
-    const totalPotential = stats.totalRevenue + stats.pendingRevenue;
-    return totalPotential > 0 ? (stats.totalRevenue / totalPotential) * 100 : 0;
-  }, [stats]);
-
+export function InvoiceAnalytics({
+  stats,
+  isLoading,
+  dateRange,
+  onDateRangeChange,
+  comparisonLabel,
+}: InvoiceAnalyticsProps) {
   const handleExport = () => {
     // Placeholder for export functionality
     alert('Exporting analytics data...');
@@ -61,51 +34,25 @@ export function InvoiceAnalytics() {
 
   return (
     <Box className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Invoice Analytics</h2>
+      {/* Controls */}
+      <Box className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Box>
+          <h2 className="text-2xl font-bold tracking-tight">Detailed Analytics</h2>
           <p className="text-muted-foreground">
-            Comprehensive overview of your invoicing performance.
+            Comprehensive overview of your invoicing performance
           </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <CalendarDateRangePicker date={dateRange} onDateChange={setDateRange} />
+        </Box>
+        <Box className="flex flex-wrap items-center gap-2">
+          <CalendarDateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <StatCard
-          title="Total Revenue"
-          value={formatCurrency({ number: stats?.totalRevenue ?? 0, maxFractionDigits: 0 })}
-          description="Collected revenue"
-          comparisonLabel={comparisonLabel}
-          icon={DollarSign}
-          growth={stats?.totalRevenueGrowth}
-          isLoading={isLoading}
-          color="text-emerald-500"
-        />
-        <StatCard
-          title="Outstanding"
-          value={formatCurrency({ number: stats?.pendingRevenue ?? 0, maxFractionDigits: 0 })}
-          description="Awaiting payment"
-          comparisonLabel={comparisonLabel}
-          icon={Clock}
-          growth={stats?.pendingRevenueGrowth}
-          isLoading={isLoading}
-          color="text-yellow-500"
-        />
-        <StatCard
-          title="Collection Rate"
-          value={`${collectionRate.toFixed(0)}%`}
-          description="Revenue collected"
-          icon={Percent}
-          isLoading={isLoading}
-          color="text-green-500"
-        />
+      {/* Additional Metrics */}
+      <Box className="grid gap-4 md:grid-cols-2">
         <StatCard
           title="Average Value"
           value={formatCurrency({ number: stats?.avgInvoiceValue ?? 0, maxFractionDigits: 0 })}
@@ -122,20 +69,22 @@ export function InvoiceAnalytics() {
           isLoading={isLoading}
           color="text-slate-400"
         />
-      </div>
+      </Box>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
+      {/* Charts */}
+      <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Box className="lg:col-span-4">
           <RevenueTrendChart data={stats?.revenueTrend} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-3">
+        </Box>
+        <Box className="lg:col-span-3">
           <StatusDistributionChart stats={stats} isLoading={isLoading} />
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+      {/* Top Debtors Table */}
+      <Box className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
         <TopDebtorsList debtors={stats?.topDebtors} isLoading={isLoading} />
-      </div>
+      </Box>
     </Box>
   );
 }

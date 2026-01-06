@@ -2,7 +2,7 @@ import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { constructMetadata } from '@/lib/utils';
 import { getQuotes } from '@/actions/quotes';
-import { QuoteList } from '@/features/finances/quotes/components/quote-list';
+import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 
 export const metadata = constructMetadata({
   title: 'Quotes – lfm dashboard',
@@ -23,7 +23,7 @@ export default async function QuotesPage({
 
   return (
     <Shell scrollable>
-      <QuoteList data={result.data} searchParams={searchParamsResolved} />
+      <QuotesView initialData={result.data} searchParams={searchParamsResolved} />
     </Shell>
   );
 }

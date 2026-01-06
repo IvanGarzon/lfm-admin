@@ -2,7 +2,7 @@ import { SearchParams } from 'nuqs/server';
 import { getTransactions } from '@/actions/transactions';
 import { constructMetadata } from '@/lib/utils';
 import { Shell } from '@/components/shared/shell';
-import { TransactionList } from '@/features/finances/transactions/components/transaction-list';
+import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
 
 export const metadata = constructMetadata({
   title: 'Transactions – lfm dashboard',
@@ -23,7 +23,7 @@ export default async function TransactionsPage({
 
   return (
     <Shell scrollable>
-      <TransactionList data={result.data} searchParams={searchParamsResolved} />
+      <TransactionsView initialData={result.data} searchParams={searchParamsResolved} />
     </Shell>
   );
 }
