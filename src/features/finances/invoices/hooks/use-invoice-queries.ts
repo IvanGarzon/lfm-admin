@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { InvoiceStatus } from '@/prisma/client';
 import {
   getInvoices,
@@ -27,13 +28,12 @@ import type {
   InvoiceWithDetails,
   CancelInvoiceData,
 } from '@/features/finances/invoices/types';
-
 import type {
   CreateInvoiceInput,
   UpdateInvoiceInput,
   RecordPaymentInput,
 } from '@/schemas/invoices';
-import { toast } from 'sonner';
+import { formatDateNormalizer } from '@/lib/utils';
 
 export const INVOICE_KEYS = {
   all: ['invoices'] as const,
@@ -87,6 +87,7 @@ export function useInvoice(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -105,6 +106,7 @@ export function useInvoiceBasic(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -123,10 +125,11 @@ export function useInvoiceItems(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
-export function useInvoicePayments(id: string | undefined) {
+export function useInvoicePayments(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: INVOICE_KEYS.payments(id ?? ''),
     queryFn: async () => {
@@ -140,11 +143,12 @@ export function useInvoicePayments(id: string | undefined) {
 
       return result.data;
     },
-    enabled: Boolean(id),
+    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
-export function useInvoiceHistory(id: string | undefined) {
+export function useInvoiceHistory(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: INVOICE_KEYS.history(id ?? ''),
     queryFn: async () => {
@@ -158,7 +162,8 @@ export function useInvoiceHistory(id: string | undefined) {
 
       return result.data;
     },
-    enabled: Boolean(id),
+    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -166,8 +171,17 @@ export function useInvoiceStatistics(
   dateFilter?: { startDate?: Date; endDate?: Date },
   options?: { enabled?: boolean },
 ) {
+  // Normalize date filter to ISO date strings for stable query keys
+  // This prevents cache misses when component remounts with logically identical dates
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: [...INVOICE_KEYS.statistics(), dateFilter],
+    queryKey: [...INVOICE_KEYS.statistics(), normalizedDateFilter],
     queryFn: async () => {
       const result = await getInvoiceStatistics(dateFilter);
       if (!result.success) {
@@ -175,7 +189,8 @@ export function useInvoiceStatistics(
       }
       return result.data;
     },
-    staleTime: 60_000, // 1 minute
+    staleTime: 60 * 1000, // 1 minute
+    placeholderData: keepPreviousData,
     enabled: options?.enabled,
   });
 }
@@ -708,4 +723,20 @@ export function useDuplicateInvoice() {
       toast.error(error.message || 'Failed to duplicate invoice');
     },
   });
+}
+
+export function usePrefetchInvoice() {
+  const queryClient = useQueryClient();
+
+  return (invoiceId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: [...INVOICE_KEYS.detail(invoiceId), 'basic'],
+      queryFn: async () => {
+        const result = await getInvoiceBasicById(invoiceId);
+        if (!result.success) throw new Error(result.error);
+        return result.data;
+      },
+      staleTime: 30 * 1000,
+    });
+  };
 }

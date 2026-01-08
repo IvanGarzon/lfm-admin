@@ -43,7 +43,7 @@ import type {
   InvoiceItemDetail,
   InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
-import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
+import { useActiveCustomers } from '@/features/customers/hooks/useCustomersQueries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
 import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
@@ -94,13 +94,11 @@ const mapInvoiceToFormValues = (
 export function InvoiceForm({
   invoice,
   items,
-  statusHistory,
   onCreate,
   onUpdate,
   isCreating = false,
   isUpdating = false,
   isLoadingItems = false,
-  isLoadingHistory = false,
   onDirtyStateChange,
 }: {
   invoice?: InvoiceBasic | null;
@@ -116,7 +114,7 @@ export function InvoiceForm({
 }) {
   const mode = invoice ? 'update' : 'create';
 
-  const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
+  const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
   const { data: products, isLoading: isLoadingProducts } = useProducts();
 
   const defaultValues: InvoiceFormInput =
@@ -509,22 +507,10 @@ export function InvoiceForm({
               )}
             />
           </FieldGroup>
-
-          {/* Status History - Only show for existing invoices */}
-          {isLoadingHistory ? (
-            <Box className="py-4 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Loading history...</span>
-            </Box>
-          ) : statusHistory && statusHistory.length > 0 ? (
-            <FieldGroup>
-              <InvoiceStatusHistory history={statusHistory} />
-            </FieldGroup>
-          ) : null}
         </Box>
 
         {/* Total Summary */}
-        <Box className="border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
+        <Box className="sticky bottom-0 border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
           <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
             <span>Subtotal:</span>
             <span>{formatCurrency({ number: calculateSubtotal() })}</span>

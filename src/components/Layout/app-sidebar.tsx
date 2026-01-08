@@ -53,7 +53,7 @@ export const company = {
 };
 
 export function AppSidebar() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const pathname = usePathname();
 
   return (

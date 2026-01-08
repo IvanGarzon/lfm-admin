@@ -18,6 +18,7 @@ interface DataTableProps<TData> extends React.ComponentProps<'div'> {
   children?: React.ReactNode;
   className?: string;
   actionBar?: React.ReactNode;
+  onRowHover?: (row: TData) => void;
 }
 
 const listVariants = {
@@ -40,6 +41,7 @@ export function DataTable<TData>({
   actionBar,
   children,
   className,
+  onRowHover,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -77,6 +79,7 @@ export function DataTable<TData>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     className="group hover:bg-gray-50 hover:dark:bg-gray-900 cursor-pointer"
+                    onMouseEnter={() => onRowHover?.(row.original)}
                   >
                     {row.getVisibleCells().map((cell, index) => (
                       <TableCell

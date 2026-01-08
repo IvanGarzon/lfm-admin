@@ -33,17 +33,19 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
 
+  const today = new Date();
+
   // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
+    from: subDays(today, 30),
+    to: today,
   });
 
   // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
-      startDate: startOfMonth(new Date()),
-      endDate: new Date(),
+      startDate: startOfMonth(today),
+      endDate: today,
     }),
     [],
   );

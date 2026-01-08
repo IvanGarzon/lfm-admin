@@ -13,6 +13,13 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
+    title: 'Customers',
+    href: '/customers',
+    icon: 'users',
+    shortcut: ['c', 'c'],
+    authorizeOnly: ['*'],
+  },
+  {
     title: 'Employees',
     href: '/employees',
     icon: 'users',
@@ -54,13 +61,7 @@ export const navItems: NavItem[] = [
     shortcut: ['s', 's'],
     authorizeOnly: ['*'],
   },
-  // {
-  //   title: 'Customers',
-  //   href: '/customers',
-  //   icon: 'users',
-  //   shortcut: ['c', 'c'],
-  //   authorizeOnly: ['*'],
-  // },
+
   // {
   //   title: 'Product',
   //   href: '/products',

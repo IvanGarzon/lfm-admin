@@ -1,14 +1,27 @@
 'use server';
 
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Customer } from '@/prisma/client';
+import { SearchParams } from 'nuqs/server';
 import {
   CustomerStatusSchema,
   type CustomerStatusType,
 } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
 import type { ActionResult } from '@/types/actions';
+import { CustomerRepository } from '@/repositories/customer-repository';
+import { handleActionError } from '@/lib/error-handler';
+import type { CustomerPagination } from '@/features/customers/types';
+import { searchParamsCache } from '@/filters/customers/customers-filters';
+
+const customerRepo = new CustomerRepository(prisma);
 
 export async function getActiveCustomers(): Promise<ActionResult<Partial<Customer>[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     const customers = await prisma.customer.findMany({
       where: {
@@ -42,35 +55,21 @@ export async function getActiveCustomers(): Promise<ActionResult<Partial<Custome
   }
 }
 
-export async function getCustomers(params: {
-  status?: CustomerStatusType;
-}): Promise<ActionResult<Partial<Customer>[]>> {
+export async function getCustomers(
+  searchParams: SearchParams,
+): Promise<ActionResult<CustomerPagination>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
-    const customers = await prisma.customer.findMany({
-      where: {
-        deletedAt: null,
-        status: CustomerStatusSchema.enum.ACTIVE,
-      },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        firstName: 'desc',
-      },
-    });
+    const filters = searchParamsCache.parse(searchParams);
+    const result = await customerRepo.searchAndPaginate(filters);
 
-    return { success: true, data: customers };
+    return { success: true, data: result };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch customers' };
+    return handleActionError(error, 'Failed to fetch customers');
   }
 }
 
@@ -83,6 +82,11 @@ export async function createCustomer(data: {
   organizationId?: string;
   organizationName?: string;
 }): Promise<ActionResult<Customer>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     // Check if email already exists
     const existingCustomer = await prisma.customer.findUnique({
@@ -142,6 +146,11 @@ export async function createCustomer(data: {
 export async function getOrganizations(): Promise<
   ActionResult<Array<{ id: string; name: string }>>
 > {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
   try {
     const organizations = await prisma.organization.findMany({
       select: {

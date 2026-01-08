@@ -36,6 +36,8 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +61,7 @@ import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-help
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
+import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
 import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
@@ -90,9 +93,12 @@ export function QuoteDrawer({
   const pathname = usePathname();
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
 
   const { data: quote, isLoading, error, isError } = useQuote(id);
-  const { data: versions } = useQuoteVersions(id);
+  const { data: versions, isLoading: isLoadingVersions } = useQuoteVersions(id, {
+    enabled: activeTab === 'versions',
+  });
 
   const { openDelete, openReject, openOnHold, openCancel, openConvert } = useQuoteActions();
 
@@ -639,7 +645,7 @@ export function QuoteDrawer({
               <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
                 <Box className="flex h-full">
                   <Box
-                    className="overflow-y-auto"
+                    className="h-full"
                     style={{
                       width: mode === 'edit' && showPreview ? '50%' : '100%',
                     }}
@@ -651,12 +657,44 @@ export function QuoteDrawer({
                         onDirtyStateChange={setHasUnsavedChanges}
                       />
                     ) : (
-                      <QuoteForm
-                        quote={quote}
-                        onUpdate={handleUpdate}
-                        isUpdating={updateQuote.isPending}
-                        onDirtyStateChange={setHasUnsavedChanges}
-                      />
+                      <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full h-full flex flex-col"
+                      >
+                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
+                          <TabsTrigger value="details" className="relative">
+                            Quote Details
+                          </TabsTrigger>
+                          <TabsTrigger value="history" className="relative">
+                            History
+                            {quote && quote.statusHistory && quote.statusHistory.length > 0 && (
+                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                {quote.statusHistory.length}
+                              </Badge>
+                            )}
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                          <QuoteForm
+                            quote={quote}
+                            onUpdate={handleUpdate}
+                            isUpdating={updateQuote.isPending}
+                            onDirtyStateChange={setHasUnsavedChanges}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="history" className="mt-0 p-6">
+                          {quote && quote.statusHistory && quote.statusHistory.length > 0 ? (
+                            <QuoteStatusHistory history={quote.statusHistory} />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              No history available
+                            </Box>
+                          )}
+                        </TabsContent>
+                      </Tabs>
                     )}
                   </Box>
 

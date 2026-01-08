@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { SearchParams } from 'nuqs/server';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -11,12 +13,13 @@ import { InvoiceList } from '@/features/finances/invoices/components/invoice-lis
 import { InvoiceOverview } from '@/features/finances/invoices/components/invoice-overview';
 import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
+import type { InvoicePagination } from '@/features/finances/invoices/types';
 
 import dynamic from 'next/dynamic';
 
 interface InvoicesViewProps {
-  initialData: any;
-  searchParams: any;
+  initialData: InvoicePagination;
+  searchParams: SearchParams;
 }
 
 const InvoiceDrawer = dynamic(

@@ -2,7 +2,7 @@
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { cookies } from 'next/headers';
 
-import { AppSidebar } from '@/components/Layout/AppSidebar';
+import { AppSidebar } from '@/components/Layout/app-sidebar';
 import { Header } from '@/components/Layout/Header';
 import { SessionHeartbeatProvider } from '@/components/providers/SessionHeartbeatProvider';
 

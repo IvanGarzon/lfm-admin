@@ -33,6 +33,8 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +57,8 @@ import {
 import { InvoiceForm } from '@/features/finances/invoices/components/invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
+import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
+import { InvoicePayments } from '@/features/finances/invoices/components/invoice-payments';
 import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
@@ -90,11 +94,16 @@ export function InvoiceDrawer({
   const pathname = usePathname();
   const [showPreview, setShowPreview] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
 
   const { data: invoice, isLoading, error, isError } = useInvoiceBasic(id);
   const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id);
-  const { data: history, isLoading: isLoadingHistory } = useInvoiceHistory(id);
-  const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id);
+  const { data: history, isLoading: isLoadingHistory } = useInvoiceHistory(id, {
+    enabled: activeTab === 'history',
+  });
+  const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id, {
+    enabled: activeTab === 'payments',
+  });
   const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const createInvoice = useCreateInvoice();
@@ -442,7 +451,7 @@ export function InvoiceDrawer({
               <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
                 <Box className="flex h-full">
                   <Box
-                    className="overflow-y-auto"
+                    className="h-full"
                     style={{
                       width: mode === 'edit' && showPreview ? '50%' : '100%',
                     }}
@@ -450,16 +459,78 @@ export function InvoiceDrawer({
                     {mode === 'create' ? (
                       <InvoiceForm onCreate={handleCreate} isCreating={createInvoice.isPending} />
                     ) : (
-                      <InvoiceForm
-                        invoice={invoice}
-                        items={items}
-                        statusHistory={history}
-                        onUpdate={handleUpdate}
-                        isUpdating={updateInvoice.isPending}
-                        isLoadingItems={isLoadingItems}
-                        isLoadingHistory={isLoadingHistory}
-                        onDirtyStateChange={handleUnsavedChanges}
-                      />
+                      <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full h-full flex flex-col"
+                      >
+                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
+                          <TabsTrigger value="details" className="relative">
+                            Invoice Details
+                          </TabsTrigger>
+                          <TabsTrigger value="payments" className="relative">
+                            Payments
+                            {invoice && invoice._count?.payments && invoice._count.payments > 0 && (
+                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                {invoice._count.payments}
+                              </Badge>
+                            )}
+                          </TabsTrigger>
+                          <TabsTrigger value="history" className="relative">
+                            History
+                            {invoice &&
+                              invoice._count?.statusHistory &&
+                              invoice._count.statusHistory > 0 && (
+                                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                  {invoice._count.statusHistory}
+                                </Badge>
+                              )}
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                          <InvoiceForm
+                            invoice={invoice}
+                            items={items}
+                            onUpdate={handleUpdate}
+                            isUpdating={updateInvoice.isPending}
+                            isLoadingItems={isLoadingItems}
+                            onDirtyStateChange={handleUnsavedChanges}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="payments" className="mt-0 p-6">
+                          {isLoadingPayments ? (
+                            <Box className="space-y-4">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4" />
+                              <div className="h-20 bg-gray-200 rounded animate-pulse" />
+                              <div className="h-20 bg-gray-200 rounded animate-pulse" />
+                            </Box>
+                          ) : payments && payments.length > 0 ? (
+                            <InvoicePayments payments={payments} />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              No payments recorded yet
+                            </Box>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="history" className="mt-0 p-6">
+                          {isLoadingHistory ? (
+                            <Box className="space-y-4">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/4" />
+                              <div className="h-16 bg-gray-200 rounded animate-pulse" />
+                              <div className="h-16 bg-gray-200 rounded animate-pulse" />
+                            </Box>
+                          ) : history && history.length > 0 ? (
+                            <InvoiceStatusHistory history={history} />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              No history available
+                            </Box>
+                          )}
+                        </TabsContent>
+                      </Tabs>
                     )}
                   </Box>
 
