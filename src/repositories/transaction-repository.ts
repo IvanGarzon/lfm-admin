@@ -78,7 +78,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             const order: Prisma.SortOrder = sortItem.desc ? 'desc' : 'asc';
             return { [sortItem.id]: order };
           })
-        : [{ date: 'desc' }];
+        : [{ createdAt: 'desc' }];
 
     const countOperation = this.prisma.transaction.count({ where: whereClause });
     const findManyOperation = this.prisma.transaction.findMany({

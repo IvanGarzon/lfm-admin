@@ -13,6 +13,13 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
+    title: 'Customers',
+    href: '/customers',
+    icon: 'users',
+    shortcut: ['c', 'c'],
+    authorizeOnly: ['*'],
+  },
+  {
     title: 'Employees',
     href: '/employees',
     icon: 'users',
@@ -24,20 +31,20 @@ export const navItems: NavItem[] = [
     href: '#',
     icon: 'billing',
     items: [
-      {
-        title: 'Invoices',
-        href: '/finances/invoices',
-        icon: 'fileText',
-        shortcut: ['i', 'i'],
-        authorizeOnly: ['*'],
-      },
-      {
-        title: 'Quotes',
-        href: '/finances/quotes',
-        icon: 'kanban',
-        shortcut: ['q', 'q'],
-        authorizeOnly: ['*'],
-      },
+      // {
+      //   title: 'Invoices',
+      //   href: '/finances/invoices',
+      //   icon: 'fileText',
+      //   shortcut: ['i', 'i'],
+      //   authorizeOnly: ['*'],
+      // },
+      // {
+      //   title: 'Quotes',
+      //   href: '/finances/quotes',
+      //   icon: 'kanban',
+      //   shortcut: ['q', 'q'],
+      //   authorizeOnly: ['*'],
+      // },
       {
         title: 'Transactions',
         href: '/finances/transactions',
@@ -54,13 +61,7 @@ export const navItems: NavItem[] = [
     shortcut: ['s', 's'],
     authorizeOnly: ['*'],
   },
-  // {
-  //   title: 'Customers',
-  //   href: '/customers',
-  //   icon: 'users',
-  //   shortcut: ['c', 'c'],
-  //   authorizeOnly: ['*'],
-  // },
+
   // {
   //   title: 'Product',
   //   href: '/products',

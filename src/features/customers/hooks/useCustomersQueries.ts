@@ -1,15 +1,49 @@
+'use client';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getActiveCustomers, createCustomer, getOrganizations } from '@/actions/customers';
+import {
+  getCustomers,
+  createCustomer,
+  getOrganizations,
+  getActiveCustomers,
+} from '@/actions/customers/queries';
 import type { CreateCustomerInput } from '@/schemas/customers';
+
+type CustomerFilters = {
+  search?: string;
+};
 
 export const CUSTOMER_KEYS = {
   all: () => ['customers'] as const,
+  lists: () => ['customers', 'list'] as const,
+  list: (filters: CustomerFilters) => [...CUSTOMER_KEYS.lists(), { filters }] as const,
   organizations: () => ['organizations'] as const,
 };
 
-export function useCustomers() {
+export function useCustomers(filters: CustomerFilters) {
   return useQuery({
-    queryKey: CUSTOMER_KEYS.all(),
+    queryKey: CUSTOMER_KEYS.list(filters),
+    queryFn: async () => {
+      const searchParams: Record<string, string | string[]> = {};
+
+      if (filters.search) {
+        searchParams.search = filters.search;
+      }
+
+      const result = await getCustomers(searchParams);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useActiveCustomers() {
+  return useQuery({
+    queryKey: CUSTOMER_KEYS.lists(),
     queryFn: async () => {
       const result = await getActiveCustomers();
       if (!result.success) {
@@ -18,7 +52,7 @@ export function useCustomers() {
 
       return result.data;
     },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
   });
 }
 

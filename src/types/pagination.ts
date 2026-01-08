@@ -8,10 +8,13 @@
  * Contains information about current page, items per page, and total counts
  */
 export interface PaginationMeta {
-  page: number;
-  perPage: number;
-  total: number;
+  totalItems: number;
   totalPages: number;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextPage: number | null;
+  previousPage: number | null;
 }
 
 /**
