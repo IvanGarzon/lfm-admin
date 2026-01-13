@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
@@ -14,8 +15,6 @@ import { InvoiceOverview } from '@/features/finances/invoices/components/invoice
 import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import type { InvoicePagination } from '@/features/finances/invoices/types';
-
-import dynamic from 'next/dynamic';
 
 interface InvoicesViewProps {
   initialData: InvoicePagination;
@@ -36,18 +35,19 @@ const InvoiceDrawer = dynamic(
 export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
+  const today = new Date();
 
   // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
+    from: subDays(today, 30),
+    to: today,
   });
 
   // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
-      startDate: startOfMonth(new Date()),
-      endDate: new Date(),
+      startDate: startOfMonth(today),
+      endDate: today,
     }),
     [],
   );

@@ -1,9 +1,8 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { getInvoices } from '@/actions/invoices';
-
+import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
 import dynamic from 'next/dynamic';
-import { InvoiceList } from '@/features/finances/invoices/components/invoice-list';
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(
@@ -30,8 +29,8 @@ export default async function InvoicePage({
   }
 
   return (
-    <Shell className="gap-2" scrollable>
-      <InvoiceList data={result.data} searchParams={searchParamsResolved} />
+    <Shell scrollable>
+      <InvoicesView initialData={result.data} searchParams={searchParamsResolved} />
       {id ? <InvoiceDrawer key={id} id={id} open={true} /> : null}
     </Shell>
   );

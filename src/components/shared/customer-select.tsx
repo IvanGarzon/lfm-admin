@@ -196,7 +196,7 @@ export function CustomerSelect({
       <CreateCustomerDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSuccess={handleCustomerCreated}
+        onCreate={handleCustomerCreated}
       />
     </>
   );

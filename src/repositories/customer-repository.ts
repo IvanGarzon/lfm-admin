@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, Customer } from '@/prisma/client';
+import { Prisma, PrismaClient, CustomerStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { getPaginationMetadata } from '@/lib/utils';
 import type {
@@ -6,6 +6,7 @@ import type {
   CustomerListItem,
   CustomerFilters,
 } from '@/features/customers/types';
+import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
 
 /**
  * Customer Repository
@@ -65,13 +66,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
               return { organization: { name: order } };
             }
 
-            // if (sortItem.id === 'search') {
-            //   return { invoiceNumber: order };
-            // }
-
             return { [sortItem.id]: order };
           })
-        : [{ firstName: 'desc' }];
+        : [{ createdAt: 'desc' }];
 
     const countOperation = this.prisma.customer.count({ where: whereClause });
     const findManyOperation = this.prisma.customer.findMany({
@@ -83,16 +80,21 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
             name: true,
           },
         },
+        _count: {
+          select: {
+            invoices: true,
+            quotes: true,
+          },
+        },
       },
       orderBy,
       skip,
       take: perPage,
     });
 
-    const [totalItems, customers] = await this.prisma.$transaction([
-      countOperation,
-      findManyOperation,
-    ]);
+    // Run count and query in parallel without transaction
+    // These are read-only operations so transaction isn't necessary
+    const [totalItems, customers] = await Promise.all([countOperation, findManyOperation]);
 
     const items: CustomerListItem[] = customers.map((customer) => ({
       id: customer.id,
@@ -106,11 +108,210 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       organizationName: customer?.organization?.name ?? null,
       createdAt: customer.createdAt,
       deletedAt: customer.deletedAt ?? null,
+      invoicesCount: customer._count.invoices ?? 0,
+      quotesCount: customer._count.quotes ?? 0,
     }));
 
     return {
       items,
       pagination: getPaginationMetadata(totalItems, perPage, page),
     };
+  }
+
+  /**
+   * Find customer by ID with detailed relations
+   */
+  async findByIdWithDetails(id: string): Promise<CustomerListItem | null> {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        gender: true,
+        status: true,
+        createdAt: true,
+        deletedAt: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            invoices: true,
+            quotes: true,
+          },
+        },
+      },
+    });
+
+    if (!customer) {
+      return null;
+    }
+
+    return {
+      id: customer.id,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      email: customer.email,
+      phone: customer?.phone,
+      gender: customer.gender,
+      status: customer.status,
+      organizationId: customer?.organization?.id ?? null,
+      organizationName: customer?.organization?.name ?? null,
+      createdAt: customer.createdAt,
+      deletedAt: customer.deletedAt ?? null,
+      invoicesCount: customer._count.invoices ?? 0,
+      quotesCount: customer._count.quotes ?? 0,
+    };
+  }
+
+  /**
+   * Find customer by email
+   */
+  async findByEmail(email: string) {
+    return this.prisma.customer.findUnique({
+      where: { email },
+    });
+  }
+
+  /**
+   * Get active customers for selection lists
+   */
+  async findActiveSelection() {
+    return this.prisma.customer.findMany({
+      where: {
+        deletedAt: null,
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        firstName: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Get all organizations for selection lists
+   */
+  async findAllOrganizations() {
+    return this.prisma.organization.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Create customer with optional organization creation
+   */
+  async createWithOrganization(data: CreateCustomerInput) {
+    const { organizationName, organizationId, ...customerData } = data;
+
+    let finalOrganizationId = organizationId;
+
+    return this.prisma.$transaction(async (tx) => {
+      if (organizationName && !organizationId) {
+        const organization = await tx.organization.create({
+          data: {
+            name: organizationName,
+          },
+        });
+        finalOrganizationId = organization.id;
+      }
+
+      return tx.customer.create({
+        data: {
+          firstName: customerData.firstName,
+          lastName: customerData.lastName,
+          email: customerData.email,
+          phone: customerData.phone,
+          gender: customerData.gender,
+          organizationId: finalOrganizationId,
+          status: 'ACTIVE',
+        },
+      });
+    });
+  }
+
+  /**
+   * Update customer with optional organization creation
+   */
+  async updateWithOrganization(
+    id: string,
+    data: UpdateCustomerInput,
+    updatedBy?: string,
+  ): Promise<CustomerListItem | null> {
+    const { organizationName, organizationId, ...updateData } = data;
+
+    let finalOrganizationId = organizationId;
+
+    const updatedCustomer = await this.prisma.$transaction(async (tx) => {
+      // Handle organization logic
+      if (organizationName && !organizationId) {
+        const organization = await tx.organization.create({
+          data: {
+            name: organizationName,
+          },
+        });
+        finalOrganizationId = organization.id;
+      }
+
+      return tx.customer.update({
+        where: { id },
+        data: {
+          ...updateData,
+          organization: finalOrganizationId
+            ? { connect: { id: finalOrganizationId } }
+            : { disconnect: true },
+        },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+    });
+
+    if (!updatedCustomer) {
+      return null;
+    }
+
+    return await this.findByIdWithDetails(updatedCustomer.id);
+  }
+
+  /**
+   * Soft delete customer
+   */
+  async softDelete(id: string) {
+    return this.prisma.customer.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        status: CustomerStatus.DELETED,
+      },
+    });
   }
 }

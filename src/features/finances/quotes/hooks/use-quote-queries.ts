@@ -1,8 +1,9 @@
 import { QuoteStatus } from '@/prisma/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   getQuotes,
   getQuoteById,
+  getQuoteStatusHistory,
   getQuoteStatistics,
   createQuote,
   updateQuote,
@@ -42,6 +43,7 @@ import type {
   MarkQuoteAsCancelledData,
   ConvertQuoteToInvoiceData,
 } from '@/features/finances/quotes/types';
+import { formatDateNormalizer } from '@/lib/utils';
 
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { toast } from 'sonner';
@@ -52,6 +54,7 @@ export const QUOTE_KEYS = {
   list: (filters: QuoteFilters) => [...QUOTE_KEYS.lists(), { filters }] as const,
   details: () => [...QUOTE_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...QUOTE_KEYS.details(), id] as const,
+  history: (id: string) => [...QUOTE_KEYS.detail(id), 'history'] as const,
   statistics: () => [...QUOTE_KEYS.all, 'statistics'] as const,
   itemAttachments: (quoteItemId: string) =>
     [...QUOTE_KEYS.all, 'item-attachments', quoteItemId] as const,
@@ -59,8 +62,10 @@ export const QUOTE_KEYS = {
   analytics: {
     all: () => [...QUOTE_KEYS.all, 'analytics'] as const,
     valueTrend: (limit?: number) => [...QUOTE_KEYS.analytics.all(), 'value-trend', limit] as const,
-    conversionFunnel: (dateFilter?: { startDate?: Date; endDate?: Date }) =>
-      [...QUOTE_KEYS.analytics.all(), 'conversion-funnel', dateFilter] as const,
+    conversionFunnel: (dateFilter?: {
+      startDate?: Date | string | null;
+      endDate?: Date | string | null;
+    }) => [...QUOTE_KEYS.analytics.all(), 'conversion-funnel', dateFilter] as const,
     topCustomers: (limit?: number) =>
       [...QUOTE_KEYS.analytics.all(), 'top-customers', limit] as const,
     avgTimeToDecision: () => [...QUOTE_KEYS.analytics.all(), 'avg-time-to-decision'] as const,
@@ -107,10 +112,30 @@ export function useQuote(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
-export function useQuoteVersions(quoteId: string | undefined) {
+export function usePrefetchQuote() {
+  const queryClient = useQueryClient();
+
+  return (quoteId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: QUOTE_KEYS.detail(quoteId),
+      queryFn: async () => {
+        const result = await getQuoteById(quoteId);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
+      },
+      staleTime: 30 * 1000,
+    });
+  };
+}
+
+export function useQuoteVersions(quoteId: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: QUOTE_KEYS.versions(quoteId ?? ''),
     queryFn: async () => {
@@ -124,13 +149,43 @@ export function useQuoteVersions(quoteId: string | undefined) {
 
       return result.data;
     },
-    enabled: Boolean(quoteId),
+    enabled:
+      options?.enabled !== undefined ? options.enabled && Boolean(quoteId) : Boolean(quoteId),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useQuoteHistory(id: string | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.history(id ?? ''),
+    queryFn: async () => {
+      if (!id) {
+        throw new Error('Quote ID is required');
+      }
+      const result = await getQuoteStatusHistory(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    },
+    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useQuoteStatistics(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  // Normalize date filter to ISO date strings for stable query keys
+  // This prevents cache misses when component remounts with logically identical dates
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: [...QUOTE_KEYS.statistics(), dateFilter],
+    queryKey: [...QUOTE_KEYS.statistics(), normalizedDateFilter],
     queryFn: async () => {
       const result = await getQuoteStatistics(dateFilter);
       if (!result.success) {
@@ -139,6 +194,7 @@ export function useQuoteStatistics(dateFilter?: { startDate?: Date; endDate?: Da
       return result.data;
     },
     staleTime: 60_000, // 1 minute
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -786,6 +842,7 @@ export function useQuoteItemAttachments(quoteItemId: string | undefined) {
       return result.data;
     },
     enabled: Boolean(quoteItemId),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
@@ -1072,8 +1129,16 @@ export function useQuoteValueTrend(limit?: number) {
  * @returns Query result with conversion funnel data.
  */
 export function useConversionFunnel(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  // Normalize date filter to ISO date strings for stable query keys
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: QUOTE_KEYS.analytics.conversionFunnel(dateFilter),
+    queryKey: QUOTE_KEYS.analytics.conversionFunnel(normalizedDateFilter),
     queryFn: async () => {
       const result = await getConversionFunnel(dateFilter);
       if (!result.success) {
@@ -1082,6 +1147,7 @@ export function useConversionFunnel(dateFilter?: { startDate?: Date; endDate?: D
       return result.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: keepPreviousData,
   });
 }
 

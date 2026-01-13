@@ -315,6 +315,14 @@ export function formatDate(
   }
 }
 
+export function formatDateNormalizer(date: Date | string | number | undefined) {
+  return formatDate(date, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
+
 export function absoluteUrl(path: string) {
   return `${env.NEXT_PUBLIC_APP_URL}${path}`;
 }

@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
 import { getTransactions } from '@/actions/transactions';
 import { Shell } from '@/components/shared/shell';
-import { TransactionList } from '@/features/finances/transactions/components/transaction-list';
+import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
 import dynamic from 'next/dynamic';
 
 // Lazy load TransactionDrawer to reduce initial bundle size
@@ -31,8 +31,8 @@ export default async function TransactionIdPage({
   }
 
   return (
-    <Shell className="gap-2" scrollable>
-      <TransactionList data={result.data} searchParams={searchParamsResolved} />
+    <Shell scrollable>
+      <TransactionsView initialData={result.data} searchParams={searchParamsResolved} />
       {id ? <TransactionDrawer key={id} id={id} open={true} /> : null}
     </Shell>
   );

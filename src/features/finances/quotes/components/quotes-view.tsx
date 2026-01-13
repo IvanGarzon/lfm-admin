@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { SearchParams } from 'nuqs/server';
+import dynamic from 'next/dynamic';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -11,11 +14,11 @@ import { QuoteList } from '@/features/finances/quotes/components/quote-list';
 import { QuoteOverview } from '@/features/finances/quotes/components/quote-overview';
 import { QuoteAnalytics } from '@/features/finances/quotes/components/quote-analytics';
 import { useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-queries';
-import dynamic from 'next/dynamic';
+import { QuotePagination } from '@/features/finances/quotes/types';
 
 interface QuotesViewProps {
-  initialData: any;
-  searchParams: any;
+  initialData: QuotePagination;
+  searchParams: SearchParams;
 }
 
 const QuoteDrawer = dynamic(
@@ -29,18 +32,19 @@ const QuoteDrawer = dynamic(
 export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
+  const today = new Date();
 
   // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
+    from: subDays(today, 30),
+    to: today,
   });
 
   // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
-      startDate: startOfMonth(new Date()),
-      endDate: new Date(),
+      startDate: startOfMonth(today),
+      endDate: today,
     }),
     [],
   );

@@ -56,12 +56,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
-      // Only show latest versions (quotes that don't have any child versions)
-      versions: {
-        none: {
-          deletedAt: null,
-        },
-      },
+      isLatestVersion: true,
     };
 
     if (status && status.length > 0) {
@@ -139,10 +134,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       take: perPage,
     });
 
-    const [totalItems, quotes] = await this.prisma.$transaction([
-      countOperation,
-      findManyOperation,
-    ]);
+    // Run count and query in parallel without transaction
+    // These are read-only operations so transaction isn't necessary
+    const [totalItems, quotes] = await Promise.all([countOperation, findManyOperation]);
 
     const items: QuoteListItem[] = quotes.map((quote) => ({
       id: quote.id,
@@ -238,16 +232,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           },
           orderBy: { order: 'asc' },
         },
-        statusHistory: {
+        _count: {
           select: {
-            id: true,
-            status: true,
-            previousStatus: true,
-            changedAt: true,
-            changedBy: true,
-            notes: true,
+            statusHistory: true,
           },
-          orderBy: { changedAt: 'asc' },
         },
       },
     });
@@ -256,6 +244,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
+    // Get versions count
+    const versionsCount = await this.countQuoteVersions(id);
+
     return {
       ...quote,
       amount: Number(quote.amount),
@@ -263,12 +254,40 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       discount: Number(quote.discount),
       notes: quote.notes ?? undefined,
       terms: quote.terms ?? undefined,
+      versionsCount,
       items: quote.items.map((item) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
         total: Number(item.total),
       })),
     };
+  }
+
+  /**
+   * Find status history for a specific quote
+   * @param quoteId - The ID of the quote
+   * @returns A promise that resolves to an array of status history items
+   */
+  async findQuoteStatusHistory(quoteId: string) {
+    return this.prisma.quoteStatusHistory.findMany({
+      where: { quoteId },
+      select: {
+        id: true,
+        status: true,
+        previousStatus: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        notes: true,
+      },
+      orderBy: { updatedAt: 'asc' },
+    });
   }
 
   /**
@@ -283,12 +302,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async getStatistics(dateFilter?: { startDate?: Date; endDate?: Date }): Promise<QuoteStatistics> {
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
-      // Only count latest versions (quotes that don't have any child versions)
-      versions: {
-        none: {
-          deletedAt: null,
-        },
-      },
+      // Only count latest versions
+      isLatestVersion: true,
     };
 
     // Add date filter if provided
@@ -463,8 +478,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               quoteId: quote.id,
               status: data.status,
               previousStatus: null,
-              changedAt: createdDate,
-              changedBy: createdBy,
+              updatedAt: createdDate,
+              updatedBy: createdBy,
               notes: 'Quote created',
             },
           });
@@ -571,8 +586,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             quoteId: id,
             status: data.status,
             previousStatus,
-            changedAt: new Date(),
-            changedBy: updatedBy,
+            updatedAt: new Date(),
+            updatedBy: updatedBy,
             notes: 'Status updated via quote edit',
           },
         });
@@ -662,12 +677,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * Validates the status transition and creates a status history entry in a transaction.
    *
    * @param id - The ID of the quote to mark as accepted
-   * @param changedBy - Optional ID of the user who marked the quote as accepted (for audit trail)
+   * @param updatedBy - Optional ID of the user who marked the quote as accepted (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot accept a cancelled quote)
    */
-  async markAsAccepted(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsAccepted(id: string, updatedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -679,7 +694,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
-    const changedAt = new Date();
+    const updatedAt = new Date();
 
     // Validate status transition
     validateQuoteStatusTransition(previousStatus, QuoteStatus.ACCEPTED);
@@ -691,7 +706,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatus.ACCEPTED,
-          updatedAt: changedAt,
+          updatedAt: updatedAt,
         },
       });
 
@@ -701,8 +716,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.ACCEPTED,
           previousStatus,
-          changedAt,
-          changedBy,
+          updatedAt,
+          updatedBy,
           notes: 'Quote accepted by customer',
         },
       });
@@ -723,7 +738,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @param id - The ID of the quote to mark as on hold
    * @param reason - Optional reason for putting the quote on hold
-   * @param changedBy - Optional ID of the user who put the quote on hold (for audit trail)
+   * @param updatedBy - Optional ID of the user who put the quote on hold (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
    * @throws {Error} If the status transition is invalid
@@ -731,7 +746,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async markAsOnHold(
     id: string,
     reason?: string,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
@@ -744,7 +759,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
-    const changedAt = new Date();
+    const updatedAt = new Date();
 
     // Validate status transition
     validateQuoteStatusTransition(previousStatus, QuoteStatus.ON_HOLD);
@@ -756,7 +771,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatus.ON_HOLD,
-          updatedAt: changedAt,
+          updatedAt: updatedAt,
         },
       });
 
@@ -766,8 +781,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.ON_HOLD,
           previousStatus,
-          changedAt,
-          changedBy,
+          updatedAt,
+          updatedBy,
           notes: reason || 'Quote put on hold by customer',
         },
       });
@@ -788,7 +803,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @param id - The ID of the quote to cancel
    * @param reason - Optional reason for cancelling the quote
-   * @param changedBy - Optional ID of the user who cancelled the quote (for audit trail)
+   * @param updatedBy - Optional ID of the user who cancelled the quote (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
    * @throws {Error} If the status transition is invalid
@@ -796,7 +811,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async markAsCancelled(
     id: string,
     reason?: string,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
@@ -809,7 +824,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
-    const changedAt = new Date();
+    const updatedAt = new Date();
 
     // Validate status transition
     validateQuoteStatusTransition(previousStatus, QuoteStatus.CANCELLED);
@@ -821,7 +836,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatus.CANCELLED,
-          updatedAt: changedAt,
+          updatedAt: updatedAt,
         },
       });
 
@@ -831,8 +846,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.CANCELLED,
           previousStatus,
-          changedAt,
-          changedBy,
+          updatedAt,
+          updatedBy,
           notes: reason || 'Quote cancelled',
         },
       });
@@ -853,7 +868,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @param id - The ID of the quote to mark as rejected
    * @param rejectReason - The reason why the quote was rejected (required)
-   * @param changedBy - Optional ID of the user who marked the quote as rejected (for audit trail)
+   * @param updatedBy - Optional ID of the user who marked the quote as rejected (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
    * @throws {Error} If the status transition is invalid
@@ -861,7 +876,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async markAsRejected(
     id: string,
     rejectReason: string,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
@@ -874,7 +889,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
-    const changedAt = new Date();
+    const updatedAt = new Date();
 
     // Validate status transition
     validateQuoteStatusTransition(previousStatus, QuoteStatus.REJECTED);
@@ -886,7 +901,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatus.REJECTED,
-          updatedAt: changedAt,
+          updatedAt: updatedAt,
         },
       });
 
@@ -896,8 +911,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.REJECTED,
           previousStatus,
-          changedAt,
-          changedBy,
+          updatedAt,
+          updatedBy,
           notes: `Quote rejected by customer${rejectReason ? `: ${rejectReason}` : ''}`,
         },
       });
@@ -913,12 +928,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * Validates the status transition and creates a status history entry.
    *
    * @param id - The ID of the quote to mark as sent
-   * @param changedBy - Optional ID of the user who sent the quote (for audit trail)
+   * @param updatedBy - Optional ID of the user who sent the quote (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot send a cancelled quote)
    */
-  async markAsSent(id: string, changedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsSent(id: string, updatedBy?: string): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -952,8 +967,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.SENT,
           previousStatus,
-          changedAt: sentDate,
-          changedBy,
+          updatedAt: sentDate,
+          updatedBy,
           notes: 'Quote sent to customer',
         },
       });
@@ -979,7 +994,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param invoiceData.gst - The GST/tax amount for the invoice
    * @param invoiceData.discount - The discount amount for the invoice
    * @param invoiceData.dueDate - The payment due date for the invoice
-   * @param changedBy - Optional ID of the user who performed the conversion (for audit trail)
+   * @param updatedBy - Optional ID of the user who performed the conversion (for audit trail)
    * @returns A promise that resolves to an object containing the new invoice's ID and number
    *
    * @throws {Error} If the quote is not found or the status transition is invalid
@@ -992,7 +1007,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       discount: number;
       dueDate: Date;
     },
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<{ invoiceId: string; invoiceNumber: string }> {
     return this.prisma.$transaction(async (tx) => {
       // Get quote with details
@@ -1054,8 +1069,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: quoteId,
           status: QuoteStatus.CONVERTED,
           previousStatus,
-          changedAt: convertedDate,
-          changedBy: changedBy,
+          updatedAt: convertedDate,
+          updatedBy: updatedBy,
           notes: `Quote converted to invoice ${invoice.invoiceNumber}`,
         },
       });
@@ -1109,8 +1124,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             quoteId: quote.id,
             status: QuoteStatus.EXPIRED,
             previousStatus: quote.status,
-            changedAt: quote.validUntil,
-            changedBy: null, // System-initiated
+            updatedAt: quote.validUntil,
+            updatedBy: null, // System-initiated
             notes: 'Quote expired automatically',
           },
         });
@@ -1139,6 +1154,37 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     });
 
     return result !== null;
+  }
+
+  /**
+   * Get the count of all versions in a quote's version chain.
+   *
+   * @param quoteId - The ID of any quote in the version chain (can be root or child version)
+   * @returns A promise that resolves to the total number of versions in the chain
+   */
+  async countQuoteVersions(quoteId: string): Promise<number> {
+    // First, get the quote to determine if it has a parent or is the root
+    const quote = await this.prisma.quote.findUnique({
+      where: { id: quoteId, deletedAt: null },
+      select: { id: true, parentQuoteId: true },
+    });
+
+    if (!quote) {
+      return 0;
+    }
+
+    // Determine the root quote ID (either the parent or the quote itself)
+    const rootQuoteId = quote.parentQuoteId || quoteId;
+
+    // Count all versions (root + all children)
+    const count = await this.prisma.quote.count({
+      where: {
+        OR: [{ id: rootQuoteId }, { parentQuoteId: rootQuoteId }],
+        deletedAt: null,
+      },
+    });
+
+    return count;
   }
 
   /**
@@ -1445,18 +1491,19 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: newVersion.id,
           status: QuoteStatus.DRAFT,
           previousStatus: null,
-          changedAt: createdDate,
-          changedBy: createdBy,
+          updatedAt: createdDate,
+          updatedBy: createdBy,
           notes: `New version created from ${parentQuote.quoteNumber}`,
         },
       });
 
-      // Mark parent quote as CANCELLED since it's been superseded by a new version
+      // Mark parent quote as CANCELLED and no longer the latest version
       const previousParentStatus = parentQuote.status;
       await tx.quote.update({
         where: { id: parentQuoteId },
         data: {
           status: QuoteStatus.CANCELLED,
+          isLatestVersion: false,
           updatedAt: createdDate,
         },
       });
@@ -1467,8 +1514,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: parentQuoteId,
           status: QuoteStatus.CANCELLED,
           previousStatus: previousParentStatus,
-          changedAt: createdDate,
-          changedBy: createdBy,
+          updatedAt: createdDate,
+          updatedBy: createdBy,
           notes: `Quote cancelled due to new version ${newQuoteNumber} being created`,
         },
       });
@@ -1508,11 +1555,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         SUM(CASE WHEN status::text = ${QuoteStatus.CONVERTED} THEN amount::numeric ELSE 0 END)::float as converted
       FROM quotes
       WHERE deleted_at IS NULL
-        AND NOT EXISTS (
-          SELECT 1 FROM quotes child
-          WHERE child.parent_quote_id = quotes.id
-          AND child.deleted_at IS NULL
-        )
+        AND is_latest_version = true
       GROUP BY year, month_num, month
       ORDER BY year DESC, month_num DESC
       LIMIT ${limit}
@@ -1539,11 +1582,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
       // Only count latest versions
-      versions: {
-        none: {
-          deletedAt: null,
-        },
-      },
+      isLatestVersion: true,
     };
 
     // Add date filter if provided
@@ -1639,11 +1678,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       FROM quotes q
       JOIN customers c ON q.customer_id = c.id
       WHERE q.deleted_at IS NULL
-        AND NOT EXISTS (
-          SELECT 1 FROM quotes child
-          WHERE child.parent_quote_id = q.id
-          AND child.deleted_at IS NULL
-        )
+        AND q.is_latest_version = true
       GROUP BY c.id, "customerName"
       ORDER BY "totalQuotedValue" DESC
       LIMIT ${limit}
@@ -1681,10 +1716,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         statusHistory: {
           select: {
             status: true,
-            changedAt: true,
+            updatedAt: true,
           },
           orderBy: {
-            changedAt: 'asc',
+            updatedAt: 'asc',
           },
         },
       },
@@ -1706,7 +1741,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       if (sentHistory && decisionHistory) {
         const days = Math.ceil(
-          (decisionHistory.changedAt.getTime() - sentHistory.changedAt.getTime()) /
+          (decisionHistory.updatedAt.getTime() - sentHistory.updatedAt.getTime()) /
             (1000 * 60 * 60 * 24),
         );
 
@@ -1850,7 +1885,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               quoteId: newQuote.id,
               status: QuoteStatus.DRAFT,
               previousStatus: null,
-              changedAt: new Date(),
+              updatedAt: new Date(),
               notes: `Duplicated from quote ${original.quoteNumber}`,
             },
           });
@@ -1882,13 +1917,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * Skips quotes with invalid transitions instead of failing the entire operation.
    * @param ids - Array of quote IDs to update
    * @param status - The new status to set for all quotes
-   * @param changedBy - Optional user ID who triggered this change
+   * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to results array with success/failure for each quote
    */
   async bulkUpdateStatus(
     ids: string[],
     status: QuoteStatus,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
@@ -1937,8 +1972,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               quoteId: id,
               status,
               previousStatus: quote.status,
-              changedAt: new Date(),
-              changedBy,
+              updatedAt: new Date(),
+              updatedBy,
               notes: 'Bulk status update',
             },
           });

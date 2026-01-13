@@ -43,20 +43,15 @@ import {
   getQuoteStatusLabel,
   getQuotePermissions,
 } from '@/features/finances/quotes/utils/quote-helpers';
-import { useCustomers } from '@/features/customers/hooks/useCustomersQueries';
+import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
-import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
-import { QuoteVersions } from '@/features/finances/quotes/components/quote-versions';
 import {
   useDeleteQuoteItemAttachment,
   useGetItemAttachmentDownloadUrl,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
-// Lazy load QuoteItemDetails to avoid loading TipTap on every drawer open
-// This component uses RichTextEditor (TipTap) which is a heavy dependency (~1-2MB)
-// Only needed for existing quotes in edit mode, not for creating new quotes
 const QuoteItemDetails = dynamic(
   () =>
     import('@/features/finances/quotes/components/quote-item-details').then(
@@ -133,7 +128,7 @@ export function QuoteForm({
 }) {
   const mode = quote ? 'update' : 'create';
 
-  const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
+  const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
   const { data: products, isLoading: isLoadingProducts } = useProducts();
 
   // Item attachment mutations
@@ -568,41 +563,27 @@ export function QuoteForm({
               )}
             />
           </FieldGroup>
+        </Box>
 
-          {/* Status History - Only show for existing quotes */}
-          {quote?.statusHistory && quote.statusHistory.length > 0 ? (
-            <FieldGroup>
-              <QuoteStatusHistory history={quote.statusHistory} />
-            </FieldGroup>
-          ) : null}
-
-          {/* Version History - Only show for existing quotes with versions */}
-          {quote?.id ? (
-            <FieldGroup>
-              <QuoteVersions quoteId={quote.id} currentVersionId={quote.id} />
-            </FieldGroup>
-          ) : null}
-
-          {/* Total Summary */}
-          <Box className="border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
+        {/* Total Summary */}
+        <Box className="sticky bottom-0 border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
+          <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+            <span>Subtotal:</span>
+            <span>{formatCurrency({ number: calculateSubtotal() })}</span>
+          </Box>
+          <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+            <span>Gst ({gst}%):</span>
+            <span>{formatCurrency({ number: calculateTax() })}</span>
+          </Box>
+          {discount > 0 ? (
             <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-              <span>Subtotal:</span>
-              <span>{formatCurrency({ number: calculateSubtotal() })}</span>
+              <span>Discount:</span>
+              <span>-{formatCurrency({ number: discount })}</span>
             </Box>
-            <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-              <span>Gst ({gst}%):</span>
-              <span>{formatCurrency({ number: calculateTax() })}</span>
-            </Box>
-            {discount > 0 ? (
-              <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-                <span>Discount:</span>
-                <span>-{formatCurrency({ number: discount })}</span>
-              </Box>
-            ) : null}
-            <Box className="flex justify-between items-center text-lg font-bold pt-3 border-t border-gray-200 dark:border-gray-700">
-              <span>Quote Total:</span>
-              <span>{formatCurrency({ number: calculateTotal() })}</span>
-            </Box>
+          ) : null}
+          <Box className="flex justify-between items-center text-lg font-bold pt-3 border-t border-gray-200 dark:border-gray-700">
+            <span>Quote Total:</span>
+            <span>{formatCurrency({ number: calculateTotal() })}</span>
           </Box>
         </Box>
       </form>

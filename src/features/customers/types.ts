@@ -1,6 +1,9 @@
 import type { CustomerStatusType } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
 import type { GenderType } from '@/zod/inputTypeSchemas/GenderSchema';
 import type { PaginationMeta } from '@/types/pagination';
+import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
+
+export type CustomerFormInput = CreateCustomerInput | UpdateCustomerInput;
 
 export type CustomerListItem = {
   id: string;
@@ -14,6 +17,8 @@ export type CustomerListItem = {
   organizationName: string | null;
   createdAt: Date;
   deletedAt: Date | null;
+  invoicesCount: number;
+  quotesCount: number;
 };
 
 export type CustomerPagination = {

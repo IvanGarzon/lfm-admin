@@ -6,6 +6,7 @@ import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar
 import { BulkActionsBar } from './bulk-actions-bar';
 import { QuoteStatus } from '@/prisma/client';
 import { QuoteListItem } from '../types';
+import { usePrefetchQuote } from '../hooks/use-quote-queries';
 
 interface QuoteTableProps<TData extends QuoteListItem> {
   table: Table<TData>;
@@ -24,6 +25,12 @@ export function QuoteTable<TData extends QuoteListItem>({
   onBulkDelete,
   isBulkPending,
 }: QuoteTableProps<TData>) {
+  const prefetchQuote = usePrefetchQuote();
+
+  const handleRowHover = (quote: TData) => {
+    prefetchQuote(quote.id);
+  };
+
   return (
     <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
       <BulkActionsBar
@@ -34,7 +41,7 @@ export function QuoteTable<TData extends QuoteListItem>({
       />
       <DataTableToolbar table={table} />
       {items.length ? (
-        <DataTable table={table} totalItems={totalItems} />
+        <DataTable table={table} totalItems={totalItems} onRowHover={handleRowHover} />
       ) : (
         <Box className="text-center py-12 text-muted-foreground">
           No quotes found. Try adjusting your filters.

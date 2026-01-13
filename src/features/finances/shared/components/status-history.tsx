@@ -3,7 +3,7 @@
 import { format } from 'date-fns';
 import { Clock, ArrowRight } from 'lucide-react';
 import { Box } from '@/components/ui/box';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserAvatar } from '@/components/shared/user-avatar';
 import type { FinanceStatusHistory, FinanceStatus } from '../types';
 
 /**
@@ -54,74 +54,88 @@ interface StatusHistoryProps<TStatus extends FinanceStatus> {
 export function StatusHistory<TStatus extends FinanceStatus>({
   history,
   renderStatusBadge,
-  title = 'Status History',
-  emptyMessage = 'No status history available.',
 }: StatusHistoryProps<TStatus>) {
-  if (history.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Box className="space-y-4">
-          {history.map((item, index) => {
-            const isLast = index === history.length - 1;
+    <Box className="space-y-0">
+      {history.map((item, index) => {
+        const isLast = index === history.length - 1;
 
-            return (
-              <Box key={item.id} className="relative">
-                <Box className="flex gap-4">
-                  {/* Timeline dot */}
-                  <Box className="relative flex h-6 w-6 shrink-0 items-center justify-center">
-                    <Box className="h-3 w-3 rounded-full border-2 border-primary bg-background z-10" />
-                  </Box>
+        return (
+          <Box key={item.id} className="relative">
+            <Box className="flex gap-3">
+              {/* Timeline dot */}
+              <Box className="relative flex h-6 w-6 shrink-0 items-center justify-center mt-1">
+                <Box className="h-2.5 w-2.5 rounded-full border-2 border-primary bg-primary z-10" />
+              </Box>
 
-                  {/* Content */}
-                  <Box className="flex-1 pb-4">
-                    <Box className="flex flex-wrap items-center gap-2 mb-1">
+              {/* Content */}
+              <Box className="flex-1 pb-4">
+                <Box className="rounded-lg border p-4">
+                  {/* Status and Date Row */}
+                  <Box className="flex items-start justify-between gap-4 mb-3">
+                    {/* Status Row */}
+                    <Box className="flex flex-wrap items-center gap-2">
                       {item.previousStatus ? (
                         <>
                           {renderStatusBadge(item.previousStatus)}
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                         </>
                       ) : null}
                       {renderStatusBadge(item.status)}
                     </Box>
 
-                    <Box className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                      <Clock className="h-3 w-3" />
-                      <time dateTime={item.changedAt.toISOString()}>
-                        {format(new Date(item.changedAt), 'PPp')}
-                      </time>
+                    {/* Date and Time */}
+                    <Box className="text-right shrink-0">
+                      <Box className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        <time dateTime={item.updatedAt.toISOString()}>
+                          {format(new Date(item.updatedAt), 'MMM d, yyyy')}
+                        </time>
+                      </Box>
+                      <Box className="text-xs text-muted-foreground">
+                        {format(new Date(item.updatedAt), 'h:mm a')}
+                      </Box>
                     </Box>
-
-                    {item.notes ? (
-                      <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
-                    ) : null}
                   </Box>
-                </Box>
 
-                {/* Vertical line - only show if not the last item */}
-                {!isLast ? (
-                  <Box className="absolute left-[11px] top-6 -bottom-4 w-px bg-border" />
-                ) : null}
+                  {/* Updated By Section */}
+                  {item.user ? (
+                    <Box className="flex items-center gap-3 p-3 rounded-md bg-muted/30 mb-3">
+                      <UserAvatar
+                        user={{
+                          name: `${item.user.firstName} ${item.user.lastName}`,
+                          image: item.user.avatarUrl ?? undefined,
+                        }}
+                        className="h-8 w-8"
+                        fontSize="0.75rem"
+                      />
+                      <Box className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Updated by</p>
+                        <p className="text-sm font-medium truncate">
+                          {`${item.user.firstName} ${item.user.lastName}`}
+                        </p>
+                      </Box>
+                    </Box>
+                  ) : null}
+
+                  {/* Notes */}
+                  {item.notes ? (
+                    <Box className="rounded-md bg-muted/30 p-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
+                      <p className="text-sm text-foreground">{item.notes}</p>
+                    </Box>
+                  ) : null}
+                </Box>
               </Box>
-            );
-          })}
-        </Box>
-      </CardContent>
-    </Card>
+            </Box>
+
+            {/* Vertical line - only show if not the last item */}
+            {!isLast ? (
+              <Box className="absolute left-[11px] top-6 bottom-0 w-[2px] bg-border" />
+            ) : null}
+          </Box>
+        );
+      })}
+    </Box>
   );
 }

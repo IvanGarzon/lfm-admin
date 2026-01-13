@@ -104,15 +104,6 @@ export function RecordPaymentDialog({
     const amount = (baseAmount * percentage) / 100;
     const roundedAmount = Number(amount.toFixed(2));
 
-    console.log('Setting percentage amount:', {
-      percentage,
-      amountDue,
-      invoiceTotal,
-      baseAmount,
-      calculated: amount,
-      rounded: roundedAmount,
-    });
-
     form.setValue('amount', roundedAmount, {
       shouldDirty: true,
       shouldTouch: true,

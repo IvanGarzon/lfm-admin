@@ -141,10 +141,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       take: perPage,
     });
 
-    const [totalItems, invoices] = await this.prisma.$transaction([
-      countOperation,
-      findManyOperation,
-    ]);
+    // Run count and query in parallel without transaction
+    // These are read-only operations so transaction isn't necessary
+    const [totalItems, invoices] = await Promise.all([countOperation, findManyOperation]);
 
     const items: InvoiceListItem[] = invoices.map((invoice) => ({
       id: invoice.id,
@@ -213,11 +212,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             id: true,
             status: true,
             previousStatus: true,
-            changedAt: true,
-            changedBy: true,
+            updatedAt: true,
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                avatarUrl: true,
+              },
+            },
             notes: true,
           },
-          orderBy: { changedAt: 'asc' },
+          orderBy: { updatedAt: 'asc' },
         },
         customer: {
           select: {
@@ -271,7 +277,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         unitPrice: Number(item.unitPrice),
         total: Number(item.total),
       })),
-    } as InvoiceWithDetails;
+    };
   }
 
   /**
@@ -328,7 +334,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       },
     });
 
-    if (!invoice) return null;
+    if (!invoice) {
+      return null;
+    }
 
     return {
       ...invoice,
@@ -402,11 +410,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         id: true,
         status: true,
         previousStatus: true,
-        changedAt: true,
-        changedBy: true,
+        updatedAt: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
         notes: true,
       },
-      orderBy: { changedAt: 'asc' },
+      orderBy: { updatedAt: 'asc' },
     });
   }
 
@@ -715,8 +730,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               invoiceId: invoice.id,
               status: data.status,
               previousStatus: null,
-              changedAt: new Date(),
-              changedBy: createdBy,
+              updatedAt: new Date(),
+              updatedBy: createdBy,
               notes: 'Invoice created',
             },
           });
@@ -822,7 +837,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               invoiceId: id,
               status: data.status,
               previousStatus: currentInvoice.status,
-              changedAt: new Date(),
+              updatedAt: new Date(),
               notes: `Status updated via edit: ${data.status}`,
             },
           });
@@ -921,11 +936,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Validates status transition before updating.
    * Typically used when extending due dates or correcting status.
    * @param id - The unique identifier of the invoice
-   * @param changedBy - Optional user ID who triggered this change
+   * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    * @throws {Error} If the status transition is invalid (e.g., cannot revert from PAID)
    */
-  async markAsPending(id: string, changedBy?: string): Promise<InvoiceWithDetails | null> {
+  async markAsPending(id: string, updatedBy?: string): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, deletedAt: null },
@@ -953,8 +968,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           invoiceId: id,
           status: InvoiceStatus.PENDING,
           previousStatus: currentInvoice.status,
-          changedAt: new Date(),
-          changedBy,
+          updatedAt: new Date(),
+          updatedBy,
           notes: 'Marked as pending',
         },
       });
@@ -973,10 +988,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Revert an invoice to draft status.
    * Only possible from PENDING or OVERDUE status.
    * @param id - The unique identifier of the invoice
-   * @param changedBy - Optional user ID who triggered this change
+   * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    */
-  async markAsDraft(id: string, changedBy?: string): Promise<InvoiceWithDetails | null> {
+  async markAsDraft(id: string, updatedBy?: string): Promise<InvoiceWithDetails | null> {
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, deletedAt: null },
       select: { status: true },
@@ -1002,8 +1017,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           invoiceId: id,
           status: InvoiceStatus.DRAFT,
           previousStatus: currentInvoice.status,
-          changedAt: new Date(),
-          changedBy,
+          updatedAt: new Date(),
+          updatedBy,
           notes: 'Reverted to draft',
         },
       });
@@ -1025,7 +1040,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param id - The unique identifier of the invoice
    * @param cancelledDate - The date the invoice was cancelled
    * @param cancelReason - The reason for cancellation (required for audit purposes)
-   * @param changedBy - Optional user ID who triggered this change
+   * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    * @throws {Error} If the status transition is invalid (e.g., trying to cancel PAID invoice)
    */
@@ -1033,7 +1048,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     id: string,
     cancelledDate: Date,
     cancelReason: string,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
@@ -1064,8 +1079,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           invoiceId: id,
           status: InvoiceStatus.CANCELLED,
           previousStatus: currentInvoice.status,
-          changedAt: new Date(),
-          changedBy,
+          updatedAt: new Date(),
+          updatedBy,
           notes: `Cancelled: ${cancelReason}`,
         },
       });
@@ -1160,7 +1175,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param method - The payment method used
    * @param date - The date the payment was made
    * @param notes - Optional notes about the payment
-   * @param changedBy - Optional user ID who recorded this payment
+   * @param updatedBy - Optional user ID who recorded this payment
    * @param idempotencyKey - Optional idempotency key to prevent duplicate payments
    * @returns A promise that resolves to the updated invoice with full details
    * @throws {Error} If the invoice is not found or status transition is invalid
@@ -1171,7 +1186,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     method: string,
     date: Date,
     notes?: string,
-    changedBy?: string,
+    updatedBy?: string,
     idempotencyKey?: string,
   ): Promise<InvoiceWithDetails> {
     const invoice = await this.prisma.invoice.findUnique({
@@ -1215,6 +1230,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Validate status transition if status is changing
     if (statusChanged) {
       validateInvoiceStatusTransition(previousStatus, newStatus);
+    } else {
+      // If status is not changing, only allow it for PARTIALLY_PAID invoices
+      // (adding another partial payment to an already partially paid invoice)
+      if (previousStatus !== InvoiceStatus.PARTIALLY_PAID) {
+        throw new Error(
+          `Cannot add payment to invoice with status ${previousStatus}. The payment would not change the invoice status.`,
+        );
+      }
     }
 
     // Generate receipt number if invoice will be fully paid and doesn't have one yet
@@ -1269,17 +1292,21 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         },
       });
 
-      // Create status history entry
-      await tx.invoiceStatusHistory.create({
-        data: {
-          invoiceId,
-          status: newStatus,
-          previousStatus,
-          changedAt: new Date(),
-          changedBy,
-          notes: `Payment of ${amount} ${invoice.currency} received. ${newStatus === InvoiceStatus.PAID ? 'Invoice fully paid.' : 'Invoice partially paid.'}`,
-        },
-      });
+      // Create status history entry if:
+      // 1. Status actually changed, OR
+      // 2. Status is PARTIALLY_PAID (to track each partial payment even if status doesn't change)
+      if (statusChanged || newStatus === InvoiceStatus.PARTIALLY_PAID) {
+        await tx.invoiceStatusHistory.create({
+          data: {
+            invoiceId,
+            status: newStatus,
+            previousStatus,
+            updatedAt: new Date(),
+            updatedBy,
+            notes: `Payment of ${amount} ${invoice.currency} received. ${newStatus === InvoiceStatus.PAID ? 'Invoice fully paid.' : 'Invoice partially paid.'}`,
+          },
+        });
+      }
 
       // Transaction creation
       const categoryName =
@@ -1376,7 +1403,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               mimeType: document.mimeType,
               s3Key: document.s3Key,
               s3Url: document.s3Url,
-              uploadedBy: changedBy,
+              uploadedBy: updatedBy,
             },
           });
         }
@@ -1396,13 +1423,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Skips invoices with invalid transitions instead of failing the entire operation.
    * @param ids - Array of invoice IDs to update
    * @param status - The new status to set for all invoices
-   * @param changedBy - Optional user ID who triggered this change
+   * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to results array with success/failure for each invoice
    */
   async bulkUpdateStatus(
     ids: string[],
     status: InvoiceStatus,
-    changedBy?: string,
+    updatedBy?: string,
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
@@ -1451,8 +1478,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               invoiceId: id,
               status,
               previousStatus: invoice.status,
-              changedAt: new Date(),
-              changedBy,
+              updatedAt: new Date(),
+              updatedBy,
               notes: 'Bulk status update',
             },
           });

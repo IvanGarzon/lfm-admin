@@ -23,35 +23,10 @@ export async function getActiveCustomers(): Promise<ActionResult<Partial<Custome
   }
 
   try {
-    const customers = await prisma.customer.findMany({
-      where: {
-        deletedAt: null,
-        status: CustomerStatusSchema.enum.ACTIVE,
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        firstName: 'asc',
-      },
-    });
-
-    return { success: true, data: customers };
+    const customers = await customerRepo.findActiveSelection();
+    return { success: true, data: customers as Partial<Customer>[] };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch customers' };
+    return handleActionError(error, 'Failed to fetch customers');
   }
 }
 
@@ -73,73 +48,21 @@ export async function getCustomers(
   }
 }
 
-export async function createCustomer(data: {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  gender: 'MALE' | 'FEMALE';
-  organizationId?: string;
-  organizationName?: string;
-}): Promise<ActionResult<Customer>> {
+export async function getCustomerById(id: string): Promise<ActionResult<any>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
   }
 
   try {
-    // Check if email already exists
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { email: data.email },
-    });
-
-    if (existingCustomer) {
-      return {
-        success: false,
-        error: 'A customer with this email already exists',
-        errors: { email: ['Email already in use'] },
-      };
+    const customer = await customerRepo.findByIdWithDetails(id);
+    if (!customer) {
+      return { success: false, error: 'Customer not found' };
     }
-
-    let organizationId = data.organizationId;
-
-    // If organizationName is provided but no organizationId, create new organization
-    if (data.organizationName && !data.organizationId) {
-      const organization = await prisma.organization.create({
-        data: {
-          name: data.organizationName,
-        },
-      });
-      organizationId = organization.id;
-    }
-
-    const customer = await prisma.customer.create({
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        gender: data.gender,
-        organizationId,
-        status: CustomerStatusSchema.enum.ACTIVE,
-      },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
 
     return { success: true, data: customer };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to create customer' };
+    return handleActionError(error, 'Failed to fetch customer');
   }
 }
 
@@ -152,22 +75,9 @@ export async function getOrganizations(): Promise<
   }
 
   try {
-    const organizations = await prisma.organization.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
+    const organizations = await customerRepo.findAllOrganizations();
     return { success: true, data: organizations };
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: false, error: 'Failed to fetch organizations' };
+    return handleActionError(error, 'Failed to fetch organizations');
   }
 }

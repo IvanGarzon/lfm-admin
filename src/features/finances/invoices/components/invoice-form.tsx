@@ -43,10 +43,9 @@ import type {
   InvoiceItemDetail,
   InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
-import { useActiveCustomers } from '@/features/customers/hooks/useCustomersQueries';
+import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
-import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 const defaultFormState: CreateInvoiceInput = {
@@ -94,13 +93,11 @@ const mapInvoiceToFormValues = (
 export function InvoiceForm({
   invoice,
   items,
-  statusHistory,
   onCreate,
   onUpdate,
   isCreating = false,
   isUpdating = false,
   isLoadingItems = false,
-  isLoadingHistory = false,
   onDirtyStateChange,
 }: {
   invoice?: InvoiceBasic | null;
@@ -234,7 +231,8 @@ export function InvoiceForm({
           <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
             <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              This invoice is {invoice?.status.toLowerCase()} and cannot be edited.
+              This invoice is {invoice?.status.toLowerCase().replace(/_/g, ' ')} and cannot be
+              edited.
             </span>
           </Box>
         ) : null}
@@ -509,22 +507,10 @@ export function InvoiceForm({
               )}
             />
           </FieldGroup>
-
-          {/* Status History - Only show for existing invoices */}
-          {isLoadingHistory ? (
-            <Box className="py-4 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Loading history...</span>
-            </Box>
-          ) : statusHistory && statusHistory.length > 0 ? (
-            <FieldGroup>
-              <InvoiceStatusHistory history={statusHistory} />
-            </FieldGroup>
-          ) : null}
         </Box>
 
         {/* Total Summary */}
-        <Box className="border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
+        <Box className="sticky bottom-0 border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
           <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
             <span>Subtotal:</span>
             <span>{formatCurrency({ number: calculateSubtotal() })}</span>
