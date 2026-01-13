@@ -77,6 +77,27 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
 }
 
 /**
+ * Retrieves the status history for a specific quote.
+ * @param id - The ID of the quote.
+ * @returns A promise that resolves to an `ActionResult` containing the quote status history.
+ */
+export async function getQuoteStatusHistory(id: string): Promise<ActionResult<any[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+    const history = await quoteRepo.findQuoteStatusHistory(id);
+
+    return { success: true, data: history };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch quote status history');
+  }
+}
+
+/**
  * Retrieves statistics about quotes, such as counts for different statuses.
  * Can be filtered by a date range.
  * @param dateFilter - An optional object with startDate and endDate to filter the statistics.

@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   getTransactions,
   getTransactionById,
@@ -16,7 +17,7 @@ import {
 } from '@/actions/transactions';
 import { TransactionFilters } from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
-import { toast } from 'sonner';
+import { formatDateNormalizer } from '@/lib/utils';
 
 export const TRANSACTION_KEYS = {
   all: ['transactions'] as const,
@@ -28,8 +29,10 @@ export const TRANSACTION_KEYS = {
   statistics: () => [...TRANSACTION_KEYS.all, 'statistics'] as const,
   analytics: () => [...TRANSACTION_KEYS.all, 'analytics'] as const,
   trend: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'trend', { limit }] as const,
-  categoryBreakdown: (dateFilter?: { startDate?: Date; endDate?: Date }) =>
-    [...TRANSACTION_KEYS.analytics(), 'breakdown', { dateFilter }] as const,
+  categoryBreakdown: (dateFilter?: {
+    startDate?: Date | string | null;
+    endDate?: Date | string | null;
+  }) => [...TRANSACTION_KEYS.analytics(), 'breakdown', { dateFilter }] as const,
   topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const,
 };
 
@@ -101,12 +104,25 @@ export function useTransaction(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000, // 30 seconds
   });
 }
 
-export function useTransactionStatistics(dateFilter?: { startDate?: Date; endDate?: Date }) {
+export function useTransactionStatistics(
+  dateFilter?: { startDate?: Date; endDate?: Date },
+  options?: { enabled?: boolean },
+) {
+  // Normalize date filter to ISO date strings for stable query keys
+  // This prevents cache misses when component remounts with logically identical dates
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: [...TRANSACTION_KEYS.statistics(), dateFilter],
+    queryKey: [...TRANSACTION_KEYS.statistics(), normalizedDateFilter],
     queryFn: async () => {
       const result = await getTransactionStatistics(dateFilter);
       if (!result.success) {
@@ -115,7 +131,9 @@ export function useTransactionStatistics(dateFilter?: { startDate?: Date; endDat
 
       return result.data;
     },
-    staleTime: 60 * 1000,
+    staleTime: 60 * 1000, // 1 minute
+    placeholderData: keepPreviousData,
+    enabled: options?.enabled,
   });
 }
 
@@ -185,6 +203,7 @@ export function useDeleteTransaction() {
     },
   });
 }
+
 export function useUploadTransactionAttachment() {
   const queryClient = useQueryClient();
 
@@ -256,8 +275,16 @@ export function useTransactionTrend(limit: number = 12) {
 }
 
 export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  // Normalize date filter to ISO date strings for stable query keys
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
   return useQuery({
-    queryKey: TRANSACTION_KEYS.categoryBreakdown(dateFilter),
+    queryKey: TRANSACTION_KEYS.categoryBreakdown(normalizedDateFilter),
     queryFn: async () => {
       const result = await getTransactionCategoryBreakdown(dateFilter);
       if (!result.success) {
@@ -266,6 +293,7 @@ export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: 
       return result.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -281,4 +309,20 @@ export function useTopCategories(limit: number = 5) {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+}
+
+export function usePrefetchTransaction() {
+  const queryClient = useQueryClient();
+
+  return (transactionId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: TRANSACTION_KEYS.detail(transactionId),
+      queryFn: async () => {
+        const result = await getTransactionById(transactionId);
+        if (!result.success) throw new Error(result.error);
+        return result.data;
+      },
+      staleTime: 30 * 1000,
+    });
+  };
 }

@@ -1,6 +1,6 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
-import { QuoteList } from '@/features/finances/quotes/components/quote-list';
+import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 import { getQuotes } from '@/actions/quotes';
 import dynamic from 'next/dynamic';
 
@@ -28,8 +28,8 @@ export default async function QuotePage({
   }
 
   return (
-    <Shell className="gap-2" scrollable>
-      <QuoteList data={result.data} searchParams={searchParamsResolved} />
+    <Shell scrollable>
+      <QuotesView initialData={result.data} searchParams={searchParamsResolved} />
       {id ? <QuoteDrawer key={id} id={id} open={true} /> : null}
     </Shell>
   );

@@ -25,8 +25,13 @@ export type QuoteStatusHistoryItem = {
   id: string;
   status: QuoteStatusType;
   previousStatus: QuoteStatusType | null;
-  changedAt: Date;
-  changedBy: string | null;
+  updatedAt: Date;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  } | null;
   notes: string | null;
 };
 
@@ -45,6 +50,7 @@ export type QuoteWithDetails = {
   terms?: string;
   versionNumber: number;
   parentQuoteId?: string | null;
+  versionsCount: number;
   customer: {
     id: string;
     firstName: string;
@@ -70,7 +76,9 @@ export type QuoteWithDetails = {
     createdAt: Date;
     attachments: QuoteItemAttachment[];
   }[];
-  statusHistory: QuoteStatusHistoryItem[];
+  _count?: {
+    statusHistory: number;
+  };
 };
 
 export type QuoteItemAttachment = {

@@ -19,8 +19,6 @@ export function QuoteStatusHistory({ history }: QuoteStatusHistoryProps) {
     <StatusHistory
       history={history}
       renderStatusBadge={(status) => <QuoteStatusBadge status={status} />}
-      title="Status History"
-      emptyMessage="No status history available."
     />
   );
 }

@@ -14,8 +14,13 @@ export interface FinanceStatusHistory<TStatus extends FinanceStatus = FinanceSta
   id: string;
   status: TStatus;
   previousStatus: TStatus | null;
-  changedAt: Date;
-  changedBy: string | null;
+  updatedAt: Date;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  } | null;
   notes: string | null;
 }
 

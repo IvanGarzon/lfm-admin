@@ -55,6 +55,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   taskExecutions TaskExecution[]
+  QuoteStatusHistory QuoteStatusHistory[] @relation("user")
+  InvoiceStatusHistory InvoiceStatusHistory[] @relation("user")
 
   role                  UserRole               @default(USER)
   // isTwoFactorEnabled    Boolean                @default(false)
@@ -266,11 +268,13 @@ model InvoiceStatusHistory {
 
   status         InvoiceStatus
   previousStatus InvoiceStatus?
-  changedAt      DateTime      @default(now()) @map(name: "changed_at") @db.Timestamptz()
-  changedBy      String?       @map(name: "changed_by")
+  updatedAt      DateTime      @default(now()) @map(name: "updated_at") @db.Timestamptz()
+  updatedBy      String?       @map(name: "updated_by")
+  user           User?         @relation("user", fields: [updatedBy], references: [id], onDelete: SetNull)
   notes          String?       @db.Text
 
-  @@index([invoiceId, changedAt])
+  @@index([invoiceId, updatedAt])
+  @@index([updatedBy])
   @@map(name: "invoice_status_history")
 }
 
@@ -304,10 +308,11 @@ model Quote {
 
   status QuoteStatus @default(DRAFT)
 
-  versionNumber  Int     @default(1) @map(name: "version_number")
-  parentQuoteId  String? @map(name: "parent_quote_id")
-  parentQuote    Quote?  @relation("QuoteVersions", fields: [parentQuoteId], references: [id], onDelete: Restrict)
-  versions       Quote[] @relation("QuoteVersions")
+  versionNumber   Int     @default(1) @map(name: "version_number")
+  parentQuoteId   String? @map(name: "parent_quote_id")
+  parentQuote     Quote?  @relation("QuoteVersions", fields: [parentQuoteId], references: [id], onDelete: Restrict)
+  versions        Quote[] @relation("QuoteVersions")
+  isLatestVersion Boolean @default(true) @map(name: "is_latest_version")
 
   amount     Decimal  @db.Decimal(15, 2)
   currency   String   @default("AUD")
@@ -338,6 +343,8 @@ model Quote {
   @@index([parentQuoteId])                // HIGH PRIORITY: Version chain queries
   @@index([customerId, issuedDate(sort: Desc)])  // MEDIUM PRIORITY: Recent quotes per customer
   @@index([deletedAt])                    // MEDIUM PRIORITY: Soft delete filtering
+  @@index([isLatestVersion, deletedAt])   // CRITICAL: Latest version queries with soft delete
+  @@index([status, isLatestVersion, deletedAt])  // CRITICAL: Status filtering for latest versions
   @@map(name: "quotes")
 }
 
@@ -400,11 +407,13 @@ model QuoteStatusHistory {
 
   status         QuoteStatus
   previousStatus QuoteStatus?
-  changedAt      DateTime    @default(now()) @map(name: "changed_at") @db.Timestamptz()
-  changedBy      String?     @map(name: "changed_by")
+  updatedAt      DateTime    @default(now()) @map(name: "updated_at") @db.Timestamptz()
+  updatedBy      String?     @map(name: "updated_by")
+  user           User?       @relation("user", fields: [updatedBy], references: [id], onDelete: SetNull)
   notes          String?     @db.Text
 
-  @@index([quoteId, changedAt])
+  @@index([quoteId, updatedAt])
+  @@index([updatedBy])
   @@map(name: "quote_status_history")
 }
 
