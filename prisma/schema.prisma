@@ -97,6 +97,16 @@ model Customer {
   updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
 
+  address1         String?
+  address2         String?
+  city             String?
+  region           String?
+  postalCode       String?        @map("postal_code")
+  country          String?        @default("Australia")
+  lat              Float?
+  lng              Float?
+  formattedAddress String?        @map("formatted_address")
+
   invoices   Invoice[]
   quotes     Quote[]
   emailAudit EmailAudit[]

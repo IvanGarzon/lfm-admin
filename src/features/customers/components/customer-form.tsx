@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { Controller, useForm, type Resolver, SubmitHandler } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,12 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AddressAutoComplete } from '@/components/ui/address-autocomplete/address-autocomplete';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { OrganizationSelect } from '@/components/shared/organization-select';
 import { useOrganizations } from '@/features/organizations/hooks/use-organization-queries';
 import type { CustomerListItem, CustomerFormInput } from '@/features/customers/types';
 import { CustomerStatusSchema } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
 import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
+import { emptyAddress, type AddressInput } from '@/schemas/address';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({
   value: gender,
@@ -73,6 +75,7 @@ export function CustomerForm({
           gender: customer.gender,
           status: customer.status,
           organizationId: customer.organizationId ?? '',
+          address: customer.address ?? null,
         }
       : {
           firstName: '',
@@ -82,10 +85,31 @@ export function CustomerForm({
           gender: GenderSchema.enum.MALE,
           status: CustomerStatusSchema.enum.ACTIVE,
           organizationId: '',
+          address: null,
         },
   });
 
   const { isDirty } = form.formState;
+
+  // Address autocomplete state
+  const [address, setAddress] = useState<AddressInput>(customer?.address ?? emptyAddress);
+  const [addressSearchInput, setAddressSearchInput] = useState('');
+
+  // Sync address state with form
+  useEffect(() => {
+    const currentFormAddress = form.getValues('address');
+    const targetAddress = address.formattedAddress ? address : null;
+
+    // Skip if both are essentially 'null' or empty to avoid marking dirty on mount
+    if (!currentFormAddress && !targetAddress) return;
+
+    const hasAddressActualChanged =
+      JSON.stringify(currentFormAddress) !== JSON.stringify(targetAddress);
+
+    if (hasAddressActualChanged) {
+      form.setValue('address', targetAddress, { shouldDirty: true });
+    }
+  }, [address, form]);
 
   useEffect(() => {
     if (onDirtyStateChange) {
@@ -101,6 +125,8 @@ export function CustomerForm({
   const onSubmit: SubmitHandler<CustomerFormInput> = useCallback(
     (data: CustomerFormInput) => {
       if (mode === 'create') {
+        console.log('Creating customer...');
+        console.log(data);
         onCreate?.(data);
       } else {
         const updateData: UpdateCustomerInput = {
@@ -295,6 +321,22 @@ export function CustomerForm({
                   </Field>
                 )}
               />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Field>
+                <FieldContent>
+                  <FieldLabel>Address (Optional)</FieldLabel>
+                </FieldContent>
+                <AddressAutoComplete
+                  address={address}
+                  setAddress={setAddress}
+                  searchInput={addressSearchInput}
+                  setSearchInput={setAddressSearchInput}
+                  dialogTitle="Edit Address"
+                  placeholder="Search for an address"
+                />
+              </Field>
             </FieldGroup>
           </Box>
 

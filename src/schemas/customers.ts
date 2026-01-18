@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
 import { CustomerStatusSchema } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
+import { AddressSchema } from '@/schemas/address';
 
 export const CustomerSchema = z.object({
   firstName: z.string().trim().min(2, {
@@ -15,6 +16,7 @@ export const CustomerSchema = z.object({
   organizationId: z.string().optional().nullable(),
   organizationName: z.string().optional().nullable(),
   status: CustomerStatusSchema,
+  address: AddressSchema.optional().nullable(),
 });
 
 export const CreateCustomerSchema = CustomerSchema;
