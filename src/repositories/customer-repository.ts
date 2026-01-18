@@ -7,6 +7,7 @@ import type {
   CustomerFilters,
 } from '@/features/customers/types';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
+import type { AddressInput } from '@/schemas/address';
 
 /**
  * Customer Repository
@@ -110,6 +111,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
       quotesCount: customer._count.quotes ?? 0,
+      address: this.mapToAddress(customer),
     }));
 
     return {
@@ -146,6 +148,15 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
             quotes: true,
           },
         },
+        address1: true,
+        address2: true,
+        city: true,
+        region: true,
+        postalCode: true,
+        country: true,
+        lat: true,
+        lng: true,
+        formattedAddress: true,
       },
     });
 
@@ -167,6 +178,25 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
       quotesCount: customer._count.quotes ?? 0,
+      address: this.mapToAddress(customer),
+    };
+  }
+
+  private mapToAddress(customer: any): AddressInput | null {
+    if (!customer.address1) {
+      return null;
+    }
+
+    return {
+      address1: customer.address1,
+      address2: customer.address2 ?? '',
+      city: customer.city ?? '',
+      region: customer.region ?? '',
+      postalCode: customer.postalCode ?? '',
+      country: customer.country ?? 'Australia',
+      lat: Number(customer.lat) ?? 0,
+      lng: Number(customer.lng) ?? 0,
+      formattedAddress: customer.formattedAddress ?? '',
     };
   }
 
@@ -227,7 +257,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   async createWithOrganization(data: CreateCustomerInput) {
     const { organizationName, organizationId, ...customerData } = data;
 
-    let finalOrganizationId = organizationId;
+    let finalOrganizationId = organizationId || null;
 
     return this.prisma.$transaction(async (tx) => {
       if (organizationName && !organizationId) {
@@ -248,6 +278,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
           gender: customerData.gender,
           organizationId: finalOrganizationId,
           status: 'ACTIVE',
+          ...(customerData.address || {}),
         },
       });
     });
@@ -263,7 +294,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   ): Promise<CustomerListItem | null> {
     const { organizationName, organizationId, ...updateData } = data;
 
-    let finalOrganizationId = organizationId;
+    let finalOrganizationId = organizationId || null;
 
     const updatedCustomer = await this.prisma.$transaction(async (tx) => {
       // Handle organization logic
@@ -276,10 +307,24 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         finalOrganizationId = organization.id;
       }
 
+      const { address, ...restUpdateData } = updateData;
+      const addressData = address || {
+        address1: null,
+        address2: null,
+        city: null,
+        region: null,
+        postalCode: null,
+        country: null,
+        lat: null,
+        lng: null,
+        formattedAddress: null,
+      };
+
       return tx.customer.update({
         where: { id },
         data: {
-          ...updateData,
+          ...restUpdateData,
+          ...addressData,
           organization: finalOrganizationId
             ? { connect: { id: finalOrganizationId } }
             : { disconnect: true },

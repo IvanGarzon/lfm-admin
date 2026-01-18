@@ -6,38 +6,58 @@
     "allowJs": true,
     "moduleDetection": "force",
     "isolatedModules": true,
-
     /* Strictness */
     "strict": true,
     "checkJs": true,
     "allowImportingTsExtensions": true,
-
     /* Bundled projects */
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES2022"
+    ],
     "noEmit": true,
     //"module": "Preserve",
     "module": "ESNext",
     "moduleResolution": "bundler",
-
     "esModuleInterop": true,
     "resolveJsonModule": true,
-
-    "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "incremental": true,
-
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
-      "@/env": ["./env.ts"],
-      "@/public/*": ["./public/*"],
-      "@/prisma/*": ["./prisma/generated/*"],
-      "@/zod/*": ["./prisma/zod/*"],
-      "@/repo/*": ["./prisma/prisma-vault/*"],
-      "@/*": ["./src/*"],
-      "next-themes/dist/types": ["node_modules/next-themes"]
+      "@/env": [
+        "./env.ts"
+      ],
+      "@/public/*": [
+        "./public/*"
+      ],
+      "@/prisma/*": [
+        "./prisma/generated/*"
+      ],
+      "@/zod/*": [
+        "./prisma/zod/*"
+      ],
+      "@/repo/*": [
+        "./prisma/prisma-vault/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ],
+      "next-themes/dist/types": [
+        "node_modules/next-themes"
+      ]
     },
-    "types": ["next", "react"]
+    "types": [
+      "next",
+      "react"
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -45,7 +65,10 @@
     "**/*.tsx",
     "*.js",
     ".next/types/**/*.ts",
-    "src/components/shared/tailwind.config.Js"
+    "src/components/shared/tailwind.config.Js",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
