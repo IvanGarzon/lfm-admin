@@ -8,16 +8,14 @@ datasource db {
 }
 
 generator zod {
-  provider                  = "zod-prisma-types"
-  output                    = "./zod"
-  prismaClientPath          = "@/prisma/client"
-  createRelationValuesTypes = true
-  writeBarrelFiles          = true
-  writeNullishInModelTypes  = true
-  createInputTypes          = true
-  useMultipleFiles          = true
-  useTypeAssertions         = false
-  useDecimalJs              = true
+  provider       = "prisma-zod-generator"
+  output         = "./zod"
+  imports        = "@/prisma/client"
+  relationModel  = true
+  modelCase      = "PascalCase"
+  modelSuffix    = "Schema"
+  useDecimalJs   = true
+  prismaJsonNullability = true
 }
 
 generator json {
