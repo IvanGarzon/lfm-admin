@@ -23,6 +23,9 @@ export const sendEmailFunction = inngest.createFunction(
     concurrency: {
       limit: 10, // Process up to 10 emails concurrently
     },
+    timeouts: {
+      finish: '5m', // Max 5 minutes to complete (includes PDF generation)
+    },
   },
   [
     { event: 'email/send' },
@@ -41,6 +44,25 @@ export const sendEmailFunction = inngest.createFunction(
         recipient: email.recipient,
       },
     });
+
+    // Idempotency check: Skip if email was already sent
+    const existingAudit = await step.run('check-idempotency', async () => {
+      return prisma.emailAudit.findUnique({
+        where: { id: auditId },
+        select: { status: true, sentAt: true },
+      });
+    });
+
+    if (existingAudit?.status === 'SENT') {
+      logger.info('Email already sent - skipping (idempotency check)', {
+        context: 'inngest-send-email',
+        metadata: {
+          auditId,
+          sentAt: existingAudit.sentAt,
+        },
+      });
+      return { success: true, skipped: true, reason: 'already_sent' };
+    }
 
     // Step 1: Update audit status to SENDING
     await step.run('update-status-sending', async () => {

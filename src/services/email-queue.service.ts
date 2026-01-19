@@ -5,11 +5,15 @@
  * Works for all features: invoices, quotes, reports, etc.
  */
 
-import { inngest } from '@/lib/inngest/client';
+import { sendEmailEvent } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repository';
+import { env } from '@/env';
 import type { QueueEmailPayload } from '@/types/email';
+
+// Singleton repository instance
+const taskRepo = new ScheduledTaskRepository(prisma);
 
 /**
  * Queue an email for background processing
@@ -46,7 +50,6 @@ export async function queueEmail(
 ): Promise<{ auditId: string; eventId: string }> {
   try {
     // Check if send-email task is enabled
-    const taskRepo = new ScheduledTaskRepository(prisma);
     const sendEmailTask = await taskRepo.findByFunctionId('send-email');
 
     if (sendEmailTask && !sendEmailTask.isEnabled) {
@@ -64,13 +67,30 @@ export async function queueEmail(
       );
     }
 
+    // Determine recipient (use test recipient in test mode)
+    let recipient = payload.recipient;
+    let isTestMode = false;
+
+    if (env.EMAIL_TEST_MODE && env.EMAIL_TEST_RECIPIENT) {
+      recipient = env.EMAIL_TEST_RECIPIENT;
+      isTestMode = true;
+
+      logger.info('Email test mode active - redirecting email', {
+        context: 'email-queue',
+        metadata: {
+          originalRecipient: payload.recipient,
+          testRecipient: recipient,
+          emailType: payload.emailType,
+        },
+      });
+    }
+
     // Create email audit record
     const emailAudit = await prisma.emailAudit.create({
       data: {
         emailType: payload.emailType,
         templateName: payload.templateName,
-        // recipient: payload.recipient,
-        recipient: 'ivangarzoncruz@gmail.com',
+        recipient,
         subject: payload.subject,
         status: 'QUEUED',
 
@@ -86,6 +106,8 @@ export async function queueEmail(
           priority: payload.priority,
           attachments: payload.attachments,
           ...payload.metadata,
+          // Track original recipient when in test mode
+          ...(isTestMode && { originalRecipient: payload.recipient }),
         },
       },
     });
@@ -93,15 +115,8 @@ export async function queueEmail(
     // Generate event ID for deduplication and tracking
     const eventId = `email-${emailAudit.id}`;
 
-    // Send event to Inngest
-    await inngest.send({
-      id: eventId, // Deduplication key
-      name: 'email/send',
-      data: {
-        auditId: emailAudit.id,
-        email: payload,
-      },
-    });
+    // Send event to Inngest (type-safe)
+    await sendEmailEvent({ auditId: emailAudit.id, email: payload }, { id: eventId });
 
     // Update audit record with Inngest event ID
     await prisma.emailAudit.update({
@@ -115,7 +130,8 @@ export async function queueEmail(
         auditId: emailAudit.id,
         eventId,
         emailType: payload.emailType,
-        recipient: payload.recipient,
+        recipient,
+        ...(isTestMode && { originalRecipient: payload.recipient }),
       },
     });
 

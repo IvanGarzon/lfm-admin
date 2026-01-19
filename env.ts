@@ -39,7 +39,11 @@ export const env = createEnv({
       .string()
       .optional()
       .transform((s) => s === 'true'),
-    EMAIL_TEST_RECIPIENT: z.string().email().optional(),
+    EMAIL_TEST_RECIPIENT: z.email().optional(),
+    EMAIL_DRY_RUN: z
+      .string()
+      .optional()
+      .transform((s) => s === 'true'),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -70,5 +74,6 @@ export const env = createEnv({
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
     EMAIL_TEST_MODE: process.env.EMAIL_TEST_MODE,
     EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
+    EMAIL_DRY_RUN: process.env.EMAIL_DRY_RUN,
   },
 });

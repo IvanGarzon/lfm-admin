@@ -17,6 +17,10 @@ export const cleanupSessionsFunction = inngest.createFunction(
   {
     id: 'cleanup-sessions',
     name: 'Cleanup Inactive Sessions',
+    retries: 3,
+    timeouts: {
+      finish: '2m', // Max 2 minutes for batch deactivation
+    },
   },
   [
     { cron: '0 0 * * *' }, // Daily at midnight

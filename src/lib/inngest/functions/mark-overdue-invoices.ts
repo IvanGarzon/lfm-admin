@@ -14,6 +14,10 @@ export const markOverdueInvoicesFunction = inngest.createFunction(
   {
     id: 'mark-overdue-invoices',
     name: 'Mark Overdue Invoices',
+    retries: 3,
+    timeouts: {
+      finish: '2m', // Max 2 minutes for batch update
+    },
   },
   [
     { cron: '0 1 * * *' }, // Daily at 1:00 AM

@@ -15,6 +15,9 @@ export const checkExpiredQuotesFunction = inngest.createFunction(
     id: 'check-expired-quotes',
     name: 'Check and Mark Expired Quotes',
     retries: 3,
+    timeouts: {
+      finish: '2m', // Max 2 minutes for batch update
+    },
   },
   [
     { cron: '0 0 * * *' }, // Daily at midnight

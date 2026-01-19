@@ -9,12 +9,20 @@ import { inngest } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { queueQuoteEmail } from '@/services/email-queue.service';
+import type { Prisma } from '@/prisma/client';
+
+type QuoteWithCustomerAndItems = Prisma.QuoteGetPayload<{
+  include: { customer: true; items: true };
+}>;
 
 export const quoteExpiryReminderFunction = inngest.createFunction(
   {
     id: 'quote-expiry-reminder',
     name: 'Send Quote Expiry Reminders',
     retries: 3,
+    timeouts: {
+      finish: '10m', // Max 10 minutes (may process many quotes)
+    },
   },
   [
     { cron: '0 9 * * *' }, // Daily at 9 AM
@@ -26,7 +34,7 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
     });
 
     // Find quotes expiring in 3 days
-    const expiringQuotes = await step.run('find-expiring-quotes', async () => {
+    const expiringQuotes = (await step.run('find-expiring-quotes', async () => {
       const threeDaysFromNow = new Date();
       threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
       threeDaysFromNow.setHours(23, 59, 59, 999); // End of day
@@ -49,7 +57,7 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
           items: true,
         },
       });
-    });
+    })) as QuoteWithCustomerAndItems[];
 
     logger.info('Found expiring quotes', {
       context: 'inngest-quote-expiry-reminder',
