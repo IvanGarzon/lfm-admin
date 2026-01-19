@@ -8,16 +8,14 @@ datasource db {
 }
 
 generator zod {
-  provider                  = "zod-prisma-types"
-  output                    = "./zod"
-  prismaClientPath          = "@/prisma/client"
-  createRelationValuesTypes = true
-  writeBarrelFiles          = true
-  writeNullishInModelTypes  = true
-  createInputTypes          = true
-  useMultipleFiles          = true
-  useTypeAssertions         = false
-  useDecimalJs              = true
+  provider       = "prisma-zod-generator"
+  output         = "./zod"
+  imports        = "@/prisma/client"
+  relationModel  = true
+  modelCase      = "PascalCase"
+  modelSuffix    = "Schema"
+  useDecimalJs   = true
+  prismaJsonNullability = true
 }
 
 generator json {
@@ -97,10 +95,25 @@ model Customer {
   updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
 
+  address1         String?
+  address2         String?
+  city             String?
+  region           String?
+  postalCode       String?        @map("postal_code")
+  country          String?        @default("Australia")
+  lat              Float?
+  lng              Float?
+  formattedAddress String?        @map("formatted_address")
+
   invoices   Invoice[]
   quotes     Quote[]
   emailAudit EmailAudit[]
 
+  @@index([status])
+  @@index([email])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@index([status, deletedAt])
   @@map(name: "customers")
 }
 
@@ -116,6 +129,7 @@ model Organization {
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
 
+  @@index([name])
   @@map(name: "organizations")
 }
 
@@ -337,14 +351,14 @@ model Quote {
   @@index([customerId])
   @@index([status])
   @@index([issuedDate])
-  @@index([customerId, status])           // HIGH PRIORITY: Customer-filtered status queries
-  @@index([status, deletedAt])            // HIGH PRIORITY: Status with soft delete filtering
-  @@index([validUntil])                   // HIGH PRIORITY: Expiration checks
-  @@index([parentQuoteId])                // HIGH PRIORITY: Version chain queries
-  @@index([customerId, issuedDate(sort: Desc)])  // MEDIUM PRIORITY: Recent quotes per customer
-  @@index([deletedAt])                    // MEDIUM PRIORITY: Soft delete filtering
-  @@index([isLatestVersion, deletedAt])   // CRITICAL: Latest version queries with soft delete
-  @@index([status, isLatestVersion, deletedAt])  // CRITICAL: Status filtering for latest versions
+  @@index([customerId, status])           
+  @@index([status, deletedAt])            
+  @@index([validUntil])                   
+  @@index([parentQuoteId])                
+  @@index([customerId, issuedDate(sort: Desc)])
+  @@index([deletedAt])                    
+  @@index([isLatestVersion, deletedAt])   
+  @@index([status, isLatestVersion, deletedAt])
   @@map(name: "quotes")
 }
 

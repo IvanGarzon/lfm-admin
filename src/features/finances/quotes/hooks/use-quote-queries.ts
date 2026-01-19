@@ -116,6 +116,25 @@ export function useQuote(id: string | undefined) {
   });
 }
 
+export function usePrefetchQuote() {
+  const queryClient = useQueryClient();
+
+  return (quoteId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: QUOTE_KEYS.detail(quoteId),
+      queryFn: async () => {
+        const result = await getQuoteById(quoteId);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
+      },
+      staleTime: 30 * 1000,
+    });
+  };
+}
+
 export function useQuoteVersions(quoteId: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: QUOTE_KEYS.versions(quoteId ?? ''),
@@ -1231,20 +1250,4 @@ export function useBulkDeleteQuotes() {
       toast.error(error.message || 'Failed to delete quotes');
     },
   });
-}
-
-export function usePrefetchQuote() {
-  const queryClient = useQueryClient();
-
-  return (quoteId: string) => {
-    queryClient.prefetchQuery({
-      queryKey: QUOTE_KEYS.detail(quoteId),
-      queryFn: async () => {
-        const result = await getQuoteById(quoteId);
-        if (!result.success) throw new Error(result.error);
-        return result.data;
-      },
-      staleTime: 30 * 1000,
-    });
-  };
 }

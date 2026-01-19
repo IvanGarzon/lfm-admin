@@ -4,8 +4,8 @@ import { formatters } from '@/lib/utils';
 // import { isValidPhoneNumber } from 'react-phone-number-input';
 
 // Create enum arrays for Zod from Prisma enums
-const GenderEnum = Object.values(Gender) as [string, ...string[]];
-const EmployeeStatusEnum = Object.values(EmployeeStatus) as [string, ...string[]];
+import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
+import { EmployeeStatusSchema } from '@/zod/inputTypeSchemas/EmployeeStatusSchema';
 
 const EmployeeSchema = z.object({
   firstName: z.string().trim().min(2, {
@@ -18,11 +18,11 @@ const EmployeeSchema = z.object({
     error: 'Please enter a valid email address.',
   }),
   phone: z.string('Please enter a valid phone number'),
-  gender: z.enum(GenderEnum).optional(),
+  gender: GenderSchema.optional(),
   rate: z.coerce.number().nonnegative({
     error: 'Rate must be a positive number.',
   }),
-  status: z.enum(EmployeeStatusEnum),
+  status: EmployeeStatusSchema,
   dob: z
     .preprocess((val) => {
       if (typeof val === 'string') {

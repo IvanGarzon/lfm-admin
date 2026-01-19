@@ -43,7 +43,7 @@ import {
   getQuoteStatusLabel,
   getQuotePermissions,
 } from '@/features/finances/quotes/utils/quote-helpers';
-import { useActiveCustomers } from '@/features/customers/hooks/useCustomersQueries';
+import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import {

@@ -90,9 +90,9 @@ export function InvoiceDrawer({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const [showPreview, setShowPreview] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
+  const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('details');
 
   const { data: invoice, isLoading, error, isError } = useInvoiceBasic(id);
   const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id);

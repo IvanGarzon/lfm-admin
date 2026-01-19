@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
@@ -14,8 +15,6 @@ import { InvoiceOverview } from '@/features/finances/invoices/components/invoice
 import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import type { InvoicePagination } from '@/features/finances/invoices/types';
-
-import dynamic from 'next/dynamic';
 
 interface InvoicesViewProps {
   initialData: InvoicePagination;

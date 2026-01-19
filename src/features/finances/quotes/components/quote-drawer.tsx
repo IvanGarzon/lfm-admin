@@ -93,9 +93,9 @@ export function QuoteDrawer({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
-  const [showPreview, setShowPreview] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [activeTab, setActiveTab] = useState('details');
+  const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('details');
 
   const { data: quote, isLoading, error, isError } = useQuote(id);
   const { data: versions, isLoading: isLoadingVersions } = useQuoteVersions(id, {
