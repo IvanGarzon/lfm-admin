@@ -49,23 +49,14 @@ const nextConfig: NextConfig = {
   //     },
   //   ];
   // },
-  // experimental: {
-  // serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
-  // turbo: {
-  //   resolveAlias: {
-  //     '.prisma/client/index-browser': './prisma/generated/client/index-browser.js',
-  //   },
-  // },
-  // instrumentationHook: true,
-  // },
-  // webpack: (config, { isServer }) => {
-  //   if (isServer) {
-  //     config.externals.push('@prisma/client');
-  //   }
-  //   return config;
-  // },
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-neon', 'ws'],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('@prisma/client', '@prisma/adapter-neon');
+    }
+    return config;
+  },
   // Already doing linting and typechecking as separate tasks in CI
-  eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 };
 
