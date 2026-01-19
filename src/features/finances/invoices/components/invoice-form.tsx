@@ -43,10 +43,9 @@ import type {
   InvoiceItemDetail,
   InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
-import { useActiveCustomers } from '@/features/customers/hooks/useCustomersQueries';
+import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
 import { useProducts } from '@/features/products/hooks/useProductsQueries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
-import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
 const defaultFormState: CreateInvoiceInput = {
