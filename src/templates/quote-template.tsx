@@ -2,7 +2,7 @@ import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react
 import { format } from 'date-fns';
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 
 type QuotePreviewProps = {

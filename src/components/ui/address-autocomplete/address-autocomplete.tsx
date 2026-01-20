@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { Delete, Pencil, MapPin } from 'lucide-react';
-import usePlacesAutocompleteService from 'react-google-autocomplete/lib/usePlacesAutocompleteService';
+import { Delete, Pencil } from 'lucide-react';
+import { useGoogleMaps } from '@/hooks/use-google-maps';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import AddressDialog from './address-dialog';
+import { AddressDialog } from './address-dialog';
 import { AddressAutoCompleteInput } from './address-autocomplete-input';
 import { emptyAddress, type AddressInput } from '@/schemas/address';
 
@@ -39,72 +39,64 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [adrAddress, setAdrAddress] = useState('');
 
-  const { placesService } = usePlacesAutocompleteService({
-    apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    debounce: 500,
-    language: 'en',
-    options: {
-      componentRestrictions: { country: 'au' },
-    },
-  });
+  const { isLoaded, getPlaceDetails } = useGoogleMaps();
 
   const handlePlaceSelect = useCallback(
-    (placeId: string) => {
-      if (!placesService) return;
+    async (placeId: string) => {
+      if (!isLoaded) return;
 
       setSelectedPlaceId(placeId);
       setIsLoading(true);
 
-      placesService.getDetails(
-        {
-          placeId,
-          fields: ['address_components', 'formatted_address', 'geometry', 'adr_address'],
-        },
-        (
-          place: {
-            address_components?: Array<{ long_name: string; short_name: string; types: string[] }>;
-            formatted_address?: string;
-            geometry?: { location?: { lat: () => number; lng: () => number } };
-            adr_address?: string;
-          } | null,
-          status: string,
-        ) => {
-          setIsLoading(false);
+      try {
+        const place = await getPlaceDetails(placeId);
 
-          if (status === 'OK' && place) {
-            const addressComponents = place.address_components || [];
+        if (place) {
+          const addressComponents = place.addressComponents || [];
 
-            const getComponent = (
-              type: string,
-              nameType: 'long_name' | 'short_name' = 'long_name',
-            ) => addressComponents.find((c) => c.types.includes(type))?.[nameType] || '';
+          // Helper to get address component by type
+          const getComponent = (
+            type: string,
+            nameType: 'longText' | 'shortText' = 'longText',
+          ): string => {
+            const component = addressComponents.find((c) => c.types.includes(type));
+            return component?.[nameType] || '';
+          };
 
-            const streetNumber = getComponent('street_number');
-            const route = getComponent('route');
-            const subpremise = getComponent('subpremise');
+          const streetNumber = getComponent('street_number');
+          const route = getComponent('route');
+          const subpremise = getComponent('subpremise');
 
-            const mainAddress = `${streetNumber} ${route}`.trim();
-            const fullAddress1 = subpremise ? `${subpremise}/${mainAddress}` : mainAddress;
+          const mainAddress = `${streetNumber} ${route}`.trim();
+          const fullAddress1 = subpremise ? `${subpremise}/${mainAddress}` : mainAddress;
 
-            setAddress({
-              address1: fullAddress1,
-              address2: '',
-              formattedAddress: place.formatted_address || '',
-              city: getComponent('locality') || getComponent('sublocality'),
-              region: getComponent('administrative_area_level_1', 'short_name'),
-              postalCode: getComponent('postal_code'),
-              country: getComponent('country'),
-              lat: place.geometry?.location?.lat() || 0,
-              lng: place.geometry?.location?.lng() || 0,
-            });
+          // Get location coordinates
+          const lat = place.location?.lat() || 0;
+          const lng = place.location?.lng() || 0;
 
-            setAdrAddress(place.adr_address || '');
-            setIsOpen(true);
-          }
-        },
-      );
+          setAddress({
+            address1: fullAddress1,
+            address2: '',
+            formattedAddress: place.formattedAddress || '',
+            city: getComponent('locality') || getComponent('sublocality'),
+            region: getComponent('administrative_area_level_1', 'shortText'),
+            postalCode: getComponent('postal_code'),
+            country: getComponent('country'),
+            lat,
+            lng,
+          });
+
+          // Use adrFormatAddress from new API (may be undefined)
+          setAdrAddress(place.adrFormatAddress || '');
+          setIsOpen(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch place details:', error);
+      } finally {
+        setIsLoading(false);
+      }
     },
-    [placesService, setAddress],
+    [isLoaded, getPlaceDetails, setAddress],
   );
 
   const handleClear = useCallback(() => {

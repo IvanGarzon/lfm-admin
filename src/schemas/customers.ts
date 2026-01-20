@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
-import { CustomerStatusSchema } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
+import { CustomerStatusSchema } from '@/zod/schemas/enums/CustomerStatus.schema';
 import { AddressSchema } from '@/schemas/address';
 
 export const CustomerSchema = z.object({

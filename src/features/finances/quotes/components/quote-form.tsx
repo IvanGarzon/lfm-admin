@@ -7,7 +7,7 @@ import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-
 import { format, addDays, startOfToday } from 'date-fns';
 import dynamic from 'next/dynamic';
 
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';

@@ -1,7 +1,7 @@
 'use client';
 
 import { Product, Prisma } from '@/prisma/client';
-import { ProductStatusType } from '@/zod/inputTypeSchemas/ProductStatusSchema';
+import type { ProductStatus } from '@/zod/schemas/enums/ProductStatus.schema';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { TableHead, TableRow, TableHeader, TableBody, Table } from 'src/components/ui/table';
@@ -12,7 +12,7 @@ import { getProducts, createProduct } from '@/actions/products';
 import { PageContainer } from '@/components/Layout/PageContainer';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { File, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 interface ProductParams {
   search?: string;
@@ -59,7 +59,7 @@ export function ProductsList() {
       price: new Prisma.Decimal(155),
       stock: 100,
       availableAt: new Date('2024-12-10T00:00:00Z'),
-      status: 'ACTIVE' as ProductStatusType,
+      status: 'ACTIVE' as ProductStatus,
     } as Product;
 
     mutation.mutate(product);

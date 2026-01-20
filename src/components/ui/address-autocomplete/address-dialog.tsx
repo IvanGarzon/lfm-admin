@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -22,7 +23,7 @@ interface AddressDialogProps {
   isLoading: boolean;
 }
 
-export default function AddressDialog(props: React.PropsWithChildren<AddressDialogProps>) {
+export function AddressDialog(props: React.PropsWithChildren<AddressDialogProps>) {
   const { children, dialogTitle, open, setOpen, address, setAddress, adrAddress, isLoading } =
     props;
 
@@ -71,6 +72,9 @@ export default function AddressDialog(props: React.PropsWithChildren<AddressDial
       <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>
+            Edit the address details. Required fields are marked with (*).
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (

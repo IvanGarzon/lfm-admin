@@ -56,7 +56,8 @@
     },
     "types": [
       "next",
-      "react"
+      "react",
+      "google.maps"
     ]
   },
   "include": [

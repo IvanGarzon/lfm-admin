@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { InvoiceStatusSchema } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import { InvoiceStatusSchema } from '@/zod/schemas/enums/InvoiceStatus.schema';
 
 export const InvoiceItemSchema = z.object({
   description: z

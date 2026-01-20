@@ -4,10 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Customer } from '@/prisma/client';
 import { SearchParams } from 'nuqs/server';
-import {
-  CustomerStatusSchema,
-  type CustomerStatusType,
-} from '@/zod/inputTypeSchemas/CustomerStatusSchema';
+
 import type { ActionResult } from '@/types/actions';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { handleActionError } from '@/lib/error-handler';

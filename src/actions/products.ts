@@ -2,10 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { Product } from '@/prisma/client';
-import {
-  ProductStatusSchema,
-  type ProductStatusType,
-} from '@/zod/inputTypeSchemas/ProductStatusSchema';
+import { ProductStatusSchema, type ProductStatus } from '@/zod/schemas/enums/ProductStatus.schema';
 import { ActiveProduct } from '@/features/products/types';
 import type { ActionResult } from '@/types/actions';
 
@@ -42,7 +39,7 @@ export async function getActiveProducts(): Promise<ActionResult<ActiveProduct[]>
 }
 
 export async function getProducts(params: {
-  status?: ProductStatusType;
+  status?: ProductStatus;
 }): Promise<ActionResult<Product[]>> {
   try {
     const products = await prisma.product.findMany({

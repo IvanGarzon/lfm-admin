@@ -1,10 +1,16 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
-import usePlacesAutocompleteService from 'react-google-autocomplete/lib/usePlacesAutocompleteService';
+import { useGoogleMaps } from '@/hooks/use-google-maps';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { Command, CommandEmpty, CommandGroup, CommandList } from '@/components/ui/command';
 import { Command as CommandPrimitive } from 'cmdk';
+
+type PlacePrediction = {
+  placeId: string;
+  description: string;
+};
 
 interface AddressAutoCompleteInputProps {
   selectedPlaceId: string;
@@ -30,6 +36,10 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
   } = props;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { isLoaded, getPlacePredictions } = useGoogleMaps();
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
@@ -40,24 +50,47 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
     }
   };
 
-  const { placePredictions, getPlacePredictions, isPlacePredictionsLoading } =
-    usePlacesAutocompleteService({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-      debounce: 500,
-      options: {
-        componentRestrictions: { country: 'au' },
-      },
-    });
+  const fetchPredictions = useCallback(
+    async (input: string) => {
+      if (!input.trim()) {
+        setPredictions([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const results = await getPlacePredictions(input);
+        setPredictions(results);
+      } catch (error) {
+        console.error('Failed to fetch predictions:', error);
+        setPredictions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [getPlacePredictions],
+  );
+
+  const debouncedFetchPredictions = useDebouncedCallback(fetchPredictions, 500);
 
   const handleInputChange = useCallback(
     (value: string) => {
       setSearchInput(value);
-      if (value) {
-        getPlacePredictions({ input: value });
+      if (value && isLoaded) {
+        debouncedFetchPredictions(value);
+      } else {
+        setPredictions([]);
       }
     },
-    [setSearchInput, getPlacePredictions],
+    [setSearchInput, isLoaded, debouncedFetchPredictions],
   );
+
+  // Clear predictions when search input is cleared
+  useEffect(() => {
+    if (!searchInput) {
+      setPredictions([]);
+    }
+  }, [searchInput]);
 
   return (
     <Command shouldFilter={false} onKeyDown={handleKeyDown} className="overflow-visible">
@@ -89,21 +122,21 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
           <CommandList>
             <div className="absolute top-1.5 z-50 w-full">
               <CommandGroup className="relative h-auto z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md bg-background">
-                {isPlacePredictionsLoading ? (
+                {isLoading ? (
                   <div className="h-28 flex items-center justify-center">
                     <Loader2 className="size-6 animate-spin" />
                   </div>
                 ) : (
                   <>
-                    {placePredictions.map((prediction) => (
+                    {predictions.map((prediction) => (
                       <CommandPrimitive.Item
                         value={prediction.description}
                         onSelect={() => {
                           setSearchInput('');
-                          onPlaceSelect(prediction.place_id);
+                          onPlaceSelect(prediction.placeId);
                         }}
                         className="flex select-text flex-col cursor-pointer gap-0.5 h-max p-2 px-3 rounded-md text-sm aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-accent hover:text-accent-foreground items-start"
-                        key={prediction.place_id}
+                        key={prediction.placeId}
                         onMouseDown={(e) => e.preventDefault()}
                       >
                         {prediction.description}
@@ -113,7 +146,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
                 )}
 
                 <CommandEmpty>
-                  {!isPlacePredictionsLoading && placePredictions.length === 0 ? (
+                  {!isLoading && predictions.length === 0 ? (
                     <div className="py-2 flex items-center justify-center">
                       {searchInput === '' ? 'Please enter an address' : 'No address found'}
                     </div>

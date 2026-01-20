@@ -27,8 +27,10 @@ import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { OrganizationSelect } from '@/components/shared/organization-select';
 import { useOrganizations } from '@/features/organizations/hooks/use-organization-queries';
 import type { CustomerListItem, CustomerFormInput } from '@/features/customers/types';
-import { CustomerStatusSchema } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
-import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
+
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
+import { CustomerStatusSchema } from '@/zod/schemas/enums/CustomerStatus.schema';
+
 import { emptyAddress, type AddressInput } from '@/schemas/address';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({

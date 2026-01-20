@@ -1,5 +1,5 @@
-import type { CustomerStatusType } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
-import type { GenderType } from '@/zod/inputTypeSchemas/GenderSchema';
+import type { CustomerStatus } from '@/zod/schemas/enums/CustomerStatus.schema';
+import type { Gender } from '@/zod/schemas/enums/Gender.schema';
 import type { PaginationMeta } from '@/types/pagination';
 import type { AddressInput } from '@/schemas/address';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
@@ -12,8 +12,8 @@ export type CustomerListItem = {
   lastName: string;
   email: string;
   phone: string | null;
-  gender: GenderType;
-  status: CustomerStatusType;
+  gender: Gender;
+  status: CustomerStatus;
   organizationId: string | null;
   organizationName: string | null;
   address: AddressInput | null;
@@ -30,7 +30,7 @@ export type CustomerPagination = {
 
 export interface CustomerFilters {
   search?: string;
-  status?: CustomerStatusType[];
+  status?: CustomerStatus[];
   page: number;
   perPage: number;
   sort?: {

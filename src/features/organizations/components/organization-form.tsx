@@ -5,7 +5,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { CreateOrganizationSchema, type CreateOrganizationInput } from '@/schemas/organizations';
-import { StatesSchema } from '@/zod/inputTypeSchemas/StatesSchema';
+import { StatesSchema } from '@/zod/schemas/enums/States.schema';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
