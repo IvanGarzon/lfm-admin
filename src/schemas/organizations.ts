@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { StatesSchema } from '@/zod/inputTypeSchemas/StatesSchema';
+import { StatesSchema } from '@/zod/schemas/enums/States.schema';
 
 export const OrganizationSchema = z.object({
   name: z.string().trim().min(2, {

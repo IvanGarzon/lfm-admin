@@ -4,10 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { Customer } from '@/prisma/client';
 import { SearchParams } from 'nuqs/server';
-import {
-  CustomerStatusSchema,
-  type CustomerStatusType,
-} from '@/zod/inputTypeSchemas/CustomerStatusSchema';
+
 import type { ActionResult } from '@/types/actions';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { handleActionError } from '@/lib/error-handler';
@@ -63,21 +60,5 @@ export async function getCustomerById(id: string): Promise<ActionResult<any>> {
     return { success: true, data: customer };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch customer');
-  }
-}
-
-export async function getOrganizations(): Promise<
-  ActionResult<Array<{ id: string; name: string }>>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const organizations = await customerRepo.findAllOrganizations();
-    return { success: true, data: organizations };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch organizations');
   }
 }

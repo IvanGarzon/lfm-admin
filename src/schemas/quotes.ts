@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
 
 export const QuoteItemSchema = z.object({

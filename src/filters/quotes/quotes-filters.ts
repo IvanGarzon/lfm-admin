@@ -1,4 +1,4 @@
-import { QuoteStatusSchema, type QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_QUOTE_COLUMNS } from '@/features/finances/quotes/constants/sortable-columns';
 
@@ -28,9 +28,7 @@ export const searchParams = {
   search: parseAsString.withDefault(''),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
-  status: parseAsArrayOf(parseAsStringEnum<QuoteStatusType>(QuoteStatusSchema.options)).withDefault(
-    [],
-  ),
+  status: parseAsArrayOf(parseAsStringEnum<QuoteStatus>(QuoteStatusSchema.options)).withDefault([]),
   sort: getSortingStateParser(sortableColumnIds).withDefault([]),
 };
 

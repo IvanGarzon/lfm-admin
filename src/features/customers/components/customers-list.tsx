@@ -15,11 +15,6 @@ import type { CustomerPagination } from '@/features/customers/types';
 
 const DEFAULT_PAGE_SIZE = 20;
 
-interface CustomerViewProps {
-  initialData: CustomerPagination;
-  searchParams: SearchParams;
-}
-
 const CustomerDrawer = dynamic(
   () => import('@/features/customers/components/customer-drawer').then((mod) => mod.CustomerDrawer),
   {
@@ -31,7 +26,10 @@ const CustomerDrawer = dynamic(
 export function CustomersList({
   initialData,
   searchParams: serverSearchParams,
-}: CustomerViewProps) {
+}: {
+  initialData: CustomerPagination;
+  searchParams: SearchParams;
+}) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const deleteCustomer = useDeleteCustomer();
 

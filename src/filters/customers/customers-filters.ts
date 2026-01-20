@@ -1,7 +1,7 @@
 import {
   CustomerStatusSchema,
-  type CustomerStatusType,
-} from '@/zod/inputTypeSchemas/CustomerStatusSchema';
+  type CustomerStatus,
+} from '@/zod/schemas/enums/CustomerStatus.schema';
 
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_CUSTOMER_COLUMNS } from '@/features/customers/constants/sortable-columns';
@@ -33,7 +33,7 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   status: parseAsArrayOf(
-    parseAsStringEnum<CustomerStatusType>(CustomerStatusSchema.options),
+    parseAsStringEnum<CustomerStatus>(CustomerStatusSchema.options),
   ).withDefault([]),
   sort: getSortingStateParser(sortableColumnIds).withDefault([]),
 };

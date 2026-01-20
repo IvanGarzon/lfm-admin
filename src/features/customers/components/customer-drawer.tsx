@@ -52,6 +52,7 @@ export function CustomerDrawer({
     (openState: boolean) => {
       if (!openState) {
         if (id) {
+          // Navigate back to list preserving filters
           const basePath = '/customers';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
@@ -68,11 +69,10 @@ export function CustomerDrawer({
       createCustomer.mutate(data, {
         onSuccess: () => {
           onClose?.();
-          // router.refresh();
         },
       });
     },
-    [createCustomer, onClose, router],
+    [createCustomer, onClose],
   );
 
   const handleUpdate = useCallback(
@@ -80,11 +80,11 @@ export function CustomerDrawer({
       updateCustomer.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-          // router.refresh();
+          onClose?.();
         },
       });
     },
-    [updateCustomer, router],
+    [updateCustomer, onClose],
   );
 
   const getDrawerHeader = () => {

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getCustomerById, getActiveCustomers, getOrganizations } from '@/actions/customers/queries';
+import { getCustomerById, getActiveCustomers } from '@/actions/customers/queries';
 import { updateCustomer, deleteCustomer, createCustomer } from '@/actions/customers/mutations';
 import type {
   UpdateCustomerInput,
@@ -17,7 +17,6 @@ export const CUSTOMER_KEYS = {
   list: (filters: string) => [...CUSTOMER_KEYS.lists(), { filters }] as const,
   details: () => [...CUSTOMER_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...CUSTOMER_KEYS.details(), id] as const,
-  organizations: () => ['organizations'] as const,
 };
 
 export function useActiveCustomers() {
@@ -29,18 +28,6 @@ export function useActiveCustomers() {
       return result.data;
     },
     staleTime: 30 * 1000,
-  });
-}
-
-export function useOrganizations() {
-  return useQuery({
-    queryKey: CUSTOMER_KEYS.organizations(),
-    queryFn: async () => {
-      const result = await getOrganizations();
-      if (!result.success) throw new Error(result.error);
-      return result.data;
-    },
-    staleTime: 60 * 1000,
   });
 }
 
@@ -96,7 +83,7 @@ export function useCreateCustomer() {
       // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: CUSTOMER_KEYS.lists() });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidate lists and statistics
       queryClient.invalidateQueries({ queryKey: CUSTOMER_KEYS.lists() });
       toast.success(`Customer created successfully`);

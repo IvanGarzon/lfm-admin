@@ -14,12 +14,13 @@ import Link from 'next/link';
 import { useCustomerQueryString } from '@/features/customers/hooks/use-customer-query-string';
 import { customerSearchParamsDefaults, searchParams } from '@/filters/customers/customers-filters';
 
-interface CustomerActionsProps {
+export function CustomerActions({
+  customer,
+  onDelete,
+}: {
   customer: CustomerListItem;
   onDelete: (id: string, name: string) => void;
-}
-
-export function CustomerActions({ customer, onDelete }: CustomerActionsProps) {
+}) {
   const queryString = useCustomerQueryString(searchParams, customerSearchParamsDefaults);
   const basePath = `/customers/${customer.id}`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;

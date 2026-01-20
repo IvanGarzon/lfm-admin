@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { bulkUpdateQuoteStatus, bulkDeleteQuotes } from '@/actions/quotes/mutations';
-import { QuoteStatusSchema } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 
 const { mockQuoteRepo, mockRequirePermission, mockAuth } = vi.hoisted(() => {
   return {

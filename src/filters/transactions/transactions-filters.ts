@@ -1,11 +1,11 @@
 import {
   TransactionStatusSchema,
-  type TransactionStatusType,
-} from '@/zod/inputTypeSchemas/TransactionStatusSchema';
+  type TransactionStatus,
+} from '@/zod/schemas/enums/TransactionStatus.schema';
 import {
   TransactionTypeSchema,
-  type TransactionTypeType,
-} from '@/zod/inputTypeSchemas/TransactionTypeSchema';
+  type TransactionType,
+} from '@/zod/schemas/enums/TransactionType.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_TRANSACTION_COLUMNS } from '@/features/finances/transactions/constants/sortable-columns';
 
@@ -36,10 +36,10 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   type: parseAsArrayOf(
-    parseAsStringEnum<TransactionTypeType>(TransactionTypeSchema.options),
+    parseAsStringEnum<TransactionType>(TransactionTypeSchema.options),
   ).withDefault([]),
   status: parseAsArrayOf(
-    parseAsStringEnum<TransactionStatusType>(TransactionStatusSchema.options),
+    parseAsStringEnum<TransactionStatus>(TransactionStatusSchema.options),
   ).withDefault([]),
   sort: getSortingStateParser(sortableColumnIds).withDefault([]),
 };

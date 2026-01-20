@@ -17,11 +17,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CreateOrganizationDialog } from '@/features/organizations/components/create-organization-dialog';
 
-interface Organization {
+export interface Organization {
   id: string;
   name: string;
+  address?: string | null;
   city?: string | null;
   state?: string | null;
+  postcode?: string | null;
+  country?: string | null;
 }
 
 interface OrganizationSelectProps {

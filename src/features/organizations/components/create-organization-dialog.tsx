@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Box } from '@/components/ui/box';
 import { type CreateOrganizationInput } from '@/schemas/organizations';
 import { useCreateOrganization } from '@/features/organizations/hooks/use-organization-queries';
 import { OrganizationForm } from './organization-form';
@@ -39,16 +37,14 @@ export function CreateOrganizationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-w-[95vw] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Add New Organization</DialogTitle>
           <DialogDescription>
             Create a new organization. Required fields are marked with (*).
           </DialogDescription>
         </DialogHeader>
-        <Box className="max-h-[80vh] overflow-y-auto">
-          <OrganizationForm onCreate={handleCreate} isCreating={createOrganization.isPending} />
-        </Box>
+        <OrganizationForm onCreate={handleCreate} isCreating={createOrganization.isPending} />
       </DialogContent>
     </Dialog>
   );

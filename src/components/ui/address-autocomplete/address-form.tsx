@@ -20,10 +20,10 @@ export function AddressForm({ address, onSubmit, onCancel }: AddressFormProps) {
     resolver: zodResolver(AddressDialogSchema),
     defaultValues: {
       address1: address.address1,
-      address2: address.address2 || '',
-      city: address.city,
-      region: address.region,
-      postalCode: address.postalCode,
+      address2: address.address2 ?? '',
+      city: address.city ?? '',
+      region: address.region ?? '',
+      postalCode: address.postalCode ?? '',
     },
   });
 
@@ -127,7 +127,7 @@ export function AddressForm({ address, onSubmit, onCancel }: AddressFormProps) {
               <FieldContent>
                 <FieldLabel htmlFor="country">Country</FieldLabel>
               </FieldContent>
-              <Input value={address?.country} id="country" disabled placeholder="Country" />
+              <Input value={address?.country ?? ''} id="country" disabled placeholder="Country" />
             </Field>
           </FieldGroup>
         </Box>

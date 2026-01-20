@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { TransactionStatusSchema } from '@/zod/inputTypeSchemas/TransactionStatusSchema';
-import { TransactionTypeSchema } from '@/zod/inputTypeSchemas/TransactionTypeSchema';
+import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
+import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
 
 export const TransactionSchema = z.object({
   type: TransactionTypeSchema,

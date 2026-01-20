@@ -6,7 +6,17 @@ import type { ActionResult } from '@/types/actions';
 import { handleActionError } from '@/lib/error-handler';
 
 export async function getOrganizations(): Promise<
-  ActionResult<Array<{ id: string; name: string; city: string | null; state: string | null }>>
+  ActionResult<
+    Array<{
+      id: string;
+      name: string;
+      address: string | null;
+      city: string | null;
+      state: string | null;
+      postcode: string | null;
+      country: string | null;
+    }>
+  >
 > {
   const session = await auth();
   if (!session?.user) {
@@ -18,8 +28,11 @@ export async function getOrganizations(): Promise<
       select: {
         id: true,
         name: true,
+        address: true,
         city: true,
         state: true,
+        postcode: true,
+        country: true,
       },
       orderBy: {
         name: 'asc',

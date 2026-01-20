@@ -1,7 +1,4 @@
-import {
-  InvoiceStatusSchema,
-  type InvoiceStatusType,
-} from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_INVOICE_COLUMNS } from '@/features/finances/invoices/constants/sortable-columns';
 
@@ -31,9 +28,9 @@ export const searchParams = {
   search: parseAsString.withDefault(''),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
-  status: parseAsArrayOf(
-    parseAsStringEnum<InvoiceStatusType>(InvoiceStatusSchema.options),
-  ).withDefault([]),
+  status: parseAsArrayOf(parseAsStringEnum<InvoiceStatus>(InvoiceStatusSchema.options)).withDefault(
+    [],
+  ),
   sort: getSortingStateParser(sortableColumnIds).withDefault([]),
 };
 

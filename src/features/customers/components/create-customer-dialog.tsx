@@ -14,13 +14,15 @@ import type { CreateCustomerInput } from '@/schemas/customers';
 import { useCreateCustomer } from '@/features/customers/hooks/use-customer-queries';
 import { CustomerForm } from './customer-form';
 
-interface CreateCustomerDialogProps {
+export function CreateCustomerDialog({
+  open,
+  onOpenChange,
+  onCreate,
+}: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate?: (customerId: string) => void;
-}
-
-export function CreateCustomerDialog({ open, onOpenChange, onCreate }: CreateCustomerDialogProps) {
+}) {
   const createCustomer = useCreateCustomer();
 
   const handleCreate = useCallback(

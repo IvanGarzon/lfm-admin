@@ -1,12 +1,12 @@
 import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
-import type { InvoiceStatusType } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import type { InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 
 export type InvoiceFormInput = CreateInvoiceInput | UpdateInvoiceInput;
 
 export type InvoiceStatusHistoryItem = {
   id: string;
-  status: InvoiceStatusType;
-  previousStatus: InvoiceStatusType | null;
+  status: InvoiceStatus;
+  previousStatus: InvoiceStatus | null;
   updatedAt: Date;
   user: {
     id: string;
@@ -23,7 +23,7 @@ export type InvoiceListItem = {
   customerId: string;
   customerName: string;
   customerEmail: string;
-  status: InvoiceStatusType;
+  status: InvoiceStatus;
   amount: number;
   currency: string;
   issuedDate: Date;
@@ -63,7 +63,7 @@ export type InvoiceBasic = Omit<InvoiceWithDetails, 'payments' | 'statusHistory'
 export type InvoiceWithDetails = {
   id: string;
   invoiceNumber: string;
-  status: InvoiceStatusType;
+  status: InvoiceStatus;
   amount: number;
   gst: number;
   discount: number;
@@ -100,7 +100,7 @@ export type InvoiceWithDetails = {
 
 export interface InvoiceFilters {
   search?: string;
-  status?: InvoiceStatusType[];
+  status?: InvoiceStatus[];
   page: number;
   perPage: number;
   sort?: {

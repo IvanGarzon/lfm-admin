@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { Controller, useForm, type Resolver, SubmitHandler } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,13 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AddressAutoComplete } from '@/components/ui/address-autocomplete/address-autocomplete';
+import { AddressInlineFields } from '@/components/ui/address-autocomplete/address-inline-fields';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { OrganizationSelect } from '@/components/shared/organization-select';
 import { useOrganizations } from '@/features/organizations/hooks/use-organization-queries';
 import type { CustomerListItem, CustomerFormInput } from '@/features/customers/types';
-import { CustomerStatusSchema } from '@/zod/inputTypeSchemas/CustomerStatusSchema';
-import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
+import { AddressSourceSelector } from './address-source-selector';
+
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
+import { CustomerStatusSchema } from '@/zod/schemas/enums/CustomerStatus.schema';
+
 import { emptyAddress, type AddressInput } from '@/schemas/address';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({
@@ -41,6 +44,33 @@ const StatusOptions = CustomerStatusSchema.options.map((status) => ({
   label: status.charAt(0) + status.slice(1).toLowerCase(),
 }));
 
+const defaultFormState: CreateCustomerInput = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: null,
+  gender: GenderSchema.enum.MALE,
+  status: CustomerStatusSchema.enum.ACTIVE,
+  organizationId: '',
+  useOrganizationAddress: false,
+  address: null,
+};
+
+const mapCustomerToFormValues = (customer: CustomerListItem): UpdateCustomerInput => {
+  return {
+    id: customer.id,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    email: customer.email,
+    phone: customer.phone ?? null,
+    gender: customer.gender,
+    status: customer.status,
+    organizationId: customer.organizationId ?? '',
+    useOrganizationAddress: customer.useOrganizationAddress ?? false,
+    address: customer.address ?? null,
+  };
+};
+
 export function CustomerForm({
   customer,
   onCreate,
@@ -48,6 +78,7 @@ export function CustomerForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
+  onClose,
 }: {
   customer?: CustomerListItem;
   onCreate?: (data: CreateCustomerInput) => void;
@@ -55,8 +86,16 @@ export function CustomerForm({
   isCreating?: boolean;
   isUpdating?: boolean;
   onDirtyStateChange?: (isDirty: boolean) => void;
+  onClose?: () => void;
 }) {
   const mode = customer ? 'update' : 'create';
+
+  const defaultValues: CustomerFormInput =
+    mode === 'create'
+      ? defaultFormState
+      : customer
+        ? mapCustomerToFormValues(customer)
+        : defaultFormState;
 
   const createResolver: Resolver<CustomerFormInput> = (values, context, options) => {
     const schema = mode === 'create' ? CreateCustomerSchema : UpdateCustomerSchema;
@@ -64,52 +103,27 @@ export function CustomerForm({
   };
 
   const form = useForm<CustomerFormInput>({
+    mode: 'onChange',
     resolver: createResolver,
-    defaultValues: customer
-      ? {
-          id: customer.id,
-          firstName: customer.firstName,
-          lastName: customer.lastName,
-          email: customer.email,
-          phone: customer.phone ?? null,
-          gender: customer.gender,
-          status: customer.status,
-          organizationId: customer.organizationId ?? '',
-          address: customer.address ?? null,
-        }
-      : {
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: null,
-          gender: GenderSchema.enum.MALE,
-          status: CustomerStatusSchema.enum.ACTIVE,
-          organizationId: '',
-          address: null,
-        },
+    defaultValues,
   });
 
   const { isDirty } = form.formState;
 
-  // Address autocomplete state
-  const [address, setAddress] = useState<AddressInput>(customer?.address ?? emptyAddress);
-  const [addressSearchInput, setAddressSearchInput] = useState('');
+  // Watch address from form
+  const watchedAddress = form.watch('address');
 
-  // Sync address state with form
-  useEffect(() => {
-    const currentFormAddress = form.getValues('address');
-    const targetAddress = address.formattedAddress ? address : null;
+  // Address autocomplete search input state
+  const [addressSearchInput, setAddressSearchInput] = useState<string>('');
 
-    // Skip if both are essentially 'null' or empty to avoid marking dirty on mount
-    if (!currentFormAddress && !targetAddress) return;
-
-    const hasAddressActualChanged =
-      JSON.stringify(currentFormAddress) !== JSON.stringify(targetAddress);
-
-    if (hasAddressActualChanged) {
+  // Handler to update address in form
+  const handleAddressChange = useCallback(
+    (newAddress: AddressInput) => {
+      const targetAddress = newAddress.formattedAddress ? newAddress : null;
       form.setValue('address', targetAddress, { shouldDirty: true });
-    }
-  }, [address, form]);
+    },
+    [form],
+  );
 
   useEffect(() => {
     if (onDirtyStateChange) {
@@ -122,11 +136,42 @@ export function CustomerForm({
 
   const { data: organizations = [], isLoading: isLoadingOrganizations } = useOrganizations();
 
+  // Watch organization-related fields
+  const watchedOrgId = form.watch('organizationId');
+  const watchedUseOrgAddress = form.watch('useOrganizationAddress');
+
+  // Find selected organization with full details
+  const selectedOrganization = useMemo(
+    () => organizations.find((org) => org.id === watchedOrgId) ?? null,
+    [organizations, watchedOrgId],
+  );
+
+  // Handle address source change
+  const handleAddressSourceChange = useCallback(
+    (useOrgAddress: boolean) => {
+      form.setValue('useOrganizationAddress', useOrgAddress, { shouldDirty: true });
+
+      if (useOrgAddress) {
+        // Clear customer address when using org address
+        form.setValue('address', null, { shouldDirty: true });
+        setAddressSearchInput('');
+      }
+    },
+    [form],
+  );
+
+  // Handler for organization change - resets useOrganizationAddress
+  const handleOrganizationChange = useCallback(
+    (organizationId: string) => {
+      form.setValue('organizationId', organizationId, { shouldDirty: true });
+      form.setValue('useOrganizationAddress', false, { shouldDirty: true });
+    },
+    [form],
+  );
+
   const onSubmit: SubmitHandler<CustomerFormInput> = useCallback(
     (data: CustomerFormInput) => {
       if (mode === 'create') {
-        console.log('Creating customer...');
-        console.log(data);
         onCreate?.(data);
       } else {
         const updateData: UpdateCustomerInput = {
@@ -311,7 +356,7 @@ export function CustomerForm({
                     <OrganizationSelect
                       organizations={organizations}
                       value={field.value ?? undefined}
-                      onValueChange={field.onChange}
+                      onValueChange={handleOrganizationChange}
                       isLoading={isLoadingOrganizations}
                       label="Organization (Optional)"
                       placeholder="Select or create an organization"
@@ -323,28 +368,69 @@ export function CustomerForm({
               />
             </FieldGroup>
 
-            <FieldGroup>
-              <Field>
-                <FieldContent>
-                  <FieldLabel>Address (Optional)</FieldLabel>
-                </FieldContent>
-                <AddressAutoComplete
-                  address={address}
-                  setAddress={setAddress}
-                  searchInput={addressSearchInput}
-                  setSearchInput={setAddressSearchInput}
-                  dialogTitle="Edit Address"
-                  placeholder="Search for an address"
+            {/* Address Source Selector - only show when organization is selected */}
+            {watchedOrgId ? (
+              <FieldGroup>
+                <AddressSourceSelector
+                  organization={selectedOrganization}
+                  useOrganizationAddress={watchedUseOrgAddress ?? false}
+                  onValueChange={handleAddressSourceChange}
                 />
-              </Field>
-            </FieldGroup>
-          </Box>
+              </FieldGroup>
+            ) : null}
 
-          <Box className="flex justify-end gap-2 pt-4 border-t sticky bottom-0 bg-background pb-2">
-            <Button type="submit" disabled={isCreating || isUpdating || (customer && !isDirty)}>
-              {customer ? 'Update Customer' : 'Create Customer'}
-            </Button>
+            {/* Custom Address Input - show only when NOT using org address */}
+            {!watchedOrgId || !watchedUseOrgAddress ? (
+              <Box className="space-y-2">
+                <FieldLabel>Address {watchedOrgId ? '(Optional)' : '(Required)'}</FieldLabel>
+                <Controller
+                  name="address"
+                  control={form.control}
+                  render={({ fieldState }) => (
+                    <>
+                      <AddressInlineFields
+                        address={watchedAddress ?? emptyAddress}
+                        setAddress={handleAddressChange}
+                        searchInput={addressSearchInput}
+                        setSearchInput={setAddressSearchInput}
+                        placeholder="Search for an address"
+                        disabled={isCreating || isUpdating}
+                      />
+                      {fieldState.invalid && !watchedAddress?.formattedAddress && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </>
+                  )}
+                />
+              </Box>
+            ) : null}
           </Box>
+        </Box>
+
+        {/* Action Buttons */}
+        <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
+          {onClose ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isCreating || isUpdating}
+            >
+              Cancel
+            </Button>
+          ) : null}
+          <Button type="submit" disabled={isCreating || isUpdating || (customer && !isDirty)}>
+            {isCreating || isUpdating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {customer ? 'Updating...' : 'Creating...'}
+              </>
+            ) : customer ? (
+              'Update Customer'
+            ) : (
+              'Create Customer'
+            )}
+          </Button>
         </Box>
       </form>
     </Form>
