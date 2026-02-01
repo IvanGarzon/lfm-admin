@@ -20,6 +20,13 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
+    title: 'Organizations',
+    href: '/organizations',
+    icon: 'building',
+    shortcut: ['o', 'o'],
+    authorizeOnly: ['*'],
+  },
+  {
     title: 'Employees',
     href: '/employees',
     icon: 'users',

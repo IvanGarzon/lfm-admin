@@ -33,6 +33,7 @@ import {
   KeyRound,
   X,
   ArrowLeftRight,
+  Building2,
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -89,4 +90,5 @@ export const Icons = {
   keyRound: KeyRound,
   fileText: FileText,
   arrowLeftRight: ArrowLeftRight,
+  building: Building2,
 };

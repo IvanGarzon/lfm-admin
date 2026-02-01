@@ -25,6 +25,24 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
     >;
   }
 
+  private mapToAddress(customer: any): AddressInput | null {
+    if (!customer.address1) {
+      return null;
+    }
+
+    return {
+      address1: customer.address1,
+      address2: customer.address2 ?? '',
+      city: customer.city ?? '',
+      region: customer.region ?? '',
+      postalCode: customer.postalCode ?? '',
+      country: customer.country ?? 'Australia',
+      lat: Number(customer.lat) ?? 0,
+      lng: Number(customer.lng) ?? 0,
+      formattedAddress: customer.formattedAddress ?? '',
+    };
+  }
+
   /**
    * Search and paginate customers with filters
    * Follows the same pattern as employeeRepository.searchAndPaginate
@@ -182,24 +200,6 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       invoicesCount: customer._count.invoices ?? 0,
       quotesCount: customer._count.quotes ?? 0,
       address: this.mapToAddress(customer),
-    };
-  }
-
-  private mapToAddress(customer: any): AddressInput | null {
-    if (!customer.address1) {
-      return null;
-    }
-
-    return {
-      address1: customer.address1,
-      address2: customer.address2 ?? '',
-      city: customer.city ?? '',
-      region: customer.region ?? '',
-      postalCode: customer.postalCode ?? '',
-      country: customer.country ?? 'Australia',
-      lat: Number(customer.lat) ?? 0,
-      lng: Number(customer.lng) ?? 0,
-      formattedAddress: customer.formattedAddress ?? '',
     };
   }
 

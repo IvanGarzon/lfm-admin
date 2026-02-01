@@ -11,26 +11,22 @@ import { type CreateOrganizationInput } from '@/schemas/organizations';
 import { useCreateOrganization } from '@/features/organizations/hooks/use-organization-queries';
 import { OrganizationForm } from './organization-form';
 
-interface CreateOrganizationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: (organizationId: string, organizationName: string) => void;
-}
-
 export function CreateOrganizationDialog({
   open,
   onOpenChange,
   onSuccess,
-}: CreateOrganizationDialogProps) {
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: (organizationId: string, organizationName: string) => void;
+}) {
   const createOrganization = useCreateOrganization();
 
   const handleCreate = (data: CreateOrganizationInput) => {
     createOrganization.mutate(data, {
       onSuccess: (result) => {
-        if (result.success) {
-          onOpenChange(false);
-          onSuccess?.(result.data.id, result.data.name);
-        }
+        onOpenChange(false);
+        onSuccess?.(result.id, result.name);
       },
     });
   };
