@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { CustomerRepository } from '@/repositories/customer-repository';
+import { OrganizationRepository } from '@/repositories/organization-repository';
 import { handleActionError } from '@/lib/error-handler';
 import {
   CreateCustomerSchema,
@@ -16,6 +17,7 @@ import {
 import type { ActionResult } from '@/types/actions';
 
 const customerRepo = new CustomerRepository(prisma);
+const organizationRepo = new OrganizationRepository(prisma);
 
 /**
  * Creates a new customer
@@ -41,7 +43,17 @@ export async function createCustomer(
       };
     }
 
-    const customer = await customerRepo.createWithOrganization(validatedData);
+    // Handle organization creation if organizationName is provided
+    let finalOrganizationId = validatedData.organizationId || null;
+    if (validatedData.organizationName && !validatedData.organizationId) {
+      const organization = await organizationRepo.findOrCreate(validatedData.organizationName);
+      finalOrganizationId = organization.id;
+    }
+
+    const customer = await customerRepo.createCustomer({
+      ...validatedData,
+      organizationId: finalOrganizationId,
+    });
 
     revalidatePath('/customers');
 
@@ -70,9 +82,19 @@ export async function updateCustomer(
       return { success: false, error: 'Customer not found' };
     }
 
-    const customer = await customerRepo.updateWithOrganization(
+    // Handle organization creation if organizationName is provided
+    let finalOrganizationId = validatedData.organizationId || null;
+    if (validatedData.organizationName && !validatedData.organizationId) {
+      const organization = await organizationRepo.findOrCreate(validatedData.organizationName);
+      finalOrganizationId = organization.id;
+    }
+
+    const customer = await customerRepo.updateCustomer(
       validatedData.id,
-      validatedData,
+      {
+        ...validatedData,
+        organizationId: finalOrganizationId,
+      },
       session.user.id,
     );
 

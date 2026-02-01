@@ -36,8 +36,10 @@ export function TransactionDrawer({
   onClose?: () => void;
 }) {
   const { data: transaction, isLoading, error, isError } = useTransaction(id);
-  const createMutation = useCreateTransaction();
-  const updateMutation = useUpdateTransaction();
+
+  const createTransaction = useCreateTransaction();
+  const updateTransaction = useUpdateTransaction();
+
   const router = useRouter();
   const pathname = usePathname();
   const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
@@ -63,24 +65,24 @@ export function TransactionDrawer({
 
   const handleCreate = useCallback(
     (data: CreateTransactionInput) => {
-      createMutation.mutate(data, {
+      createTransaction.mutate(data, {
         onSuccess: () => {
           onClose?.();
         },
       });
     },
-    [createMutation, onClose],
+    [createTransaction, onClose],
   );
 
   const handleUpdate = useCallback(
     (data: UpdateTransactionInput) => {
-      updateMutation.mutate(data, {
+      updateTransaction.mutate(data, {
         onSuccess: () => {
           onClose?.();
         },
       });
     },
-    [updateMutation, onClose],
+    [updateTransaction, onClose],
   );
 
   return (
@@ -130,8 +132,8 @@ export function TransactionDrawer({
                   transaction={transaction ?? null}
                   onCreate={handleCreate}
                   onUpdate={handleUpdate}
-                  isCreating={createMutation.isPending}
-                  isUpdating={updateMutation.isPending}
+                  isCreating={createTransaction.isPending}
+                  isUpdating={updateTransaction.isPending}
                   onClose={onClose}
                 />
               )}

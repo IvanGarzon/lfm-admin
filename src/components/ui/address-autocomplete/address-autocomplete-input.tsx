@@ -98,7 +98,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
         {showMapIcon ? (
           <MapPin
             style={{ left: '6px' }}
-            className={`absolute top-1 -translate-y-1 h-4 w-4 shrink-0 text-muted-foreground ${
+            className={`absolute top-3.5 -translate-y-1 h-4 w-4 shrink-0 text-muted-foreground ${
               mapIconClass || ''
             }`}
           />
@@ -117,11 +117,11 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
         <div className="pt-1 text-sm text-red-500">Select a valid address from the list</div>
       )}
 
-      {isOpen ? (
+      {isOpen && (isLoading || predictions.length > 0 || searchInput !== '') ? (
         <div className="relative animate-in fade-in-0 zoom-in-95 h-auto">
           <CommandList>
-            <div className="absolute top-1.5 z-50 w-full">
-              <CommandGroup className="relative h-auto z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md bg-background">
+            <div className="absolute top-1.5 z-[9999] w-full">
+              <CommandGroup className="relative h-auto z-[9999] min-w-[8rem] overflow-hidden rounded-md border shadow-md bg-background">
                 {isLoading ? (
                   <div className="h-28 flex items-center justify-center">
                     <Loader2 className="size-6 animate-spin" />
@@ -146,10 +146,8 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
                 )}
 
                 <CommandEmpty>
-                  {!isLoading && predictions.length === 0 ? (
-                    <div className="py-2 flex items-center justify-center">
-                      {searchInput === '' ? 'Please enter an address' : 'No address found'}
-                    </div>
+                  {!isLoading && predictions.length === 0 && searchInput !== '' ? (
+                    <div className="py-2 flex items-center justify-center">No address found</div>
                   ) : null}
                 </CommandEmpty>
               </CommandGroup>

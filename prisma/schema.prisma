@@ -103,7 +103,8 @@ model Customer {
   country          String?        @default("Australia")
   lat              Float?
   lng              Float?
-  formattedAddress String?        @map("formatted_address")
+  formattedAddress       String?  @map("formatted_address")
+  useOrganizationAddress Boolean  @default(false) @map("use_organization_address")
 
   invoices   Invoice[]
   quotes     Quote[]

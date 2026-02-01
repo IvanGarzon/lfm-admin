@@ -62,19 +62,3 @@ export async function getCustomerById(id: string): Promise<ActionResult<any>> {
     return handleActionError(error, 'Failed to fetch customer');
   }
 }
-
-export async function getOrganizations(): Promise<
-  ActionResult<Array<{ id: string; name: string }>>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const organizations = await customerRepo.findAllOrganizations();
-    return { success: true, data: organizations };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch organizations');
-  }
-}

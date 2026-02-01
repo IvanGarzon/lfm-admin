@@ -107,6 +107,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       status: customer.status,
       organizationId: customer?.organization?.id ?? null,
       organizationName: customer?.organization?.name ?? null,
+      useOrganizationAddress: customer.useOrganizationAddress,
       createdAt: customer.createdAt,
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
@@ -136,6 +137,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         status: true,
         createdAt: true,
         deletedAt: true,
+        useOrganizationAddress: true,
         organization: {
           select: {
             id: true,
@@ -174,6 +176,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       status: customer.status,
       organizationId: customer?.organization?.id ?? null,
       organizationName: customer?.organization?.name ?? null,
+      useOrganizationAddress: customer.useOrganizationAddress,
       createdAt: customer.createdAt,
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
@@ -237,107 +240,82 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Get all organizations for selection lists
+   * Create customer
    */
-  async findAllOrganizations() {
-    return this.prisma.organization.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      orderBy: {
-        name: 'asc',
+  async createCustomer(data: CreateCustomerInput) {
+    const { organizationId, useOrganizationAddress, ...customerData } = data;
+
+    // If using organization address, don't store customer address
+    const addressData = useOrganizationAddress ? {} : customerData.address || {};
+
+    return this.prisma.customer.create({
+      data: {
+        firstName: customerData.firstName,
+        lastName: customerData.lastName,
+        email: customerData.email,
+        phone: customerData.phone,
+        gender: customerData.gender,
+        organizationId: organizationId || null,
+        useOrganizationAddress: useOrganizationAddress ?? false,
+        status: 'ACTIVE',
+        ...addressData,
       },
     });
   }
 
   /**
-   * Create customer with optional organization creation
+   * Update customer
    */
-  async createWithOrganization(data: CreateCustomerInput) {
-    const { organizationName, organizationId, ...customerData } = data;
-
-    let finalOrganizationId = organizationId || null;
-
-    return this.prisma.$transaction(async (tx) => {
-      if (organizationName && !organizationId) {
-        const organization = await tx.organization.create({
-          data: {
-            name: organizationName,
-          },
-        });
-        finalOrganizationId = organization.id;
-      }
-
-      return tx.customer.create({
-        data: {
-          firstName: customerData.firstName,
-          lastName: customerData.lastName,
-          email: customerData.email,
-          phone: customerData.phone,
-          gender: customerData.gender,
-          organizationId: finalOrganizationId,
-          status: 'ACTIVE',
-          ...(customerData.address || {}),
-        },
-      });
-    });
-  }
-
-  /**
-   * Update customer with optional organization creation
-   */
-  async updateWithOrganization(
+  async updateCustomer(
     id: string,
     data: UpdateCustomerInput,
     updatedBy?: string,
   ): Promise<CustomerListItem | null> {
-    const { organizationName, organizationId, ...updateData } = data;
+    const { organizationId, useOrganizationAddress, ...updateData } = data;
 
-    let finalOrganizationId = organizationId || null;
+    const { address, ...restUpdateData } = updateData;
 
-    const updatedCustomer = await this.prisma.$transaction(async (tx) => {
-      // Handle organization logic
-      if (organizationName && !organizationId) {
-        const organization = await tx.organization.create({
-          data: {
-            name: organizationName,
+    // If using organization address, clear customer address fields
+    const addressData = useOrganizationAddress
+      ? {
+          address1: null,
+          address2: null,
+          city: null,
+          region: null,
+          postalCode: null,
+          country: null,
+          lat: null,
+          lng: null,
+          formattedAddress: null,
+        }
+      : address || {
+          address1: null,
+          address2: null,
+          city: null,
+          region: null,
+          postalCode: null,
+          country: null,
+          lat: null,
+          lng: null,
+          formattedAddress: null,
+        };
+
+    const updatedCustomer = await this.prisma.customer.update({
+      where: { id },
+      data: {
+        ...restUpdateData,
+        ...addressData,
+        useOrganizationAddress: useOrganizationAddress ?? false,
+        organization: organizationId ? { connect: { id: organizationId } } : { disconnect: true },
+      },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
           },
-        });
-        finalOrganizationId = organization.id;
-      }
-
-      const { address, ...restUpdateData } = updateData;
-      const addressData = address || {
-        address1: null,
-        address2: null,
-        city: null,
-        region: null,
-        postalCode: null,
-        country: null,
-        lat: null,
-        lng: null,
-        formattedAddress: null,
-      };
-
-      return tx.customer.update({
-        where: { id },
-        data: {
-          ...restUpdateData,
-          ...addressData,
-          organization: finalOrganizationId
-            ? { connect: { id: finalOrganizationId } }
-            : { disconnect: true },
         },
-        include: {
-          organization: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      });
+      },
     });
 
     if (!updatedCustomer) {
