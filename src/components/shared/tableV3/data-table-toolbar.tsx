@@ -2,6 +2,7 @@
 
 import { ComponentProps, useMemo, useCallback } from 'react';
 import type { Column, Table } from '@tanstack/react-table';
+import { useRouter } from 'next/navigation';
 import { DataTableDateFilter } from '@/components/shared/tableV3/data-table-date-filter';
 import { DataTableFacetedFilter } from '@/components/shared/tableV3/data-table-faceted-filter';
 import { DataTableSliderFilter } from '@/components/shared/tableV3/data-table-slider-filter';
@@ -22,6 +23,7 @@ export function DataTableToolbar<TData>({
   className,
   ...props
 }: DataTableToolbarProps<TData>) {
+  const router = useRouter();
   const isFiltered = table.getState().columnFilters.length > 0;
 
   const columns = useMemo(
@@ -30,8 +32,24 @@ export function DataTableToolbar<TData>({
   );
 
   const onReset = useCallback(() => {
+    // Clear filters from table state
     table.resetColumnFilters();
-  }, [table]);
+
+    // Immediately clear URL params without debounce
+    const url = new URL(window.location.href);
+    const filterableColumnIds = columns.map((col) => col.id).filter(Boolean);
+
+    // Remove all filter params from URL
+    filterableColumnIds.forEach((id) => {
+      url.searchParams.delete(id);
+    });
+
+    // Reset to page 1
+    url.searchParams.set('page', '1');
+
+    // Navigate immediately
+    router.replace(url.pathname + url.search);
+  }, [table, columns, router]);
 
   return (
     <Box
