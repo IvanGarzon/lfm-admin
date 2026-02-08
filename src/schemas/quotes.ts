@@ -1,14 +1,18 @@
 import { z } from 'zod';
 import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { ALLOWED_IMAGE_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
+import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
+import { baseFiltersSchema, createEnumArrayFilter } from '@/schemas/common';
 
 export const QuoteItemSchema = z.object({
-  id: z.string().optional(),
+  id: z.cuid().optional(),
   description: z
     .string()
     .trim()
     .min(1, { error: 'Description is required' })
-    .max(500, { error: 'Description must be less than 500 characters' }),
+    .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
+      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+    }),
   quantity: z
     .number()
     .int({ error: 'Quantity must be a whole number' })
@@ -19,7 +23,12 @@ export const QuoteItemSchema = z.object({
     .nonnegative({ error: 'Unit price must be non-negative' })
     .max(1000000, { error: 'Unit price must be less than 1,000,000' }),
   productId: z.string().nullable(),
-  notes: z.string().max(500, { error: 'Notes must be less than 500 characters' }).optional(),
+  notes: z
+    .string()
+    .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
+      error: `Notes must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+    })
+    .optional(),
   colors: z
     .array(
       z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
@@ -31,21 +40,35 @@ export const QuoteItemSchema = z.object({
 
 export const QuoteSchema = z
   .object({
-    customerId: z.string().min(1, { error: 'Customer is required' }),
+    customerId: z.cuid({ error: 'Customer is required' }),
     status: QuoteStatusSchema,
     issuedDate: z.date({ error: 'Issued date is required' }),
     validUntil: z.date({ error: 'Valid until date is required' }),
     currency: z.string().length(3, { error: 'Currency must be a 3-letter code' }),
     gst: z
       .number()
-      .min(0, { error: 'GST percentage must be at least 0%' })
-      .max(100, { error: 'GST percentage cannot exceed 100%' }),
+      .min(VALIDATION_LIMITS.GST_MIN, {
+        error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`,
+      })
+      .max(VALIDATION_LIMITS.GST_MAX, {
+        error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`,
+      }),
     discount: z
       .number()
       .min(0, { error: 'Discount must be at least 0' })
       .max(1000000, { error: 'Discount must be less than 1,000,000' }),
-    notes: z.string().max(1000, { error: 'Notes must be less than 1000 characters' }).optional(),
-    terms: z.string().max(2000, { error: 'Terms must be less than 2000 characters' }).optional(),
+    notes: z
+      .string()
+      .max(VALIDATION_LIMITS.NOTES_MAX, {
+        error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+      })
+      .optional(),
+    terms: z
+      .string()
+      .max(VALIDATION_LIMITS.TERMS_MAX, {
+        error: `Terms must be less than ${VALIDATION_LIMITS.TERMS_MAX} characters`,
+      })
+      .optional(),
     items: z
       .array(QuoteItemSchema)
       .min(1, { error: 'At least one item is required' })
@@ -58,37 +81,41 @@ export const QuoteSchema = z
 
 export const CreateQuoteSchema = QuoteSchema;
 export const UpdateQuoteSchema = QuoteSchema.safeExtend({
-  id: z.string().min(1, { error: 'Invalid quote ID' }),
+  id: z.cuid({ error: 'Invalid quote ID' }),
 });
 
 /**
  * Mark Quote as Accepted Schema
  */
 export const MarkQuoteAsAcceptedSchema = z.object({
-  id: z.string().min(1, { error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' }),
 });
 
 /**
  * Mark Quote as Rejected Schema
  */
 export const MarkQuoteAsRejectedSchema = z.object({
-  id: z.string().min(1, { error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' }),
   rejectReason: z
     .string()
     .trim()
     .min(1, { error: 'Rejection reason is required' })
-    .max(500, { error: 'Reason must be less than 500 characters' }),
+    .max(VALIDATION_LIMITS.REASON_MAX, {
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
+    }),
 });
 
 /**
  * Mark Quote as On Hold Schema
  */
 export const MarkQuoteAsOnHoldSchema = z.object({
-  id: z.string().min(1, { error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' }),
   reason: z
     .string()
     .trim()
-    .max(500, { error: 'Reason must be less than 500 characters' })
+    .max(VALIDATION_LIMITS.REASON_MAX, {
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
+    })
     .optional(),
 });
 
@@ -96,11 +123,13 @@ export const MarkQuoteAsOnHoldSchema = z.object({
  * Mark Quote as Cancelled Schema
  */
 export const MarkQuoteAsCancelledSchema = z.object({
-  id: z.string().min(1, { error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' }),
   reason: z
     .string()
     .trim()
-    .max(500, { error: 'Reason must be less than 500 characters' })
+    .max(VALIDATION_LIMITS.REASON_MAX, {
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
+    })
     .optional(),
 });
 
@@ -108,12 +137,16 @@ export const MarkQuoteAsCancelledSchema = z.object({
  * Convert Quote to Invoice Schema
  */
 export const ConvertQuoteToInvoiceSchema = z.object({
-  id: z.string().min(1, { error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' }),
   dueDate: z.date({ error: 'Due date is required' }),
   gst: z
     .number()
-    .min(0, { error: 'GST percentage must be at least 0%' })
-    .max(100, { error: 'GST percentage cannot exceed 100%' }),
+    .min(VALIDATION_LIMITS.GST_MIN, {
+      error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`,
+    })
+    .max(VALIDATION_LIMITS.GST_MAX, {
+      error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`,
+    }),
   discount: z
     .number()
     .min(0, { error: 'Discount must be at least 0' })
@@ -121,64 +154,27 @@ export const ConvertQuoteToInvoiceSchema = z.object({
 });
 
 /**
- * Type Inference
- */
-export type CreateQuoteInput = z.infer<typeof CreateQuoteSchema>;
-export type UpdateQuoteInput = z.infer<typeof UpdateQuoteSchema>;
-export type MarkQuoteAsAcceptedInput = z.infer<typeof MarkQuoteAsAcceptedSchema>;
-export type MarkQuoteAsRejectedInput = z.infer<typeof MarkQuoteAsRejectedSchema>;
-export type MarkQuoteAsOnHoldInput = z.infer<typeof MarkQuoteAsOnHoldSchema>;
-export type MarkQuoteAsCancelledInput = z.infer<typeof MarkQuoteAsCancelledSchema>;
-export type ConvertQuoteToInvoiceInput = z.infer<typeof ConvertQuoteToInvoiceSchema>;
-
-/**
  * Quote Filters Schema
  */
-const sortingItemSchema = z.object({
-  id: z.string(),
-  desc: z.boolean(),
-});
-
-const sortingSchema = z.union([z.string(), z.array(z.unknown())]).transform((val) => {
-  if (typeof val === 'string') {
-    try {
-      const parsed = JSON.parse(val);
-      return z.array(sortingItemSchema).parse(parsed);
-    } catch {
-      return [];
-    }
-  }
-  if (Array.isArray(val)) {
-    return z.array(sortingItemSchema).parse(val);
-  }
-  return [];
-});
-
-export const QuoteFiltersSchema = z.object({
-  search: z.string().trim().default('').optional(),
-  status: z
-    .union([z.string(), z.array(z.string())])
-    .transform((val) => {
-      const arr = Array.isArray(val) ? val : val ? val.split(',').map((v) => v.trim()) : [];
-      return arr.length === 0 ? undefined : arr.map((v) => QuoteStatusSchema.parse(v));
-    })
-    .optional(),
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-  sort: sortingSchema.default([]),
+export const QuoteFiltersSchema = baseFiltersSchema.extend({
+  status: createEnumArrayFilter(QuoteStatusSchema),
 });
 
 /**
  * Quote Item Attachment Schemas
  */
 export const QuoteItemAttachmentSchema = z.object({
-  id: z.string(),
-  quoteItemId: z.string(),
-  fileName: z.string(),
-  fileSize: z.number().int().positive(),
-  mimeType: z.string(),
-  s3Key: z.string(),
-  s3Url: z.url(),
+  id: z.cuid({ error: 'Quote item attachment ID is required' }),
+  quoteItemId: z.cuid({ error: 'Quote item ID is required' }),
+  fileName: z.string().min(1, { error: 'File name is required' }),
+  fileSize: z.number().int().positive({ error: 'File size must be positive' }),
+  mimeType: z.string().min(1, { error: 'File type is required' }),
+  s3Key: z.string().min(1, { error: 'S3 key is required' }),
+  s3Url: z
+    .string()
+    .trim()
+    .max(VALIDATION_LIMITS.URL_MAX)
+    .pipe(z.url({ error: 'Invalid S3 URL' })),
   uploadedBy: z.string().nullable(),
   uploadedAt: z.date(),
 });
@@ -187,7 +183,7 @@ export const QuoteItemAttachmentSchema = z.object({
  * Upload Item Attachment Schema (for server-side validation)
  */
 export const UploadItemAttachmentSchema = z.object({
-  quoteItemId: z.string().min(1, { error: 'Quote item ID is required' }),
+  quoteItemId: z.cuid({ error: 'Quote item ID is required' }),
   fileName: z.string().min(1, { error: 'File name is required' }),
   fileSize: z
     .number()
@@ -205,41 +201,46 @@ export const UploadItemAttachmentSchema = z.object({
  * Delete Item Attachment Schema
  */
 export const DeleteItemAttachmentSchema = z.object({
-  attachmentId: z.string().min(1, { error: 'Attachment ID is required' }),
+  attachmentId: z.cuid({ error: 'Attachment ID is required' }),
 });
-
-/**
- * Item Attachment Type Inference
- */
-export type QuoteItemAttachmentInput = z.infer<typeof QuoteItemAttachmentSchema>;
-export type UploadItemAttachmentInput = z.infer<typeof UploadItemAttachmentSchema>;
-export type DeleteItemAttachmentInput = z.infer<typeof DeleteItemAttachmentSchema>;
 
 /**
  * Create Version Schema
  */
 export const CreateVersionSchema = z.object({
-  quoteId: z.string().min(1, { error: 'Quote ID is required' }),
+  quoteId: z.cuid({ error: 'Quote ID is required' }),
 });
-
-export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
 
 /**
  * Send Quote Email Schema
  */
 export const SendQuoteEmailSchema = z.object({
-  quoteId: z.string().cuid(),
-  to: z.string().email(),
+  quoteId: z.cuid({ error: 'Quote ID is required' }),
+  to: commonValidators.email(),
   quoteData: z.object({
-    quoteNumber: z.string(),
-    customerName: z.string(),
-    amount: z.number().positive(),
-    currency: z.string(),
-    issuedDate: z.coerce.date(),
-    validUntil: z.coerce.date(),
-    itemCount: z.number().int().nonnegative(),
+    quoteNumber: z.string({ error: 'Quote number is required' }),
+    customerName: z.string({ error: 'Customer name is required' }),
+    amount: z.number().positive({ error: 'Amount must be positive' }),
+    currency: z.string({ error: 'Currency is required' }),
+    issuedDate: z.coerce.date({ error: 'Issued date is required' }),
+    validUntil: z.coerce.date({ error: 'Valid until date is required' }),
+    itemCount: z.number().int().nonnegative({ error: 'Item count must be non-negative' }),
   }),
-  pdfUrl: z.string().url().optional(),
+  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional(),
 });
 
+/**
+ * Type Inference
+ */
+export type CreateQuoteInput = z.infer<typeof CreateQuoteSchema>;
+export type UpdateQuoteInput = z.infer<typeof UpdateQuoteSchema>;
+export type MarkQuoteAsAcceptedInput = z.infer<typeof MarkQuoteAsAcceptedSchema>;
+export type MarkQuoteAsRejectedInput = z.infer<typeof MarkQuoteAsRejectedSchema>;
+export type MarkQuoteAsOnHoldInput = z.infer<typeof MarkQuoteAsOnHoldSchema>;
+export type MarkQuoteAsCancelledInput = z.infer<typeof MarkQuoteAsCancelledSchema>;
+export type ConvertQuoteToInvoiceInput = z.infer<typeof ConvertQuoteToInvoiceSchema>;
+export type QuoteItemAttachmentInput = z.infer<typeof QuoteItemAttachmentSchema>;
+export type UploadItemAttachmentInput = z.infer<typeof UploadItemAttachmentSchema>;
+export type DeleteItemAttachmentInput = z.infer<typeof DeleteItemAttachmentSchema>;
+export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
 export type SendQuoteEmailInput = z.infer<typeof SendQuoteEmailSchema>;

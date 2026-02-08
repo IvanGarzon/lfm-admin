@@ -7,7 +7,10 @@ import type { ActionResult } from '@/types/actions';
 import { handleActionError } from '@/lib/error-handler';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 import type { OrganizationListItem, OrganizationPagination } from '@/features/organizations/types';
-import { searchParamsCache } from '@/filters/organizations/organizations-filters';
+import {
+  searchParamsCache,
+  validateOrganizationSearchParams,
+} from '@/filters/organizations/organizations-filters';
 
 const organizationRepo = new OrganizationRepository(prisma);
 
@@ -85,8 +88,9 @@ export async function getOrganizations(
   }
 
   try {
-    const filters = searchParamsCache.parse(searchParams);
-    const result = await organizationRepo.searchAndPaginate(filters);
+    const parsedParams = searchParamsCache.parse(searchParams);
+    const validatedFilters = validateOrganizationSearchParams(parsedParams);
+    const result = await organizationRepo.searchAndPaginate(validatedFilters);
 
     return { success: true, data: result };
   } catch (error) {

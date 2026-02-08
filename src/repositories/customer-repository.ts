@@ -219,7 +219,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
     return this.prisma.customer.findMany({
       where: {
         deletedAt: null,
-        status: 'ACTIVE',
+        status: CustomerStatus.ACTIVE,
       },
       select: {
         id: true,
@@ -257,7 +257,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         gender: customerData.gender,
         organizationId: organizationId || null,
         useOrganizationAddress: useOrganizationAddress ?? false,
-        status: 'ACTIVE',
+        status: CustomerStatus.ACTIVE,
         ...addressData,
       },
     });

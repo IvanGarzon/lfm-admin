@@ -1,52 +1,32 @@
 import { z } from 'zod';
 import { StatesSchema } from '@/zod/schemas/enums/States.schema';
 import { OrganizationStatusSchema } from '@/zod/schemas/enums/OrganizationStatus.schema';
+import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
 
 export const OrganizationSchema = z.object({
-  name: z.string().trim().min(2, {
-    message: 'Organization name must be at least 2 characters.',
-  }),
-  address: z.string().trim().optional().nullable(),
-  city: z.string().trim().optional().nullable(),
+  name: commonValidators.name('Organization name'),
+  address: commonValidators.stringOptional(VALIDATION_LIMITS.ADDRESS_MAX, 'Address'),
+  city: commonValidators.stringOptional(VALIDATION_LIMITS.CITY_MAX, 'City'),
   state: StatesSchema.optional().nullable(),
-  postcode: z.string().trim().optional().nullable(),
-  country: z.string().trim().default('Australia').optional().nullable(),
-  phone: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .refine((val) => !val || val.length === 0 || /^[0-9\s\-\+\(\)]+$/.test(val), {
-      message: 'Please enter a valid phone number',
-    }),
-  email: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .refine((val) => !val || val.length === 0 || z.string().email().safeParse(val).success, {
-      message: 'Please enter a valid email address',
-    }),
-  website: z
-    .string()
-    .trim()
-    .optional()
-    .nullable()
-    .refine((val) => !val || val.length === 0 || z.string().url().safeParse(val).success, {
-      message: 'Please enter a valid URL (e.g., https://example.com)',
-    }),
-  abn: z.string().trim().optional().nullable(),
+  postcode: commonValidators.stringOptional(VALIDATION_LIMITS.POSTCODE_MAX, 'Postcode'),
+  country: commonValidators
+    .stringOptional(VALIDATION_LIMITS.COUNTRY_MAX, 'Country')
+    .default('Australia'),
+  phone: commonValidators.phoneOptional(),
+  email: commonValidators.emailOptional(),
+  website: commonValidators.urlOptional(),
+  abn: commonValidators.stringOptional(VALIDATION_LIMITS.ABN_MAX, 'ABN'),
   status: OrganizationStatusSchema.default('ACTIVE').optional(),
 });
 
 export const CreateOrganizationSchema = OrganizationSchema;
 
 export const UpdateOrganizationSchema = OrganizationSchema.extend({
-  id: z.string().min(1, { message: 'Invalid organization ID' }),
+  id: z.cuid({ error: 'Invalid organization ID' }),
 });
 
 export const DeleteOrganizationSchema = z.object({
-  id: z.string().min(1, { message: 'Invalid organization ID' }),
+  id: z.cuid({ error: 'Invalid organization ID' }),
 });
 
 export type CreateOrganizationInput = z.infer<typeof CreateOrganizationSchema>;

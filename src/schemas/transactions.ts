@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
 import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
+import { VALIDATION_LIMITS } from '@/lib/validation';
+import { baseFiltersSchema, createEnumArrayFilter } from '@/schemas/common';
 
 export const TransactionSchema = z.object({
   type: TransactionTypeSchema,
@@ -13,56 +15,20 @@ export const TransactionSchema = z.object({
   status: TransactionStatusSchema,
   referenceNumber: z.string().optional().nullable(),
   referenceId: z.string().optional().nullable(),
-  invoiceId: z.string().optional().nullable(),
+  invoiceId: z.cuid().optional().nullable(),
 });
 
 export const CreateTransactionSchema = TransactionSchema;
 export const UpdateTransactionSchema = TransactionSchema.safeExtend({
-  id: z.string().min(1, { error: 'Invalid transaction ID' }),
+  id: z.cuid({ error: 'Invalid transaction ID' }),
 });
 
 /**
  * Transaction Filters Schema
  */
-const sortingItemSchema = z.object({
-  id: z.string(),
-  desc: z.boolean(),
-});
-
-const sortingSchema = z.union([z.string(), z.array(z.unknown())]).transform((val) => {
-  if (typeof val === 'string') {
-    try {
-      const parsed = JSON.parse(val);
-      return z.array(sortingItemSchema).parse(parsed);
-    } catch {
-      return [];
-    }
-  }
-  if (Array.isArray(val)) {
-    return z.array(sortingItemSchema).parse(val);
-  }
-  return [];
-});
-
-export const TransactionFiltersSchema = z.object({
-  search: z.string().trim().default('').optional(),
-  type: z
-    .union([z.string(), z.array(z.string())])
-    .transform((val) => {
-      const arr = Array.isArray(val) ? val : val ? val.split(',').map((v) => v.trim()) : [];
-      return arr.length === 0 ? undefined : arr.map((v) => TransactionTypeSchema.parse(v));
-    })
-    .optional(),
-  status: z
-    .union([z.string(), z.array(z.string())])
-    .transform((val) => {
-      const arr = Array.isArray(val) ? val : val ? val.split(',').map((v) => v.trim()) : [];
-      return arr.length === 0 ? undefined : arr.map((v) => TransactionStatusSchema.parse(v));
-    })
-    .optional(),
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-  sort: sortingSchema.default([]),
+export const TransactionFiltersSchema = baseFiltersSchema.extend({
+  type: createEnumArrayFilter(TransactionTypeSchema),
+  status: createEnumArrayFilter(TransactionStatusSchema),
 });
 
 export type CreateTransactionInput = z.infer<typeof CreateTransactionSchema>;

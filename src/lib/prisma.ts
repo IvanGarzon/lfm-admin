@@ -2,6 +2,7 @@ import { neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@/prisma/client';
 import { env } from '@/env';
+import { logger } from '@/lib/logger';
 import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
@@ -14,18 +15,55 @@ const prismaClientSingleton = () => {
   }
 
   const adapter = new PrismaNeon({ connectionString });
-  return new PrismaClient({
+  const client = new PrismaClient({
     adapter,
     log:
       env.NODE_ENV === 'development'
         ? [
-            { emit: 'stdout', level: 'query' },
+            { emit: 'event', level: 'query' },
             { emit: 'stdout', level: 'info' },
             { emit: 'stdout', level: 'warn' },
             { emit: 'stdout', level: 'error' },
           ]
         : [{ emit: 'stdout', level: 'error' }],
   });
+
+  // Add query performance monitoring in development
+  if (env.NODE_ENV === 'development') {
+    client.$on('query', (e) => {
+      const duration = e.duration;
+      const query = e.query;
+      const params = e.params;
+
+      // Warn about slow queries (> 1 second)
+      if (duration > 1000) {
+        logger.warn('Slow query detected', {
+          context: 'PrismaQueryMonitor',
+          metadata: {
+            query,
+            params,
+            duration: `${duration}ms`,
+            timestamp: e.timestamp,
+          },
+        });
+      }
+
+      // Log all queries with color coding based on performance
+      const durationColor = duration > 1000 ? '\x1b[31m' : duration > 100 ? '\x1b[33m' : '\x1b[32m';
+      const reset = '\x1b[0m';
+
+      console.log(
+        `${durationColor}[Prisma Query]${reset} ${duration}ms - ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`,
+      );
+
+      // Optionally log params for debugging
+      if (params && params !== '[]') {
+        console.log(`  └─ Params: ${params}`);
+      }
+    });
+  }
+
+  return client;
 };
 
 declare global {

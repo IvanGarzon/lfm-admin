@@ -3,6 +3,7 @@ import {
   type OrganizationStatus,
 } from '@/zod/schemas/enums/OrganizationStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
+import { sanitizeSearchQuery, validatePaginationParams } from '@/lib/validation';
 
 import {
   createSearchParamsCache,
@@ -40,3 +41,23 @@ export const searchParams = {
 
 export const searchParamsCache = createSearchParamsCache(searchParams);
 export const organizationSearchParamsDefaults = getSearchParamsDefaults(searchParams);
+
+/**
+ * Validates and sanitizes organization search parameters
+ * - Sanitizes search query to prevent injection attacks
+ * - Validates pagination parameters are within acceptable ranges
+ * - Ensures status values are from allowed enum
+ */
+export function validateOrganizationSearchParams(
+  params: Awaited<ReturnType<typeof searchParamsCache.parse>>,
+) {
+  const { page, perPage } = validatePaginationParams(params.page, params.perPage);
+
+  return {
+    name: sanitizeSearchQuery(params.name),
+    page,
+    perPage,
+    status: params.status, // Already validated by parseAsStringEnum
+    sort: params.sort, // Already validated by getSortingStateParser
+  };
+}

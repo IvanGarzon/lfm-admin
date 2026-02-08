@@ -1,9 +1,8 @@
 import { z } from 'zod';
+import { commonValidators } from '@/lib/validation';
 
 export const AuthSchema = z.object({
-  email: z.email({
-    error: 'Please enter a valid email address.',
-  }),
+  email: commonValidators.email(),
 });
 
 export type AuthFormValues = z.infer<typeof AuthSchema>;
