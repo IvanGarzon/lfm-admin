@@ -119,18 +119,25 @@ model Customer {
 }
 
 model Organization {
-  id        String     @id @default(cuid())
+  id        String             @id @default(cuid())
   name      String
+  email     String?
+  phone     String?
+  website   String?
+  abn       String?
+  status    OrganizationStatus @default(ACTIVE)
   address   String?
   city      String?
   state     States?
   postcode  String?
-  country   String?    @default("Australia")
+  country   String?            @default("Australia")
   customers Customer[]
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime           @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime?          @map("deleted_at") @db.Timestamptz()
 
   @@index([name])
+  @@index([status, deletedAt])
   @@map(name: "organizations")
 }
 
@@ -140,15 +147,18 @@ model Employee {
   lastName  String         @map(name: "last_name")
   email     String         @unique
   phone     String
-  gender    Gender?
-  dob       DateTime?      @db.Date()
+  gender    Gender
+  dob       DateTime       @db.Date()
   rate      Decimal        @default(0) @db.Decimal(15, 2)
   status    EmployeeStatus @default(ACTIVE)
   avatarUrl String?        @map(name: "avatar_url")
-  createdAt DateTime       @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime       @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  
+  createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
+  updatedAt DateTime  @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
 
   @@index([email])
+  @@index([status, deletedAt])
   @@map(name: "employees")
 }
 
@@ -272,7 +282,7 @@ model InvoiceItem {
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
 
   @@index([invoiceId])
-  @@index([productId])  // Product-based queries
+  @@index([productId])
   @@map(name: "invoice_items")
 }
 
@@ -672,9 +682,16 @@ model TransactionAttachment {
 enum Gender {
   MALE
   FEMALE
+  OTHER
 }
 
 enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+enum OrganizationStatus {
   ACTIVE
   INACTIVE
 }

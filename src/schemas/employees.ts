@@ -5,8 +5,8 @@ import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
 // import { isValidPhoneNumber } from 'react-phone-number-input';
 
 // Create enum arrays for Zod from Prisma enums
-import { GenderSchema } from '@/zod/inputTypeSchemas/GenderSchema';
-import { EmployeeStatusSchema } from '@/zod/inputTypeSchemas/EmployeeStatusSchema';
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
+import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 
 const EmployeeSchema = z.object({
   firstName: commonValidators.name('First name'),

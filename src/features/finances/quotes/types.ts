@@ -1,5 +1,5 @@
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
-import type { QuoteStatusType } from '@/zod/inputTypeSchemas/QuoteStatusSchema';
+import type { QuoteStatus as QuoteStatusType } from '@/zod/schemas/enums/QuoteStatus.schema';
 
 export type QuoteFormInput = CreateQuoteInput | UpdateQuoteInput;
 

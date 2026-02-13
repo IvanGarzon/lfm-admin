@@ -1,5 +1,5 @@
 import { type NextAuthConfig, type Account, type Profile } from 'next-auth';
-import { handleSignIn } from '@/services/authService';
+import { handleSignIn } from '@/services/auth.service';
 import { prisma } from '@/lib/prisma';
 import { getClientDetails } from '@/lib/agent';
 import { env } from '@/env';

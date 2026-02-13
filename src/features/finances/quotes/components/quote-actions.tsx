@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { QuoteListItem } from '@/features/finances/quotes/types';
-import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
 
@@ -62,7 +62,7 @@ export function QuoteActions({
   onCreateVersion,
   onDuplicate,
 }: QuoteActionsProps) {
-  const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quote.id}`;
   const quoteUrl = queryString ? `${basePath}?${queryString}` : basePath;
 
@@ -82,7 +82,9 @@ export function QuoteActions({
   // Check if follow-up should be available
   // Only show when status is SENT and within 3 days of validUntil
   const showFollowUp = (() => {
-    if (quote.status !== 'SENT') return false;
+    if (quote.status !== 'SENT') {
+      return false;
+    }
 
     const now = new Date();
     const validUntil = new Date(quote.validUntil);

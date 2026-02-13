@@ -22,7 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { InvoiceListItem } from '@/features/finances/invoices/types';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
 import { InvoiceActions } from '@/features/finances/invoices/components/invoice-actions';
-import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { invoiceSearchParamsDefaults, searchParams } from '@/filters/invoices/invoices-filters';
 import {
   daysUntilDue,
@@ -70,7 +70,7 @@ const StatusOptions: {
 ];
 
 function InvoiceLink({ invoiceId, invoiceNumber }: { invoiceId: string; invoiceNumber: string }) {
-  const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
   const basePath = `/finances/invoices/${invoiceId}`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 

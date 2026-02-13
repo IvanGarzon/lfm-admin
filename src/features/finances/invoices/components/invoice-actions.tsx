@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { InvoiceListItem } from '@/features/finances/invoices/types';
-import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 
 interface InvoiceActionsProps {
@@ -54,7 +54,7 @@ export function InvoiceActions({
   onDuplicate,
   onMarkAsDraft,
 }: InvoiceActionsProps) {
-  const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
   const basePath = `/finances/invoices/${invoice.id}`;
   const invoiceUrl = queryString ? `${basePath}?${queryString}` : basePath;
 
@@ -110,12 +110,14 @@ export function InvoiceActions({
               </DropdownMenuItem>
               <>
                 <DropdownMenuSeparator />
-                {invoice.status === InvoiceStatus.PENDING && (
+
+                {invoice.status === InvoiceStatus.PENDING ? (
                   <DropdownMenuItem onClick={() => onMarkAsDraft(invoice.id)}>
                     <RotateCcw className="h-4 w-4" />
                     Revert to draft
                   </DropdownMenuItem>
-                )}
+                ) : null}
+
                 <DropdownMenuItem
                   onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}
                   className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"

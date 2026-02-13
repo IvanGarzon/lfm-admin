@@ -5,7 +5,7 @@ import type {
   OrganizationListItem,
   OrganizationPagination,
   OrganizationFilters,
-} from '@/features/organizations/types';
+} from '@/features/crm/organizations/types';
 import { getPaginationMetadata } from '@/lib/utils';
 
 /**

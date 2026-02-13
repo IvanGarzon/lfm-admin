@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
-import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document-service';
+import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document.service';
 import { DocumentKind } from '@/prisma/client';
 import {
   generateInvoiceFilename,

@@ -1,6 +1,6 @@
 import { logger } from '@/lib/logger';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
-import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document-service';
+import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document.service';
 import { DocumentKind } from '@/prisma/client';
 import {
   generateQuoteFilename,

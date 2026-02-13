@@ -16,7 +16,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { createTransactionCategory } from '@/actions/transactions/mutations';
+import { createTransactionCategory } from '@/actions/finances/transactions/mutations';
 
 export type Category = {
   id: string;

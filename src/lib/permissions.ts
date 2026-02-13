@@ -36,6 +36,14 @@ export const PERMISSIONS = {
   canManageTransactions: {
     label: 'Can create, edit, and delete transactions',
   },
+
+  // Product Permissions
+  canReadProducts: {
+    label: 'Can view products',
+  },
+  canManageProducts: {
+    label: 'Can create, edit, and delete products',
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -64,7 +72,7 @@ type RolePolicy = {
  * USER role: Read-only access to invoices and quotes
  */
 const USER: RolePolicy = {
-  allow: ['canReadInvoices', 'canReadQuotes'],
+  allow: ['canReadInvoices', 'canReadQuotes', 'canReadProducts'],
   deny: [],
   actions: {
     allow: [
@@ -78,6 +86,12 @@ const USER: RolePolicy = {
       'quotes.getQuotes',
       'quotes.getQuoteById',
       'quotes.getQuoteStatistics',
+
+      // Product read actions
+      'products.getProducts',
+      'products.getProductById',
+      'products.getProductStatistics',
+      'products.getActiveProducts',
     ],
     deny: [],
   },
@@ -88,7 +102,13 @@ const USER: RolePolicy = {
  * Inherits from USER and adds management and payment permissions
  */
 const MANAGER: RolePolicy = {
-  allow: [...USER.allow, 'canManageInvoices', 'canManageQuotes', 'canRecordPayments'],
+  allow: [
+    ...USER.allow,
+    'canManageInvoices',
+    'canManageQuotes',
+    'canRecordPayments',
+    'canManageProducts',
+  ],
   deny: [],
   actions: {
     allow: [
@@ -113,6 +133,12 @@ const MANAGER: RolePolicy = {
       'quotes.markQuoteAsSent',
       'quotes.markQuoteAsAccepted',
       'quotes.cancelQuote',
+
+      // Product management actions
+      'products.createProduct',
+      'products.updateProduct',
+      'products.updateProductStatus',
+      'products.updateProductStock',
     ],
     deny: [],
   },
@@ -132,6 +158,7 @@ const ADMIN: RolePolicy = {
       // Admin-only actions (deletion)
       'invoices.deleteInvoice',
       'quotes.deleteQuote',
+      'products.deleteProduct',
     ],
     deny: [],
   },

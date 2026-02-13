@@ -14,7 +14,7 @@ import {
   deleteTransaction,
   uploadTransactionAttachment,
   deleteTransactionAttachment,
-} from '@/actions/transactions';
+} from '@/actions/finances/transactions';
 import { TransactionFilters } from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { formatDateNormalizer } from '@/lib/utils';

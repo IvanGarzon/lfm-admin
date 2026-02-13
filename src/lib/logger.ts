@@ -16,6 +16,9 @@
  * ```
  */
 
+import pino from 'pino';
+import { env } from '@/env';
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LoggerOptions {
@@ -25,44 +28,71 @@ interface LoggerOptions {
 
 class Logger {
   private isDevelopment: boolean;
+  private pinoLogger?: pino.Logger;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.isDevelopment = env.NODE_ENV === 'development';
+
+    if (!this.isDevelopment) {
+      this.pinoLogger = pino({
+        level: env.LOG_LEVEL || 'info',
+        formatters: {
+          level: (label) => {
+            return { level: label };
+          },
+        },
+        timestamp: pino.stdTimeFunctions.isoTime,
+      });
+    }
   }
 
   /**
    * Debug-level logging for detailed diagnostics
-   * Only logs in development mode
    */
   debug(message: string, options?: LoggerOptions): void {
     if (this.isDevelopment) {
       this.log('debug', message, options);
+    } else {
+      this.pinoLogger?.debug({
+        msg: message,
+        context: options?.context,
+        ...options?.metadata,
+      });
     }
   }
 
   /**
    * Info-level logging for general information
-   * Only logs in development mode
    */
   info(message: string, options?: LoggerOptions): void {
     if (this.isDevelopment) {
       this.log('info', message, options);
+    } else {
+      this.pinoLogger?.info({
+        msg: message,
+        context: options?.context,
+        ...options?.metadata,
+      });
     }
   }
 
   /**
    * Warning-level logging for potential issues
-   * Only logs in development mode
    */
   warn(message: string, options?: LoggerOptions): void {
     if (this.isDevelopment) {
       this.log('warn', message, options);
+    } else {
+      this.pinoLogger?.warn({
+        msg: message,
+        context: options?.context,
+        ...options?.metadata,
+      });
     }
   }
 
   /**
    * Error-level logging for errors
-   * Logs in all environments but formats differently
    */
   error(message: string, error?: unknown, options?: LoggerOptions): void {
     if (this.isDevelopment) {
@@ -72,11 +102,12 @@ class Logger {
         options?.metadata || '',
       );
     } else {
-      // In production, just log the error without sensitive data
-      console.error(`[ERROR] ${message}`);
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
+      this.pinoLogger?.error({
+        msg: message,
+        err: error,
+        context: options?.context,
+        ...options?.metadata,
+      });
     }
   }
 

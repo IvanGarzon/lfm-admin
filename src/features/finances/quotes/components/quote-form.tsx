@@ -43,8 +43,8 @@ import {
   getQuoteStatusLabel,
   getQuotePermissions,
 } from '@/features/finances/quotes/utils/quote-helpers';
-import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
-import { useProducts } from '@/features/products/hooks/useProductsQueries';
+import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
+import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import {
   useDeleteQuoteItemAttachment,
@@ -129,7 +129,7 @@ export function QuoteForm({
   const mode = quote ? 'update' : 'create';
 
   const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
-  const { data: products, isLoading: isLoadingProducts } = useProducts();
+  const { data: products, isLoading: isLoadingProducts } = useActiveProducts();
 
   // Item attachment mutations
   const deleteItemMutation = useDeleteQuoteItemAttachment();

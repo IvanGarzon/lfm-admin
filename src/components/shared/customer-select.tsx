@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import { CreateCustomerDialog } from '@/features/customers/components/create-customer-dialog';
+import { CreateCustomerDialog } from '@/features/crm/customers/components/create-customer-dialog';
 
 interface Customer {
   id: string;

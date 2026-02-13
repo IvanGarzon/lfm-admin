@@ -34,7 +34,7 @@ import {
   searchParams,
   transactionSearchParamsDefaults,
 } from '@/filters/transactions/transactions-filters';
-import { useTransactionQueryString } from '../hooks/use-transaction-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { TransactionActions } from './transaction-actions';
 
 const TypeOptions = [
@@ -75,7 +75,7 @@ function TransactionLink({
   transactionId: string;
   referenceNumber: string;
 }) {
-  const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, transactionSearchParamsDefaults);
   const basePath = `/finances/transactions/${transactionId}`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 

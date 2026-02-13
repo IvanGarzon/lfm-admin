@@ -13,8 +13,7 @@
  * ```
  */
 
-import { useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface UseUnsavedChangesOptions {
   /**

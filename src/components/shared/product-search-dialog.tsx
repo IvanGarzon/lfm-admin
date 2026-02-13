@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
-import type { ActiveProduct } from '@/features/products/types';
+import type { ActiveProduct } from '@/features/inventory/products/types';
 
 interface ProductSearchDialogProps {
   open: boolean;

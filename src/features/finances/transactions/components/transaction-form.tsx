@@ -38,7 +38,7 @@ import {
 } from '@/schemas/transactions';
 
 import type { Transaction, TransactionFormInput, TransactionAttachment } from '../types';
-import { getTransactionCategories } from '@/actions/transactions/queries';
+import { getTransactionCategories } from '@/actions/finances/transactions/queries';
 import { CategoryMultiSelect, type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
 

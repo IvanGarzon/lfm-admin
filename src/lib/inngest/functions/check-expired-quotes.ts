@@ -8,7 +8,7 @@
 
 import { inngest } from '@/lib/inngest/client';
 import { logger } from '@/lib/logger';
-import { checkAndExpireQuotes } from '@/actions/quotes';
+import { checkAndExpireQuotes } from '@/actions/finances/quotes';
 
 export const checkExpiredQuotesFunction = inngest.createFunction(
   {

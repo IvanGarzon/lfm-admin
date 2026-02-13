@@ -2,9 +2,8 @@ import {
   CustomerStatusSchema,
   type CustomerStatus,
 } from '@/zod/schemas/enums/CustomerStatus.schema';
-
 import { getSortingStateParser } from '@/lib/parsers';
-import { SORTABLE_CUSTOMER_COLUMNS } from '@/features/customers/constants/sortable-columns';
+import { SORTABLE_CUSTOMER_COLUMNS } from '@/features/crm/customers/constants/sortable-columns';
 
 import {
   createSearchParamsCache,

@@ -14,11 +14,11 @@ import type { QuoteListItem } from '@/features/finances/quotes/types';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
 import { QuoteActions } from '@/features/finances/quotes/components/quote-actions';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
-import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { isExpired } from '@/features/finances/quotes/utils/quote-helpers';
 
 function QuoteLink({ quoteId, quoteNumber }: { quoteId: string; quoteNumber: string }) {
-  const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quoteId}`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 

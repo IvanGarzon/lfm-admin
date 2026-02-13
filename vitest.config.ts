@@ -12,7 +12,7 @@ export default defineConfig({
     environment: 'node',
     // environment: 'happy-dom',
     // environment: 'jsdom',
-    setupFiles: ['./src/setupTests.ts'],
+    setupFiles: ['./src/lib/testing/setup.ts'],
     deps: {
       interopDefault: true,
     },
@@ -22,7 +22,7 @@ export default defineConfig({
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.cjs'],
     alias: {
       '@/env': path.resolve(__dirname, 'env.ts'),
-      '@/prisma/client': path.resolve(__dirname, 'src/testing/mocks/prisma.ts'),
+      '@/prisma/client': path.resolve(__dirname, 'src/lib/testing/mocks/prisma.mock.ts'),
       '@/prisma': path.resolve(__dirname, 'prisma/generated'),
       '@/zod': path.resolve(__dirname, 'prisma/zod'),
       '@/repo': path.resolve(__dirname, 'prisma/prisma-vault'),

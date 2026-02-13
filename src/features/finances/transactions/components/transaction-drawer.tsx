@@ -20,7 +20,7 @@ import {
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { Loader2, X } from 'lucide-react';
 import { Box } from '@/components/ui/box';
-import { useTransactionQueryString } from '../hooks/use-transaction-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import {
   searchParams,
   transactionSearchParamsDefaults,
@@ -42,7 +42,7 @@ export function TransactionDrawer({
 
   const router = useRouter();
   const pathname = usePathname();
-  const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, transactionSearchParamsDefaults);
 
   const mode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/transactions/${id}`) ?? false) : (open ?? false);

@@ -15,7 +15,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CreateOrganizationDialog } from '@/features/organizations/components/create-organization-dialog';
+import { CreateOrganizationDialog } from '@/features/crm/organizations/components/create-organization-dialog';
 
 export interface Organization {
   id: string;

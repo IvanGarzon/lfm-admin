@@ -43,8 +43,8 @@ import type {
   InvoiceItemDetail,
   InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
-import { useActiveCustomers } from '@/features/customers/hooks/use-customer-queries';
-import { useProducts } from '@/features/products/hooks/useProductsQueries';
+import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
+import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
@@ -114,7 +114,7 @@ export function InvoiceForm({
   const mode = invoice ? 'update' : 'create';
 
   const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
-  const { data: products, isLoading: isLoadingProducts } = useProducts();
+  const { data: products, isLoading: isLoadingProducts } = useActiveProducts();
 
   const defaultValues: InvoiceFormInput =
     mode === 'create'

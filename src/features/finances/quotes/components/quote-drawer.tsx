@@ -64,7 +64,7 @@ import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
 import { QuoteVersions } from '@/features/finances/quotes/components/quote-versions';
 import { QuoteStatusHistory } from '@/features/finances/quotes/components/quote-status-history';
-import { useQuoteQueryString } from '@/features/finances/quotes/hooks/use-quote-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
 
@@ -118,7 +118,7 @@ export function QuoteDrawer({
   const duplicateQuote = useDuplicateQuote();
 
   const router = useRouter();
-  const queryString = useQuoteQueryString(searchParams, quoteSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
 
   // Version navigation
   const currentVersionIndex = versions?.findIndex((v) => v.id === id) ?? -1;

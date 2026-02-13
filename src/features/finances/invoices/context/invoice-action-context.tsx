@@ -157,7 +157,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     }
 
     // Import the server action dynamically to avoid bundling issues
-    const { sendInvoiceReceipt } = await import('@/actions/invoices');
+    const { sendInvoiceReceipt } = await import('@/actions/finances/invoices');
 
     // Send the receipt email with PDF attachment
     const result = await sendInvoiceReceipt(state.id);

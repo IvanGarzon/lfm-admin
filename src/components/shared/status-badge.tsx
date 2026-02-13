@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type StatusBadgeLabel = 'ACTIVE' | 'INACTIVE' | 'FEMALE' | 'MALE';
+type StatusBadgeLabel = 'ACTIVE' | 'INACTIVE' | 'FEMALE' | 'MALE' | 'ON_LEAVE';
 
 const statusLabels: {
   value: StatusBadgeLabel;
@@ -35,6 +35,12 @@ const statusLabels: {
     label: 'Male',
     variant: 'outline',
     weight: 0.9,
+  },
+  {
+    value: 'ON_LEAVE',
+    label: 'On Leave',
+    variant: 'warning',
+    weight: 0.5,
   },
 ];
 

@@ -5,7 +5,7 @@ import type {
   CustomerPagination,
   CustomerListItem,
   CustomerFilters,
-} from '@/features/customers/types';
+} from '@/features/crm/customers/types';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
 import type { AddressInput } from '@/schemas/address';
 
@@ -54,12 +54,6 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       deletedAt: null,
     };
 
-    if (status && status.length > 0) {
-      whereClause.status = {
-        in: status,
-      };
-    }
-
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
@@ -73,6 +67,12 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         { phone: searchFilter },
         { organization: { name: searchFilter } },
       ];
+    }
+
+    if (status && status.length > 0) {
+      whereClause.status = {
+        in: status,
+      };
     }
 
     const skip = page > 0 ? perPage * (page - 1) : 0;

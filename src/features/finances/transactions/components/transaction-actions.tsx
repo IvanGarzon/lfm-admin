@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Transaction } from '../types';
-import { useTransactionQueryString } from '../hooks/use-transaction-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import {
   searchParams,
   transactionSearchParamsDefaults,
@@ -24,7 +24,7 @@ interface TransactionActionsProps {
 }
 
 export function TransactionActions({ transaction, onDelete }: TransactionActionsProps) {
-  const queryString = useTransactionQueryString(searchParams, transactionSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, transactionSearchParamsDefaults);
   const basePath = `/finances/transactions/${transaction.id}`;
   const transactionUrl = queryString ? `${basePath}?${queryString}` : basePath;
 
@@ -39,21 +39,21 @@ export function TransactionActions({ transaction, onDelete }: TransactionActions
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-          <Copy className="h-4 w-4 mr-2" />
+          <Copy className="h-4 w-4" />
           Copy transaction ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={transactionUrl}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
+            <Edit className="h-4 w-4" />
+            Edit Transaction
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onDelete(transaction.id)}
-          className="text-destructive focus:text-destructive"
+          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
         >
-          <Trash2 className="h-4 w-4 mr-2" />
+          <Trash2 className="h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

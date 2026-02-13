@@ -59,7 +59,7 @@ import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/i
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
 import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
 import { InvoicePayments } from '@/features/finances/invoices/components/invoice-payments';
-import { useInvoiceQueryString } from '@/features/finances/invoices/hooks/use-invoice-query-string';
+import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
 
@@ -113,7 +113,7 @@ export function InvoiceDrawer({
   const markAsDraft = useMarkInvoiceAsDraft();
 
   const router = useRouter();
-  const queryString = useInvoiceQueryString(searchParams, invoiceSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
 
   const mode: DrawerMode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/invoices/${id}`) ?? false) : (open ?? false);

@@ -6,7 +6,7 @@ import { Box } from '@/components/ui/box';
 import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
 import type { InvoicePaymentItem } from '@/features/finances/invoices/types';
 import { formatCurrency } from '@/lib/utils';
-import type { InvoiceStatusType } from '@/zod/inputTypeSchemas/InvoiceStatusSchema';
+import type { InvoiceStatus as InvoiceStatusType } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { InvoiceStatus } from '@/prisma/client';
 
 interface InvoicePaymentsProps {

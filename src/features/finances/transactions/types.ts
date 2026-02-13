@@ -1,5 +1,5 @@
-import type { TransactionStatusType } from '@/zod/inputTypeSchemas/TransactionStatusSchema';
-import type { TransactionTypeType } from '@/zod/inputTypeSchemas/TransactionTypeSchema';
+import type { TransactionStatus as TransactionStatusType } from '@/zod/schemas/enums/TransactionStatus.schema';
+import type { TransactionType as TransactionTypeType } from '@/zod/schemas/enums/TransactionType.schema';
 
 import { type CreateTransactionInput, type UpdateTransactionInput } from '@/schemas/transactions';
 

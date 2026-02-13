@@ -22,7 +22,7 @@ import {
   bulkUpdateInvoiceStatus,
   duplicateInvoice,
   markInvoiceAsDraft,
-} from '@/actions/invoices';
+} from '@/actions/finances/invoices';
 import type {
   InvoiceFilters,
   InvoiceWithDetails,
@@ -305,7 +305,7 @@ export function useRecordPayment() {
   return useMutation({
     mutationFn: async (data: RecordPaymentInput) => {
       // Dynamically import to separate server actions if needed, or import at top
-      const { recordPayment } = await import('@/actions/invoices');
+      const { recordPayment } = await import('@/actions/finances/invoices');
       const result = await recordPayment(data);
       if (!result.success) {
         throw new Error(result.error);

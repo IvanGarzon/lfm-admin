@@ -33,7 +33,7 @@ import {
   getConversionFunnel,
   getTopCustomersByQuotedValue,
   getAverageTimeToDecision,
-} from '@/actions/quotes';
+} from '@/actions/finances/quotes';
 import type {
   QuoteFilters,
   QuoteWithDetails,
@@ -104,6 +104,7 @@ export function useQuote(id: string | undefined) {
       if (!id) {
         throw new Error('Quote ID is required');
       }
+
       const result = await getQuoteById(id);
       if (!result.success) {
         throw new Error(result.error);

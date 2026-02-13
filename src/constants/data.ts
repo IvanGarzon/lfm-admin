@@ -13,25 +13,39 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
-    title: 'Customers',
-    href: '/customers',
-    icon: 'users',
-    shortcut: ['c', 'c'],
-    authorizeOnly: ['*'],
+    title: 'CRM',
+    href: '#',
+    icon: 'userPen',
+    items: [
+      {
+        title: 'Customers',
+        href: '/crm/customers',
+        icon: 'users',
+        shortcut: ['c', 'c'],
+        authorizeOnly: ['*'],
+      },
+      {
+        title: 'Organizations',
+        href: '/crm/organizations',
+        icon: 'building',
+        shortcut: ['o', 'o'],
+        authorizeOnly: ['*'],
+      },
+    ],
   },
   {
-    title: 'Organizations',
-    href: '/organizations',
-    icon: 'building',
-    shortcut: ['o', 'o'],
-    authorizeOnly: ['*'],
-  },
-  {
-    title: 'Employees',
-    href: '/employees',
-    icon: 'users',
-    shortcut: ['e', 'e'],
-    authorizeOnly: ['*'],
+    title: 'Staff',
+    href: '#',
+    icon: 'employee',
+    items: [
+      {
+        title: 'Employees',
+        href: '/staff/employees',
+        icon: 'user',
+        shortcut: ['e', 'e'],
+        authorizeOnly: ['*'],
+      },
+    ],
   },
   {
     title: 'Finances',
@@ -62,20 +76,26 @@ export const navItems: NavItem[] = [
     ],
   },
   {
+    title: 'Inventory',
+    href: '#',
+    icon: 'product',
+    items: [
+      {
+        title: 'Products',
+        href: '/inventory/products',
+        icon: 'product',
+        shortcut: ['p', 'p'],
+        authorizeOnly: ['*'],
+      },
+    ],
+  },
+  {
     title: 'Sessions',
     href: '/sessions',
     icon: 'keyRound',
     shortcut: ['s', 's'],
     authorizeOnly: ['*'],
   },
-
-  // {
-  //   title: 'Product',
-  //   href: '/products',
-  //   icon: 'product',
-  //   shortcut: ['p', 'p'],
-  //   authorizeOnly: ['*'],
-  // },
 ];
 
 export const lasFloresAccount = {

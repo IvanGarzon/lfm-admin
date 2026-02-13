@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { FormLabel } from '@/components/ui/form';
-import type { ActiveProduct } from '@/features/products/types';
+import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { InvoiceFormInput } from '@/features/finances/invoices/types';
 import { InvoiceItemRow } from '@/features/finances/invoices/components/invoice-item-row';
 

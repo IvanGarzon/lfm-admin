@@ -6,7 +6,7 @@ import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { GripVertical, Package, Trash2, X, Lock, Unlock } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
-import { ActiveProduct } from '@/features/products/types';
+import type { ActiveProduct } from '@/features/inventory/products/types';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -13,7 +13,7 @@ import {
   parseAsArrayOf,
 } from 'nuqs/server';
 
-import { SORTABLE_ORGANIZATION_COLUMNS } from '@/features/organizations/constants/sortable-columns';
+import { SORTABLE_ORGANIZATION_COLUMNS } from '@/features/crm/organizations/constants/sortable-columns';
 
 const sortableColumnIds = new Set(SORTABLE_ORGANIZATION_COLUMNS);
 
