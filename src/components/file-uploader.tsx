@@ -157,23 +157,39 @@ export function FileUploader(props: FileUploaderProps) {
 
   function onRemove(index: number) {
     if (!files) return;
+    const fileToRemove = files[index];
+    // Revoke the object URL to free memory
+    if (isFileWithPreview(fileToRemove)) {
+      URL.revokeObjectURL(fileToRemove.preview);
+    }
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
     onValueChange?.(newFiles);
   }
 
-  // Revoke preview url when component unmounts
+  // Track previous files to properly revoke old URLs
+  const previousFilesRef = React.useRef<File[]>([]);
+
+  // Revoke preview URLs when files change or component unmounts
   React.useEffect(() => {
+    // Revoke URLs for files that were removed
+    const currentFileSet = new Set(files?.map((f) => f.name) ?? []);
+    previousFilesRef.current.forEach((file) => {
+      if (!currentFileSet.has(file.name) && isFileWithPreview(file)) {
+        URL.revokeObjectURL(file.preview);
+      }
+    });
+    previousFilesRef.current = files ?? [];
+
+    // Cleanup on unmount
     return () => {
-      if (!files) return;
-      files.forEach((file) => {
+      previousFilesRef.current.forEach((file) => {
         if (isFileWithPreview(file)) {
           URL.revokeObjectURL(file.preview);
         }
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [files]);
 
   const isDisabled = disabled || (files?.length ?? 0) >= maxFiles;
 

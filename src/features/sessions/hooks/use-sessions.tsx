@@ -31,6 +31,7 @@ type QueryOptions<T, E = Error> = {
   initialData?: () => T | undefined;
   refetchOnWindowFocus?: boolean;
   staleTime?: number;
+  gcTime?: number;
 };
 
 /**
@@ -85,7 +86,8 @@ export function useSessions(params: {}): QueryOptions<SessionWithUser[], Error> 
     initialData: () =>
       queryClient.getQueryData<SessionWithUser[]>([QueryKeys.SESSION.GET_ALL]) || undefined,
     refetchOnWindowFocus: true, // Refetch when window gets focus to sync across browsers
-    staleTime: 0, // Always consider data stale to ensure fresh data
+    staleTime: 30000, // 30 seconds - prevents excessive refetches
+    gcTime: 5 * 60 * 1000, // 5 minutes - cleanup unused queries
   };
 }
 

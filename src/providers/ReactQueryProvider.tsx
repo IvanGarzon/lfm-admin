@@ -13,6 +13,7 @@ export const ReactQueryProvider = ({ children }: { children: React.ReactNode }) 
             // With SSR, we usually want to set some default staleTime
             // above 0 to avoid refetching immediately on the client
             staleTime: 1000 * 60 * 5, // 5 minutes
+            gcTime: 1000 * 60 * 10, // 10 minutes - cleanup unused queries
             refetchOnWindowFocus: false, // Personal preference
           },
         },
@@ -22,7 +23,7 @@ export const ReactQueryProvider = ({ children }: { children: React.ReactNode }) 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={true} />
+      {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
     </QueryClientProvider>
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
 import { useGoogleMaps } from '@/hooks/use-google-maps';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
@@ -41,6 +41,9 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
 
   const { isLoaded, getPlacePredictions } = useGoogleMaps();
 
+  // Track request ID to prevent race conditions from rapid typing
+  const requestIdRef = useRef(0);
+
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
 
@@ -57,15 +60,27 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
         return;
       }
 
+      // Increment request ID to track this specific request
+      const currentRequestId = ++requestIdRef.current;
+
       setIsLoading(true);
       try {
         const results = await getPlacePredictions(input);
-        setPredictions(results);
+        // Only update state if this is still the most recent request
+        if (currentRequestId === requestIdRef.current) {
+          setPredictions(results);
+        }
       } catch (error) {
-        console.error('Failed to fetch predictions:', error);
-        setPredictions([]);
+        // Only log/update if this is still the most recent request
+        if (currentRequestId === requestIdRef.current) {
+          console.error('Failed to fetch predictions:', error);
+          setPredictions([]);
+        }
       } finally {
-        setIsLoading(false);
+        // Only update loading state if this is still the most recent request
+        if (currentRequestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     [getPlacePredictions],

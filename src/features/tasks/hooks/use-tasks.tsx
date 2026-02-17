@@ -46,6 +46,7 @@ type QueryOptions<T, E = Error> = {
   refetchOnWindowFocus?: boolean;
   refetchInterval?: number | false;
   staleTime?: number;
+  gcTime?: number;
 };
 
 export type TaskWithStats = ScheduledTask & {
@@ -103,8 +104,9 @@ export function useTasks(filters?: {
       queryClient.getQueryData<TaskWithStats[]>([QueryKeys.TASK.GET_ALL, filters || {}]) ||
       undefined,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000, // Poll every 5 seconds to update task execution status
-    staleTime: 0, // Always consider data stale to ensure fresh data
+    refetchInterval: 30000, // Poll every 30 seconds (reduced from 5s to prevent memory churn)
+    staleTime: 10000, // 10 seconds - prevents immediate refetch
+    gcTime: 5 * 60 * 1000, // 5 minutes - explicit garbage collection
   };
 }
 
@@ -236,9 +238,10 @@ export function useTaskExecutions(
   return {
     ...getTaskExecutions(taskId, options),
     placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: true,
-    refetchInterval: 3000, // Poll every 3 seconds to catch status updates from background tasks
-    staleTime: 0, // Always consider data stale to ensure fresh data
+    refetchOnWindowFocus: false, // Polling handles updates, no need for window focus refetch
+    refetchInterval: 15000, // Poll every 15 seconds (reduced from 3s to prevent memory churn)
+    staleTime: 5000, // 5 seconds - prevents immediate refetch
+    gcTime: 2 * 60 * 1000, // 2 minutes - faster cleanup for execution data
   };
 }
 

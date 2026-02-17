@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
+import { useTimeout } from '@/hooks/use-timeout';
 import { getDefaultFilterOperator, getFilterOperators } from '@/lib/data-table';
 import { formatDate } from '@/lib/utils';
 import { generateId } from '@/lib/id';
@@ -66,17 +67,21 @@ export function DataTableFilterMenu<TData>({
   const [inputValue, setInputValue] = React.useState('');
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const resetTimeout = useTimeout();
 
-  const onOpenChange = React.useCallback((open: boolean) => {
-    setOpen(open);
+  const onOpenChange = React.useCallback(
+    (open: boolean) => {
+      setOpen(open);
 
-    if (!open) {
-      setTimeout(() => {
-        setSelectedColumn(null);
-        setInputValue('');
-      }, 100);
-    }
-  }, []);
+      if (!open) {
+        resetTimeout.set(() => {
+          setSelectedColumn(null);
+          setInputValue('');
+        }, 100);
+      }
+    },
+    [resetTimeout],
+  );
 
   const onInputKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -123,12 +128,12 @@ export function DataTableFilterMenu<TData>({
       debouncedSetFilters([...filters, newFilter]);
       setOpen(false);
 
-      setTimeout(() => {
+      resetTimeout.set(() => {
         setSelectedColumn(null);
         setInputValue('');
       }, 100);
     },
-    [filters, debouncedSetFilters],
+    [filters, debouncedSetFilters, resetTimeout],
   );
 
   const onFilterRemove = React.useCallback(

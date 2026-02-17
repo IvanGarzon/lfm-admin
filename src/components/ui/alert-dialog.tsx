@@ -5,6 +5,7 @@ import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import { useTimeout } from '@/hooks/use-timeout';
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -93,17 +94,26 @@ AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 const AlertDialogCancel = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Cancel
-    ref={ref}
-    className={cn(buttonVariants({ variant: 'outline' }), 'mt-2 sm:mt-0', className)}
-    onClick={() =>
-      // yes, you have to set a timeout
-      setTimeout(() => (document.body.style.pointerEvents = ''), 100)
-    }
-    {...props}
-  />
-));
+>(({ className, onClick, ...props }, ref) => {
+  const timeout = useTimeout();
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
+    // Workaround for Radix UI leaving pointer-events: none on body
+    timeout.set(() => {
+      document.body.style.pointerEvents = '';
+    }, 100);
+  };
+
+  return (
+    <AlertDialogPrimitive.Cancel
+      ref={ref}
+      className={cn(buttonVariants({ variant: 'outline' }), 'mt-2 sm:mt-0', className)}
+      onClick={handleClick}
+      {...props}
+    />
+  );
+});
 AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 
 export {

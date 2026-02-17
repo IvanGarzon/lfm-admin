@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { Controller, useForm, useFieldArray, type Resolver, SubmitHandler } from 'react-hook-form';
+import {
+  Controller,
+  useForm,
+  useFieldArray,
+  useWatch,
+  type Resolver,
+  SubmitHandler,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
@@ -154,8 +161,13 @@ export function QuoteForm({
     name: 'items',
   });
 
-  const gst = form.watch('gst') ?? 0;
-  const discount = form.watch('discount') ?? 0;
+  // Single subscription for all watched values
+  const [watchedItems, watchedGst, watchedDiscount] = useWatch({
+    control: form.control,
+    name: ['items', 'gst', 'discount'],
+  });
+  const gst = watchedGst ?? 0;
+  const discount = watchedDiscount ?? 0;
 
   useEffect(() => {
     if (mode === 'update' && quote) {
@@ -221,9 +233,11 @@ export function QuoteForm({
   );
 
   const calculateSubtotal = useCallback(() => {
-    const items = form.watch('items');
-    return items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0);
-  }, [form]);
+    return watchedItems.reduce(
+      (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
+      0,
+    );
+  }, [watchedItems]);
 
   const calculateTax = useCallback(() => {
     return (calculateSubtotal() * gst) / 100;

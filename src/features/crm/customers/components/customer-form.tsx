@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useState, useMemo } from 'react';
-import { Controller, useForm, type Resolver, SubmitHandler } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -109,8 +109,11 @@ export function CustomerForm({
 
   const { isDirty } = form.formState;
 
-  // Watch address from form
-  const watchedAddress = form.watch('address');
+  // Watch all form fields we need in a single subscription (more performant than multiple form.watch calls)
+  const [watchedAddress, watchedOrgId, watchedUseOrgAddress] = useWatch({
+    control: form.control,
+    name: ['address', 'organizationId', 'useOrganizationAddress'],
+  });
 
   // Address autocomplete search input state
   const [addressSearchInput, setAddressSearchInput] = useState<string>('');
@@ -134,10 +137,6 @@ export function CustomerForm({
   useUnsavedChanges(form.formState.isDirty);
 
   const { data: organizations = [], isLoading: isLoadingOrganizations } = useOrganizations();
-
-  // Watch organization-related fields
-  const watchedOrgId = form.watch('organizationId');
-  const watchedUseOrgAddress = form.watch('useOrganizationAddress');
 
   // Find selected organization with full details
   const selectedOrganization = useMemo(

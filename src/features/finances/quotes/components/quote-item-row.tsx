@@ -1,6 +1,7 @@
 'use client';
 
 import type { UseFormReturn, FieldArrayWithId } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
 import { useState } from 'react';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { GripVertical, Package, Trash2, X, ImagePlus, Palette } from 'lucide-react';
@@ -96,9 +97,19 @@ export function QuoteItemRow({
     );
   };
 
-  const selectedProductId = form.watch(`items.${index}.productId`);
-  const quantity = form.watch(`items.${index}.quantity`) || 0;
-  const unitPrice = form.watch(`items.${index}.unitPrice`) || 0;
+  // Single subscription for all watched item values
+  const [selectedProductId, watchedQuantity, watchedUnitPrice, watchedDescription] = useWatch({
+    control: form.control,
+    name: [
+      `items.${index}.productId`,
+      `items.${index}.quantity`,
+      `items.${index}.unitPrice`,
+      `items.${index}.description`,
+    ],
+  });
+  const quantity = watchedQuantity || 0;
+  const unitPrice = watchedUnitPrice || 0;
+  const description = watchedDescription || 'Untitled Item';
   const total = quantity * unitPrice;
 
   // Get error states
@@ -318,7 +329,7 @@ export function QuoteItemRow({
           onOpenChange={setColorPaletteDialogOpen}
           quoteId={quoteId}
           quoteItemId={itemId}
-          itemDescription={form.watch(`items.${index}.description`) || 'Untitled Item'}
+          itemDescription={description}
           initialColors={field.colors || []}
         />
       ) : null}
@@ -330,7 +341,7 @@ export function QuoteItemRow({
           onOpenChange={setAttachmentsDialogOpen}
           quoteId={quoteId}
           quoteItemId={itemId}
-          itemDescription={form.watch(`items.${index}.description`) || 'Untitled Item'}
+          itemDescription={description}
         />
       ) : null}
     </Reorder.Item>
