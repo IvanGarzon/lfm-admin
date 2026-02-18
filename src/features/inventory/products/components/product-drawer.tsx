@@ -105,7 +105,7 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
   useUnsavedChanges(isDirty);
 
   return (
-    <Drawer key={id} open={isOpen} onOpenChange={handleOpenChange}>
+    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
         {mode === 'update' && isLoading ? (
           <ProductDrawerSkeleton />

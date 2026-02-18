@@ -1,18 +1,16 @@
 'use client';
 
+import { useEffect, useCallback } from 'react';
+import { Controller, useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { parsePhoneNumber } from 'react-phone-number-input';
+import { Loader2 } from 'lucide-react';
+
+import { Form } from '@/components/ui/form';
+import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,48 +18,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { EmployeeStatus } from '@/prisma/client';
-import type { EmployeeListItem } from '@/features/staff/employees/types';
-import { GenderSchema, type Gender as GenderType } from '@/zod/schemas/enums/Gender.schema';
-import {
-  EmployeeStatusSchema,
-  type EmployeeStatus as EmployeeStatusType,
-} from '@/zod/schemas/enums/EmployeeStatus.schema';
-import { Loader2 } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { PhoneInputField } from '@/components/ui/phone-input';
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { useFormReset } from '@/hooks/use-form-reset';
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
+import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import {
   CreateEmployeeSchema,
   UpdateEmployeeSchema,
-  type CreateEmployeeFormValues,
-  type UpdateEmployeeFormValues,
+  type CreateEmployeeInput,
+  type UpdateEmployeeInput,
 } from '@/schemas/employees';
-import { DatePicker } from '@/components/ui/date-picker';
-import { PhoneInputField } from '@/components/ui/phone-input';
-import { parsePhoneNumber } from 'react-phone-number-input';
-import type { SubmitHandler } from 'react-hook-form';
+import type { EmployeeListItem, EmployeeFormInput } from '@/features/staff/employees/types';
 
-const defaultFormState: EmployeeFormValues = {
+const GenderOptions = GenderSchema.options.map((gender) => ({
+  value: gender,
+  label: gender.charAt(0) + gender.slice(1).toLowerCase(),
+}));
+
+const StatusOptions = EmployeeStatusSchema.options.map((status) => ({
+  value: status,
+  label: status.charAt(0) + status.slice(1).toLowerCase(),
+}));
+
+const defaultFormState: CreateEmployeeInput = {
   firstName: '',
   lastName: '',
   dob: undefined,
   phone: '',
   email: '',
   gender: undefined,
-  status: EmployeeStatus.ACTIVE,
-  rate: '0',
+  status: EmployeeStatusSchema.enum.ACTIVE,
+  rate: 0,
   avatarUrl: null,
-};
-
-type EmployeeFormValues = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  rate: string;
-  status: EmployeeStatusType;
-  avatarUrl: string | null;
-  id?: string;
-  gender?: GenderType | undefined;
-  dob?: Date | undefined;
 };
 
 // Helper function to convert phone number to E.164 format
@@ -86,11 +76,7 @@ const normalizePhoneNumber = (phone: string): string => {
   }
 };
 
-const mapEmployeeToFormValues = (employee: EmployeeListItem | null): EmployeeFormValues => {
-  if (!employee) {
-    return defaultFormState;
-  }
-
+const mapEmployeeToFormValues = (employee: EmployeeListItem): UpdateEmployeeInput => {
   return {
     id: employee.id,
     firstName: employee.firstName,
@@ -100,252 +86,310 @@ const mapEmployeeToFormValues = (employee: EmployeeListItem | null): EmployeeFor
     email: employee.email,
     gender: employee.gender ?? undefined,
     status: employee.status,
-    rate: employee.rate.toString(),
+    rate: employee.rate,
     avatarUrl: employee.avatarUrl ?? null,
   };
 };
-
-const genderOptions = GenderSchema.options.map((gender) => ({
-  value: gender,
-  label: gender.charAt(0) + gender.slice(1).toLowerCase(),
-}));
-
-const statusOptions = EmployeeStatusSchema.options.map((status) => ({
-  value: status,
-  label: status.charAt(0) + status.slice(1).toLowerCase(),
-}));
-
-import { useEffect } from 'react';
 
 export function EmployeeForm({
   employee,
   onCreate,
   onUpdate,
-  isUpdating = false,
   isCreating = false,
+  isUpdating = false,
   onDirtyStateChange,
   onClose,
 }: {
-  employee?: EmployeeListItem | undefined | null;
-  onCreate?: (data: CreateEmployeeFormValues) => void;
-  onUpdate?: (data: UpdateEmployeeFormValues) => void;
-  isUpdating?: boolean;
+  employee?: EmployeeListItem;
+  onCreate?: (data: CreateEmployeeInput) => void;
+  onUpdate?: (data: UpdateEmployeeInput) => void;
   isCreating?: boolean;
+  isUpdating?: boolean;
   onDirtyStateChange?: (isDirty: boolean) => void;
   onClose?: () => void;
 }) {
   const mode = employee ? 'update' : 'create';
-  const isSubmitting = isUpdating || isCreating;
 
-  // Get default values and ensure they're properly serialized (no superjson metadata)
-  const rawDefaultValues: EmployeeFormValues =
+  const defaultValues: EmployeeFormInput =
     mode === 'create'
       ? defaultFormState
       : employee
         ? mapEmployeeToFormValues(employee)
         : defaultFormState;
 
-  // Clean default values to ensure no superjson metadata leaks through
-  const defaultValues: EmployeeFormValues = {
-    ...rawDefaultValues,
-    dob:
-      rawDefaultValues.dob instanceof Date
-        ? rawDefaultValues.dob
-        : rawDefaultValues.dob
-          ? new Date(String(rawDefaultValues.dob).replace('$D', ''))
-          : undefined,
-    rate: String(rawDefaultValues.rate).replace('$D', ''),
-  } as EmployeeFormValues;
+  const createResolver: Resolver<EmployeeFormInput> = (values, context, options) => {
+    const schema = mode === 'create' ? CreateEmployeeSchema : UpdateEmployeeSchema;
+    return zodResolver(schema)(values, context, options);
+  };
 
-  const form = useForm<EmployeeFormValues>({
-    mode: 'onBlur',
-    resolver: zodResolver(mode === 'create' ? CreateEmployeeSchema : UpdateEmployeeSchema) as any,
+  const form = useForm<EmployeeFormInput>({
+    mode: 'onChange',
+    resolver: createResolver,
     defaultValues,
   });
 
+  // Reset form when employee changes (instead of relying on key={id} remount)
+  useFormReset(
+    form,
+    employee?.id,
+    useCallback(
+      () => (employee ? mapEmployeeToFormValues(employee) : defaultFormState),
+      [employee],
+    ),
+  );
+
   const { isDirty } = form.formState;
 
+  // Track dirty state for parent
   useEffect(() => {
-    onDirtyStateChange?.(isDirty);
-  }, [isDirty, onDirtyStateChange]);
-
-  const onSubmit: SubmitHandler<EmployeeFormValues> = (data) => {
-    const cleanedData = {
-      ...data,
-      dob: data.dob instanceof Date ? data.dob.toISOString() : data.dob,
-      rate: parseFloat(String(data.rate)),
-    };
-
-    if (mode === 'create') {
-      onCreate?.(cleanedData);
-    } else {
-      onUpdate?.(cleanedData as UpdateEmployeeFormValues);
+    if (onDirtyStateChange) {
+      onDirtyStateChange(form.formState.isDirty);
     }
-  };
+  }, [form.formState.isDirty, onDirtyStateChange]);
+
+  // Warn user before leaving page with unsaved changes
+  useUnsavedChanges(form.formState.isDirty);
+
+  const onSubmit: SubmitHandler<EmployeeFormInput> = useCallback(
+    (data: EmployeeFormInput) => {
+      if (mode === 'create') {
+        onCreate?.(data as CreateEmployeeInput);
+      } else {
+        const updateData: UpdateEmployeeInput = {
+          ...data,
+          id: employee?.id ?? '',
+        } as UpdateEmployeeInput;
+        onUpdate?.(updateData);
+      }
+    },
+    [mode, onCreate, onUpdate, employee?.id],
+  );
 
   return (
     <Form {...form}>
       <form
-        id="employee-form"
+        id="form-rhf-employee"
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col h-full"
       >
-        <Box className="flex-1 overflow-y-auto px-6 py-6">
-          <Box className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First name</FormLabel>
-                  <FormControl>
-                    <Input type="search" placeholder="Enter first name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last name</FormLabel>
-                  <FormControl>
-                    <Input type="search" placeholder="Enter last name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Enter your email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {genderOptions.map(({ value, label }) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone</FormLabel>
-                  <FormControl>
+        {isCreating || isUpdating ? (
+          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm font-medium">
+              {isCreating ? 'Creating employee...' : 'Updating employee...'}
+            </span>
+          </Box>
+        ) : null}
+
+        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldGroup>
+              <Controller
+                name="firstName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-firstName">First Name</FieldLabel>
+                    </FieldContent>
+                    <Input
+                      {...field}
+                      id="form-rhf-input-firstName"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Enter first name"
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="lastName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-lastName">Last Name</FieldLabel>
+                    </FieldContent>
+                    <Input
+                      {...field}
+                      id="form-rhf-input-lastName"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Enter last name"
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </Box>
+
+          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldGroup>
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                    </FieldContent>
+                    <Input
+                      {...field}
+                      id="form-rhf-input-email"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="john.doe@example.com"
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="phone"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-phone">Phone</FieldLabel>
+                    </FieldContent>
                     <PhoneInputField
                       defaultCountry="AU"
                       name={field.name}
                       value={field.value}
                       onChange={field.onChange}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dob"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of birth</FormLabel>
-                  <FormControl>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </Box>
+
+          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldGroup>
+              <Controller
+                name="gender"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-gender">Gender</FieldLabel>
+                    </FieldContent>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="form-rhf-select-gender" aria-invalid={fieldState.invalid}>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GenderOptions.map(({ value, label }) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="dob"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-dob">Date of Birth</FieldLabel>
+                    </FieldContent>
                     <DatePicker
                       endYear={new Date().getFullYear()}
                       formatString="MMMM d, yyyy"
-                      {...field}
+                      value={field.value as Date | undefined}
+                      onChange={field.onChange}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rate ($)</FormLabel>
-                  <FormControl>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </Box>
+
+          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FieldGroup>
+              <Controller
+                name="rate"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-rate">Rate ($)</FieldLabel>
+                    </FieldContent>
                     <Input
+                      id="form-rhf-input-rate"
                       type="number"
                       step="0.01"
+                      min="0"
+                      aria-invalid={fieldState.invalid}
                       placeholder="Enter rate"
                       {...field}
                       value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value === '' ? '' : e.target.value)}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Status" />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+
+            <FieldGroup>
+              <Controller
+                name="status"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
+                    </FieldContent>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statusOptions.map(({ value, label }) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <SelectContent>
+                        {StatusOptions.map(({ value, label }) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
           </Box>
         </Box>
 
         {/* Action Buttons */}
         <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
           {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isCreating || isUpdating}
+            >
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button type="submit" disabled={isCreating || isUpdating || (employee && !isDirty)}>
+            {isCreating || isUpdating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}

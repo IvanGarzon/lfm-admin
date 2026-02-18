@@ -104,7 +104,7 @@ export function CustomerDrawer({
   const { title, status } = getDrawerHeader();
 
   return (
-    <Drawer key={id} open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+    <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
         {isLoading ? <div>Loading...</div> : null}
 

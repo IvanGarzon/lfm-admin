@@ -24,5 +24,5 @@ export default function TransactionModal({ params }: { params: Promise<{ id: str
     return null;
   }
 
-  return <TransactionDrawer key={id} id={id} onClose={() => Promise.resolve()} />;
+  return <TransactionDrawer id={id} onClose={() => Promise.resolve()} />;
 }

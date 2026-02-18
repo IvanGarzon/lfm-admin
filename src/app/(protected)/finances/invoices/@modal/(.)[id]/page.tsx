@@ -26,5 +26,5 @@ export default function InvoiceModal({ params }: { params: Promise<{ id: string 
     return null;
   }
 
-  return <InvoiceDrawer key={id} id={id} onClose={() => Promise.resolve()} />;
+  return <InvoiceDrawer id={id} onClose={() => Promise.resolve()} />;
 }

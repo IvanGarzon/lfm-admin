@@ -116,7 +116,7 @@ export function EmployeeDrawer({
   const { title, status } = getDrawerHeader();
 
   return (
-    <Drawer key={id} open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+    <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
         {isLoading ? <Box className="p-6">Loading...</Box> : null}
 

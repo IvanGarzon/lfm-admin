@@ -154,12 +154,15 @@ export function InvoiceForm({
   const gst = watchedGst ?? 0;
   const discount = watchedDiscount ?? 0;
 
+  // Reset form when invoice or items change
+  // Note: Using manual effect instead of useFormReset because items are loaded separately
+  // and we need to reset when either invoice changes OR items finish loading
   useEffect(() => {
     if (mode === 'update' && invoice) {
       const formValues = mapInvoiceToFormValues(invoice, items);
       form.reset(formValues);
     }
-  }, [invoice, items, mode]);
+  }, [invoice, items, mode, form]);
 
   useEffect(() => {
     if (onDirtyStateChange) {

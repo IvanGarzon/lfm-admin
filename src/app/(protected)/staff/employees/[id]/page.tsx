@@ -37,7 +37,7 @@ export default async function EmployeePage({
   return (
     <Shell scrollable>
       <EmployeesList initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <EmployeeDrawer key={id} id={id} open={true} /> : null}
+      {id ? <EmployeeDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

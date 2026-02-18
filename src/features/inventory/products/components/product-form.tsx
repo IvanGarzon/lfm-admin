@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { Controller, useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
+import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Form } from '@/components/ui/form';
@@ -87,12 +88,12 @@ export function ProductForm({
     defaultValues,
   });
 
-  // Reset form when product changes
-  useEffect(() => {
-    if (mode === 'edit' && product) {
-      form.reset(mapProductToFormValues(product));
-    }
-  }, [product, mode, form]);
+  // Reset form when switching between products
+  useFormReset(
+    form,
+    product?.id,
+    useCallback(() => (product ? mapProductToFormValues(product) : defaultFormState), [product]),
+  );
 
   // Track dirty state for parent
   useEffect(() => {

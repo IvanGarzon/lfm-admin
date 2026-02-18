@@ -31,7 +31,7 @@ export default async function CustomerPage({
   return (
     <Shell scrollable>
       <CustomersList initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <CustomerDrawer key={id} id={id} open={true} /> : null}
+      {id ? <CustomerDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

@@ -9,6 +9,7 @@ import {
   type Resolver,
   SubmitHandler,
 } from 'react-hook-form';
+import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { format, addDays, startOfToday } from 'date-fns';
@@ -169,12 +170,12 @@ export function QuoteForm({
   const gst = watchedGst ?? 0;
   const discount = watchedDiscount ?? 0;
 
-  useEffect(() => {
-    if (mode === 'update' && quote) {
-      const formValues = mapQuoteToFormValues(quote);
-      form.reset(formValues);
-    }
-  }, [quote, mode]);
+  // Reset form when switching between quotes
+  useFormReset(
+    form,
+    quote?.id,
+    useCallback(() => (quote ? mapQuoteToFormValues(quote) : defaultFormState), [quote]),
+  );
 
   useEffect(() => {
     if (onDirtyStateChange) {

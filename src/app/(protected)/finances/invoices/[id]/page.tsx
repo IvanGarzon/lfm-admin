@@ -31,7 +31,7 @@ export default async function InvoicePage({
   return (
     <Shell scrollable>
       <InvoicesView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <InvoiceDrawer key={id} id={id} open={true} /> : null}
+      {id ? <InvoiceDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

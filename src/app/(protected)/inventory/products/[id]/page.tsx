@@ -32,7 +32,7 @@ export default async function ProductPage({
   return (
     <Shell scrollable>
       <ProductsView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <ProductDrawer key={id} id={id} open={true} /> : null}
+      {id ? <ProductDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

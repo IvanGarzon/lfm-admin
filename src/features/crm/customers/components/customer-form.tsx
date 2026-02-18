@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { AddressInlineFields } from '@/components/ui/address-autocomplete/address-inline-fields';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { useFormReset } from '@/hooks/use-form-reset';
 import { OrganizationSelect } from '@/components/shared/organization-select';
 import { useOrganizations } from '@/features/crm/organizations/hooks/use-organization-queries';
 import type { CustomerListItem, CustomerFormInput } from '@/features/crm/customers/types';
@@ -106,6 +107,16 @@ export function CustomerForm({
     resolver: createResolver,
     defaultValues,
   });
+
+  // Reset form when customer changes (instead of relying on key={id} remount)
+  useFormReset(
+    form,
+    customer?.id,
+    useCallback(
+      () => (customer ? mapCustomerToFormValues(customer) : defaultFormState),
+      [customer],
+    ),
+  );
 
   const { isDirty } = form.formState;
 

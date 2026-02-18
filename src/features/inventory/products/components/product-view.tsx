@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
 
@@ -31,6 +31,10 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
   const [showCreateDrawer, setShowCreateDrawer] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useProductStatistics({ enabled: true });
+
+  const handleShowCreateDrawer = () => {
+    setShowCreateDrawer((prev) => !prev);
+  };
 
   return (
     <Box className="flex flex-col gap-6">
@@ -68,12 +72,10 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
         </Box>
       ) : null}
 
-      {/* Product List */}
       <ProductList initialData={initialData} searchParams={searchParams} />
 
-      {/* Create Drawer */}
       {showCreateDrawer ? (
-        <ProductDrawer open={showCreateDrawer} onClose={() => setShowCreateDrawer(false)} />
+        <ProductDrawer open={showCreateDrawer} onClose={handleShowCreateDrawer} />
       ) : null}
     </Box>
   );

@@ -3,7 +3,6 @@ import {
   getTasks as getTasksAction,
   getTaskById as getTaskByIdAction,
   getTaskExecutions as getTaskExecutionsAction,
-  getExecutionById as getExecutionByIdAction,
   getRecentExecutions as getRecentExecutionsAction,
   updateTask,
   setTaskEnabled,
@@ -39,8 +38,8 @@ export const MutationKeys = {
 };
 
 type QueryOptions<T, E = Error> = {
-  queryKey: readonly [string, any];
-  queryFn: QueryFunction<T, readonly [string, any], E>;
+  queryKey: readonly [string, ...unknown[]];
+  queryFn: QueryFunction<T, readonly [string, ...unknown[]], E>;
   placeholderData?: (previousData: T | undefined) => T | undefined;
   initialData?: () => T | undefined;
   refetchOnWindowFocus?: boolean;
@@ -233,8 +232,6 @@ export function useTaskExecutions(
   },
   Error
 > {
-  const queryClient = useQueryClient();
-
   return {
     ...getTaskExecutions(taskId, options),
     placeholderData: (previousData) => previousData,
@@ -391,8 +388,6 @@ export function useRecentExecutions(limit: number = 10): QueryOptions<
   })[],
   Error
 > {
-  const queryClient = useQueryClient();
-
   return {
     ...getRecentExecutions(limit),
     placeholderData: (previousData) => previousData,

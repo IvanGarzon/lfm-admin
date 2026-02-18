@@ -23,5 +23,5 @@ export default function QuoteModalPage({ params }: { params: Promise<{ id: strin
     return null;
   }
 
-  return <QuoteDrawer key={id} id={id} onClose={() => Promise.resolve()} />;
+  return <QuoteDrawer id={id} onClose={() => Promise.resolve()} />;
 }

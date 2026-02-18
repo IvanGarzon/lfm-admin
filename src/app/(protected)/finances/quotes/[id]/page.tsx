@@ -30,7 +30,7 @@ export default async function QuotePage({
   return (
     <Shell scrollable>
       <QuotesView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <QuoteDrawer key={id} id={id} open={true} /> : null}
+      {id ? <QuoteDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

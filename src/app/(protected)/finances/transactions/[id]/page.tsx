@@ -33,7 +33,7 @@ export default async function TransactionIdPage({
   return (
     <Shell scrollable>
       <TransactionsView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <TransactionDrawer key={id} id={id} open={true} /> : null}
+      {id ? <TransactionDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

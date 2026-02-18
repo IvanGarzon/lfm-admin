@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import dynamic from 'next/dynamic';
+import { SearchParams } from 'nuqs/server';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -11,11 +14,11 @@ import { TransactionList } from '@/features/finances/transactions/components/tra
 import { TransactionOverview } from '@/features/finances/transactions/components/transaction-overview';
 import { TransactionAnalytics } from '@/features/finances/transactions/components/analytics/transaction-analytics';
 import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
-import dynamic from 'next/dynamic';
+import type { TransactionPagination } from '@/features/finances/transactions/types';
 
 interface TransactionsViewProps {
-  initialData: any;
-  searchParams: any;
+  initialData: TransactionPagination;
+  searchParams: SearchParams;
 }
 
 const TransactionDrawer = dynamic(

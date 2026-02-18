@@ -41,6 +41,7 @@ import type { Transaction, TransactionFormInput, TransactionAttachment } from '.
 import { getTransactionCategories } from '@/actions/finances/transactions/queries';
 import { CategoryMultiSelect, type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
+import { useFormReset } from '@/hooks/use-form-reset';
 
 const defaultFormState: CreateTransactionInput = {
   type: TransactionType.INCOME,
@@ -112,6 +113,16 @@ export function TransactionForm({
     resolver: createResolver,
     defaultValues,
   });
+
+  // Reset form when transaction changes (instead of relying on key={id} remount)
+  useFormReset(
+    form,
+    transaction?.id,
+    useCallback(
+      () => (transaction ? mapTransactionToFormValues(transaction) : defaultFormState),
+      [transaction],
+    ),
+  );
 
   const transactionType = form.watch('type');
 
