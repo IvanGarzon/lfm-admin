@@ -2,7 +2,17 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { X, Save, AlertCircle, Mail, Phone, Edit2, Check } from 'lucide-react';
+import {
+  X,
+  AlertCircle,
+  Mail,
+  Phone,
+  Edit2,
+  Calendar,
+  DollarSign,
+  Cake,
+  ExternalLink,
+} from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import {
   Drawer,
@@ -13,7 +23,7 @@ import {
   DrawerDescription,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   useEmployeeById,
   useUpdateEmployee,
@@ -62,6 +72,10 @@ export function EmployeeDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
+        // Reset to view mode when closing
+        setIsEditing(false);
+        setHasUnsavedChanges(false);
+
         if (id) {
           // Navigate back to list preserving filters
           const basePath = '/staff/employees';
@@ -201,59 +215,126 @@ export function EmployeeDrawer({
                   onClose={mode === 'create' ? onClose : () => setIsEditing(false)}
                 />
               ) : (
-                <Box className="p-6 space-y-8">
-                  <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Box className="space-y-4">
-                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        Contact Information
-                      </h3>
-                      <Box className="space-y-3">
-                        <Box className="flex items-center gap-3 text-sm">
-                          <Mail className="size-4 text-muted-foreground" />
-                          <a href={`mailto:${employee?.email}`} className="hover:underline">
-                            {employee?.email}
-                          </a>
-                        </Box>
-                        {employee?.phone && (
-                          <Box className="flex items-center gap-3 text-sm">
-                            <Phone className="size-4 text-muted-foreground" />
-                            <a href={`tel:${employee.phone}`} className="hover:underline">
-                              {employee.phone}
-                            </a>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-
-                    <Box className="space-y-4">
-                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        Basic Information
-                      </h3>
-                      <Box className="space-y-3">
-                        <Box className="flex justify-between text-sm py-1 border-b border-border/50">
-                          <span className="text-muted-foreground">Gender</span>
-                          <span className="font-medium capitalize">
-                            {employee?.gender?.toLowerCase() ?? 'N/A'}
-                          </span>
-                        </Box>
-                        <Box className="flex justify-between text-sm py-1 border-b border-border/50">
-                          <span className="text-muted-foreground">Date of Birth</span>
-                          <span className="font-medium">
-                            {employee?.dob ? format(new Date(employee.dob), 'PPPP') : 'N/A'}
-                          </span>
-                        </Box>
-                        <Box className="flex justify-between text-sm py-1 border-b border-border/50">
-                          <span className="text-muted-foreground">Hourly Rate</span>
-                          <span className="font-medium text-primary">
+                <Box className="p-6 space-y-6 overflow-y-auto">
+                  {/* Compensation Highlight Card */}
+                  <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-800">
+                    <CardContent className="p-4">
+                      <Box className="flex items-center justify-between">
+                        <Box>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                            Hourly Rate
+                          </p>
+                          <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                             {new Intl.NumberFormat('en-AU', {
                               style: 'currency',
                               currency: 'AUD',
                             }).format(employee?.rate ?? 0)}
-                          </span>
+                          </p>
+                        </Box>
+                        <Box className="p-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                          <DollarSign className="size-6 text-emerald-600 dark:text-emerald-400" />
                         </Box>
                       </Box>
-                    </Box>
-                  </Box>
+                    </CardContent>
+                  </Card>
+
+                  {/* Contact Information Card */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-medium flex items-center gap-2">
+                        <Mail className="size-4" />
+                        Contact Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Box className="flex items-center justify-between py-2 border-b border-border/50">
+                        <Box className="flex items-center gap-3">
+                          <Box className="p-2 rounded-lg bg-muted">
+                            <Mail className="size-4 text-muted-foreground" />
+                          </Box>
+                          <Box>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                              Email
+                            </p>
+                            <a
+                              href={`mailto:${employee?.email}`}
+                              className="text-sm font-medium hover:text-primary transition-colors"
+                            >
+                              {employee?.email}
+                            </a>
+                          </Box>
+                        </Box>
+                        <Button variant="ghost" size="icon" asChild className="size-8">
+                          <a href={`mailto:${employee?.email}`}>
+                            <ExternalLink className="size-4" />
+                          </a>
+                        </Button>
+                      </Box>
+
+                      {employee?.phone && (
+                        <Box className="flex items-center justify-between py-2">
+                          <Box className="flex items-center gap-3">
+                            <Box className="p-2 rounded-lg bg-muted">
+                              <Phone className="size-4 text-muted-foreground" />
+                            </Box>
+                            <Box>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                Phone
+                              </p>
+                              <a
+                                href={`tel:${employee.phone}`}
+                                className="text-sm font-medium hover:text-primary transition-colors"
+                              >
+                                {employee.phone}
+                              </a>
+                            </Box>
+                          </Box>
+                          <Button variant="ghost" size="icon" asChild className="size-8">
+                            <a href={`tel:${employee.phone}`}>
+                              <ExternalLink className="size-4" />
+                            </a>
+                          </Button>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Details Card */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base font-medium">Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Box className="flex items-center justify-between py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Gender</span>
+                        <span className="text-sm font-medium capitalize">
+                          {employee?.gender?.toLowerCase() ?? 'Not specified'}
+                        </span>
+                      </Box>
+                      <Box className="flex items-center justify-between py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Status</span>
+                        <StatusBadge status={employee?.status as any} />
+                      </Box>
+                      <Box className="flex items-center justify-between py-2 border-b border-border/50">
+                        <span className="text-sm text-muted-foreground">Date of Birth</span>
+                        <Box className="flex items-center gap-2 text-sm font-medium">
+                          <Cake className="size-3.5 text-muted-foreground" />
+                          {employee?.dob
+                            ? format(new Date(employee.dob), 'MMM d, yyyy')
+                            : 'Not specified'}
+                        </Box>
+                      </Box>
+                      <Box className="flex items-center justify-between py-2">
+                        <span className="text-sm text-muted-foreground">Employee since</span>
+                        <Box className="flex items-center gap-2 text-sm font-medium">
+                          <Calendar className="size-3.5 text-muted-foreground" />
+                          {employee?.createdAt
+                            ? format(new Date(employee.createdAt), 'MMM d, yyyy')
+                            : 'N/A'}
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
                 </Box>
               )}
             </DrawerBody>
