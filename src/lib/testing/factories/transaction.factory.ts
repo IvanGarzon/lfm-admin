@@ -9,7 +9,7 @@ import { testIds } from '../id-generator';
 import type { TransactionType, TransactionStatus } from '@/prisma/client';
 import type { CreateTransactionInput } from '@/schemas/transactions';
 import type {
-  Transaction,
+  TransactionListItem,
   TransactionStatistics,
   TransactionTrend,
   TransactionCategoryBreakdown,
@@ -69,7 +69,9 @@ export function createTransactionResponse(
 /**
  * Creates a mock transaction with full details.
  */
-export function createTransactionWithDetails(overrides: Partial<Transaction> = {}): Transaction {
+export function createTransactionWithDetails(
+  overrides: Partial<TransactionListItem> = {},
+): TransactionListItem {
   return {
     id: overrides.id ?? testIds.transaction(),
     type: 'INCOME',
@@ -82,6 +84,7 @@ export function createTransactionWithDetails(overrides: Partial<Transaction> = {
     referenceNumber: null,
     referenceId: null,
     invoiceId: null,
+    vendorId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     categories: overrides.categories ?? [
@@ -89,6 +92,7 @@ export function createTransactionWithDetails(overrides: Partial<Transaction> = {
     ],
     attachments: overrides.attachments ?? [],
     invoice: overrides.invoice ?? null,
+    vendor: overrides.vendor ?? null,
     ...overrides,
   };
 }

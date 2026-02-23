@@ -54,6 +54,3 @@ export const DeleteCustomerSchema = z.object({
 export type CreateCustomerInput = z.infer<typeof CreateCustomerSchema>;
 export type UpdateCustomerInput = z.infer<typeof UpdateCustomerSchema>;
 export type DeleteCustomerInput = z.infer<typeof DeleteCustomerSchema>;
-
-export type CustomerFormValues = z.infer<typeof BaseCustomerSchema>;
-export type CustomerFormValuesWithId = CustomerFormValues & { id: string };

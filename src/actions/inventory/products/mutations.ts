@@ -30,8 +30,10 @@ export async function createProduct(
   try {
     requirePermission(session.user, 'canManageProducts');
     const validatedData = CreateProductSchema.parse(data);
+
     const result = await productRepo.createProduct(validatedData);
     revalidatePath(PRODUCTS_PATH);
+
     return { success: true, data: result };
   } catch (error) {
     return handleActionError(error, 'Failed to create product');

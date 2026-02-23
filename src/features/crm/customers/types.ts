@@ -2,9 +2,9 @@ import type { CustomerStatus } from '@/zod/schemas/enums/CustomerStatus.schema';
 import type { Gender } from '@/zod/schemas/enums/Gender.schema';
 import type { PaginationMeta } from '@/types/pagination';
 import type { AddressInput } from '@/schemas/address';
-import type { CustomerFormValues, CustomerFormValuesWithId } from '@/schemas/customers';
+import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
 
-export type CustomerFormInput = CustomerFormValues | CustomerFormValuesWithId;
+export type CustomerFormInput = CreateCustomerInput | UpdateCustomerInput;
 
 export type CustomerListItem = {
   id: string;

@@ -44,6 +44,14 @@ export const PERMISSIONS = {
   canManageProducts: {
     label: 'Can create, edit, and delete products',
   },
+
+  // Vendor Permissions
+  canReadVendors: {
+    label: 'Can view vendors',
+  },
+  canManageVendors: {
+    label: 'Can create, edit, and delete vendors',
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -72,7 +80,7 @@ type RolePolicy = {
  * USER role: Read-only access to invoices and quotes
  */
 const USER: RolePolicy = {
-  allow: ['canReadInvoices', 'canReadQuotes', 'canReadProducts'],
+  allow: ['canReadInvoices', 'canReadQuotes', 'canReadProducts', 'canReadVendors'],
   deny: [],
   actions: {
     allow: [
@@ -92,6 +100,12 @@ const USER: RolePolicy = {
       'products.getProductById',
       'products.getProductStatistics',
       'products.getActiveProducts',
+
+      // Vendor read actions
+      'vendors.getVendors',
+      'vendors.getVendorById',
+      'vendors.getVendorStatistics',
+      'vendors.getActiveVendors',
     ],
     deny: [],
   },
@@ -108,6 +122,7 @@ const MANAGER: RolePolicy = {
     'canManageQuotes',
     'canRecordPayments',
     'canManageProducts',
+    'canManageVendors',
   ],
   deny: [],
   actions: {
@@ -139,6 +154,11 @@ const MANAGER: RolePolicy = {
       'products.updateProduct',
       'products.updateProductStatus',
       'products.updateProductStock',
+
+      // Vendor management actions
+      'vendors.createVendor',
+      'vendors.updateVendor',
+      'vendors.updateVendorStatus',
     ],
     deny: [],
   },
@@ -159,6 +179,7 @@ const ADMIN: RolePolicy = {
       'invoices.deleteInvoice',
       'quotes.deleteQuote',
       'products.deleteProduct',
+      'vendors.deleteVendor',
     ],
     deny: [],
   },

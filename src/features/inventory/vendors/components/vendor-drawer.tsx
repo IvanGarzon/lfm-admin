@@ -13,52 +13,52 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { ProductForm } from '@/features/inventory/products/components/product-form';
-import { ProductDrawerSkeleton } from '@/features/inventory/products/components/product-drawer-skeleton';
+import { VendorForm } from '@/features/inventory/vendors/components/vendor-form';
+import { VendorDrawerSkeleton } from '@/features/inventory/vendors/components/vendor-drawer-skeleton';
 import { useQueryString } from '@/hooks/use-query-string';
-import { searchParams, productSearchParamsDefaults } from '@/filters/products/products-filters';
+import { searchParams, vendorSearchParamsDefaults } from '@/filters/vendors/vendors-filters';
 import {
-  useProduct,
-  useCreateProduct,
-  useUpdateProduct,
-} from '@/features/inventory/products/hooks/use-products-queries';
-import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
+  useVendor,
+  useCreateVendor,
+  useUpdateVendor,
+} from '@/features/inventory/vendors/hooks/use-vendor-queries';
+import type { CreateVendorInput, UpdateVendorInput } from '@/schemas/vendors';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 
-interface ProductDrawerProps {
+interface VendorDrawerProps {
   id?: string;
   open?: boolean;
   onClose?: () => void;
 }
 
-export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProps) {
+export function VendorDrawer({ id, open: openProp, onClose }: VendorDrawerProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const queryString = useQueryString(searchParams, productSearchParamsDefaults);
+  const queryString = useQueryString(searchParams, vendorSearchParamsDefaults);
 
   const [isDirty, setIsDirty] = useState(false);
 
   // Determine if drawer is open (URL-based or prop-based)
   const isOpen = id
-    ? (pathname?.includes(`/inventory/products/${id}`) ?? false)
+    ? (pathname?.includes(`/inventory/vendors/${id}`) ?? false)
     : (openProp ?? false);
 
   // Mode: create or update
   const mode = id ? 'update' : 'create';
 
-  // Fetch product data if editing
-  const { data: product, isLoading, isError, error } = useProduct(id);
+  // Fetch vendor data if editing
+  const { data: vendor, isLoading, isError, error } = useVendor(id);
 
   // Mutations
-  const createMutation = useCreateProduct();
-  const updateMutation = useUpdateProduct();
+  const createMutation = useCreateVendor();
+  const updateMutation = useUpdateVendor();
 
   // Handle close
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
         if (id) {
-          const basePath = '/inventory/products';
+          const basePath = '/inventory/vendors';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
         } else {
@@ -71,7 +71,7 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
 
   // Handle create
   const handleCreate = useCallback(
-    (data: CreateProductInput) => {
+    (data: CreateVendorInput) => {
       createMutation.mutate(data, {
         onSuccess: () => {
           setIsDirty(false);
@@ -84,7 +84,7 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
 
   // Handle update
   const handleUpdate = useCallback(
-    (data: UpdateProductInput) => {
+    (data: UpdateVendorInput) => {
       updateMutation.mutate(data, {
         onSuccess: () => {
           setIsDirty(false);
@@ -106,23 +106,23 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
         {mode === 'update' && isLoading ? (
-          <ProductDrawerSkeleton />
+          <VendorDrawerSkeleton />
         ) : isError ? (
           <Box className="p-6 text-destructive">
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load product: {error?.message}</p>
+            <p className="mt-4">Could not load vendor: {error?.message}</p>
           </Box>
         ) : (
           <>
             <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
               <Box className="mt-1 flex flex-col flex-1">
-                <DrawerTitle>{mode === 'create' ? 'Add Product' : 'Edit Product'}</DrawerTitle>
+                <DrawerTitle>{mode === 'create' ? 'Add Vendor' : 'Edit Vendor'}</DrawerTitle>
                 <div className="text-xs text-muted-foreground mt-1">
                   {mode === 'create'
-                    ? 'Fill in the information to add a new product to your inventory.'
-                    : `Updating product: ${product?.name ?? id}`}
+                    ? 'Fill in the information to add a new vendor to your system.'
+                    : `Updating vendor: ${vendor?.name ?? id}`}
                 </div>
               </Box>
               <Button
@@ -138,8 +138,8 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
             <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
               <Box className="flex h-full">
                 <Box className="overflow-y-auto w-full">
-                  <ProductForm
-                    product={mode === 'update' ? product : null}
+                  <VendorForm
+                    vendor={mode === 'update' ? vendor : null}
                     onCreate={handleCreate}
                     onUpdate={handleUpdate}
                     isCreating={createMutation.isPending}

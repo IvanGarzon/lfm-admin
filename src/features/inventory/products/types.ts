@@ -1,5 +1,6 @@
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
-import type { ProductStatus } from '@/prisma/client';
+import type { ProductStatus } from '@/zod/schemas/enums/ProductStatus.schema';
+import type { PaginationMeta } from '@/types/pagination';
 
 export type ProductFormInput = CreateProductInput | UpdateProductInput;
 
@@ -39,15 +40,7 @@ export interface ProductFilters {
 
 export type ProductPagination = {
   items: ProductListItem[];
-  pagination: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number | null;
-    previousPage: number | null;
-  };
+  pagination: PaginationMeta;
 };
 
 export interface ProductStatistics {

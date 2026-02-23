@@ -1,9 +1,9 @@
 import type { EmployeeStatus } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import type { Gender } from '@/zod/schemas/enums/Gender.schema';
 import type { PaginationMeta } from '@/types/pagination';
-import type { EmployeeFormValues, EmployeeFormValuesWithId } from '@/schemas/employees';
+import type { CreateEmployeeInput, UpdateEmployeeInput } from '@/schemas/employees';
 
-export type EmployeeFormInput = EmployeeFormValues | EmployeeFormValuesWithId;
+export type EmployeeFormInput = CreateEmployeeInput | UpdateEmployeeInput;
 
 export type EmployeeListItem = {
   id: string;

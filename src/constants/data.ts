@@ -87,6 +87,13 @@ export const navItems: NavItem[] = [
         shortcut: ['p', 'p'],
         authorizeOnly: ['*'],
       },
+      {
+        title: 'Vendors',
+        href: '/inventory/vendors',
+        icon: 'users',
+        shortcut: ['v', 'v'],
+        authorizeOnly: ['*'],
+      },
     ],
   },
   {

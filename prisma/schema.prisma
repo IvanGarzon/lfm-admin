@@ -141,6 +141,48 @@ model Organization {
   @@map(name: "organizations")
 }
 
+model Vendor {
+  id           String       @id @default(cuid())
+  vendorCode   String       @unique @map(name: "vendor_code")
+  name         String
+  email        String
+  phone        String?
+  abn          String?
+  status       VendorStatus @default(ACTIVE)
+
+  // Address fields
+  address1         String?
+  address2         String?
+  city             String?
+  region           String?
+  postalCode       String?      @map("postal_code")
+  country          String?      @default("Australia")
+  lat              Float?
+  lng              Float?
+  formattedAddress String?      @map("formatted_address")
+
+  // Business details
+  website      String?
+  paymentTerms Int?         @default(30) @map("payment_terms")
+  taxId        String?      @map("tax_id")
+  notes        String?      @db.Text
+
+  // Relations
+  transactions Transaction[] @relation("VendorTransactions")
+
+  // Audit fields
+  createdAt    DateTime     @default(now()) @map(name: "created_at") @db.Timestamptz()
+  updatedAt    DateTime     @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  deletedAt    DateTime?    @map(name: "deleted_at") @db.Timestamptz()
+
+  @@index([status])
+  @@index([email])
+  @@index([vendorCode])
+  @@index([status, deletedAt])
+  @@index([name])
+  @@map(name: "vendors")
+}
+
 model Employee {
   id        String         @id @default(cuid())
   firstName String         @map(name: "first_name")
@@ -616,6 +658,8 @@ model Transaction {
   referenceId     String?                           @map(name: "reference_id")
   invoiceId   String?           @map(name: "invoice_id")
   invoice     Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  vendorId    String?           @map(name: "vendor_id")
+  vendor      Vendor?           @relation("VendorTransactions", fields: [vendorId], references: [id], onDelete: SetNull)
 
   categories  TransactionCategoryOnTransaction[]
   attachments TransactionAttachment[]
@@ -627,6 +671,7 @@ model Transaction {
   @@index([status])
   @@index([date], map: "transactions_date_idx")
   @@index([invoiceId])
+  @@index([vendorId])
   @@index([type, status])
   @@index([date(sort: Desc)], map: "transactions_date_desc_idx")
   @@map(name: "transactions")
@@ -706,6 +751,12 @@ enum ProductStatus {
   ACTIVE
   INACTIVE
   OUT_OF_STOCK
+}
+
+enum VendorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 enum States {

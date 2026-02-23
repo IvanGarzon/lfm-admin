@@ -1,7 +1,7 @@
-import type { TransactionStatus as TransactionStatusType } from '@/zod/schemas/enums/TransactionStatus.schema';
-import type { TransactionType as TransactionTypeType } from '@/zod/schemas/enums/TransactionType.schema';
-
-import { type CreateTransactionInput, type UpdateTransactionInput } from '@/schemas/transactions';
+import type { TransactionStatus } from '@/zod/schemas/enums/TransactionStatus.schema';
+import type { TransactionType } from '@/zod/schemas/enums/TransactionType.schema';
+import type { PaginationMeta } from '@/types/pagination';
+import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 
 export type TransactionFormInput = CreateTransactionInput | UpdateTransactionInput;
 
@@ -28,18 +28,19 @@ export type TransactionAttachment = {
   uploadedAt: Date;
 };
 
-export type Transaction = {
+export type TransactionListItem = {
   id: string;
-  type: TransactionTypeType;
+  type: TransactionType;
   date: Date;
   amount: number;
   currency: string;
   description: string;
   payee: string;
-  status: TransactionStatusType;
+  status: TransactionStatus;
   referenceNumber: string | null;
   referenceId: string | null;
   invoiceId: string | null;
+  vendorId: string | null;
   createdAt: Date;
   updatedAt: Date;
   categories: {
@@ -57,14 +58,16 @@ export type Transaction = {
       lastName: string;
     };
   } | null;
+  vendor?: {
+    id: string;
+    name: string;
+  } | null;
 };
-
-export type TransactionListItem = Transaction;
 
 export interface TransactionFilters {
   search?: string;
-  type?: TransactionTypeType[];
-  status?: TransactionStatusType[];
+  type?: TransactionType[];
+  status?: TransactionStatus[];
   page: number;
   perPage: number;
   sort?: {
@@ -75,15 +78,7 @@ export interface TransactionFilters {
 
 export type TransactionPagination = {
   items: TransactionListItem[];
-  pagination: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number | null;
-    previousPage: number | null;
-  };
+  pagination: PaginationMeta;
 };
 
 export interface TransactionStatistics {

@@ -1,10 +1,4 @@
-import {
-  Prisma,
-  PrismaClient,
-  Transaction,
-  TransactionType,
-  TransactionStatus,
-} from '@/prisma/client';
+import { Prisma, PrismaClient, TransactionType, TransactionStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import type { CreateTransactionInput } from '@/schemas/transactions';
 import { getPaginationMetadata } from '@/lib/utils';
@@ -121,6 +115,12 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             },
           },
         },
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy,
       skip,
@@ -135,7 +135,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     const items: TransactionListItem[] = transactions.map((transaction) => ({
       ...transaction,
       amount: Number(transaction.amount),
-    }));
+    })) as unknown as TransactionListItem[];
 
     return {
       items,
@@ -148,8 +148,8 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param id - The ID of the transaction
    * @returns A promise that resolves to the transaction or null
    */
-  async findByIdWithDetails(id: string) {
-    return this.prisma.transaction.findUnique({
+  async findByIdWithDetails(id: string): Promise<TransactionListItem | null> {
+    const transaction = await this.prisma.transaction.findUnique({
       where: { id },
       include: {
         categories: {
@@ -189,8 +189,23 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             },
           },
         },
+        vendor: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
+
+    if (!transaction) {
+      return null;
+    }
+
+    return {
+      ...transaction,
+      amount: Number(transaction.amount),
+    };
   }
 
   /**
@@ -209,12 +224,12 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   /**
    * Create a new transaction
    * @param data - The transaction data
-   * @returns A promise that resolves to the created transaction
+   * @returns A promise that resolves to the created transaction with full details
    */
-  async createTransaction(data: CreateTransactionInput): Promise<Transaction> {
+  async createTransaction(data: CreateTransactionInput): Promise<TransactionListItem> {
     const referenceNumber = await TransactionRepository.generateReferenceNumber();
 
-    return this.prisma.transaction.create({
+    const transaction = await this.prisma.transaction.create({
       data: {
         type: data.type,
         date: data.date,
@@ -226,6 +241,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         referenceNumber,
         referenceId: data.referenceId,
         invoiceId: data.invoiceId,
+        vendorId: data.vendorId,
         categories: data.categoryIds
           ? {
               create: data.categoryIds.map((categoryId) => ({
@@ -234,7 +250,18 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             }
           : undefined,
       },
+      select: {
+        id: true,
+      },
     });
+
+    const createdTransaction = await this.findByIdWithDetails(transaction.id);
+
+    if (!createdTransaction) {
+      throw new Error('Failed to retrieve created transaction');
+    }
+
+    return createdTransaction;
   }
 
   /**
@@ -243,7 +270,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param data - The updated transaction data
    * @returns A promise that resolves to the updated transaction
    */
-  async updateTransaction(id: string, data: Partial<CreateTransactionInput>): Promise<Transaction> {
+  async updateTransaction(
+    id: string,
+    data: Partial<CreateTransactionInput>,
+  ): Promise<TransactionListItem | null> {
     // If categoryIds are provided, we need to update the categories
     if (data.categoryIds) {
       // Delete existing categories and create new ones
@@ -252,7 +282,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       });
     }
 
-    return this.prisma.transaction.update({
+    const updatedTransaction = await this.prisma.transaction.update({
       where: { id },
       data: {
         type: data.type,
@@ -264,6 +294,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         status: data.status,
         referenceId: data.referenceId,
         invoiceId: data.invoiceId,
+        vendorId: data.vendorId,
         categories: data.categoryIds
           ? {
               create: data.categoryIds.map((categoryId) => ({
@@ -272,7 +303,27 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             }
           : undefined,
       },
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        invoice: {
+          include: {
+            customer: true,
+          },
+        },
+        vendor: true,
+        attachments: true,
+      },
     });
+
+    if (!updatedTransaction) {
+      return null;
+    }
+
+    return await this.findByIdWithDetails(updatedTransaction.id);
   }
 
   /**
@@ -280,10 +331,30 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param id - The ID of the transaction to delete
    * @returns A promise that resolves to the deleted transaction
    */
-  async deleteTransaction(id: string): Promise<Transaction> {
-    return this.prisma.transaction.delete({
+  async deleteTransaction(id: string): Promise<TransactionListItem | null> {
+    const transaction = await this.prisma.transaction.delete({
       where: { id },
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        invoice: {
+          include: {
+            customer: true,
+          },
+        },
+        vendor: true,
+        attachments: true,
+      },
     });
+
+    if (!transaction) {
+      return null;
+    }
+
+    return await this.findByIdWithDetails(transaction.id);
   }
 
   /**

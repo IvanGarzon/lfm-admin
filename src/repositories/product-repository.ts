@@ -1,65 +1,14 @@
 import { Prisma, PrismaClient, ProductStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { getPaginationMetadata } from '@/lib/utils';
-
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
-
-/**
- * Product type definitions
- */
-export type ProductListItem = {
-  id: string;
-  name: string;
-  description: string | null;
-  imageUrl: string | null;
-  status: ProductStatus;
-  price: number;
-  stock: number;
-  availableAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type ProductWithDetails = ProductListItem & {
-  _count: {
-    invoiceItems: number;
-    quoteItems: number;
-  };
-};
-
-export interface ProductFilters {
-  search?: string;
-  status?: ProductStatus[];
-  page: number;
-  perPage: number;
-  sort?: { id: string; desc: boolean }[];
-}
-
-export type ProductPagination = {
-  items: ProductListItem[];
-  pagination: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number | null;
-    previousPage: number | null;
-  };
-};
-
-export interface ProductStatistics {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  outOfStockProducts: number;
-  totalValue: number;
-  averagePrice: number;
-  lowStockProducts: number;
-  growth: {
-    totalProducts: number;
-  };
-}
+import type {
+  ProductListItem,
+  ProductWithDetails,
+  ProductFilters,
+  ProductPagination,
+  ProductStatistics,
+} from '@/features/inventory/products/types';
 
 /**
  * Product Repository
@@ -274,13 +223,13 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @returns A promise that resolves to the updated product, or null if not found
    */
   async updateProduct(id: string, data: UpdateProductInput): Promise<ProductWithDetails | null> {
-    const existing = await this.prisma.product.findUnique({ where: { id } });
+    const existing = await this.findById(id);
 
     if (!existing) {
       return null;
     }
 
-    await this.prisma.product.update({
+    const updatedProduct = await this.prisma.product.update({
       where: { id },
       data: {
         name: data.name,
@@ -292,6 +241,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
         availableAt: data.availableAt,
       },
     });
+
+    if (!updatedProduct) {
+      return null;
+    }
 
     return this.findByIdWithDetails(id);
   }
@@ -337,7 +290,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @returns A promise that resolves to the updated product
    */
   async updateStatus(id: string, status: ProductStatus): Promise<ProductWithDetails | null> {
-    const existing = await this.prisma.product.findUnique({ where: { id } });
+    const existing = await this.findById(id);
 
     if (!existing) {
       return null;
@@ -462,4 +415,5 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
 
 // Singleton instance
 import { prisma } from '@/lib/prisma';
+import { NullableIntFieldUpdateOperationsInputObjectSchema } from '@/zod/schemas';
 export const productRepo = new ProductRepository(prisma);

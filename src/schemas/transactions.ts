@@ -28,6 +28,7 @@ export const TransactionSchema = z.object({
   referenceNumber: z.string().max(100, 'Reference number is too long').optional().nullable(),
   referenceId: z.string().max(100, 'Reference ID is too long').optional().nullable(),
   invoiceId: z.cuid().optional().nullable(),
+  vendorId: z.cuid().optional().nullable(),
 });
 
 export const CreateTransactionSchema = TransactionSchema;

@@ -77,6 +77,10 @@ export async function updateTransaction(
 
     const transaction = await transactionRepo.updateTransaction(validatedData.id, validatedData);
 
+    if (!transaction) {
+      return { success: false, error: 'Failed to update transaction' };
+    }
+
     logger.info('Transaction updated', {
       context: 'updateTransaction',
       metadata: {},

@@ -20,29 +20,11 @@ const EmployeeSchema = z
         message: 'Please enter a valid phone number',
       }),
     gender: GenderSchema.optional(),
-    // rate: z.coerce.number().nonnegative({
-    //   error: 'Rate must be a positive number.',
-    // }),
     rate: z
       .number()
       .min(0, { error: 'Rate must be a positive number' })
       .max(1000000, { error: 'Rate must be less than 1,000,000' }),
     status: EmployeeStatusSchema,
-    // dob: z
-    //   .preprocess((val) => {
-    //     if (typeof val === 'string') {
-    //       const date = new Date(val);
-    //       if (isNaN(date.getTime())) {
-    //         return undefined;
-    //       }
-    //       return date;
-    //     }
-    //     return val;
-    //   }, z.date().optional())
-    //   .refine((date) => !date || date <= new Date(), {
-    //     error: 'Date of birth cannot be in the future.',
-    //   })
-    //   .transform((date) => (date ? formatters.toDateOnlyUTC(date) : undefined)),
     dob: z.date().optional(),
     avatarUrl: z
       .string()
@@ -65,6 +47,3 @@ export const UpdateEmployeeSchema = EmployeeSchema.extend({
 // Output types (after validation/transforms) - used for API calls
 export type CreateEmployeeInput = z.infer<typeof CreateEmployeeSchema>;
 export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeSchema>;
-
-export type EmployeeFormValues = z.infer<typeof EmployeeSchema>;
-export type EmployeeFormValuesWithId = EmployeeFormValues & { id: string };

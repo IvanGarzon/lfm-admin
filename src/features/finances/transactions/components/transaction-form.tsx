@@ -1,11 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Controller, useForm, type Resolver, SubmitHandler } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, DollarSign, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { TransactionType, TransactionStatus } from '@/prisma/client';
+
+import { VendorSelect } from '@/features/inventory/vendors/components/vendor-select';
+import { useActiveVendors } from '@/features/inventory/vendors/hooks/use-vendor-queries';
+import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
+import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
 
 import { cn } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -29,7 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-
+import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
@@ -37,26 +41,31 @@ import {
   type UpdateTransactionInput,
 } from '@/schemas/transactions';
 
-import type { Transaction, TransactionFormInput, TransactionAttachment } from '../types';
+import type {
+  TransactionListItem,
+  TransactionFormInput,
+  TransactionAttachment,
+} from '@/features/finances/transactions/types';
 import { getTransactionCategories } from '@/actions/finances/transactions/queries';
 import { CategoryMultiSelect, type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
 import { useFormReset } from '@/hooks/use-form-reset';
 
 const defaultFormState: CreateTransactionInput = {
-  type: TransactionType.INCOME,
+  type: TransactionTypeSchema.enum.INCOME,
   date: new Date(),
   amount: 0,
   currency: 'AUD',
   categoryIds: [],
   description: '',
   payee: '',
-  status: TransactionStatus.PENDING,
+  status: TransactionStatusSchema.enum.PENDING,
   referenceId: null,
   invoiceId: null,
+  vendorId: null,
 };
 
-const mapTransactionToFormValues = (transaction: Transaction): UpdateTransactionInput => {
+const mapTransactionToFormValues = (transaction: TransactionListItem): UpdateTransactionInput => {
   // Extract category IDs from the categories relation
   const categoryIds =
     transaction.categories?.map((cat: { category: { id: string } }) => cat.category.id) || [];
@@ -74,6 +83,7 @@ const mapTransactionToFormValues = (transaction: Transaction): UpdateTransaction
     referenceNumber: transaction.referenceNumber ?? null,
     referenceId: transaction.referenceId ?? null,
     invoiceId: transaction.invoiceId ?? null,
+    vendorId: transaction.vendorId ?? null,
   };
 };
 
@@ -83,16 +93,19 @@ export function TransactionForm({
   onUpdate,
   isCreating = false,
   isUpdating = false,
+  onDirtyStateChange,
   onClose,
 }: {
-  transaction?: Transaction | null;
+  transaction?: TransactionListItem;
   onCreate?: (data: CreateTransactionInput) => void;
   onUpdate?: (data: UpdateTransactionInput) => void;
   isCreating?: boolean;
   isUpdating?: boolean;
+  onDirtyStateChange?: (isDirty: boolean) => void;
   onClose?: () => void;
 }) {
   const mode = transaction ? 'edit' : 'create';
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
@@ -124,7 +137,16 @@ export function TransactionForm({
     ),
   );
 
-  const transactionType = form.watch('type');
+  const { isDirty } = form.formState;
+
+  // Fetch vendors for auto-populating payee
+  const { data: vendors = [] } = useActiveVendors();
+
+  // const transactionType = form.watch('type');
+  const [watchedType, watchedVendorId] = useWatch({
+    control: form.control,
+    name: ['type', 'vendorId'],
+  });
 
   // Fetch categories on mount
   useEffect(() => {
@@ -139,6 +161,25 @@ export function TransactionForm({
 
     fetchCategories();
   }, []);
+
+  // Auto-populate payee when vendor is selected
+  useEffect(() => {
+    if (watchedVendorId && watchedType === TransactionTypeSchema.enum.EXPENSE) {
+      const selectedVendor = vendors.find((v) => v.id === watchedVendorId);
+      if (selectedVendor) {
+        form.setValue('payee', selectedVendor.name, { shouldDirty: true });
+      }
+    }
+  }, [watchedVendorId, vendors, watchedType, form]);
+
+  useEffect(() => {
+    if (onDirtyStateChange) {
+      onDirtyStateChange(form.formState.isDirty);
+    }
+  }, [form.formState.isDirty, onDirtyStateChange]);
+
+  // Warn user before leaving page with unsaved changes
+  useUnsavedChanges(form.formState.isDirty);
 
   // Handle new category creation
   const handleCategoryCreated = useCallback((newCategory: Category) => {
@@ -309,30 +350,46 @@ export function TransactionForm({
             />
           </FieldGroup>
 
-          {/* Payee */}
+          {/* Payee / Vendor */}
           <FieldGroup>
-            <Controller
-              name="payee"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-payee">
-                      {transactionType === TransactionType.INCOME
-                        ? 'From (Customer/Client)'
-                        : 'To (Vendor/Supplier)'}
-                    </FieldLabel>
-                  </FieldContent>
-                  <Input
-                    {...field}
-                    id="form-rhf-input-payee"
-                    aria-invalid={fieldState.invalid}
-                    placeholder={`Enter ${transactionType === TransactionType.INCOME ? 'customer' : 'vendor'} name`}
-                  />
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Field>
-              )}
-            />
+            {watchedType === TransactionTypeSchema.enum.EXPENSE ? (
+              <Controller
+                name="vendorId"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <VendorSelect
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      placeholder="Select or create a vendor"
+                      label="Vendor (Optional)"
+                      showAddVendorLink={false}
+                      disabled={isCreating || isUpdating}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+            ) : (
+              <Controller
+                name="payee"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-payee">From (Customer/Client)</FieldLabel>
+                    </FieldContent>
+                    <Input
+                      {...field}
+                      id="form-rhf-input-payee"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="Enter customer name"
+                    />
+                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                  </Field>
+                )}
+              />
+            )}
           </FieldGroup>
 
           {/* Description */}
@@ -446,7 +503,7 @@ export function TransactionForm({
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isCreating || isUpdating}>
+          <Button type="submit" disabled={isCreating || isUpdating || (transaction && !isDirty)}>
             {isCreating || isUpdating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
