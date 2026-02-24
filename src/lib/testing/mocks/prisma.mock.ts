@@ -34,6 +34,13 @@ export const TransactionStatus = {
   CANCELLED: 'CANCELLED',
 } as const;
 
+export const DocumentKind = {
+  INVOICE: 'INVOICE',
+  RECEIPT: 'RECEIPT',
+  QUOTE: 'QUOTE',
+  OTHER: 'OTHER',
+} as const;
+
 // Prisma Decimal class mock
 class DecimalMock {
   public value: unknown;

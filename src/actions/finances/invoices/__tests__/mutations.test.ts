@@ -1,3 +1,40 @@
+/**
+ * Invoice Mutation Action Tests
+ *
+ * PURPOSE: Tests the action layer for all invoice write operations (mutations).
+ * These tests verify that server actions correctly handle authentication,
+ * authorization, validation, and delegate to the repository.
+ *
+ * SCOPE:
+ * - Authentication checks (session validation, unauthorized responses)
+ * - Permission enforcement (role-based access control)
+ * - Input validation (schema validation via Zod)
+ * - Proper delegation to InvoiceRepository methods
+ * - Cache invalidation (revalidatePath calls)
+ * - Error handling and ActionResult responses
+ *
+ * MOCKING STRATEGY:
+ * - InvoiceRepository is mocked to isolate action logic from database
+ * - Auth module is mocked to simulate different user sessions/roles
+ * - Permissions are mocked to test RBAC enforcement
+ * - next/cache is mocked to verify revalidation calls
+ *
+ * TEST SECTIONS:
+ * 1. Basic CRUD operations (create, update, delete)
+ * 2. Status transitions (pending, draft, cancel)
+ * 3. Payment recording
+ * 4. Bulk operations
+ * 5. Email operations (receipt, reminder)
+ * 6. Permission tests per role (USER, MANAGER, ADMIN)
+ *
+ * WHY SEPARATE FROM REPOSITORY TESTS:
+ * - Repository tests focus on database query correctness
+ * - Action tests focus on authentication, permissions, and HTTP layer concerns
+ * - This separation ensures both layers are tested independently
+ *
+ * @see src/repositories/invoice-repository.spec.ts for repository layer tests
+ * @see src/actions/finances/invoices/__tests__/queries.test.ts for read operations
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   createInvoice,
@@ -22,6 +59,7 @@ import {
   createInvoiceItemInput,
   createInvoiceResponse,
   createInvoiceWithCustomer,
+  createInvoiceDetails,
   createRecordPaymentInput,
   createCancelInvoiceInput,
 } from '@/lib/testing';
@@ -393,11 +431,9 @@ describe('Invoice Mutations', () => {
 
   describe('sendInvoiceReceipt', () => {
     it('sends receipt for paid invoice', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue({
-        ...createInvoiceWithCustomer({ id: TEST_INVOICE_ID }),
-        status: 'PAID',
-        receiptNumber: 'REC-001',
-      });
+      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PAID', receiptNumber: 'REC-001' }),
+      );
 
       const result = await sendInvoiceReceipt(TEST_INVOICE_ID);
 
@@ -416,10 +452,9 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice is not paid', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue({
-        ...createInvoiceWithCustomer({ id: TEST_INVOICE_ID }),
-        status: 'PENDING',
-      });
+      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PENDING' }),
+      );
 
       const result = await sendInvoiceReceipt(TEST_INVOICE_ID);
 
@@ -432,11 +467,13 @@ describe('Invoice Mutations', () => {
 
   describe('sendInvoiceReminder', () => {
     it('returns error when invoice is not overdue', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue({
-        ...createInvoiceWithCustomer({ id: TEST_INVOICE_ID }),
-        status: 'PENDING',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days in future
-      });
+      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+        createInvoiceDetails({
+          id: TEST_INVOICE_ID,
+          status: 'PENDING',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days in future
+        }),
+      );
 
       const result = await sendInvoiceReminder(TEST_INVOICE_ID);
 

@@ -1,6 +1,52 @@
+/**
+ * Invoice Repository Unit Tests
+ *
+ * PURPOSE: Tests the data access layer (Repository pattern) in isolation.
+ * These tests verify that the InvoiceRepository correctly interacts with
+ * the Prisma client to perform database operations.
+ *
+ * SCOPE:
+ * - Database query construction (correct WHERE clauses, JOINs, etc.)
+ * - Data transformation logic within repository methods
+ * - Transaction handling and rollback behavior
+ * - Complex business logic that spans multiple database operations
+ *   (e.g., addPayment creates payment + updates invoice + creates transaction)
+ *
+ * MOCKING STRATEGY:
+ * - Prisma client is fully mocked to avoid database dependencies
+ * - External services (PDF generation) are mocked to prevent side effects
+ * - Repository methods are tested with controlled mock return values
+ *
+ * WHY SEPARATE FROM ACTION TESTS:
+ * - Action tests verify authentication, permissions, and error handling
+ * - Repository tests verify the actual database interaction logic
+ * - This separation allows testing complex queries without auth overhead
+ *
+ * @see src/actions/finances/invoices/__tests__/ for action layer tests
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InvoiceRepository } from './invoice-repository';
 import { InvoiceStatus } from '@/prisma/client';
+import { testIds, createInvoiceResponse, createInvoiceDetails } from '@/lib/testing';
+
+// Mock the PDF service to prevent side effects during tests
+vi.mock('@/features/finances/invoices/services/invoice-pdf.service', () => ({
+  getOrGenerateReceiptPdf: vi.fn().mockResolvedValue({
+    url: 'https://example.com/receipt.pdf',
+    documentId: 'doc_123',
+  }),
+  getOrGenerateInvoicePdf: vi.fn().mockResolvedValue({
+    url: 'https://example.com/invoice.pdf',
+    documentId: 'doc_456',
+  }),
+}));
+
+// Mock document for receipt generation
+const mockDocument = {
+  id: 'doc_123',
+  kind: 'RECEIPT',
+  url: 'https://example.com/receipt.pdf',
+};
 
 const mockPrisma = {
   invoice: {
@@ -23,6 +69,15 @@ const mockPrisma = {
   transaction: {
     create: vi.fn(),
   },
+  transactionCategory: {
+    upsert: vi.fn(),
+  },
+  document: {
+    findFirst: vi.fn().mockResolvedValue(mockDocument),
+  },
+  transactionAttachment: {
+    create: vi.fn(),
+  },
   $transaction: vi.fn((input) => {
     if (Array.isArray(input)) return Promise.all(input);
     return input(mockPrisma);
@@ -41,21 +96,16 @@ describe('InvoiceRepository', () => {
 
   describe('findByIdWithDetails', () => {
     it('returns an invoice with details when it exists', async () => {
-      const mockInvoice = {
-        id: 'inv_123',
+      const invoiceId = testIds.invoice();
+      const mockInvoice = createInvoiceDetails({
+        id: invoiceId,
         invoiceNumber: 'INV-001',
-        customer: { firstName: 'John', lastName: 'Doe' },
         items: [],
         payments: [],
-        amount: '100',
-        gst: '10',
-        discount: '0',
-        amountPaid: '0',
-        amountDue: '100',
-      };
+      });
       mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
 
-      const result = await repository.findByIdWithDetails('inv_123');
+      const result = await repository.findByIdWithDetails(invoiceId);
 
       expect(result?.invoiceNumber).toBe('INV-001');
       expect(mockPrisma.invoice.findUnique).toHaveBeenCalled();
@@ -97,7 +147,9 @@ describe('InvoiceRepository', () => {
 
   describe('markAsPending', () => {
     it('updates status and creates history entry', async () => {
-      const mockInvoice = { id: 'inv_123', status: InvoiceStatus.DRAFT };
+      const invoiceId = testIds.invoice();
+      const userId = testIds.user();
+      const mockInvoice = createInvoiceResponse({ id: invoiceId, status: InvoiceStatus.DRAFT });
       mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
       mockPrisma.invoice.update.mockResolvedValue({
         ...mockInvoice,
@@ -105,16 +157,15 @@ describe('InvoiceRepository', () => {
       });
 
       // Need to mock findByIdWithDetails which is called at the end
-      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue({
-        id: 'inv_123',
-        status: InvoiceStatus.PENDING,
-      } as any);
+      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue(
+        createInvoiceResponse({ id: invoiceId, status: InvoiceStatus.PENDING }) as any,
+      );
 
-      await repository.markAsPending('inv_123', 'user_123');
+      await repository.markAsPending(invoiceId, userId);
 
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'inv_123', deletedAt: null },
+          where: { id: invoiceId, deletedAt: null },
           data: expect.objectContaining({ status: InvoiceStatus.PENDING }),
         }),
       );
@@ -151,15 +202,19 @@ describe('InvoiceRepository', () => {
 
   describe('addPayment', () => {
     it('creates payment, updates invoice, and creates transaction', async () => {
-      const mockInvoice = {
-        id: 'inv_123',
+      const invoiceId = testIds.invoice();
+      const userId = testIds.user();
+      const categoryId = testIds.category();
+      const transactionId = testIds.transaction();
+      const mockInvoice = createInvoiceDetails({
+        id: invoiceId,
         invoiceNumber: 'INV-001',
         status: InvoiceStatus.PENDING,
         amount: 100,
-        amountPaid: 0,
         currency: 'USD',
-        customer: { firstName: 'John', lastName: 'Doe' },
-      };
+        amountPaid: 0,
+      });
+
       mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice);
       mockPrisma.invoice.update.mockResolvedValue({
         ...mockInvoice,
@@ -167,29 +222,38 @@ describe('InvoiceRepository', () => {
         amountPaid: 100,
         amountDue: 0,
       });
+      mockPrisma.transactionCategory.upsert.mockResolvedValue({
+        id: categoryId,
+        name: 'Invoice Fully Payment',
+      });
+      mockPrisma.transaction.create.mockResolvedValue({
+        id: transactionId,
+      });
 
       // Mock findByIdWithDetails which is called at the end
-      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue({
-        id: 'inv_123',
-        invoiceNumber: 'INV-001',
-        status: InvoiceStatus.PAID,
-      } as any);
+      vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue(
+        createInvoiceResponse({
+          id: invoiceId,
+          invoiceNumber: 'INV-001',
+          status: InvoiceStatus.PAID,
+        }) as any,
+      );
 
       const paymentDate = new Date();
       await repository.addPayment(
-        'inv_123',
+        invoiceId,
         100,
         'Bank Transfer',
         paymentDate,
         'Full payment',
-        'user_123',
+        userId,
       );
 
       // Verify payment creation
       expect(mockPrisma.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            invoiceId: 'inv_123',
+            invoiceId: invoiceId,
             amount: 100,
             method: 'Bank Transfer',
             date: paymentDate,
@@ -200,7 +264,7 @@ describe('InvoiceRepository', () => {
       // Verify invoice update
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'inv_123' },
+          where: { id: invoiceId },
           data: expect.objectContaining({
             status: InvoiceStatus.PAID,
             amountPaid: 100,
@@ -213,9 +277,11 @@ describe('InvoiceRepository', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             type: 'INCOME',
-            amount: 100,
+            amount: expect.objectContaining({ value: 100 }),
             payee: 'John Doe',
-            categories: expect.anything(), // Now uses many-to-many categories
+            categories: expect.objectContaining({
+              create: [{ categoryId: categoryId }],
+            }),
           }),
         }),
       );

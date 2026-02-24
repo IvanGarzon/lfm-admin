@@ -1,3 +1,42 @@
+/**
+ * Invoice Query Action Tests
+ *
+ * PURPOSE: Tests the action layer for all invoice read operations (queries).
+ * These tests verify that server actions correctly handle authentication,
+ * authorization, and delegate to the repository for data fetching.
+ *
+ * SCOPE:
+ * - Authentication checks (session validation, unauthorized responses)
+ * - Permission enforcement (canReadInvoices permission)
+ * - Proper delegation to InvoiceRepository query methods
+ * - Filter and pagination parameter passing
+ * - Error handling for not-found scenarios
+ * - ActionResult response structure
+ *
+ * MOCKING STRATEGY:
+ * - InvoiceRepository is mocked to return controlled test data
+ * - Auth module is mocked to simulate different user sessions/roles
+ * - Permissions are mocked to test read access enforcement
+ *
+ * QUERY FUNCTIONS TESTED:
+ * - getInvoices: Paginated list with filters
+ * - getInvoiceById: Full invoice details
+ * - getInvoiceBasicById: Minimal invoice data
+ * - getInvoiceItems: Line items for an invoice
+ * - getInvoicePayments: Payment history
+ * - getInvoiceStatusHistory: Status change audit trail
+ * - getInvoiceStatistics: Dashboard statistics
+ * - getMonthlyRevenueTrend: Revenue analytics
+ * - getTopDebtors: Outstanding balance report
+ *
+ * WHY SEPARATE FROM MUTATION TESTS:
+ * - Queries are read-only and don't require cache invalidation
+ * - Different permission levels (canReadInvoices vs canManageInvoices)
+ * - Simpler error scenarios (mainly not-found vs validation errors)
+ *
+ * @see src/actions/finances/invoices/__tests__/mutations.test.ts for write operations
+ * @see src/repositories/invoice-repository.spec.ts for repository layer tests
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getInvoices,
@@ -14,7 +53,7 @@ import {
   testIds,
   mockSessions,
   createInvoiceStatistics,
-  createInvoiceWithCustomer,
+  createInvoiceDetails,
 } from '@/lib/testing';
 
 const { mockRepoInstance, mockAuth, mockRequirePermission } = vi.hoisted(() => ({
@@ -108,7 +147,7 @@ describe('Invoice Queries', () => {
 
   describe('getInvoiceById', () => {
     it('returns invoice details successfully when authorized', async () => {
-      const mockInvoice = createInvoiceWithCustomer({ id: TEST_INVOICE_ID });
+      const mockInvoice = createInvoiceDetails({ id: TEST_INVOICE_ID });
 
       mockRepoInstance.findByIdWithDetails.mockResolvedValue(mockInvoice);
 
@@ -327,7 +366,7 @@ describe('Invoice Queries - Permission Tests', () => {
       items: [],
       pagination: {},
     });
-    mockRepoInstance.findByIdWithDetails.mockResolvedValue(createInvoiceWithCustomer());
+    mockRepoInstance.findByIdWithDetails.mockResolvedValue(createInvoiceDetails());
   });
 
   describe('getInvoices', () => {

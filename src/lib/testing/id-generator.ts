@@ -54,6 +54,7 @@ export const testIds = {
   employee: () => generateTestId('empl'),
   transaction: () => generateTestId('txn0'),
   category: () => generateTestId('catg'),
+  payment: () => generateTestId('pymt'),
   nonExistent: () => generateTestId('none'),
 } as const;
 
@@ -81,6 +82,7 @@ export function createTestIdSet() {
     employeeId: testIds.employee(),
     transactionId: testIds.transaction(),
     categoryId: testIds.category(),
+    paymentId: testIds.payment(),
     nonExistentId: testIds.nonExistent(),
   };
 }
