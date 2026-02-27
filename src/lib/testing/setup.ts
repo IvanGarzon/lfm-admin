@@ -40,9 +40,7 @@ vi.mock('@/env', () => ({
     RESEND_API_KEY: 're_test',
     CRON_SECRET: 'test',
     INNGEST_APP_ID: 'test',
-    OPTIMIZE_API_KEY: 'test',
     AUTH_TRUST_HOST: true,
-    USE_ADAPTER: false,
   },
 }));
 

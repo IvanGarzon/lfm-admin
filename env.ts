@@ -17,11 +17,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     AUTH_SECRET: z.string().min(1),
     DATABASE_URL: z.string().min(1),
-    OPTIMIZE_API_KEY: z.string().min(1),
-    USE_ADAPTER: z
-      .string()
-      .refine((s) => s === 'true' || s === 'false')
-      .transform((s) => s === 'true'),
 
     AWS_REGION: z.string().min(1),
     AWS_ACCESS_KEY_ID: z.string().min(1),
@@ -61,9 +56,7 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     AUTH_SECRET: process.env.AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
-    OPTIMIZE_API_KEY: process.env.OPTIMIZE_API_KEY,
-    USE_ADAPTER: process.env.USE_ADAPTER,
-    AUTH_TRUST_HOST: process.env.USE_ADAPTER,
+    AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
     AWS_REGION: process.env.AWS_REGION,
     AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
