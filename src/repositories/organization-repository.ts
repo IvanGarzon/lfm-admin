@@ -29,6 +29,18 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * Supports full-text search across organization name, phone, email, and ABN,
    * status filtering, sorting, and pagination.
    */
+  /**
+   * Search and paginate organizations with advanced filtering capabilities.
+   * Supports full-text search across organization name, phone, email, and ABN,
+   * status filtering, sorting, and pagination.
+   * @param params - Filter parameters for the search
+   * @param params.name - Search term for name, phone, email, or ABN
+   * @param params.status - Optional array of statuses to filter by
+   * @param params.page - Current page number (1-indexed)
+   * @param params.perPage - Number of organizations per page
+   * @param params.sort - Sorting criteria (supports custom sorting by metadata like customer count)
+   * @returns Paginated results containing organization list items and metadata
+   */
   async searchAndPaginate(params: OrganizationFilters): Promise<OrganizationPagination> {
     const { name, status, page, perPage, sort } = params;
 
@@ -133,7 +145,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Find organization by ID with detailed relations
+   * Find an organization by its unique ID.
+   * Includes detailed fields and a count of related customers.
+   * @param id - The organization ID
+   * @returns Organization details or null if not found
    */
   async findByIdWithDetails(id: string): Promise<OrganizationListItem | null> {
     const organization = await this.prisma.organization.findUnique({
@@ -187,7 +202,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Get all organizations for selection lists
+   * Retrieves all organizations with minimal fields for selection components.
+   * Useful for population of dropdowns and searchable lists.
+   * @returns Array of organization objects (id and name)
    */
   async findAllForSelection() {
     return this.prisma.organization.findMany({
@@ -202,7 +219,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Find organization by name
+   * Locates an organization by its name using a case-insensitive search.
+   * @param name - The organization name to search for
+   * @returns The organization object or null
    */
   async findByName(name: string) {
     return this.prisma.organization.findFirst({
@@ -216,7 +235,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Create organization with address data
+   * Creates a new organization record.
+   * @param data - The organization creation input data
+   * @returns The newly created organization
    */
   async createOrganization(data: CreateOrganizationInput) {
     return this.prisma.organization.create({
@@ -237,8 +258,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Find or create organization by name
-   * Returns existing organization if found, otherwise creates new one
+   * Finds an organization by name or creates it if it doesn't exist.
+   * Useful for importer logic or quick-add features.
+   * @param name - The organization name
+   * @returns The existing or newly created organization
    */
   async findOrCreate(name: string) {
     const existing = await this.findByName(name);
@@ -252,7 +275,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Update organization
+   * Updates an existing organization record.
+   * @param id - The ID of the organization to update
+   * @param data - The updated organization data
+   * @returns The updated organization with detailed fields or null if update failed
    */
   async updateOrganization(
     id: string,
@@ -283,8 +309,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Delete organization (hard delete)
-   * Note: This will fail if the organization has related customers
+   * Permanently removes an organization record from the database.
+   * @param id - The ID of the organization to delete
+   * @returns The deleted organization (Prisma record)
+   * @throws Will throw if there are foreign key constraint violations (e.g., related customers)
    */
   async deleteOrganization(id: string) {
     return this.prisma.organization.delete({

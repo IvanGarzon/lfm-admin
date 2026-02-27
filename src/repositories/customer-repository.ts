@@ -25,6 +25,12 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
     >;
   }
 
+  /**
+   * Maps raw database customer fields to a structured AddressInput object.
+   * @param customer - The raw customer object from Prisma
+   * @returns An AddressInput object if address information exists, otherwise null
+   * @private
+   */
   private mapToAddress(customer: any): AddressInput | null {
     if (!customer.address1) {
       return null;
@@ -44,8 +50,23 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Search and paginate customers with filters
-   * Follows the same pattern as employeeRepository.searchAndPaginate
+   * Search and paginate customers with advanced filtering capabilities.
+   * Supports full-text search across name, email, phone, and organization,
+   * status filtering, and custom sorting.
+   * @param params - Filter parameters for the search
+   * @param params.search - Optional search term
+   * @param params.status - Optional array of customer statuses to filter by
+   * @param params.page - Page number for pagination (1-indexed)
+   * @param params.perPage - Number of items per page
+   * @param params.sort - Optional array of sort criteria
+   * @returns A promise that resolves to paginated customer results with metadata
+   * @example
+   * const result = await repo.searchAndPaginate({
+   *   search: "Acme",
+   *   status: ["ACTIVE"],
+   *   page: 1,
+   *   perPage: 20
+   * });
    */
   async searchAndPaginate(params: CustomerFilters): Promise<CustomerPagination> {
     const { search, status, page, perPage, sort } = params;
@@ -140,7 +161,10 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Find customer by ID with detailed relations
+   * Find a customer by ID with detailed relationship data.
+   * Includes organization details and counts of invoices/quotes.
+   * @param id - The unique identifier of the customer
+   * @returns A promise that resolves to the customer details or null if not found
    */
   async findByIdWithDetails(id: string): Promise<CustomerListItem | null> {
     const customer = await this.prisma.customer.findUnique({
@@ -204,7 +228,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Find customer by email
+   * Find a single customer by their email address.
+   * @param email - The email address to search for
+   * @returns A promise that resolves to the customer or null
    */
   async findByEmail(email: string) {
     return this.prisma.customer.findUnique({
@@ -213,7 +239,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Get active customers for selection lists
+   * Get a list of active customers for population of selection components.
+   * Returns a minimal set of fields needed for dropdowns and pickers.
+   * @returns A promise that resolves to an array of active customer summaries
    */
   async findActiveSelection() {
     return this.prisma.customer.findMany({
@@ -240,7 +268,10 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Create customer
+   * Create a new customer record.
+   * Automatically handles address logic based on organization settings.
+   * @param data - The customer creation input data
+   * @returns A promise that resolves to the newly created customer
    */
   async createCustomer(data: CreateCustomerInput) {
     const { organizationId, useOrganizationAddress, ...customerData } = data;
@@ -264,7 +295,12 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Update customer
+   * Update an existing customer record.
+   * Handles complex address updates and organization connections.
+   * @param id - The unique identifier of the customer
+   * @param data - The update data
+   * @param updatedBy - Optional identifier of the user making the update
+   * @returns A promise that resolves to the updated customer with details, or null if update failed
    */
   async updateCustomer(
     id: string,
@@ -326,7 +362,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Soft delete customer
+   * Performs a soft delete on a customer by setting deletedAt and updating status.
+   * @param id - The unique identifier of the customer to delete
+   * @returns A promise that resolves to the soft-deleted customer
    */
   async softDelete(id: string) {
     return this.prisma.customer.update({

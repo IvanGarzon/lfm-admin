@@ -56,9 +56,9 @@ export class SessionRepository {
   }
 
   /**
-   * Find a session by ID
+   * Find a session by its unique ID.
    * @param id - The ID of the session
-   * @returns The session or null if not found
+   * @returns A promise that resolves to the session object or null if not found
    */
   async findById(id: string): Promise<Session | null> {
     return this.prisma.session.findUnique({
@@ -67,10 +67,11 @@ export class SessionRepository {
   }
 
   /**
-   * Update session device name
-   * @param id - The ID of the session
-   * @param deviceName - The new device name
-   * @returns The updated session
+   * Update the device name associated with a session.
+   * Useful for identifying which device a session belongs to in the UI.
+   * @param id - The unique ID of the session
+   * @param deviceName - The human-readable name of the device (e.g., "iPhone 13")
+   * @returns A promise that resolves to the updated session
    */
   async updateDeviceName(id: string, deviceName: string): Promise<Session> {
     return this.prisma.session.update({
@@ -80,9 +81,10 @@ export class SessionRepository {
   }
 
   /**
-   * Deactivate a specific session
-   * @param id - The ID of the session to deactivate
-   * @returns The updated session
+   * Deactivates a specific session immediately.
+   * Sets isActive to false and expiration date to now.
+   * @param id - The unique ID of the session to deactivate
+   * @returns A promise that resolves to the updated session record
    */
   async deactivate(id: string): Promise<Session> {
     return this.prisma.session.update({
@@ -95,10 +97,11 @@ export class SessionRepository {
   }
 
   /**
-   * Deactivate all sessions except the specified one
-   * @param userId - The ID of the user
+   * Deactivates all active sessions for a user EXCEPT the specified one.
+   * Commonly used for "log out of other devices" features.
+   * @param userId - The user ID whose other sessions should be deactivated
    * @param exceptSessionId - The ID of the session to keep active
-   * @returns The count of deactivated sessions
+   * @returns A promise that resolves to the count of deactivated sessions
    */
   async deactivateOtherSessions(userId: string, exceptSessionId: string): Promise<number> {
     const result = await this.prisma.session.updateMany({
@@ -119,8 +122,9 @@ export class SessionRepository {
   }
 
   /**
-   * Clean up expired sessions (can be run on a schedule)
-   * @returns The count of cleaned up sessions
+   * Cleans up all sessions that have passed their expiration date.
+   * Marks them as inactive in the database.
+   * @returns A promise that resolves to the count of sessions updated
    */
   async cleanupExpired(): Promise<number> {
     const result = await this.prisma.session.updateMany({
@@ -137,10 +141,11 @@ export class SessionRepository {
   }
 
   /**
-   * Verify that a session belongs to a specific user
-   * @param sessionId - The ID of the session
-   * @param userId - The ID of the user
-   * @returns True if the session belongs to the user, false otherwise
+   * Verifies that a specific session belongs to a given user.
+   * Security utility for session management operations.
+   * @param sessionId - The ID of the session to check
+   * @param userId - The ID of the user to verify against
+   * @returns A promise that resolves to true if ownership is confirmed
    */
   async verifyOwnership(sessionId: string, userId: string): Promise<boolean> {
     const session = await this.prisma.session.findUnique({
@@ -152,9 +157,9 @@ export class SessionRepository {
   }
 
   /**
-   * Update the lastActiveAt timestamp for a session by its token
-   * @param sessionToken - The session token to update
-   * @returns The count of updated sessions (should be 0 or 1)
+   * Inform the database that a session is still active by updating its heartbeat timestamp.
+   * @param sessionToken - The raw session token used to identify the session
+   * @returns A promise that resolves to the count of updated records (usually 0 or 1)
    */
   async updateHeartbeat(sessionToken: string): Promise<number> {
     const result = await this.prisma.session.updateMany({
@@ -171,10 +176,11 @@ export class SessionRepository {
   }
 
   /**
-   * Extend a session's expiration date
-   * @param id - The ID of the session to extend
-   * @param newExpiry - The new expiration date
-   * @returns The updated session
+   * Extends the lifespan of a session by setting a new expiration date.
+   * Also ensures the session is marked as active.
+   * @param id - The unique ID of the session to extend
+   * @param newExpiry - The new Date when the session should expire
+   * @returns A promise that resolves to the updated session
    */
   async extendSession(id: string, newExpiry: Date): Promise<Session> {
     return this.prisma.session.update({
@@ -185,10 +191,12 @@ export class SessionRepository {
       },
     });
   }
+
   /**
-   * Count active sessions for a user
-   * @param userId - The ID of the user
-   * @returns The number of active sessions
+   * Counts the current number of valid active sessions for a user.
+   * Only counts sessions that are marked active AND have not expired.
+   * @param userId - The user ID to check
+   * @returns A promise that resolves to the number of active sessions
    */
   async countActiveSessions(userId: string): Promise<number> {
     return this.prisma.session.count({
@@ -203,9 +211,10 @@ export class SessionRepository {
   }
 
   /**
-   * Revoke the oldest active session for a user
+   * Revokes the chronologically oldest active session for a specific user.
+   * Useful for enforcing concurrent session limits.
    * @param userId - The ID of the user
-   * @returns The revoked session or null if none found
+   * @returns A promise that resolves to the revoked session or null if no active sessions exist
    */
   async revokeOldestSession(userId: string): Promise<Session | null> {
     const oldestSession = await this.prisma.session.findFirst({
@@ -228,11 +237,12 @@ export class SessionRepository {
       },
     });
   }
+
   /**
-   * Deactivate multiple sessions for a user
-   * @param userId - The ID of the user
-   * @param ids - The IDs of the sessions to deactivate
-   * @returns The count of deactivated sessions
+   * Batch deactivates a list of specific sessions for a user.
+   * @param userId - The ID of the user owning the sessions
+   * @param ids - Array of session IDs to deactivate
+   * @returns A promise that resolves to the count of deactivated sessions
    */
   async deactivateMany(userId: string, ids: string[]): Promise<number> {
     const result = await this.prisma.session.updateMany({
@@ -247,10 +257,11 @@ export class SessionRepository {
     });
     return result.count;
   }
+
   /**
-   * Deactivate inactive sessions older than the threshold
-   * @param threshold - The date threshold for inactivity
-   * @returns The count of deactivated sessions
+   * Deactivates all sessions that show no activity since the threshold date.
+   * @param threshold - The date before which any activity is considered "inactive"
+   * @returns A promise that resolves to the total count of deactivated sessions
    */
   async deactivateInactive(threshold: Date): Promise<number> {
     const result = await this.prisma.session.updateMany({

@@ -33,6 +33,18 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @param params - Filter parameters for the search
    * @returns A promise that resolves to paginated products
    */
+  /**
+   * Search and paginate products with advanced filtering capabilities.
+   * Supports full-text search across product name and description,
+   * status filtering, sorting, and pagination.
+   * @param params - Filter parameters for the search
+   * @param params.search - Optional search term
+   * @param params.status - Optional array of statuses to filter by
+   * @param params.page - Current page number (1-indexed)
+   * @param params.perPage - Number of items per page
+   * @param params.sort - Sorting criteria
+   * @returns A promise that resolves to paginated products with metadata
+   */
   async searchAndPaginate(params: ProductFilters): Promise<ProductPagination> {
     const { search, status, page = 1, perPage = 20, sort } = params;
 
@@ -107,7 +119,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Find a product by its ID with complete details.
+   * Find a product by its ID with complete details including relation counts.
    * @param id - The unique identifier of the product
    * @returns A promise that resolves to the product with all details, or null if not found
    */
@@ -144,7 +156,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Get statistics for products.
+   * Calculate product statistics including inventory value and stock alerts.
    * @returns A promise that resolves to product statistics object
    */
   async getStatistics(): Promise<ProductStatistics> {
@@ -195,9 +207,9 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Create a new product.
-   * @param data - The product data
-   * @returns A promise that resolves to the created product ID
+   * Create a new product record.
+   * @param data - The product creation input data
+   * @returns A promise that resolves to an object containing the new product ID
    */
   async createProduct(data: CreateProductInput): Promise<{ id: string }> {
     const product = await this.prisma.product.create({
@@ -217,10 +229,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Update an existing product.
-   * @param id - The product ID to update
-   * @param data - The updated product data
-   * @returns A promise that resolves to the updated product, or null if not found
+   * Update an existing product record.
+   * @param id - The ID of the product to update
+   * @param data - The update data
+   * @returns A promise that resolves to the updated product with details, or null if update failed
    */
   async updateProduct(id: string, data: UpdateProductInput): Promise<ProductWithDetails | null> {
     const existing = await this.findById(id);
@@ -250,10 +262,11 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Delete a product (hard delete).
-   * Note: Products are hard deleted as they don't have a deletedAt field.
-   * @param id - The product ID to delete
+   * Permanently deletes a product record.
+   * Only allows deletion if the product is not referenced in any invoices or quotes.
+   * @param id - The ID of the product to delete
    * @returns A promise that resolves to true if deleted, false if not found
+   * @throws {Error} If product is in use and cannot be deleted
    */
   async deleteProduct(id: string): Promise<boolean> {
     const existing = await this.prisma.product.findUnique({
@@ -284,10 +297,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Update product status.
+   * Updates the status of a specific product.
    * @param id - The product ID
-   * @param status - The new status
-   * @returns A promise that resolves to the updated product
+   * @param status - The new status to apply
+   * @returns A promise that resolves to the updated product with details
    */
   async updateStatus(id: string, status: ProductStatus): Promise<ProductWithDetails | null> {
     const existing = await this.findById(id);
@@ -305,9 +318,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Update status for multiple products.
-   * @param ids - Array of product IDs
-   * @param status - The new status
+   * Updates the status for a batch of products.
+   * @param ids - Array of product IDs to update
+   * @param status - The new status to apply to all selected products
+   * @returns A promise that resolves to the number of updated records
    */
   async bulkUpdateStatus(ids: string[], status: ProductStatus): Promise<number> {
     const result = await this.prisma.product.updateMany({
@@ -318,9 +332,11 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Delete multiple products.
-   * Only deletes products that are not used in invoices or quotes.
-   * @param ids - Array of product IDs
+   * Deletes multiple products in a single operation.
+   * Automatically filters out products that are in use and cannot be deleted.
+   * @param ids - Array of product IDs to delete
+   * @returns A promise that resolves to the number of deleted records
+   * @throws {Error} If NO products can be deleted among the selection
    */
   async bulkDelete(ids: string[]): Promise<number> {
     // We need to check usage for each product.
@@ -353,8 +369,8 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Get active products for selection dropdowns.
-   * @returns A promise that resolves to array of active products
+   * Retrieves active products with mandatory fields for selection components.
+   * @returns A promise that resolves to an array of products for selection
    */
   async getActiveProducts(): Promise<Array<{ id: string; name: string; price: number }>> {
     const products = await this.prisma.product.findMany({
@@ -375,10 +391,12 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   }
 
   /**
-   * Update stock for a product.
+   * Updates the stock level for a product.
+   * Automatically adjusts product status (e.g., marks OUT_OF_STOCK if zero).
    * @param id - The product ID
-   * @param quantity - The quantity to add (positive) or subtract (negative)
-   * @returns A promise that resolves to the updated product
+   * @param quantity - The amount to add (positive) or subtract (negative)
+   * @returns A promise that resolves to the updated product with details
+   * @throws {Error} If subtraction results in negative stock
    */
   async updateStock(id: string, quantity: number): Promise<ProductWithDetails | null> {
     const existing = await this.prisma.product.findUnique({ where: { id } });

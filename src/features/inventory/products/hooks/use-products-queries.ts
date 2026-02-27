@@ -163,6 +163,7 @@ export function useUpdateProduct() {
       if (!result.success) {
         throw new Error(result.error);
       }
+
       return result.data;
     },
     onMutate: async (newData) => {

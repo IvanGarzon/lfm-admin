@@ -264,7 +264,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   }
 
   /**
-   * Find status history for a specific quote
+   * Find status history for a specific quote.
+   * Includes detailed user information and timestamps.
    * @param quoteId - The ID of the quote
    * @returns A promise that resolves to an array of status history items
    */

@@ -42,14 +42,6 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @param params.perPage - Number of items per page
    * @param params.sort - Optional array of sort criteria with id and desc properties
    * @returns A promise that resolves to paginated vendor results with metadata
-   * @example
-   * const result = await repo.searchAndPaginate({
-   *   search: "Acme",
-   *   status: ["ACTIVE"],
-   *   page: 1,
-   *   perPage: 20,
-   *   sort: [{ id: "name", desc: false }]
-   * });
    */
   async searchAndPaginate(params: VendorFilters): Promise<VendorPagination> {
     const { search, status, page, perPage, sort } = params;
@@ -152,7 +144,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Find a vendor by ID with full details including transactions.
+   * Find a vendor by ID with full details including address and transaction counts.
    * @param id - The unique identifier of the vendor
    * @returns A promise that resolves to the vendor with details, or null if not found
    */
@@ -264,12 +256,11 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Create a new vendor with auto-generated vendor code.
-   * Retries up to 3 times if vendor code collision occurs.
+   * Create a new vendor record with an auto-generated vendor code.
+   * Implements retry logic for unique constraint handling.
    * @param data - The vendor data to create
    * @returns A promise that resolves to an object with the new vendor ID and code
-   * @throws {Error} If unable to generate unique vendor code after 3 attempts
-   * @throws {Error} For other database errors
+   * @throws {Error} If unique code generation fails after 3 attempts
    */
   async createVendor(data: CreateVendorInput): Promise<{ id: string; vendorCode: string }> {
     let attempts = 0;
@@ -328,11 +319,10 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Update an existing vendor.
+   * Update an existing vendor's information.
    * @param id - The unique identifier of the vendor to update
-   * @param data - The updated vendor data
+   * @param data - The update data payload
    * @returns A promise that resolves to the updated vendor with details, or null if not found
-   * @throws {Error} If vendor is not found
    */
   async updateVendor(id: string, data: UpdateVendorInput): Promise<VendorWithDetails | null> {
     const existing = await this.findById(id);
@@ -374,10 +364,10 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Update vendor status.
-   * @param id - The unique identifier of the vendor
-   * @param status - The new status
-   * @returns A promise that resolves to the updated vendor
+   * Updates the operational status for a vendor.
+   * @param id - The vendor ID
+   * @param status - The new VendorStatus to apply
+   * @returns A promise that resolves to the basic updated vendor record
    */
   async updateVendorStatus(id: string, status: VendorStatus): Promise<Vendor> {
     return await withDatabaseRetry(() =>
@@ -389,11 +379,11 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Soft delete a vendor.
-   * Only allows deletion if vendor has no associated transactions.
-   * @param id - The unique identifier of the vendor to delete
-   * @returns A promise that resolves to the deleted vendor
-   * @throws {Error} If vendor has associated transactions
+   * Soft deletes a vendor by setting the deletedAt timestamp.
+   * Prevents deletion if the vendor has associated financial transactions.
+   * @param id - The ID of the vendor to delete
+   * @returns A promise that resolves to the soft-deleted vendor record
+   * @throws {Error} If vendor has existing transactions
    */
   async softDeleteVendor(id: string): Promise<Vendor> {
     // Check if vendor has transactions
@@ -416,8 +406,9 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Get vendor statistics including counts by status.
-   * @returns A promise that resolves to vendor statistics
+   * Calculates high-level statistics for the vendor pool.
+   * Includes total counts and status-based breakdowns.
+   * @returns A promise that resolves to a VendorStatistics object
    */
   async getStatistics(): Promise<VendorStatistics> {
     const [total, active, inactive, suspended] = await Promise.all([
@@ -436,8 +427,8 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   }
 
   /**
-   * Get active vendors for dropdown selection.
-   * @returns A promise that resolves to an array of active vendors
+   * Retrieves active vendors with mandatory fields for selection components.
+   * @returns A promise that resolves to an array of vendor identifiers and names
    */
   async getActiveVendors(): Promise<Array<{ id: string; vendorCode: string; name: string }>> {
     return await this.prisma.vendor.findMany({

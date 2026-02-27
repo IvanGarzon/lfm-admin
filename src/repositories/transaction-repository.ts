@@ -30,7 +30,15 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
 
   /**
    * Search and paginate transactions with advanced filtering capabilities.
+   * Supports filtering by type (Income/Expense), status (Pending/Completed),
+   * and full-text search across description, payee, and reference ID.
    * @param params - Filter parameters for the search
+   * @param params.search - Optional search term
+   * @param params.type - Optional array of transaction types
+   * @param params.status - Optional array of transaction statuses
+   * @param params.page - Current page number (1-indexed)
+   * @param params.perPage - Number of items per page
+   * @param params.sort - Sorting criteria
    * @returns A promise that resolves to paginated transaction results with metadata
    */
   async searchAndPaginate(params: TransactionFilters): Promise<TransactionPagination> {
@@ -144,9 +152,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Find a transaction by ID with invoice details
+   * Find a transaction by its unique ID with all associated details.
+   * Includes categories, attachments, and links to invoices or vendors.
    * @param id - The ID of the transaction
-   * @returns A promise that resolves to the transaction or null
+   * @returns A promise that resolves to the transaction with details or null if not found
    */
   async findByIdWithDetails(id: string): Promise<TransactionListItem | null> {
     const transaction = await this.prisma.transaction.findUnique({
@@ -222,9 +231,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Create a new transaction
-   * @param data - The transaction data
+   * Create a new transaction record.
+   * Automatically generates a unique reference number.
+   * @param data - The transaction creation input data
    * @returns A promise that resolves to the created transaction with full details
+   * @throws {Error} If retrieval of the created transaction fails
    */
   async createTransaction(data: CreateTransactionInput): Promise<TransactionListItem> {
     const referenceNumber = await TransactionRepository.generateReferenceNumber();
@@ -265,10 +276,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Update an existing transaction
+   * Update an existing transaction record.
+   * Syncs category relations if categoryIds are provided.
    * @param id - The ID of the transaction to update
-   * @param data - The updated transaction data
-   * @returns A promise that resolves to the updated transaction
+   * @param data - The updated transaction data payload
+   * @returns A promise that resolves to the updated transaction with details
    */
   async updateTransaction(
     id: string,
@@ -327,9 +339,9 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Delete a transaction
-   * @param id - The ID of the transaction to delete
-   * @returns A promise that resolves to the deleted transaction
+   * Permanently deletes a transaction record.
+   * @param id - The ID of the transaction to remove
+   * @returns A promise that resolves to the deleted transaction details
    */
   async deleteTransaction(id: string): Promise<TransactionListItem | null> {
     const transaction = await this.prisma.transaction.delete({
@@ -358,9 +370,12 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Get transaction statistics
-   * @param dateFilter - Optional date range filter
-   * @returns A promise that resolves to transaction statistics
+   * Aggregates financial statistics for completed transactions.
+   * Calculates total income, expenses, cash flow, and counts by status.
+   * @param dateFilter - Optional date range for the statistics
+   * @param dateFilter.startDate - Inclusive start date
+   * @param dateFilter.endDate - Inclusive end date
+   * @returns A promise that resolves to a transaction statistics object
    */
   async getStatistics(dateFilter?: {
     startDate?: Date;
@@ -416,9 +431,9 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Get monthly transaction trend showing income vs expense over time.
-   * @param limit - Number of months to retrieve. Defaults to 12.
-   * @returns A promise that resolves to an array of monthly transaction trends
+   * Retrieves a chronological trend of income versus expenses grouped by month.
+   * @param limit - Max number of months to retrieve (defaults to 12)
+   * @returns A promise that resolves to an array of trend data points
    */
   async getMonthlyTransactionTrend(limit: number = 12): Promise<TransactionTrend[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
@@ -447,9 +462,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Get transaction breakdown by category with percentages.
-   * @param dateFilter - Optional date range filter
-   * @returns A promise that resolves to an array of category breakdowns
+   * Provides a breakdown of transaction volume and value per category.
+   * Includes percentages of total spend/income.
+   * @param dateFilter - Optional date range for the breakdown
+   * @returns A promise that resolves to an array of category breakdown objects
    */
   async getCategoryBreakdown(dateFilter?: {
     startDate?: Date;
@@ -505,9 +521,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }
 
   /**
-   * Get top transaction categories by total amount.
-   * @param limit - Number of categories to retrieve. Defaults to 5.
-   * @returns A promise that resolves to an array of top categories
+   * Retrieves the top-performing or highest-cost categories.
+   * Includes average transaction value for each category.
+   * @param limit - Number of top categories to return
+   * @returns A promise that resolves to an array of top transaction categories
    */
   async getTopCategories(limit: number = 5): Promise<TopTransactionCategory[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`

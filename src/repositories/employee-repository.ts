@@ -23,6 +23,13 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     >;
   }
 
+  /**
+   * Maps a raw employee model to a structured EmployeeListItem.
+   * Ensures that numeric fields like rate are correctly typed.
+   * @param employee - The raw employee data from the database
+   * @returns A structured EmployeeListItem object
+   * @private
+   */
   private mapToListItem(employee: any): EmployeeListItem {
     return {
       id: employee.id,
@@ -41,6 +48,19 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     };
   }
 
+  /**
+   * Search and paginate employees with filtering.
+   * Supports name/email search, alphabetical filtering, gender, and status.
+   * @param params - Filter parameters for the search
+   * @param params.search - Text search for name or email
+   * @param params.alphabet - Optional starting letter for first name
+   * @param params.gender - Array of genders to filter by
+   * @param params.status - Array of statuses to filter by
+   * @param params.page - Current page number
+   * @param params.perPage - Items per page
+   * @param params.sort - Sorting criteria
+   * @returns Paginated results with metadata
+   */
   async searchAndPaginate(params: EmployeeFilters): Promise<EmployeePagination> {
     const { search, alphabet, gender, status, page, perPage, sort } = params;
     const whereClause: Prisma.EmployeeWhereInput = {};
@@ -119,6 +139,11 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     };
   }
 
+  /**
+   * Retrieves a list of active employees, typically for selection components.
+   * @param limit - Maximum number of employees to return
+   * @returns A promise that resolves to an array of active employees
+   */
   async getActiveEmployees(limit: number = 20): Promise<EmployeeListItem[]> {
     const employees = await this.findMany({
       where: {
@@ -130,6 +155,11 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     return employees.map((e) => this.mapToListItem(e));
   }
 
+  /**
+   * Locates an employee by their unique email address.
+   * @param email - The email address to look up
+   * @returns The employee details or null if not found
+   */
   async findByEmail(email: string): Promise<EmployeeListItem | null> {
     const employee = await this.model.findUnique({
       where: { email },
@@ -137,6 +167,11 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     return employee ? this.mapToListItem(employee) : null;
   }
 
+  /**
+   * Locates an employee by their ID.
+   * @param id - The ID of the employee
+   * @returns The employee details or null if not found
+   */
   async findEmployeeById(id: string | number): Promise<EmployeeListItem | null> {
     const employee = await this.model.findUnique({
       where: { id: id as string },

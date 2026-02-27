@@ -14,7 +14,10 @@ import type { ActionResult } from '@/types/actions';
 import type { SearchParams } from 'nuqs/server';
 
 /**
- * Get paginated list of products with filters
+ * Retrieves a paginated list of products based on search and filter criteria.
+ * Supports filtering by name, status, and other product attributes.
+ * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated product data.
  */
 export async function getProducts(
   searchParams: SearchParams,
@@ -48,7 +51,11 @@ export async function getProducts(
 }
 
 /**
- * Get a single product by ID with details
+ * Retrieves a single product by ID with full details.
+ * Includes all product fields, pricing, and stock levels.
+ * @param id - The unique identifier of the product to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the product details,
+ * or an error if the product is not found.
  */
 export async function getProductById(id: string): Promise<ActionResult<ProductWithDetails>> {
   const session = await auth();
@@ -71,7 +78,9 @@ export async function getProductById(id: string): Promise<ActionResult<ProductWi
 }
 
 /**
- * Get product statistics
+ * Retrieves aggregated product statistics for dashboard displays.
+ * Returns counts and metrics including total, active, and low stock products.
+ * @returns A promise that resolves to an `ActionResult` containing the product statistics.
  */
 export async function getProductStatistics(): Promise<ActionResult<ProductStatistics>> {
   const session = await auth();
@@ -89,7 +98,9 @@ export async function getProductStatistics(): Promise<ActionResult<ProductStatis
 }
 
 /**
- * Get active products for dropdown selections
+ * Retrieves all active products for dropdown selections.
+ * Returns a lightweight list with only essential fields (id, name, price).
+ * @returns A promise that resolves to an `ActionResult` containing an array of active products.
  */
 export async function getActiveProducts(): Promise<
   ActionResult<Array<{ id: string; name: string; price: number }>>
