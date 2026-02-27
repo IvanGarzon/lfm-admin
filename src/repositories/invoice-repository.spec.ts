@@ -297,19 +297,13 @@ describe('InvoiceRepository', () => {
     });
   });
 
-  // ============================================================================
-  // CRITICAL BUSINESS LOGIC TESTS
-  // ============================================================================
-
   describe('createInvoiceWithItems', () => {
     it('creates invoice with items and status history in a transaction', async () => {
       const customerId = testIds.customer();
       const newInvoiceId = testIds.invoice();
 
-      // Mock generateInvoiceNumber (uses findFirst internally)
       mockPrisma.invoice.findFirst.mockResolvedValue(null);
 
-      // Mock invoice creation
       mockPrisma.invoice.create.mockResolvedValue({
         id: newInvoiceId,
         invoiceNumber: 'INV-2026-0001',
@@ -333,8 +327,6 @@ describe('InvoiceRepository', () => {
 
       expect(result.id).toBe(newInvoiceId);
       expect(result.invoiceNumber).toBe('INV-2026-0001');
-
-      // Verify invoice was created with correct data
       expect(mockPrisma.invoice.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -351,7 +343,6 @@ describe('InvoiceRepository', () => {
         }),
       );
 
-      // Verify status history was created
       expect(mockPrisma.invoiceStatusHistory.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -374,10 +365,6 @@ describe('InvoiceRepository', () => {
         invoiceNumber: 'INV-2026-0001',
       });
 
-      // Items: 2x100 + 1x50 = 250 subtotal
-      // GST 10%: 25
-      // Discount: 20
-      // Total: 250 + 25 - 20 = 255
       const input = {
         customerId,
         status: InvoiceStatus.DRAFT,
@@ -411,17 +398,14 @@ describe('InvoiceRepository', () => {
       const invoiceId = testIds.invoice();
       const existingItemId = testIds.invoiceItem();
 
-      // Mock current invoice (DRAFT status allows full editing)
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.DRAFT,
         amountPaid: 0,
       });
 
-      // Mock update
       mockPrisma.invoice.update.mockResolvedValue({ id: invoiceId });
 
-      // Mock findByIdWithDetails
       vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue(
         createInvoiceDetails({ id: invoiceId }),
       );
@@ -436,7 +420,6 @@ describe('InvoiceRepository', () => {
         issuedDate: new Date(),
         dueDate: new Date(),
         items: [
-          // Existing item (has id)
           {
             id: existingItemId,
             description: 'Updated Item',
@@ -444,7 +427,6 @@ describe('InvoiceRepository', () => {
             unitPrice: 100,
             productId: null,
           },
-          // New item (no id)
           { description: 'New Item', quantity: 1, unitPrice: 200, productId: null },
         ],
       };
@@ -453,7 +435,6 @@ describe('InvoiceRepository', () => {
 
       expect(result).not.toBeNull();
 
-      // Verify items not in list were deleted
       expect(mockPrisma.invoiceItem.deleteMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -463,7 +444,6 @@ describe('InvoiceRepository', () => {
         }),
       );
 
-      // Verify existing item was updated
       expect(mockPrisma.invoiceItem.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: existingItemId },
@@ -474,7 +454,6 @@ describe('InvoiceRepository', () => {
         }),
       );
 
-      // Verify new items were created
       expect(mockPrisma.invoiceItem.createMany).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.arrayContaining([
@@ -491,7 +470,6 @@ describe('InvoiceRepository', () => {
     it('prevents content modification for PENDING invoices', async () => {
       const invoiceId = testIds.invoice();
 
-      // Mock current invoice (PENDING status - locked)
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.PENDING,
@@ -543,19 +521,15 @@ describe('InvoiceRepository', () => {
       const cancelDate = new Date();
       const cancelReason = 'Customer requested cancellation';
 
-      // Mock current invoice (PENDING can be cancelled)
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.PENDING,
       });
 
-      // Mock update
       mockPrisma.invoice.update.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.CANCELLED,
       });
-
-      // Mock findByIdWithDetails
       vi.spyOn(repository, 'findByIdWithDetails').mockResolvedValue(
         createInvoiceDetails({ id: invoiceId, status: 'CANCELLED' }),
       );
@@ -565,7 +539,6 @@ describe('InvoiceRepository', () => {
       expect(result).not.toBeNull();
       expect(result?.status).toBe('CANCELLED');
 
-      // Verify invoice was updated with cancel info
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: invoiceId, deletedAt: null },
@@ -577,7 +550,6 @@ describe('InvoiceRepository', () => {
         }),
       );
 
-      // Verify status history was created
       expect(mockPrisma.invoiceStatusHistory.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -601,7 +573,6 @@ describe('InvoiceRepository', () => {
     it('throws error for invalid status transition (PAID cannot be cancelled)', async () => {
       const invoiceId = testIds.invoice();
 
-      // Mock PAID invoice
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.PAID,
@@ -617,13 +588,11 @@ describe('InvoiceRepository', () => {
     it('soft deletes DRAFT invoice successfully', async () => {
       const invoiceId = testIds.invoice();
 
-      // Mock DRAFT invoice
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.DRAFT,
       });
 
-      // Mock update (soft delete sets deletedAt)
       mockPrisma.invoice.update.mockResolvedValue({ id: invoiceId });
 
       const result = await repository.softDelete(invoiceId);
@@ -642,7 +611,6 @@ describe('InvoiceRepository', () => {
     it('throws error when trying to delete non-DRAFT invoice', async () => {
       const invoiceId = testIds.invoice();
 
-      // Mock PENDING invoice
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: invoiceId,
         status: InvoiceStatus.PENDING,
@@ -665,7 +633,6 @@ describe('InvoiceRepository', () => {
       const originalId = testIds.invoice();
       const duplicateId = testIds.invoice();
 
-      // Mock original invoice with items
       mockPrisma.invoice.findUnique.mockResolvedValue({
         id: originalId,
         customerId: testIds.customer(),
@@ -680,10 +647,8 @@ describe('InvoiceRepository', () => {
         ],
       });
 
-      // Mock generateInvoiceNumber
       mockPrisma.invoice.findFirst.mockResolvedValue({ invoiceNumber: 'INV-2026-0005' });
 
-      // Mock create
       mockPrisma.invoice.create.mockResolvedValue({
         id: duplicateId,
         invoiceNumber: 'INV-2026-0006',
@@ -694,20 +659,17 @@ describe('InvoiceRepository', () => {
       expect(result.id).toBe(duplicateId);
       expect(result.invoiceNumber).toBe('INV-2026-0006');
 
-      // Verify new invoice was created with DRAFT status
       expect(mockPrisma.invoice.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             status: InvoiceStatus.DRAFT,
             amountPaid: 0,
             remindersSent: 0,
-            // Payment fields should be reset
             paidDate: null,
             paymentMethod: null,
             receiptNumber: null,
             cancelledDate: null,
             cancelReason: null,
-            // Items should be copied
             items: expect.objectContaining({
               create: expect.arrayContaining([
                 expect.objectContaining({ description: 'Item 1', quantity: 2 }),

@@ -17,6 +17,11 @@ import {
 
 const organizationRepo = new OrganizationRepository(prisma);
 
+/**
+ * Retrieves all active organizations with customer counts.
+ * Returns a list of all organizations sorted alphabetically by name.
+ * @returns A promise that resolves to an `ActionResult` containing an array of organization items.
+ */
 export async function getActiveOrganizations(): Promise<ActionResult<OrganizationListItem[]>> {
   const session = await auth();
   if (!session?.user) {
@@ -79,8 +84,10 @@ export async function getActiveOrganizations(): Promise<ActionResult<Organizatio
 }
 
 /**
- * Retrieves a paginated list of organizations based on search and filter criteria
- * Supports filtering by name, status, sorting, and pagination
+ * Retrieves a paginated list of organizations based on search and filter criteria.
+ * Supports filtering by name, status, sorting, and pagination.
+ * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated organization data.
  */
 export async function getOrganizations(
   searchParams: SearchParams,
@@ -101,6 +108,13 @@ export async function getOrganizations(
   }
 }
 
+/**
+ * Retrieves a single organization by ID with full details.
+ * Includes all organization fields, customer count, and related metadata.
+ * @param id - The unique identifier of the organization to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the organization details,
+ * or an error if the organization is not found.
+ */
 export async function getOrganizationById(id: string): Promise<ActionResult<OrganizationListItem>> {
   const session = await auth();
   if (!session?.user) {

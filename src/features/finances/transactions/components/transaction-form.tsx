@@ -442,12 +442,7 @@ export function TransactionForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
                       </PopoverContent>
                     </Popover>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

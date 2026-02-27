@@ -13,8 +13,8 @@ export function QuoteDrawerSkeleton() {
       </DrawerHeader>
 
       <DrawerBody className="p-6 space-y-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <Box key={index}>
+        {Array.from({ length: 4 }, (_, i) => i).map((index) => (
+          <Box key={`skeleton-${index}`}>
             <Skeleton className="h-8 w-3/4 mb-2" />
             <Skeleton className="h-4 w-1/2 mb-4" />
             <Box className="space-y-2">

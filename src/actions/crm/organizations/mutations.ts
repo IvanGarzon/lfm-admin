@@ -17,6 +17,12 @@ import { OrganizationRepository } from '@/repositories/organization-repository';
 
 const organizationRepo = new OrganizationRepository(prisma);
 
+/**
+ * Creates a new organization with the provided data.
+ * Validates input and creates a new organization record in the database.
+ * @param data - The input data for creating the organization, conforming to `CreateOrganizationInput`.
+ * @returns A promise that resolves to an `ActionResult` with the new organization's ID and name.
+ */
 export async function createOrganization(
   data: CreateOrganizationInput,
 ): Promise<ActionResult<{ id: string; name: string }>> {
@@ -46,6 +52,12 @@ export async function createOrganization(
   }
 }
 
+/**
+ * Updates an existing organization with the provided data.
+ * Validates input and checks that the organization exists before updating.
+ * @param data - The input data for updating the organization, conforming to `UpdateOrganizationInput`.
+ * @returns A promise that resolves to an `ActionResult` with the updated organization's ID.
+ */
 export async function updateOrganization(
   data: UpdateOrganizationInput,
 ): Promise<ActionResult<{ id: string }>> {
@@ -77,6 +89,12 @@ export async function updateOrganization(
   }
 }
 
+/**
+ * Deletes an organization from the system.
+ * Verifies the organization exists before attempting deletion.
+ * @param data - An object containing the organization ID to delete.
+ * @returns A promise that resolves to an `ActionResult` with the deleted organization's ID.
+ */
 export async function deleteOrganization(
   data: DeleteOrganizationInput,
 ): Promise<ActionResult<{ id: string }>> {

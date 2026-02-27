@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ModuleCard } from './module-card';
-import { CashFlowWaterfallChart } from './cash-flow-waterfall-chart';
 import { RecentActivity } from './recent-activity';
 import { FinancialHealth } from './financial-health';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
@@ -12,6 +11,36 @@ import { useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-q
 import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
 import { FileText, FileCheck, Receipt, DollarSign } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
+const ModuleCard = dynamic(
+  () => import('./module-card').then((mod) => ({ default: mod.ModuleCard })),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-8 w-8 rounded" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    ),
+  },
+);
+
+const CashFlowWaterfallChart = dynamic(
+  () =>
+    import('./cash-flow-waterfall-chart').then((mod) => ({ default: mod.CashFlowWaterfallChart })),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[400px] w-full" />,
+  },
+);
 
 export function FinancesOverview() {
   const router = useRouter();

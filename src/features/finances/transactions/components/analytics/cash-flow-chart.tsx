@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ReferenceLine } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -13,7 +16,6 @@ import { formatCurrency } from '@/lib/utils';
 import { TransactionTrend } from '@/features/finances/transactions/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 
 interface CashFlowChartProps {
@@ -24,15 +26,15 @@ interface CashFlowChartProps {
 const chartConfig = {
   income: {
     label: 'Income',
-    color: 'hsl(var(--chart-1))', // Emerald/Green
+    color: 'hsl(var(--chart-1))',
   },
   expense: {
     label: 'Expense',
-    color: 'hsl(var(--chart-2))', // Green for expenses
+    color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
 
-export function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
+function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
   const monthsToShow = 6;
   // Offset represents how many months back from now the window ends
   // 0 = window ends at current month (showing last 6 months)
@@ -220,3 +222,18 @@ export function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(CashFlowChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-72 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[400px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

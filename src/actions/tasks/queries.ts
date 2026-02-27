@@ -18,36 +18,10 @@ const taskRepo = new ScheduledTaskRepository(prisma);
 const executionRepo = new TaskExecutionRepository(prisma);
 
 /**
- * Retrieves all scheduled tasks with execution statistics and optional filtering
- *
- * Fetches a comprehensive list of scheduled tasks including execution counts and information
- * about the last execution (status, timing, triggering user). Results can be filtered by
- * category, enabled status, and schedule type. Requires authentication.
- *
- * @param filters - Optional filters to narrow down results
- * @param filters.category - Filter by task category (SYSTEM, EMAIL, CLEANUP, FINANCE, CUSTOM)
- * @param filters.isEnabled - Filter by enabled/disabled status
- * @param filters.scheduleType - Filter by schedule type (CRON or EVENT)
- *
- * @returns Promise resolving to ActionResult containing array of tasks with stats or error
- * @returns Tasks include:
- * - All task properties from ScheduledTask model
- * - _count.executions: Total number of executions
- * - lastExecution: Details of the most recent execution (if any)
- *
- * @throws Returns error if user is not authenticated
- *
- * @example
- * ```ts
- * // Get all tasks
- * const allTasks = await getTasks();
- *
- * // Get only enabled email tasks
- * const emailTasks = await getTasks({
- *   category: 'EMAIL',
- *   isEnabled: true
- * });
- * ```
+ * Retrieves all scheduled tasks with execution statistics.
+ * Supports filtering by category, enabled status, and schedule type.
+ * @param filters - Optional filters including category, isEnabled, and scheduleType.
+ * @returns A promise that resolves to an `ActionResult` containing the tasks with stats.
  */
 export async function getTasks(filters?: {
   category?: TaskCategory;
@@ -89,33 +63,11 @@ export async function getTasks(filters?: {
 }
 
 /**
- * Retrieves a single scheduled task by ID with execution statistics
- *
- * Fetches detailed information about a specific task including total execution count
- * and details about the most recent execution. Useful for task detail pages and
- * monitoring individual task performance. Requires authentication.
- *
- * @param taskId - The unique identifier of the task to retrieve
- *
- * @returns Promise resolving to ActionResult containing task with stats or error
- * @returns Task includes:
- * - All task properties from ScheduledTask model
- * - _count.executions: Total number of executions
- * - lastExecution: Details of the most recent execution (if any)
- *
- * @throws Returns error if:
- * - User is not authenticated
- * - Task is not found in the database
- *
- * @example
- * ```ts
- * const result = await getTaskById('task-123');
- * if (result.success) {
- *   console.log(`Task: ${result.data.functionName}`);
- *   console.log(`Executions: ${result.data._count.executions}`);
- *   console.log(`Last run: ${result.data.lastExecution?.startedAt}`);
- * }
- * ```
+ * Retrieves a single scheduled task by ID with execution statistics.
+ * Includes execution count and last execution details.
+ * @param taskId - The unique identifier of the task to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the task with stats,
+ * or an error if the task is not found.
  */
 export async function getTaskById(taskId: string): Promise<
   ActionResult<
@@ -153,37 +105,11 @@ export async function getTaskById(taskId: string): Promise<
 }
 
 /**
- * Retrieves execution history for a specific task with statistics
- *
- * Fetches paginated execution records for a task along with aggregated statistics.
- * Useful for monitoring task performance, debugging failures, and analyzing execution
- * patterns. Supports filtering by status and pagination. Requires authentication.
- *
- * @param taskId - The unique identifier of the task
- * @param options - Optional pagination and filtering options
- * @param options.limit - Maximum number of executions to return (for pagination)
- * @param options.offset - Number of executions to skip (for pagination)
- * @param options.status - Filter executions by status (RUNNING, COMPLETED, FAILED, CANCELLED, TIMEOUT)
- *
- * @returns Promise resolving to ActionResult containing executions and stats or error
- * @returns {TaskExecution[]} data.executions - Array of execution records
- * @returns {object} data.stats - Aggregated statistics
- * @returns {number} data.stats.total - Total number of executions
- * @returns {number} data.stats.completed - Number of successful executions
- * @returns {number} data.stats.failed - Number of failed executions
- * @returns {number} data.stats.running - Number of currently running executions
- * @returns {number|null} data.stats.avgDuration - Average execution duration in milliseconds
- *
- * @throws Returns error if user is not authenticated
- *
- * @example
- * ```ts
- * // Get recent executions with stats
- * const result = await getTaskExecutions('task-123', { limit: 20, offset: 0 });
- *
- * // Get only failed executions
- * const failures = await getTaskExecutions('task-123', { status: 'FAILED' });
- * ```
+ * Retrieves execution history for a specific task with statistics.
+ * Supports pagination and filtering by status.
+ * @param taskId - The unique identifier of the task.
+ * @param options - Optional pagination and filtering options (limit, offset, status).
+ * @returns A promise that resolves to an `ActionResult` containing executions and stats.
  */
 export async function getTaskExecutions(
   taskId: string,
@@ -230,36 +156,11 @@ export async function getTaskExecutions(
 }
 
 /**
- * Retrieves a single task execution by ID
- *
- * Fetches detailed information about a specific task execution including its status,
- * timing, result data, and error information. Useful for debugging failed executions
- * and viewing execution details. Requires authentication.
- *
- * @param executionId - The unique identifier of the execution to retrieve
- *
- * @returns Promise resolving to ActionResult containing the execution record or error
- * @returns Execution includes all TaskExecution model properties:
- * - id, taskId, status, triggeredBy
- * - startedAt, completedAt, duration
- * - resultData, errorMessage, errorStack
- * - createdAt, updatedAt
- *
- * @throws Returns error if:
- * - User is not authenticated
- * - Execution is not found in the database
- *
- * @example
- * ```ts
- * const result = await getExecutionById('exec-123');
- * if (result.success) {
- *   console.log(`Status: ${result.data.status}`);
- *   console.log(`Duration: ${result.data.duration}ms`);
- *   if (result.data.errorMessage) {
- *     console.error(`Error: ${result.data.errorMessage}`);
- *   }
- * }
- * ```
+ * Retrieves a single task execution by ID.
+ * Includes status, timing, result data, and error information.
+ * @param executionId - The unique identifier of the execution to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the execution record,
+ * or an error if the execution is not found.
  */
 export async function getExecutionById(executionId: string): Promise<ActionResult<TaskExecution>> {
   const session = await auth();
@@ -285,36 +186,10 @@ export async function getExecutionById(executionId: string): Promise<ActionResul
 }
 
 /**
- * Retrieves recent executions across all tasks
- *
- * Fetches the most recent task executions from all tasks in the system, ordered by
- * start time. Each execution includes basic task information for context. Useful for
- * dashboard activity feeds and system-wide execution monitoring. Requires authentication.
- *
- * @param limit - Maximum number of executions to return (default: 10)
- *
- * @returns Promise resolving to ActionResult containing array of executions or error
- * @returns Each execution includes:
- * - All TaskExecution model properties
- * - task.id: The task's unique identifier
- * - task.functionName: The task's function name
- * - task.category: The task's category
- *
- * @throws Returns error if user is not authenticated
- *
- * @example
- * ```ts
- * // Get last 10 executions
- * const result = await getRecentExecutions();
- *
- * // Get last 50 executions for detailed monitoring
- * const result = await getRecentExecutions(50);
- * if (result.success) {
- *   result.data.forEach(exec => {
- *     console.log(`${exec.task.functionName}: ${exec.status}`);
- *   });
- * }
- * ```
+ * Retrieves recent executions across all tasks.
+ * Each execution includes basic task information for context.
+ * @param limit - Maximum number of executions to return. Defaults to 10.
+ * @returns A promise that resolves to an `ActionResult` containing the recent executions.
  */
 export async function getRecentExecutions(limit: number = 10): Promise<
   ActionResult<
@@ -344,34 +219,9 @@ export async function getRecentExecutions(limit: number = 10): Promise<
 }
 
 /**
- * Retrieves task counts grouped by category
- *
- * Provides aggregated counts of tasks for each category (SYSTEM, EMAIL, CLEANUP, FINANCE, CUSTOM).
- * Useful for dashboard statistics, analytics, and understanding task distribution across
- * different functional areas. Requires authentication.
- *
- * @returns Promise resolving to ActionResult containing category counts or error
- * @returns Object with category names as keys and counts as values:
- * - SYSTEM: number - Count of system tasks
- * - EMAIL: number - Count of email tasks
- * - CLEANUP: number - Count of cleanup tasks
- * - FINANCE: number - Count of finance tasks
- * - CUSTOM: number - Count of custom tasks
- *
- * @throws Returns error if user is not authenticated
- *
- * @example
- * ```ts
- * const result = await getTaskCountsByCategory();
- * if (result.success) {
- *   console.log(`Email tasks: ${result.data.EMAIL}`);
- *   console.log(`Finance tasks: ${result.data.FINANCE}`);
- *
- *   // Calculate total tasks
- *   const total = Object.values(result.data).reduce((sum, count) => sum + count, 0);
- *   console.log(`Total tasks: ${total}`);
- * }
- * ```
+ * Retrieves task counts grouped by category.
+ * Returns counts for SYSTEM, EMAIL, CLEANUP, FINANCE, and CUSTOM categories.
+ * @returns A promise that resolves to an `ActionResult` containing category counts.
  */
 export async function getTaskCountsByCategory(): Promise<
   ActionResult<Record<TaskCategory, number>>

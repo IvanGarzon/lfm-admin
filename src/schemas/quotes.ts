@@ -38,7 +38,7 @@ export const QuoteItemSchema = z.object({
     .max(10, { error: 'Maximum 10 colors allowed' }),
 });
 
-export const QuoteSchema = z
+const QuoteSchema = z
   .object({
     customerId: z.cuid({ error: 'Customer is required' }),
     status: QuoteStatusSchema,

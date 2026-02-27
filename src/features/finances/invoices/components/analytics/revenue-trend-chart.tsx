@@ -1,6 +1,8 @@
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -8,7 +10,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { RevenueTrend } from '@/features/finances/invoices/types';
@@ -26,11 +27,11 @@ const chartConfig = {
   },
   paid: {
     label: 'Collected',
-    color: '#10b981', // Emerald-500
+    color: '#10b981',
   },
 } satisfies ChartConfig;
 
-export function RevenueTrendChart({ data, isLoading }: RevenueTrendChartProps) {
+function RevenueTrendChart({ data, isLoading }: RevenueTrendChartProps) {
   if (isLoading) {
     return (
       <Card className="col-span-1 md:col-span-2">
@@ -73,7 +74,7 @@ export function RevenueTrendChart({ data, isLoading }: RevenueTrendChartProps) {
               }
             />
             <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend />
             <Bar
               dataKey="total"
               name="Invoiced"
@@ -94,3 +95,18 @@ export function RevenueTrendChart({ data, isLoading }: RevenueTrendChartProps) {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(RevenueTrendChart), {
+  ssr: false,
+  loading: () => (
+    <Card className="col-span-1 md:col-span-2">
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-72 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

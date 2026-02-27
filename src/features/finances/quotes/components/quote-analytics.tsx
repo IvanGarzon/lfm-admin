@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import {
   useQuoteValueTrend,
@@ -8,8 +9,6 @@ import {
   useAverageTimeToDecision,
 } from '../hooks/use-quote-queries';
 import { StatCard } from '@/features/finances/invoices/components/analytics/stat-card';
-import { QuoteValueTrendChart } from './analytics/quote-value-trend-chart';
-import { ConversionFunnelChart } from './analytics/conversion-funnel-chart';
 import { TopCustomersQuotedTable } from './analytics/top-customers-quoted-table';
 import { Clock, TrendingUp, Download } from 'lucide-react';
 import { Box } from '@/components/ui/box';
@@ -17,6 +16,38 @@ import { Button } from '@/components/ui/button';
 import { DateRange } from 'react-day-picker';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { QuoteStatistics } from '@/features/finances/quotes/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const QuoteValueTrendChart = dynamic(() => import('./analytics/quote-value-trend-chart'), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Quote Value Trend</CardTitle>
+        <CardDescription>Loading chart...</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[300px] w-full" />
+      </CardContent>
+    </Card>
+  ),
+});
+
+const ConversionFunnelChart = dynamic(() => import('./analytics/conversion-funnel-chart'), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Conversion Funnel</CardTitle>
+        <CardDescription>Loading chart...</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[300px] w-full" />
+      </CardContent>
+    </Card>
+  ),
+});
 
 interface QuoteAnalyticsProps {
   stats?: QuoteStatistics;

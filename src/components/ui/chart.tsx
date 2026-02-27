@@ -5,7 +5,6 @@ import * as RechartsPrimitive from 'recharts';
 
 import { cn } from '@/lib/utils';
 
-// Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const;
 
 export type ChartConfig = {
@@ -67,31 +66,35 @@ function ChartContainer({
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([, config]) => config.theme || config.color);
+  const styleRef = React.useRef<HTMLStyleElement>(null);
+
+  React.useEffect(() => {
+    if (!styleRef.current || !colorConfig.length) return;
+
+    const css = Object.entries(THEMES)
+      .map(
+        ([theme, prefix]) => `
+          ${prefix} [data-chart=${id}] {
+            ${colorConfig
+              .map(([key, itemConfig]) => {
+                const color =
+                  itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+                return color ? `  --color-${key}: ${color};` : null;
+              })
+              .join('\n')}
+          }
+        `,
+      )
+      .join('\n');
+
+    styleRef.current.textContent = css;
+  }, [id, colorConfig]);
 
   if (!colorConfig.length) {
     return null;
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join('\n')}
-}
-`,
-          )
-          .join('\n'),
-      }}
-    />
-  );
+  return <style ref={styleRef} />;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
@@ -182,28 +185,26 @@ function ChartTooltipContent({
                   <>
                     {itemConfig?.icon ? (
                       <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
-                            {
-                              'h-2.5 w-2.5': indicator === 'dot',
-                              'w-1': indicator === 'line',
-                              'w-0 border-[1.5px] border-dashed bg-transparent':
-                                indicator === 'dashed',
-                              'my-0.5': nestLabel && indicator === 'dashed',
-                            },
-                          )}
-                          style={
-                            {
-                              '--color-bg': indicatorColor,
-                              '--color-border': indicatorColor,
-                            } as React.CSSProperties
-                          }
-                        />
-                      )
-                    )}
+                    ) : !hideIndicator ? (
+                      <div
+                        className={cn(
+                          'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
+                          {
+                            'h-2.5 w-2.5': indicator === 'dot',
+                            'w-1': indicator === 'line',
+                            'w-0 border-[1.5px] border-dashed bg-transparent':
+                              indicator === 'dashed',
+                            'my-0.5': nestLabel && indicator === 'dashed',
+                          },
+                        )}
+                        style={
+                          {
+                            '--color-bg': indicatorColor,
+                            '--color-border': indicatorColor,
+                          } as React.CSSProperties
+                        }
+                      />
+                    ) : null}
                     <div
                       className={cn(
                         'flex flex-1 justify-between leading-none',
@@ -324,3 +325,15 @@ export {
   ChartLegendContent,
   ChartStyle,
 };
+
+// Dynamic import for code splitting
+import dynamic from 'next/dynamic';
+
+export const DynamicChartContainer = dynamic(() => Promise.resolve(ChartContainer), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
+      Loading chart...
+    </div>
+  ),
+});

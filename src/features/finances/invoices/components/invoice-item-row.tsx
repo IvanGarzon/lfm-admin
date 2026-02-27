@@ -20,6 +20,7 @@ import {
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { ProductSearchDialog } from '@/components/shared/product-search-dialog';
 import type { InvoiceFormInput } from '@/features/finances/invoices/types';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 type InvoiceItemRowProps = {
   index: number;
@@ -42,6 +43,7 @@ export function InvoiceItemRow({
   onRemove,
   isLocked,
 }: InvoiceItemRowProps) {
+  const prefersReducedMotion = useReducedMotion();
   const y = useMotionValue(0);
   const dragControls = useDragControls();
 
@@ -112,7 +114,11 @@ export function InvoiceItemRow({
       dragControls={dragControls}
       style={{ y }}
       layout="position"
-      transition={{ type: 'spring', stiffness: 500, damping: 50, mass: 1 }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 500, damping: 50, mass: 1 }
+      }
       className="border-b border-gray-100 dark:border-gray-800 last:border-b-0 relative"
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}

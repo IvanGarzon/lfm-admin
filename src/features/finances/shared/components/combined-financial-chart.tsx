@@ -1,9 +1,11 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import {
   ChartConfig,
   ChartContainer,
@@ -20,38 +22,35 @@ import { useTransactionTrend } from '@/features/finances/transactions/hooks/use-
 const chartConfig = {
   revenue: {
     label: 'Revenue',
-    color: '#10b981', // Emerald-500
+    color: '#10b981',
   },
   quotes: {
     label: 'Quoted Value',
-    color: '#3b82f6', // Blue-500
+    color: '#3b82f6',
   },
   income: {
     label: 'Income',
-    color: '#8b5cf6', // Purple-500
+    color: '#8b5cf6',
   },
 } satisfies ChartConfig;
 
-export function CombinedFinancialChart() {
+function CombinedFinancialChart() {
   const { data: invoiceStats, isLoading: invoiceLoading } = useInvoiceStatistics();
   const { data: quoteTrend, isLoading: quoteLoading } = useQuoteValueTrend(12);
   const { data: transactionTrend, isLoading: transactionLoading } = useTransactionTrend(12);
 
   const isLoading = invoiceLoading || quoteLoading || transactionLoading;
 
-  // Combine data from all sources
   const chartData = useMemo(() => {
     if (!invoiceStats?.revenueTrend || !quoteTrend || !transactionTrend) {
       return [];
     }
 
-    // Create a map of all months
     const monthsMap = new Map<
       string,
       { month: string; revenue?: number; quotes?: number; income?: number }
     >();
 
-    // Add invoice revenue data
     invoiceStats.revenueTrend?.forEach((item) => {
       monthsMap.set(item.month, {
         month: item.month,
@@ -59,7 +58,6 @@ export function CombinedFinancialChart() {
       });
     });
 
-    // Add quote data
     quoteTrend.forEach((item) => {
       const existing = monthsMap.get(item.month) || { month: item.month };
       monthsMap.set(item.month, {
@@ -68,7 +66,6 @@ export function CombinedFinancialChart() {
       });
     });
 
-    // Add transaction income data
     transactionTrend.forEach((item) => {
       const existing = monthsMap.get(item.month) || { month: item.month };
       monthsMap.set(item.month, {
@@ -153,3 +150,18 @@ export function CombinedFinancialChart() {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(CombinedFinancialChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-72 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

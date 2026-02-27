@@ -21,6 +21,9 @@ import type {
 } from '@/features/finances/invoices/types';
 import { ReceiptPreview } from '@/features/finances/invoices/components/receipt-preview';
 
+const EMPTY_ITEMS: InvoiceItemDetail[] = [];
+const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
+
 interface SendReceiptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,8 +40,8 @@ export function SendReceiptDialog({
   open,
   onOpenChange,
   invoice,
-  items = [],
-  payments = [],
+  items = EMPTY_ITEMS,
+  payments = EMPTY_PAYMENTS,
   isLoadingItems = false,
   isLoadingPayments = false,
   onDownload,

@@ -28,7 +28,6 @@ const quoteRepo = new QuoteRepository(prisma);
  * Retrieves a paginated list of quotes based on specified search and filter criteria.
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated quote data.
- * @throws Will throw an error if the user is not authenticated or if the search parameters are invalid.
  */
 export async function getQuotes(
   searchParams: SearchParams,

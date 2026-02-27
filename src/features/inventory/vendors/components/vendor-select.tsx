@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 import { Check, ChevronDown, Store } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -43,6 +43,7 @@ export function VendorSelect({
   showAddVendorLink = false,
 }: VendorSelectProps) {
   const [open, setOpen] = useState<boolean>(false);
+  const listboxId = useId();
   const { data: vendors = [], isLoading: isLoadingVendors } = useActiveVendors();
 
   const isLoading = isLoadingProp || isLoadingVendors;
@@ -100,6 +101,7 @@ export function VendorSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listboxId}
             className="w-full justify-between h-auto py-2 text-left"
             disabled={disabled || isLoading}
           >
@@ -131,7 +133,7 @@ export function VendorSelect({
           sideOffset={4}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
-          <Command>
+          <Command id={listboxId}>
             <CommandInput placeholder="Search vendors..." />
             <CommandList className="max-h-[300px] overflow-y-auto">
               <CommandEmpty>No vendor found.</CommandEmpty>

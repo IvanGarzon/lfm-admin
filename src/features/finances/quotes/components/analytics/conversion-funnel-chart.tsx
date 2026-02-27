@@ -1,13 +1,10 @@
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
+import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import type { ConversionFunnelData } from '@/features/finances/quotes/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,15 +22,15 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const COLORS = {
-  sent: '#3b82f6', // Blue-500
-  onHold: '#f59e0b', // Amber-500
-  accepted: '#10b981', // Emerald-500
-  rejected: '#ef4444', // Red-500
-  expired: '#94a3b8', // Slate-400
-  converted: '#8b5cf6', // Purple-500
+  sent: '#3b82f6',
+  onHold: '#f59e0b',
+  accepted: '#10b981',
+  rejected: '#ef4444',
+  expired: '#94a3b8',
+  converted: '#8b5cf6',
 };
 
-export function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChartProps) {
+function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChartProps) {
   if (isLoading) {
     return (
       <Card>
@@ -68,7 +65,6 @@ export function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChart
     { name: 'Converted', count: data.converted, color: COLORS.converted },
   ];
 
-  // Calculate conversion rate
   const totalSent = data.sent + data.accepted + data.rejected + data.expired + data.converted;
   const conversionRate = totalSent > 0 ? ((data.accepted / totalSent) * 100).toFixed(1) : '0.0';
 
@@ -116,7 +112,7 @@ export function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChart
             />
             <Bar dataKey="count" radius={[0, 4, 4, 0]}>
               {funnelData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell key={entry.name} fill={entry.color} />
               ))}
             </Bar>
           </BarChart>
@@ -125,3 +121,18 @@ export function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChart
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(ConversionFunnelChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-64 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

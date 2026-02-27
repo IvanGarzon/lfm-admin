@@ -1,4 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
+'use client';
+
 import { type Table as TanstackTable, flexRender } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -11,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/shared/tableV3/data-table-pagination';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface DataTableProps<TData> extends React.ComponentProps<'div'> {
   table: TanstackTable<TData>;
@@ -21,20 +23,6 @@ interface DataTableProps<TData> extends React.ComponentProps<'div'> {
   onRowHover?: (row: TData) => void;
 }
 
-const listVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-    },
-  },
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
-
 export function DataTable<TData>({
   table,
   totalItems,
@@ -44,6 +32,7 @@ export function DataTable<TData>({
   onRowHover,
   ...props
 }: DataTableProps<TData>) {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <Box className={cn('flex w-full flex-col space-y-4', className)} {...props}>
       {children}

@@ -13,6 +13,11 @@ import { searchParamsCache } from '@/filters/customers/customers-filters';
 
 const customerRepo = new CustomerRepository(prisma);
 
+/**
+ * Retrieves all active customers for dropdown selections.
+ * Returns a lightweight list of customers with only essential fields.
+ * @returns A promise that resolves to an `ActionResult` containing an array of partial customer objects.
+ */
 export async function getActiveCustomers(): Promise<ActionResult<Partial<Customer>[]>> {
   const session = await auth();
   if (!session?.user) {
@@ -27,6 +32,12 @@ export async function getActiveCustomers(): Promise<ActionResult<Partial<Custome
   }
 }
 
+/**
+ * Retrieves a paginated list of customers based on search and filter criteria.
+ * Supports filtering by name, email, organization, and status.
+ * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated customer data.
+ */
 export async function getCustomers(
   searchParams: SearchParams,
 ): Promise<ActionResult<CustomerPagination>> {
@@ -45,6 +56,13 @@ export async function getCustomers(
   }
 }
 
+/**
+ * Retrieves a single customer by ID with full details.
+ * Includes associated organization data and related information.
+ * @param id - The unique identifier of the customer to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the customer details,
+ * or an error if the customer is not found.
+ */
 export async function getCustomerById(id: string): Promise<ActionResult<CustomerListItem | null>> {
   const session = await auth();
   if (!session?.user) {

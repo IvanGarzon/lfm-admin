@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { ArrowRight, TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
 interface ModuleCardProps {
   title: string;
@@ -27,7 +28,7 @@ interface ModuleCardProps {
   isLoading?: boolean;
 }
 
-export function ModuleCard({
+function ModuleCard({
   title,
   icon: Icon,
   iconColor,
@@ -74,7 +75,6 @@ export function ModuleCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Primary Metric */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">{primaryMetric.label}</p>
           <div className="flex items-baseline gap-2">
@@ -97,7 +97,6 @@ export function ModuleCard({
           </div>
         </div>
 
-        {/* Mini Chart */}
         {chartData && chartData.length > 0 && (
           <div className="h-16 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -121,17 +120,15 @@ export function ModuleCard({
           </div>
         )}
 
-        {/* Secondary Metrics */}
         <div className="grid grid-cols-2 gap-4">
           {secondaryMetrics.map((metric, index) => (
-            <div key={index} className="space-y-1">
+            <div key={metric.label} className="space-y-1">
               <p className="text-xs text-muted-foreground">{metric.label}</p>
               <p className="text-lg font-semibold">{metric.value}</p>
             </div>
           ))}
         </div>
 
-        {/* View Analytics Button */}
         <Link href={href} className="block">
           <Button variant="outline" className="w-full group">
             View Analytics
@@ -142,3 +139,27 @@ export function ModuleCard({
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(ModuleCard), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-8 w-8 rounded" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Skeleton className="h-16 w-full" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+        <Skeleton className="h-9 w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

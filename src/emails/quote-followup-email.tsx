@@ -135,5 +135,3 @@ QuoteFollowUpEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/quote.pdf',
 } satisfies QuoteFollowUpEmailProps;
-
-export default QuoteFollowUpEmail;

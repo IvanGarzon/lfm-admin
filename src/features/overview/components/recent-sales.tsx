@@ -50,7 +50,7 @@ export function RecentSales() {
       <CardContent>
         <Box className="space-y-8">
           {salesData.map((sale, index) => (
-            <Box key={index} className="flex items-center mb-5">
+            <Box key={sale.email} className="flex items-center mb-5">
               <UserAvatar
                 className="h-9 w-9 rounded-full bg-gray-200"
                 user={{

@@ -11,6 +11,7 @@ import { FormLabel } from '@/components/ui/form';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
 import { QuoteItemRow } from '@/features/finances/quotes/components/quote-item-row';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 export function QuoteItemsList({
   form,
@@ -27,6 +28,7 @@ export function QuoteItemsList({
   isLocked?: boolean;
   quoteId?: string;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const { fields, append, remove, move } = fieldArray;
 
   const handleAddItem = useCallback(() => {

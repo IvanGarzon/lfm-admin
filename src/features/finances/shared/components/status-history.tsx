@@ -35,6 +35,21 @@ interface StatusHistoryProps<TStatus extends FinanceStatus> {
 }
 
 /**
+ * Wrapper component for status badge rendering
+ * Prevents inline render function issues
+ */
+function StatusBadge<TStatus extends FinanceStatus>({
+  status,
+  renderBadge,
+}: {
+  status: TStatus;
+  renderBadge: (status: TStatus) => React.ReactNode;
+}) {
+  const badge = renderBadge(status);
+  return <>{badge}</>;
+}
+
+/**
  * Generic status history component for finance entities
  *
  * Displays a timeline of status changes with timestamps, notes, and status badges.
@@ -77,11 +92,14 @@ export function StatusHistory<TStatus extends FinanceStatus>({
                     <Box className="flex flex-wrap items-center gap-2">
                       {item.previousStatus ? (
                         <>
-                          {renderStatusBadge(item.previousStatus)}
+                          <StatusBadge
+                            status={item.previousStatus}
+                            renderBadge={renderStatusBadge}
+                          />
                           <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                         </>
                       ) : null}
-                      {renderStatusBadge(item.status)}
+                      <StatusBadge status={item.status} renderBadge={renderStatusBadge} />
                     </Box>
 
                     {/* Date and Time */}

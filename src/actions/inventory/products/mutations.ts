@@ -17,7 +17,10 @@ import type { ActionResult } from '@/types/actions';
 const PRODUCTS_PATH = '/inventory/products';
 
 /**
- * Create a new product
+ * Creates a new product with the provided data.
+ * Validates input and creates a new product record in the database.
+ * @param data - The input data for creating the product, conforming to `CreateProductInput`.
+ * @returns A promise that resolves to an `ActionResult` with the new product's ID.
  */
 export async function createProduct(
   data: CreateProductInput,
@@ -41,7 +44,10 @@ export async function createProduct(
 }
 
 /**
- * Update an existing product
+ * Updates an existing product with the provided data.
+ * Validates input and updates the product record in the database.
+ * @param data - The input data for updating the product, conforming to `UpdateProductInput`.
+ * @returns A promise that resolves to an `ActionResult` with the updated product's ID.
  */
 export async function updateProduct(
   data: UpdateProductInput,
@@ -69,7 +75,10 @@ export async function updateProduct(
 }
 
 /**
- * Delete a product
+ * Deletes a product from the system.
+ * Removes the product record from the database.
+ * @param id - The unique identifier of the product to delete.
+ * @returns A promise that resolves to an `ActionResult` with success status.
  */
 export async function deleteProduct(id: string): Promise<ActionResult<{ success: boolean }>> {
   const session = await auth();
@@ -93,7 +102,11 @@ export async function deleteProduct(id: string): Promise<ActionResult<{ success:
 }
 
 /**
- * Update product status
+ * Updates the status of a single product.
+ * Changes the product status without modifying other fields.
+ * @param id - The unique identifier of the product to update.
+ * @param status - The new status (ACTIVE, INACTIVE, or DISCONTINUED).
+ * @returns A promise that resolves to an `ActionResult` with the product's ID.
  */
 export async function updateProductStatus(
   id: string,
@@ -121,7 +134,11 @@ export async function updateProductStatus(
 }
 
 /**
- * Update product stock
+ * Updates the stock quantity for a single product.
+ * Directly sets the stock level to the specified quantity.
+ * @param id - The unique identifier of the product to update.
+ * @param quantity - The new stock quantity.
+ * @returns A promise that resolves to an `ActionResult` with the product's ID and new stock level.
  */
 export async function updateProductStock(
   id: string,
@@ -149,7 +166,11 @@ export async function updateProductStock(
 }
 
 /**
- * Bulk update product status
+ * Updates the status of multiple products in a single operation.
+ * Efficiently updates the status for a batch of products.
+ * @param ids - Array of product IDs to update.
+ * @param status - The new status to apply to all products.
+ * @returns A promise that resolves to an `ActionResult` with the count of updated products.
  */
 export async function bulkUpdateProductStatus(
   ids: string[],
@@ -171,7 +192,10 @@ export async function bulkUpdateProductStatus(
 }
 
 /**
- * Bulk delete products
+ * Deletes multiple products in a single operation.
+ * Efficiently removes a batch of products from the database.
+ * @param ids - Array of product IDs to delete.
+ * @returns A promise that resolves to an `ActionResult` with the count of deleted products.
  */
 export async function bulkDeleteProducts(ids: string[]): Promise<ActionResult<{ count: number }>> {
   const session = await auth();

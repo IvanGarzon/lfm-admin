@@ -8,9 +8,12 @@ export class ScheduledTaskRepository {
   constructor(private prisma: PrismaClient) {}
 
   /**
-   * Find all scheduled tasks
-   * @param filters - Optional filters for category, enabled status, etc.
-   * @returns Array of scheduled tasks
+   * Find all scheduled tasks with optional filtering.
+   * @param filters - Optional filters for category, enabled status, and schedule type
+   * @param filters.category - Filter by task category
+   * @param filters.isEnabled - Filter by active/inactive status
+   * @param filters.scheduleType - Filter by trigger type (CRON, EVENT, etc.)
+   * @returns A promise that resolves to an array of scheduled tasks
    */
   async findAll(filters?: {
     category?: TaskCategory;
@@ -30,9 +33,9 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Find a scheduled task by ID
+   * Find a scheduled task by its unique database ID.
    * @param id - The ID of the task
-   * @returns The task or null if not found
+   * @returns A promise that resolves to the task or null if not found
    */
   async findById(id: string): Promise<ScheduledTask | null> {
     return this.prisma.scheduledTask.findUnique({
@@ -41,9 +44,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Find a scheduled task by function ID
-   * @param functionId - The Inngest function ID
-   * @returns The task or null if not found
+   * Find a scheduled task by its Inngest function ID.
+   * Useful for syncing definitions from code to database.
+   * @param functionId - The unique Inngest function ID
+   * @returns A promise that resolves to the task or null if not found
    */
   async findByFunctionId(functionId: string): Promise<ScheduledTask | null> {
     return this.prisma.scheduledTask.findUnique({
@@ -52,9 +56,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Create or update a scheduled task (upsert)
-   * @param data - The task data
-   * @returns The created or updated task
+   * Create or update a scheduled task definition (upsert).
+   * Used for synchronizing Inngest function definitions with the database.
+   * @param data - The task configuration data
+   * @returns A promise that resolves to the created or updated task
    */
   async upsert(data: {
     functionId: string;
@@ -105,10 +110,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Update task configuration
-   * @param id - The ID of the task
-   * @param data - The fields to update
-   * @returns The updated task
+   * Update specific fields of a task configuration.
+   * @param id - The unique ID of the task
+   * @param data - The fields to update (isEnabled, schedule, etc.)
+   * @returns A promise that resolves to the updated task
    */
   async update(
     id: string,
@@ -128,10 +133,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Enable or disable a task
-   * @param id - The ID of the task
-   * @param isEnabled - Whether the task should be enabled
-   * @returns The updated task
+   * Quickly enable or disable a scheduled task.
+   * @param id - The unique ID of the task
+   * @param isEnabled - Desired enabled status
+   * @returns A promise that resolves to the updated task
    */
   async setEnabled(id: string, isEnabled: boolean): Promise<ScheduledTask> {
     return this.prisma.scheduledTask.update({
@@ -141,9 +146,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Get task with execution statistics
-   * @param id - The ID of the task
-   * @returns The task with execution stats or null if not found
+   * Retrieves a task along with its execution statistics.
+   * Includes total execution count and the most recent execution details.
+   * @param id - The unique ID of the task
+   * @returns A promise that resolves to the task with execution stats or null if not found
    */
   async findByIdWithStats(id: string): Promise<
     | (ScheduledTask & {
@@ -178,17 +184,18 @@ export class ScheduledTaskRepository {
 
     if (!task) return null;
 
+    const { executions, ...taskData } = task;
+
     return {
-      ...task,
-      lastExecution: task.executions[0] || null,
-      executions: undefined as any, // Remove from result
+      ...taskData,
+      lastExecution: executions[0] || null,
     };
   }
 
   /**
-   * Delete a scheduled task
-   * @param id - The ID of the task
-   * @returns The deleted task
+   * Permanently deletes a scheduled task definition.
+   * @param id - The unique ID of the task to delete
+   * @returns A promise that resolves to the deleted task record
    */
   async delete(id: string): Promise<ScheduledTask> {
     return this.prisma.scheduledTask.delete({
@@ -197,8 +204,8 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Count tasks by category
-   * @returns Object with counts per category
+   * Aggregates task counts grouped by their category.
+   * @returns A promise that resolves to an object mapping categories to task counts
    */
   async countByCategory(): Promise<Record<TaskCategory, number>> {
     const counts = await this.prisma.scheduledTask.groupBy({
@@ -215,8 +222,9 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Get all enabled tasks
-   * @returns Array of enabled tasks
+   * Retrieves all tasks that are currently marked as enabled.
+   * Useful for internal scheduler logic.
+   * @returns A promise that resolves to an array of enabled tasks
    */
   async findAllEnabled(): Promise<ScheduledTask[]> {
     return this.prisma.scheduledTask.findMany({
@@ -226,9 +234,10 @@ export class ScheduledTaskRepository {
   }
 
   /**
-   * Find all scheduled tasks with execution statistics
-   * @param filters - Optional filters for category, enabled status, etc.
-   * @returns Array of tasks with last execution info
+   * Find all scheduled tasks with integrated execution statistics.
+   * Includes execution count and the single most recent execution for each task.
+   * @param filters - Optional filters for the task list
+   * @returns A promise that resolves to an array of tasks with execution summaries
    */
   async findAllWithStats(filters?: {
     category?: TaskCategory;

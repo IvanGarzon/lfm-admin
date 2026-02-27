@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -29,6 +29,8 @@ interface Customer {
   } | null;
 }
 
+const EMPTY_CUSTOMERS: Partial<Customer>[] = [];
+
 interface CustomerSelectProps {
   customers?: Partial<Customer>[];
   value?: string;
@@ -42,7 +44,7 @@ interface CustomerSelectProps {
 }
 
 export function CustomerSelect({
-  customers = [],
+  customers = EMPTY_CUSTOMERS,
   value,
   onValueChange,
   disabled = false,
@@ -54,6 +56,7 @@ export function CustomerSelect({
 }: CustomerSelectProps) {
   const [open, setOpen] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const listboxId = useId();
 
   const selectedCustomer = useMemo(
     () => customers.find((customer) => customer.id === value),
@@ -110,6 +113,7 @@ export function CustomerSelect({
               variant="outline"
               role="combobox"
               aria-expanded={open}
+              aria-controls={listboxId}
               className="w-full justify-between h-auto py-2 text-left"
               disabled={disabled || isLoading}
             >
@@ -145,7 +149,7 @@ export function CustomerSelect({
             sideOffset={4}
             style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
-            <Command>
+            <Command id={listboxId}>
               <CommandInput placeholder="Search customers..." />
               <CommandList className="max-h-[300px] overflow-y-auto">
                 <CommandEmpty>No customer found.</CommandEmpty>

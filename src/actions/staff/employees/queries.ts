@@ -12,6 +12,12 @@ import { searchParamsCache } from '@/filters/employees/employee-filters';
 
 const employeeRepo = new EmployeeRepository(prisma);
 
+/**
+ * Retrieves a paginated list of employees based on search and filter criteria.
+ * Supports filtering by name, email, role, and status.
+ * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated employee data.
+ */
 export async function getEmployees(
   searchParams: SearchParams,
 ): Promise<ActionResult<EmployeePagination>> {
@@ -30,6 +36,13 @@ export async function getEmployees(
   }
 }
 
+/**
+ * Retrieves a single employee by ID with full details.
+ * Includes all employee fields, contact information, role, and related metadata.
+ * @param id - The unique identifier of the employee to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the employee details,
+ * or an error if the employee is not found.
+ */
 export async function getEmployeeById(id: string): Promise<ActionResult<EmployeeListItem | null>> {
   const session = await auth();
   if (!session?.user) {

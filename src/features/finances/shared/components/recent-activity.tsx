@@ -18,12 +18,14 @@ interface ActivityItem {
   status: string;
 }
 
+const EMPTY_ITEMS: ActivityItem[] = [];
+
 interface RecentActivityProps {
   items?: ActivityItem[];
   isLoading?: boolean;
 }
 
-export function RecentActivity({ items = [], isLoading }: RecentActivityProps) {
+export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivityProps) {
   if (isLoading) {
     return (
       <Card>

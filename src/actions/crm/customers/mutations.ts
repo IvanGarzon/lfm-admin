@@ -20,7 +20,10 @@ const customerRepo = new CustomerRepository(prisma);
 const organizationRepo = new OrganizationRepository(prisma);
 
 /**
- * Creates a new customer
+ * Creates a new customer with the provided data.
+ * Validates input, checks for duplicate emails, and optionally links to an organization.
+ * @param data - The input data for creating the customer, conforming to `CreateCustomerInput`.
+ * @returns A promise that resolves to an `ActionResult` with the new customer's ID.
  */
 export async function createCustomer(
   data: CreateCustomerInput,
@@ -64,7 +67,10 @@ export async function createCustomer(
 }
 
 /**
- * Updates an existing customer
+ * Updates an existing customer with the provided data.
+ * Validates input and optionally creates or links to an organization.
+ * @param data - The input data for updating the customer, conforming to `UpdateCustomerInput`.
+ * @returns A promise that resolves to an `ActionResult` with the updated customer's ID.
  */
 export async function updateCustomer(
   data: UpdateCustomerInput,
@@ -112,7 +118,10 @@ export async function updateCustomer(
 }
 
 /**
- * Deletes a customer (soft delete)
+ * Soft deletes a customer by setting its `deletedAt` timestamp.
+ * The customer is not permanently removed from the database.
+ * @param data - An object containing the customer ID to delete.
+ * @returns A promise that resolves to an `ActionResult` with the deleted customer's ID.
  */
 export async function deleteCustomer(
   data: DeleteCustomerInput,

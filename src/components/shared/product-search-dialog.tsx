@@ -76,7 +76,6 @@ export function ProductSearchDialog({
                 placeholder="Search products by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
                 className="focus-visible:ring-primary/20 focus-visible:border-primary"
               />
             </Box>

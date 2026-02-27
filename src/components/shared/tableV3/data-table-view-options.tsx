@@ -22,6 +22,8 @@ interface DataTableViewOptionsProps<TData> {
 }
 
 export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps<TData>) {
+  const listboxId = React.useId();
+  const [open, setOpen] = React.useState(false);
   const columns = React.useMemo(
     () =>
       table
@@ -31,11 +33,13 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
   );
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           aria-label="Toggle columns"
           role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
           variant="outline"
           className="ml-auto hidden py-0 px-2 lg:flex"
         >
@@ -45,7 +49,7 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-0">
-        <Command>
+        <Command id={listboxId}>
           <CommandInput placeholder="Search columns..." />
           <CommandList>
             <CommandEmpty>No columns found.</CommandEmpty>

@@ -45,7 +45,7 @@ const formatPhoneDisplay = (phone: string): string => {
   }
 };
 
-function EmployeeLink({ employeeId, name }: { employeeId: string; name: string }) {
+function EmployeeLinkCell({ employeeId, name }: { employeeId: string; name: string }) {
   const [currentParams] = useQueryStates(searchParams);
 
   const queryParts: string[] = [];
@@ -70,6 +70,32 @@ function EmployeeLink({ employeeId, name }: { employeeId: string; name: string }
     <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
       {name}
     </Link>
+  );
+}
+
+function EmployeeActionsCell({
+  employee,
+  onDelete,
+}: {
+  employee: EmployeeListItem;
+  onDelete: (id: string) => void;
+}) {
+  const [currentParams] = useQueryStates(searchParams);
+
+  // Convert currentParams to SearchParams (Record<string, string | string[] | undefined>)
+  const stringifiedParams: Record<string, string | string[] | undefined> = {};
+  for (const [key, value] of Object.entries(currentParams)) {
+    if (value === null) {
+      stringifiedParams[key] = undefined;
+    } else if (Array.isArray(value)) {
+      stringifiedParams[key] = value.map(String);
+    } else {
+      stringifiedParams[key] = String(value);
+    }
+  }
+
+  return (
+    <EmployeeAction employee={employee} onDelete={onDelete} searchParams={stringifiedParams} />
   );
 }
 
@@ -112,7 +138,7 @@ export const createEmployeeColumns = (
             user={{ name: fullName, image: avatarUrl ?? null }}
           />
           <Box>
-            <EmployeeLink employeeId={id} name={fullName} />
+            <EmployeeLinkCell employeeId={id} name={fullName} />
             <div className="text-[0.8rem] text-gray-400">{email}</div>
           </Box>
         </Box>
@@ -204,28 +230,6 @@ export const createEmployeeColumns = (
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const [currentParams] = useQueryStates(searchParams);
-
-      // Convert currentParams to SearchParams (Record<string, string | string[] | undefined>)
-      const stringifiedParams: Record<string, string | string[] | undefined> = {};
-      for (const [key, value] of Object.entries(currentParams)) {
-        if (value === null) {
-          stringifiedParams[key] = undefined;
-        } else if (Array.isArray(value)) {
-          stringifiedParams[key] = value.map(String);
-        } else {
-          stringifiedParams[key] = String(value);
-        }
-      }
-
-      return (
-        <EmployeeAction
-          employee={row.original}
-          onDelete={onDelete}
-          searchParams={stringifiedParams}
-        />
-      );
-    },
+    cell: ({ row }) => <EmployeeActionsCell employee={row.original} onDelete={onDelete} />,
   },
 ];

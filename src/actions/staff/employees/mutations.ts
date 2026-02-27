@@ -5,8 +5,8 @@ import { revalidatePath } from 'next/cache';
 import {
   UpdateEmployeeSchema,
   CreateEmployeeSchema,
-  type UpdateEmployeeFormValues,
-  type CreateEmployeeFormValues,
+  type UpdateEmployeeInput,
+  type CreateEmployeeInput,
 } from '@/schemas/employees';
 import { prisma } from '@/lib/prisma';
 import { EmployeeRepository } from '@/repositories/employee-repository';
@@ -22,7 +22,7 @@ const employeeRepo = new EmployeeRepository(prisma);
  * @returns A promise that resolves to an `ActionResult` with the new employee's ID.
  */
 export async function createEmployee(
-  data: CreateEmployeeFormValues,
+  data: CreateEmployeeInput,
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user) {
@@ -58,7 +58,7 @@ export async function createEmployee(
  * @returns A promise that resolves to an `ActionResult` with the updated employee's ID.
  */
 export async function updateEmployee(
-  data: UpdateEmployeeFormValues,
+  data: UpdateEmployeeInput,
 ): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user) {

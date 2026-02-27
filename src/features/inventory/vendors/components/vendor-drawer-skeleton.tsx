@@ -11,8 +11,8 @@ export function VendorDrawerSkeleton() {
 
       {/* Info grid skeleton */}
       <div className="grid gap-4 md:grid-cols-2">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="space-y-2">
+        {Array.from({ length: 6 }, (_, i) => i).map((index) => (
+          <div key={`vendor-field-${index}`} className="space-y-2">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-full" />
           </div>

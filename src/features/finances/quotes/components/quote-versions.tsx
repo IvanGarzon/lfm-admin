@@ -22,8 +22,8 @@ export function QuoteVersions({
   if (isLoading) {
     return (
       <Box className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-20 w-full" />
+        {[1, 2, 3].map((item) => (
+          <Skeleton key={`version-skeleton-${item}`} className="h-20 w-full" />
         ))}
       </Box>
     );
