@@ -724,6 +724,143 @@ model TransactionAttachment {
   @@map(name: "transaction_attachments")
 }
 
+model Recipe {
+  id                  String       @id @default(cuid())
+  name                String
+  description         String?      @db.Text
+  laborRate           Decimal      @default(25.00) @map("labor_rate") @db.Decimal(5, 2)
+  targetMargin        Decimal      @default(30.00) @map("target_margin") @db.Decimal(5, 2)
+  totalMaterialsCost  Decimal      @default(0) @map("total_materials_cost") @db.Decimal(15, 2)
+  laborCost           Decimal      @default(0) @map("labor_cost") @db.Decimal(15, 2)
+  totalProductionCost Decimal      @default(0) @map("total_production_cost") @db.Decimal(15, 2)
+  sellingPrice        Decimal      @default(0) @map("selling_price") @db.Decimal(15, 2)
+  profitValue         Decimal      @default(0) @map("profit_value") @db.Decimal(15, 2)
+  profitPercentage    Decimal      @default(0) @map("profit_percentage") @db.Decimal(5, 2)
+  notes               String?      @db.Text
+
+  items               RecipeItem[]
+  recipeGroupItems    RecipeGroupItem[]
+
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime     @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt           DateTime?    @map("deleted_at") @db.Timestamptz()
+
+  @@map("recipes")
+}
+
+model RecipeItem {
+  id                   String         @id @default(cuid())
+  recipeId             String         @map("recipe_id")
+  recipe               Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  description          String
+  type                 RecipeItemType @default(FLORAL)
+  purchaseUnit         String         @map("purchase_unit")
+  purchaseUnitQuantity Decimal        @map("purchase_unit_quantity") @db.Decimal(15, 2)
+  purchaseCost         Decimal        @map("purchase_cost") @db.Decimal(15, 2)
+  unitCost             Decimal        @map("unit_cost") @db.Decimal(15, 2)
+  quantityUsed         Decimal        @map("quantity_used") @db.Decimal(15, 2)
+  subtotal             Decimal        @db.Decimal(15, 2)
+  order                Int            @default(0)
+
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@index([recipeId])
+  @@map("recipe_items")
+}
+
+model RecipeUnit {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("recipe_units")
+}
+
+model RecipeGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+
+  // Calculated totals (sum of all recipe costs × quantities)
+  totalCost   Decimal  @default(0) @map("total_cost") @db.Decimal(15, 2)
+
+  // Relation to recipe group items
+  items       RecipeGroupItem[]
+
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz()
+
+  @@index([deletedAt])
+  @@map("recipe_groups")
+}
+
+model RecipeGroupItem {
+  id             String      @id @default(cuid())
+  recipeGroupId  String      @map("recipe_group_id")
+  recipeGroup    RecipeGroup @relation(fields: [recipeGroupId], references: [id], onDelete: Cascade)
+
+  recipeId       String      @map("recipe_id")
+  recipe         Recipe      @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+
+  quantity       Int         @default(1)
+  subtotal       Decimal     @default(0) @db.Decimal(15, 2) // recipe.sellingPrice × quantity
+  order          Int         @default(0)
+
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([recipeGroupId, recipeId])
+  @@index([recipeGroupId])
+  @@index([recipeId])
+  @@map("recipe_group_items")
+}
+
+model PriceListItem {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  category    String  @default("FLORAL")
+  imageUrl    String? @map("image_url")
+  wholesalePrice Decimal? @map("wholesale_price") @db.Decimal(15, 2) // Price paid to purchase from supplier
+  costPerUnit    Decimal  @default(0) @map("cost_per_unit") @db.Decimal(15, 2)
+  multiplier     Decimal  @default(3) @db.Decimal(5, 2)
+  retailPrice    Decimal  @db.Decimal(15, 2) // Calculated: costPerUnit × multiplier, or retailPriceOverride if set
+  retailPriceOverride Decimal? @map("retail_price_override") @db.Decimal(15, 2) // Manual override for retail price
+
+  // Optional metadata
+  unitType  String? @map("unit_type")
+  bunchSize Int?    @map("bunch_size")
+  season    String?
+
+  costHistory PriceListCostHistory[]
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+
+  @@index([name])
+  @@index([category])
+  @@index([deletedAt])
+  @@map("price_list_items")
+}
+
+model PriceListCostHistory {
+  id              String        @id @default(cuid())
+  priceListItemId String        @map("price_list_item_id")
+  priceListItem   PriceListItem @relation(fields: [priceListItemId], references: [id], onDelete: Cascade)
+  previousCost    Decimal       @map("previous_cost") @db.Decimal(15, 2)
+  newCost         Decimal       @map("new_cost") @db.Decimal(15, 2)
+  changedAt       DateTime      @default(now()) @map("changed_at") @db.Timestamptz()
+
+  @@index([priceListItemId, changedAt(sort: Desc)])
+  @@map("price_list_cost_history")
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -854,5 +991,13 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   CANCELLED
+}
+
+enum RecipeItemType {
+  FLORAL
+  FOLIAGE
+  SUPPLY
+  INGREDIENT
+  OTHER
 }
 
