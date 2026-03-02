@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   useForm,
   useWatch,
@@ -220,20 +220,35 @@ export function RecipeForm({
 
   const { isDirty } = form.formState;
 
-  useEffect(() => {
-    onDirtyStateChange?.(isDirty);
-  }, [isDirty, onDirtyStateChange]);
-
   useFormReset(
     form,
     recipe?.id,
-    useCallback(() => (recipe ? mapRecipeToFormValues(recipe) : defaultFormState), [recipe]),
+    useCallback(() => {
+      const values = recipe ? mapRecipeToFormValues(recipe) : defaultFormState;
+      // Notify parent that form is clean after reset
+      onDirtyStateChange?.(false);
+      return values;
+    }, [recipe, onDirtyStateChange]),
   );
 
   useUnsavedChanges(isDirty);
 
+  // Track and notify parent of dirty state changes
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
+
   const onSubmit: SubmitHandler<RecipeFormInput> = useCallback(
     (data: RecipeFormInput) => {
+      // Notify parent that form will be clean after submission
+      onDirtyStateChange?.(false);
+
       const finalData = {
         ...data,
         ...totals,
@@ -249,7 +264,7 @@ export function RecipeForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, recipe?.id, totals],
+    [mode, onCreate, onUpdate, recipe?.id, totals, onDirtyStateChange],
   );
 
   const isPending = isCreating || isUpdating;

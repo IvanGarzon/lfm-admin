@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { Controller, useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -92,21 +92,33 @@ export function ProductForm({
   useFormReset(
     form,
     product?.id,
-    useCallback(() => (product ? mapProductToFormValues(product) : defaultFormState), [product]),
+    useCallback(() => {
+      const values = product ? mapProductToFormValues(product) : defaultFormState;
+      // Notify parent that form is clean after reset
+      onDirtyStateChange?.(false);
+      return values;
+    }, [product, onDirtyStateChange]),
   );
-
-  // Track dirty state for parent
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
 
   // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
 
+  // Track and notify parent of dirty state changes
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
+
   const onSubmit: SubmitHandler<ProductFormInput> = useCallback(
     (data: ProductFormInput) => {
+      // Notify parent that form will be clean after submission
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -118,7 +130,7 @@ export function ProductForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, product?.id],
+    [mode, onCreate, onUpdate, product?.id, onDirtyStateChange],
   );
 
   const isSubmitting = isCreating || isUpdating;

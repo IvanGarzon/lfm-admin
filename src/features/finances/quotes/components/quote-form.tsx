@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Controller,
   useForm,
@@ -138,9 +138,7 @@ export function QuoteForm({
 }) {
   const mode = quote ? 'update' : 'create';
 
-  // Only fetch recipes when the "Add from Recipes" dialog is opened
   const [shouldFetchRecipes, setShouldFetchRecipes] = useState(false);
-  // Only fetch products when the user clicks to select a product
   const [shouldFetchProducts, setShouldFetchProducts] = useState(false);
 
   const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
@@ -171,39 +169,47 @@ export function QuoteForm({
     name: 'items',
   });
 
-  // Single subscription for all watched values
   const [watchedItems, watchedGst, watchedDiscount] = useWatch({
     control: form.control,
     name: ['items', 'gst', 'discount'],
   });
+
   const gst = watchedGst ?? 0;
   const discount = watchedDiscount ?? 0;
 
-  // Reset form when switching between quotes
   useFormReset(
     form,
     quote?.id,
-    useCallback(() => (quote ? mapQuoteToFormValues(quote) : defaultFormState), [quote]),
+    useCallback(() => {
+      const values = quote ? mapQuoteToFormValues(quote) : defaultFormState;
+      onDirtyStateChange?.(false);
+
+      return values;
+    }, [quote, onDirtyStateChange]),
   );
 
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
-
-  // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
 
-  // Use permissions from getQuotePermissions for consistency
   const { canEdit } = getQuotePermissions(quote?.status);
   const isLocked = mode === 'update' && !canEdit;
+
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
 
   const onSubmit: SubmitHandler<QuoteFormInput> = useCallback(
     (data: QuoteFormInput) => {
       if (isLocked) {
         return;
       }
+
+      onDirtyStateChange?.(false);
 
       if (mode === 'create') {
         onCreate?.(data);
@@ -215,13 +221,15 @@ export function QuoteForm({
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, quote?.id],
+    [isLocked, mode, onCreate, onUpdate, quote?.id, onDirtyStateChange],
   );
 
-  // Item attachment handlers
   const handleDownloadItemImage = useCallback(
     (attachmentId: string) => {
-      if (!quote?.id) return;
+      if (!quote?.id) {
+        return;
+      }
+
       downloadItemMutation.mutate(attachmentId);
     },
     [downloadItemMutation, quote?.id],
@@ -229,7 +237,10 @@ export function QuoteForm({
 
   const handleDeleteItemImage = useCallback(
     (attachmentId: string, quoteItemId: string, onSuccess: () => void) => {
-      if (!quote?.id) return;
+      if (!quote?.id) {
+        return;
+      }
+
       deleteItemMutation.mutate(
         { attachmentId, quoteItemId, quoteId: quote.id },
         {
@@ -383,12 +394,7 @@ export function QuoteForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
                       </PopoverContent>
                     </Popover>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -422,12 +428,7 @@ export function QuoteForm({
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
                       </PopoverContent>
                     </Popover>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo, useRef } from 'react';
 import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -112,10 +112,12 @@ export function CustomerForm({
   useFormReset(
     form,
     customer?.id,
-    useCallback(
-      () => (customer ? mapCustomerToFormValues(customer) : defaultFormState),
-      [customer],
-    ),
+    useCallback(() => {
+      const values = customer ? mapCustomerToFormValues(customer) : defaultFormState;
+      // Notify parent that form is clean after reset
+      onDirtyStateChange?.(false);
+      return values;
+    }, [customer, onDirtyStateChange]),
   );
 
   const { isDirty } = form.formState;
@@ -138,14 +140,19 @@ export function CustomerForm({
     [form],
   );
 
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
-
   // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
+
+  // Track and notify parent of dirty state changes
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
 
   const { data: organizations = [], isLoading: isLoadingOrganizations } = useOrganizations();
 
@@ -180,6 +187,9 @@ export function CustomerForm({
 
   const onSubmit: SubmitHandler<CustomerFormInput> = useCallback(
     (data: CustomerFormInput) => {
+      // Notify parent that form will be clean after submission
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -190,7 +200,7 @@ export function CustomerForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, customer?.id],
+    [mode, onCreate, onUpdate, customer?.id, onDirtyStateChange],
   );
 
   return (

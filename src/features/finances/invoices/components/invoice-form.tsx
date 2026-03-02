@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   Controller,
   useForm,
@@ -54,6 +54,7 @@ import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { useFormReset } from '@/hooks/use-form-reset';
 
 const defaultFormState: CreateInvoiceInput = {
   customerId: '',
@@ -146,32 +147,44 @@ export function InvoiceForm({
     name: 'items',
   });
 
-  // Single subscription for all watched values
   const [watchedItems, watchedGst, watchedDiscount] = useWatch({
     control: form.control,
     name: ['items', 'gst', 'discount'],
   });
+
   const gst = watchedGst ?? 0;
   const discount = watchedDiscount ?? 0;
 
-  // Reset form when invoice or items change
-  // Note: Using manual effect instead of useFormReset because items are loaded separately
-  // and we need to reset when either invoice changes OR items finish loading
-  useEffect(() => {
-    if (mode === 'update' && invoice) {
-      const formValues = mapInvoiceToFormValues(invoice, items);
-      form.reset(formValues);
-    }
-  }, [invoice, items, mode, form]);
+  // Create a composite key that changes when either invoice or items change
+  // This is needed because items load separately/asynchronously from the invoice
+  // Without this, useFormReset won't trigger when items load since invoice.id stays the same
+  const resetKey = invoice?.id ? `${invoice.id}-${items?.length ?? 0}` : undefined;
 
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
+  // Reset form when invoice or items change
+  useFormReset(
+    form,
+    resetKey,
+    useCallback(() => {
+      const values = invoice ? mapInvoiceToFormValues(invoice, items) : defaultFormState;
+      // Notify parent that form is clean after reset
+      onDirtyStateChange?.(false);
+      return values;
+    }, [invoice, items, onDirtyStateChange]),
+  );
 
   // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
+
+  // Track and notify parent of dirty state changes
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
 
   const isLocked = useMemo(() => {
     if (mode === 'create') {
@@ -200,6 +213,9 @@ export function InvoiceForm({
         return;
       }
 
+      // Notify parent that form will be clean after submission
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -210,7 +226,7 @@ export function InvoiceForm({
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, invoice?.id],
+    [isLocked, mode, onCreate, onUpdate, invoice?.id, onDirtyStateChange],
   );
 
   const calculateSubtotal = useCallback(() => {

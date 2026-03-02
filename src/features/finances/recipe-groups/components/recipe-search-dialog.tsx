@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Search, ChefHat } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -26,11 +26,13 @@ interface RecipeSearchDialogProps {
   excludeIds?: string[];
 }
 
+const EMPTY_EXCLUDE_IDS: string[] = [];
+
 export function RecipeSearchDialog({
   open,
   onOpenChange,
   onSelect,
-  excludeIds = [],
+  excludeIds = EMPTY_EXCLUDE_IDS,
 }: RecipeSearchDialogProps) {
   const [search, setSearch] = useState('');
 
@@ -38,7 +40,10 @@ export function RecipeSearchDialog({
     queryKey: ['recipes', 'all'],
     queryFn: async () => {
       const result = await getRecipes({ perPage: '100' });
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       return result.data?.items ?? [];
     },
     enabled: open,
@@ -46,16 +51,16 @@ export function RecipeSearchDialog({
   });
 
   const filteredRecipes = useMemo(() => {
-    if (!recipesData) return [];
+    if (!recipesData) {
+      return [];
+    }
 
     let recipes = recipesData;
 
-    // Exclude already selected recipes
     if (excludeIds.length > 0) {
       recipes = recipes.filter((r) => !excludeIds.includes(r.id));
     }
 
-    // Apply search filter
     if (search.trim()) {
       const lowerSearch = search.toLowerCase();
       recipes = recipes.filter(
@@ -68,10 +73,13 @@ export function RecipeSearchDialog({
     return recipes;
   }, [recipesData, search, excludeIds]);
 
-  const handleSelect = (recipe: RecipeListItem) => {
-    onSelect(recipe);
-    setSearch('');
-  };
+  const handleSelect = useCallback(
+    (recipe: RecipeListItem) => {
+      onSelect(recipe);
+      setSearch('');
+    },
+    [onSelect],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

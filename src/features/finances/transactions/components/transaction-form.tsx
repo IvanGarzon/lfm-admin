@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, DollarSign, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { VendorSelect } from '@/features/inventory/vendors/components/vendor-select';
 import { useActiveVendors } from '@/features/inventory/vendors/hooks/use-vendor-queries';
@@ -46,10 +47,10 @@ import type {
   TransactionFormInput,
   TransactionAttachment,
 } from '@/features/finances/transactions/types';
-import { getTransactionCategories } from '@/actions/finances/transactions/queries';
 import { CategoryMultiSelect, type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
 import { useFormReset } from '@/hooks/use-form-reset';
+import { useTransactionCategories } from '@/features/finances/transactions/hooks/use-transaction-queries';
 
 const defaultFormState: CreateTransactionInput = {
   type: TransactionTypeSchema.enum.INCOME,
@@ -105,9 +106,10 @@ export function TransactionForm({
   onClose?: () => void;
 }) {
   const mode = transaction ? 'edit' : 'create';
+  const queryClient = useQueryClient();
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const { data: vendors = [] } = useActiveVendors();
+  const { data: categories = [], isLoading: isLoadingCategories } = useTransactionCategories();
 
   const defaultValues: TransactionFormInput =
     mode === 'create'
@@ -127,40 +129,22 @@ export function TransactionForm({
     defaultValues,
   });
 
-  // Reset form when transaction changes (instead of relying on key={id} remount)
   useFormReset(
     form,
     transaction?.id,
-    useCallback(
-      () => (transaction ? mapTransactionToFormValues(transaction) : defaultFormState),
-      [transaction],
-    ),
+    useCallback(() => {
+      const values = transaction ? mapTransactionToFormValues(transaction) : defaultFormState;
+      onDirtyStateChange?.(false);
+      return values;
+    }, [transaction, onDirtyStateChange]),
   );
 
   const { isDirty } = form.formState;
 
-  // Fetch vendors for auto-populating payee
-  const { data: vendors = [] } = useActiveVendors();
-
-  // const transactionType = form.watch('type');
   const [watchedType, watchedVendorId] = useWatch({
     control: form.control,
     name: ['type', 'vendorId'],
   });
-
-  // Fetch categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoadingCategories(true);
-      const result = await getTransactionCategories();
-      if (result.success && result.data) {
-        setCategories(result.data);
-      }
-      setIsLoadingCategories(false);
-    };
-
-    fetchCategories();
-  }, []);
 
   // Auto-populate payee when vendor is selected
   useEffect(() => {
@@ -172,22 +156,29 @@ export function TransactionForm({
     }
   }, [watchedVendorId, vendors, watchedType, form]);
 
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
-
-  // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
 
-  // Handle new category creation
-  const handleCategoryCreated = useCallback((newCategory: Category) => {
-    setCategories((prev) => [...prev, newCategory]);
-  }, []);
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
+
+  const handleCategoryCreated = useCallback(
+    (_newCategory: Category) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions', 'categories'] });
+    },
+    [queryClient],
+  );
 
   const onSubmit: SubmitHandler<TransactionFormInput> = useCallback(
     (data: TransactionFormInput) => {
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -199,7 +190,7 @@ export function TransactionForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, transaction?.id],
+    [mode, onCreate, onUpdate, transaction?.id, onDirtyStateChange],
   );
 
   return (
@@ -218,7 +209,7 @@ export function TransactionForm({
           </Box>
         ) : null}
 
-        {mode === 'edit' && transaction?.referenceNumber && (
+        {mode === 'edit' && transaction?.referenceNumber ? (
           <Box className="px-6 py-2 bg-muted/30 border-b flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Reference Number
@@ -227,7 +218,7 @@ export function TransactionForm({
               {transaction.referenceNumber}
             </span>
           </Box>
-        )}
+        ) : null}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           <Box className="grid grid-cols-3 gap-4">

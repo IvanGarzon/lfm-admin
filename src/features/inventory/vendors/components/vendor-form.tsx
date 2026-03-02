@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Controller, useForm, useWatch, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,7 +101,12 @@ export function VendorForm({
   useFormReset(
     form,
     vendor?.id,
-    useCallback(() => (vendor ? mapVendorToFormValues(vendor) : defaultFormState), [vendor]),
+    useCallback(() => {
+      const values = vendor ? mapVendorToFormValues(vendor) : defaultFormState;
+      // Notify parent that form is clean after reset
+      onDirtyStateChange?.(false);
+      return values;
+    }, [vendor, onDirtyStateChange]),
   );
 
   // Watch address field
@@ -122,18 +127,25 @@ export function VendorForm({
     [form],
   );
 
-  // Track dirty state for parent
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
-
   // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
 
+  // Track and notify parent of dirty state changes
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
+
   const onSubmit: SubmitHandler<VendorFormInput> = useCallback(
     (data: VendorFormInput) => {
+      // Notify parent that form will be clean after submission
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -145,7 +157,7 @@ export function VendorForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, vendor?.id],
+    [mode, onCreate, onUpdate, vendor?.id, onDirtyStateChange],
   );
 
   const isSubmitting = isCreating || isUpdating;

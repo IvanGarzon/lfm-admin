@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -94,21 +94,18 @@ export function PriceListForm({
   onClose?: () => void;
 }) {
   const mode = item ? 'edit' : 'create';
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const initialAdvancedOpen = useMemo(() => {
+    if (item) {
+      return !!(item.unitType || item.bunchSize || item.season || item.retailPriceOverride);
+    }
+    return false;
+  }, [item]);
+
+  const [advancedOpen, setAdvancedOpen] = useState(initialAdvancedOpen);
 
   const defaultValues: PriceListItemFormInput =
     mode === 'create' ? defaultFormState : item ? mapItemToFormValues(item) : defaultFormState;
-
-  // Open advanced settings if any advanced field has a value
-  useEffect(() => {
-    if (item) {
-      const hasAdvanced =
-        item.unitType || item.bunchSize || item.season || item.retailPriceOverride;
-      if (hasAdvanced) {
-        setAdvancedOpen(true);
-      }
-    }
-  }, [item]);
 
   const createResolver: Resolver<PriceListItemFormInput> = (values, context, options) => {
     const schema = mode === 'create' ? CreatePriceListItemSchema : UpdatePriceListItemSchema;
@@ -124,19 +121,30 @@ export function PriceListForm({
   useFormReset(
     form,
     item?.id,
-    useCallback(() => (item ? mapItemToFormValues(item) : defaultFormState), [item]),
-  );
+    useCallback(() => {
+      const values = item ? mapItemToFormValues(item) : defaultFormState;
+      onDirtyStateChange?.(false);
 
-  useEffect(() => {
-    if (onDirtyStateChange) {
-      onDirtyStateChange(form.formState.isDirty);
-    }
-  }, [form.formState.isDirty, onDirtyStateChange]);
+      return values;
+    }, [item, onDirtyStateChange]),
+  );
 
   useUnsavedChanges(form.formState.isDirty);
 
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
+
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
+
   const onSubmit: SubmitHandler<PriceListItemFormInput> = useCallback(
     (data: PriceListItemFormInput) => {
+      onDirtyStateChange?.(false);
+
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -147,7 +155,7 @@ export function PriceListForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, item?.id],
+    [mode, onCreate, onUpdate, item?.id, onDirtyStateChange],
   );
 
   const isSubmitting = isCreating || isUpdating;

@@ -9,6 +9,7 @@ import {
   getTransactionTrend,
   getTransactionCategoryBreakdown,
   getTopTransactionCategories,
+  getTransactionCategories,
   createTransaction,
   updateTransaction,
   deleteTransaction,
@@ -26,6 +27,7 @@ export const TRANSACTION_KEYS = {
     [...TRANSACTION_KEYS.lists(), { filters }] as const,
   details: () => [...TRANSACTION_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...TRANSACTION_KEYS.details(), id] as const,
+  categories: () => [...TRANSACTION_KEYS.all, 'categories'] as const,
   statistics: () => [...TRANSACTION_KEYS.all, 'statistics'] as const,
   analytics: () => [...TRANSACTION_KEYS.all, 'analytics'] as const,
   trend: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'trend', { limit }] as const,
@@ -105,6 +107,20 @@ export function useTransaction(id: string | undefined) {
     },
     enabled: Boolean(id),
     staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useTransactionCategories() {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.categories(),
+    queryFn: async () => {
+      const result = await getTransactionCategories();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data ?? [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - categories don't change often
   });
 }
 
