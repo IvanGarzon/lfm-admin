@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useCallback, useState, useMemo } from 'react';
+import { Plus, Flower2 } from 'lucide-react';
+import { useWatch } from 'react-hook-form';
 import type { UseFormReturn, UseFieldArrayReturn } from 'react-hook-form';
 import { Reorder } from 'framer-motion';
 
@@ -13,6 +14,7 @@ import { RecipeItemRow } from '@/features/finances/recipes/components/recipe-ite
 import { PriceListSearchDialog } from '@/components/shared/price-list-search-dialog';
 import { useActivePriceListItems } from '@/features/inventory/price-list/hooks/use-price-list-queries';
 import type { PriceListItemListItem } from '@/features/inventory/price-list/types';
+import { formatCurrency } from '@/lib/utils';
 type RecipeItemsListProps = {
   form: UseFormReturn<RecipeFormInput>;
   fieldArray: UseFieldArrayReturn<RecipeFormInput, 'items', 'id'>;
@@ -25,6 +27,20 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
 
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Watch all items for totals calculation
+  const watchedItems = useWatch({
+    control: form.control,
+    name: 'items',
+  });
+
+  // Calculate section totals
+  const sectionTotals = useMemo(() => {
+    const items = watchedItems || [];
+    const totalCost = items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
+    const totalRetail = items.reduce((sum, item) => sum + (Number(item.retailLineTotal) || 0), 0);
+    return { totalCost, totalRetail };
+  }, [watchedItems]);
 
   const handleAddItem = useCallback(() => {
     append(
@@ -75,8 +91,23 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
 
   return (
     <Box className="py-6">
-      <Box className="flex items-center justify-between mb-4">
-        <FormLabel className="text-base font-semibold">Items</FormLabel>
+      {/* Section Header */}
+      <Box className="flex items-center gap-3 mb-4">
+        <Box className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+          <Flower2 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        </Box>
+        <Box className="flex-1">
+          <FormLabel className="text-base font-semibold">Items</FormLabel>
+          <p className="text-sm text-muted-foreground">Add items to your arrangement</p>
+        </Box>
+        <Box className="text-right">
+          <p className="text-lg font-bold text-blue-600">
+            {formatCurrency({ number: sectionTotals.totalRetail })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            cost {formatCurrency({ number: sectionTotals.totalCost })}
+          </p>
+        </Box>
       </Box>
 
       <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -87,9 +118,9 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
             <Box className="flex-1 min-w-0">Name</Box>
             <Box className="w-20 shrink-0 text-center">Qty</Box>
             <Box className="w-24 shrink-0 text-right">Cost</Box>
-            <Box className="w-24 shrink-0 text-right">Cost Total</Box>
+            {/* <Box className="w-24 shrink-0 text-right">Cost Total</Box> */}
             <Box className="w-24 shrink-0 text-right">Retail</Box>
-            <Box className="w-28 shrink-0 text-right">Retail Total</Box>
+            {/* <Box className="w-28 shrink-0 text-right">Retail Total</Box> */}
             <Box className="w-8 shrink-0" />
           </Box>
         </Box>
@@ -154,7 +185,9 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
         items={priceListItems}
         isLoading={isLoadingPriceList}
         selectedItemId={
-          editingIndex !== null ? form.getValues(`items.${editingIndex}.priceListItemId`) : null
+          editingIndex !== null
+            ? (form.getValues(`items.${editingIndex}.priceListItemId`) ?? null)
+            : null
         }
         onItemSelect={handleSelectPriceListItem}
       />

@@ -4,12 +4,18 @@ import { useState } from 'react';
 import type { UseFormReturn, FieldArrayWithId } from 'react-hook-form';
 import { useWatch } from 'react-hook-form';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
-import { GripVertical, Trash2, Search } from 'lucide-react';
+import { GripVertical, Trash2, Package } from 'lucide-react';
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+  InputGroupButton,
+} from '@/components/ui/input-group';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import type { RecipeFormInput } from '@/features/finances/recipes/types';
 
@@ -96,36 +102,37 @@ export function RecipeItemRow({
         </Box>
 
         {/* Name with Browse Button */}
-        <Box className="flex-1 min-w-0 flex gap-2">
+        <Box className="flex-1 min-w-0">
           <FormField
             control={form.control}
             name={`items.${index}.name`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0 flex-1">
+              <FormItem className="space-y-0 mb-0">
                 <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="e.g., Red Rose"
-                    disabled={isLocked}
+                  <InputGroup
                     className={cn(
-                      'h-9 border-gray-200 dark:border-gray-700',
-                      nameError && 'border-destructive',
+                      nameError && 'border-destructive focus-within:ring-destructive/20',
                     )}
-                  />
+                  >
+                    <InputGroupInput {...field} placeholder="e.g., Red Rose" disabled={isLocked} />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        type="button"
+                        onClick={onOpenSearch}
+                        aria-label="Browse price list"
+                        title="Browse price list"
+                        size="icon-xs"
+                        className="cursor-pointer hover:text-primary"
+                        disabled={isLocked}
+                      >
+                        <Package />
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
                 </FormControl>
               </FormItem>
             )}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onOpenSearch}
-            disabled={isLocked}
-            className="h-9 px-3 shrink-0"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
         </Box>
 
         {/* Quantity */}
@@ -165,12 +172,12 @@ export function RecipeItemRow({
           </Box>
         </Box>
 
-        {/* Line Total (Display Only) */}
-        <Box className="w-24 shrink-0">
+        {/* Line Total (Display Only) - Commented out per user request */}
+        {/* <Box className="w-24 shrink-0">
           <Box className="h-9 px-3 bg-emerald-50 dark:bg-emerald-900/20 rounded border border-emerald-200 dark:border-emerald-800 font-semibold text-sm text-emerald-700 dark:text-emerald-400 w-full flex items-center justify-end">
             {formatCurrency({ number: lineTotal })}
           </Box>
-        </Box>
+        </Box> */}
 
         {/* Retail Price (Display Only) */}
         <Box className="w-24 shrink-0">
@@ -179,12 +186,12 @@ export function RecipeItemRow({
           </Box>
         </Box>
 
-        {/* Retail Line Total (Display Only) */}
-        <Box className="w-28 shrink-0">
+        {/* Retail Line Total (Display Only) - Commented out per user request */}
+        {/* <Box className="w-28 shrink-0">
           <Box className="h-9 px-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 font-semibold text-sm text-blue-700 dark:text-blue-400 w-full flex items-center justify-end">
             {formatCurrency({ number: retailLineTotal })}
           </Box>
-        </Box>
+        </Box> */}
 
         {/* Delete Button */}
         <Box className="w-8 shrink-0 flex items-center justify-center">
@@ -197,6 +204,20 @@ export function RecipeItemRow({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
+        </Box>
+      </Box>
+
+      {/* Formula Display */}
+      <Box className="px-4 pb-2 pt-1 text-xs text-muted-foreground">
+        <Box className="flex gap-6 justify-end">
+          <span>
+            Cost: ({qty}) × {formatCurrency({ number: price })} ={' '}
+            {formatCurrency({ number: lineTotal })}
+          </span>
+          <span>
+            Retail: ({qty}) × {formatCurrency({ number: retail })} ={' '}
+            {formatCurrency({ number: retailLineTotal })}
+          </span>
         </Box>
       </Box>
     </Reorder.Item>

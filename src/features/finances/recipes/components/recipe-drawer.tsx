@@ -45,7 +45,7 @@ export function RecipeDrawer({
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
-  const [isEditing, setIsEditing] = useState<boolean>(!id);
+  const [isEditing] = useState<boolean>(true);
 
   const { data: recipe, isLoading, isError, error } = useRecipe(id);
 
@@ -61,7 +61,6 @@ export function RecipeDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
-        setIsEditing(false);
         setHasUnsavedChanges(false);
 
         if (id) {
@@ -95,7 +94,6 @@ export function RecipeDrawer({
         {
           onSuccess: () => {
             setHasUnsavedChanges(false);
-            setIsEditing(false);
           },
         },
       );
@@ -116,8 +114,7 @@ export function RecipeDrawer({
 
   const getTitle = () => {
     if (mode === 'create') return 'New Recipe';
-    if (mode === 'edit') return 'Edit Recipe';
-    return recipe?.name || 'Recipe Details';
+    return recipe?.name || 'Edit Recipe';
   };
 
   return (
@@ -171,50 +168,38 @@ export function RecipeDrawer({
               </Box>
 
               <Box className="flex items-center gap-2 shrink-0">
-                {isEditing || mode === 'create' ? (
-                  <Button
-                    type="submit"
-                    form="form-rhf-recipe"
-                    size="sm"
-                    className="shadow-sm"
-                    disabled={createRecipe.isPending || updateRecipe.isPending}
-                  >
-                    <Save className="h-4 w-4 mr-1.5" />
-                    {mode === 'edit' ? 'Update' : 'Save'}
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      className="gap-2 shadow-sm border-gray-200 dark:border-gray-800"
-                    >
-                      <Edit2 className="size-4" />
-                      Edit
-                    </Button>
+                <Button
+                  type="submit"
+                  form="form-rhf-recipe"
+                  size="sm"
+                  className="shadow-sm"
+                  disabled={createRecipe.isPending || updateRecipe.isPending}
+                >
+                  <Save className="h-4 w-4 mr-1.5" />
+                  {mode === 'create' ? 'Save' : 'Update'}
+                </Button>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-9 w-9 shadow-sm border-gray-200 dark:border-gray-800"
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onClick={handleDelete}
-                          className="text-destructive focus:text-destructive cursor-pointer"
-                        >
-                          <Trash className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
+                {mode !== 'create' && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 shadow-sm border-gray-200 dark:border-gray-800"
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={handleDelete}
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                      >
+                        <Trash className="mr-2 size-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
 
                 <Button
@@ -229,20 +214,14 @@ export function RecipeDrawer({
             </Box>
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-hidden bg-gray-50/30 dark:bg-transparent">
-              {isEditing || mode === 'create' ? (
-                <RecipeForm
-                  recipe={mode === 'create' ? null : recipe}
-                  onCreate={handleCreate}
-                  onUpdate={handleUpdate}
-                  isCreating={createRecipe.isPending}
-                  isUpdating={updateRecipe.isPending}
-                  onDirtyStateChange={setHasUnsavedChanges}
-                />
-              ) : (
-                <Box className="h-full overflow-y-auto w-full">
-                  {recipe && <RecipeDetailsView recipe={recipe} />}
-                </Box>
-              )}
+              <RecipeForm
+                recipe={mode === 'create' ? null : recipe}
+                onCreate={handleCreate}
+                onUpdate={handleUpdate}
+                isCreating={createRecipe.isPending}
+                isUpdating={updateRecipe.isPending}
+                onDirtyStateChange={setHasUnsavedChanges}
+              />
             </DrawerBody>
           </>
         )}

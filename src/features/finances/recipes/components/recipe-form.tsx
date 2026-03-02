@@ -11,9 +11,10 @@ import {
   FormProvider,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
+import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -165,12 +166,18 @@ export function RecipeForm({
     }
 
     const totalCost = totalMaterialsCost + laborCost;
+    const sellingPrice = totalRetailPrice + laborCost;
+    const profit = sellingPrice - totalCost;
+    const profitPercentage = sellingPrice > 0 ? (profit / sellingPrice) * 100 : 0;
 
     return {
       totalMaterialsCost,
       laborCost,
       totalCost,
       totalRetailPrice,
+      sellingPrice,
+      profit,
+      profitPercentage,
     };
   }, [watchedItems, watchedLabourCostType, watchedLabourAmount]);
 
@@ -219,20 +226,10 @@ export function RecipeForm({
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col h-full"
         >
-          {isPending && (
-            <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm font-medium">
-                {isCreating ? 'Creating recipe...' : 'Updating recipe...'}
-              </span>
-            </Box>
-          )}
-
-          <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-            {/* Two Column Layout: Form Fields + Summary */}
-            <Box className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Form Inputs */}
-              <Box className="lg:col-span-2 space-y-4">
+          <Box className="flex-1 flex overflow-hidden">
+            <Box className="flex flex-1 min-h-0">
+              {/* Left Column: Form */}
+              <Box className="flex-1 p-6 space-y-6 border-r border-border overflow-y-auto">
                 {/* Recipe Name */}
                 <Box className="space-y-2">
                   <Label htmlFor="recipe-name">Recipe Name</Label>
@@ -240,14 +237,15 @@ export function RecipeForm({
                     {...form.register('name')}
                     id="recipe-name"
                     placeholder="e.g., Summer Bridal Bouquet"
+                    className="h-11"
                   />
-                  {form.formState.errors.name && (
+                  {form.formState.errors.name ? (
                     <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
-                  )}
+                  ) : null}
                 </Box>
 
                 {/* Labour Cost Type & Amount */}
-                <Box className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Box className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Box className="space-y-2">
                     <Label htmlFor="labour-cost-type">Labour Cost Type</Label>
                     <Controller
@@ -282,6 +280,16 @@ export function RecipeForm({
                       placeholder={isPercentageType ? 'e.g., 25' : 'e.g., 50.00'}
                     />
                   </Box>
+
+                  <Box className="space-y-2">
+                    <Label htmlFor="labour-cost-calculated">Calculated Labour Cost</Label>
+                    <Input
+                      id="labour-cost-calculated"
+                      value={formatCurrency({ number: totals.laborCost })}
+                      readOnly
+                      className="bg-muted/50 cursor-not-allowed"
+                    />
+                  </Box>
                 </Box>
 
                 {/* Description */}
@@ -295,54 +303,100 @@ export function RecipeForm({
                     rows={2}
                   />
                 </Box>
+
+                {/* Recipe Items */}
+                <RecipeItemsList form={form} fieldArray={fieldArray} />
               </Box>
 
               {/* Right Column: Summary Panel */}
-              <Box className="lg:col-span-1">
-                <Box className="sticky top-6 p-4 border border-border rounded-lg bg-muted/30 space-y-4">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                    Cost Summary
-                  </h3>
+              <Box className="w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4">
+                <Box className="sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  {/* Selling Price Header */}
+                  <Box className="bg-teal-500 text-white p-6 text-center">
+                    <p className="text-xs uppercase tracking-wider mb-1 text-teal-100">
+                      Selling Price
+                    </p>
+                    <p className="text-4xl font-bold">
+                      {formatCurrency({ number: totals.sellingPrice })}
+                    </p>
+                  </Box>
 
-                  <Box className="space-y-3">
-                    <Box className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Materials Cost</span>
-                      <span className="font-medium">
-                        {formatCurrency({ number: totals.totalMaterialsCost })}
-                      </span>
-                    </Box>
-
-                    <Box className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Labour Cost</span>
-                      <span className="font-medium">
-                        {formatCurrency({ number: totals.laborCost })}
-                      </span>
-                    </Box>
-
-                    <Box className="border-t border-border pt-3">
-                      <Box className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Total Cost</span>
-                        <span className="font-bold text-primary">
-                          {formatCurrency({ number: totals.totalCost })}
-                        </span>
+                  {/* Cost Breakdown */}
+                  <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
+                    {/* Costs Section */}
+                    <Box className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Costs
+                      </p>
+                      <Box className="space-y-1.5">
+                        <Box className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Materials</span>
+                          <span>{formatCurrency({ number: totals.totalMaterialsCost })}</span>
+                        </Box>
+                        <Box className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Labour</span>
+                          <span>{formatCurrency({ number: totals.laborCost })}</span>
+                        </Box>
+                      </Box>
+                      <Box className="flex justify-between text-sm font-semibold pt-1 border-t border-border">
+                        <span>Total Cost</span>
+                        <span>{formatCurrency({ number: totals.totalCost })}</span>
                       </Box>
                     </Box>
 
-                    <Box className="border-t border-border pt-3">
-                      <Box className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Retail Price</span>
-                        <span className="font-bold text-blue-600">
-                          {formatCurrency({ number: totals.totalRetailPrice })}
-                        </span>
+                    {/* Retail Section */}
+                    <Box className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Retail
+                      </p>
+                      <Box className="space-y-1.5">
+                        <Box className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Materials (marked up)</span>
+                          <span>{formatCurrency({ number: totals.totalRetailPrice })}</span>
+                        </Box>
+                        <Box className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Labour</span>
+                          <span>{formatCurrency({ number: totals.laborCost })}</span>
+                        </Box>
                       </Box>
                     </Box>
+
+                    {/* Profit */}
+                    <Box className="flex justify-between items-center pt-3 border-t border-border">
+                      <span className="text-sm font-semibold text-emerald-600">Profit</span>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatCurrency({ number: totals.profit })} (
+                        {totals.profitPercentage.toFixed(1)}%)
+                      </span>
+                    </Box>
+
+                    {/* Update Button */}
+                    <Button
+                      type="submit"
+                      form="form-rhf-recipe"
+                      className="w-full bg-teal-500 hover:bg-teal-600 text-white h-11"
+                      disabled={isPending}
+                    >
+                      {isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          {isCreating ? 'Creating...' : 'Updating...'}
+                        </>
+                      ) : (
+                        <>{mode === 'create' ? 'Create' : 'Update'}</>
+                      )}
+                    </Button>
+
+                    {/* Editing indicator */}
+                    {mode === 'update' && recipe?.name ? (
+                      <p className="text-xs text-center text-muted-foreground">
+                        Editing &quot;{recipe.name}&quot;
+                      </p>
+                    ) : null}
                   </Box>
                 </Box>
               </Box>
             </Box>
-
-            {/* Recipe Items */}
-            <RecipeItemsList form={form} fieldArray={fieldArray} />
           </Box>
         </form>
       </Form>
