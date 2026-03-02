@@ -58,30 +58,20 @@ export const createRecipeColumns = (
     cell: ({ row }) => formatCurrency({ number: row.original.laborCost }),
   },
   {
-    accessorKey: 'totalProductionCost',
+    accessorKey: 'totalCost',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Total Cost" />,
     cell: ({ row }) => (
       <Box className="font-semibold text-primary">
-        {formatCurrency({ number: row.original.totalProductionCost })}
+        {formatCurrency({ number: row.original.totalCost })}
       </Box>
     ),
   },
   {
-    accessorKey: 'sellingPrice',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Price" />,
-    cell: ({ row }) => formatCurrency({ number: row.original.sellingPrice }),
-  },
-  {
-    id: 'profit',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Profit" />,
+    accessorKey: 'totalRetailPrice',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Retail Total" />,
     cell: ({ row }) => (
-      <Box className="flex flex-col">
-        <span className="font-medium text-green-600">
-          {formatCurrency({ number: row.original.profitValue })}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          {row.original.profitPercentage.toFixed(1)}%
-        </span>
+      <Box className="font-semibold text-blue-600">
+        {formatCurrency({ number: row.original.totalRetailPrice })}
       </Box>
     ),
   },

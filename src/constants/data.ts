@@ -73,6 +73,13 @@ export const navItems: NavItem[] = [
         shortcut: ['t', 't'],
         authorizeOnly: ['*'],
       },
+      {
+        title: 'Recipes',
+        href: '/finances/recipes',
+        icon: 'pizza',
+        shortcut: ['r', 'r'],
+        authorizeOnly: ['*'],
+      },
     ],
   },
   {
@@ -86,6 +93,13 @@ export const navItems: NavItem[] = [
         icon: 'product',
         shortcut: ['p', 'p'],
         authorizeOnly: ['*'],
+      },
+      {
+        title: 'Price List',
+        href: '/inventory/price-list',
+        icon: 'list',
+        shortcut: ['l', 'l'],
+        authorizeOnly: ['canReadPriceList', 'canManagePriceList'],
       },
       {
         title: 'Vendors',

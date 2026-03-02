@@ -1,94 +1,95 @@
 'use client';
 
-import { Plus, Trash2, GripVertical } from 'lucide-react';
-import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
-import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { Plus } from 'lucide-react';
+import type { UseFormReturn, UseFieldArrayReturn } from 'react-hook-form';
+import { Reorder } from 'framer-motion';
 
-import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { FormLabel } from '@/components/ui/form';
-import {
-  RecipeItemTypeSchema,
-  type RecipeItemType,
-} from '@/zod/schemas/enums/RecipeItemType.schema';
 import type { RecipeFormInput } from '@/features/finances/recipes/types';
+import { RecipeItemRow } from '@/features/finances/recipes/components/recipe-item-row';
+import { PriceListSearchDialog } from '@/components/shared/price-list-search-dialog';
+import { useActivePriceListItems } from '@/features/inventory/price-list/hooks/use-price-list-queries';
+import type { PriceListItemListItem } from '@/features/inventory/price-list/types';
+type RecipeItemsListProps = {
+  form: UseFormReturn<RecipeFormInput>;
+  fieldArray: UseFieldArrayReturn<RecipeFormInput, 'items', 'id'>;
+  isLocked?: boolean;
+};
 
-export function RecipeItemsList({ isLocked = false }: { isLocked?: boolean }) {
-  const {
-    control,
-    register,
-    setValue,
-    formState: { errors },
-  } = useFormContext<RecipeFormInput>();
+export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeItemsListProps) {
+  const { fields, append, remove, move } = fieldArray;
+  const { data: priceListItems = [], isLoading: isLoadingPriceList } = useActivePriceListItems();
 
-  const { fields, append, remove, move } = useFieldArray({
-    control,
-    name: 'items',
-  });
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const watchedItems = useWatch({
-    control,
-    name: 'items',
-  });
+  const handleAddItem = useCallback(() => {
+    append(
+      {
+        priceListItemId: null,
+        name: '',
+        quantity: 1,
+        unitPrice: 0,
+        lineTotal: 0,
+        retailPrice: 0,
+        retailLineTotal: 0,
+        order: fields.length,
+      },
+      { shouldFocus: false },
+    );
+  }, [append, fields.length]);
 
-  const handleAddItem = () => {
-    append({
-      description: '',
-      type: 'FLORAL',
-      purchaseUnit: 'Stem',
-      purchaseUnitQuantity: 1,
-      purchaseCost: 0,
-      unitCost: 0,
-      quantityUsed: 1,
-      subtotal: 0,
-      order: fields.length,
-    });
-  };
+  const handleOpenSearch = useCallback((index: number) => {
+    setEditingIndex(index);
+    setSearchDialogOpen(true);
+  }, []);
 
-  const calculateItemCosts = (index: number) => {
-    const item = watchedItems[index];
-    if (!item) return;
+  const handleSelectPriceListItem = useCallback(
+    (item: PriceListItemListItem) => {
+      if (editingIndex !== null) {
+        const quantity = form.getValues(`items.${editingIndex}.quantity`) || 1;
 
-    const purchaseCost = Number(item.purchaseCost) || 0;
-    const purchaseUnitQuantity = Number(item.purchaseUnitQuantity) || 1;
-    const quantityUsed = Number(item.quantityUsed) || 0;
+        // Cost calculations
+        const costLineTotal = item.costPerUnit * quantity;
 
-    const unitCost = purchaseCost / purchaseUnitQuantity;
-    const subtotal = unitCost * quantityUsed;
+        // Retail calculations
+        const retailPricePerUnit = item.retailPriceOverride ?? item.retailPrice;
+        const retailLineTotal = retailPricePerUnit * quantity;
 
-    setValue(`items.${index}.unitCost`, unitCost);
-    setValue(`items.${index}.subtotal`, subtotal);
-  };
+        // Set all values
+        form.setValue(`items.${editingIndex}.priceListItemId`, item.id);
+        form.setValue(`items.${editingIndex}.name`, item.name);
+        form.setValue(`items.${editingIndex}.unitPrice`, item.costPerUnit);
+        form.setValue(`items.${editingIndex}.lineTotal`, costLineTotal);
+        form.setValue(`items.${editingIndex}.retailPrice`, retailPricePerUnit);
+        form.setValue(`items.${editingIndex}.retailLineTotal`, retailLineTotal);
+      }
+      setSearchDialogOpen(false);
+      setEditingIndex(null);
+    },
+    [editingIndex, form],
+  );
 
   return (
     <Box className="py-6">
       <Box className="flex items-center justify-between mb-4">
-        <FormLabel className="text-base font-semibold">Materials & Ingredients</FormLabel>
+        <FormLabel className="text-base font-semibold">Items</FormLabel>
       </Box>
 
       <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
         {/* Table Header */}
         <Box className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <Box className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-            <Box className="w-4 shrink-0" />
-            <Box className="w-[180px] min-w-0 shrink-0">Item</Box>
-            <Box className="w-20 shrink-0">Type</Box>
-            <Box className="w-20 shrink-0">I paid</Box>
-            <Box className="w-12 shrink-0 text-center">for</Box>
-            <Box className="w-16 shrink-0">Unit</Box>
-            <Box className="w-24 shrink-0 text-right">= Cost/Unit</Box>
-            <Box className="w-20 shrink-0">I use</Box>
-            <Box className="w-24 shrink-0 text-right">= Total</Box>
+            <Box className="w-6 shrink-0" />
+            <Box className="flex-1 min-w-0">Name</Box>
+            <Box className="w-20 shrink-0 text-center">Qty</Box>
+            <Box className="w-24 shrink-0 text-right">Cost</Box>
+            <Box className="w-24 shrink-0 text-right">Cost Total</Box>
+            <Box className="w-24 shrink-0 text-right">Retail</Box>
+            <Box className="w-28 shrink-0 text-right">Retail Total</Box>
             <Box className="w-8 shrink-0" />
           </Box>
         </Box>
@@ -114,24 +115,21 @@ export function RecipeItemsList({ isLocked = false }: { isLocked?: boolean }) {
               key={field.id}
               field={field}
               index={index}
+              form={form}
               isLocked={isLocked}
               canRemove={fields.length > 1}
               onRemove={() => remove(index)}
-              register={register}
-              setValue={setValue}
-              errors={errors}
-              watchedItem={watchedItems[index]}
-              calculateItemCosts={calculateItemCosts}
+              onOpenSearch={() => handleOpenSearch(index)}
             />
           ))}
         </Reorder.Group>
 
         {/* Empty State */}
-        {fields.length === 0 && (
+        {fields.length === 0 ? (
           <Box className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No materials added yet. Click "Add Item" to get started.
+            No items added yet. Click &quot;Add Item&quot; to get started.
           </Box>
-        )}
+        ) : null}
 
         {/* Add Item Button */}
         <Box className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
@@ -148,198 +146,18 @@ export function RecipeItemsList({ isLocked = false }: { isLocked?: boolean }) {
           </Button>
         </Box>
       </Box>
+
+      {/* Price List Search Dialog */}
+      <PriceListSearchDialog
+        open={searchDialogOpen}
+        onOpenChange={setSearchDialogOpen}
+        items={priceListItems}
+        isLoading={isLoadingPriceList}
+        selectedItemId={
+          editingIndex !== null ? form.getValues(`items.${editingIndex}.priceListItemId`) : null
+        }
+        onItemSelect={handleSelectPriceListItem}
+      />
     </Box>
-  );
-}
-
-function RecipeItemRow({
-  field,
-  index,
-  isLocked,
-  canRemove,
-  onRemove,
-  register,
-  setValue,
-  errors,
-  watchedItem,
-  calculateItemCosts,
-}: {
-  field: any;
-  index: number;
-  isLocked: boolean;
-  canRemove: boolean;
-  onRemove: () => void;
-  register: any;
-  setValue: any;
-  errors: any;
-  watchedItem: any;
-  calculateItemCosts: (index: number) => void;
-}) {
-  const y = useMotionValue(0);
-  const dragControls = useDragControls();
-  const [isDragging, setIsDragging] = useState(false);
-
-  const itemError = errors.items?.[index];
-
-  // Get current unit for display
-  const currentUnit = watchedItem?.purchaseUnit || 'Unit';
-  const unitCost = watchedItem?.unitCost || 0;
-
-  return (
-    <Reorder.Item
-      as="div"
-      value={field}
-      dragListener={false}
-      dragControls={dragControls}
-      style={{ y }}
-      layout="position"
-      transition={{ type: 'spring', stiffness: 500, damping: 50, mass: 1 }}
-      className="border-b border-gray-100 dark:border-gray-800 last:border-b-0 relative"
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={() => setIsDragging(false)}
-    >
-      <Box
-        className={cn(
-          'flex items-center gap-2 px-4 py-3 transition-colors',
-          isDragging
-            ? 'bg-gray-100 dark:bg-gray-800 shadow-lg cursor-grabbing'
-            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
-        )}
-      >
-        {/* Drag Handle */}
-        <Box
-          className="w-4 shrink-0 flex items-center justify-center"
-          onPointerDown={(e) => !isLocked && dragControls.start(e)}
-        >
-          <GripVertical
-            className={cn(
-              'h-4 w-4',
-              isLocked ? 'text-gray-300' : 'text-gray-400 cursor-grab active:cursor-grabbing',
-            )}
-          />
-        </Box>
-
-        {/* Item Description */}
-        <Box className="w-[180px] min-w-0 shrink-0">
-          <Input
-            {...register(`items.${index}.description`)}
-            placeholder="e.g., Red Rose"
-            disabled={isLocked}
-            className={cn(
-              'h-9 border-gray-200 dark:border-gray-700',
-              itemError?.description && 'border-destructive',
-            )}
-          />
-        </Box>
-
-        {/* Type */}
-        <Box className="w-20 shrink-0">
-          <Select
-            defaultValue={field.type}
-            onValueChange={(val) => setValue(`items.${index}.type`, val as RecipeItemType)}
-            disabled={isLocked}
-          >
-            <SelectTrigger className="h-9 border-gray-200 dark:border-gray-700 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RecipeItemTypeSchema.options.map((type) => (
-                <SelectItem key={type} value={type} className="text-xs">
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Box>
-
-        {/* I paid (Purchase Cost) */}
-        <Box className="w-20 shrink-0">
-          <Input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="$0.00"
-            {...register(`items.${index}.purchaseCost`, {
-              valueAsNumber: true,
-              onChange: () => calculateItemCosts(index),
-            })}
-            disabled={isLocked}
-            className="h-9 border-gray-200 dark:border-gray-700 text-sm"
-          />
-        </Box>
-
-        {/* for (Purchase Unit Quantity) */}
-        <Box className="w-12 shrink-0">
-          <Input
-            type="number"
-            step="1"
-            min="1"
-            {...register(`items.${index}.purchaseUnitQuantity`, {
-              valueAsNumber: true,
-              onChange: () => calculateItemCosts(index),
-            })}
-            disabled={isLocked}
-            className="h-9 border-gray-200 dark:border-gray-700 text-sm text-center"
-          />
-        </Box>
-
-        {/* Unit (Purchase Unit) */}
-        <Box className="w-16 shrink-0">
-          <Input
-            {...register(`items.${index}.purchaseUnit`)}
-            placeholder="Stem"
-            disabled={isLocked}
-            className="h-9 border-gray-200 dark:border-gray-700 text-sm"
-          />
-        </Box>
-
-        {/* = Cost/Unit (Calculated) */}
-        <Box className="w-24 shrink-0">
-          <Box className="h-9 px-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: unitCost })}/{currentUnit.toLowerCase()}
-          </Box>
-        </Box>
-
-        {/* I use (Quantity Used) + unit label */}
-        <Box className="w-20 shrink-0">
-          <Box className="flex items-center gap-1">
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              {...register(`items.${index}.quantityUsed`, {
-                valueAsNumber: true,
-                onChange: () => calculateItemCosts(index),
-              })}
-              disabled={isLocked}
-              className="h-9 border-gray-200 dark:border-gray-700 text-sm w-14"
-            />
-            <span className="text-xs text-gray-500 truncate">{currentUnit.toLowerCase()}s</span>
-          </Box>
-        </Box>
-
-        {/* = Total (Subtotal) */}
-        <Box className="w-24 shrink-0">
-          <Box className="h-9 px-3 bg-emerald-50 dark:bg-emerald-900/20 rounded border border-emerald-200 dark:border-emerald-800 font-semibold text-sm text-emerald-700 dark:text-emerald-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: watchedItem?.subtotal || 0 })}
-          </Box>
-        </Box>
-
-        {/* Delete Button */}
-        <Box className="w-8 shrink-0 flex items-center justify-center">
-          {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onRemove}
-              className="h-8 w-8 p-0 text-gray-400 hover:text-destructive hover:bg-transparent cursor-pointer"
-              disabled={isLocked}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </Box>
-      </Box>
-    </Reorder.Item>
   );
 }

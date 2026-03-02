@@ -7,6 +7,7 @@ import {
   getPriceListItems,
   getPriceListItemById,
   getPriceListCostHistory,
+  getActivePriceListItems,
   createPriceListItem,
   updatePriceListItem,
   deletePriceListItem,
@@ -27,6 +28,7 @@ export const PRICE_LIST_KEYS = {
   all: ['priceList'] as const,
   lists: () => [...PRICE_LIST_KEYS.all, 'list'] as const,
   list: (filters: PriceListFilters) => [...PRICE_LIST_KEYS.lists(), { filters }] as const,
+  active: () => [...PRICE_LIST_KEYS.all, 'active'] as const,
   details: () => [...PRICE_LIST_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRICE_LIST_KEYS.details(), id] as const,
   costHistory: (id: string) => [...PRICE_LIST_KEYS.all, 'costHistory', id] as const,
@@ -95,6 +97,23 @@ export function usePrefetchPriceListItem() {
       staleTime: 30 * 1000,
     });
   };
+}
+
+/**
+ * Hook to fetch all active price list items for selection in recipes
+ */
+export function useActivePriceListItems() {
+  return useQuery({
+    queryKey: PRICE_LIST_KEYS.active(),
+    queryFn: async () => {
+      const result = await getActivePriceListItems();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
 // ============================================================================

@@ -26,6 +26,7 @@ Review checklist:
 
 Provide feedback organized by priority:
 
+- Focus ONLY on actionable suggestions and improvements
 - Critical issues (must fix)
 - Warnings (should fix)
 - Suggestions (consider improving)

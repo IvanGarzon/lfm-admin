@@ -42,6 +42,7 @@ export function OrganizationsList({
 }: OrganizationsListProps) {
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [editingOrganization, setEditingOrganization] = useState<OrganizationListItem | null>(null);
   const [deletingOrganization, setDeletingOrganization] = useState<{

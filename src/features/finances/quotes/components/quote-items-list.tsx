@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 import { Reorder } from 'framer-motion';
 import type { UseFormReturn, UseFieldArrayReturn } from 'react-hook-form';
 import { Plus } from 'lucide-react';
@@ -11,6 +11,7 @@ import { FormLabel } from '@/components/ui/form';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
 import { QuoteItemRow } from '@/features/finances/quotes/components/quote-item-row';
+import { AddRecipesDialog } from '@/features/finances/quotes/components/add-recipes-dialog';
 
 export function QuoteItemsList({
   form,
@@ -41,6 +42,24 @@ export function QuoteItemsList({
       { shouldFocus: false },
     );
   }, [append]);
+
+  const handleAddFromRecipes = useCallback(
+    (items: { description: string; quantity: number; unitPrice: number }[]) => {
+      items.forEach((item) => {
+        append(
+          {
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            productId: null,
+            colors: [],
+          },
+          { shouldFocus: false },
+        );
+      });
+    },
+    [append],
+  );
 
   return (
     <Box className="py-6">
@@ -108,8 +127,8 @@ export function QuoteItemsList({
           })}
         </Reorder.Group>
 
-        {/* Add Item Button */}
-        <Box className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        {/* Add Item Buttons */}
+        <Box className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex items-center gap-2">
           <Button
             type="button"
             variant="ghost"
@@ -121,6 +140,7 @@ export function QuoteItemsList({
             <Plus className="h-4 w-4 mr-1" />
             Add Item
           </Button>
+          <AddRecipesDialog onAdd={handleAddFromRecipes} disabled={isLocked} />
         </Box>
       </Box>
     </Box>

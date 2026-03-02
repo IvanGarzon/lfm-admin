@@ -725,48 +725,48 @@ model TransactionAttachment {
 }
 
 model Recipe {
-  id                  String       @id @default(cuid())
-  name                String
-  description         String?      @db.Text
-  laborRate           Decimal      @default(25.00) @map("labor_rate") @db.Decimal(5, 2)
-  targetMargin        Decimal      @default(30.00) @map("target_margin") @db.Decimal(5, 2)
-  totalMaterialsCost  Decimal      @default(0) @map("total_materials_cost") @db.Decimal(15, 2)
-  laborCost           Decimal      @default(0) @map("labor_cost") @db.Decimal(15, 2)
-  totalProductionCost Decimal      @default(0) @map("total_production_cost") @db.Decimal(15, 2)
-  sellingPrice        Decimal      @default(0) @map("selling_price") @db.Decimal(15, 2)
-  profitValue         Decimal      @default(0) @map("profit_value") @db.Decimal(15, 2)
-  profitPercentage    Decimal      @default(0) @map("profit_percentage") @db.Decimal(5, 2)
-  notes               String?      @db.Text
+  id                 String          @id @default(cuid())
+  name               String
+  description        String?         @db.Text
+  labourCostType     LabourCostType  @default(FIXED_AMOUNT) @map("labour_cost_type")
+  labourAmount       Decimal         @default(0) @map("labour_amount") @db.Decimal(15, 2)
+  totalMaterialsCost Decimal         @default(0) @map("total_materials_cost") @db.Decimal(15, 2)
+  laborCost          Decimal         @default(0) @map("labor_cost") @db.Decimal(15, 2)
+  totalCost          Decimal         @default(0) @map("total_cost") @db.Decimal(15, 2)
+  totalRetailPrice   Decimal         @default(0) @map("total_retail_price") @db.Decimal(15, 2)
+  notes              String?         @db.Text
 
-  items               RecipeItem[]
-  recipeGroupItems    RecipeGroupItem[]
+  items              RecipeItem[]
+  recipeGroupItems   RecipeGroupItem[]
 
-  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt           DateTime     @updatedAt @map("updated_at") @db.Timestamptz()
-  deletedAt           DateTime?    @map("deleted_at") @db.Timestamptz()
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt          DateTime?       @map("deleted_at") @db.Timestamptz()
 
   @@map("recipes")
 }
 
 model RecipeItem {
-  id                   String         @id @default(cuid())
-  recipeId             String         @map("recipe_id")
-  recipe               Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  recipeId        String         @map("recipe_id")
+  recipe          Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
-  description          String
-  type                 RecipeItemType @default(FLORAL)
-  purchaseUnit         String         @map("purchase_unit")
-  purchaseUnitQuantity Decimal        @map("purchase_unit_quantity") @db.Decimal(15, 2)
-  purchaseCost         Decimal        @map("purchase_cost") @db.Decimal(15, 2)
-  unitCost             Decimal        @map("unit_cost") @db.Decimal(15, 2)
-  quantityUsed         Decimal        @map("quantity_used") @db.Decimal(15, 2)
-  subtotal             Decimal        @db.Decimal(15, 2)
-  order                Int            @default(0)
+  priceListItemId String?        @map("price_list_item_id")
+  priceListItem   PriceListItem? @relation(fields: [priceListItemId], references: [id], onDelete: SetNull)
 
-  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  name            String
+  quantity        Decimal        @default(1) @db.Decimal(15, 2)
+  unitPrice       Decimal        @default(0) @map("unit_price") @db.Decimal(15, 2)
+  lineTotal       Decimal        @default(0) @map("line_total") @db.Decimal(15, 2)
+  retailPrice     Decimal        @default(0) @map("retail_price") @db.Decimal(15, 2)
+  retailLineTotal Decimal        @default(0) @map("retail_line_total") @db.Decimal(15, 2)
+  order           Int            @default(0)
+
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([recipeId])
+  @@index([priceListItemId])
   @@map("recipe_items")
 }
 
@@ -808,7 +808,7 @@ model RecipeGroupItem {
   recipe         Recipe      @relation(fields: [recipeId], references: [id], onDelete: Restrict)
 
   quantity       Int         @default(1)
-  subtotal       Decimal     @default(0) @db.Decimal(15, 2) // recipe.sellingPrice × quantity
+  subtotal       Decimal     @default(0) @db.Decimal(15, 2) // recipe.totalCost × quantity
   order          Int         @default(0)
 
   createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz()
@@ -826,11 +826,12 @@ model PriceListItem {
   description String?
   category    String  @default("FLORAL")
   imageUrl    String? @map("image_url")
-  wholesalePrice Decimal? @map("wholesale_price") @db.Decimal(15, 2) // Price paid to purchase from supplier
-  costPerUnit    Decimal  @default(0) @map("cost_per_unit") @db.Decimal(15, 2)
-  multiplier     Decimal  @default(3) @db.Decimal(5, 2)
-  retailPrice    Decimal  @db.Decimal(15, 2) // Calculated: costPerUnit × multiplier, or retailPriceOverride if set
-  retailPriceOverride Decimal? @map("retail_price_override") @db.Decimal(15, 2) // Manual override for retail price
+
+  wholesalePrice      Decimal? @map("wholesale_price") @db.Decimal(15, 2)
+  costPerUnit         Decimal  @default(0) @map("cost_per_unit") @db.Decimal(15, 2)
+  multiplier          Decimal  @default(3) @db.Decimal(5, 2)
+  retailPrice         Decimal  @db.Decimal(15, 2) @map("retail_price")
+  retailPriceOverride Decimal? @map("retail_price_override") @db.Decimal(15, 2)
 
   // Optional metadata
   unitType  String? @map("unit_type")
@@ -838,6 +839,7 @@ model PriceListItem {
   season    String?
 
   costHistory PriceListCostHistory[]
+  recipeItems RecipeItem[]
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
@@ -999,5 +1001,11 @@ enum RecipeItemType {
   SUPPLY
   INGREDIENT
   OTHER
+}
+
+enum LabourCostType {
+  FIXED_AMOUNT
+  PERCENTAGE_OF_RETAIL
+  PERCENTAGE_OF_MATERIAL
 }
 

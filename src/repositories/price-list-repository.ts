@@ -322,6 +322,19 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
       changedAt: h.changedAt,
     }));
   }
+
+  /**
+   * Retrieves all active price list items for selection in recipes.
+   * @returns A promise that resolves to an array of active price list items
+   */
+  async findAllActive(): Promise<PriceListItemListItem[]> {
+    const items = await this.prisma.priceListItem.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+
+    return items.map((item) => this.toListItem(item, null));
+  }
 }
 
 // Singleton instance

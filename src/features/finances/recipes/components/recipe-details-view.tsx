@@ -1,6 +1,6 @@
 'use client';
 
-import { Calculator, DollarSign, Percent, TrendingUp, Inbox } from 'lucide-react';
+import { Calculator, DollarSign, Inbox } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +20,15 @@ interface RecipeDetailsViewProps {
   recipe: RecipeWithDetails;
 }
 
+const LABOUR_COST_TYPE_LABELS = {
+  FIXED_AMOUNT: 'Fixed Amount',
+  PERCENTAGE_OF_RETAIL: '% of Retail Price',
+  PERCENTAGE_OF_MATERIAL: '% of Material Cost',
+};
+
 export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
+  const isPercentageType = recipe.labourCostType !== 'FIXED_AMOUNT';
+
   return (
     <Box className="space-y-6 pb-20">
       {/* Summary Cards */}
@@ -28,40 +36,38 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">
-              Selling Price
+              Total Cost
             </p>
             <p className="text-2xl font-black text-primary">
-              {formatCurrency({ number: recipe.sellingPrice })}
+              {formatCurrency({ number: recipe.totalCost })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">
-              Total Production Cost
+              Materials Cost
             </p>
             <p className="text-xl font-bold">
-              {formatCurrency({ number: recipe.totalProductionCost })}
+              {formatCurrency({ number: recipe.totalMaterialsCost })}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">
-              Estimated Profit
+              Labor Cost
             </p>
-            <p className="text-xl font-bold text-green-600">
-              {formatCurrency({ number: recipe.profitValue })}
-            </p>
+            <p className="text-xl font-bold">{formatCurrency({ number: recipe.laborCost })}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-4">
             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">
-              Profit Margin
+              Retail Total
             </p>
-            <p className="text-xl font-bold text-green-600">
-              {recipe.profitPercentage.toFixed(1)}%
+            <p className="text-xl font-bold text-blue-600">
+              {formatCurrency({ number: recipe.totalRetailPrice })}
             </p>
           </CardContent>
         </Card>
@@ -83,18 +89,26 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
         <Card className="bg-muted/30 border-dashed">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="size-3" />
-              Configuration
+              <Calculator className="size-3" />
+              Labour Configuration
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Box className="flex items-center justify-between py-1">
-              <span className="text-xs text-muted-foreground">Labor Rate</span>
-              <span className="text-xs font-medium">{recipe.laborRate}%</span>
+              <span className="text-xs text-muted-foreground">Type</span>
+              <span className="text-xs font-medium">
+                {LABOUR_COST_TYPE_LABELS[recipe.labourCostType]}
+              </span>
             </Box>
             <Box className="flex items-center justify-between py-1">
-              <span className="text-xs text-muted-foreground">Target Margin</span>
-              <span className="text-xs font-medium">{recipe.targetMargin}%</span>
+              <span className="text-xs text-muted-foreground">
+                {isPercentageType ? 'Percentage' : 'Amount'}
+              </span>
+              <span className="text-xs font-medium">
+                {isPercentageType
+                  ? `${recipe.labourAmount}%`
+                  : formatCurrency({ number: recipe.labourAmount })}
+              </span>
             </Box>
             <Separator className="my-1" />
             <Box className="flex items-center justify-between py-1">
@@ -107,6 +121,13 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
               <span className="text-xs text-muted-foreground">Labor Cost</span>
               <span className="text-xs font-medium">
                 {formatCurrency({ number: recipe.laborCost })}
+              </span>
+            </Box>
+            <Separator className="my-1" />
+            <Box className="flex items-center justify-between py-1">
+              <span className="text-xs font-bold text-foreground">Total Cost</span>
+              <span className="text-xs font-bold text-primary">
+                {formatCurrency({ number: recipe.totalCost })}
               </span>
             </Box>
           </CardContent>
@@ -129,32 +150,30 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[40%]">Description</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Unit Qty</TableHead>
-                <TableHead className="text-right">Unit Cost</TableHead>
-                <TableHead className="text-right">Qty Used</TableHead>
-                <TableHead className="text-right font-bold">Subtotal</TableHead>
+                <TableHead className="w-[40%]">Name</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead className="text-right">Unit Price</TableHead>
+                <TableHead className="text-right font-bold">Cost Total</TableHead>
+                <TableHead className="text-right">Retail Price</TableHead>
+                <TableHead className="text-right font-bold">Retail Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recipe.items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.description}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {item.type}
-                    </Badge>
-                  </TableCell>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell className="text-right text-xs">{item.quantity}</TableCell>
                   <TableCell className="text-right text-xs">
-                    {item.purchaseUnitQuantity} {item.purchaseUnit}
+                    {formatCurrency({ number: item.unitPrice })}
                   </TableCell>
-                  <TableCell className="text-right text-xs">
-                    {formatCurrency({ number: item.unitCost })}
-                  </TableCell>
-                  <TableCell className="text-right text-xs">{item.quantityUsed}</TableCell>
                   <TableCell className="text-right font-bold text-sm">
-                    {formatCurrency({ number: item.subtotal })}
+                    {formatCurrency({ number: item.lineTotal })}
+                  </TableCell>
+                  <TableCell className="text-right text-xs text-blue-600">
+                    {formatCurrency({ number: item.retailPrice })}
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-sm text-blue-600">
+                    {formatCurrency({ number: item.retailLineTotal })}
                   </TableCell>
                 </TableRow>
               ))}

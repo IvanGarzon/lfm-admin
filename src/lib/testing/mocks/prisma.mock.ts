@@ -41,6 +41,14 @@ export const DocumentKind = {
   OTHER: 'OTHER',
 } as const;
 
+export const RecipeItemType = {
+  FLORAL: 'FLORAL',
+  FOLIAGE: 'FOLIAGE',
+  SUPPLY: 'SUPPLY',
+  INGREDIENT: 'INGREDIENT',
+  OTHER: 'OTHER',
+} as const;
+
 // Prisma Decimal class mock
 class DecimalMock {
   public value: unknown;

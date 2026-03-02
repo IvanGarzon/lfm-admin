@@ -55,6 +55,8 @@ export const testIds = {
   transaction: () => generateTestId('txn0'),
   category: () => generateTestId('catg'),
   payment: () => generateTestId('pymt'),
+  recipe: () => generateTestId('rcpe'),
+  recipeItem: () => generateTestId('ritm'),
   nonExistent: () => generateTestId('none'),
 } as const;
 
@@ -83,6 +85,8 @@ export function createTestIdSet() {
     transactionId: testIds.transaction(),
     categoryId: testIds.category(),
     paymentId: testIds.payment(),
+    recipeId: testIds.recipe(),
+    recipeItemId: testIds.recipeItem(),
     nonExistentId: testIds.nonExistent(),
   };
 }

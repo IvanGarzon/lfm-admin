@@ -49,10 +49,19 @@ const nextConfig: NextConfig = {
   //     },
   //   ];
   // },
-  serverExternalPackages: ['@prisma/client', '@prisma/adapter-neon', 'ws'],
+  serverExternalPackages: [
+    '@prisma/client',
+    '@prisma/client-runtime-utils',
+    '@prisma/adapter-neon',
+    'ws',
+  ],
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals.push('@prisma/client', '@prisma/adapter-neon');
+      config.externals.push(
+        '@prisma/client',
+        '@prisma/client-runtime-utils',
+        '@prisma/adapter-neon',
+      );
     }
     return config;
   },

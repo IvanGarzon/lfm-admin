@@ -11,6 +11,7 @@ import type {
   PriceListPagination,
   PriceListItemWithDetails,
   PriceListCostHistoryItem,
+  PriceListItemListItem,
 } from '@/features/inventory/price-list/types';
 
 /**
@@ -95,5 +96,24 @@ export async function getPriceListCostHistory(
     return { success: true, data: history };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch cost history');
+  }
+}
+
+/**
+ * Retrieves all active price list items for selection in recipes.
+ * @returns A promise that resolves to an `ActionResult` containing all active items.
+ */
+export async function getActivePriceListItems(): Promise<ActionResult<PriceListItemListItem[]>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canReadPriceList');
+    const items = await priceListRepo.findAllActive();
+    return { success: true, data: items };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch price list items');
   }
 }

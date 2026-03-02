@@ -52,6 +52,22 @@ export const PERMISSIONS = {
   canManageVendors: {
     label: 'Can create, edit, and delete vendors',
   },
+
+  // Recipe Permissions
+  canReadRecipes: {
+    label: 'Can view recipes',
+  },
+  canManageRecipes: {
+    label: 'Can create, edit, and delete recipes',
+  },
+
+  // Price List Permissions
+  canReadPriceList: {
+    label: 'Can view price list',
+  },
+  canManagePriceList: {
+    label: 'Can create, edit, and delete price list items',
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -80,7 +96,14 @@ type RolePolicy = {
  * USER role: Read-only access to invoices and quotes
  */
 const USER: RolePolicy = {
-  allow: ['canReadInvoices', 'canReadQuotes', 'canReadProducts', 'canReadVendors'],
+  allow: [
+    'canReadInvoices',
+    'canReadQuotes',
+    'canReadRecipes',
+    'canReadProducts',
+    'canReadVendors',
+    'canReadPriceList',
+  ],
   deny: [],
   actions: {
     allow: [
@@ -106,6 +129,15 @@ const USER: RolePolicy = {
       'vendors.getVendorById',
       'vendors.getVendorStatistics',
       'vendors.getActiveVendors',
+
+      // Recipe read actions
+      'recipes.getRecipes',
+      'recipes.getRecipeById',
+
+      // Price List read actions
+      'priceList.getPriceListItems',
+      'priceList.getPriceListItemById',
+      'priceList.getPriceListCostHistory',
     ],
     deny: [],
   },
@@ -123,6 +155,8 @@ const MANAGER: RolePolicy = {
     'canRecordPayments',
     'canManageProducts',
     'canManageVendors',
+    'canManageRecipes',
+    'canManagePriceList',
   ],
   deny: [],
   actions: {
@@ -159,6 +193,14 @@ const MANAGER: RolePolicy = {
       'vendors.createVendor',
       'vendors.updateVendor',
       'vendors.updateVendorStatus',
+
+      // Recipe management actions
+      'recipes.createRecipe',
+      'recipes.updateRecipe',
+
+      // Price List management actions
+      'priceList.createPriceListItem',
+      'priceList.updatePriceListItem',
     ],
     deny: [],
   },
@@ -180,6 +222,8 @@ const ADMIN: RolePolicy = {
       'quotes.deleteQuote',
       'products.deleteProduct',
       'vendors.deleteVendor',
+      'recipes.deleteRecipe',
+      'priceList.deletePriceListItem',
     ],
     deny: [],
   },
