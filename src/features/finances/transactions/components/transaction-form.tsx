@@ -1,39 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { Controller, useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
+import { useForm, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, DollarSign, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { VendorSelect } from '@/features/inventory/vendors/components/vendor-select';
 import { useActiveVendors } from '@/features/inventory/vendors/hooks/use-vendor-queries';
 import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
 import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
 
-import { cn } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form } from '@/components/ui/form';
-import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupAddon,
-  InputGroupText,
-} from '@/components/ui/input-group';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import {
   CreateTransactionSchema,
@@ -45,12 +24,16 @@ import {
 import type {
   TransactionListItem,
   TransactionFormInput,
-  TransactionAttachment,
 } from '@/features/finances/transactions/types';
-import { CategoryMultiSelect, type Category } from './category-multi-select';
+import { type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { useTransactionCategories } from '@/features/finances/transactions/hooks/use-transaction-queries';
+import { TransactionTypeFields } from './form-fields/transaction-type-fields';
+import { TransactionCategoryField } from './form-fields/transaction-category-field';
+import { TransactionPayeeField } from './form-fields/transaction-payee-field';
+import { TransactionDescriptionField } from './form-fields/transaction-description-field';
+import { TransactionDateStatusFields } from './form-fields/transaction-date-status-fields';
 
 const defaultFormState: CreateTransactionInput = {
   type: TransactionTypeSchema.enum.INCOME,
@@ -193,6 +176,8 @@ export function TransactionForm({
     [mode, onCreate, onUpdate, transaction?.id, onDirtyStateChange],
   );
 
+  const isDisabled = isCreating || isUpdating;
+
   return (
     <Form {...form}>
       <form
@@ -200,7 +185,7 @@ export function TransactionForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col h-full"
       >
-        {isCreating || isUpdating ? (
+        {isDisabled ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm font-medium">
@@ -221,281 +206,37 @@ export function TransactionForm({
         ) : null}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          <Box className="grid grid-cols-3 gap-4">
-            <FieldGroup>
-              <Controller
-                name="type"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-type">Transaction Type</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-type" aria-invalid={fieldState.invalid}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INCOME">Income</SelectItem>
-                        <SelectItem value="EXPENSE">Expense</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="currency"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger
-                        id="form-rhf-select-currency"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="amount"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-amount">Amount</FieldLabel>
-                    </FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <InputGroupText>
-                          <DollarSign className="h-4 w-4" />
-                        </InputGroupText>
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        {...field}
-                        id="form-rhf-input-amount"
-                        aria-invalid={fieldState.invalid}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={field.value}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        placeholder="Enter amount"
-                      />
-                    </InputGroup>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          {/* Categories */}
-          <FieldGroup>
-            <Controller
-              name="categoryIds"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldContent>
-                    <FieldLabel>Categories</FieldLabel>
-                  </FieldContent>
-                  {isLoadingCategories ? (
-                    <Box className="flex items-center justify-center py-4">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        Loading categories...
-                      </span>
-                    </Box>
-                  ) : (
-                    <CategoryMultiSelect
-                      categories={categories}
-                      selectedIds={field.value || []}
-                      onChange={field.onChange}
-                      onCategoryCreated={handleCategoryCreated}
-                      disabled={isCreating || isUpdating}
-                    />
-                  )}
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-
-          {/* Payee / Vendor */}
-          <FieldGroup>
-            {watchedType === TransactionTypeSchema.enum.EXPENSE ? (
-              <Controller
-                name="vendorId"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <VendorSelect
-                      value={field.value ?? undefined}
-                      onValueChange={field.onChange}
-                      placeholder="Select or create a vendor"
-                      label="Vendor (Optional)"
-                      showAddVendorLink={false}
-                      disabled={isCreating || isUpdating}
-                    />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                  </Field>
-                )}
-              />
-            ) : (
-              <Controller
-                name="payee"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-payee">From (Customer/Client)</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      {...field}
-                      id="form-rhf-input-payee"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter customer name"
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            )}
-          </FieldGroup>
-
-          {/* Description */}
-          <FieldGroup>
-            <Controller
-              name="description"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-description">Description</FieldLabel>
-                  </FieldContent>
-                  <Textarea
-                    {...field}
-                    id="form-rhf-textarea-description"
-                    aria-invalid={fieldState.invalid}
-                    value={field.value ?? ''}
-                    placeholder="Enter transaction description..."
-                    rows={3}
-                    className="resize-none"
-                  />
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-
-          <Box className="grid grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="date"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-date">Date</FieldLabel>
-                    </FieldContent>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                          type="button"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          autoFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="status"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          {/* Attachments */}
+          <TransactionTypeFields control={form.control} isDisabled={isDisabled} />
+          <TransactionCategoryField
+            control={form.control}
+            isDisabled={isDisabled}
+            categories={categories}
+            isLoadingCategories={isLoadingCategories}
+            onCategoryCreated={handleCategoryCreated}
+          />
+          <TransactionPayeeField
+            control={form.control}
+            isDisabled={isDisabled}
+            transactionType={watchedType}
+          />
+          <TransactionDescriptionField control={form.control} isDisabled={isDisabled} />
+          <TransactionDateStatusFields control={form.control} isDisabled={isDisabled} />
           <TransactionAttachments
             transactionId={transaction?.id}
             attachments={transaction?.attachments || []}
-            disabled={isCreating || isUpdating}
+            disabled={isDisabled}
             mode={mode}
           />
         </Box>
 
-        {/* Action Buttons */}
         <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
           {onClose ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isCreating || isUpdating}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isDisabled}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isCreating || isUpdating || (transaction && !isDirty)}>
-            {isCreating || isUpdating ? (
+          <Button type="submit" disabled={isDisabled || (transaction && !isDirty)}>
+            {isDisabled ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}

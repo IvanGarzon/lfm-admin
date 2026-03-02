@@ -1,28 +1,16 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { Controller, useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
+import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parsePhoneNumber } from 'react-phone-number-input';
 import { Loader2 } from 'lucide-react';
 
 import { Form } from '@/components/ui/form';
-import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
-import { PhoneInputField } from '@/components/ui/phone-input';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useFormReset } from '@/hooks/use-form-reset';
-import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import {
   CreateEmployeeSchema,
@@ -31,16 +19,10 @@ import {
   type UpdateEmployeeInput,
 } from '@/schemas/employees';
 import type { EmployeeListItem, EmployeeFormInput } from '@/features/staff/employees/types';
-
-const GenderOptions = GenderSchema.options.map((gender) => ({
-  value: gender,
-  label: gender.charAt(0) + gender.slice(1).toLowerCase(),
-}));
-
-const StatusOptions = EmployeeStatusSchema.options.map((status) => ({
-  value: status,
-  label: status.charAt(0) + status.slice(1).toLowerCase(),
-}));
+import { EmployeePersonalFields } from './form-fields/employee-personal-fields';
+import { EmployeeContactFields } from './form-fields/employee-contact-fields';
+import { EmployeeDetailsFields } from './form-fields/employee-details-fields';
+import { EmployeeEmploymentFields } from './form-fields/employee-employment-fields';
 
 const defaultFormState: CreateEmployeeInput = {
   firstName: '',
@@ -128,24 +110,20 @@ export function EmployeeForm({
     defaultValues,
   });
 
-  // Reset form when employee changes (instead of relying on key={id} remount)
   useFormReset(
     form,
     employee?.id,
     useCallback(() => {
       const values = employee ? mapEmployeeToFormValues(employee) : defaultFormState;
-      // Notify parent that form is clean after reset
+
       onDirtyStateChange?.(false);
       return values;
     }, [employee, onDirtyStateChange]),
   );
 
   const { isDirty } = form.formState;
-
-  // Warn user before leaving page with unsaved changes
   useUnsavedChanges(form.formState.isDirty);
 
-  // Track and notify parent of dirty state changes
   const previousDirtyRef = useRef(form.formState.isDirty);
   const currentDirty = form.formState.isDirty;
 
@@ -158,21 +136,23 @@ export function EmployeeForm({
 
   const onSubmit: SubmitHandler<EmployeeFormInput> = useCallback(
     (data: EmployeeFormInput) => {
-      // Notify parent that form will be clean after submission
       onDirtyStateChange?.(false);
 
       if (mode === 'create') {
-        onCreate?.(data as CreateEmployeeInput);
+        onCreate?.(data);
       } else {
         const updateData: UpdateEmployeeInput = {
           ...data,
           id: employee?.id ?? '',
-        } as UpdateEmployeeInput;
+        };
+
         onUpdate?.(updateData);
       }
     },
     [mode, onCreate, onUpdate, employee?.id, onDirtyStateChange],
   );
+
+  const isDisabled = isCreating || isUpdating;
 
   return (
     <Form {...form}>
@@ -181,7 +161,7 @@ export function EmployeeForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col h-full"
       >
-        {isCreating || isUpdating ? (
+        {isDisabled ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm font-medium">
@@ -191,214 +171,20 @@ export function EmployeeForm({
         ) : null}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="firstName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-firstName">First Name</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      {...field}
-                      id="form-rhf-input-firstName"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter first name"
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="lastName"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-lastName">Last Name</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      {...field}
-                      id="form-rhf-input-lastName"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter last name"
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="email"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      {...field}
-                      id="form-rhf-input-email"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="john.doe@example.com"
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="phone"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-phone">Phone</FieldLabel>
-                    </FieldContent>
-                    <PhoneInputField
-                      defaultCountry="AU"
-                      name={field.name}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="gender"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-gender">Gender</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-gender" aria-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {GenderOptions.map(({ value, label }) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="dob"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-dob">Date of Birth</FieldLabel>
-                    </FieldContent>
-                    <DatePicker
-                      endYear={new Date().getFullYear()}
-                      formatString="MMMM d, yyyy"
-                      value={field.value as Date | undefined}
-                      onChange={field.onChange}
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="rate"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-rate">Rate ($)</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      id="form-rhf-input-rate"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter rate"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="status"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {StatusOptions.map(({ value, label }) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
+          <EmployeePersonalFields control={form.control} isDisabled={isDisabled} />
+          <EmployeeContactFields control={form.control} isDisabled={isDisabled} />
+          <EmployeeDetailsFields control={form.control} isDisabled={isDisabled} />
+          <EmployeeEmploymentFields control={form.control} isDisabled={isDisabled} />
         </Box>
 
-        {/* Action Buttons */}
         <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
           {onClose ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isCreating || isUpdating}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isDisabled}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isCreating || isUpdating || (employee && !isDirty)}>
-            {isCreating || isUpdating ? (
+          <Button type="submit" disabled={isDisabled || (employee && !isDirty)}>
+            {isDisabled ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}

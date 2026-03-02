@@ -17,6 +17,7 @@ interface DatePickerProps {
   value?: Date;
   formatString?: string;
   onChange?: (date: Date) => void;
+  disabled?: boolean;
 }
 
 export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
@@ -27,6 +28,7 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       value,
       formatString = 'PPP',
       onChange,
+      disabled = false,
       ...props
     },
     ref,
@@ -82,6 +84,7 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
         <PopoverTrigger asChild>
           <Button
             variant={'outline'}
+            disabled={disabled}
             className={cn(
               'w-full justify-start text-left font-normal',
               !date && 'text-muted-foreground',
