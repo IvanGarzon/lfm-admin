@@ -1,6 +1,12 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  skipToken,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
@@ -86,16 +92,18 @@ export function useProductStatistics(options?: { enabled?: boolean }) {
 /**
  * Hook to fetch active products for dropdowns
  */
-export function useActiveProducts() {
+export function useActiveProducts(enabled: boolean = true) {
   return useQuery({
     queryKey: PRODUCT_KEYS.active(),
-    queryFn: async () => {
-      const result = await getActiveProducts();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
+    queryFn: enabled
+      ? async () => {
+          const result = await getActiveProducts();
+          if (!result.success) {
+            throw new Error(result.error);
+          }
+          return result.data;
+        }
+      : skipToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

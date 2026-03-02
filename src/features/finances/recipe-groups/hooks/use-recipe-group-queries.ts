@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, skipToken } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   getRecipeGroups,
@@ -78,17 +78,19 @@ export function useRecipeGroup(id: string | undefined) {
   });
 }
 
-export function useAllRecipeGroups() {
+export function useAllRecipeGroups(enabled: boolean = true) {
   return useQuery({
     queryKey: RECIPE_GROUP_KEYS.lists(),
-    queryFn: async () => {
-      const result = await getAllRecipeGroups();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryFn: enabled
+      ? async () => {
+          const result = await getAllRecipeGroups();
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
+          return result.data;
+        }
+      : skipToken,
     staleTime: 60 * 1000,
   });
 }

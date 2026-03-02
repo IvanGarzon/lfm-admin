@@ -39,7 +39,8 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
     const items = watchedItems || [];
     const totalCost = items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
     const totalRetail = items.reduce((sum, item) => sum + (Number(item.retailLineTotal) || 0), 0);
-    return { totalCost, totalRetail };
+    const totalSelling = totalRetail; // Selling price is the retail total
+    return { totalCost, totalRetail, totalSelling };
   }, [watchedItems]);
 
   const handleAddItem = useCallback(() => {
@@ -101,8 +102,8 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
           <p className="text-sm text-muted-foreground">Add items to your arrangement</p>
         </Box>
         <Box className="text-right">
-          <p className="text-lg font-bold text-blue-600">
-            {formatCurrency({ number: sectionTotals.totalRetail })}
+          <p className="text-lg font-bold text-teal-600">
+            {formatCurrency({ number: sectionTotals.totalSelling })}
           </p>
           <p className="text-xs text-muted-foreground">
             cost {formatCurrency({ number: sectionTotals.totalCost })}
@@ -118,9 +119,8 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
             <Box className="flex-1 min-w-0">Name</Box>
             <Box className="w-20 shrink-0 text-center">Qty</Box>
             <Box className="w-24 shrink-0 text-right">Cost</Box>
-            {/* <Box className="w-24 shrink-0 text-right">Cost Total</Box> */}
             <Box className="w-24 shrink-0 text-right">Retail</Box>
-            {/* <Box className="w-28 shrink-0 text-right">Retail Total</Box> */}
+            <Box className="w-28 shrink-0 text-right">Selling</Box>
             <Box className="w-8 shrink-0" />
           </Box>
         </Box>

@@ -730,10 +730,13 @@ model Recipe {
   description        String?         @db.Text
   labourCostType     LabourCostType  @default(FIXED_AMOUNT) @map("labour_cost_type")
   labourAmount       Decimal         @default(0) @map("labour_amount") @db.Decimal(15, 2)
+  roundPrice         Boolean?        @default(false) @map("round_price")
+  roundingMethod     RoundingMethod? @default(NEAREST) @map("rounding_method")
   totalMaterialsCost Decimal         @default(0) @map("total_materials_cost") @db.Decimal(15, 2)
-  laborCost          Decimal         @default(0) @map("labor_cost") @db.Decimal(15, 2)
+  labourCost         Decimal         @default(0) @map("labour_cost") @db.Decimal(15, 2)
   totalCost          Decimal         @default(0) @map("total_cost") @db.Decimal(15, 2)
   totalRetailPrice   Decimal         @default(0) @map("total_retail_price") @db.Decimal(15, 2)
+  sellingPrice       Decimal         @default(0) @map("selling_price") @db.Decimal(15, 2)
   notes              String?         @db.Text
 
   items              RecipeItem[]
@@ -1007,5 +1010,11 @@ enum LabourCostType {
   FIXED_AMOUNT
   PERCENTAGE_OF_RETAIL
   PERCENTAGE_OF_MATERIAL
+}
+
+enum RoundingMethod {
+  NEAREST
+  PSYCHOLOGICAL_99
+  PSYCHOLOGICAL_95
 }
 

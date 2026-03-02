@@ -9,6 +9,10 @@ export const LabourCostTypeSchema = z.enum([
 
 export type LabourCostType = z.infer<typeof LabourCostTypeSchema>;
 
+export const RoundingMethodSchema = z.enum(['NEAREST', 'PSYCHOLOGICAL_99', 'PSYCHOLOGICAL_95']);
+
+export type RoundingMethod = z.infer<typeof RoundingMethodSchema>;
+
 export const RecipeItemSchema = z.object({
   id: z.cuid().optional(),
   priceListItemId: z.cuid().nullable().optional(),
@@ -43,10 +47,13 @@ export const RecipeSchema = z.object({
     .optional(),
   labourCostType: LabourCostTypeSchema,
   labourAmount: z.number().nonnegative({ error: 'Labour amount must be non-negative' }),
+  roundPrice: z.boolean().optional(),
+  roundingMethod: RoundingMethodSchema.optional(),
   totalMaterialsCost: z.number().nonnegative(),
-  laborCost: z.number().nonnegative(),
+  labourCost: z.number().nonnegative(),
   totalCost: z.number().nonnegative(),
   totalRetailPrice: z.number().nonnegative(),
+  sellingPrice: z.number().nonnegative(),
   notes: z
     .string()
     .max(VALIDATION_LIMITS.NOTES_MAX, {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Controller,
   useForm,
@@ -53,6 +53,8 @@ import {
 } from '@/features/finances/quotes/utils/quote-helpers';
 import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
+import { useAllRecipes } from '@/features/finances/recipes/hooks/use-recipe-queries';
+import { useAllRecipeGroups } from '@/features/finances/recipe-groups/hooks/use-recipe-group-queries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import {
   useDeleteQuoteItemAttachment,
@@ -136,10 +138,17 @@ export function QuoteForm({
 }) {
   const mode = quote ? 'update' : 'create';
 
-  const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
-  const { data: products, isLoading: isLoadingProducts } = useActiveProducts();
+  // Only fetch recipes when the "Add from Recipes" dialog is opened
+  const [shouldFetchRecipes, setShouldFetchRecipes] = useState(false);
+  // Only fetch products when the user clicks to select a product
+  const [shouldFetchProducts, setShouldFetchProducts] = useState(false);
 
-  // Item attachment mutations
+  const { data: customers, isLoading: isLoadingCustomers } = useActiveCustomers();
+  const { data: products, isLoading: isLoadingProducts } = useActiveProducts(shouldFetchProducts);
+  const { data: recipes, isLoading: isLoadingRecipes } = useAllRecipes(shouldFetchRecipes);
+  const { data: recipeGroups, isLoading: isLoadingRecipeGroups } =
+    useAllRecipeGroups(shouldFetchRecipes);
+
   const deleteItemMutation = useDeleteQuoteItemAttachment();
   const downloadItemMutation = useGetItemAttachmentDownloadUrl();
 
@@ -434,6 +443,12 @@ export function QuoteForm({
             fieldArray={itemsFieldArray}
             products={products}
             isLoadingProducts={isLoadingProducts}
+            recipes={recipes}
+            isLoadingRecipes={isLoadingRecipes}
+            recipeGroups={recipeGroups}
+            isLoadingRecipeGroups={isLoadingRecipeGroups}
+            onRequestRecipes={() => setShouldFetchRecipes(true)}
+            onRequestProducts={() => setShouldFetchProducts(true)}
             isLocked={isLocked}
             quoteId={quote?.id}
           />

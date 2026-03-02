@@ -54,12 +54,25 @@ export function RecipeItemRow({
   const retail = Number(retailPrice) || 0;
   const lineTotal = qty * price;
   const retailLineTotal = qty * retail;
+  const sellingPrice = retailLineTotal; // Selling price is the retail total
 
   // Update both totals when quantity changes - use newQty directly to avoid stale closure
   const updateLineTotals = (newQty: number) => {
     const newLineTotal = newQty * price;
     const newRetailLineTotal = newQty * retail;
     form.setValue(`items.${index}.lineTotal`, newLineTotal);
+    form.setValue(`items.${index}.retailLineTotal`, newRetailLineTotal);
+  };
+
+  // Update line totals when unit price changes
+  const updateLineTotalsFromPrice = (newPrice: number) => {
+    const newLineTotal = qty * newPrice;
+    form.setValue(`items.${index}.lineTotal`, newLineTotal);
+  };
+
+  // Update retail line total when retail price changes
+  const updateRetailLineTotal = (newRetailPrice: number) => {
+    const newRetailLineTotal = qty * newRetailPrice;
     form.setValue(`items.${index}.retailLineTotal`, newRetailLineTotal);
   };
 
@@ -111,7 +124,7 @@ export function RecipeItemRow({
                 <FormControl>
                   <InputGroup
                     className={cn(
-                      nameError && 'border-destructive focus-within:ring-destructive/20',
+                      nameError ? 'border-destructive focus-within:ring-destructive/20' : '',
                     )}
                   >
                     <InputGroupInput {...field} placeholder="e.g., Red Rose" disabled={isLocked} />
@@ -165,33 +178,66 @@ export function RecipeItemRow({
           />
         </Box>
 
-        {/* Price (Display Only) */}
+        {/* Unit Price */}
         <Box className="w-24 shrink-0">
-          <Box className="h-9 px-3 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: price })}
-          </Box>
+          <FormField
+            control={form.control}
+            name={`items.${index}.unitPrice`}
+            render={({ field }) => (
+              <FormItem className="space-y-0 mb-0">
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    onChange={(e) => {
+                      const newPrice = e.target.valueAsNumber || 0;
+                      field.onChange(newPrice);
+                      updateLineTotalsFromPrice(newPrice);
+                    }}
+                    disabled={isLocked}
+                    className="h-9 border-gray-200 dark:border-gray-700 text-sm text-right"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </Box>
 
-        {/* Line Total (Display Only) - Commented out per user request */}
-        {/* <Box className="w-24 shrink-0">
-          <Box className="h-9 px-3 bg-emerald-50 dark:bg-emerald-900/20 rounded border border-emerald-200 dark:border-emerald-800 font-semibold text-sm text-emerald-700 dark:text-emerald-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: lineTotal })}
-          </Box>
-        </Box> */}
-
-        {/* Retail Price (Display Only) */}
+        {/* Retail Price */}
         <Box className="w-24 shrink-0">
-          <Box className="h-9 px-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: retail })}
-          </Box>
+          <FormField
+            control={form.control}
+            name={`items.${index}.retailPrice`}
+            render={({ field }) => (
+              <FormItem className="space-y-0 mb-0">
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    onChange={(e) => {
+                      const newRetailPrice = e.target.valueAsNumber || 0;
+                      field.onChange(newRetailPrice);
+                      updateRetailLineTotal(newRetailPrice);
+                    }}
+                    disabled={isLocked}
+                    className="h-9 border-gray-200 dark:border-gray-700 text-sm text-right"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </Box>
 
-        {/* Retail Line Total (Display Only) - Commented out per user request */}
-        {/* <Box className="w-28 shrink-0">
-          <Box className="h-9 px-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 font-semibold text-sm text-blue-700 dark:text-blue-400 w-full flex items-center justify-end">
-            {formatCurrency({ number: retailLineTotal })}
+        {/* Selling Price (Display Only) */}
+        <Box className="w-28 shrink-0">
+          <Box className="h-9 px-3 bg-teal-50 dark:bg-teal-900/20 rounded border border-teal-200 dark:border-teal-800 font-semibold text-sm text-teal-700 dark:text-teal-400 w-full flex items-center justify-end">
+            {formatCurrency({ number: sellingPrice })}
           </Box>
-        </Box> */}
+        </Box>
 
         {/* Delete Button */}
         <Box className="w-8 shrink-0 flex items-center justify-center">
@@ -214,9 +260,9 @@ export function RecipeItemRow({
             Cost: ({qty}) × {formatCurrency({ number: price })} ={' '}
             {formatCurrency({ number: lineTotal })}
           </span>
-          <span>
-            Retail: ({qty}) × {formatCurrency({ number: retail })} ={' '}
-            {formatCurrency({ number: retailLineTotal })}
+          <span className="text-teal-600 dark:text-teal-400 font-semibold">
+            Selling Price: ({qty}) × {formatCurrency({ number: retail })} ={' '}
+            {formatCurrency({ number: sellingPrice })}
           </span>
         </Box>
       </Box>

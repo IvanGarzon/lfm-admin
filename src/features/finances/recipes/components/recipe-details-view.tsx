@@ -58,7 +58,7 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">
               Labor Cost
             </p>
-            <p className="text-xl font-bold">{formatCurrency({ number: recipe.laborCost })}</p>
+            <p className="text-xl font-bold">{formatCurrency({ number: recipe.labourCost })}</p>
           </CardContent>
         </Card>
         <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
@@ -120,7 +120,7 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
             <Box className="flex items-center justify-between py-1">
               <span className="text-xs text-muted-foreground">Labor Cost</span>
               <span className="text-xs font-medium">
-                {formatCurrency({ number: recipe.laborCost })}
+                {formatCurrency({ number: recipe.labourCost })}
               </span>
             </Box>
             <Separator className="my-1" />

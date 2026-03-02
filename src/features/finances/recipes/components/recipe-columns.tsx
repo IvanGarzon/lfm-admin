@@ -55,7 +55,7 @@ export const createRecipeColumns = (
   {
     accessorKey: 'laborCost',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Labor" />,
-    cell: ({ row }) => formatCurrency({ number: row.original.laborCost }),
+    cell: ({ row }) => formatCurrency({ number: row.original.labourCost }),
   },
   {
     accessorKey: 'totalCost',
@@ -74,6 +74,33 @@ export const createRecipeColumns = (
         {formatCurrency({ number: row.original.totalRetailPrice })}
       </Box>
     ),
+  },
+  {
+    id: 'sellingPrice',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Selling Price" />,
+    cell: ({ row }) => {
+      const recipe = row.original;
+      let sellingPrice = recipe.totalRetailPrice + recipe.labourCost;
+
+      // Apply rounding if enabled
+      if (recipe.roundPrice && sellingPrice > 0) {
+        const roundingMethod = recipe.roundingMethod ?? 'NEAREST';
+        if (roundingMethod === 'NEAREST') {
+          sellingPrice = Math.round(sellingPrice);
+        } else if (roundingMethod === 'PSYCHOLOGICAL_99') {
+          sellingPrice = Math.ceil(sellingPrice) - 0.01;
+        } else if (roundingMethod === 'PSYCHOLOGICAL_95') {
+          sellingPrice = Math.ceil(sellingPrice) - 0.05;
+        }
+      }
+
+      return (
+        <Box className="text-teal-600 dark:text-teal-400 font-semibold">
+          {formatCurrency({ number: sellingPrice })}
+        </Box>
+      );
+    },
+    enableSorting: false,
   },
   {
     accessorKey: 'updatedAt',

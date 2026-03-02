@@ -51,19 +51,45 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
       }),
     ]);
 
-    const items: RecipeListItem[] = recipes.map((r) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      labourCostType: r.labourCostType,
-      labourAmount: Number(r.labourAmount),
-      totalMaterialsCost: Number(r.totalMaterialsCost),
-      laborCost: Number(r.laborCost),
-      totalCost: Number(r.totalCost),
-      totalRetailPrice: Number(r.totalRetailPrice),
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
-    }));
+    const items: RecipeListItem[] = recipes.map((r) => {
+      const labourCost = Number(r.labourCost);
+      const totalRetailPrice = Number(r.totalRetailPrice);
+      let sellingPrice = Number(r.sellingPrice);
+
+      // Calculate selling price if it's 0 (for existing recipes created before this field was added)
+      if (sellingPrice === 0) {
+        sellingPrice = totalRetailPrice + labourCost;
+
+        // Apply rounding if enabled
+        if (r.roundPrice && sellingPrice > 0) {
+          const roundingMethod = r.roundingMethod ?? 'NEAREST';
+          if (roundingMethod === 'NEAREST') {
+            sellingPrice = Math.round(sellingPrice);
+          } else if (roundingMethod === 'PSYCHOLOGICAL_99') {
+            sellingPrice = Math.ceil(sellingPrice) - 0.01;
+          } else if (roundingMethod === 'PSYCHOLOGICAL_95') {
+            sellingPrice = Math.ceil(sellingPrice) - 0.05;
+          }
+        }
+      }
+
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        labourCostType: r.labourCostType,
+        labourAmount: Number(r.labourAmount),
+        roundPrice: r.roundPrice ?? undefined,
+        roundingMethod: r.roundingMethod ?? undefined,
+        totalMaterialsCost: Number(r.totalMaterialsCost),
+        labourCost,
+        totalCost: Number(r.totalCost),
+        totalRetailPrice,
+        sellingPrice,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      };
+    });
 
     return {
       items,
@@ -81,16 +107,25 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
       },
     });
 
-    if (!recipe) return null;
+    if (!recipe) {
+      return null;
+    }
+
+    const labourCost = Number(recipe.labourCost);
+    const totalRetailPrice = Number(recipe.totalRetailPrice);
+    let sellingPrice = Number(recipe.sellingPrice);
 
     return {
       ...recipe,
       labourCostType: recipe.labourCostType,
       labourAmount: Number(recipe.labourAmount),
+      roundPrice: recipe.roundPrice ?? undefined,
+      roundingMethod: recipe.roundingMethod ?? undefined,
       totalMaterialsCost: Number(recipe.totalMaterialsCost),
-      laborCost: Number(recipe.laborCost),
+      labourCost,
       totalCost: Number(recipe.totalCost),
-      totalRetailPrice: Number(recipe.totalRetailPrice),
+      totalRetailPrice,
+      sellingPrice,
       items: recipe.items.map((i) => ({
         id: i.id,
         recipeId: i.recipeId,
@@ -114,10 +149,13 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
           description: data.description,
           labourCostType: data.labourCostType,
           labourAmount: data.labourAmount,
+          roundPrice: data.roundPrice,
+          roundingMethod: data.roundingMethod,
           totalMaterialsCost: data.totalMaterialsCost,
-          laborCost: data.laborCost,
+          labourCost: data.labourCost,
           totalCost: data.totalCost,
           totalRetailPrice: data.totalRetailPrice,
+          sellingPrice: data.sellingPrice,
           notes: data.notes,
           items: {
             create: data.items.map((item, index) => ({
@@ -152,10 +190,13 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
           description: data.description,
           labourCostType: data.labourCostType,
           labourAmount: data.labourAmount,
+          roundPrice: data.roundPrice,
+          roundingMethod: data.roundingMethod,
           totalMaterialsCost: data.totalMaterialsCost,
-          laborCost: data.laborCost,
+          labourCost: data.labourCost,
           totalCost: data.totalCost,
           totalRetailPrice: data.totalRetailPrice,
+          sellingPrice: data.sellingPrice,
           notes: data.notes,
           items: {
             create: data.items.map((item, index) => ({

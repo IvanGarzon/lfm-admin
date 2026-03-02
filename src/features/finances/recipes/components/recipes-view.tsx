@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Layers } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
 
 import { Box } from '@/components/ui/box';
@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/button';
 import { RecipeList } from '@/features/finances/recipes/components/recipe-list';
 import { RecipeActionProvider } from '@/features/finances/recipes/context/recipe-action-context';
 import type { RecipePagination } from '@/features/finances/recipes/types';
+import { CreateRecipeGroupDialog } from '@/features/finances/recipe-groups/components/create-recipe-group-dialog';
+import { useCreateRecipeGroup } from '@/features/finances/recipe-groups/hooks/use-recipe-group-mutations';
+import type { CreateRecipeGroupInput } from '@/schemas/recipe-groups';
 
 interface RecipesViewProps {
   initialData: RecipePagination;
@@ -28,9 +31,19 @@ const RecipeDrawer = dynamic(
 
 export function RecipesView({ initialData, searchParams, recipeId }: RecipesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [showGroupDialog, setShowGroupDialog] = useState<boolean>(false);
+
+  const createGroupMutation = useCreateRecipeGroup();
 
   const handleShowCreateModal = () => {
     setShowCreateModal((prev) => !prev);
+  };
+
+  const handleCreateGroup = async (data: CreateRecipeGroupInput) => {
+    const result = await createGroupMutation.mutateAsync(data);
+    if (result.success) {
+      setShowGroupDialog(false);
+    }
   };
 
   return (
@@ -41,7 +54,15 @@ export function RecipesView({ initialData, searchParams, recipeId }: RecipesView
             <h1 className="text-3xl font-bold tracking-tight">Recipes</h1>
             <p className="text-muted-foreground text-sm">Floral & Craft Cost Calculator</p>
           </Box>
-          <Box className="flex items-center shrink-0">
+          <Box className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowGroupDialog(true)}
+              className="w-full sm:w-auto"
+            >
+              <Layers className="h-4 w-4 mr-2" />
+              Create Group
+            </Button>
             <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               New Recipe
@@ -53,9 +74,18 @@ export function RecipesView({ initialData, searchParams, recipeId }: RecipesView
           <RecipeList initialData={initialData} searchParams={searchParams} />
         </Box>
 
-        {showCreateModal && <RecipeDrawer open={showCreateModal} onClose={handleShowCreateModal} />}
+        {showCreateModal ? (
+          <RecipeDrawer open={showCreateModal} onClose={handleShowCreateModal} />
+        ) : null}
 
-        {recipeId && <RecipeDrawer id={recipeId} />}
+        {recipeId ? <RecipeDrawer id={recipeId} /> : null}
+
+        <CreateRecipeGroupDialog
+          open={showGroupDialog}
+          onOpenChange={setShowGroupDialog}
+          onCreate={handleCreateGroup}
+          isCreating={createGroupMutation.isPending}
+        />
       </Box>
     </RecipeActionProvider>
   );

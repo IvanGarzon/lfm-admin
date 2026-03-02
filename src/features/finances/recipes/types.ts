@@ -1,4 +1,9 @@
-import type { CreateRecipeInput, UpdateRecipeInput, LabourCostType } from '@/schemas/recipes';
+import type {
+  CreateRecipeInput,
+  UpdateRecipeInput,
+  LabourCostType,
+  RoundingMethod,
+} from '@/schemas/recipes';
 import type { PaginationMeta } from '@/types/pagination';
 
 export type RecipeFormInput = CreateRecipeInput | UpdateRecipeInput;
@@ -9,10 +14,13 @@ export type RecipeListItem = {
   description?: string | null;
   labourCostType: LabourCostType;
   labourAmount: number;
+  roundPrice?: boolean;
+  roundingMethod?: RoundingMethod;
   totalMaterialsCost: number;
-  laborCost: number;
+  labourCost: number;
   totalCost: number;
   totalRetailPrice: number;
+  sellingPrice: number;
   createdAt: Date;
   updatedAt: Date;
 };

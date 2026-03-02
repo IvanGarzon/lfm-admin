@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { FormLabel } from '@/components/ui/form';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
+import type { RecipeListItem } from '@/features/finances/recipes/types';
+import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
 import { QuoteItemRow } from '@/features/finances/quotes/components/quote-item-row';
 import { AddRecipesDialog } from '@/features/finances/quotes/components/add-recipes-dialog';
 
@@ -18,6 +20,12 @@ export function QuoteItemsList({
   fieldArray,
   products,
   isLoadingProducts,
+  recipes,
+  isLoadingRecipes,
+  recipeGroups,
+  isLoadingRecipeGroups,
+  onRequestRecipes,
+  onRequestProducts,
   isLocked,
   quoteId,
 }: {
@@ -25,6 +33,12 @@ export function QuoteItemsList({
   fieldArray: UseFieldArrayReturn<QuoteFormInput, 'items', 'id'>;
   products: ActiveProduct[] | undefined;
   isLoadingProducts: boolean;
+  recipes: RecipeListItem[] | undefined;
+  isLoadingRecipes: boolean;
+  recipeGroups: RecipeGroupListItem[] | undefined;
+  isLoadingRecipeGroups: boolean;
+  onRequestRecipes: () => void;
+  onRequestProducts: () => void;
   isLocked?: boolean;
   quoteId?: string;
 }) {
@@ -88,7 +102,9 @@ export function QuoteItemsList({
             // A single drag-and-drop reorder can be represented by a single `move` operation.
             // We need to find which item was moved and from where to where.
             const movedItemId = newOrder.find((item, index) => fields[index].id !== item.id)?.id;
-            if (!movedItemId) return;
+            if (!movedItemId) {
+              return;
+            }
 
             const from = fields.findIndex((item) => item.id === movedItemId);
             const to = newOrder.findIndex((item) => item.id === movedItemId);
@@ -114,6 +130,7 @@ export function QuoteItemsList({
                 itemId={itemId}
                 products={products}
                 isLoadingProducts={isLoadingProducts}
+                onRequestProducts={onRequestProducts}
                 canRemove={fields.length > 1}
                 onRemove={() => {
                   const nextFocusIndex = index === 0 ? 0 : index - 1;
@@ -140,7 +157,15 @@ export function QuoteItemsList({
             <Plus className="h-4 w-4 mr-1" />
             Add Item
           </Button>
-          <AddRecipesDialog onAdd={handleAddFromRecipes} disabled={isLocked} />
+          <AddRecipesDialog
+            onAdd={handleAddFromRecipes}
+            disabled={isLocked}
+            recipes={recipes}
+            isLoadingRecipes={isLoadingRecipes}
+            recipeGroups={recipeGroups}
+            isLoadingRecipeGroups={isLoadingRecipeGroups}
+            onRequestRecipes={onRequestRecipes}
+          />
         </Box>
       </Box>
     </Box>

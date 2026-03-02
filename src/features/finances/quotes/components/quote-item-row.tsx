@@ -31,6 +31,7 @@ type QuoteItemRowProps = {
   isLoadingProducts: boolean;
   canRemove: boolean;
   onRemove: () => void;
+  onRequestProducts: () => void;
   isLocked?: boolean;
   quoteId?: string;
   itemId?: string;
@@ -44,6 +45,7 @@ export function QuoteItemRow({
   isLoadingProducts,
   canRemove,
   onRemove,
+  onRequestProducts,
   isLocked,
   quoteId,
   itemId,
@@ -172,10 +174,13 @@ export function QuoteItemRow({
                         >
                           <X />
                         </InputGroupButton>
-                      ) : products && products.length > 0 ? (
+                      ) : (
                         <InputGroupButton
                           type="button"
-                          onClick={() => setProductSearchOpen(true)}
+                          onClick={() => {
+                            onRequestProducts();
+                            setProductSearchOpen(true);
+                          }}
                           aria-label="Browse products"
                           title="Browse products"
                           size="icon-xs"
@@ -184,7 +189,7 @@ export function QuoteItemRow({
                         >
                           <Package />
                         </InputGroupButton>
-                      ) : null}
+                      )}
                     </InputGroupAddon>
                   </InputGroup>
                 </FormControl>

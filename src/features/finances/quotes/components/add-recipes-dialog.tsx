@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Check, ChefHat, Layers, Minus, Plus, Search } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 
 import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -20,8 +19,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { getRecipes } from '@/actions/finances/recipes/queries';
-import { getAllRecipeGroups, getRecipeGroupById } from '@/actions/finances/recipe-groups/queries';
+import { getRecipeGroupById } from '@/actions/finances/recipe-groups/queries';
+import type { RecipeListItem } from '@/features/finances/recipes/types';
+import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
 
 type SelectedItem = {
   id: string;
@@ -31,81 +31,76 @@ type SelectedItem = {
   type: 'recipe' | 'group';
 };
 
-type RecipeItem = {
-  id: string;
-  name: string;
-  description?: string | null;
-  totalRetailPrice: number;
-};
-
-type RecipeGroupItem = {
-  id: string;
-  name: string;
-  description?: string | null;
-  totalCost: number;
-  itemCount: number;
-};
-
 interface AddRecipesDialogProps {
   onAdd: (items: { description: string; quantity: number; unitPrice: number }[]) => void;
   disabled?: boolean;
+  recipes: RecipeListItem[] | undefined;
+  isLoadingRecipes: boolean;
+  recipeGroups: RecipeGroupListItem[] | undefined;
+  isLoadingRecipeGroups: boolean;
+  onRequestRecipes: () => void;
 }
 
-export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
+export function AddRecipesDialog({
+  onAdd,
+  disabled,
+  recipes,
+  isLoadingRecipes,
+  recipeGroups,
+  isLoadingRecipeGroups,
+  onRequestRecipes,
+}: AddRecipesDialogProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItem>>(new Map());
   const [activeTab, setActiveTab] = useState<'recipes' | 'groups'>('recipes');
 
-  // Fetch recipes
-  const { data: recipesData, isLoading: isLoadingRecipes } = useQuery({
-    queryKey: ['recipes', 'all'],
-    queryFn: async () => {
-      const result = await getRecipes({ perPage: '100' });
-      if (!result.success) throw new Error(result.error);
-      return result.data?.items ?? [];
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (newOpen) {
+        onRequestRecipes();
+      }
+      setOpen(newOpen);
     },
-    enabled: open,
-    staleTime: 30 * 1000,
-  });
+    [onRequestRecipes],
+  );
 
-  // Fetch recipe groups
-  const { data: groupsData, isLoading: isLoadingGroups } = useQuery({
-    queryKey: ['recipe-groups', 'all'],
-    queryFn: async () => {
-      const result = await getAllRecipeGroups();
-      if (!result.success) throw new Error(result.error);
-      return result.data ?? [];
-    },
-    enabled: open,
-    staleTime: 30 * 1000,
-  });
-
-  // Filter items by search
   const filteredRecipes = useMemo(() => {
-    if (!recipesData) return [];
-    if (!search.trim()) return recipesData;
+    if (!recipes) {
+      return [];
+    }
+
+    if (!search.trim()) {
+      return recipes;
+    }
+
     const lowerSearch = search.toLowerCase();
-    return recipesData.filter(
+    return recipes.filter(
       (r) =>
         r.name.toLowerCase().includes(lowerSearch) ||
         r.description?.toLowerCase().includes(lowerSearch),
     );
-  }, [recipesData, search]);
+  }, [recipes, search]);
 
   const filteredGroups = useMemo(() => {
-    if (!groupsData) return [];
-    if (!search.trim()) return groupsData;
+    if (!recipeGroups) {
+      return [];
+    }
+
+    if (!search.trim()) {
+      return recipeGroups;
+    }
+
     const lowerSearch = search.toLowerCase();
-    return groupsData.filter(
+    return recipeGroups.filter(
       (g) =>
         g.name.toLowerCase().includes(lowerSearch) ||
         g.description?.toLowerCase().includes(lowerSearch),
     );
-  }, [groupsData, search]);
+  }, [recipeGroups, search]);
 
   const handleToggleItem = useCallback(
-    (item: RecipeItem | RecipeGroupItem, type: 'recipe' | 'group') => {
+    (item: RecipeListItem | RecipeGroupListItem, type: 'recipe' | 'group') => {
       setSelectedItems((prev) => {
         const key = `${type}-${item.id}`;
         const newMap = new Map(prev);
@@ -116,10 +111,7 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
           newMap.set(key, {
             id: item.id,
             name: item.name,
-            totalRetailPrice:
-              type === 'recipe'
-                ? (item as RecipeItem).totalRetailPrice
-                : (item as RecipeGroupItem).totalCost,
+            sellingPrice: type === 'recipe' ? item.sellingPrice : item.totalCost,
             quantity: 1,
             type,
           });
@@ -151,7 +143,7 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
         items.push({
           description: item.name,
           quantity: item.quantity,
-          unitPrice: item.totalRetailPrice,
+          unitPrice: item.sellingPrice,
         });
       } else {
         // For recipe groups, fetch the group details and expand into individual items
@@ -161,7 +153,8 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
             items.push({
               description: `${groupItem.recipe.name}`,
               quantity: groupItem.quantity * item.quantity,
-              unitPrice: groupItem.recipe.totalRetailPrice,
+              unitPrice:
+                (groupItem.recipe as any).sellingPrice ?? groupItem.recipe.totalRetailPrice,
             });
           }
         }
@@ -169,22 +162,22 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
     }
 
     onAdd(items);
-    setOpen(false);
+    handleOpenChange(false);
     setSelectedItems(new Map());
     setSearch('');
-  }, [selectedItems, onAdd]);
+  }, [selectedItems, onAdd, handleOpenChange]);
 
   const totalSelected = selectedItems.size;
   const totalValue = useMemo(() => {
     let sum = 0;
     for (const [, item] of selectedItems) {
-      sum += item.totalRetailPrice * item.quantity;
+      sum += item.sellingPrice * item.quantity;
     }
     return sum;
   }, [selectedItems]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -221,20 +214,20 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
             <TabsTrigger value="recipes" className="flex items-center gap-2">
               <ChefHat className="h-4 w-4" />
               Recipes
-              {filteredRecipes.length > 0 && (
+              {filteredRecipes.length > 0 ? (
                 <Badge variant="secondary" className="ml-1">
                   {filteredRecipes.length}
                 </Badge>
-              )}
+              ) : null}
             </TabsTrigger>
             <TabsTrigger value="groups" className="flex items-center gap-2">
               <Layers className="h-4 w-4" />
               Groups
-              {filteredGroups.length > 0 && (
+              {filteredGroups.length > 0 ? (
                 <Badge variant="secondary" className="ml-1">
                   {filteredGroups.length}
                 </Badge>
-              )}
+              ) : null}
             </TabsTrigger>
           </TabsList>
 
@@ -260,7 +253,7 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
                         key={recipe.id}
                         name={recipe.name}
                         description={recipe.description}
-                        price={recipe.totalRetailPrice}
+                        price={recipe.sellingPrice}
                         isSelected={isSelected}
                         quantity={selected?.quantity ?? 1}
                         onToggle={() => handleToggleItem(recipe, 'recipe')}
@@ -275,7 +268,7 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
 
           <TabsContent value="groups" className="mt-4">
             <ScrollArea className="h-[300px] pr-4">
-              {isLoadingGroups ? (
+              {isLoadingRecipeGroups ? (
                 <Box className="flex items-center justify-center h-full">
                   <Box className="text-sm text-muted-foreground">Loading groups...</Box>
                 </Box>
@@ -312,15 +305,15 @@ export function AddRecipesDialog({ onAdd, disabled }: AddRecipesDialogProps) {
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Box className="flex-1 text-sm text-muted-foreground">
-            {totalSelected > 0 && (
+            {totalSelected > 0 ? (
               <>
                 {totalSelected} item{totalSelected > 1 ? 's' : ''} selected
                 <span className="mx-2">·</span>
                 {formatCurrency({ number: totalValue })}
               </>
-            )}
+            ) : null}
           </Box>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleAddToQuote} disabled={totalSelected === 0}>
@@ -367,26 +360,26 @@ function RecipeItemCard({
           isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-gray-300',
         )}
       >
-        {isSelected && <Check className="h-3 w-3" />}
+        {isSelected ? <Check className="h-3 w-3" /> : null}
       </Box>
 
       <Box className="flex-1 min-w-0">
         <Box className="flex items-center gap-2">
           <span className="font-medium text-sm truncate">{name}</span>
-          {badge && (
+          {badge ? (
             <Badge variant="outline" className="text-xs shrink-0">
               {badge}
             </Badge>
-          )}
+          ) : null}
         </Box>
-        {description && (
+        {description ? (
           <Box className="text-xs text-muted-foreground truncate mt-0.5">{description}</Box>
-        )}
+        ) : null}
       </Box>
 
       <Box className="text-sm font-medium shrink-0">{formatCurrency({ number: price })}</Box>
 
-      {isSelected && (
+      {isSelected ? (
         <Box className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <Button
             type="button"
@@ -409,7 +402,7 @@ function RecipeItemCard({
             <Plus className="h-3 w-3" />
           </Button>
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 }

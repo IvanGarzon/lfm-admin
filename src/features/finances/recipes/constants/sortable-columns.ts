@@ -1,11 +1,10 @@
 export const SORTABLE_RECIPE_COLUMNS = [
   'name',
   'totalMaterialsCost',
-  'laborCost',
-  'totalProductionCost',
+  'labourCost',
+  'totalCost',
+  'totalRetailPrice',
   'sellingPrice',
-  'profitValue',
-  'profitPercentage',
   'createdAt',
   'updatedAt',
 ] as const;

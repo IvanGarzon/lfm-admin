@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, skipToken } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getRecipes, getRecipeById } from '@/actions/finances/recipes/queries';
 import { createRecipe, updateRecipe, deleteRecipe } from '@/actions/finances/recipes/mutations';
@@ -63,6 +63,22 @@ export function useRecipe(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useAllRecipes(enabled: boolean = true) {
+  return useQuery({
+    queryKey: [...RECIPE_KEYS.all, 'all'],
+    queryFn: enabled
+      ? async () => {
+          const result = await getRecipes({ perPage: '100' });
+          if (!result.success) {
+            throw new Error(result.error);
+          }
+          return result.data?.items ?? [];
+        }
+      : skipToken,
     staleTime: 30 * 1000,
   });
 }

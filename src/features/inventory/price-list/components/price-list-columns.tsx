@@ -216,6 +216,23 @@ export function createPriceListColumns({
       enableSorting: true,
     },
 
+    // Retail Price (Selling Price) column
+    {
+      id: 'retailPrice',
+      accessorKey: 'retailPrice',
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Retail Price" />,
+      cell: ({ row }) => {
+        const item = row.original;
+        const retailPrice = item.retailPriceOverride ?? item.retailPrice;
+        return (
+          <Box className="font-semibold text-teal-700 dark:text-teal-400">
+            {formatCurrency({ number: retailPrice })}
+          </Box>
+        );
+      },
+      enableSorting: true,
+    },
+
     // Actions column
     {
       id: 'actions',
