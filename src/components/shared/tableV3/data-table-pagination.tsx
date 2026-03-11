@@ -85,7 +85,7 @@ export function DataTablePagination<TData>({
             </SelectTrigger>
             <SelectContent side="top">
               {pageSizeOptions.map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
+                <SelectItem key={`pagesize-${pageSize}`} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
               ))}
@@ -116,7 +116,7 @@ export function DataTablePagination<TData>({
         <Box className="flex items-center gap-x-1">
           {paginationButtons.map((button, index) => (
             <Button
-              key={index}
+              key={button.srText}
               aria-label={button.srText}
               variant="outline"
               className={cn(button.mobileView, 'h-8 w-8 p-1.5')}

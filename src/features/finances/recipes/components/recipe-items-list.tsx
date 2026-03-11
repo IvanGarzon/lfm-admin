@@ -8,7 +8,6 @@ import { Reorder } from 'framer-motion';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { FormLabel } from '@/components/ui/form';
 import type { RecipeFormInput } from '@/features/finances/recipes/types';
 import { RecipeItemRow } from '@/features/finances/recipes/components/recipe-item-row';
 import { PriceListSearchDialog } from '@/components/shared/price-list-search-dialog';
@@ -98,8 +97,8 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
           <Flower2 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
         </Box>
         <Box className="flex-1">
-          <FormLabel className="text-base font-semibold">Items</FormLabel>
-          <p className="text-sm text-muted-foreground">Add items to your arrangement</p>
+          <h3 className="text-base font-semibold">Items</h3>
+          <p className="text-sm text-muted-foreground">Add items to your recipe</p>
         </Box>
         <Box className="text-right">
           <p className="text-lg font-bold text-teal-600">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import dynamic from 'next/dynamic';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -125,7 +126,7 @@ const chartConfig = {
   // },
 } satisfies ChartConfig;
 
-export function BarGraph() {
+function BarGraph() {
   const [isClient, setIsClient] = useState(false);
   const [activeChart, setActiveChart] = useState<keyof typeof chartConfig>('desktop');
 
@@ -140,12 +141,6 @@ export function BarGraph() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // useEffect(() => {
-  //   if (activeChart === 'error') {
-  //     throw new Error('Mocking Error');
-  //   }
-  // }, [activeChart]);
 
   if (!isClient) {
     return null;
@@ -224,3 +219,32 @@ export function BarGraph() {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(BarGraph), {
+  ssr: false,
+  loading: () => (
+    <Card className="@container/card">
+      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+          <div className="h-6 w-48 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-64 bg-muted rounded animate-pulse mt-2" />
+        </div>
+        <div className="flex">
+          <div className="flex-1 px-6 py-4 sm:px-8 sm:py-6">
+            <div className="h-4 w-16 bg-muted rounded animate-pulse mb-1" />
+            <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="flex-1 px-6 py-4 sm:px-8 sm:py-6">
+            <div className="h-4 w-16 bg-muted rounded animate-pulse mb-1" />
+            <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="px-2 sm:p-6">
+        <div className="aspect-auto h-[280px] w-full flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading chart...</div>
+        </div>
+      </CardContent>
+    </Card>
+  ),
+});

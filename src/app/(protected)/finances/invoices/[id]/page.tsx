@@ -3,6 +3,11 @@ import { Shell } from '@/components/shared/shell';
 import { getInvoices } from '@/actions/finances/invoices';
 import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
 import dynamic from 'next/dynamic';
+
+export const metadata = {
+  title: 'Invoice Detail | Finance',
+};
+
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(

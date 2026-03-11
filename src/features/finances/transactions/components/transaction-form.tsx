@@ -120,6 +120,7 @@ export function TransactionForm({
       onDirtyStateChange?.(false);
       return values;
     }, [transaction, onDirtyStateChange]),
+    isUpdating, // Reset form when update completes (true -> false)
   );
 
   const { isDirty } = form.formState;
@@ -160,8 +161,6 @@ export function TransactionForm({
 
   const onSubmit: SubmitHandler<TransactionFormInput> = useCallback(
     (data: TransactionFormInput) => {
-      onDirtyStateChange?.(false);
-
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -173,7 +172,7 @@ export function TransactionForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, transaction?.id, onDirtyStateChange],
+    [mode, onCreate, onUpdate, transaction?.id],
   );
 
   const isDisabled = isCreating || isUpdating;

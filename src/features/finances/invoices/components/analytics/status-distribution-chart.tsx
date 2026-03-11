@@ -3,9 +3,10 @@
 import { useMemo } from 'react';
 import { Label, Pie, PieChart } from 'recharts';
 import { PieChartIcon } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Box } from '@/components/ui/box';
-import { formatCurrency } from '@/lib/utils';
 import type { InvoiceStatistics } from '@/features/finances/invoices/types';
 import {
   ChartConfig,
@@ -19,9 +20,22 @@ interface StatusDistributionChartProps {
   isLoading?: boolean;
 }
 
-export function StatusDistributionChart({ stats, isLoading }: StatusDistributionChartProps) {
+const chartConfig = {
+  count: { label: 'Invoices' },
+  draft: { label: 'Draft', color: 'rgb(229, 231, 235)' },
+  pending: { label: 'Pending', color: 'rgb(255, 240, 133)' },
+  paid: { label: 'Paid', color: 'rgb(0, 130, 54)' },
+  partial: { label: 'Partial', color: 'rgb(249, 115, 22)' },
+  overdue: { label: 'Overdue', color: 'rgb(250, 245, 255, 1)' },
+  cancelled: { label: 'Cancelled', color: 'rgb(254, 242, 242)' },
+} satisfies ChartConfig;
+
+function StatusDistributionChart({ stats, isLoading }: StatusDistributionChartProps) {
   const chartData = useMemo(() => {
-    if (!stats) return [];
+    if (!stats) {
+      return [];
+    }
+
     return [
       {
         status: 'draft',
@@ -57,16 +71,6 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
   }, [stats]);
 
   const totalInvoices = stats?.total ?? 0;
-
-  const chartConfig = {
-    count: { label: 'Invoices' },
-    draft: { label: 'Draft', color: 'rgb(229, 231, 235)' },
-    pending: { label: 'Pending', color: 'rgb(255, 240, 133)' },
-    paid: { label: 'Paid', color: 'rgb(0, 130, 54)' },
-    partial: { label: 'Partial', color: 'rgb(249, 115, 22)' },
-    overdue: { label: 'Overdue', color: 'rgb(250, 245, 255, 1)' },
-    cancelled: { label: 'Cancelled', color: 'rgb(254, 242, 242)' },
-  } satisfies ChartConfig;
 
   if (isLoading) {
     return (
@@ -154,3 +158,17 @@ export function StatusDistributionChart({ stats, isLoading }: StatusDistribution
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(StatusDistributionChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <Box className="h-6 w-48 bg-muted rounded animate-pulse" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Box className="h-40 w-40 rounded-full bg-muted animate-pulse" />
+      </CardContent>
+    </Card>
+  ),
+});

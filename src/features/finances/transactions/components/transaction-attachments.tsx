@@ -13,6 +13,8 @@ import { formatFileSize, isImageFile } from '@/lib/file-constants';
 import type { TransactionAttachment } from '../types';
 import { toast } from 'sonner';
 
+const EMPTY_ATTACHMENTS: TransactionAttachment[] = [];
+
 interface TransactionAttachmentsProps {
   transactionId?: string;
   attachments: TransactionAttachment[];
@@ -23,7 +25,7 @@ interface TransactionAttachmentsProps {
 
 export function TransactionAttachments({
   transactionId,
-  attachments = [],
+  attachments = EMPTY_ATTACHMENTS,
   onAttachmentsChange,
   disabled = false,
   mode = 'edit',

@@ -53,6 +53,7 @@ const nextConfig: NextConfig = {
     '@prisma/client',
     '@prisma/client-runtime-utils',
     '@prisma/adapter-neon',
+    '@prisma/adapter-pg',
     'ws',
   ],
   webpack: (config, { isServer }) => {
@@ -61,6 +62,7 @@ const nextConfig: NextConfig = {
         '@prisma/client',
         '@prisma/client-runtime-utils',
         '@prisma/adapter-neon',
+        '@prisma/adapter-pg',
       );
     }
     return config;

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { DateRange } from 'react-day-picker';
 import { CheckCircle, Download, FileEdit } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -7,10 +8,46 @@ import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { InvoiceStatistics } from '@/features/finances/invoices/types';
-import { RevenueTrendChart } from '@/features/finances/invoices/components/analytics/revenue-trend-chart';
 import { TopDebtorsList } from '@/features/finances/invoices/components/analytics/top-debtors-list';
-import { StatusDistributionChart } from '@/features/finances/invoices/components/analytics/status-distribution-chart';
 import { StatCard } from '@/features/finances/invoices/components/analytics/stat-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const RevenueTrendChart = dynamic(
+  () => import('@/features/finances/invoices/components/analytics/revenue-trend-chart'),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue Trend</CardTitle>
+          <CardDescription>Loading chart...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    ),
+  },
+);
+
+const StatusDistributionChart = dynamic(
+  () => import('@/features/finances/invoices/components/analytics/status-distribution-chart'),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Status Distribution</CardTitle>
+          <CardDescription>Loading chart...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    ),
+  },
+);
 
 interface InvoiceAnalyticsProps {
   stats?: InvoiceStatistics;

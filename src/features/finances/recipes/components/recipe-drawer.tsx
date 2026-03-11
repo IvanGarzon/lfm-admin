@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { X, AlertCircle, Calculator, Save, Edit2, MoreHorizontal, Trash } from 'lucide-react';
+import { X, AlertCircle, Calculator, Save, MoreHorizontal, Trash, Loader2 } from 'lucide-react';
+
 import { Box } from '@/components/ui/box';
 import {
   Drawer,
@@ -25,7 +26,7 @@ import {
   useDeleteRecipe,
 } from '@/features/finances/recipes/hooks/use-recipe-queries';
 import { RecipeForm } from './recipe-form';
-import { RecipeDetailsView } from './recipe-details-view';
+import { RecipeDrawerSkeleton } from './recipe-drawer-skeleton';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, recipeSearchParamsDefaults } from '@/filters/recipes/recipes-filters';
 import { CopyButton } from '@/components/shared/copy-button';
@@ -113,7 +114,10 @@ export function RecipeDrawer({
   }, [deleteRecipe, id, handleOpenChange]);
 
   const getTitle = () => {
-    if (mode === 'create') return 'New Recipe';
+    if (mode === 'create') {
+      return 'New Recipe';
+    }
+
     return recipe?.name || 'Edit Recipe';
   };
 
@@ -123,18 +127,20 @@ export function RecipeDrawer({
         className="overflow-x-hidden dark:bg-gray-925 pb-0!"
         style={{ maxWidth: '1100px' }}
       >
-        {isLoading && id ? (
-          <Box className="p-12 flex items-center justify-center">
-            <Loader2 className="size-8 animate-spin text-primary/40" />
-          </Box>
-        ) : isError ? (
-          <Box className="p-6 text-destructive">
+        {isLoading ? <RecipeDrawerSkeleton /> : null}
+
+        {isError ? (
+          <>
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load recipe details: {error?.message}</p>
-          </Box>
-        ) : (
+            <Box className="p-6 text-destructive">
+              <p className="mt-4">Could not load recipe details: {error?.message}</p>
+            </Box>
+          </>
+        ) : null}
+
+        {!isLoading && !isError ? (
           <>
             <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900 shadow-sm">
               <Box className="mt-1 flex flex-row items-center gap-4 flex-1 text-wrap break-all min-w-0">
@@ -146,15 +152,15 @@ export function RecipeDrawer({
                     <DrawerTitle className="text-xl font-semibold tracking-tight truncate max-w-[300px] md:max-w-[500px]">
                       {getTitle()}
                     </DrawerTitle>
-                    {isEditing && hasUnsavedChanges && (
+                    {isEditing && hasUnsavedChanges ? (
                       <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
                         <AlertCircle className="h-3 w-3" />
                         Unsaved changes
                       </span>
-                    )}
+                    ) : null}
                   </Box>
                   <Box className="flex items-center gap-2 mt-1">
-                    {recipe && (
+                    {recipe ? (
                       <Box className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border border-border/40 transition-colors hover:bg-muted">
                         <span>{recipe.id}</span>
                         <CopyButton
@@ -162,7 +168,7 @@ export function RecipeDrawer({
                           className="size-3 p-0 border-none hover:text-primary transition-colors"
                         />
                       </Box>
-                    )}
+                    ) : null}
                   </Box>
                 </Box>
               </Box>
@@ -172,14 +178,13 @@ export function RecipeDrawer({
                   type="submit"
                   form="form-rhf-recipe"
                   size="sm"
-                  className="shadow-sm"
-                  disabled={createRecipe.isPending || updateRecipe.isPending}
+                  disabled={createRecipe.isPending || updateRecipe.isPending || !hasUnsavedChanges}
                 >
-                  <Save className="h-4 w-4 mr-1.5" />
+                  <Save className="h-4 w-4 mr-1" />
                   {mode === 'create' ? 'Save' : 'Update'}
                 </Button>
 
-                {mode !== 'create' && (
+                {mode !== 'create' ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -195,16 +200,16 @@ export function RecipeDrawer({
                         onClick={handleDelete}
                         className="text-destructive focus:text-destructive cursor-pointer"
                       >
-                        <Trash className="mr-2 size-4" />
-                        Delete
+                        <Trash className="h-4 w-4" />
+                        Delete recipe
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                )}
+                ) : null}
 
                 <Button
                   variant="ghost"
-                  className="aspect-square p-2 text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-full"
+                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
                   onClick={() => handleOpenChange(false)}
                 >
                   <X className="size-5" aria-hidden="true" />
@@ -224,32 +229,8 @@ export function RecipeDrawer({
               />
             </DrawerBody>
           </>
-        )}
+        ) : null}
       </DrawerContent>
     </Drawer>
   );
 }
-
-const Loader2 = ({ className }: { className: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 2v4" />
-    <path d="M12 18v4" />
-    <path d="M4.93 4.93l2.83 2.83" />
-    <path d="M16.24 16.24l2.83 2.83" />
-    <path d="M2 12h4" />
-    <path d="M18 12h4" />
-    <path d="M4.93 19.07l2.83-2.83" />
-    <path d="M16.24 7.76l2.83-2.83" />
-  </svg>
-);

@@ -32,35 +32,34 @@ const QuoteDrawer = dynamic(
 export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
-  const today = new Date();
 
-  // Date range for Analytics (default last 30 days)
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  const today = useMemo(() => new Date(), []);
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
     to: today,
-  });
+  }));
 
-  // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
       endDate: today,
     }),
-    [],
+    [today],
   );
 
-  // Stats for Overview (current month)
   const { data: overviewStats, isLoading: overviewLoading } =
     useQuoteStatistics(currentMonthFilter);
 
-  // Stats for Analytics (custom date range)
   const { data: analyticsStats, isLoading: analyticsLoading } = useQuoteStatistics({
     startDate: dateRange?.from,
     endDate: dateRange?.to,
   });
 
   const getComparisonLabel = () => {
-    if (!dateRange?.from || !dateRange?.to) return 'vs. previous period';
+    if (!dateRange?.from || !dateRange?.to) {
+      return 'vs. previous period';
+    }
 
     const diffInDays =
       Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;

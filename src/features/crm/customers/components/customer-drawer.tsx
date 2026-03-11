@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   X,
@@ -24,7 +24,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,14 +54,9 @@ export function CustomerDrawer({
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
-  const [isEditing, setIsEditing] = useState<boolean>(!id);
+  const [isEditingView, setIsEditingView] = useState<boolean>(false);
 
   const { data: customer, isLoading, error, isError } = useCustomer(id);
-
-  // Sync isEditing with mode change
-  useEffect(() => {
-    setIsEditing(!id);
-  }, [id]);
 
   const updateCustomer = useUpdateCustomer();
   const createCustomer = useCreateCustomer();
@@ -72,11 +66,14 @@ export function CustomerDrawer({
   const mode: DrawerMode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/crm/customers/${id}`) ?? false) : (open ?? false);
 
+  // Compute isEditing based on mode - create mode is always editing
+  const isEditing = mode === 'create' || isEditingView;
+
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
         // Reset to view mode when closing
-        setIsEditing(false);
+        setIsEditingView(false);
         setHasUnsavedChanges(false);
 
         if (id) {
@@ -108,7 +105,7 @@ export function CustomerDrawer({
       updateCustomer.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-          setIsEditing(false);
+          setIsEditingView(false);
         },
       });
     },
@@ -134,15 +131,24 @@ export function CustomerDrawer({
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
-        {isLoading ? <div>Loading...</div> : null}
+        {isLoading ? (
+          <>
+            <DrawerHeader>
+              <DrawerTitle>Customer Details</DrawerTitle>
+            </DrawerHeader>
+            <Box className="p-6">Loading...</Box>
+          </>
+        ) : null}
 
         {isError ? (
-          <Box className="p-6 text-destructive">
+          <>
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load customer details: {error?.message}</p>
-          </Box>
+            <Box className="p-6 text-destructive">
+              <p className="mt-4">Could not load customer details: {error?.message}</p>
+            </Box>
+          </>
         ) : null}
 
         {(customer && !isLoading && !isError) || mode === 'create' ? (
@@ -188,7 +194,7 @@ export function CustomerDrawer({
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingView(true)}
                   >
                     <Edit2 className="size-4" />
                     Edit
@@ -206,7 +212,7 @@ export function CustomerDrawer({
             </Box>
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
-              {isEditing || mode === 'create' ? (
+              {isEditing ? (
                 <CustomerForm
                   customer={customer}
                   onCreate={handleCreate}
@@ -214,7 +220,7 @@ export function CustomerDrawer({
                   isCreating={createCustomer.isPending}
                   isUpdating={updateCustomer.isPending}
                   onDirtyStateChange={setHasUnsavedChanges}
-                  onClose={mode === 'create' ? onClose : () => setIsEditing(false)}
+                  onClose={mode === 'create' ? onClose : () => setIsEditingView(false)}
                 />
               ) : (
                 <Box className="p-6 space-y-6 overflow-y-auto">
@@ -342,7 +348,7 @@ export function CustomerDrawer({
                   </Card>
 
                   {/* Organization Card */}
-                  {customer?.organizationName && (
+                  {customer?.organizationName ? (
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -374,10 +380,10 @@ export function CustomerDrawer({
                         </Box>
                       </CardContent>
                     </Card>
-                  )}
+                  ) : null}
 
                   {/* Address Card */}
-                  {customer?.address && !customer.useOrganizationAddress && (
+                  {customer?.address && !customer.useOrganizationAddress ? (
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-medium flex items-center gap-2">
@@ -398,7 +404,7 @@ export function CustomerDrawer({
                         </Box>
                       </CardContent>
                     </Card>
-                  )}
+                  ) : null}
                 </Box>
               )}
             </DrawerBody>

@@ -167,5 +167,3 @@ ReminderEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/invoice.pdf',
 } satisfies ReminderEmailProps;
-
-export default ReminderEmail;

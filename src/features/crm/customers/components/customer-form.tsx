@@ -118,6 +118,7 @@ export function CustomerForm({
       onDirtyStateChange?.(false);
       return values;
     }, [customer, onDirtyStateChange]),
+    isUpdating, // Reset form when update completes (true -> false)
   );
 
   const { isDirty } = form.formState;
@@ -187,9 +188,6 @@ export function CustomerForm({
 
   const onSubmit: SubmitHandler<CustomerFormInput> = useCallback(
     (data: CustomerFormInput) => {
-      // Notify parent that form will be clean after submission
-      onDirtyStateChange?.(false);
-
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -200,7 +198,7 @@ export function CustomerForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, customer?.id, onDirtyStateChange],
+    [mode, onCreate, onUpdate, customer?.id],
   );
 
   return (

@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 import { Reorder } from 'framer-motion';
 import type { UseFormReturn, UseFieldArrayReturn } from 'react-hook-form';
 import { Plus } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { FormLabel } from '@/components/ui/form';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { InvoiceFormInput } from '@/features/finances/invoices/types';
 import { InvoiceItemRow } from '@/features/finances/invoices/components/invoice-item-row';
@@ -42,7 +41,7 @@ export function InvoiceItemsList({
   return (
     <Box className="py-6">
       <Box className="flex items-center justify-between mb-4">
-        <FormLabel className="text-base font-semibold">Items details</FormLabel>
+        <h3 className="text-base font-semibold">Items details</h3>
       </Box>
 
       <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

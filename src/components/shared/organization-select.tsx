@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 import { Check, ChevronDown, Building2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -27,6 +27,8 @@ export interface Organization {
   country?: string | null;
 }
 
+const EMPTY_ORGANIZATIONS: Partial<Organization>[] = [];
+
 interface OrganizationSelectProps {
   organizations?: Partial<Organization>[];
   value?: string;
@@ -39,7 +41,7 @@ interface OrganizationSelectProps {
 }
 
 export function OrganizationSelect({
-  organizations = [],
+  organizations = EMPTY_ORGANIZATIONS,
   value,
   onValueChange,
   disabled = false,
@@ -49,6 +51,7 @@ export function OrganizationSelect({
   showAddOrganizationLink = true,
 }: OrganizationSelectProps) {
   const [open, setOpen] = useState<boolean>(false);
+  const listboxId = useId();
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
   const selectedOrganization = useMemo(
@@ -103,6 +106,7 @@ export function OrganizationSelect({
               variant="outline"
               role="combobox"
               aria-expanded={open}
+              aria-controls={listboxId}
               className="w-full justify-between h-auto py-2 text-left"
               disabled={disabled || isLoading}
             >
@@ -134,7 +138,7 @@ export function OrganizationSelect({
             sideOffset={4}
             style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
-            <Command>
+            <Command id={listboxId}>
               <CommandInput placeholder="Search organizations..." />
               <CommandList className="max-h-[300px] overflow-y-auto">
                 <CommandEmpty>No organization found.</CommandEmpty>

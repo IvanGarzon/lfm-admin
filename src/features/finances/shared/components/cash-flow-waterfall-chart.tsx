@@ -1,9 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { startOfMonth, endOfMonth, subMonths, format, isSameMonth } from 'date-fns';
+import dynamic from 'next/dynamic';
 import {
   Bar,
   BarChart,
@@ -14,13 +13,16 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
+import { TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import { TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { startOfMonth, endOfMonth, subMonths, format, isSameMonth } from 'date-fns';
 
 const chartConfig = {
   value: {
@@ -38,22 +40,18 @@ interface WaterfallDataItem {
   type: 'start' | 'income' | 'expense' | 'pending' | 'end';
 }
 
-export function CashFlowWaterfallChart() {
-  // Month navigation state (0 = current month, 1 = last month, etc.)
+function CashFlowWaterfallChart() {
   const [monthOffset, setMonthOffset] = useState(0);
 
-  // Calculate date range for the selected month
   const dateFilter = useMemo(() => {
     const now = new Date();
     const targetMonth = subMonths(now, monthOffset);
     const startDate = startOfMonth(targetMonth);
-    // For current month, end date is today; for past months, end of that month
     const endDate = isSameMonth(targetMonth, now) ? now : endOfMonth(targetMonth);
 
     return { startDate, endDate };
   }, [monthOffset]);
 
-  // Format the date range for display
   const dateRangeLabel = useMemo(() => {
     const { startDate, endDate } = dateFilter;
     return `${format(startDate, 'dd MMM')} - ${format(endDate, 'dd MMM yyyy')}`;
@@ -65,7 +63,6 @@ export function CashFlowWaterfallChart() {
 
   const isLoading = transactionLoading || invoiceLoading;
 
-  // Build waterfall data
   const waterfallData = useMemo((): WaterfallDataItem[] => {
     if (!transactionStats) return [];
 
@@ -74,8 +71,6 @@ export function CashFlowWaterfallChart() {
     const pendingRevenue = invoiceStats?.pendingRevenue || 0;
     const netCashFlow = transactionStats.netCashFlow || 0;
 
-    // For waterfall chart, we need to calculate the "invisible" base for each bar
-    // Starting point (0), then we add income, subtract expenses, show result
     return [
       {
         name: 'Income',
@@ -112,13 +107,10 @@ export function CashFlowWaterfallChart() {
     ];
   }, [transactionStats, invoiceStats]);
 
-  // Calculate bar positions for waterfall effect
   const chartData = useMemo(() => {
     return waterfallData.map((item) => ({
       ...item,
-      // The "invisible" base of the bar
       base: item.type === 'end' ? 0 : Math.min(item.start, item.end),
-      // The visible part of the bar
       height: Math.abs(item.end - item.start),
     }));
   }, [waterfallData]);
@@ -126,15 +118,15 @@ export function CashFlowWaterfallChart() {
   const getBarColor = (type: string) => {
     switch (type) {
       case 'income':
-        return '#10b981'; // Emerald-500
+        return '#10b981';
       case 'expense':
-        return '#ef4444'; // Red-500
+        return '#ef4444';
       case 'pending':
-        return '#f59e0b'; // Amber-500
+        return '#f59e0b';
       case 'end':
-        return '#3b82f6'; // Blue-500 (always blue)
+        return '#3b82f6';
       default:
-        return '#6b7280'; // Gray-500
+        return '#6b7280';
     }
   };
 
@@ -164,7 +156,6 @@ export function CashFlowWaterfallChart() {
             <CardDescription>How money flows through your business</CardDescription>
           </div>
 
-          {/* Month Navigation */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -308,7 +299,7 @@ export function CashFlowWaterfallChart() {
               {/* Visible bar */}
               <Bar dataKey="height" stackId="stack" radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.type)} />
+                  <Cell key={entry.name} fill={getBarColor(entry.type)} />
                 ))}
               </Bar>
             </BarChart>
@@ -318,3 +309,18 @@ export function CashFlowWaterfallChart() {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(CashFlowWaterfallChart), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-72 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

@@ -83,7 +83,7 @@ const defaultFormState: CreateQuoteInput = {
   issuedDate: startOfToday(),
   validUntil: addDays(startOfToday(), 15), // 15 days from now
   currency: 'AUD',
-  gst: 10,
+  gst: 0,
   discount: 0,
   notes: '',
   terms: '',
@@ -186,6 +186,7 @@ export function QuoteForm({
 
       return values;
     }, [quote, onDirtyStateChange]),
+    isUpdating,
   );
 
   useUnsavedChanges(form.formState.isDirty);
@@ -209,8 +210,6 @@ export function QuoteForm({
         return;
       }
 
-      onDirtyStateChange?.(false);
-
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -221,7 +220,7 @@ export function QuoteForm({
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, quote?.id, onDirtyStateChange],
+    [isLocked, mode, onCreate, onUpdate, quote?.id],
   );
 
   const handleDownloadItemImage = useCallback(

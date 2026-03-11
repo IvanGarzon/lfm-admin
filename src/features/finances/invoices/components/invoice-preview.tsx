@@ -11,6 +11,9 @@ import type {
 } from '@/features/finances/invoices/types';
 import { lasFloresAccount } from '@/constants/data';
 
+const EMPTY_ITEMS: InvoiceItemDetail[] = [];
+const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
+
 type InvoiceHtmlPreviewProps = {
   invoice: InvoiceBasic;
   items?: InvoiceItemDetail[];
@@ -21,8 +24,8 @@ type InvoiceHtmlPreviewProps = {
 
 export function InvoicePreview({
   invoice,
-  items = [],
-  payments = [],
+  items = EMPTY_ITEMS,
+  payments = EMPTY_PAYMENTS,
   isLoadingItems = false,
   isLoadingPayments = false,
 }: InvoiceHtmlPreviewProps) {

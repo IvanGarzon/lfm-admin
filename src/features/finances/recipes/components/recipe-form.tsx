@@ -6,10 +6,12 @@ import {
   useWatch,
   useFieldArray,
   Controller,
+  FormProvider,
   type Resolver,
   type SubmitHandler,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
 import { Input } from '@/components/ui/input';
@@ -229,6 +231,7 @@ export function RecipeForm({
       onDirtyStateChange?.(false);
       return values;
     }, [recipe, onDirtyStateChange]),
+    isUpdating, // Reset form when update completes (true -> false)
   );
 
   useUnsavedChanges(isDirty);
@@ -246,9 +249,6 @@ export function RecipeForm({
 
   const onSubmit: SubmitHandler<RecipeFormInput> = useCallback(
     (data: RecipeFormInput) => {
-      // Notify parent that form will be clean after submission
-      onDirtyStateChange?.(false);
-
       const finalData = {
         ...data,
         ...totals,
@@ -264,97 +264,47 @@ export function RecipeForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, recipe?.id, totals, onDirtyStateChange],
+    [mode, onCreate, onUpdate, recipe?.id, totals],
   );
 
   const isPending = isCreating || isUpdating;
   const isPercentageType = watchedLabourCostType !== 'FIXED_AMOUNT';
 
   return (
-    <form
-      id="form-rhf-recipe"
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col h-full"
-    >
-      <Box className="flex-1 flex overflow-hidden">
-        <Box className="flex flex-1 min-h-0">
-          {/* Left Column: Form */}
-          <Box className="flex-1 p-6 space-y-6 border-r border-border overflow-y-auto">
-            {/* Recipe Name */}
-            <FieldGroup>
-              <Controller
-                name="name"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-recipe-name">Recipe Name</FieldLabel>
-                    </FieldContent>
-                    <Input
-                      {...field}
-                      id="form-rhf-recipe-name"
-                      placeholder="e.g., Summer Bridal Bouquet"
-                      className="h-11"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
+    <FormProvider {...form}>
+      <form
+        id="form-rhf-recipe"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col h-full"
+      >
+        {isPending ? (
+          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm font-medium">
+              {isCreating ? 'Creating recipe...' : 'Updating recipe...'}
+            </span>
+          </Box>
+        ) : null}
 
-            {/* Labour Cost Type & Amount */}
-            <Box className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Box className="flex-1 flex overflow-hidden">
+          <Box className="flex flex-1 min-h-0">
+            {/* Left Column: Form */}
+            <Box className="flex-1 p-6 space-y-6 border-r border-border overflow-y-auto">
+              {/* Recipe Name */}
               <FieldGroup>
                 <Controller
-                  name="labourCostType"
+                  name="name"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-labour-cost-type">
-                          Labour Cost Type
-                        </FieldLabel>
-                      </FieldContent>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger
-                          id="form-rhf-labour-cost-type"
-                          aria-invalid={fieldState.invalid}
-                        >
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LABOUR_COST_TYPE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-
-              <FieldGroup>
-                <Controller
-                  name="labourAmount"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-labour-amount">
-                          {isPercentageType ? 'Labour Percentage (%)' : 'Labour Amount ($)'}
-                        </FieldLabel>
+                        <FieldLabel htmlFor="form-rhf-recipe-name">Recipe Name</FieldLabel>
                       </FieldContent>
                       <Input
                         {...field}
-                        id="form-rhf-labour-amount"
-                        type="number"
-                        step={isPercentageType ? '0.1' : '0.01'}
-                        placeholder={isPercentageType ? 'e.g., 25' : 'e.g., 50.00'}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        id="form-rhf-recipe-name"
+                        placeholder="e.g., Summer Bridal Bouquet"
+                        className="h-11"
                         aria-invalid={fieldState.invalid}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -363,170 +313,233 @@ export function RecipeForm({
                 />
               </FieldGroup>
 
-              <FieldGroup>
-                <Field>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-labour-cost-calculated">
-                      Calculated Labour Cost
-                    </FieldLabel>
-                  </FieldContent>
-                  <Input
-                    id="form-rhf-labour-cost-calculated"
-                    value={formatCurrency({ number: totals.labourCost })}
-                    readOnly
-                    className="bg-muted/50 cursor-not-allowed"
-                  />
-                </Field>
-              </FieldGroup>
-            </Box>
-
-            {/* Description */}
-            <FieldGroup>
-              <Controller
-                name="description"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-recipe-description">Description</FieldLabel>
-                    </FieldContent>
-                    <Textarea
-                      {...field}
-                      id="form-rhf-recipe-description"
-                      placeholder="Add notes about design style, techniques, or customer preferences..."
-                      className="resize-none"
-                      rows={2}
-                      aria-invalid={fieldState.invalid}
-                    />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            {/* Recipe Items */}
-            <RecipeItemsList form={form} fieldArray={fieldArray} />
-          </Box>
-
-          {/* Right Column: Summary Panel */}
-          <Box className="w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4">
-            <Box className="sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              {/* Selling Price Header */}
-              <Box className="bg-teal-500 text-white p-6 text-center">
-                <p className="text-xs uppercase tracking-wider mb-1 text-teal-100">Selling Price</p>
-                <p className="text-4xl font-bold">
-                  {formatCurrency({ number: totals.sellingPrice })}
-                </p>
-              </Box>
-
-              {/* Cost Breakdown */}
-              <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
-                {/* Costs Section */}
-                <Box className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Costs
-                  </p>
-                  <Box className="space-y-1.5">
-                    <Box className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Materials</span>
-                      <span>{formatCurrency({ number: totals.totalMaterialsCost })}</span>
-                    </Box>
-                    <Box className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Labour</span>
-                      <span>{formatCurrency({ number: totals.labourCost })}</span>
-                    </Box>
-                  </Box>
-                  <Box className="flex justify-between text-sm font-semibold pt-1 border-t border-border">
-                    <span>Total Cost</span>
-                    <span>{formatCurrency({ number: totals.totalCost })}</span>
-                  </Box>
-                </Box>
-
-                {/* Retail Section */}
-                <Box className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Retail
-                  </p>
-                  <Box className="space-y-1.5">
-                    <Box className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Materials (marked up)</span>
-                      <span>{formatCurrency({ number: totals.totalRetailPrice })}</span>
-                    </Box>
-                    <Box className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Labour</span>
-                      <span>{formatCurrency({ number: totals.labourCost })}</span>
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Profit */}
-                <Box className="flex justify-between items-center pt-3 border-t border-border">
-                  <span className="text-sm font-semibold text-emerald-600">Profit</span>
-                  <span className="text-sm font-bold text-emerald-600">
-                    {formatCurrency({ number: totals.profit })} (
-                    {totals.profitPercentage.toFixed(1)}
-                    %)
-                  </span>
-                </Box>
-              </Box>
-            </Box>
-
-            {/* Pricing Options Panel */}
-            <Box className="mt-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
-                <Box className="flex items-center justify-between">
-                  <FieldLabel
-                    htmlFor="form-rhf-round-price"
-                    className="text-sm font-semibold cursor-pointer"
-                  >
-                    Round Price
-                  </FieldLabel>
+              {/* Labour Cost Type & Amount */}
+              <Box className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FieldGroup>
                   <Controller
+                    name="labourCostType"
                     control={form.control}
-                    name="roundPrice"
-                    render={({ field }) => (
-                      <Switch
-                        id="form-rhf-round-price"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldContent>
+                          <FieldLabel htmlFor="form-rhf-labour-cost-type">
+                            Labour Cost Type
+                          </FieldLabel>
+                        </FieldContent>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger
+                            id="form-rhf-labour-cost-type"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LABOUR_COST_TYPE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                      </Field>
                     )}
                   />
+                </FieldGroup>
+
+                <FieldGroup>
+                  <Controller
+                    name="labourAmount"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldContent>
+                          <FieldLabel htmlFor="form-rhf-labour-amount">
+                            {isPercentageType ? 'Labour Percentage (%)' : 'Labour Amount ($)'}
+                          </FieldLabel>
+                        </FieldContent>
+                        <Input
+                          {...field}
+                          id="form-rhf-labour-amount"
+                          type="number"
+                          step={isPercentageType ? '0.1' : '0.01'}
+                          placeholder={isPercentageType ? 'e.g., 25' : 'e.g., 50.00'}
+                          onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                      </Field>
+                    )}
+                  />
+                </FieldGroup>
+
+                <FieldGroup>
+                  <Field>
+                    <FieldContent>
+                      <FieldLabel htmlFor="form-rhf-labour-cost-calculated">
+                        Calculated Labour Cost
+                      </FieldLabel>
+                    </FieldContent>
+                    <Input
+                      id="form-rhf-labour-cost-calculated"
+                      value={formatCurrency({ number: totals.labourCost })}
+                      readOnly
+                      className="bg-muted/50 cursor-not-allowed"
+                    />
+                  </Field>
+                </FieldGroup>
+              </Box>
+
+              {/* Description */}
+              <FieldGroup>
+                <Controller
+                  name="description"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldContent>
+                        <FieldLabel htmlFor="form-rhf-recipe-description">Description</FieldLabel>
+                      </FieldContent>
+                      <Textarea
+                        {...field}
+                        id="form-rhf-recipe-description"
+                        placeholder="Add notes about design style, techniques, or customer preferences..."
+                        className="resize-none"
+                        rows={2}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              {/* Recipe Items */}
+              <RecipeItemsList form={form} fieldArray={fieldArray} />
+            </Box>
+
+            {/* Right Column: Summary Panel */}
+            <Box className="w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4">
+              <Box className="sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                {/* Selling Price Header */}
+                <Box className="bg-teal-500 text-white p-6 text-center">
+                  <p className="text-xs uppercase tracking-wider mb-1 text-teal-100">
+                    Selling Price
+                  </p>
+                  <p className="text-4xl font-bold">
+                    {formatCurrency({ number: totals.sellingPrice })}
+                  </p>
                 </Box>
 
-                {watchedRoundPrice ? (
-                  <FieldGroup>
+                {/* Cost Breakdown */}
+                <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
+                  {/* Costs Section */}
+                  <Box className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Costs
+                    </p>
+                    <Box className="space-y-1.5">
+                      <Box className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Materials</span>
+                        <span>{formatCurrency({ number: totals.totalMaterialsCost })}</span>
+                      </Box>
+                      <Box className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Labour</span>
+                        <span>{formatCurrency({ number: totals.labourCost })}</span>
+                      </Box>
+                    </Box>
+                    <Box className="flex justify-between text-sm font-semibold pt-1 border-t border-border">
+                      <span>Total Cost</span>
+                      <span>{formatCurrency({ number: totals.totalCost })}</span>
+                    </Box>
+                  </Box>
+
+                  {/* Retail Section */}
+                  <Box className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Retail
+                    </p>
+                    <Box className="space-y-1.5">
+                      <Box className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Materials (marked up)</span>
+                        <span>{formatCurrency({ number: totals.totalRetailPrice })}</span>
+                      </Box>
+                      <Box className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Labour</span>
+                        <span>{formatCurrency({ number: totals.labourCost })}</span>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* Profit */}
+                  <Box className="flex justify-between items-center pt-3 border-t border-border">
+                    <span className="text-sm font-semibold text-emerald-600">Profit</span>
+                    <span className="text-sm font-bold text-emerald-600">
+                      {formatCurrency({ number: totals.profit })} (
+                      {totals.profitPercentage.toFixed(1)}
+                      %)
+                    </span>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Pricing Options Panel */}
+              <Box className="mt-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
+                  <Box className="flex items-center justify-between">
+                    <FieldLabel
+                      htmlFor="form-rhf-round-price"
+                      className="text-sm font-semibold cursor-pointer"
+                    >
+                      Round Price
+                    </FieldLabel>
                     <Controller
                       control={form.control}
-                      name="roundingMethod"
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger
-                              id="form-rhf-rounding-method"
-                              aria-invalid={fieldState.invalid}
-                            >
-                              <SelectValue placeholder="Select method" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {ROUNDING_METHOD_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                        </Field>
+                      name="roundPrice"
+                      render={({ field }) => (
+                        <Switch
+                          id="form-rhf-round-price"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       )}
                     />
-                  </FieldGroup>
-                ) : null}
+                  </Box>
+
+                  {watchedRoundPrice ? (
+                    <FieldGroup>
+                      <Controller
+                        control={form.control}
+                        name="roundingMethod"
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger
+                                id="form-rhf-rounding-method"
+                                aria-invalid={fieldState.invalid}
+                              >
+                                <SelectValue placeholder="Select method" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ROUNDING_METHOD_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                          </Field>
+                        )}
+                      />
+                    </FieldGroup>
+                  ) : null}
+                </Box>
               </Box>
             </Box>
           </Box>
         </Box>
-      </Box>
-    </form>
+      </form>
+    </FormProvider>
   );
 }

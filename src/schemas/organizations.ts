@@ -3,7 +3,7 @@ import { StatesSchema } from '@/zod/schemas/enums/States.schema';
 import { OrganizationStatusSchema } from '@/zod/schemas/enums/OrganizationStatus.schema';
 import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
 
-export const OrganizationSchema = z.object({
+const OrganizationSchema = z.object({
   name: commonValidators.name('Organization name'),
   address: commonValidators.stringOptional(VALIDATION_LIMITS.ADDRESS_MAX, 'Address'),
   city: commonValidators.stringOptional(VALIDATION_LIMITS.CITY_MAX, 'City'),

@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import {
   ArrowDownCircle,
   ArrowUpCircle,
-  MoreHorizontal,
   Text,
   CircleDashed,
   CheckCircle,
@@ -13,23 +12,17 @@ import {
   Paperclip,
 } from 'lucide-react';
 import Link from 'next/link';
+
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Transaction } from '../types';
-import { TransactionStatusBadge } from './transaction-status-badge';
-import { TransactionType, TransactionStatus } from '@/prisma/client';
+import type { TransactionListItem } from '@/features/finances/transactions/types';
+import { TransactionStatusBadge } from '@/features/finances/transactions/components/transaction-status-badge';
+import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
+import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
+
 import {
   searchParams,
   transactionSearchParamsDefaults,
@@ -40,12 +33,12 @@ import { TransactionActions } from './transaction-actions';
 const TypeOptions = [
   {
     label: 'Income',
-    value: TransactionType.INCOME,
+    value: TransactionTypeSchema.enum.INCOME,
     icon: ArrowUpCircle,
   },
   {
     label: 'Expense',
-    value: TransactionType.EXPENSE,
+    value: TransactionTypeSchema.enum.EXPENSE,
     icon: ArrowDownCircle,
   },
 ];
@@ -53,17 +46,17 @@ const TypeOptions = [
 const StatusOptions = [
   {
     label: 'Pending',
-    value: TransactionStatus.PENDING,
+    value: TransactionStatusSchema.enum.PENDING,
     icon: CircleDashed,
   },
   {
     label: 'Completed',
-    value: TransactionStatus.COMPLETED,
+    value: TransactionStatusSchema.enum.COMPLETED,
     icon: CheckCircle,
   },
   {
     label: 'Cancelled',
-    value: TransactionStatus.CANCELLED,
+    value: TransactionStatusSchema.enum.CANCELLED,
     icon: XCircle,
   },
 ];
@@ -88,7 +81,7 @@ function TransactionLink({
 
 export const createTransactionColumns = (
   onDelete: (id: string) => void,
-): ColumnDef<Transaction>[] => [
+): ColumnDef<TransactionListItem>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -162,7 +155,7 @@ export const createTransactionColumns = (
     header: 'Type',
     cell: ({ row }) => {
       const type = row.getValue('type') as string;
-      const isIncome = type === TransactionType.INCOME;
+      const isIncome = type === TransactionTypeSchema.enum.INCOME;
 
       return (
         <Box className="flex items-center gap-2">
@@ -235,7 +228,7 @@ export const createTransactionColumns = (
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
-      const isIncome = type === TransactionType.INCOME;
+      const isIncome = type === TransactionTypeSchema.enum.INCOME;
 
       return (
         <Box className="flex flex-col">

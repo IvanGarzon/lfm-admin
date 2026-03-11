@@ -91,12 +91,14 @@ export function TransactionDrawer({
         {/* {isLoading ? <InvoiceDrawerSkeleton /> : null} */}
 
         {isError ? (
-          <Box className="p-6 text-destructive">
+          <>
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load transaction details: {error?.message}</p>
-          </Box>
+            <Box className="p-6 text-destructive">
+              <p className="mt-4">Could not load transaction details: {error?.message}</p>
+            </Box>
+          </>
         ) : null}
 
         {/* <DrawerHeader> */}

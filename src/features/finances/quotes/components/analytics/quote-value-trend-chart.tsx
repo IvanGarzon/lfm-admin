@@ -1,6 +1,8 @@
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import dynamic from 'next/dynamic';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ChartConfig,
@@ -8,7 +10,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import type { QuoteValueTrend } from '@/features/finances/quotes/types';
@@ -34,7 +35,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartProps) {
+function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartProps) {
   if (isLoading) {
     return (
       <Card className="col-span-1 md:col-span-2">
@@ -77,7 +78,7 @@ export function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartPr
               }
             />
             <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
-            <ChartLegend content={<ChartLegendContent />} />
+            <ChartLegend />
             <Bar
               dataKey="total"
               name="Total Quoted"
@@ -105,3 +106,18 @@ export function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartPr
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(QuoteValueTrendChart), {
+  ssr: false,
+  loading: () => (
+    <Card className="col-span-1 md:col-span-2">
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-72 mt-2" />
+      </CardHeader>
+      <CardContent className="h-[300px] flex items-center justify-center">
+        <Skeleton className="h-full w-full" />
+      </CardContent>
+    </Card>
+  ),
+});

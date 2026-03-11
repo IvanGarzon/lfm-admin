@@ -35,13 +35,15 @@ const InvoiceDrawer = dynamic(
 export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
-  const today = new Date();
+
+  // Use useMemo to ensure stable date between server and client renders
+  const today = useMemo(() => new Date(), []);
 
   // Date range for Analytics (default last 30 days)
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
     to: today,
-  });
+  }));
 
   // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
@@ -49,7 +51,7 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
       startDate: startOfMonth(today),
       endDate: today,
     }),
-    [],
+    [today],
   );
 
   // Stats for Overview (current month)

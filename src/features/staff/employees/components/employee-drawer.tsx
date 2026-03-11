@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   X,
@@ -20,7 +20,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerDescription,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +31,7 @@ import {
 import { EmployeeForm } from './employee-form';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, employeeSearchParamsDefaults } from '@/filters/employees/employee-filters';
-import type { CreateEmployeeFormValues, UpdateEmployeeFormValues } from '@/schemas/employees';
+import type { CreateEmployeeInput, UpdateEmployeeInput } from '@/schemas/employees';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { StatusBadge } from '@/components/shared/status-badge';
 import { CopyButton } from '@/components/shared/copy-button';
@@ -52,7 +51,7 @@ export function EmployeeDrawer({
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
-  const [isEditing, setIsEditing] = useState<boolean>(!id);
+  const [isEditingView, setIsEditingView] = useState<boolean>(false);
 
   const { data: employee, isLoading, error, isError } = useEmployeeById(id);
 
@@ -64,16 +63,14 @@ export function EmployeeDrawer({
   const mode: DrawerMode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/staff/employees/${id}`) ?? false) : (open ?? false);
 
-  // Sync isEditing with mode change
-  useEffect(() => {
-    setIsEditing(!id);
-  }, [id]);
+  // Compute isEditing based on mode - create mode is always editing
+  const isEditing = mode === 'create' || isEditingView;
 
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
         // Reset to view mode when closing
-        setIsEditing(false);
+        setIsEditingView(false);
         setHasUnsavedChanges(false);
 
         if (id) {
@@ -90,7 +87,7 @@ export function EmployeeDrawer({
   );
 
   const handleCreate = useCallback(
-    (data: CreateEmployeeFormValues) => {
+    (data: CreateEmployeeInput) => {
       createEmployee.mutate(data, {
         onSuccess: () => {
           onClose?.();
@@ -101,11 +98,11 @@ export function EmployeeDrawer({
   );
 
   const handleUpdate = useCallback(
-    (data: UpdateEmployeeFormValues) => {
+    (data: UpdateEmployeeInput) => {
       updateEmployee.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-          setIsEditing(false);
+          setIsEditingView(false);
           // If we were in a sub-route /id, we stay there but exit edit mode
         },
       });
@@ -132,15 +129,24 @@ export function EmployeeDrawer({
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
-        {isLoading ? <Box className="p-6">Loading...</Box> : null}
+        {isLoading ? (
+          <>
+            <DrawerHeader>
+              <DrawerTitle>Employee Details</DrawerTitle>
+            </DrawerHeader>
+            <Box className="p-6">Loading...</Box>
+          </>
+        ) : null}
 
         {isError ? (
-          <Box className="p-6 text-destructive">
+          <>
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load employee details: {error?.message}</p>
-          </Box>
+            <Box className="p-6 text-destructive">
+              <p className="mt-4">Could not load employee details: {error?.message}</p>
+            </Box>
+          </>
         ) : null}
 
         {(employee && !isLoading && !isError) || mode === 'create' ? (
@@ -186,7 +192,7 @@ export function EmployeeDrawer({
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditingView(true)}
                   >
                     <Edit2 className="size-4" />
                     Edit
@@ -204,15 +210,15 @@ export function EmployeeDrawer({
             </Box>
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
-              {isEditing || mode === 'create' ? (
+              {isEditing ? (
                 <EmployeeForm
-                  employee={employee}
+                  employee={employee ?? undefined}
                   onCreate={handleCreate}
                   onUpdate={handleUpdate}
                   isCreating={createEmployee.isPending}
                   isUpdating={updateEmployee.isPending}
                   onDirtyStateChange={setHasUnsavedChanges}
-                  onClose={mode === 'create' ? onClose : () => setIsEditing(false)}
+                  onClose={mode === 'create' ? onClose : () => setIsEditingView(false)}
                 />
               ) : (
                 <Box className="p-6 space-y-6 overflow-y-auto">

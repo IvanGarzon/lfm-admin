@@ -17,7 +17,7 @@ interface RecipesListProps {
 }
 
 export function RecipeList({ initialData, searchParams: serverSearchParams }: RecipesListProps) {
-  const { openDelete, openEdit, openView } = useRecipeActions();
+  const { openDelete, openEdit } = useRecipeActions();
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
@@ -27,9 +27,8 @@ export function RecipeList({ initialData, searchParams: serverSearchParams }: Re
       createRecipeColumns(
         (id, name) => openDelete(id, name),
         (id) => openEdit(id),
-        (id) => openView(id),
       ),
-    [openDelete, openEdit, openView],
+    [openDelete, openEdit],
   );
 
   const { table } = useDataTable({

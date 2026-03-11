@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { format } from 'date-fns';
 import { Box } from '@/components/ui/box';
 import { formatCurrency } from '@/lib/utils';
@@ -9,6 +10,9 @@ import type {
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
 import { lasFloresAccount } from '@/constants/data';
+
+const EMPTY_ITEMS: InvoiceItemDetail[] = [];
+const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
 
 type ReceiptHtmlPreviewProps = {
   invoice: InvoiceBasic;
@@ -20,8 +24,8 @@ type ReceiptHtmlPreviewProps = {
 
 export function ReceiptPreview({
   invoice,
-  items = [],
-  payments = [],
+  items = EMPTY_ITEMS,
+  payments = EMPTY_PAYMENTS,
   isLoadingItems = false,
   isLoadingPayments = false,
 }: ReceiptHtmlPreviewProps) {
@@ -82,10 +86,13 @@ export function ReceiptPreview({
               </Box>
             </Box>
             <Box>
-              <img
+              <Image
                 src="/static/logo-green-800.png"
                 alt="Las Flores Melbourne Logo"
+                width={160}
+                height={160}
                 className="h-40 w-auto"
+                priority
               />
             </Box>
           </Box>

@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, PDFViewer, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
 import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
@@ -299,12 +300,10 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
   const gstAmount = (subtotal * quote.gst) / 100;
   const total = subtotal + gstAmount - quote.discount;
 
-  // Only show expired watermark if status is EXPIRED, or if SENT and past validUntil
   const isExpired =
     quote.status === QuoteStatusSchema.enum.EXPIRED ||
     (quote.status === QuoteStatusSchema.enum.SENT && new Date() > new Date(quote.validUntil));
 
-  // react-pdf/renderer only supports JPG and PNG images, not WebP
   const isSupportedImageFormat = (mimeType: string) => {
     return mimeType === 'image/jpeg' || mimeType === 'image/jpg' || mimeType === 'image/png';
   };
@@ -323,7 +322,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         ) : null}
 
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>Quote</Text>
@@ -334,7 +332,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         </View>
 
-        {/* Billing Information */}
         <View style={styles.billingSection}>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Quoted by:</Text>
@@ -356,7 +353,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         </View>
 
-        {/* Dates */}
         <View style={styles.dateSection}>
           <View style={styles.dateColumn}>
             <Text style={styles.dateLabel}>Date Issued:</Text>
@@ -368,11 +364,8 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         </View>
 
-        {/* Items Table */}
         <View style={styles.table}>
           <Text style={styles.sectionTitle}>Items</Text>
-
-          {/* Table Header */}
           <View style={styles.tableHeader}>
             <Text style={styles.tableCol1}>Items</Text>
             <Text style={styles.tableCol2}>QTY</Text>
@@ -380,7 +373,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
             <Text style={styles.tableCol4}>Total</Text>
           </View>
 
-          {/* Table Rows */}
           {quote.items.map((item) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={styles.tableCol1}>{item.description}</Text>
@@ -391,7 +383,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           ))}
         </View>
 
-        {/* Summary Section */}
         <View style={styles.summarySection} wrap={false}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -416,7 +407,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         </View>
 
-        {/* Item Details (colors, attachments and notes) */}
         {quote.items.some(
           (item) =>
             item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0),
@@ -443,7 +433,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
                       : ''}
                   </Text>
 
-                  {/* Color Palette */}
                   {item.colors && item.colors.length > 0 ? (
                     <View style={styles.colorsGrid} wrap={false}>
                       {item.colors.map((color, colorIndex) => (
@@ -484,7 +473,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         ) : null}
 
-        {/* Notes */}
         {quote.notes ? (
           <View style={styles.notes} wrap={false}>
             <Text style={styles.notesTitle}>Notes:</Text>
@@ -492,7 +480,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         ) : null}
 
-        {/* Terms and Conditions */}
         {quote.terms ? (
           <View style={styles.termsSection} wrap={false}>
             <Text style={styles.sectionTitle}>Terms & Conditions</Text>
@@ -509,7 +496,6 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
           </View>
         )}
 
-        {/* Footer */}
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <View style={styles.footerContent}>
@@ -525,13 +511,5 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
         </View>
       </Page>
     </Document>
-  );
-}
-
-export function QuotePdf({ quote }: QuotePreviewProps) {
-  return (
-    <PDFViewer width="100%" height="100%" className="border-0">
-      <QuoteDocument quote={quote} />
-    </PDFViewer>
   );
 }

@@ -1,10 +1,13 @@
+import dynamic from 'next/dynamic';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 import { getQuotes } from '@/actions/finances/quotes';
-import dynamic from 'next/dynamic';
 
-// Lazy load QuoteDrawer to reduce initial bundle size
+export const metadata = {
+  title: 'Quote Detail | Finance',
+};
+
 const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {

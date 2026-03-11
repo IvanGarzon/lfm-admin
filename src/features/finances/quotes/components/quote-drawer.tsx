@@ -15,6 +15,7 @@ import {
   FileCheck,
   AlertCircle,
   Copy,
+  Trash,
   Files,
   ChevronLeft,
   ChevronRight,
@@ -135,7 +136,6 @@ export function QuoteDrawer({
     (openState: boolean) => {
       if (!openState) {
         if (id) {
-          // Navigate back to list
           const basePath = '/finances/quotes';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
@@ -375,10 +375,10 @@ export function QuoteDrawer({
     canCreateVersion,
   } = getQuotePermissions(quote?.status);
 
-  // Check if follow-up should be available
-  // Only show when status is SENT and within 3 days of validUntil
   const showFollowUp = (() => {
-    if (!quote || quote.status !== QuoteStatus.SENT) return false;
+    if (!quote || quote.status !== QuoteStatus.SENT) {
+      return false;
+    }
 
     const now = new Date();
     const validUntil = new Date(quote.validUntil);
@@ -526,11 +526,10 @@ export function QuoteDrawer({
                           type="submit"
                           form="form-rhf-quote"
                           size="sm"
-                          variant="outline"
                           disabled={updateQuote.isPending || !hasUnsavedChanges}
                         >
                           <Save className="h-4 w-4 mr-1" />
-                          Save
+                          {mode === 'edit' ? 'Update' : 'Save'}
                         </Button>
                       ) : null}
 
@@ -552,7 +551,7 @@ export function QuoteDrawer({
                           {canSend ? (
                             <DropdownMenuItem onClick={handleSend}>
                               <Send className="h-4 w-4" />
-                              Send Quote
+                              Send quote
                             </DropdownMenuItem>
                           ) : null}
 
@@ -600,25 +599,25 @@ export function QuoteDrawer({
 
                           <DropdownMenuItem onClick={handleDuplicate}>
                             <Files className="h-4 w-4" />
-                            Duplicate Quote
+                            Duplicate quote
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={handleDownloadPdf}>
                             <Download className="h-4 w-4" />
-                            Download PDF
+                            Download quote
                           </DropdownMenuItem>
 
                           {canSendQuote ? (
                             <DropdownMenuItem onClick={handleSendEmail}>
                               <Mail className="h-4 w-4" />
-                              Resend Quote
+                              Resend quote
                             </DropdownMenuItem>
                           ) : null}
 
                           {showFollowUp ? (
                             <DropdownMenuItem onClick={handleSendFollowUp}>
                               <Send className="h-4 w-4" />
-                              Send Follow-up
+                              Send follow-up
                             </DropdownMenuItem>
                           ) : null}
 
@@ -627,7 +626,7 @@ export function QuoteDrawer({
                               onClick={handleDelete}
                               className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
                             >
-                              <AlertCircle className="h-4 w-4" />
+                              <Trash className="h-4 w-4" />
                               Delete quote
                             </DropdownMenuItem>
                           ) : null}
@@ -647,7 +646,7 @@ export function QuoteDrawer({
                 </Box>
               </Box>
 
-              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
+              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent">
                 <Box className="flex h-full">
                   <Box
                     className="h-full"

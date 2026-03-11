@@ -1,10 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/eslintrc",
   "extends": [
-    "next/core-web-vitals", // Next.js best practices incl. React & Web Vitals
-    "eslint:recommended", // Base ESLint rules
-    "plugin:@typescript-eslint/recommended", // TypeScript rules
-    "plugin:prettier/recommended" // Prettier rules
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
   ],
   "plugins": ["@typescript-eslint", "prettier", "security"],
   "parser": "@typescript-eslint/parser",
@@ -14,12 +14,13 @@
     "project": "./tsconfig.json"
   },
   "rules": {
-    // Customize if needed
     "prettier/prettier": "warn",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "warn",
-    "security/detect-object-injection": "off" // optional, Prisma uses object keys
+    "security/detect-object-injection": "off",
+    "no-unused-vars": "warn",
+    "import/no-unused-modules": [1, { "unusedExports": true }]
   },
   "ignorePatterns": ["node_modules", ".next", "dist", ".turbo"]
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useId, useState, useTransition } from 'react';
 import { Check, ChevronsUpDown, Loader2, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
@@ -40,6 +40,7 @@ export function CategoryMultiSelect({
   disabled = false,
 }: CategoryMultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const listboxId = useId();
   const [search, setSearch] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -96,6 +97,7 @@ export function CategoryMultiSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-controls={listboxId}
             className="w-full justify-between h-auto min-h-[40px] py-2"
             disabled={disabled}
           >
@@ -128,7 +130,7 @@ export function CategoryMultiSelect({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-          <Command shouldFilter={false}>
+          <Command id={listboxId} shouldFilter={false}>
             <CommandInput
               placeholder="Search or create category..."
               value={search}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { X, Plus } from 'lucide-react';
 import { Box } from './box';
 import { Button } from './button';
@@ -43,6 +43,11 @@ export function ColorPicker({
   maxColors = 10,
   disabled = false,
 }: ColorPickerProps) {
+  const hexInputId = useId();
+  const rInputId = useId();
+  const gInputId = useId();
+  const bInputId = useId();
+
   const [customColor, setCustomColor] = useState('#3a3d13');
   const [r, setR] = useState(58);
   const [g, setG] = useState(61);
@@ -114,7 +119,7 @@ export function ColorPicker({
           </Box>
           <Box className="flex flex-wrap gap-1">
             {colors.map((color, index) => (
-              <Box key={`${color}-${index}`} className="relative group">
+              <Box key={color} className="relative group">
                 <Box
                   className="w-12 h-12 rounded-sm border-2 border-gray-200 dark:border-gray-700"
                   style={{ backgroundColor: color }}
@@ -187,8 +192,14 @@ export function ColorPicker({
             <Box className="flex gap-2 items-end">
               {/* HEX Input */}
               <Box className="flex-1">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">HEX</label>
+                <label
+                  htmlFor={hexInputId}
+                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
+                >
+                  HEX
+                </label>
                 <Input
+                  id={hexInputId}
                   type="text"
                   value={customColor}
                   onChange={(e) => updateFromHex(e.target.value)}
@@ -200,8 +211,14 @@ export function ColorPicker({
 
               {/* R Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">R</label>
+                <label
+                  htmlFor={rInputId}
+                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
+                >
+                  R
+                </label>
                 <Input
+                  id={rInputId}
                   type="number"
                   value={r}
                   onChange={(e) => updateFromRgb(parseInt(e.target.value) || 0, g, b)}
@@ -213,8 +230,14 @@ export function ColorPicker({
 
               {/* G Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">G</label>
+                <label
+                  htmlFor={gInputId}
+                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
+                >
+                  G
+                </label>
                 <Input
+                  id={gInputId}
                   type="number"
                   value={g}
                   onChange={(e) => updateFromRgb(r, parseInt(e.target.value) || 0, b)}
@@ -226,8 +249,14 @@ export function ColorPicker({
 
               {/* B Input */}
               <Box className="w-20">
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">B</label>
+                <label
+                  htmlFor={bInputId}
+                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
+                >
+                  B
+                </label>
                 <Input
+                  id={bInputId}
                   type="number"
                   value={b}
                   onChange={(e) => updateFromRgb(r, g, parseInt(e.target.value) || 0)}

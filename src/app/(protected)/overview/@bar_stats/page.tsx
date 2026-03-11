@@ -1,7 +1,12 @@
+import dynamic from 'next/dynamic';
 import { delay } from '@/lib/utils';
-import { BarGraph } from '@/features/overview/components/bar-graph';
+import { BarGraphSkeleton } from '@/features/overview/components/bar-graph-skeleton';
+
+const BarGraph = dynamic(() => import('@/features/overview/components/bar-graph'), {
+  loading: () => <BarGraphSkeleton />,
+});
 
 export default async function BarStatsPage() {
-  await await delay(1000);
+  await delay(1000);
   return <BarGraph />;
 }

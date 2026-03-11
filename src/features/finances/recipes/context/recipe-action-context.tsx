@@ -17,7 +17,6 @@ interface ModalState {
 interface RecipeActionContextType {
   openDelete: (id: string, name?: string, onSuccess?: () => void) => void;
   openEdit: (id: string) => void;
-  openView: (id: string) => void;
   close: () => void;
 }
 
@@ -34,13 +33,6 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const openEdit = useCallback(
-    (id: string) => {
-      router.push(`/finances/recipes/${id}/edit`);
-    },
-    [router],
-  );
-
-  const openView = useCallback(
     (id: string) => {
       router.push(`/finances/recipes/${id}`);
     },
@@ -68,17 +60,16 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
     () => ({
       openDelete,
       openEdit,
-      openView,
       close,
     }),
-    [openDelete, openEdit, openView, close],
+    [openDelete, openEdit, close],
   );
 
   return (
     <RecipeActionContext.Provider value={value}>
       {children}
 
-      {state?.type === 'DELETE' && state.id && (
+      {state?.type === 'DELETE' && state.id ? (
         <DeleteRecipeDialog
           open={true}
           onOpenChange={(open) => !open && close()}
@@ -86,7 +77,7 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
           name={state.name}
           isPending={deleteRecipe.isPending}
         />
-      )}
+      ) : null}
     </RecipeActionContext.Provider>
   );
 }

@@ -1,8 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useTransactionTrend, useTopCategories } from '../../hooks/use-transaction-queries';
 import { StatCard } from '@/features/finances/invoices/components/analytics/stat-card';
-import { CashFlowChart } from './cash-flow-chart';
 import { TopCategoriesTable } from './top-categories-table';
 import { Clock, CheckCircle, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -11,6 +11,23 @@ import { Button } from '@/components/ui/button';
 import { DateRange } from 'react-day-picker';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import { TransactionStatistics } from '../../types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+const CashFlowChart = dynamic(() => import('./cash-flow-chart'), {
+  ssr: false,
+  loading: () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Cash Flow Trend</CardTitle>
+        <CardDescription>Loading chart...</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[300px] w-full" />
+      </CardContent>
+    </Card>
+  ),
+});
 
 interface TransactionAnalyticsProps {
   stats?: TransactionStatistics;

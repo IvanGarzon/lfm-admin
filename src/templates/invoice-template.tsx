@@ -315,7 +315,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>Invoice</Text>
@@ -326,7 +325,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </View>
         </View>
 
-        {/* Billing Information */}
         <View style={styles.billingSection}>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Billed by:</Text>
@@ -348,7 +346,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </View>
         </View>
 
-        {/* Dates */}
         <View style={styles.dateSection}>
           <View style={styles.dateColumn}>
             <Text style={styles.dateLabel}>Date Issued:</Text>
@@ -360,11 +357,9 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </View>
         </View>
 
-        {/* Items Table */}
         <View style={styles.table}>
           <Text style={styles.sectionTitle}>Items</Text>
 
-          {/* Table Header */}
           <View style={styles.tableHeader}>
             <Text style={styles.tableCol1}>Items</Text>
             <Text style={styles.tableCol2}>QTY</Text>
@@ -372,7 +367,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
             <Text style={styles.tableCol4}>Total</Text>
           </View>
 
-          {/* Table Rows */}
           {invoice.items.map((item) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={styles.tableCol1}>{item.description}</Text>
@@ -383,7 +377,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           ))}
         </View>
 
-        {/* Summary Section */}
         <View style={styles.summarySection} wrap={false}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -427,12 +420,10 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           ) : null}
         </View>
 
-        {/* Payment History */}
         {invoice.payments && invoice.payments.length > 0 ? (
           <View style={styles.paymentHistorySection} wrap={false}>
             <Text style={styles.sectionTitle}>Payment History</Text>
             <View style={styles.paymentHistoryTable}>
-              {/* Table Header */}
               <View style={styles.paymentHistoryHeader}>
                 <Text style={styles.paymentCol1}>Date</Text>
                 <Text style={styles.paymentCol2}>Method</Text>
@@ -440,7 +431,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
                 <Text style={styles.paymentCol4}>Amount</Text>
               </View>
 
-              {/* Table Rows */}
               {invoice.payments.map((payment) => (
                 <View key={payment.id} style={styles.paymentHistoryRow}>
                   <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
@@ -455,7 +445,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </View>
         ) : null}
 
-        {/* Payment Details */}
         <View style={styles.paymentDetails} wrap={false}>
           <Text style={styles.sectionTitle}>Payment Information</Text>
           <Text style={styles.companyName}>{lasFloresAccount.accountName}</Text>
@@ -468,7 +457,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </Text>
         </View>
 
-        {/* Notes */}
         {invoice.notes ? (
           <View style={styles.notes} wrap={false}>
             <Text style={styles.notesTitle}>Notes:</Text>
@@ -476,7 +464,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </View>
         ) : null}
 
-        {/* Terms and Conditions */}
         <View style={styles.termsSection} wrap={false}>
           <Text style={styles.sectionTitle}>Terms & Conditions</Text>
           <Text style={styles.notesText}>
@@ -486,7 +473,6 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
           </Text>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <View style={styles.footerContent}>

@@ -18,7 +18,7 @@ interface ReceiptEmailProps {
   pdfUrl?: string;
 }
 
-function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
+export function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
   const { invoiceNumber, receiptNumber, customerName, amount, currency, paidDate, paymentMethod } =
     receiptData;
 
@@ -101,5 +101,3 @@ ReceiptEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/receipt.pdf',
 } satisfies ReceiptEmailProps;
-
-export default ReceiptEmail;

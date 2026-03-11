@@ -12,7 +12,6 @@ import { RecipeActions } from '@/features/finances/recipes/components/recipe-act
 export const createRecipeColumns = (
   onDelete: (id: string, name: string) => void,
   onEdit: (id: string) => void,
-  onView: (id: string) => void,
 ): ColumnDef<RecipeListItem>[] => [
   {
     id: 'select',
@@ -41,7 +40,7 @@ export const createRecipeColumns = (
     cell: ({ row }) => (
       <Box
         className="font-medium cursor-pointer hover:underline"
-        onClick={() => onView(row.original.id)}
+        onClick={() => onEdit(row.original.id)}
       >
         {row.original.name}
       </Box>
@@ -109,9 +108,7 @@ export const createRecipeColumns = (
   },
   {
     id: 'actions',
-    cell: ({ row }) => (
-      <RecipeActions recipe={row.original} onDelete={onDelete} onEdit={onEdit} onView={onView} />
-    ),
+    cell: ({ row }) => <RecipeActions recipe={row.original} onDelete={onDelete} onEdit={onEdit} />,
     enableHiding: false,
     meta: {
       className: 'text-right',

@@ -7,7 +7,6 @@ import { Plus } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { FormLabel } from '@/components/ui/form';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
 import type { RecipeListItem } from '@/features/finances/recipes/types';
@@ -78,7 +77,7 @@ export function QuoteItemsList({
   return (
     <Box className="py-6">
       <Box className="flex items-center justify-between mb-4">
-        <FormLabel className="text-base font-semibold">Items details</FormLabel>
+        <h3 className="text-base font-semibold">Items details</h3>
       </Box>
 
       <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

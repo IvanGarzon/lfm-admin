@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { TrendingUp } from 'lucide-react';
 import { Label, Pie, PieChart } from 'recharts';
+import dynamic from 'next/dynamic';
 
 import {
   Card,
@@ -18,6 +19,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+
 const chartData = [
   { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
   { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
@@ -52,7 +54,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function PieGraph() {
+function PieGraph() {
   const totalVisitors = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
   }, []);
@@ -118,3 +120,24 @@ export function PieGraph() {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(PieGraph), {
+  ssr: false,
+  loading: () => (
+    <Card className="@container/card">
+      <CardHeader className="items-center pb-0">
+        <div className="h-6 w-48 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-32 bg-muted rounded animate-pulse mt-2" />
+      </CardHeader>
+      <CardContent className="flex-1 pb-0">
+        <div className="mx-auto aspect-square max-h-[360px] flex items-center justify-center">
+          <div className="h-40 w-40 rounded-full bg-muted animate-pulse" />
+        </div>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-sm">
+        <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+      </CardFooter>
+    </Card>
+  ),
+});

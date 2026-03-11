@@ -65,9 +65,9 @@ export function InvoiceActions({
         size="icon"
         className="h-8 w-8 p-0"
         onClick={() => onDownloadPdf(invoice.id)}
-        title="Download PDF"
+        title="Download invoice"
       >
-        <span className="sr-only">Download PDF</span>
+        <span className="sr-only">Download invoice</span>
         <FileDown className="h-4 w-4" />
       </Button>
       <DropdownMenu>

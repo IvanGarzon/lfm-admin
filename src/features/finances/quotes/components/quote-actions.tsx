@@ -11,7 +11,7 @@ import {
   MoreHorizontal,
   Copy,
   Files,
-  AlertCircle,
+  Trash,
   Pause,
   Ban,
   Mail,
@@ -102,9 +102,9 @@ export function QuoteActions({
         size="icon"
         className="h-8 w-8 p-0"
         onClick={() => onDownloadPdf(quote.id)}
-        title="Download PDF"
+        title="Download quote"
       >
-        <span className="sr-only">Download PDF</span>
+        <span className="sr-only">Download quote</span>
         <FileDown className="h-4 w-4" />
       </Button>
       <DropdownMenu>
@@ -127,7 +127,7 @@ export function QuoteActions({
           {canSend ? (
             <DropdownMenuItem onClick={() => onSend(quote.id)}>
               <Send className="h-4 w-4" />
-              Send Quote
+              Send quote
             </DropdownMenuItem>
           ) : null}
 
@@ -185,14 +185,14 @@ export function QuoteActions({
           {canSendQuote ? (
             <DropdownMenuItem onClick={() => onSendEmail(quote.id)}>
               <Mail className="h-4 w-4" />
-              Resend Quote
+              Resend quote
             </DropdownMenuItem>
           ) : null}
 
           {showFollowUp ? (
             <DropdownMenuItem onClick={() => onSendFollowUp(quote.id)}>
               <Send className="h-4 w-4" />
-              Send Follow-up
+              Send follow-up
             </DropdownMenuItem>
           ) : null}
 
@@ -203,7 +203,7 @@ export function QuoteActions({
                 onClick={() => onDelete(quote.id, quote.quoteNumber)}
                 className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
               >
-                <AlertCircle className="h-4 w-4" />
+                <Trash className="h-4 w-4" />
                 Delete quote
               </DropdownMenuItem>
             </>

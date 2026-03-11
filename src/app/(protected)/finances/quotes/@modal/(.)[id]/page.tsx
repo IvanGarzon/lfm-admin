@@ -4,8 +4,6 @@ import { use } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-// Lazy load QuoteDrawer to avoid bundling 11+ MB into the modal page chunk
-// This significantly improves initial page load performance
 const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {

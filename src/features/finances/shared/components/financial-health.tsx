@@ -14,12 +14,14 @@ interface HealthMetric {
   format?: 'currency' | 'percentage' | 'number';
 }
 
+const EMPTY_METRICS: HealthMetric[] = [];
+
 interface FinancialHealthProps {
   metrics?: HealthMetric[];
   isLoading?: boolean;
 }
 
-export function FinancialHealth({ metrics = [], isLoading }: FinancialHealthProps) {
+export function FinancialHealth({ metrics = EMPTY_METRICS, isLoading }: FinancialHealthProps) {
   if (isLoading) {
     return (
       <Card>
@@ -28,7 +30,7 @@ export function FinancialHealth({ metrics = [], isLoading }: FinancialHealthProp
         </CardHeader>
         <CardContent className="space-y-6">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="space-y-2">
+            <div key={`skeleton-${i}`} className="space-y-2">
               <div className="flex justify-between">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-16" />
@@ -78,7 +80,7 @@ export function FinancialHealth({ metrics = [], isLoading }: FinancialHealthProp
           </div>
         ) : (
           metrics.map((metric, index) => (
-            <div key={index} className="space-y-2">
+            <div key={metric.label} className="space-y-2">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm font-medium">{metric.label}</p>

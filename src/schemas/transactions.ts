@@ -4,7 +4,7 @@ import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schem
 import { VALIDATION_LIMITS } from '@/lib/validation';
 import { baseFiltersSchema, createEnumArrayFilter } from '@/schemas/common';
 
-export const TransactionSchema = z.object({
+const TransactionSchema = z.object({
   type: TransactionTypeSchema,
   date: z.date(),
   amount: z.number().positive('Amount must be greater than 0'),

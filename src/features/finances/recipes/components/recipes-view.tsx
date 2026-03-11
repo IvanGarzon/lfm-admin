@@ -8,7 +8,6 @@ import { SearchParams } from 'nuqs/server';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { RecipeList } from '@/features/finances/recipes/components/recipe-list';
-import { RecipeActionProvider } from '@/features/finances/recipes/context/recipe-action-context';
 import type { RecipePagination } from '@/features/finances/recipes/types';
 import { CreateRecipeGroupDialog } from '@/features/finances/recipe-groups/components/create-recipe-group-dialog';
 import { useCreateRecipeGroup } from '@/features/finances/recipe-groups/hooks/use-recipe-group-mutations';
@@ -17,7 +16,6 @@ import type { CreateRecipeGroupInput } from '@/schemas/recipe-groups';
 interface RecipesViewProps {
   initialData: RecipePagination;
   searchParams: SearchParams;
-  recipeId?: string;
 }
 
 const RecipeDrawer = dynamic(
@@ -29,7 +27,7 @@ const RecipeDrawer = dynamic(
   },
 );
 
-export function RecipesView({ initialData, searchParams, recipeId }: RecipesViewProps) {
+export function RecipesView({ initialData, searchParams }: RecipesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [showGroupDialog, setShowGroupDialog] = useState<boolean>(false);
 
@@ -47,46 +45,42 @@ export function RecipesView({ initialData, searchParams, recipeId }: RecipesView
   };
 
   return (
-    <RecipeActionProvider>
-      <Box className="space-y-4 min-w-0 w-full">
-        <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Box className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-tight">Recipes</h1>
-            <p className="text-muted-foreground text-sm">Floral & Craft Cost Calculator</p>
-          </Box>
-          <Box className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowGroupDialog(true)}
-              className="w-full sm:w-auto"
-            >
-              <Layers className="h-4 w-4 mr-2" />
-              Create Group
-            </Button>
-            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              New Recipe
-            </Button>
-          </Box>
+    <Box className="space-y-4 min-w-0 w-full">
+      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <Box className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight">Recipes</h1>
+          <p className="text-muted-foreground text-sm">Floral & Craft Cost Calculator</p>
         </Box>
-
-        <Box className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0">
-          <RecipeList initialData={initialData} searchParams={searchParams} />
+        <Box className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setShowGroupDialog(true)}
+            className="w-full sm:w-auto"
+          >
+            <Layers className="h-4 w-4 mr-2" />
+            Create Group
+          </Button>
+          <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            New Recipe
+          </Button>
         </Box>
-
-        {showCreateModal ? (
-          <RecipeDrawer open={showCreateModal} onClose={handleShowCreateModal} />
-        ) : null}
-
-        {recipeId ? <RecipeDrawer id={recipeId} /> : null}
-
-        <CreateRecipeGroupDialog
-          open={showGroupDialog}
-          onOpenChange={setShowGroupDialog}
-          onCreate={handleCreateGroup}
-          isCreating={createGroupMutation.isPending}
-        />
       </Box>
-    </RecipeActionProvider>
+
+      <Box className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0">
+        <RecipeList initialData={initialData} searchParams={searchParams} />
+      </Box>
+
+      {showCreateModal ? (
+        <RecipeDrawer open={showCreateModal} onClose={handleShowCreateModal} />
+      ) : null}
+
+      <CreateRecipeGroupDialog
+        open={showGroupDialog}
+        onOpenChange={setShowGroupDialog}
+        onCreate={handleCreateGroup}
+        isCreating={createGroupMutation.isPending}
+      />
+    </Box>
   );
 }

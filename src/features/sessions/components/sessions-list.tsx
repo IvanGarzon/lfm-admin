@@ -18,7 +18,13 @@ import { SessionCard } from '@/features/sessions/components/session-card';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { getSessionLimit } from '@/config/session';
 
-export function SessionsList({ initialData = [] }: { initialData?: SessionWithUser[] }) {
+const EMPTY_SESSIONS: SessionWithUser[] = [];
+
+export function SessionsList({
+  initialData = EMPTY_SESSIONS,
+}: {
+  initialData?: SessionWithUser[];
+}) {
   const { data: currentSession } = useSession();
   const deleteMutation = useDeleteSession();
   const deleteOthersMutation = useDeleteOtherSessions();

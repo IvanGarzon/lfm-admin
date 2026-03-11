@@ -15,6 +15,8 @@ import { ColorPicker } from '@/components/ui/color-picker';
 import { Box } from '@/components/ui/box';
 import { useUploadQuoteItemColorPalette } from '@/features/finances/quotes/hooks/use-quote-queries';
 
+const EMPTY_COLORS: string[] = [];
+
 interface QuoteItemColorPaletteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,9 +32,9 @@ export function QuoteItemColorPaletteDialog({
   quoteId,
   quoteItemId,
   itemDescription,
-  initialColors = [],
+  initialColors = EMPTY_COLORS,
 }: QuoteItemColorPaletteDialogProps) {
-  const [colors, setColors] = useState<string[]>(initialColors);
+  const [colors, setColors] = useState<string[]>(EMPTY_COLORS);
 
   const uploadMutation = useUploadQuoteItemColorPalette();
 

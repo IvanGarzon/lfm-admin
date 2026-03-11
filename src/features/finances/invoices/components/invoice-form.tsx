@@ -170,6 +170,7 @@ export function InvoiceForm({
       onDirtyStateChange?.(false);
       return values;
     }, [invoice, items, onDirtyStateChange]),
+    isUpdating, // Reset form when update completes (true -> false)
   );
 
   // Warn user before leaving page with unsaved changes
@@ -213,9 +214,6 @@ export function InvoiceForm({
         return;
       }
 
-      // Notify parent that form will be clean after submission
-      onDirtyStateChange?.(false);
-
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -226,7 +224,7 @@ export function InvoiceForm({
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, invoice?.id, onDirtyStateChange],
+    [isLocked, mode, onCreate, onUpdate, invoice?.id],
   );
 
   const calculateSubtotal = useCallback(() => {

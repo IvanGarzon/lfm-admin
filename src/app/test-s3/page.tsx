@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import {
   Upload,
   Download,
@@ -40,6 +40,7 @@ type S3File = {
 };
 
 export default function TestS3Page() {
+  const fileInputId = useId();
   const [results, setResults] = useState<TestResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{
@@ -626,8 +627,11 @@ export default function TestS3Page() {
           <h2 className="text-xl font-semibold mb-4">Upload Custom File</h2>
           <Box className="flex gap-4 items-end">
             <Box className="flex-1">
-              <label className="block text-sm font-medium mb-2">Select File (Max 5MB)</label>
+              <label htmlFor={fileInputId} className="block text-sm font-medium mb-2">
+                Select File (Max 5MB)
+              </label>
               <input
+                id={fileInputId}
                 ref={fileInputRef}
                 type="file"
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
@@ -673,7 +677,7 @@ export default function TestS3Page() {
             ) : (
               results.map((result, index) => (
                 <Box
-                  key={index}
+                  key={`${result.type}-${result.message.slice(0, 50)}-${index}`}
                   className={`p-4 rounded-lg border ${
                     result.type === 'success'
                       ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
@@ -778,7 +782,7 @@ export default function TestS3Page() {
               // List View
               s3Files.map((file, index) => (
                 <Box
-                  key={index}
+                  key={file.key}
                   className="p-4 rounded-lg border bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Box className="flex items-center justify-between gap-4">
@@ -948,7 +952,7 @@ export default function TestS3Page() {
                                           <Box className="bg-white dark:bg-gray-900">
                                             {files.map((file, index) => (
                                               <Box
-                                                key={index}
+                                                key={file.key}
                                                 className="p-3 border-t hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                               >
                                                 <Box className="flex items-center justify-between gap-4">

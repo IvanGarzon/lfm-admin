@@ -119,6 +119,7 @@ export function EmployeeForm({
       onDirtyStateChange?.(false);
       return values;
     }, [employee, onDirtyStateChange]),
+    isUpdating, // Reset form when update completes (true -> false)
   );
 
   const { isDirty } = form.formState;
@@ -136,8 +137,6 @@ export function EmployeeForm({
 
   const onSubmit: SubmitHandler<EmployeeFormInput> = useCallback(
     (data: EmployeeFormInput) => {
-      onDirtyStateChange?.(false);
-
       if (mode === 'create') {
         onCreate?.(data);
       } else {
@@ -149,7 +148,7 @@ export function EmployeeForm({
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, employee?.id, onDirtyStateChange],
+    [mode, onCreate, onUpdate, employee?.id],
   );
 
   const isDisabled = isCreating || isUpdating;

@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
+
 import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
@@ -297,7 +298,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>Receipt</Text>
@@ -329,7 +329,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </View>
         </View>
 
-        {/* Billing Information */}
         <View style={styles.billingSection}>
           <View style={styles.billingColumn}>
             <Text style={styles.companyName}>{lasFloresAccount.accountName}</Text>
@@ -350,7 +349,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </View>
         </View>
 
-        {/* Payment Summary */}
         <View style={styles.paymentInfoRow}>
           <Text style={styles.paymentSummaryText}>
             {invoice.currency} {formatCurrency({ number: total })} paid on{' '}
@@ -358,11 +356,8 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </Text>
         </View>
 
-        {/* Items Table */}
         <View style={styles.table}>
           <Text style={styles.sectionTitle}>Items</Text>
-
-          {/* Table Header */}
           <View style={styles.tableHeader}>
             <Text style={styles.tableCol1}>Items</Text>
             <Text style={styles.tableCol2}>QTY</Text>
@@ -370,7 +365,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
             <Text style={styles.tableCol4}>Total</Text>
           </View>
 
-          {/* Table Rows */}
           {invoice.items.map((item) => (
             <View key={item.id} style={styles.tableRow}>
               <Text style={styles.tableCol1}>{item.description}</Text>
@@ -381,7 +375,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           ))}
         </View>
 
-        {/* Summary Section */}
         <View style={styles.summarySection} wrap={false}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -408,12 +401,10 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </View>
         </View>
 
-        {/* Payment History */}
         {invoice.payments && invoice.payments.length > 0 && (
           <View style={styles.paymentHistorySection} wrap={false}>
             <Text style={styles.sectionTitle}>Payment History</Text>
             <View style={styles.paymentHistoryTable}>
-              {/* Table Header */}
               <View style={styles.paymentHistoryHeader}>
                 <Text style={styles.paymentCol1}>Date</Text>
                 <Text style={styles.paymentCol2}>Method</Text>
@@ -421,7 +412,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
                 <Text style={styles.paymentCol4}>Amount</Text>
               </View>
 
-              {/* Table Rows */}
               {invoice.payments.map((payment) => (
                 <View key={payment.id} style={styles.paymentHistoryRow}>
                   <Text style={styles.paymentCol1}>{format(payment.date, 'MMM dd, yyyy')}</Text>
@@ -436,7 +426,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </View>
         )}
 
-        {/* Notes */}
         {invoice.notes ? (
           <View style={styles.notes} wrap={false}>
             <Text style={styles.notesTitle}>Notes:</Text>
@@ -444,7 +433,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </View>
         ) : null}
 
-        {/* Thank You Section */}
         <View style={styles.thankYouSection} wrap={false}>
           <Text style={styles.thankYouText}>Thank you for your business!</Text>
           <Text style={styles.thankYouSubtext}>
@@ -452,7 +440,6 @@ export function ReceiptDocument({ invoice, logoUrl }: ReceiptPreviewProps) {
           </Text>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <View style={styles.footerContent}>

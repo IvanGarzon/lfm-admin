@@ -24,7 +24,7 @@ export const InvoiceItemSchema = z.object({
   productId: z.cuid().nullable(),
 });
 
-export const InvoiceSchema = z
+const InvoiceSchema = z
   .object({
     customerId: z.cuid({ error: 'Customer ID is required' }),
     status: InvoiceStatusSchema,

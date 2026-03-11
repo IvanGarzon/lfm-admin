@@ -2,6 +2,7 @@
 
 import { TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import dynamic from 'next/dynamic';
 
 import {
   Card,
@@ -17,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+
 const chartData = [
   { month: 'January', desktop: 186, mobile: 80 },
   { month: 'February', desktop: 305, mobile: 200 },
@@ -37,7 +39,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AreaGraph() {
+function AreaGraph() {
   return (
     <Card className="@container/card">
       <CardHeader>
@@ -97,3 +99,28 @@ export function AreaGraph() {
     </Card>
   );
 }
+
+export default dynamic(() => Promise.resolve(AreaGraph), {
+  ssr: false,
+  loading: () => (
+    <Card className="@container/card">
+      <CardHeader>
+        <div className="h-6 w-48 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-64 bg-muted rounded animate-pulse mt-2" />
+      </CardHeader>
+      <CardContent>
+        <div className="aspect-auto h-[310px] w-full flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading chart...</div>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <div className="flex w-full items-start gap-2 text-sm">
+          <div className="grid gap-2">
+            <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  ),
+});
