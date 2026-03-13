@@ -1,6 +1,12 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  skipToken,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { InvoiceStatus } from '@/prisma/client';
 import {
@@ -74,95 +80,87 @@ export function useInvoices(filters: InvoiceFilters) {
 
 export function useInvoice(id: string | undefined) {
   return useQuery({
-    queryKey: INVOICE_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Invoice ID is required');
-      }
-      const result = await getInvoiceById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: INVOICE_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getInvoiceById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useInvoiceBasic(id: string | undefined) {
   return useQuery({
-    queryKey: [...INVOICE_KEYS.detail(id ?? ''), 'basic'],
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Invoice ID is required');
-      }
-      const result = await getInvoiceBasicById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: [...INVOICE_KEYS.detail(id ?? ''), 'basic'], // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getInvoiceBasicById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useInvoiceItems(id: string | undefined) {
   return useQuery({
-    queryKey: INVOICE_KEYS.items(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Invoice ID is required');
-      }
-      const result = await getInvoiceItems(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: INVOICE_KEYS.items(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getInvoiceItems(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useInvoicePayments(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: INVOICE_KEYS.payments(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Invoice ID is required');
-      }
-      const result = await getInvoicePayments(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: INVOICE_KEYS.payments(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getInvoicePayments(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+          return result.data;
+        }
+      : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useInvoiceHistory(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: INVOICE_KEYS.history(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Invoice ID is required');
-      }
-      const result = await getInvoiceStatusHistory(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: INVOICE_KEYS.history(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getInvoiceStatusHistory(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+          return result.data;
+        }
+      : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }

@@ -286,56 +286,58 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     id: string,
     data: Partial<CreateTransactionInput>,
   ): Promise<TransactionListItem | null> {
-    // If categoryIds are provided, we need to update the categories
-    if (data.categoryIds) {
-      // Delete existing categories and create new ones
-      await this.prisma.transactionCategoryOnTransaction.deleteMany({
-        where: { transactionId: id },
-      });
-    }
+    const updatedTransition = await this.prisma.$transaction(async (tx) => {
+      if (data.categoryIds) {
+        await tx.transactionCategoryOnTransaction.deleteMany({
+          where: { transactionId: id },
+        });
+      }
 
-    const updatedTransaction = await this.prisma.transaction.update({
-      where: { id },
-      data: {
-        type: data.type,
-        date: data.date,
-        amount: data.amount,
-        currency: data.currency,
-        description: data.description,
-        payee: data.payee,
-        status: data.status,
-        referenceId: data.referenceId,
-        invoiceId: data.invoiceId,
-        vendorId: data.vendorId,
-        categories: data.categoryIds
-          ? {
-              create: data.categoryIds.map((categoryId) => ({
-                categoryId,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        categories: {
-          include: {
-            category: true,
-          },
+      const transaction = await tx.transaction.update({
+        where: { id },
+        data: {
+          type: data.type,
+          date: data.date,
+          amount: data.amount,
+          currency: data.currency,
+          description: data.description,
+          payee: data.payee,
+          status: data.status,
+          referenceId: data.referenceId,
+          invoiceId: data.invoiceId,
+          vendorId: data.vendorId,
+          categories: data.categoryIds
+            ? {
+                create: data.categoryIds.map((categoryId) => ({
+                  categoryId,
+                })),
+              }
+            : undefined,
         },
-        invoice: {
-          include: {
-            customer: true,
+        include: {
+          categories: {
+            include: {
+              category: true,
+            },
           },
+          invoice: {
+            include: {
+              customer: true,
+            },
+          },
+          vendor: true,
+          attachments: true,
         },
-        vendor: true,
-        attachments: true,
-      },
+      });
+
+      return transaction;
     });
 
-    if (!updatedTransaction) {
+    if (!updatedTransition) {
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedTransaction.id);
+    return await this.findByIdWithDetails(updatedTransition.id);
   }
 
   /**

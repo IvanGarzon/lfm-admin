@@ -1,6 +1,12 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  skipToken,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   getTransactions,
@@ -16,7 +22,10 @@ import {
   uploadTransactionAttachment,
   deleteTransactionAttachment,
 } from '@/actions/finances/transactions';
-import { TransactionFilters } from '@/features/finances/transactions/types';
+import {
+  TransactionFilters,
+  type TransactionListItem,
+} from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { formatDateNormalizer } from '@/lib/utils';
 
@@ -93,19 +102,17 @@ export function useTransactions(filters: Partial<TransactionFilters> = {}) {
 
 export function useTransaction(id: string | undefined) {
   return useQuery({
-    queryKey: TRANSACTION_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Transaction ID is required');
-      }
-      const result = await getTransactionById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: TRANSACTION_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getTransactionById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -164,10 +171,16 @@ export function useCreateTransaction() {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
-      toast.success('Transaction created successfully');
+      toast.success(
+        `Transaction ${data?.referenceNumber != null ? data?.referenceNumber : ''} created successfully`,
+      );
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create transaction');
@@ -186,14 +199,46 @@ export function useUpdateTransaction() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(data.id) });
-      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
-      toast.success('Transaction updated successfully');
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousTransaction = queryClient.getQueryData(TRANSACTION_KEYS.detail(newData.id));
+
+      // Optimistically update transaction with new data
+      queryClient.setQueryData(
+        TRANSACTION_KEYS.detail(newData.id),
+        (old: TransactionListItem | undefined) => {
+          if (!old) {
+            return old;
+          }
+
+          return {
+            ...old,
+            ...newData,
+          };
+        },
+      );
+
+      return { previousTransaction };
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update transaction');
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousTransaction) {
+        queryClient.setQueryData(TRANSACTION_KEYS.detail(newData.id), context.previousTransaction);
+      }
+      toast.error(err.message || 'Failed to update transaction');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
+    },
+    onSuccess: () => {
+      toast.success('Transaction updated successfully');
     },
   });
 }
@@ -209,13 +254,40 @@ export function useDeleteTransaction() {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
+
+      // Snapshot the previous values
+      const previousTransaction = queryClient.getQueryData(TRANSACTION_KEYS.detail(id));
+      const previousLists = queryClient.getQueriesData({ queryKey: TRANSACTION_KEYS.lists() });
+
+      // Optimistically remove from detail cache
+      queryClient.removeQueries({ queryKey: TRANSACTION_KEYS.detail(id) });
+
+      // Return context for rollback
+      return { previousTransaction, previousLists, id };
+    },
+    onError: (error: Error, id, context) => {
+      // Rollback optimistic update
+      if (context?.previousTransaction) {
+        queryClient.setQueryData(TRANSACTION_KEYS.detail(id), context.previousTransaction);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      toast.error(error.message || 'Failed to delete transaction');
+    },
+    onSettled: () => {
+      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
-      toast.success('Transaction deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete transaction');
+    onSuccess: () => {
+      toast.success('Transaction deleted successfully');
     },
   });
 }
@@ -224,21 +296,18 @@ export function useUploadTransactionAttachment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      transactionId,
-      formData,
-    }: {
-      transactionId: string;
-      formData: FormData;
-    }) => {
-      const result = await uploadTransactionAttachment(transactionId, formData);
+    mutationFn: async (data: { transactionId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', data.file);
+
+      const result = await uploadTransactionAttachment(data.transactionId, formData);
       if (!result.success) {
         throw new Error(result.error);
       }
-      return result.data;
+      return { ...result.data, transactionId: data.transactionId };
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.transactionId) });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(data.transactionId) });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       toast.success('Attachment uploaded successfully');
     },
@@ -263,15 +332,49 @@ export function useDeleteTransactionAttachment() {
       if (!result.success) {
         throw new Error(result.error);
       }
-      return result.data;
+      return { ...result.data, transactionId };
     },
-    onSuccess: (_, variables) => {
+    onMutate: async (data) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(data.transactionId) });
+      await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
+
+      // Snapshot the previous values
+      const previousTransaction = queryClient.getQueryData(
+        TRANSACTION_KEYS.detail(data.transactionId),
+      );
+
+      // Optimistically remove attachment from transaction detail
+      queryClient.setQueryData(
+        TRANSACTION_KEYS.detail(data.transactionId),
+        (old: TransactionListItem | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            attachments: old.attachments?.filter((att) => att.id !== data.attachmentId) || [],
+          };
+        },
+      );
+
+      return { previousTransaction };
+    },
+    onError: (error: Error, data, context) => {
+      // Rollback optimistic update
+      if (context?.previousTransaction) {
+        queryClient.setQueryData(
+          TRANSACTION_KEYS.detail(data.transactionId),
+          context.previousTransaction,
+        );
+      }
+      toast.error(error.message || 'Failed to delete attachment');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.transactionId) });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
-      toast.success('Attachment deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete attachment');
+    onSuccess: () => {
+      toast.success('Attachment deleted successfully');
     },
   });
 }

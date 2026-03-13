@@ -141,48 +141,51 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     };
   }
 
-  async createWithItems(data: CreateRecipeInput): Promise<Recipe> {
-    return this.prisma.$transaction(async (tx) => {
-      const recipe = await tx.recipe.create({
-        data: {
-          name: data.name,
-          description: data.description,
-          labourCostType: data.labourCostType,
-          labourAmount: data.labourAmount,
-          roundPrice: data.roundPrice,
-          roundingMethod: data.roundingMethod,
-          totalMaterialsCost: data.totalMaterialsCost,
-          labourCost: data.labourCost,
-          totalCost: data.totalCost,
-          totalRetailPrice: data.totalRetailPrice,
-          sellingPrice: data.sellingPrice,
-          notes: data.notes,
-          items: {
-            create: data.items.map((item, index) => ({
-              priceListItemId: item.priceListItemId,
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              lineTotal: item.lineTotal,
-              retailPrice: item.retailPrice,
-              retailLineTotal: item.retailLineTotal,
-              order: item.order ?? index,
-            })),
-          },
+  async createWithItems(data: CreateRecipeInput): Promise<RecipeListItem> {
+    const recipe = await this.prisma.recipe.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        labourCostType: data.labourCostType,
+        labourAmount: data.labourAmount,
+        roundPrice: data.roundPrice,
+        roundingMethod: data.roundingMethod,
+        totalMaterialsCost: data.totalMaterialsCost,
+        labourCost: data.labourCost,
+        totalCost: data.totalCost,
+        totalRetailPrice: data.totalRetailPrice,
+        sellingPrice: data.sellingPrice,
+        notes: data.notes,
+        items: {
+          create: data.items.map((item, index) => ({
+            priceListItemId: item.priceListItemId,
+            name: item.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            lineTotal: item.lineTotal,
+            retailPrice: item.retailPrice,
+            retailLineTotal: item.retailLineTotal,
+            order: item.order ?? index,
+          })),
         },
-      });
-      return recipe;
+      },
     });
+
+    const createdRecipe = await this.findByIdWithDetails(recipe.id);
+
+    if (!createdRecipe) {
+      throw new Error('Failed to retrieve created recipe');
+    }
+
+    return createdRecipe;
   }
 
-  async updateWithItems(id: string, data: UpdateRecipeInput): Promise<Recipe> {
-    return this.prisma.$transaction(async (tx) => {
-      // Delete existing items
+  async updateWithItems(id: string, data: UpdateRecipeInput): Promise<RecipeListItem | null> {
+    const updatedRecipe = await this.prisma.$transaction(async (tx) => {
       await tx.recipeItem.deleteMany({
         where: { recipeId: id },
       });
 
-      // Update recipe and recreate items
       const recipe = await tx.recipe.update({
         where: { id },
         data: {
@@ -212,8 +215,15 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
           },
         },
       });
+
       return recipe;
     });
+
+    if (!updatedRecipe) {
+      return null;
+    }
+
+    return await this.findByIdWithDetails(updatedRecipe.id);
   }
 
   async softDelete(id: string): Promise<boolean> {

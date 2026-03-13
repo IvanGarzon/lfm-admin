@@ -83,10 +83,7 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
   try {
     requirePermission(session.user, 'canManageQuotes');
 
-    // Validate input
     const validatedData = UpdateQuoteSchema.parse(data);
-
-    // Check if quote exists
     const existing = await quoteRepo.findById(validatedData.id);
     if (!existing) {
       return { success: false, error: 'Quote not found' };

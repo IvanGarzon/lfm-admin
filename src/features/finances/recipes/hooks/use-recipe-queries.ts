@@ -50,19 +50,17 @@ export function useRecipes(filters: RecipeFilters) {
 
 export function useRecipe(id: string | undefined) {
   return useQuery({
-    queryKey: RECIPE_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Recipe ID is required');
-      }
-      const result = await getRecipeById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: RECIPE_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getRecipeById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000,
   });
 }
@@ -94,6 +92,10 @@ export function useCreateRecipe() {
       }
       return result.data;
     },
+    onMutate: async () => {
+      // Cancel any outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.lists() });
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
       toast.success(`Recipe ${data.name} created successfully`);
@@ -108,20 +110,52 @@ export function useUpdateRecipe() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateRecipeInput }) => {
-      const result = await updateRecipe(id, data);
+    mutationFn: async (data: UpdateRecipeInput) => {
+      const result = await updateRecipe(data);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.detail(data.id) });
-      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
-      toast.success(`Recipe ${data.name} updated successfully`);
+    onMutate: async (newData) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.detail(newData.id) });
+      await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.lists() });
+
+      // Snapshot the previous value
+      const previousRecipe = queryClient.getQueryData(RECIPE_KEYS.detail(newData.id));
+
+      // Optimistically update recipe with new data
+      queryClient.setQueryData(
+        RECIPE_KEYS.detail(newData.id),
+        (old: RecipeWithDetails | undefined) => {
+          if (!old) {
+            return old;
+          }
+
+          return {
+            ...old,
+            ...newData,
+          };
+        },
+      );
+
+      return { previousRecipe };
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update recipe');
+    onError: (err, newData, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousRecipe) {
+        queryClient.setQueryData(RECIPE_KEYS.detail(newData.id), context.previousRecipe);
+      }
+      toast.error(err.message || 'Failed to update recipe');
+    },
+    onSettled: (_data, _error, variables) => {
+      // Always refetch after error or success to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Recipe updated successfully');
     },
   });
 }
@@ -137,12 +171,39 @@ export function useDeleteRecipe() {
       }
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
-      toast.success('Recipe deleted successfully');
+    onMutate: async (id: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.lists() });
+
+      // Snapshot the previous values
+      const previousRecipe = queryClient.getQueryData(RECIPE_KEYS.detail(id));
+      const previousLists = queryClient.getQueriesData({ queryKey: RECIPE_KEYS.lists() });
+
+      // Optimistically remove from detail cache
+      queryClient.removeQueries({ queryKey: RECIPE_KEYS.detail(id) });
+
+      // Return context for rollback
+      return { previousRecipe, previousLists, id };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, id, context) => {
+      // Rollback optimistic update
+      if (context?.previousRecipe) {
+        queryClient.setQueryData(RECIPE_KEYS.detail(id), context.previousRecipe);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast.error(error.message || 'Failed to delete recipe');
+    },
+    onSettled: () => {
+      // Always refetch to ensure cache consistency
+      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Recipe deleted successfully');
     },
   });
 }

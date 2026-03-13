@@ -1,5 +1,12 @@
 import { QuoteStatus } from '@/prisma/client';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  skipToken,
+  type QueryClient,
+} from '@tanstack/react-query';
 import {
   getQuotes,
   getQuoteById,
@@ -72,6 +79,34 @@ export const QUOTE_KEYS = {
   },
 };
 
+/**
+ * Invalidates quote-related queries after mutations.
+ * Ensures cache consistency across quote lists, details, and statistics.
+ */
+function invalidateQuoteQueries(
+  queryClient: QueryClient,
+  options?: {
+    quoteId?: string;
+    invalidateAllDetails?: boolean;
+    includeInvoices?: boolean;
+  },
+) {
+  if (options?.quoteId) {
+    queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(options.quoteId) });
+  }
+
+  if (options?.invalidateAllDetails) {
+    queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.details() });
+  }
+
+  queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+  queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+
+  if (options?.includeInvoices) {
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+  }
+}
+
 export function useQuotes(filters: QuoteFilters) {
   return useQuery({
     queryKey: QUOTE_KEYS.list(filters),
@@ -99,20 +134,17 @@ export function useQuotes(filters: QuoteFilters) {
 
 export function useQuote(id: string | undefined) {
   return useQuery({
-    queryKey: QUOTE_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Quote ID is required');
-      }
+    queryKey: QUOTE_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getQuoteById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      const result = await getQuoteById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -138,39 +170,36 @@ export function usePrefetchQuote() {
 
 export function useQuoteVersions(quoteId: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: QUOTE_KEYS.versions(quoteId ?? ''),
-    queryFn: async () => {
-      if (!quoteId) {
-        throw new Error('Quote ID is required');
-      }
-      const result = await getQuoteVersions(quoteId);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: QUOTE_KEYS.versions(quoteId ?? ''), // Keep for type safety
+    queryFn: quoteId
+      ? async () => {
+          const result = await getQuoteVersions(quoteId);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled:
-      options?.enabled !== undefined ? options.enabled && Boolean(quoteId) : Boolean(quoteId),
+          return result.data;
+        }
+      : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useQuoteHistory(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: QUOTE_KEYS.history(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Quote ID is required');
-      }
-      const result = await getQuoteStatusHistory(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: QUOTE_KEYS.history(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getQuoteStatusHistory(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled && Boolean(id) : Boolean(id),
+          return result.data;
+        }
+      : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -215,9 +244,7 @@ export function useCreateQuote() {
       await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
     },
     onSuccess: (data) => {
-      // Invalidate lists and statistics
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient);
       toast.success(`Quote ${data.quoteNumber} created successfully`);
     },
     onError: (error: Error) => {
@@ -249,7 +276,9 @@ export function useUpdateQuote() {
       queryClient.setQueryData(
         QUOTE_KEYS.detail(newData.id),
         (old: QuoteWithDetails | undefined) => {
-          if (!old) return old;
+          if (!old) {
+            return old;
+          }
 
           // Calculate new total amount from items
           const totalAmount = newData.items.reduce(
@@ -297,10 +326,7 @@ export function useUpdateQuote() {
       toast.error(err.message || 'Failed to update quote');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success to ensure cache consistency
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id });
     },
     onSuccess: () => {
       toast.success('Quote updated successfully');
@@ -349,10 +375,7 @@ export function useMarkQuoteAsAccepted() {
       toast.error(err.message || 'Failed to mark quote as accepted');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id });
     },
     onSuccess: () => {
       toast.success('Quote marked as accepted');
@@ -401,10 +424,7 @@ export function useMarkQuoteAsRejected() {
       toast.error(err.message || 'Failed to mark quote as rejected');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id });
     },
     onSuccess: () => {
       toast.success('Quote marked as rejected');
@@ -450,10 +470,7 @@ export function useMarkQuoteAsSent() {
       toast.error(err.message || 'Failed to mark quote as sent');
     },
     onSettled: (_data, _error, id) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: id });
     },
     onSuccess: (data) => {
       if (data.message) {
@@ -509,10 +526,7 @@ export function useMarkQuoteAsOnHold() {
       toast.error(err.message || 'Failed to put quote on hold');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id });
     },
     onSuccess: () => {
       toast.success('Quote put on hold');
@@ -561,10 +575,7 @@ export function useMarkQuoteAsCancelled() {
       toast.error(err.message || 'Failed to cancel quote');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id });
     },
     onSuccess: () => {
       toast.success('Quote cancelled');
@@ -617,11 +628,7 @@ export function useConvertQuoteToInvoice() {
       toast.error(err.message || 'Failed to convert quote to invoice');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.id) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.id, includeInvoices: true });
     },
     onSuccess: (data) => {
       toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
@@ -642,8 +649,7 @@ export function useExpireQuotes() {
     },
     onSuccess: (data) => {
       if (data.count > 0) {
-        queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-        queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+        invalidateQuoteQueries(queryClient);
         toast.success(`${data.count} quote(s) expired`);
       }
     },
@@ -692,9 +698,7 @@ export function useDeleteQuote() {
       toast.error(error.message || 'Failed to delete quote');
     },
     onSettled: () => {
-      // Always refetch to ensure cache consistency
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient);
     },
     onSuccess: () => {
       toast.success('Quote deleted');
@@ -714,9 +718,7 @@ export function useCreateQuoteVersion() {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.details() });
+      invalidateQuoteQueries(queryClient, { invalidateAllDetails: true });
       toast.success(`Version ${data.versionNumber} created successfully (${data.quoteNumber})`);
     },
     onError: (error: Error) => {
@@ -744,8 +746,7 @@ export function useDuplicateQuote() {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient);
       toast.success(`Quote duplicated successfully (${data.quoteNumber})`);
     },
     onError: (error: Error) => {
@@ -831,18 +832,16 @@ export function useSendQuoteFollowUp() {
 
 export function useQuoteItemAttachments(quoteItemId: string | undefined) {
   return useQuery({
-    queryKey: QUOTE_KEYS.itemAttachments(quoteItemId ?? ''),
-    queryFn: async () => {
-      if (!quoteItemId) {
-        throw new Error('Quote item ID is required');
-      }
-      const result = await getQuoteItemAttachments(quoteItemId);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    enabled: Boolean(quoteItemId),
+    queryKey: QUOTE_KEYS.itemAttachments(quoteItemId ?? ''), // Keep for type safety
+    queryFn: quoteItemId
+      ? async () => {
+          const result = await getQuoteItemAttachments(quoteItemId);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -864,10 +863,8 @@ export function useUploadQuoteItemAttachment() {
       return { ...result.data, quoteId: data.quoteId };
     },
     onSuccess: (data) => {
-      // Invalidate item attachments, quote detail, and lists
       queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.itemAttachments(data.quoteItemId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(data.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      invalidateQuoteQueries(queryClient, { quoteId: data.quoteId });
       toast.success(`${data.fileName} uploaded successfully`);
     },
     onError: (error: Error) => {
@@ -937,12 +934,10 @@ export function useDeleteQuoteItemAttachment() {
       toast.error(error.message || 'Failed to delete image');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({
         queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId),
       });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(variables.quoteId) });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
+      invalidateQuoteQueries(queryClient, { quoteId: variables.quoteId });
     },
     onSuccess: () => {
       toast.success('Image deleted successfully');
@@ -1214,8 +1209,7 @@ export function useBulkUpdateQuoteStatus() {
           data.successCount > 1 ? `${data.successCount} quotes updated` : 'Quote updated',
         );
       }
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient);
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update quotes');
@@ -1244,8 +1238,7 @@ export function useBulkDeleteQuotes() {
           data.successCount > 1 ? `${data.successCount} quotes deleted` : 'Quote deleted',
         );
       }
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.statistics() });
+      invalidateQuoteQueries(queryClient);
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete quotes');
