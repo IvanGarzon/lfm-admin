@@ -1,5 +1,6 @@
 import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
 import type { InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
+import type { PaginationMeta } from '@/types/pagination';
 
 export type InvoiceFormInput = CreateInvoiceInput | UpdateInvoiceInput;
 
@@ -111,20 +112,9 @@ export interface InvoiceFilters {
 
 export type InvoicePagination = {
   items: InvoiceListItem[];
-  pagination: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number | null;
-    previousPage: number | null;
-  };
+  pagination: PaginationMeta;
 };
 
-/**
- * Invoice Actions
- */
 export type MarkInvoiceAsPaidData = {
   id: string;
   paidDate: Date;
@@ -141,9 +131,6 @@ export type SendInvoiceReminderData = {
   id: string;
 };
 
-/**
- * Statistics
- */
 export type RevenueTrend = {
   month: string;
   total: number;

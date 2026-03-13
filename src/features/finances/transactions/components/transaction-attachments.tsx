@@ -1,17 +1,17 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { FileText, Image, Loader2, Paperclip, Trash2, Upload, X } from 'lucide-react';
+
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   useDeleteTransactionAttachment,
   useUploadTransactionAttachment,
-} from '../hooks/use-transaction-queries';
+} from '@/features/finances/transactions/hooks/use-transaction-queries';
 import { formatFileSize, isImageFile } from '@/lib/file-constants';
-import type { TransactionAttachment } from '../types';
-import { toast } from 'sonner';
+import type { TransactionAttachment } from '@/features/finances/transactions/types';
 
 const EMPTY_ATTACHMENTS: TransactionAttachment[] = [];
 
@@ -39,11 +39,8 @@ export function TransactionAttachments({
       const file = event.target.files?.[0];
       if (!file || !transactionId) return;
 
-      const formData = new FormData();
-      formData.append('file', file);
-
       uploadMutation.mutate(
-        { transactionId, formData },
+        { transactionId, file },
         {
           onSuccess: () => {
             if (fileInputRef.current) {
@@ -70,7 +67,6 @@ export function TransactionAttachments({
     fileInputRef.current?.click();
   };
 
-  // Don't show upload button in create mode (transaction doesn't exist yet)
   const canUpload = mode === 'edit' && transactionId;
 
   return (
@@ -79,14 +75,14 @@ export function TransactionAttachments({
         <Box className="flex items-center gap-2">
           <Paperclip className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">Attachments</span>
-          {attachments.length > 0 && (
+          {attachments.length > 0 ? (
             <Badge variant="secondary" className="text-xs">
               {attachments.length}
             </Badge>
-          )}
+          ) : null}
         </Box>
 
-        {canUpload && (
+        {canUpload ? (
           <Button
             type="button"
             variant="outline"
@@ -106,7 +102,7 @@ export function TransactionAttachments({
               </>
             )}
           </Button>
-        )}
+        ) : null}
       </Box>
 
       <input
@@ -118,13 +114,13 @@ export function TransactionAttachments({
         disabled={disabled || uploadMutation.isPending || !canUpload}
       />
 
-      {!canUpload && (
+      {!canUpload ? (
         <Box className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 border border-dashed">
           Save the transaction first to add attachments
         </Box>
-      )}
+      ) : null}
 
-      {attachments.length > 0 && (
+      {attachments.length > 0 ? (
         <Box className="space-y-2">
           {attachments.map((attachment) => {
             const isDeleting =
@@ -183,7 +179,7 @@ export function TransactionAttachments({
             );
           })}
         </Box>
-      )}
+      ) : null}
     </Box>
   );
 }

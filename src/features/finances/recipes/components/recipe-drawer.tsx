@@ -89,15 +89,15 @@ export function RecipeDrawer({
 
   const handleUpdate = useCallback(
     (data: UpdateRecipeInput) => {
-      if (!id) return;
-      updateRecipe.mutate(
-        { id, data },
-        {
-          onSuccess: () => {
-            setHasUnsavedChanges(false);
-          },
+      if (!id) {
+        return;
+      }
+
+      updateRecipe.mutate(data, {
+        onSuccess: () => {
+          setHasUnsavedChanges(false);
         },
-      );
+      });
     },
     [updateRecipe, id],
   );

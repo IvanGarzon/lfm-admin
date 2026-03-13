@@ -14,6 +14,7 @@ import {
   type UpdateTransactionInput,
 } from '@/schemas/transactions';
 import type { ActionResult } from '@/types/actions';
+import type { TransactionListItem } from '@/features/finances/transactions/types';
 
 const transactionRepo = new TransactionRepository(prisma);
 
@@ -24,7 +25,7 @@ const transactionRepo = new TransactionRepository(prisma);
  */
 export async function createTransaction(
   data: CreateTransactionInput,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<TransactionListItem>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -32,7 +33,6 @@ export async function createTransaction(
 
   try {
     const validatedData = CreateTransactionSchema.parse(data);
-
     const transaction = await transactionRepo.createTransaction(validatedData);
 
     logger.info('Transaction created', {
@@ -47,7 +47,7 @@ export async function createTransaction(
 
     return {
       success: true,
-      data: { id: transaction.id },
+      data: transaction,
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create transaction');
@@ -70,13 +70,11 @@ export async function updateTransaction(
   try {
     const validatedData = UpdateTransactionSchema.parse(data);
     const existing = await transactionRepo.findById(validatedData.id);
-
     if (!existing) {
       return { success: false, error: 'Transaction not found' };
     }
 
     const transaction = await transactionRepo.updateTransaction(validatedData.id, validatedData);
-
     if (!transaction) {
       return { success: false, error: 'Failed to update transaction' };
     }

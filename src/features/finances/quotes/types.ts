@@ -1,5 +1,6 @@
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import type { QuoteStatus as QuoteStatusType } from '@/zod/schemas/enums/QuoteStatus.schema';
+import type { PaginationMeta } from '@/types/pagination';
 
 export type QuoteFormInput = CreateQuoteInput | UpdateQuoteInput;
 
@@ -106,20 +107,9 @@ export interface QuoteFilters {
 
 export type QuotePagination = {
   items: QuoteListItem[];
-  pagination: {
-    totalItems: number;
-    totalPages: number;
-    currentPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    nextPage: number | null;
-    previousPage: number | null;
-  };
+  pagination: PaginationMeta;
 };
 
-/**
- * Quote Actions
- */
 export type MarkQuoteAsAcceptedData = {
   id: string;
 };
@@ -146,9 +136,6 @@ export type ConvertQuoteToInvoiceData = {
   discount?: number;
 };
 
-/**
- * Statistics
- */
 export type QuoteStatistics = {
   total: number;
   draft: number;
@@ -171,9 +158,6 @@ export type StatsDateFilter = {
   endDate?: Date;
 };
 
-/**
- * Analytics Types
- */
 export type QuoteValueTrend = {
   month: string;
   total: number;
@@ -208,9 +192,6 @@ export type AverageTimeToDecision = {
   avgDaysToDecision: number; // Combined average for accept/reject
 };
 
-/**
- * Attachment Actions
- */
 export type UploadAttachmentData = {
   quoteId: string;
   file: File;

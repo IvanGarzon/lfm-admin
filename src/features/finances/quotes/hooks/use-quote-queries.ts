@@ -249,7 +249,9 @@ export function useUpdateQuote() {
       queryClient.setQueryData(
         QUOTE_KEYS.detail(newData.id),
         (old: QuoteWithDetails | undefined) => {
-          if (!old) return old;
+          if (!old) {
+            return old;
+          }
 
           // Calculate new total amount from items
           const totalAmount = newData.items.reduce(

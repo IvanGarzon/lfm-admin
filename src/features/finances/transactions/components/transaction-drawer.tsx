@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Drawer,
@@ -18,7 +18,7 @@ import {
   useTransaction,
 } from '../hooks/use-transaction-queries';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, AlertCircle } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { useQueryString } from '@/hooks/use-query-string';
 import {
@@ -36,6 +36,7 @@ export function TransactionDrawer({
   onClose?: () => void;
 }) {
   const { data: transaction, isLoading, error, isError } = useTransaction(id);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
@@ -50,6 +51,8 @@ export function TransactionDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
+        setHasUnsavedChanges(false);
+
         if (id && pathname?.includes(`/transactions/${id}`)) {
           // Navigate back to list preserving filters
           const basePath = '/finances/transactions';
@@ -67,7 +70,7 @@ export function TransactionDrawer({
     (data: CreateTransactionInput) => {
       createTransaction.mutate(data, {
         onSuccess: () => {
-          onClose?.();
+          handleOpenChange(false);
         },
       });
     },
@@ -76,13 +79,17 @@ export function TransactionDrawer({
 
   const handleUpdate = useCallback(
     (data: UpdateTransactionInput) => {
+      if (!id) {
+        return;
+      }
+
       updateTransaction.mutate(data, {
         onSuccess: () => {
-          onClose?.();
+          setHasUnsavedChanges(false);
         },
       });
     },
-    [updateTransaction, onClose],
+    [updateTransaction],
   );
 
   return (
@@ -104,7 +111,17 @@ export function TransactionDrawer({
         {/* <DrawerHeader> */}
         <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
           <Box className="mt-1 flex flex-col flex-1">
-            <DrawerTitle>{mode === 'create' ? 'New Transaction' : 'Edit Transaction'}</DrawerTitle>
+            <Box className="flex items-center gap-2 flex-wrap">
+              <DrawerTitle>
+                {mode === 'create' ? 'New Transaction' : 'Edit Transaction'}
+              </DrawerTitle>
+              {mode === 'edit' && hasUnsavedChanges ? (
+                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Unsaved changes
+                </span>
+              ) : null}
+            </Box>
             <DrawerDescription>
               {mode === 'create'
                 ? 'Create a new income or expense transaction.'
@@ -136,6 +153,7 @@ export function TransactionDrawer({
                   onUpdate={handleUpdate}
                   isCreating={createTransaction.isPending}
                   isUpdating={updateTransaction.isPending}
+                  onDirtyStateChange={setHasUnsavedChanges}
                   onClose={onClose}
                 />
               )}
