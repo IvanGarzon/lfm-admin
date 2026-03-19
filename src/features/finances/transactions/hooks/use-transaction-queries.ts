@@ -1,6 +1,12 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  skipToken,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   getTransactions,
@@ -96,19 +102,17 @@ export function useTransactions(filters: Partial<TransactionFilters> = {}) {
 
 export function useTransaction(id: string | undefined) {
   return useQuery({
-    queryKey: TRANSACTION_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Transaction ID is required');
-      }
-      const result = await getTransactionById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: TRANSACTION_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getTransactionById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000, // 30 seconds
   });
 }

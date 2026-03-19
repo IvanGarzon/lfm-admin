@@ -50,19 +50,17 @@ export function useRecipes(filters: RecipeFilters) {
 
 export function useRecipe(id: string | undefined) {
   return useQuery({
-    queryKey: RECIPE_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Recipe ID is required');
-      }
-      const result = await getRecipeById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: RECIPE_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getRecipeById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000,
   });
 }

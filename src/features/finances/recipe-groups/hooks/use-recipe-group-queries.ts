@@ -61,19 +61,17 @@ export function useRecipeGroups(filters: RecipeGroupFilters) {
 
 export function useRecipeGroup(id: string | undefined) {
   return useQuery({
-    queryKey: RECIPE_GROUP_KEYS.detail(id ?? ''),
-    queryFn: async () => {
-      if (!id) {
-        throw new Error('Recipe group ID is required');
-      }
-      const result = await getRecipeGroupById(id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+    queryKey: RECIPE_GROUP_KEYS.detail(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getRecipeGroupById(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
 
-      return result.data;
-    },
-    enabled: Boolean(id),
+          return result.data;
+        }
+      : skipToken,
     staleTime: 30 * 1000,
   });
 }
