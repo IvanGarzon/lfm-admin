@@ -2,7 +2,7 @@
 
 import type { UseFormReturn, FieldArrayWithId } from 'react-hook-form';
 import { useWatch } from 'react-hook-form';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Reorder, useDragControls, useMotionValue } from 'framer-motion';
 import { GripVertical, Package, Trash2, X, ImagePlus, Palette } from 'lucide-react';
 
@@ -38,7 +38,7 @@ type QuoteItemRowProps = {
   itemId?: string;
 };
 
-export function QuoteItemRow({
+export const QuoteItemRow = memo(function QuoteItemRow({
   index,
   field,
   form,
@@ -357,4 +357,4 @@ export function QuoteItemRow({
       ) : null}
     </Reorder.Item>
   );
-}
+});

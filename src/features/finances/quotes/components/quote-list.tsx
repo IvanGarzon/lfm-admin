@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { SearchParams } from 'nuqs/server';
 
 import { useDataTable } from '@/hooks/use-data-table';
@@ -36,13 +36,13 @@ export function QuoteList({
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.pagination.totalItems / perPage);
 
-  const markAsAccepted = useMarkQuoteAsAccepted();
-  const markAsSent = useMarkQuoteAsSent();
-  const downloadPdf = useDownloadQuotePdf();
-  const sendEmail = useSendQuoteEmail();
-  const sendFollowUp = useSendQuoteFollowUp();
-  const createVersion = useCreateQuoteVersion();
-  const duplicateQuote = useDuplicateQuote();
+  const markAsAcceptedMutation = useMarkQuoteAsAccepted();
+  const markAsSentMutation = useMarkQuoteAsSent();
+  const downloadPdfMutation = useDownloadQuotePdf();
+  const sendEmailMutation = useSendQuoteEmail();
+  const sendFollowUpMutation = useSendQuoteFollowUp();
+  const createVersionMutation = useCreateQuoteVersion();
+  const duplicateQuoteMutation = useDuplicateQuote();
   const bulkUpdateStatus = useBulkUpdateQuoteStatus();
   const bulkDelete = useBulkDeleteQuotes();
 
@@ -56,35 +56,84 @@ export function QuoteList({
 
   const isBulkPending = bulkUpdateStatus.isPending || bulkDelete.isPending;
 
+  const handleAccept = useCallback(
+    (id: string) => {
+      markAsAcceptedMutation.mutate({ id });
+    },
+    [markAsAcceptedMutation],
+  );
+
+  const handleSend = useCallback(
+    (id: string) => {
+      markAsSentMutation.mutate(id);
+    },
+    [markAsSentMutation],
+  );
+
+  const handleDownloadPdf = useCallback(
+    (id: string) => {
+      downloadPdfMutation.mutate(id);
+    },
+    [downloadPdfMutation],
+  );
+
+  const handleSendEmail = useCallback(
+    (id: string) => {
+      sendEmailMutation.mutate({ quoteId: id, type: 'sent' });
+    },
+    [sendEmailMutation],
+  );
+
+  const handleSendFollowUp = useCallback(
+    (id: string) => {
+      sendFollowUpMutation.mutate(id);
+    },
+    [sendFollowUpMutation],
+  );
+
+  const handleCreateVersion = useCallback(
+    (id: string) => {
+      createVersionMutation.mutate(id);
+    },
+    [createVersionMutation],
+  );
+
+  const handleDuplicate = useCallback(
+    (id: string) => {
+      duplicateQuoteMutation.mutate(id);
+    },
+    [duplicateQuoteMutation],
+  );
+
   const columns = useMemo(
     () =>
       createQuoteColumns(
-        (id, number) => openDelete(id, number),
-        (id) => markAsAccepted.mutate({ id }),
-        (id, number) => openReject(id, number),
-        (id) => markAsSent.mutate(id),
-        (id, number) => openOnHold(id, number),
-        (id, number) => openCancel(id, number),
-        (id, number, gst, discount) => openConvert(id, number, gst, discount),
-        (id) => downloadPdf.mutate(id),
-        (id) => sendEmail.mutate({ quoteId: id, type: 'sent' }),
-        (id) => sendFollowUp.mutate(id),
-        (id) => createVersion.mutate(id),
-        (id) => duplicateQuote.mutate(id),
+        openDelete,
+        handleAccept,
+        openReject,
+        handleSend,
+        openOnHold,
+        openCancel,
+        openConvert,
+        handleDownloadPdf,
+        handleSendEmail,
+        handleSendFollowUp,
+        handleCreateVersion,
+        handleDuplicate,
       ),
     [
-      markAsAccepted,
-      markAsSent,
-      downloadPdf,
-      sendEmail,
-      sendFollowUp,
-      createVersion,
-      duplicateQuote,
       openDelete,
+      handleAccept,
       openReject,
+      handleSend,
       openOnHold,
       openCancel,
       openConvert,
+      handleDownloadPdf,
+      handleSendEmail,
+      handleSendFollowUp,
+      handleCreateVersion,
+      handleDuplicate,
     ],
   );
 

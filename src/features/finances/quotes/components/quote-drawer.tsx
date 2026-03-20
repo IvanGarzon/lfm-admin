@@ -14,7 +14,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -160,12 +159,8 @@ export function QuoteDrawer({
 
   const handleDelete = useCallback(() => {
     if (!quote) return;
-    openDelete(quote.id, quote.quoteNumber, () => {
-      const basePath = '/finances/quotes';
-      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
-      router.push(targetPath);
-    });
-  }, [quote, openDelete, router, queryString]);
+    openDelete(quote.id, quote.quoteNumber);
+  }, [quote, openDelete]);
 
   const handleCreateVersion = useCallback(() => {
     if (!quote) {

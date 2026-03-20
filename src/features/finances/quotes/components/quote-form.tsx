@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useForm, useFieldArray, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -229,20 +229,16 @@ export function QuoteForm({
     [deleteItemMutation, quote?.id],
   );
 
-  const calculateSubtotal = useCallback(() => {
+  const subtotal = useMemo(() => {
     return watchedItems.reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
       0,
     );
   }, [watchedItems]);
 
-  const calculateTax = useCallback(() => {
-    return (calculateSubtotal() * gst) / 100;
-  }, [calculateSubtotal, gst]);
+  const tax = useMemo(() => (subtotal * gst) / 100, [subtotal, gst]);
 
-  const calculateTotal = useCallback(() => {
-    return calculateSubtotal() + calculateTax() - discount;
-  }, [calculateSubtotal, calculateTax, discount]);
+  const total = useMemo(() => subtotal + tax - discount, [subtotal, tax, discount]);
 
   return (
     <Form {...form}>
@@ -316,11 +312,11 @@ export function QuoteForm({
         </Box>
 
         <QuoteTotalSummary
-          subtotal={calculateSubtotal()}
+          subtotal={subtotal}
           gst={gst}
-          tax={calculateTax()}
+          tax={tax}
           discount={discount}
-          total={calculateTotal()}
+          total={total}
         />
       </form>
     </Form>
