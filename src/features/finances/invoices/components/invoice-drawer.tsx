@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
@@ -253,10 +253,10 @@ export function InvoiceDrawer({
     });
   }, [invoice, duplicateInvoice, router, queryString]);
 
-  const getDrawerHeader = () => {
+  const { title, status } = useMemo(() => {
     if (mode === 'create') {
       return {
-        title: 'New Invoice',
+        title: 'New Quote',
         status: null,
       };
     }
@@ -265,304 +265,295 @@ export function InvoiceDrawer({
       title: 'Update Invoice',
       status: invoice?.status ?? null,
     };
-  };
-
-  const { title, status } = getDrawerHeader();
+  }, [mode, invoice?.status]);
 
   return (
-    <>
-      <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-        <DrawerContent
-          className="overflow-x-hidden dark:bg-gray-925 pb-0!"
-          style={{
-            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
-          }}
-        >
-          {isLoading ? <InvoiceDrawerSkeleton /> : null}
+    <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+      <DrawerContent
+        className="overflow-x-hidden dark:bg-gray-925 pb-0!"
+        style={{
+          maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
+        }}
+      >
+        {isLoading ? <InvoiceDrawerSkeleton /> : null}
 
-          {isError ? (
-            <Box className="p-6 text-destructive">
-              <DrawerHeader>
-                <DrawerTitle>Error</DrawerTitle>
-              </DrawerHeader>
-              <p className="mt-4">Could not load invoice details: {error?.message}</p>
-            </Box>
-          ) : null}
+        {isError ? (
+          <Box className="p-6 text-destructive">
+            <DrawerHeader>
+              <DrawerTitle>Error</DrawerTitle>
+            </DrawerHeader>
+            <p className="mt-4">Could not load invoice details: {error?.message}</p>
+          </Box>
+        ) : null}
 
-          {(invoice && !isLoading && !isError) || mode === 'create' ? (
-            <>
-              {/* Custom Header with Toggle */}
-              <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-                <Box className="mt-1 flex flex-col flex-1">
-                  <Box className="flex items-center gap-2">
-                    <DrawerTitle>{title}</DrawerTitle>
-                    {mode === 'edit' && hasUnsavedChanges ? (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle className="h-3 w-3" />
-                        Unsaved changes
-                      </span>
-                    ) : null}
-                  </Box>
-                  {status ? (
-                    <DrawerDescription>
-                      <InvoiceStatusBadge status={status} />
-                    </DrawerDescription>
-                  ) : null}
-                </Box>
-
-                {/* Preview Button and Actions */}
+        {(invoice && !isLoading && !isError) || mode === 'create' ? (
+          <>
+            {/* Custom Header with Toggle */}
+            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+              <Box className="mt-1 flex flex-col flex-1">
                 <Box className="flex items-center gap-2">
-                  {mode === 'edit' ? (
-                    <Button type="button" variant="outline" size="sm" onClick={handleTogglePreview}>
-                      {showPreview ? (
-                        <>
-                          <EyeOff className="h-4 w-4 mr-1" />
-                          Hide Preview
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-4 w-4 mr-1" />
-                          Show Preview
-                        </>
-                      )}
-                    </Button>
+                  <DrawerTitle>{title}</DrawerTitle>
+                  {mode === 'edit' && hasUnsavedChanges ? (
+                    <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
+                      <AlertCircle className="h-3 w-3" />
+                      Unsaved changes
+                    </span>
                   ) : null}
-
-                  {mode === 'create' ? (
-                    <Button
-                      type="submit"
-                      form="form-rhf-invoice"
-                      size="sm"
-                      disabled={createInvoice.isPending}
-                    >
-                      <Save className="h-4 w-4 mr-1" />
-                      Save as Draft
-                    </Button>
-                  ) : null}
-
-                  {mode === 'edit' && invoice ? (
-                    <>
-                      {invoice.status !== InvoiceStatus.PAID ? (
-                        <Button
-                          type="submit"
-                          form="form-rhf-invoice"
-                          size="sm"
-                          variant="outline"
-                          disabled={updateInvoice.isPending || !hasUnsavedChanges}
-                        >
-                          <Save className="h-4 w-4 mr-1" />
-                          Save
-                        </Button>
-                      ) : null}
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            aria-label="More Options"
-                            disabled={updateInvoice.isPending}
-                            className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 cursor-pointer"
-                          >
-                            <MoreHorizontalIcon className="h-4 w-4" />
-                            <span className="sr-only">More options</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end" className="w-52">
-                          <DropdownMenuItem onClick={handleDuplicate}>
-                            <Copy className="h-4 w-4" />
-                            Duplicate invoice
-                          </DropdownMenuItem>
-                          {invoice.status === InvoiceStatus.DRAFT && (
-                            <DropdownMenuItem onClick={handleMarkAsPending}>
-                              <Hourglass className="h-4 w-4" />
-                              Mark as pending
-                            </DropdownMenuItem>
-                          )}
-                          {invoice.status === InvoiceStatus.PENDING && (
-                            <DropdownMenuItem onClick={handleMarkAsDraft}>
-                              <RotateCcw className="h-4 w-4" />
-                              Revert to draft
-                            </DropdownMenuItem>
-                          )}
-                          {invoice.status === InvoiceStatus.PENDING ||
-                          invoice.status === InvoiceStatus.OVERDUE ||
-                          invoice.status === InvoiceStatus.PARTIALLY_PAID ? (
-                            <>
-                              <DropdownMenuItem onClick={handleRecordPaymentDialog}>
-                                <CreditCard className="h-4 w-4" />
-                                Record payment
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleSendReminder}>
-                                <BellRing className="h-4 w-4" />
-                                Send reminder
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={handleCancelDialog}
-                                className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-                              >
-                                <Ban className="h-4 w-4" />
-                                Cancel invoice
-                              </DropdownMenuItem>
-                            </>
-                          ) : null}
-
-                          {invoice.status === InvoiceStatus.PAID ? (
-                            <>
-                              <DropdownMenuItem onClick={handleDownloadPdf}>
-                                <Download className="h-4 w-4" />
-                                Download invoice
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleOpenReceiptDialog}>
-                                <Receipt className="h-4 w-4" />
-                                Send receipt
-                              </DropdownMenuItem>
-                            </>
-                          ) : null}
-
-                          {invoice.status === InvoiceStatus.DRAFT && (
-                            <DropdownMenuItem
-                              onClick={handleDeleteDialog}
-                              className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-                            >
-                              <AlertCircle className="h-4 w-4" />
-                              Delete invoice
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </>
-                  ) : null}
-
-                  <Button
-                    variant="ghost"
-                    className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
-                    onClick={() => handleOpenChange(false)}
-                  >
-                    <X className="size-5" aria-hidden="true" />
-                    <span className="sr-only">Close</span>
-                  </Button>
                 </Box>
+                {status ? (
+                  <DrawerDescription>
+                    <InvoiceStatusBadge status={status} />
+                  </DrawerDescription>
+                ) : null}
               </Box>
 
-              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
-                <Box className="flex h-full">
-                  <Box
-                    className="h-full"
-                    style={{
-                      width: mode === 'edit' && showPreview ? '50%' : '100%',
-                    }}
-                  >
-                    {mode === 'create' ? (
-                      <InvoiceForm onCreate={handleCreate} isCreating={createInvoice.isPending} />
+              {/* Preview Button and Actions */}
+              <Box className="flex items-center gap-2">
+                {mode === 'edit' ? (
+                  <Button type="button" variant="outline" size="sm" onClick={handleTogglePreview}>
+                    {showPreview ? (
+                      <>
+                        <EyeOff className="h-4 w-4 mr-1" />
+                        Hide Preview
+                      </>
                     ) : (
-                      <Tabs
-                        value={activeTab}
-                        onValueChange={setActiveTab}
-                        className="w-full h-full flex flex-col"
-                      >
-                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
-                          <TabsTrigger value="details" className="relative">
-                            Invoice Details
-                          </TabsTrigger>
-                          <TabsTrigger value="payments" className="relative">
-                            Payments
-                            {invoice && invoice._count && invoice._count.payments > 0 && (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
-                                {invoice._count.payments}
-                              </Badge>
-                            )}
-                          </TabsTrigger>
-                          <TabsTrigger value="history" className="relative">
-                            History
-                            {invoice && invoice._count && invoice._count.statusHistory > 0 && (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
-                                {invoice._count.statusHistory}
-                              </Badge>
-                            )}
-                          </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
-                          <InvoiceForm
-                            invoice={invoice}
-                            items={items}
-                            onUpdate={handleUpdate}
-                            isUpdating={updateInvoice.isPending}
-                            isLoadingItems={isLoadingItems}
-                            onDirtyStateChange={handleUnsavedChanges}
-                          />
-                        </TabsContent>
-
-                        <TabsContent value="payments" className="mt-0 p-6">
-                          {isLoadingPayments ? (
-                            <Box className="text-center py-12 text-muted-foreground">
-                              Loading payments...
-                            </Box>
-                          ) : payments && payments.length > 0 && invoice ? (
-                            <InvoicePayments payments={payments} invoiceAmount={invoice.amount} />
-                          ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
-                              No payments recorded yet
-                            </Box>
-                          )}
-                        </TabsContent>
-
-                        <TabsContent value="history" className="mt-0 p-6">
-                          {isLoadingHistory ? (
-                            <Box className="text-center py-12 text-muted-foreground">
-                              Loading history...
-                            </Box>
-                          ) : history && history.length > 0 ? (
-                            <InvoiceStatusHistory history={history} />
-                          ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
-                              No history available
-                            </Box>
-                          )}
-                        </TabsContent>
-                      </Tabs>
+                      <>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Show Preview
+                      </>
                     )}
-                  </Box>
+                  </Button>
+                ) : null}
 
-                  {mode === 'edit' && showPreview && invoice ? (
-                    <Box
-                      className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
-                      style={{ width: '50%' }}
-                    >
-                      {/* Preview Header */}
-                      <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-925 flex items-center justify-between">
-                        <p className="text-lg font-semibold">Preview</p>
+                {mode === 'create' ? (
+                  <Button
+                    type="submit"
+                    form="form-rhf-invoice"
+                    size="sm"
+                    disabled={createInvoice.isPending}
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    Save as Draft
+                  </Button>
+                ) : null}
+
+                {mode === 'edit' && invoice ? (
+                  <>
+                    {invoice.status !== InvoiceStatus.PAID ? (
+                      <Button
+                        type="submit"
+                        form="form-rhf-invoice"
+                        size="sm"
+                        variant="outline"
+                        disabled={updateInvoice.isPending || !hasUnsavedChanges}
+                      >
+                        <Save className="h-4 w-4 mr-1" />
+                        Save
+                      </Button>
+                    ) : null}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <Button
-                          type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          onClick={handleDownloadPdf}
+                          aria-label="More Options"
+                          disabled={updateInvoice.isPending}
+                          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 cursor-pointer"
                         >
-                          <Download className="h-4 w-4" />
-                          <span className="sr-only">Download PDF</span>
+                          <MoreHorizontalIcon className="h-4 w-4" />
+                          <span className="sr-only">More options</span>
                         </Button>
-                      </Box>
+                      </DropdownMenuTrigger>
 
-                      {/* HTML Preview Content */}
-                      <Box className="flex-1 overflow-hidden">
-                        <InvoicePreview
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onClick={handleDuplicate}>
+                          <Copy className="h-4 w-4" />
+                          Duplicate invoice
+                        </DropdownMenuItem>
+                        {invoice.status === InvoiceStatus.DRAFT && (
+                          <DropdownMenuItem onClick={handleMarkAsPending}>
+                            <Hourglass className="h-4 w-4" />
+                            Mark as pending
+                          </DropdownMenuItem>
+                        )}
+                        {invoice.status === InvoiceStatus.PENDING && (
+                          <DropdownMenuItem onClick={handleMarkAsDraft}>
+                            <RotateCcw className="h-4 w-4" />
+                            Revert to draft
+                          </DropdownMenuItem>
+                        )}
+                        {invoice.status === InvoiceStatus.PENDING ||
+                        invoice.status === InvoiceStatus.OVERDUE ||
+                        invoice.status === InvoiceStatus.PARTIALLY_PAID ? (
+                          <>
+                            <DropdownMenuItem onClick={handleRecordPaymentDialog}>
+                              <CreditCard className="h-4 w-4" />
+                              Record payment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleSendReminder}>
+                              <BellRing className="h-4 w-4" />
+                              Send reminder
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleCancelDialog}
+                              className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                            >
+                              <Ban className="h-4 w-4" />
+                              Cancel invoice
+                            </DropdownMenuItem>
+                          </>
+                        ) : null}
+
+                        {invoice.status === InvoiceStatus.PAID ? (
+                          <>
+                            <DropdownMenuItem onClick={handleDownloadPdf}>
+                              <Download className="h-4 w-4" />
+                              Download invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleOpenReceiptDialog}>
+                              <Receipt className="h-4 w-4" />
+                              Send receipt
+                            </DropdownMenuItem>
+                          </>
+                        ) : null}
+
+                        {invoice.status === InvoiceStatus.DRAFT && (
+                          <DropdownMenuItem
+                            onClick={handleDeleteDialog}
+                            className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                          >
+                            <AlertCircle className="h-4 w-4" />
+                            Delete invoice
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                ) : null}
+
+                <Button
+                  variant="ghost"
+                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+                  onClick={() => handleOpenChange(false)}
+                >
+                  <X className="size-5" aria-hidden="true" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </Box>
+            </Box>
+
+            <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
+              <Box className="flex h-full">
+                <Box
+                  className="h-full"
+                  style={{
+                    width: mode === 'edit' && showPreview ? '50%' : '100%',
+                  }}
+                >
+                  {mode === 'create' ? (
+                    <InvoiceForm onCreate={handleCreate} isCreating={createInvoice.isPending} />
+                  ) : (
+                    <Tabs
+                      value={activeTab}
+                      onValueChange={setActiveTab}
+                      className="w-full h-full flex flex-col"
+                    >
+                      <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
+                        <TabsTrigger value="details" className="relative">
+                          Invoice Details
+                        </TabsTrigger>
+                        <TabsTrigger value="payments" className="relative">
+                          Payments
+                          {invoice && invoice._count && invoice._count.payments > 0 ? (
+                            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              {invoice._count.payments}
+                            </Badge>
+                          ) : null}
+                        </TabsTrigger>
+                        <TabsTrigger value="history" className="relative">
+                          History
+                          {invoice && invoice._count && invoice._count.statusHistory > 0 ? (
+                            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              {invoice._count.statusHistory}
+                            </Badge>
+                          ) : null}
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                        <InvoiceForm
                           invoice={invoice}
                           items={items}
-                          payments={payments}
+                          onUpdate={handleUpdate}
+                          isUpdating={updateInvoice.isPending}
                           isLoadingItems={isLoadingItems}
-                          isLoadingPayments={isLoadingPayments}
+                          onDirtyStateChange={handleUnsavedChanges}
                         />
-                      </Box>
-                    </Box>
-                  ) : null}
+                      </TabsContent>
+
+                      <TabsContent value="payments" className="mt-0 p-6">
+                        {isLoadingPayments ? (
+                          <Box className="text-center py-12 text-muted-foreground">
+                            Loading payments...
+                          </Box>
+                        ) : payments && payments.length > 0 && invoice ? (
+                          <InvoicePayments payments={payments} invoiceAmount={invoice.amount} />
+                        ) : (
+                          <Box className="text-center py-12 text-muted-foreground">
+                            No payments recorded yet
+                          </Box>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="history" className="mt-0 p-6">
+                        {isLoadingHistory ? (
+                          <Box className="text-center py-12 text-muted-foreground">
+                            Loading history...
+                          </Box>
+                        ) : history && history.length > 0 ? (
+                          <InvoiceStatusHistory history={history} />
+                        ) : (
+                          <Box className="text-center py-12 text-muted-foreground">
+                            No history available
+                          </Box>
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  )}
                 </Box>
-              </DrawerBody>
-            </>
-          ) : null}
-        </DrawerContent>
-      </Drawer>
-    </>
+
+                {mode === 'edit' && showPreview && invoice ? (
+                  <Box
+                    className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
+                    style={{ width: '50%' }}
+                  >
+                    {/* Preview Header */}
+                    <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-925 flex items-center justify-between">
+                      <p className="text-lg font-semibold">Preview</p>
+                      <Button type="button" variant="ghost" size="icon" onClick={handleDownloadPdf}>
+                        <Download className="h-4 w-4" />
+                        <span className="sr-only">Download PDF</span>
+                      </Button>
+                    </Box>
+
+                    {/* HTML Preview Content */}
+                    <Box className="flex-1 overflow-hidden">
+                      <InvoicePreview
+                        invoice={invoice}
+                        items={items}
+                        payments={payments}
+                        isLoadingItems={isLoadingItems}
+                        isLoadingPayments={isLoadingPayments}
+                      />
+                    </Box>
+                  </Box>
+                ) : null}
+              </Box>
+            </DrawerBody>
+          </>
+        ) : null}
+      </DrawerContent>
+    </Drawer>
   );
 }

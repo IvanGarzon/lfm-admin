@@ -243,7 +243,6 @@ export function QuoteForm({
   }, [watchedItems]);
 
   const tax = useMemo(() => (subtotal * gst) / 100, [subtotal, gst]);
-
   const total = useMemo(() => subtotal + tax - discount, [subtotal, tax, discount]);
 
   return (

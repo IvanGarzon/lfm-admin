@@ -11,11 +11,11 @@
  * @module quote-helpers
  */
 
-import { isAfter, differenceInDays, startOfToday } from 'date-fns';
 import crypto from 'crypto';
+import { isAfter, differenceInDays, startOfToday } from 'date-fns';
+import { QuoteStatus } from '@/prisma/client';
 import { generatePdfBuffer } from '@/lib/pdf';
 import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
-import { QuoteStatus } from '@/prisma/client';
 
 /**
  * Get human-readable label for a quote status
@@ -486,30 +486,27 @@ export function getExpiredDays(validUntil: Date): number {
  *
  * Used to highlight quotes in the UI that require urgent action.
  *
- * @param quote - The quote to check
+ * @param quote - Quote object with status and validUntil properties
  * @returns True if quote needs attention
  *
  * @example
  * ```ts
- * const quote = {
- *   status: QuoteStatus.SENT,
- *   validUntil: twoDaysFromNow
- * };
- * needsAttention(quote); // Returns: true
- *
- * const acceptedQuote = {
- *   status: QuoteStatus.ACCEPTED,
- *   validUntil: twoDaysFromNow
- * };
- * needsAttention(acceptedQuote); // Returns: false (not SENT status)
+ * needsAttention({status: QuoteStatus.SENT, validUntil: twoDaysFromNow}); // Returns: true
+ * needsAttention({status: QuoteStatus.ACCEPTED, validUntil: twoDaysFromNow}); // Returns: false (not SENT status)
  * ```
  */
-export function needsAttention(quote: QuoteListItem): boolean {
-  if (quote.status !== QuoteStatus.SENT) {
+export function needsAttention({
+  status,
+  validUntil,
+}: {
+  status: QuoteStatus;
+  validUntil: Date;
+}): boolean {
+  if (status !== QuoteStatus.SENT) {
     return false;
   }
 
-  const daysUntil = daysUntilExpiry(quote.validUntil);
+  const daysUntil = daysUntilExpiry(validUntil);
   return daysUntil <= 3 && daysUntil >= 0;
 }
 

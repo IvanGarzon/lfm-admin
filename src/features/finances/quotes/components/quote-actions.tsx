@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
 import {
   X,
@@ -29,7 +30,10 @@ import {
 import type { QuoteListItem } from '@/features/finances/quotes/types';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
-import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
+import {
+  getQuotePermissions,
+  needsAttention,
+} from '@/features/finances/quotes/utils/quote-helpers';
 
 interface QuoteActionsProps {
   quote: QuoteListItem;
@@ -81,19 +85,10 @@ export function QuoteActions({
 
   // Check if follow-up should be available
   // Only show when status is SENT and within 3 days of validUntil
-  const showFollowUp = (() => {
-    if (quote.status !== 'SENT') {
-      return false;
-    }
-
-    const now = new Date();
-    const validUntil = new Date(quote.validUntil);
-    const daysUntilExpiry = Math.ceil(
-      (validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    return daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
-  })();
+  const showFollowUp = useMemo(
+    () => needsAttention({ status: quote.status, validUntil: quote.validUntil }),
+    [quote.status, quote.validUntil],
+  );
 
   return (
     <Box className="flex items-center gap-1 justify-end">
