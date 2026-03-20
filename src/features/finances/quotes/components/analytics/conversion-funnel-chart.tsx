@@ -8,6 +8,7 @@ import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart
 import { formatCurrency } from '@/lib/utils';
 import type { ConversionFunnelData } from '@/features/finances/quotes/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Box } from '@/components/ui/box';
 
 interface ConversionFunnelChartProps {
   data?: ConversionFunnelData;
@@ -75,18 +76,18 @@ function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChartProps) 
         <CardDescription>Quote progression from sent to final status</CardDescription>
       </CardHeader>
       <CardContent className="h-[350px] w-full pt-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <Box className="mb-4 flex items-center justify-between">
+          <Box className="text-sm text-muted-foreground">
             Acceptance Rate:{' '}
             <span className="font-semibold text-emerald-600">{conversionRate}%</span>
-          </div>
-          <div className="text-sm text-muted-foreground">
+          </Box>
+          <Box className="text-sm text-muted-foreground">
             Total Value:{' '}
             <span className="font-semibold">
               {formatCurrency({ number: data.sentValue, maxFractionDigits: 0 })}
             </span>
-          </div>
-        </div>
+          </Box>
+        </Box>
         <ChartContainer config={chartConfig} className="h-[280px] w-full">
           <BarChart
             data={funnelData}
@@ -101,12 +102,12 @@ function ConversionFunnelChart({ data, isLoading }: ConversionFunnelChartProps) 
                 if (!active || !payload?.[0]) return null;
                 const data = payload[0].payload;
                 return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <div className="flex flex-col gap-1">
+                  <Box className="rounded-lg border bg-background p-2 shadow-sm">
+                    <Box className="flex flex-col gap-1">
                       <span className="text-xs font-medium">{data.name}</span>
                       <span className="text-sm font-bold">{data.count} quotes</span>
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                 );
               }}
             />

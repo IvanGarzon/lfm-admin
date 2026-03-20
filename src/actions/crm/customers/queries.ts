@@ -2,23 +2,26 @@
 
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { Customer } from '@/prisma/client';
 import { SearchParams } from 'nuqs/server';
 
 import type { ActionResult } from '@/types/actions';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { handleActionError } from '@/lib/error-handler';
-import type { CustomerPagination, CustomerListItem } from '@/features/crm/customers/types';
+import type {
+  CustomerPagination,
+  CustomerListItem,
+  CustomerSelectItem,
+} from '@/features/crm/customers/types';
 import { searchParamsCache } from '@/filters/customers/customers-filters';
 
 const customerRepo = new CustomerRepository(prisma);
 
 /**
  * Retrieves all active customers for dropdown selections.
- * Returns a lightweight list of customers with only essential fields.
- * @returns A promise that resolves to an `ActionResult` containing an array of partial customer objects.
+ * Returns a lightweight list of customers with only essential fields for dropdowns.
+ * @returns A promise that resolves to an `ActionResult` containing an array of customer select items.
  */
-export async function getActiveCustomers(): Promise<ActionResult<Partial<Customer>[]>> {
+export async function getActiveCustomers(): Promise<ActionResult<CustomerSelectItem[]>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -26,7 +29,7 @@ export async function getActiveCustomers(): Promise<ActionResult<Partial<Custome
 
   try {
     const customers = await customerRepo.findActiveSelection();
-    return { success: true, data: customers as Partial<Customer>[] };
+    return { success: true, data: customers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch customers');
   }

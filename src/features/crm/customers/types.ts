@@ -6,6 +6,17 @@ import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/custome
 
 export type CustomerFormInput = CreateCustomerInput | UpdateCustomerInput;
 
+export type CustomerSelectItem = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  organization?: {
+    id: string;
+    name: string;
+  } | null;
+};
+
 export type CustomerListItem = {
   id: string;
   firstName: string;

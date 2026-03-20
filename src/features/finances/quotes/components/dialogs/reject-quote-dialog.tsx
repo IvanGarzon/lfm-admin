@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -15,73 +16,75 @@ import {
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
+import { MarkQuoteAsRejectedSchema, type MarkQuoteAsRejectedInput } from '@/schemas/quotes';
 
-import { MarkQuoteAsCancelledSchema, type MarkQuoteAsCancelledInput } from '@/schemas/quotes';
-
-interface CancelQuoteDialogProps {
+interface RejectQuoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (data: MarkQuoteAsCancelledInput) => void;
+  onConfirm: (data: MarkQuoteAsRejectedInput) => void;
   quoteId: string;
   quoteNumber: string;
   isPending?: boolean;
 }
 
-export function CancelQuoteDialog({
+export function RejectQuoteDialog({
   open,
   onOpenChange,
   onConfirm,
   quoteId,
   quoteNumber,
   isPending = false,
-}: CancelQuoteDialogProps) {
-  const form = useForm<MarkQuoteAsCancelledInput>({
-    resolver: zodResolver(MarkQuoteAsCancelledSchema),
+}: RejectQuoteDialogProps) {
+  const form = useForm<MarkQuoteAsRejectedInput>({
+    resolver: zodResolver(MarkQuoteAsRejectedSchema),
     defaultValues: {
       id: quoteId,
-      reason: '',
+      rejectReason: '',
     },
   });
 
-  const handleSubmit = (data: MarkQuoteAsCancelledInput) => {
-    onConfirm(data);
-    form.reset();
-    onOpenChange(false);
-  };
+  const handleSubmit = useCallback(
+    (data: MarkQuoteAsRejectedInput) => {
+      onConfirm(data);
+      form.reset();
+      onOpenChange(false);
+    },
+    [onConfirm, form, onOpenChange],
+  );
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     form.reset();
     onOpenChange(false);
-  };
+  }, [form, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Cancel Quote</DialogTitle>
+          <DialogTitle>Reject Quote</DialogTitle>
           <DialogDescription>
-            Cancel quote {quoteNumber}. Optionally provide a reason for cancellation.
+            Reject quote {quoteNumber}. Please provide a reason for rejection.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            id="cancel-quote-form"
+            id="reject-quote-form"
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
             <FieldGroup>
               <Controller
-                name="reason"
+                name="rejectReason"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="cancel-quote-form-reason">Reason (Optional)</FieldLabel>
+                      <FieldLabel htmlFor="reject-quote-form-reason">Rejection Reason</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}
-                      id="cancel-quote-form-reason"
-                      placeholder="Enter reason for cancelling this quote..."
+                      id="reject-quote-form-reason"
+                      placeholder="Enter reason for rejecting this quote..."
                       rows={3}
                       className="resize-none"
                     />
@@ -96,7 +99,7 @@ export function CancelQuoteDialog({
                 Cancel
               </Button>
               <Button type="submit" variant="destructive" disabled={isPending}>
-                {isPending ? 'Cancelling...' : 'Cancel Quote'}
+                {isPending ? 'Rejecting...' : 'Reject Quote'}
               </Button>
             </DialogFooter>
           </form>

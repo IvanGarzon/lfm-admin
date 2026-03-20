@@ -12,7 +12,7 @@ import type { QuoteFormInput } from '@/features/finances/quotes/types';
 import type { RecipeListItem } from '@/features/finances/recipes/types';
 import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
 import { QuoteItemRow } from '@/features/finances/quotes/components/quote-item-row';
-import { AddRecipesDialog } from '@/features/finances/quotes/components/add-recipes-dialog';
+import { AddRecipesDialog } from '@/features/finances/quotes/components/dialogs/add-recipes-dialog';
 
 export function QuoteItemsList({
   form,

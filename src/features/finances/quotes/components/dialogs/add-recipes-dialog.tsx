@@ -41,6 +41,88 @@ interface AddRecipesDialogProps {
   onRequestRecipes: () => void;
 }
 
+function RecipeItemCard({
+  name,
+  description,
+  price,
+  badge,
+  isSelected,
+  quantity,
+  onToggle,
+  onUpdateQuantity,
+}: {
+  name: string;
+  description?: string | null;
+  price: number;
+  badge?: string;
+  isSelected: boolean;
+  quantity: number;
+  onToggle: () => void;
+  onUpdateQuantity: (delta: number) => void;
+}) {
+  return (
+    <Box
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
+        isSelected
+          ? 'border-primary bg-primary/5'
+          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+      )}
+      onClick={onToggle}
+    >
+      <Box
+        className={cn(
+          'w-5 h-5 rounded border flex items-center justify-center shrink-0',
+          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-gray-300',
+        )}
+      >
+        {isSelected ? <Check className="h-3 w-3" /> : null}
+      </Box>
+
+      <Box className="flex-1 min-w-0">
+        <Box className="flex items-center gap-2">
+          <span className="font-medium text-sm truncate">{name}</span>
+          {badge ? (
+            <Badge variant="outline" className="text-xs shrink-0">
+              {badge}
+            </Badge>
+          ) : null}
+        </Box>
+        {description ? (
+          <Box className="text-xs text-muted-foreground truncate mt-0.5">{description}</Box>
+        ) : null}
+      </Box>
+
+      <Box className="text-sm font-medium shrink-0">{formatCurrency({ number: price })}</Box>
+
+      {isSelected ? (
+        <Box className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => onUpdateQuantity(-1)}
+            disabled={quantity <= 1}
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => onUpdateQuantity(1)}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
 export function AddRecipesDialog({
   onAdd,
   disabled,
@@ -99,29 +181,47 @@ export function AddRecipesDialog({
     );
   }, [recipeGroups, search]);
 
-  const handleToggleItem = useCallback(
-    (item: RecipeListItem | RecipeGroupListItem, type: 'recipe' | 'group') => {
-      setSelectedItems((prev) => {
-        const key = `${type}-${item.id}`;
-        const newMap = new Map(prev);
+  const handleToggleRecipe = useCallback((recipe: RecipeListItem) => {
+    setSelectedItems((prev) => {
+      const key = `recipe-${recipe.id}`;
+      const newMap = new Map(prev);
 
-        if (newMap.has(key)) {
-          newMap.delete(key);
-        } else {
-          newMap.set(key, {
-            id: item.id,
-            name: item.name,
-            sellingPrice: type === 'recipe' ? item.sellingPrice : item.totalCost,
-            quantity: 1,
-            type,
-          });
-        }
+      if (newMap.has(key)) {
+        newMap.delete(key);
+      } else {
+        newMap.set(key, {
+          id: recipe.id,
+          name: recipe.name,
+          sellingPrice: recipe.sellingPrice,
+          quantity: 1,
+          type: 'recipe',
+        });
+      }
 
-        return newMap;
-      });
-    },
-    [],
-  );
+      return newMap;
+    });
+  }, []);
+
+  const handleToggleGroup = useCallback((group: RecipeGroupListItem) => {
+    setSelectedItems((prev) => {
+      const key = `group-${group.id}`;
+      const newMap = new Map(prev);
+
+      if (newMap.has(key)) {
+        newMap.delete(key);
+      } else {
+        newMap.set(key, {
+          id: group.id,
+          name: group.name,
+          sellingPrice: group.totalSellingPrice,
+          quantity: 1,
+          type: 'group',
+        });
+      }
+
+      return newMap;
+    });
+  }, []);
 
   const handleUpdateQuantity = useCallback((key: string, delta: number) => {
     setSelectedItems((prev) => {
@@ -256,7 +356,7 @@ export function AddRecipesDialog({
                         price={recipe.sellingPrice}
                         isSelected={isSelected}
                         quantity={selected?.quantity ?? 1}
-                        onToggle={() => handleToggleItem(recipe, 'recipe')}
+                        onToggle={() => handleToggleRecipe(recipe)}
                         onUpdateQuantity={(delta) => handleUpdateQuantity(key, delta)}
                       />
                     );
@@ -288,11 +388,11 @@ export function AddRecipesDialog({
                         key={group.id}
                         name={group.name}
                         description={group.description}
-                        price={group.totalCost}
+                        price={group.totalSellingPrice}
                         badge={`${group.itemCount} items`}
                         isSelected={isSelected}
                         quantity={selected?.quantity ?? 1}
-                        onToggle={() => handleToggleItem(group, 'group')}
+                        onToggle={() => handleToggleGroup(group)}
                         onUpdateQuantity={(delta) => handleUpdateQuantity(key, delta)}
                       />
                     );
@@ -322,87 +422,5 @@ export function AddRecipesDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function RecipeItemCard({
-  name,
-  description,
-  price,
-  badge,
-  isSelected,
-  quantity,
-  onToggle,
-  onUpdateQuantity,
-}: {
-  name: string;
-  description?: string | null;
-  price: number;
-  badge?: string;
-  isSelected: boolean;
-  quantity: number;
-  onToggle: () => void;
-  onUpdateQuantity: (delta: number) => void;
-}) {
-  return (
-    <Box
-      className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50',
-      )}
-      onClick={onToggle}
-    >
-      <Box
-        className={cn(
-          'w-5 h-5 rounded border flex items-center justify-center shrink-0',
-          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-gray-300',
-        )}
-      >
-        {isSelected ? <Check className="h-3 w-3" /> : null}
-      </Box>
-
-      <Box className="flex-1 min-w-0">
-        <Box className="flex items-center gap-2">
-          <span className="font-medium text-sm truncate">{name}</span>
-          {badge ? (
-            <Badge variant="outline" className="text-xs shrink-0">
-              {badge}
-            </Badge>
-          ) : null}
-        </Box>
-        {description ? (
-          <Box className="text-xs text-muted-foreground truncate mt-0.5">{description}</Box>
-        ) : null}
-      </Box>
-
-      <Box className="text-sm font-medium shrink-0">{formatCurrency({ number: price })}</Box>
-
-      {isSelected ? (
-        <Box className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onUpdateQuantity(-1)}
-            disabled={quantity <= 1}
-          >
-            <Minus className="h-3 w-3" />
-          </Button>
-          <span className="w-8 text-center text-sm font-medium">{quantity}</span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => onUpdateQuantity(1)}
-          >
-            <Plus className="h-3 w-3" />
-          </Button>
-        </Box>
-      ) : null}
-    </Box>
   );
 }

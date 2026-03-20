@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Palette, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -45,6 +45,17 @@ export function QuoteItemColorPaletteDialog({
     }
   }, [open, initialColors]);
 
+  const handleSaveColors = useCallback(() => {
+    uploadMutation.mutate(
+      { quoteItemId, quoteId, colors },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+        },
+      },
+    );
+  }, [uploadMutation, quoteItemId, quoteId, colors, onOpenChange]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -76,20 +87,7 @@ export function QuoteItemColorPaletteDialog({
           >
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              uploadMutation.mutate(
-                { quoteItemId, quoteId, colors },
-                {
-                  onSuccess: () => {
-                    onOpenChange(false);
-                  },
-                },
-              );
-            }}
-            disabled={uploadMutation.isPending}
-          >
+          <Button type="button" onClick={handleSaveColors} disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />

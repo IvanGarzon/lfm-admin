@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, addDays } from 'date-fns';
@@ -59,16 +60,19 @@ export function ConvertToInvoiceDialog({
     },
   });
 
-  const handleSubmit = (data: ConvertQuoteToInvoiceInput) => {
-    onConfirm(data);
-    form.reset();
-    onOpenChange(false);
-  };
+  const handleSubmit = useCallback(
+    (data: ConvertQuoteToInvoiceInput) => {
+      onConfirm(data);
+      form.reset();
+      onOpenChange(false);
+    },
+    [onConfirm, form, onOpenChange],
+  );
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     form.reset();
     onOpenChange(false);
-  };
+  }, [form, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

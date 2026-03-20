@@ -20,8 +20,8 @@ import {
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { ProductSearchDialog } from '@/components/shared/product-search-dialog';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
-import { QuoteItemAttachmentsDialog } from './quote-item-attachments-dialog';
-import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';
+import { QuoteItemAttachmentsDialog } from './dialogs/quote-item-attachments-dialog';
+import { QuoteItemColorPaletteDialog } from './dialogs/quote-item-color-palette-dialog';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 type QuoteItemRowProps = {

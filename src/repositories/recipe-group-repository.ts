@@ -18,6 +18,7 @@ export type RecipeGroupListItem = {
   name: string;
   description: string | null;
   totalCost: number;
+  totalSellingPrice: number;
   itemCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +75,15 @@ export class RecipeGroupRepository {
           _count: {
             select: { items: true },
           },
+          items: {
+            include: {
+              recipe: {
+                select: {
+                  sellingPrice: true,
+                },
+              },
+            },
+          },
         },
       }),
       prisma.recipeGroup.count({ where }),
@@ -82,15 +92,23 @@ export class RecipeGroupRepository {
     const totalPages = Math.ceil(total / perPage);
 
     return {
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        totalCost: Number(item.totalCost),
-        itemCount: item._count.items,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      })),
+      items: items.map((item) => {
+        const totalSellingPrice = item.items.reduce(
+          (sum, groupItem) => sum + Number(groupItem.recipe.sellingPrice) * groupItem.quantity,
+          0,
+        );
+
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          totalCost: Number(item.totalCost),
+          totalSellingPrice,
+          itemCount: item._count.items,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        };
+      }),
       pagination: {
         totalItems: total,
         totalPages,
@@ -248,17 +266,34 @@ export class RecipeGroupRepository {
         _count: {
           select: { items: true },
         },
+        items: {
+          include: {
+            recipe: {
+              select: {
+                sellingPrice: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    return items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      totalCost: Number(item.totalCost),
-      itemCount: item._count.items,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-    }));
+    return items.map((item) => {
+      const totalSellingPrice = item.items.reduce(
+        (sum, groupItem) => sum + Number(groupItem.recipe.sellingPrice) * groupItem.quantity,
+        0,
+      );
+
+      return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        totalCost: Number(item.totalCost),
+        totalSellingPrice,
+        itemCount: item._count.items,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      };
+    });
   }
 }

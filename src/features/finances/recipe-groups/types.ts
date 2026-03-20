@@ -8,6 +8,7 @@ export type RecipeGroupListItem = {
   name: string;
   description: string | null;
   totalCost: number;
+  totalSellingPrice: number;
   itemCount: number;
   createdAt: Date;
   updatedAt: Date;

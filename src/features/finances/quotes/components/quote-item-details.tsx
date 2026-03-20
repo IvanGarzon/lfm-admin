@@ -10,9 +10,9 @@ import { RichTextEditor } from '@/components/rich-text-editor/rich-text-editor';
 import { useUpdateQuoteItemNotes } from '@/features/finances/quotes/hooks/use-quote-queries';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { formatFileSize } from '@/lib/file-constants';
-import { DeleteItemImageDialog } from './delete-item-image-dialog';
-import { ImagePreviewDialog } from './image-preview-dialog';
-import { QuoteItemColorPaletteDialog } from './quote-item-color-palette-dialog';
+import { DeleteItemImageDialog } from './dialogs/delete-item-image-dialog';
+import { ImagePreviewDialog } from './dialogs/image-preview-dialog';
+import { QuoteItemColorPaletteDialog } from './dialogs/quote-item-color-palette-dialog';
 
 interface QuoteItemDetailsProps {
   quoteId: string;

@@ -8,11 +8,11 @@ import {
   useMarkQuoteAsCancelled,
   useConvertQuoteToInvoice,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { DeleteQuoteDialog } from '@/features/finances/quotes/components/delete-quote-dialog';
-import { RejectQuoteDialog } from '@/features/finances/quotes/components/reject-quote-dialog';
-import { OnHoldDialog } from '@/features/finances/quotes/components/on-hold-dialog';
-import { CancelQuoteDialog } from '@/features/finances/quotes/components/cancel-quote-dialog';
-import { ConvertToInvoiceDialog } from '@/features/finances/quotes/components/convert-to-invoice-dialog';
+import { DeleteQuoteDialog } from '@/features/finances/quotes/components/dialogs/delete-quote-dialog';
+import { RejectQuoteDialog } from '@/features/finances/quotes/components/dialogs/reject-quote-dialog';
+import { OnHoldDialog } from '@/features/finances/quotes/components/dialogs/on-hold-dialog';
+import { CancelQuoteDialog } from '@/features/finances/quotes/components/dialogs/cancel-quote-dialog';
+import { ConvertToInvoiceDialog } from '@/features/finances/quotes/components/dialogs/convert-to-invoice-dialog';
 
 type ModalType = 'DELETE' | 'REJECT' | 'ON_HOLD' | 'CANCEL' | 'CONVERT';
 

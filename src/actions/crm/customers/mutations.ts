@@ -35,8 +35,6 @@ export async function createCustomer(
 
   try {
     const validatedData = CreateCustomerSchema.parse(data);
-
-    // Check if email already exists
     const existingCustomer = await customerRepo.findByEmail(validatedData.email);
 
     if (existingCustomer) {

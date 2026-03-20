@@ -13,7 +13,7 @@ export const RoundingMethodSchema = z.enum(['NEAREST', 'PSYCHOLOGICAL_99', 'PSYC
 
 export type RoundingMethod = z.infer<typeof RoundingMethodSchema>;
 
-export const RecipeItemSchema = z.object({
+const RecipeItemSchema = z.object({
   id: z.cuid().optional(),
   priceListItemId: z.cuid().nullable().optional(),
   name: z
@@ -31,7 +31,7 @@ export const RecipeItemSchema = z.object({
   order: z.number().int(),
 });
 
-export const RecipeSchema = z.object({
+const RecipeSchema = z.object({
   name: z
     .string()
     .trim()
@@ -67,10 +67,9 @@ export const RecipeSchema = z.object({
 });
 
 export const CreateRecipeSchema = RecipeSchema;
-export const UpdateRecipeSchema = RecipeSchema.extend({
+export const UpdateRecipeSchema = RecipeSchema.safeExtend({
   id: z.cuid({ error: 'Invalid recipe ID' }),
 });
 
-export type RecipeItem = z.infer<typeof RecipeItemSchema>;
 export type CreateRecipeInput = z.infer<typeof CreateRecipeSchema>;
 export type UpdateRecipeInput = z.infer<typeof UpdateRecipeSchema>;

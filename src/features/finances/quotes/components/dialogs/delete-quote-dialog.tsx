@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { AlertCircle } from 'lucide-react';
 import {
   Dialog,
@@ -28,13 +29,13 @@ export function DeleteQuoteDialog({
   quoteNumber,
   isPending = false,
 }: DeleteQuoteDialogProps) {
-  const handleConfirm = () => {
+  const handleConfirm = useCallback(() => {
     onConfirm(quoteId);
-  };
+  }, [onConfirm, quoteId]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onOpenChange(false);
-  };
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

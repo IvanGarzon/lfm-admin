@@ -17,22 +17,12 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { CreateCustomerDialog } from '@/features/crm/customers/components/create-customer-dialog';
+import type { CustomerSelectItem } from '@/features/crm/customers/types';
 
-interface Customer {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  organization?: {
-    id: string;
-    name: string;
-  } | null;
-}
-
-const EMPTY_CUSTOMERS: Partial<Customer>[] = [];
+const EMPTY_CUSTOMERS: CustomerSelectItem[] = [];
 
 interface CustomerSelectProps {
-  customers?: Partial<Customer>[];
+  customers?: CustomerSelectItem[];
   value?: string;
   onValueChange?: (value: string) => void;
   disabled?: boolean;
@@ -64,14 +54,14 @@ export function CustomerSelect({
   );
 
   const getCustomerDisplayName = useMemo(() => {
-    return (customer: Partial<Customer>) => {
+    return (customer: CustomerSelectItem) => {
       const fullName = `${customer.firstName ?? ''} ${customer.lastName ?? ''}`.trim();
       return fullName ?? customer.email ?? '';
     };
   }, []);
 
   const getCustomerSecondaryText = useMemo(() => {
-    return (customer: Partial<Customer>) => {
+    return (customer: CustomerSelectItem) => {
       if (customer.organization?.name) {
         return `${customer.organization.name} • ${customer.email ?? ''}`;
       }
