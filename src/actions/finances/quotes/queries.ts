@@ -11,6 +11,8 @@ import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
   QuoteStatistics,
   QuoteWithDetails,
+  QuoteMetadata,
+  QuoteItem,
   QuotePagination,
   QuoteItemAttachment,
   QuoteValueTrend,
@@ -72,6 +74,56 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
     return { success: true, data: quote };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch quote');
+  }
+}
+
+/**
+ * Retrieves lightweight quote metadata without items.
+ * Used for headers, actions, and navigation where item details aren't needed.
+ * Significantly reduces data transfer compared to getQuoteById.
+ * @param id - The ID of the quote to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the quote metadata,
+ * or an error if the quote is not found.
+ */
+export async function getQuoteMetadata(id: string): Promise<ActionResult<QuoteMetadata>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+    const quote = await quoteRepo.findByIdMetadata(id);
+
+    if (!quote) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    return { success: true, data: quote };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch quote metadata');
+  }
+}
+
+/**
+ * Retrieves quote items with attachments for a specific quote.
+ * Fetched separately from quote metadata for better performance.
+ * @param quoteId - The ID of the quote to retrieve items for.
+ * @returns A promise that resolves to an `ActionResult` containing the quote items.
+ */
+export async function getQuoteItems(quoteId: string): Promise<ActionResult<QuoteItem[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    requirePermission(session.user, 'canReadQuotes');
+    const items = await quoteRepo.findQuoteItems(quoteId);
+
+    return { success: true, data: items };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch quote items');
   }
 }
 

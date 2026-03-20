@@ -18,7 +18,7 @@ import {
   type CreateQuoteInput,
   type UpdateQuoteInput,
 } from '@/schemas/quotes';
-import type { QuoteWithDetails, QuoteFormInput } from '@/features/finances/quotes/types';
+import type { QuoteMetadata, QuoteItem, QuoteFormInput } from '@/features/finances/quotes/types';
 import {
   getQuoteStatusLabel,
   getQuotePermissions,
@@ -75,7 +75,7 @@ const defaultFormState: CreateQuoteInput = {
   ],
 };
 
-const mapQuoteToFormValues = (quote: QuoteWithDetails): UpdateQuoteInput => {
+const mapQuoteToFormValues = (quote: QuoteMetadata, items: QuoteItem[] = []): UpdateQuoteInput => {
   return {
     id: quote.id,
     customerId: quote.customer.id,
@@ -87,7 +87,7 @@ const mapQuoteToFormValues = (quote: QuoteWithDetails): UpdateQuoteInput => {
     discount: Number(quote.discount),
     notes: quote.notes ?? '',
     terms: quote.terms ?? '',
-    items: quote.items.map((item) => ({
+    items: items.map((item) => ({
       id: item.id,
       description: item.description,
       quantity: item.quantity,
@@ -100,13 +100,15 @@ const mapQuoteToFormValues = (quote: QuoteWithDetails): UpdateQuoteInput => {
 
 export function QuoteForm({
   quote,
+  items,
   onCreate,
   onUpdate,
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
 }: {
-  quote?: QuoteWithDetails | null;
+  quote?: QuoteMetadata | null;
+  items?: QuoteItem[] | null;
   onCreate?: (data: CreateQuoteInput) => void;
   onUpdate?: (data: UpdateQuoteInput) => void;
   isCreating?: boolean;
@@ -128,7 +130,11 @@ export function QuoteForm({
   const downloadItemMutation = useGetItemAttachmentDownloadUrl();
 
   const defaultValues: QuoteFormInput =
-    mode === 'create' ? defaultFormState : quote ? mapQuoteToFormValues(quote) : defaultFormState;
+    mode === 'create'
+      ? defaultFormState
+      : quote
+        ? mapQuoteToFormValues(quote, items ?? [])
+        : defaultFormState;
 
   const createResolver: Resolver<QuoteFormInput> = (values, context, options) => {
     const schema = mode === 'create' ? CreateQuoteSchema : UpdateQuoteSchema;
@@ -158,11 +164,11 @@ export function QuoteForm({
     form,
     quote?.id,
     useCallback(() => {
-      const values = quote ? mapQuoteToFormValues(quote) : defaultFormState;
+      const values = quote ? mapQuoteToFormValues(quote, items ?? []) : defaultFormState;
       onDirtyStateChange?.(false);
 
       return values;
-    }, [quote, onDirtyStateChange]),
+    }, [quote, items, onDirtyStateChange]),
     isUpdating,
   );
 
@@ -295,11 +301,11 @@ export function QuoteForm({
 
           <QuoteTaxDiscountFields control={form.control} isLocked={isLocked} />
 
-          {mode === 'update' && quote && quote.items.length > 0 ? (
+          {mode === 'update' && quote && items && items.length > 0 ? (
             <Box className="space-y-4">
               <QuoteItemDetails
                 quoteId={quote.id}
-                items={quote.items}
+                items={items}
                 readOnly={isLocked}
                 onDownloadImage={handleDownloadItemImage}
                 onDeleteImage={handleDeleteItemImage}

@@ -1,7 +1,7 @@
 'use client';
 
 import { Box } from '@/components/ui/box';
-import type { QuoteWithDetails } from '@/features/finances/quotes/types';
+import type { QuoteMetadata, QuoteItem } from '@/features/finances/quotes/types';
 import { QuotePreviewHeader } from './quote-preview-header';
 import { QuotePreviewBillingInfo } from './quote-preview-billing-info';
 import { QuotePreviewDates } from './quote-preview-dates';
@@ -12,11 +12,12 @@ import { QuotePreviewNotes } from './quote-preview-notes';
 import { QuotePreviewTerms } from './quote-preview-terms';
 
 type QuoteHtmlPreviewProps = {
-  quote: QuoteWithDetails;
+  quote: QuoteMetadata;
+  items: QuoteItem[];
 };
 
-export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
-  const subtotal = quote.items.reduce((sum, item) => sum + item.total, 0);
+export function QuotePreview({ quote, items }: QuoteHtmlPreviewProps) {
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * quote.gst) / 100;
   const total = subtotal + gstAmount - quote.discount;
 
@@ -30,7 +31,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
 
           <QuotePreviewDates issuedDate={quote.issuedDate} validUntil={quote.validUntil} />
 
-          <QuotePreviewItemsTable items={quote.items} />
+          <QuotePreviewItemsTable items={items} />
 
           <QuotePreviewSummary
             subtotal={subtotal}
@@ -40,7 +41,7 @@ export function QuotePreview({ quote }: QuoteHtmlPreviewProps) {
             total={total}
           />
 
-          <QuotePreviewItemDetails items={quote.items} />
+          <QuotePreviewItemDetails items={items} />
 
           <QuotePreviewNotes notes={quote.notes} />
 

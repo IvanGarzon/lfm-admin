@@ -17,7 +17,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
-  useQuote,
+  useQuoteMetadata,
+  useQuoteItems,
   useQuoteHistory,
   useCreateQuote,
   useUpdateQuote,
@@ -58,10 +59,19 @@ export function QuoteDrawer({
 
   const mode: DrawerMode = id ? 'edit' : 'create';
 
-  const { data: quote, isLoading, error, isError } = useQuote(id);
+  const { data: quote, isLoading: isLoadingQuote, error, isError } = useQuoteMetadata(id);
+
+  const needsItems = activeTab === 'details' || showPreview;
+  const { data: items, isLoading: isLoadingItems } = useQuoteItems(id, {
+    enabled: needsItems,
+  });
+
+  const isLoading = isLoadingQuote || (needsItems && isLoadingItems);
+
   const { data: versions, isLoading: isLoadingVersions } = useQuoteVersions(id, {
     enabled: mode === 'edit',
   });
+
   const { data: history, isLoading: isLoadingHistory } = useQuoteHistory(id, {
     enabled: activeTab === 'history',
   });
@@ -438,35 +448,46 @@ export function QuoteDrawer({
                           </TabsTrigger>
                           <TabsTrigger value="versions" className="relative">
                             Versions
-                            {quote && quote.versionsCount > 1 && (
+                            {quote && quote.versionsCount > 1 ? (
                               <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
                                 {quote.versionsCount}
                               </Badge>
-                            )}
+                            ) : null}
                           </TabsTrigger>
                           <TabsTrigger value="history" className="relative">
                             History
                             {quote &&
-                              quote._count?.statusHistory &&
-                              quote._count.statusHistory > 0 && (
-                                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
-                                  {quote._count.statusHistory}
-                                </Badge>
-                              )}
+                            quote._count?.statusHistory &&
+                            quote._count.statusHistory > 0 ? (
+                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                {quote._count.statusHistory}
+                              </Badge>
+                            ) : null}
                           </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="details" className="mt-0 h-full flex flex-col">
-                          <QuoteForm
-                            quote={quote}
-                            onUpdate={handleUpdate}
-                            isUpdating={updateQuote.isPending}
-                            onDirtyStateChange={setHasUnsavedChanges}
-                          />
+                          {quote && items ? (
+                            <QuoteForm
+                              quote={quote}
+                              items={items}
+                              onUpdate={handleUpdate}
+                              isUpdating={updateQuote.isPending}
+                              onDirtyStateChange={setHasUnsavedChanges}
+                            />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              Loading quote details...
+                            </Box>
+                          )}
                         </TabsContent>
 
                         <TabsContent value="versions" className="mt-0 p-6">
-                          {versions && versions.length > 1 && quote ? (
+                          {isLoadingVersions ? (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              Loading versions...
+                            </Box>
+                          ) : versions && versions.length > 1 && quote ? (
                             <QuoteVersions
                               currentVersionId={quote.id}
                               versions={versions}
@@ -496,8 +517,12 @@ export function QuoteDrawer({
                     )}
                   </Box>
 
-                  {mode === 'edit' && showPreview && quote ? (
-                    <QuotePreviewPanel quote={quote} onDownloadPdf={handleDownloadPdf} />
+                  {mode === 'edit' && showPreview && quote && items ? (
+                    <QuotePreviewPanel
+                      quote={quote}
+                      items={items}
+                      onDownloadPdf={handleDownloadPdf}
+                    />
                   ) : null}
                 </Box>
               </DrawerBody>

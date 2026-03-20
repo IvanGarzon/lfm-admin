@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import type { QuoteWithDetails } from '@/features/finances/quotes/types';
+import type { QuoteMetadata, QuoteItem } from '@/features/finances/quotes/types';
 
 const QuotePreview = dynamic(
   () =>
@@ -21,11 +21,12 @@ const QuotePreview = dynamic(
 );
 
 interface QuotePreviewPanelProps {
-  quote: QuoteWithDetails;
+  quote: QuoteMetadata;
+  items: QuoteItem[];
   onDownloadPdf: () => void;
 }
 
-export function QuotePreviewPanel({ quote, onDownloadPdf }: QuotePreviewPanelProps) {
+export function QuotePreviewPanel({ quote, items, onDownloadPdf }: QuotePreviewPanelProps) {
   return (
     <Box
       className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
@@ -40,7 +41,7 @@ export function QuotePreviewPanel({ quote, onDownloadPdf }: QuotePreviewPanelPro
       </Box>
 
       <Box className="flex-1 overflow-hidden">
-        <QuotePreview quote={quote} />
+        <QuotePreview quote={quote} items={items} />
       </Box>
     </Box>
   );

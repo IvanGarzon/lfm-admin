@@ -10,6 +10,8 @@ import {
 import {
   getQuotes,
   getQuoteById,
+  getQuoteMetadata,
+  getQuoteItems,
   getQuoteStatusHistory,
   getQuoteStatistics,
   createQuote,
@@ -44,6 +46,8 @@ import {
 import type {
   QuoteFilters,
   QuoteWithDetails,
+  QuoteMetadata,
+  QuoteItem,
   MarkQuoteAsAcceptedData,
   MarkQuoteAsRejectedData,
   MarkQuoteAsOnHoldData,
@@ -61,6 +65,8 @@ export const QUOTE_KEYS = {
   list: (filters: QuoteFilters) => [...QUOTE_KEYS.lists(), { filters }] as const,
   details: () => [...QUOTE_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...QUOTE_KEYS.details(), id] as const,
+  metadata: (id: string) => [...QUOTE_KEYS.all, 'metadata', id] as const,
+  items: (quoteId: string) => [...QUOTE_KEYS.all, 'items', quoteId] as const,
   history: (id: string) => [...QUOTE_KEYS.detail(id), 'history'] as const,
   statistics: () => [...QUOTE_KEYS.all, 'statistics'] as const,
   itemAttachments: (quoteItemId: string) =>
@@ -81,7 +87,7 @@ export const QUOTE_KEYS = {
 
 /**
  * Invalidates quote-related queries after mutations.
- * Ensures cache consistency across quote lists, details, and statistics.
+ * Ensures cache consistency across quote lists, details, metadata, items, and statistics.
  */
 function invalidateQuoteQueries(
   queryClient: QueryClient,
@@ -93,6 +99,8 @@ function invalidateQuoteQueries(
 ) {
   if (options?.quoteId) {
     queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(options.quoteId) });
+    queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.metadata(options.quoteId) });
+    queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.items(options.quoteId) });
   }
 
   if (options?.invalidateAllDetails) {
@@ -132,7 +140,7 @@ export function useQuotes(filters: QuoteFilters) {
   });
 }
 
-export function useQuote(id: string | undefined) {
+export function useQuote(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: QUOTE_KEYS.detail(id ?? ''), // Keep for type safety
     queryFn: id
@@ -145,6 +153,51 @@ export function useQuote(id: string | undefined) {
           return result.data;
         }
       : skipToken,
+    enabled: options?.enabled,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Fetches lightweight quote metadata without items.
+ * Used for headers, actions, and navigation where item details aren't needed.
+ * Significantly reduces data transfer compared to useQuote.
+ */
+export function useQuoteMetadata(id: string | undefined) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.metadata(id ?? ''), // Keep for type safety
+    queryFn: id
+      ? async () => {
+          const result = await getQuoteMetadata(id);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
+
+          return result.data;
+        }
+      : skipToken,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Fetches quote items with attachments for a specific quote.
+ * Fetched separately from quote metadata for better performance and caching.
+ */
+export function useQuoteItems(quoteId: string | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: QUOTE_KEYS.items(quoteId ?? ''), // Keep for type safety
+    queryFn: quoteId
+      ? async () => {
+          const result = await getQuoteItems(quoteId);
+          if (!result.success) {
+            throw new Error(result.error);
+          }
+
+          return result.data;
+        }
+      : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }

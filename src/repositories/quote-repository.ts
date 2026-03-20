@@ -6,6 +6,8 @@ import type {
   QuoteListItem,
   QuoteStatistics,
   QuoteWithDetails,
+  QuoteMetadata,
+  QuoteItem,
   QuoteFilters,
   QuotePagination,
   QuoteValueTrend,
@@ -261,6 +263,123 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         total: Number(item.total),
       })),
     };
+  }
+
+  /**
+   * Fetches lightweight quote metadata without items.
+   * Used for headers, actions, and navigation where item details aren't needed.
+   * Significantly reduces data transfer compared to findByIdWithDetails.
+   * @param id - The ID of the quote
+   * @returns A promise that resolves to the quote metadata, or null if not found
+   */
+  async findByIdMetadata(id: string): Promise<QuoteMetadata | null> {
+    const quote = await this.prisma.quote.findUnique({
+      where: { id, deletedAt: null },
+      select: {
+        id: true,
+        quoteNumber: true,
+        status: true,
+        amount: true,
+        currency: true,
+        gst: true,
+        discount: true,
+        issuedDate: true,
+        validUntil: true,
+        invoiceId: true,
+        notes: true,
+        terms: true,
+        versionNumber: true,
+        parentQuoteId: true,
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            organization: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            statusHistory: true,
+          },
+        },
+      },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    // Get versions count
+    const versionsCount = await this.countQuoteVersions(id);
+
+    return {
+      ...quote,
+      amount: Number(quote.amount),
+      gst: Number(quote.gst),
+      discount: Number(quote.discount),
+      notes: quote.notes ?? undefined,
+      terms: quote.terms ?? undefined,
+      versionsCount,
+    };
+  }
+
+  /**
+   * Fetches quote items with attachments for a specific quote.
+   * Fetched separately from quote metadata for better performance.
+   * @param quoteId - The ID of the quote
+   * @returns A promise that resolves to an array of quote items
+   */
+  async findQuoteItems(quoteId: string): Promise<QuoteItem[]> {
+    const items = await this.prisma.quoteItem.findMany({
+      where: {
+        quoteId,
+        quote: {
+          deletedAt: null,
+        },
+      },
+      select: {
+        id: true,
+        quoteId: true,
+        description: true,
+        quantity: true,
+        unitPrice: true,
+        total: true,
+        productId: true,
+        notes: true,
+        order: true,
+        colors: true,
+        createdAt: true,
+        attachments: {
+          select: {
+            id: true,
+            quoteItemId: true,
+            fileName: true,
+            fileSize: true,
+            mimeType: true,
+            s3Key: true,
+            s3Url: true,
+            uploadedBy: true,
+            uploadedAt: true,
+          },
+          orderBy: { uploadedAt: 'desc' },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    return items.map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      total: Number(item.total),
+    }));
   }
 
   /**

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { QuoteStatusBadge } from '@/features/finances/quotes/components/quote-status-badge';
 import { QuoteDrawerActionsMenu } from '@/features/finances/quotes/components/quote-drawer-actions-menu';
 import { QuoteVersionNavigation } from '@/features/finances/quotes/components/quote-version-navigation';
-import type { QuoteWithDetails } from '@/features/finances/quotes/types';
+import type { QuoteWithDetails, QuoteMetadata } from '@/features/finances/quotes/types';
 
 interface QuoteVersion {
   id: string;
@@ -38,7 +38,7 @@ interface QuoteDrawerHeaderProps {
   versions?: QuoteVersion[];
   currentVersionIndex: number;
   onNavigateToVersion: (versionId: string) => void;
-  quote?: QuoteWithDetails | null;
+  quote?: QuoteWithDetails | QuoteMetadata | null;
   isCreating: boolean;
   isUpdating: boolean;
   actionsMenuHandlers: QuoteDrawerActionsMenuHandlers;

@@ -82,6 +82,19 @@ export type QuoteWithDetails = {
   };
 };
 
+/**
+ * Lightweight quote metadata without items.
+ * Used for headers, actions, and navigation where full item details aren't needed.
+ * Reduces data transfer when viewing non-detail tabs (versions, history).
+ */
+export type QuoteMetadata = Omit<QuoteWithDetails, 'items'>;
+
+/**
+ * Quote item with all details including attachments.
+ * Fetched separately from quote metadata for better performance.
+ */
+export type QuoteItem = QuoteWithDetails['items'][number];
+
 export type QuoteItemAttachment = {
   id: string;
   quoteItemId: string;

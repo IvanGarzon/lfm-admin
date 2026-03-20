@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getQuotePermissions } from '@/features/finances/quotes/utils/quote-helpers';
-import type { QuoteWithDetails } from '@/features/finances/quotes/types';
+import type { QuoteWithDetails, QuoteMetadata } from '@/features/finances/quotes/types';
 
 interface QuoteDrawerActionsMenuHandlers {
   onSend: () => void;
@@ -39,7 +39,7 @@ interface QuoteDrawerActionsMenuHandlers {
 }
 
 interface QuoteDrawerActionsMenuProps {
-  quote: QuoteWithDetails;
+  quote: QuoteWithDetails | QuoteMetadata;
   handlers: QuoteDrawerActionsMenuHandlers;
   showFollowUp: boolean;
   isDisabled?: boolean;
