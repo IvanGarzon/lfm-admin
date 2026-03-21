@@ -6,7 +6,7 @@ import {
   useRecordPayment,
   useCancelInvoice,
   useDownloadReceiptPdf,
-  useInvoiceBasic,
+  useInvoiceMetadata,
   useInvoiceItems,
   useInvoicePayments,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
@@ -16,7 +16,7 @@ import { CancelInvoiceDialog } from '@/features/finances/invoices/components/can
 import { SendReceiptDialog } from '@/features/finances/invoices/components/send-receipt-dialog';
 import type {
   InvoiceWithDetails,
-  InvoiceBasic,
+  InvoiceMetadata,
   CancelInvoiceData,
 } from '@/features/finances/invoices/types';
 import type { RecordPaymentInput } from '@/schemas/invoices';
@@ -27,7 +27,7 @@ interface ModalState {
   type: ModalType;
   id: string;
   invoiceNumber?: string;
-  invoice?: InvoiceWithDetails | InvoiceBasic;
+  invoice?: InvoiceWithDetails | InvoiceMetadata;
   onSuccess?: () => void;
 }
 
@@ -36,13 +36,13 @@ interface InvoiceActionContextType {
   openRecordPayment: (
     id: string,
     invoiceNumber: string,
-    invoice?: InvoiceWithDetails | InvoiceBasic,
+    invoice?: InvoiceWithDetails | InvoiceMetadata,
     onSuccess?: () => void,
   ) => void;
   openCancel: (id: string, invoiceNumber: string, onSuccess?: () => void) => void;
   openSendReceipt: (
     id: string,
-    invoice?: InvoiceWithDetails | InvoiceBasic,
+    invoice?: InvoiceWithDetails | InvoiceMetadata,
     onSuccess?: () => void,
   ) => void;
   close: () => void;
@@ -59,10 +59,10 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   const downloadReceiptPdf = useDownloadReceiptPdf();
 
   // Fetch basic invoice details if needed (e.g. for Send Receipt dialog if opened from list)
-  // useInvoiceBasic is much lighter than useInvoice as it skips items and history
+  // useInvoiceMetadata is much lighter than useInvoice as it skips items and history
   const shouldFetchInvoice =
     (state?.type === 'SEND_RECEIPT' || state?.type === 'RECORD_PAYMENT') && !state.invoice;
-  const { data: fetchedInvoice } = useInvoiceBasic(shouldFetchInvoice ? state?.id : undefined);
+  const { data: fetchedInvoice } = useInvoiceMetadata(shouldFetchInvoice ? state?.id : undefined);
 
   // Fetch items and payments if needed (specifically for Send Receipt dialog)
   const shouldFetchDetails = state?.type === 'SEND_RECEIPT';
@@ -81,7 +81,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     (
       id: string,
       invoiceNumber: string,
-      invoice?: InvoiceWithDetails | InvoiceBasic,
+      invoice?: InvoiceWithDetails | InvoiceMetadata,
       onSuccess?: () => void,
     ) => {
       setState({ type: 'RECORD_PAYMENT', id, invoiceNumber, invoice, onSuccess });
@@ -94,7 +94,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const openSendReceipt = useCallback(
-    (id: string, invoice?: InvoiceWithDetails | InvoiceBasic, onSuccess?: () => void) => {
+    (id: string, invoice?: InvoiceWithDetails | InvoiceMetadata, onSuccess?: () => void) => {
       setState({ type: 'SEND_RECEIPT', id, invoice, onSuccess });
     },
     [],

@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { Box } from '@/components/ui/box';
 import { formatCurrency } from '@/lib/utils';
 import type {
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
@@ -15,7 +15,7 @@ const EMPTY_ITEMS: InvoiceItemDetail[] = [];
 const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
 
 type ReceiptHtmlPreviewProps = {
-  invoice: InvoiceBasic;
+  invoice: InvoiceMetadata;
   items?: InvoiceItemDetail[];
   payments?: InvoicePaymentItem[];
   isLoadingItems?: boolean;

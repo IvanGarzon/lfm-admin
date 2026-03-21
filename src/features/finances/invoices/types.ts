@@ -53,7 +53,7 @@ export type InvoiceItemDetail = {
   productId: string | null;
 };
 
-export type InvoiceBasic = Omit<InvoiceWithDetails, 'payments' | 'statusHistory' | 'items'> & {
+export type InvoiceMetadata = Omit<InvoiceWithDetails, 'payments' | 'statusHistory' | 'items'> & {
   _count?: {
     payments: number;
     statusHistory: number;

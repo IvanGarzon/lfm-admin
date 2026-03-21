@@ -10,7 +10,7 @@ import type {
   InvoiceStatistics,
   InvoiceWithDetails,
   InvoicePagination,
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
@@ -82,7 +82,7 @@ export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWi
  * @param id - The ID of the invoice to retrieve.
  * @returns A promise that resolves to an `ActionResult` containing basic invoice details.
  */
-export async function getInvoiceBasicById(id: string): Promise<ActionResult<InvoiceBasic>> {
+export async function getInvoiceMetadata(id: string): Promise<ActionResult<InvoiceMetadata>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -90,7 +90,7 @@ export async function getInvoiceBasicById(id: string): Promise<ActionResult<Invo
 
   try {
     requirePermission(session.user, 'canReadInvoices');
-    const invoice = await invoiceRepo.findInvoiceBasicById(id);
+    const invoice = await invoiceRepo.findByIdMetadata(id);
 
     if (!invoice) {
       return { success: false, error: 'Invoice not found' };

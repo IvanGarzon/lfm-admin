@@ -76,11 +76,11 @@ export function QuoteDrawer({
   const isLoading = isLoadingQuote || (needsItems && isLoadingItems);
 
   const { data: versions, isLoading: isLoadingVersions } = useQuoteVersions(id, {
-    enabled: mode === 'edit',
+    enabled: mode === 'edit' && activeTab === 'versions',
   });
 
   const { data: history, isLoading: isLoadingHistory } = useQuoteHistory(id, {
-    enabled: activeTab === 'history',
+    enabled: mode === 'edit' && activeTab === 'history',
   });
 
   const { openDelete, openReject, openOnHold, openCancel, openConvert } = useQuoteActions();
@@ -574,19 +574,14 @@ export function QuoteDrawer({
                         </TabsList>
 
                         <TabsContent value="details" className="mt-0 h-full flex flex-col">
-                          {quote && items ? (
-                            <QuoteForm
-                              quote={quote}
-                              items={items}
-                              onUpdate={handleUpdate}
-                              isUpdating={updateQuote.isPending}
-                              onDirtyStateChange={setHasUnsavedChanges}
-                            />
-                          ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
-                              Loading quote details...
-                            </Box>
-                          )}
+                          <QuoteForm
+                            quote={quote}
+                            items={items}
+                            onUpdate={handleUpdate}
+                            isUpdating={updateQuote.isPending}
+                            isLoadingItems={isLoadingItems}
+                            onDirtyStateChange={setHasUnsavedChanges}
+                          />
                         </TabsContent>
 
                         <TabsContent value="versions" className="mt-0 p-6">

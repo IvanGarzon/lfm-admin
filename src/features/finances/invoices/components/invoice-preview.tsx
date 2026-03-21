@@ -1,21 +1,23 @@
 'use client';
 
-import { format } from 'date-fns';
-import Image from 'next/image';
 import { Box } from '@/components/ui/box';
-import { formatCurrency } from '@/lib/utils';
 import type {
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
 import { lasFloresAccount } from '@/constants/data';
+import { InvoicePreviewHeader } from '@/features/finances/invoices/components/preview/invoice-preview-header';
+import { InvoicePreviewBillingInfo } from '@/features/finances/invoices/components/preview/invoice-preview-billing-info';
+import { InvoicePreviewItemsTable } from '@/features/finances/invoices/components/preview/invoice-preview-items-table';
+import { InvoicePreviewSummary } from '@/features/finances/invoices/components/preview/invoice-preview-summary';
+import { InvoicePreviewPayments } from '@/features/finances/invoices/components/preview/invoice-preview-payments';
 
 const EMPTY_ITEMS: InvoiceItemDetail[] = [];
 const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
 
 type InvoiceHtmlPreviewProps = {
-  invoice: InvoiceBasic;
+  invoice: InvoiceMetadata;
   items?: InvoiceItemDetail[];
   payments?: InvoicePaymentItem[];
   isLoadingItems?: boolean;
@@ -36,253 +38,21 @@ export function InvoicePreview({
   return (
     <Box className="h-full overflow-y-auto bg-gray-100 dark:bg-gray-950 p-8">
       <Box className="bg-white dark:bg-gray-900 shadow-lg max-w-4xl mx-auto">
-        {/* Invoice Container */}
         <Box className="p-12">
-          {/* Header */}
-          <Box className="flex items-start justify-between mb-8">
-            <Box>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-1">Invoice</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Invoice Number #{invoice.invoiceNumber}
-              </p>
-            </Box>
-            <Box className="relative h-40 w-40">
-              <Image
-                src="/static/logo-green-800.png"
-                alt="Las Flores Melbourne Logo"
-                width={160}
-                height={160}
-                className="h-40 w-auto object-contain"
-                priority
-              />
-            </Box>
-          </Box>
+          <InvoicePreviewHeader invoiceNumber={invoice.invoiceNumber} />
 
-          {/* Billing Information */}
-          <Box className="grid grid-cols-2 gap-8 mb-8">
-            <Box>
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                Billed by:
-              </p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
-                {lasFloresAccount.accountName}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.phone}</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.email}</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                AU ABN {lasFloresAccount.abn}
-              </p>
-            </Box>
-            <Box>
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                Billed to:
-              </p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
-                {invoice.customer.firstName} {invoice.customer.lastName}
-              </p>
-              {invoice.customer.phone && (
-                <p className="text-sm text-gray-700 dark:text-gray-300">{invoice.customer.phone}</p>
-              )}
-              <p className="text-sm text-gray-700 dark:text-gray-300">{invoice.customer.email}</p>
-              {invoice.customer.organization && invoice.customer.organization.name ? (
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {invoice.customer.organization.name}
-                </p>
-              ) : null}
-            </Box>
-          </Box>
+          <InvoicePreviewBillingInfo invoice={invoice} />
 
-          {/* Dates */}
-          <Box className="grid grid-cols-2 gap-8 mb-8">
-            <Box>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Date Issued:</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                {format(invoice.issuedDate, 'MMMM dd, yyyy')}
-              </p>
-            </Box>
-            <Box>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Due Date:</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                {format(invoice.dueDate, 'MMMM dd, yyyy')}
-              </p>
-            </Box>
-          </Box>
+          <InvoicePreviewItemsTable items={items} isLoadingItems={isLoadingItems} />
 
-          {/* Items Table */}
-          <Box className="mb-8">
-            <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Items</p>
-            <Box className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      Items
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      QTY
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      Cost
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {isLoadingItems
-                    ? Array.from({ length: 3 }).map((_, i) => (
-                        <tr key={i} className="animate-pulse">
-                          <td className="px-4 py-3">
-                            <Box className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded" />
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Box className="h-4 w-8 bg-gray-200 dark:bg-gray-800 rounded mx-auto" />
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <Box className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded ml-auto" />
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <Box className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded ml-auto" />
-                          </td>
-                        </tr>
-                      ))
-                    : items.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                            {item.description}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-center text-gray-900 dark:text-gray-100">
-                            {item.quantity}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-right text-gray-900 dark:text-gray-100">
-                            {formatCurrency({ number: item.unitPrice })}
-                          </td>
-                          <td className="px-4 py-2 text-sm font-medium text-right text-gray-900 dark:text-gray-100">
-                            {formatCurrency({ number: item.total })}
-                          </td>
-                        </tr>
-                      ))}
-                </tbody>
-              </table>
-            </Box>
-          </Box>
+          <InvoicePreviewSummary
+            invoice={invoice}
+            subtotal={subtotal}
+            gstAmount={gstAmount}
+            total={total}
+          />
 
-          {/* Summary Section */}
-          <Box className="flex justify-end mb-8">
-            <Box className="w-1/2 space-y-3">
-              <Box className="flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Subtotal</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: subtotal })}
-                </p>
-              </Box>
-
-              <Box className="flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">GST ({invoice.gst}%)</p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: gstAmount })}
-                </p>
-              </Box>
-
-              {invoice.discount > 0 ? (
-                <Box className="flex justify-between items-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Discount</p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                    -{formatCurrency({ number: invoice.discount })}
-                  </p>
-                </Box>
-              ) : null}
-
-              <Box className="flex justify-between items-center pt-3 border-t-2 border-gray-900 dark:border-gray-50">
-                <p className="text-base font-bold text-gray-900 dark:text-gray-50">Invoice Total</p>
-                <p className="text-base font-bold text-gray-900 dark:text-gray-50">
-                  {formatCurrency({ number: total })}
-                </p>
-              </Box>
-
-              {invoice.amountPaid > 0 ? (
-                <>
-                  <Box className="flex justify-between items-center text-green-600 dark:text-green-400">
-                    <p className="text-sm">Amount Paid</p>
-                    <p className="text-sm font-semibold">
-                      -{formatCurrency({ number: invoice.amountPaid })}
-                    </p>
-                  </Box>
-                  <Box className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-lg font-bold text-gray-900 dark:text-gray-50">Amount Due</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-gray-50">
-                      {formatCurrency({ number: invoice.amountDue })}
-                    </p>
-                  </Box>
-                </>
-              ) : null}
-            </Box>
-          </Box>
-
-          {/* Payment History */}
-          {isLoadingPayments || (payments && payments.length > 0) ? (
-            <Box className="mb-8">
-              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
-                Payment History
-              </p>
-              <Box className="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">
-                        Date
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">
-                        Method
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">
-                        Notes
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                    {isLoadingPayments
-                      ? Array.from({ length: 2 }).map((_, i) => (
-                          <tr key={i} className="animate-pulse">
-                            <td className="px-4 py-3">
-                              <Box className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded" />
-                            </td>
-                            <td className="px-4 py-3">
-                              <Box className="h-4 w-24 bg-gray-200 dark:bg-gray-800 rounded" />
-                            </td>
-                            <td className="px-4 py-3">
-                              <Box className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded" />
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <Box className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded ml-auto" />
-                            </td>
-                          </tr>
-                        ))
-                      : payments.map((payment) => (
-                          <tr key={payment.id}>
-                            <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                              {format(payment.date, 'MMM dd, yyyy')}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
-                              {payment.method}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 text-xs italic">
-                              {payment.notes || '-'}
-                            </td>
-                            <td className="px-4 py-2 text-sm font-medium text-right text-gray-900 dark:text-gray-100">
-                              {formatCurrency({ number: payment.amount })}
-                            </td>
-                          </tr>
-                        ))}
-                  </tbody>
-                </table>
-              </Box>
-            </Box>
-          ) : null}
+          <InvoicePreviewPayments payments={payments} isLoadingPayments={isLoadingPayments} />
 
           {/* Payment Details */}
           <Box className="grid gap-8 mb-8">

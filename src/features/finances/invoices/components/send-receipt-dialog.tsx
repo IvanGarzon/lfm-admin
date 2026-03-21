@@ -15,7 +15,7 @@ import {
 import { Box } from '@/components/ui/box';
 import type {
   InvoiceWithDetails,
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
@@ -27,7 +27,7 @@ const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
 interface SendReceiptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: InvoiceBasic | InvoiceWithDetails;
+  invoice: InvoiceMetadata | InvoiceWithDetails;
   items?: InvoiceItemDetail[];
   payments?: InvoicePaymentItem[];
   isLoadingItems?: boolean;

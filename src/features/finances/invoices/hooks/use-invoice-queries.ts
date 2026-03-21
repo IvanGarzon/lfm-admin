@@ -12,7 +12,7 @@ import { InvoiceStatus } from '@/prisma/client';
 import {
   getInvoices,
   getInvoiceById,
-  getInvoiceBasicById,
+  getInvoiceMetadata,
   getInvoiceItems,
   getInvoicePayments,
   getInvoiceStatusHistory,
@@ -95,12 +95,12 @@ export function useInvoice(id: string | undefined) {
   });
 }
 
-export function useInvoiceBasic(id: string | undefined) {
+export function useInvoiceMetadata(id: string | undefined) {
   return useQuery({
     queryKey: [...INVOICE_KEYS.detail(id ?? ''), 'basic'], // Keep for type safety
     queryFn: id
       ? async () => {
-          const result = await getInvoiceBasicById(id);
+          const result = await getInvoiceMetadata(id);
           if (!result.success) {
             throw new Error(result.error);
           }
@@ -112,7 +112,7 @@ export function useInvoiceBasic(id: string | undefined) {
   });
 }
 
-export function useInvoiceItems(id: string | undefined) {
+export function useInvoiceItems(id: string | undefined, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: INVOICE_KEYS.items(id ?? ''), // Keep for type safety
     queryFn: id
@@ -125,6 +125,7 @@ export function useInvoiceItems(id: string | undefined) {
           return result.data;
         }
       : skipToken,
+    enabled: options?.enabled,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -730,8 +731,11 @@ export function usePrefetchInvoice() {
     queryClient.prefetchQuery({
       queryKey: [...INVOICE_KEYS.detail(invoiceId), 'basic'],
       queryFn: async () => {
-        const result = await getInvoiceBasicById(invoiceId);
-        if (!result.success) throw new Error(result.error);
+        const result = await getInvoiceMetadata(invoiceId);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       },
       staleTime: 30 * 1000,

@@ -105,6 +105,7 @@ export function QuoteForm({
   onUpdate,
   isCreating = false,
   isUpdating = false,
+  isLoadingItems = false,
   onDirtyStateChange,
 }: {
   quote?: QuoteMetadata | null;
@@ -113,6 +114,7 @@ export function QuoteForm({
   onUpdate?: (data: UpdateQuoteInput) => void;
   isCreating?: boolean;
   isUpdating?: boolean;
+  isLoadingItems?: boolean;
   onDirtyStateChange?: (isDirty: boolean) => void;
 }) {
   const mode = quote ? 'update' : 'create';
@@ -283,20 +285,27 @@ export function QuoteForm({
 
           <QuoteDateFields control={form.control} isLocked={isLocked} />
 
-          <QuoteItemsList
-            form={form}
-            fieldArray={itemsFieldArray}
-            products={products}
-            isLoadingProducts={isLoadingProducts}
-            recipes={recipes}
-            isLoadingRecipes={isLoadingRecipes}
-            recipeGroups={recipeGroups}
-            isLoadingRecipeGroups={isLoadingRecipeGroups}
-            onRequestRecipes={() => setShouldFetchRecipes(true)}
-            onRequestProducts={() => setShouldFetchProducts(true)}
-            isLocked={isLocked}
-            quoteId={quote?.id}
-          />
+          {isLoadingItems ? (
+            <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Loading invoice items...</p>
+            </Box>
+          ) : (
+            <QuoteItemsList
+              form={form}
+              fieldArray={itemsFieldArray}
+              products={products}
+              isLoadingProducts={isLoadingProducts}
+              recipes={recipes}
+              isLoadingRecipes={isLoadingRecipes}
+              recipeGroups={recipeGroups}
+              isLoadingRecipeGroups={isLoadingRecipeGroups}
+              onRequestRecipes={() => setShouldFetchRecipes(true)}
+              onRequestProducts={() => setShouldFetchProducts(true)}
+              isLocked={isLocked}
+              quoteId={quote?.id}
+            />
+          )}
 
           <QuoteTaxDiscountFields control={form.control} isLocked={isLocked} />
 

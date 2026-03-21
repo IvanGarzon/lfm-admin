@@ -21,7 +21,7 @@
  * QUERY FUNCTIONS TESTED:
  * - getInvoices: Paginated list with filters
  * - getInvoiceById: Full invoice details
- * - getInvoiceBasicById: Minimal invoice data
+ * - getInvoiceMetadata: Minimal invoice data
  * - getInvoiceItems: Line items for an invoice
  * - getInvoicePayments: Payment history
  * - getInvoiceStatusHistory: Status change audit trail
@@ -41,7 +41,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getInvoices,
   getInvoiceById,
-  getInvoiceBasicById,
+  getInvoiceMetadata,
   getInvoiceItems,
   getInvoicePayments,
   getInvoiceStatusHistory,
@@ -60,7 +60,7 @@ const { mockRepoInstance, mockAuth, mockRequirePermission } = vi.hoisted(() => (
   mockRepoInstance: {
     searchAndPaginate: vi.fn(),
     findByIdWithDetails: vi.fn(),
-    findInvoiceBasicById: vi.fn(),
+    findByIdMetadata: vi.fn(),
     findInvoiceItems: vi.fn(),
     findInvoicePayments: vi.fn(),
     findInvoiceStatusHistory: vi.fn(),
@@ -181,7 +181,7 @@ describe('Invoice Queries', () => {
     });
   });
 
-  describe('getInvoiceBasicById', () => {
+  describe('getInvoiceMetadata', () => {
     it('returns basic invoice details successfully', async () => {
       const mockInvoice = {
         id: TEST_INVOICE_ID,
@@ -190,9 +190,9 @@ describe('Invoice Queries', () => {
         _count: { items: 3, payments: 1 },
       };
 
-      mockRepoInstance.findInvoiceBasicById.mockResolvedValue(mockInvoice);
+      mockRepoInstance.findByIdMetadata.mockResolvedValue(mockInvoice);
 
-      const result = await getInvoiceBasicById(TEST_INVOICE_ID);
+      const result = await getInvoiceMetadata(TEST_INVOICE_ID);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -201,9 +201,9 @@ describe('Invoice Queries', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockRepoInstance.findInvoiceBasicById.mockResolvedValue(null);
+      mockRepoInstance.findByIdMetadata.mockResolvedValue(null);
 
-      const result = await getInvoiceBasicById('non-existent');
+      const result = await getInvoiceMetadata('non-existent');
 
       expect(result.success).toBe(false);
       if (!result.success) {

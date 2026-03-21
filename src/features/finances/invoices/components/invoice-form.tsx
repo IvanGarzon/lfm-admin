@@ -10,32 +10,13 @@ import {
   SubmitHandler,
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarIcon, Percent, DollarSign, Loader2, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 import { InvoiceStatus } from '@/prisma/client';
-import { cn, formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupAddon,
-  InputGroupText,
-} from '@/components/ui/input-group';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 
 import {
   CreateInvoiceSchema,
@@ -43,16 +24,18 @@ import {
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
 } from '@/schemas/invoices';
-import { CustomerSelect } from '@/components/shared/customer-select';
 import type {
   InvoiceFormInput,
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoiceStatusHistoryItem,
 } from '@/features/finances/invoices/types';
 import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
+import { InvoiceHeaderFields } from '@/features/finances/invoices/components/form-fields/invoice-header-fields';
+import { InvoiceTaxDiscountFields } from '@/features/finances/invoices/components/form-fields/invoice-tax-discount-fields';
+import { InvoiceTotalSummary } from '@/features/finances/invoices/components/form-fields/invoice-total-summary';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useFormReset } from '@/hooks/use-form-reset';
 
@@ -76,7 +59,7 @@ const defaultFormState: CreateInvoiceInput = {
 };
 
 const mapInvoiceToFormValues = (
-  invoice: InvoiceBasic,
+  invoice: InvoiceMetadata,
   items: InvoiceItemDetail[] = [],
 ): UpdateInvoiceInput => {
   return {
@@ -108,7 +91,7 @@ export function InvoiceForm({
   isLoadingItems = false,
   onDirtyStateChange,
 }: {
-  invoice?: InvoiceBasic | null;
+  invoice?: InvoiceMetadata | null;
   items?: InvoiceItemDetail[];
   statusHistory?: InvoiceStatusHistoryItem[];
   onCreate?: (data: CreateInvoiceInput) => void;
@@ -269,148 +252,14 @@ export function InvoiceForm({
         ) : null}
 
         <Box className="flex-1 overflow-y-auto px-6 py-6">
-          {/* Customer Selection */}
-          <FieldGroup>
-            <Controller
-              name="customerId"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Box>
-                  <CustomerSelect
-                    customers={customers ?? []}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    isLoading={isLoadingCustomers}
-                    disabled={isLoadingCustomers || isLocked}
-                    label="Bill to"
-                    showAddCustomerLink={true}
-                    isLocked={isLocked}
-                  />
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Box>
-              )}
-            />
-          </FieldGroup>
-
-          {/* Invoice Number (Read-only when editing) & Currency */}
-          <Box className="grid grid-cols-2 gap-4">
-            {mode === 'update' && invoice?.invoiceNumber ? (
-              <FieldGroup>
-                <Field>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-invoice-number">Invoice Number</FieldLabel>
-                  </FieldContent>
-                  <Input
-                    id="form-rhf-invoice-number"
-                    value={invoice.invoiceNumber}
-                    disabled
-                    readOnly
-                    className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
-                  />
-                </Field>
-              </FieldGroup>
-            ) : null}
-
-            <FieldGroup className={mode === 'create' ? 'col-span-2' : ''}>
-              <Controller
-                name="currency"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
-                    </FieldContent>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                      <SelectTrigger
-                        id="form-rhf-select-currency"
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
-
-          {/* Dates */}
-          <Box className="grid grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="issuedDate"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-issued-date">Issued Date</FieldLabel>
-                    </FieldContent>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                          type="button"
-                          disabled={isLocked}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
-                      </PopoverContent>
-                    </Popover>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="dueDate"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-due-date">Due Date</FieldLabel>
-                    </FieldContent>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                          type="button"
-                          disabled={isLocked}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
-                      </PopoverContent>
-                    </Popover>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
+          <InvoiceHeaderFields
+            control={form.control}
+            mode={mode}
+            invoice={invoice}
+            customers={customers ?? []}
+            isLoadingCustomers={isLoadingCustomers}
+            isLocked={isLocked}
+          />
 
           {/* Items details */}
           {isLoadingItems ? (
@@ -428,80 +277,7 @@ export function InvoiceForm({
             />
           )}
 
-          {/* GST and Discount */}
-          <Box className="grid grid-cols-2 gap-4">
-            <FieldGroup>
-              <Controller
-                name="gst"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-gst">GST</FieldLabel>
-                    </FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <InputGroupText>
-                          <Percent className="h-4 w-4" />
-                        </InputGroupText>
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        {...field}
-                        id="form-rhf-input-gst"
-                        aria-invalid={fieldState.invalid}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        value={field.value}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        placeholder="Enter GST percentage"
-                        disabled={isLocked}
-                      />
-                    </InputGroup>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
-            <FieldGroup>
-              <Controller
-                name="discount"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-discount">Discount</FieldLabel>
-                    </FieldContent>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <InputGroupText>
-                          <DollarSign className="h-4 w-4" />
-                        </InputGroupText>
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        {...field}
-                        id="form-rhf-input-discount"
-                        aria-invalid={fieldState.invalid}
-                        type="number"
-                        step="1"
-                        min="0"
-                        value={isNaN(field.value ?? 0) ? '' : (field.value ?? 0)}
-                        onChange={(e) => {
-                          const value = e.target.valueAsNumber;
-                          field.onChange(isNaN(value) ? 0 : value);
-                        }}
-                        placeholder="Enter discount amount"
-                        disabled={isLocked}
-                      />
-                    </InputGroup>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-          </Box>
+          <InvoiceTaxDiscountFields control={form.control} isLocked={isLocked} />
 
           {/* Notes */}
           <FieldGroup>
@@ -530,27 +306,13 @@ export function InvoiceForm({
           </FieldGroup>
         </Box>
 
-        {/* Total Summary */}
-        <Box className="sticky bottom-0 border-t p-6 space-y-3 bg-gray-50 dark:bg-gray-900">
-          <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-            <span>Subtotal:</span>
-            <span>{formatCurrency({ number: calculateSubtotal() })}</span>
-          </Box>
-          <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-            <span>Gst ({gst}%):</span>
-            <span>{formatCurrency({ number: calculateTax() })}</span>
-          </Box>
-          {discount > 0 ? (
-            <Box className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
-              <span>Discount:</span>
-              <span>-{formatCurrency({ number: discount })}</span>
-            </Box>
-          ) : null}
-          <Box className="flex justify-between items-center text-lg font-bold pt-3 border-t border-gray-200 dark:border-gray-700">
-            <span>Invoice Total:</span>
-            <span>{formatCurrency({ number: calculateTotal() })}</span>
-          </Box>
-        </Box>
+        <InvoiceTotalSummary
+          subtotal={calculateSubtotal()}
+          gst={gst}
+          gstAmount={calculateTax()}
+          discount={discount}
+          total={calculateTotal()}
+        />
       </form>
     </Form>
   );

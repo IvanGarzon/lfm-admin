@@ -24,7 +24,7 @@ import type {
   InvoiceWithDetails,
   InvoiceFilters,
   InvoicePagination,
-  InvoiceBasic,
+  InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
@@ -281,11 +281,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   }
 
   /**
-   * Find basic invoice details without relations, but with relationship counts.
-   * @param id - The unique identifier of the invoice
-   * @returns A promise that resolves to basic invoice info or null
+   * Fetches lightweight invoice metadata without items, payments, or history.
+   * Used for headers, actions, and navigation where full details aren't needed.
+   * Significantly reduces data transfer compared to findByIdWithDetails.
+   * This method aliases findInvoiceMetadataById for consistency with quote repository.
+   * @param id - The ID of the invoice
+   * @returns A promise that resolves to the invoice metadata, or null if not found
    */
-  async findInvoiceBasicById(id: string): Promise<InvoiceBasic | null> {
+  async findByIdMetadata(id: string): Promise<InvoiceMetadata | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, deletedAt: null },
       select: {
@@ -345,7 +348,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       discount: Number(invoice.discount),
       amountPaid: Number(invoice.amountPaid),
       amountDue: Number(invoice.amountDue),
-    } as InvoiceBasic;
+      notes: invoice.notes ?? undefined,
+    };
   }
 
   /**

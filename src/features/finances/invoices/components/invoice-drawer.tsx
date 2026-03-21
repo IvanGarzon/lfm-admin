@@ -2,47 +2,21 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import {
-  X,
-  Ban,
-  Receipt,
-  CreditCard,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Download,
-  MoreHorizontalIcon,
-  Save,
-  Hourglass,
-  BellRing,
-  Copy,
-  RotateCcw,
-} from 'lucide-react';
 import { toast } from 'sonner';
 
-import { InvoiceStatus } from '@/prisma/client';
 import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
 import { Box } from '@/components/ui/box';
+import { Badge } from '@/components/ui/badge';
 import {
   Drawer,
   DrawerBody,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  useInvoiceBasic,
+  useInvoiceMetadata,
   useInvoiceItems,
   useInvoiceHistory,
   useInvoicePayments,
@@ -56,27 +30,13 @@ import {
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { InvoiceForm } from '@/features/finances/invoices/components/invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
-import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invoice-status-badge';
+import { InvoiceDrawerHeader } from '@/features/finances/invoices/components/invoice-drawer-header';
 import { InvoiceStatusHistory } from '@/features/finances/invoices/components/invoice-status-history';
 import { InvoicePayments } from '@/features/finances/invoices/components/invoice-payments';
+import { InvoicePreviewPanel } from '@/features/finances/invoices/components/invoice-preview-panel';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
-
-const InvoicePreview = dynamic(
-  () =>
-    import('@/features/finances/invoices/components/invoice-preview').then(
-      (mod) => mod.InvoicePreview,
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <Box className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading preview...</p>
-      </Box>
-    ),
-  },
-);
 
 type DrawerMode = 'edit' | 'create';
 
@@ -94,14 +54,25 @@ export function InvoiceDrawer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('details');
 
-  const { data: invoice, isLoading, error, isError } = useInvoiceBasic(id);
-  const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id);
+  const mode: DrawerMode = id ? 'edit' : 'create';
+
+  const { data: invoice, isLoading: isLoadingInvoice, error, isError } = useInvoiceMetadata(id);
+
+  const needsItems = activeTab === 'details' || showPreview;
+  const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id, {
+    enabled: needsItems,
+  });
+
+  const isLoading = isLoadingInvoice || (needsItems && isLoadingItems);
+
   const { data: history, isLoading: isLoadingHistory } = useInvoiceHistory(id, {
-    enabled: activeTab === 'history',
+    enabled: mode === 'edit' && activeTab === 'history',
   });
+
   const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id, {
-    enabled: activeTab === 'payments',
+    enabled: mode === 'edit' && activeTab === 'payments',
   });
+
   const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
 
   const createInvoice = useCreateInvoice();
@@ -115,7 +86,6 @@ export function InvoiceDrawer({
   const router = useRouter();
   const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
 
-  const mode: DrawerMode = id ? 'edit' : 'create';
   const isOpen = id ? (pathname?.includes(`/invoices/${id}`) ?? false) : (open ?? false);
 
   const handleOpenChange = useCallback(
@@ -256,16 +226,41 @@ export function InvoiceDrawer({
   const { title, status } = useMemo(() => {
     if (mode === 'create') {
       return {
-        title: 'New Quote',
+        title: 'New Invoice',
         status: null,
       };
     }
 
     return {
-      title: 'Update Invoice',
+      title: invoice?.invoiceNumber || 'Update Invoice',
       status: invoice?.status ?? null,
     };
-  }, [mode, invoice?.status]);
+  }, [mode, invoice?.invoiceNumber, invoice?.status]);
+
+  const actionsMenuHandlers = useMemo(
+    () => ({
+      onDuplicate: handleDuplicate,
+      onMarkAsPending: handleMarkAsPending,
+      onMarkAsDraft: handleMarkAsDraft,
+      onRecordPayment: handleRecordPaymentDialog,
+      onSendReminder: handleSendReminder,
+      onCancel: handleCancelDialog,
+      onDownloadPdf: handleDownloadPdf,
+      onSendReceipt: handleOpenReceiptDialog,
+      onDelete: handleDeleteDialog,
+    }),
+    [
+      handleDuplicate,
+      handleMarkAsPending,
+      handleMarkAsDraft,
+      handleRecordPaymentDialog,
+      handleSendReminder,
+      handleCancelDialog,
+      handleDownloadPdf,
+      handleOpenReceiptDialog,
+      handleDeleteDialog,
+    ],
+  );
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
@@ -288,160 +283,19 @@ export function InvoiceDrawer({
 
         {(invoice && !isLoading && !isError) || mode === 'create' ? (
           <>
-            {/* Custom Header with Toggle */}
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-              <Box className="mt-1 flex flex-col flex-1">
-                <Box className="flex items-center gap-2">
-                  <DrawerTitle>{title}</DrawerTitle>
-                  {mode === 'edit' && hasUnsavedChanges ? (
-                    <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                      <AlertCircle className="h-3 w-3" />
-                      Unsaved changes
-                    </span>
-                  ) : null}
-                </Box>
-                {status ? (
-                  <DrawerDescription>
-                    <InvoiceStatusBadge status={status} />
-                  </DrawerDescription>
-                ) : null}
-              </Box>
-
-              {/* Preview Button and Actions */}
-              <Box className="flex items-center gap-2">
-                {mode === 'edit' ? (
-                  <Button type="button" variant="outline" size="sm" onClick={handleTogglePreview}>
-                    {showPreview ? (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-1" />
-                        Hide Preview
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4 mr-1" />
-                        Show Preview
-                      </>
-                    )}
-                  </Button>
-                ) : null}
-
-                {mode === 'create' ? (
-                  <Button
-                    type="submit"
-                    form="form-rhf-invoice"
-                    size="sm"
-                    disabled={createInvoice.isPending}
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    Save as Draft
-                  </Button>
-                ) : null}
-
-                {mode === 'edit' && invoice ? (
-                  <>
-                    {invoice.status !== InvoiceStatus.PAID ? (
-                      <Button
-                        type="submit"
-                        form="form-rhf-invoice"
-                        size="sm"
-                        variant="outline"
-                        disabled={updateInvoice.isPending || !hasUnsavedChanges}
-                      >
-                        <Save className="h-4 w-4 mr-1" />
-                        Save
-                      </Button>
-                    ) : null}
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label="More Options"
-                          disabled={updateInvoice.isPending}
-                          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 cursor-pointer"
-                        >
-                          <MoreHorizontalIcon className="h-4 w-4" />
-                          <span className="sr-only">More options</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem onClick={handleDuplicate}>
-                          <Copy className="h-4 w-4" />
-                          Duplicate invoice
-                        </DropdownMenuItem>
-                        {invoice.status === InvoiceStatus.DRAFT && (
-                          <DropdownMenuItem onClick={handleMarkAsPending}>
-                            <Hourglass className="h-4 w-4" />
-                            Mark as pending
-                          </DropdownMenuItem>
-                        )}
-                        {invoice.status === InvoiceStatus.PENDING && (
-                          <DropdownMenuItem onClick={handleMarkAsDraft}>
-                            <RotateCcw className="h-4 w-4" />
-                            Revert to draft
-                          </DropdownMenuItem>
-                        )}
-                        {invoice.status === InvoiceStatus.PENDING ||
-                        invoice.status === InvoiceStatus.OVERDUE ||
-                        invoice.status === InvoiceStatus.PARTIALLY_PAID ? (
-                          <>
-                            <DropdownMenuItem onClick={handleRecordPaymentDialog}>
-                              <CreditCard className="h-4 w-4" />
-                              Record payment
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleSendReminder}>
-                              <BellRing className="h-4 w-4" />
-                              Send reminder
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={handleCancelDialog}
-                              className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-                            >
-                              <Ban className="h-4 w-4" />
-                              Cancel invoice
-                            </DropdownMenuItem>
-                          </>
-                        ) : null}
-
-                        {invoice.status === InvoiceStatus.PAID ? (
-                          <>
-                            <DropdownMenuItem onClick={handleDownloadPdf}>
-                              <Download className="h-4 w-4" />
-                              Download invoice
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleOpenReceiptDialog}>
-                              <Receipt className="h-4 w-4" />
-                              Send receipt
-                            </DropdownMenuItem>
-                          </>
-                        ) : null}
-
-                        {invoice.status === InvoiceStatus.DRAFT && (
-                          <DropdownMenuItem
-                            onClick={handleDeleteDialog}
-                            className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-                          >
-                            <AlertCircle className="h-4 w-4" />
-                            Delete invoice
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : null}
-
-                <Button
-                  variant="ghost"
-                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
-                  onClick={() => handleOpenChange(false)}
-                >
-                  <X className="size-5" aria-hidden="true" />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </Box>
-            </Box>
+            <InvoiceDrawerHeader
+              mode={mode}
+              title={title}
+              status={status}
+              hasUnsavedChanges={hasUnsavedChanges}
+              showPreview={showPreview}
+              isCreating={createInvoice.isPending}
+              isUpdating={updateInvoice.isPending}
+              onTogglePreview={handleTogglePreview}
+              onClose={() => handleOpenChange(false)}
+              invoice={invoice}
+              actionsMenuHandlers={mode === 'edit' && invoice ? actionsMenuHandlers : undefined}
+            />
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
               <Box className="flex h-full">
@@ -452,7 +306,11 @@ export function InvoiceDrawer({
                   }}
                 >
                   {mode === 'create' ? (
-                    <InvoiceForm onCreate={handleCreate} isCreating={createInvoice.isPending} />
+                    <InvoiceForm
+                      onCreate={handleCreate}
+                      isCreating={createInvoice.isPending}
+                      onDirtyStateChange={handleUnsavedChanges}
+                    />
                   ) : (
                     <Tabs
                       value={activeTab}
@@ -524,30 +382,14 @@ export function InvoiceDrawer({
                 </Box>
 
                 {mode === 'edit' && showPreview && invoice ? (
-                  <Box
-                    className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
-                    style={{ width: '50%' }}
-                  >
-                    {/* Preview Header */}
-                    <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-925 flex items-center justify-between">
-                      <p className="text-lg font-semibold">Preview</p>
-                      <Button type="button" variant="ghost" size="icon" onClick={handleDownloadPdf}>
-                        <Download className="h-4 w-4" />
-                        <span className="sr-only">Download PDF</span>
-                      </Button>
-                    </Box>
-
-                    {/* HTML Preview Content */}
-                    <Box className="flex-1 overflow-hidden">
-                      <InvoicePreview
-                        invoice={invoice}
-                        items={items}
-                        payments={payments}
-                        isLoadingItems={isLoadingItems}
-                        isLoadingPayments={isLoadingPayments}
-                      />
-                    </Box>
-                  </Box>
+                  <InvoicePreviewPanel
+                    invoice={invoice}
+                    items={items}
+                    payments={payments}
+                    isLoadingItems={isLoadingItems}
+                    isLoadingPayments={isLoadingPayments}
+                    onDownloadPdf={handleDownloadPdf}
+                  />
                 ) : null}
               </Box>
             </DrawerBody>
