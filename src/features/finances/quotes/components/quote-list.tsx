@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SearchParams } from 'nuqs/server';
+import { toast } from 'sonner';
 
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
@@ -15,12 +16,15 @@ import {
   useDuplicateQuote,
   useBulkUpdateQuoteStatus,
   useBulkDeleteQuotes,
+  useToggleQuoteFavourite,
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { QuoteTable } from '@/features/finances/quotes/components/quote-table';
 import type { QuotePagination } from '@/features/finances/quotes/types';
 import { createQuoteColumns } from '@/features/finances/quotes/components/quote-columns';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
 import { QuoteStatus } from '@/prisma/client';
+import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes';
+import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -45,6 +49,16 @@ export function QuoteList({
   const duplicateQuoteMutation = useDuplicateQuote();
   const bulkUpdateStatus = useBulkUpdateQuoteStatus();
   const bulkDelete = useBulkDeleteQuotes();
+  const toggleFavouriteMutation = useToggleQuoteFavourite();
+
+  // Email preview state
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
+  const [isLoadingEmailPreview, setIsLoadingEmailPreview] = useState(false);
+  const [pendingEmailAction, setPendingEmailAction] = useState<{
+    quoteId: string;
+    emailType: QuoteEmailType;
+  } | null>(null);
 
   const handleBulkUpdateStatus = (ids: string[], status: QuoteStatus) => {
     bulkUpdateStatus.mutate({ ids, status });
@@ -56,6 +70,33 @@ export function QuoteList({
 
   const isBulkPending = bulkUpdateStatus.isPending || bulkDelete.isPending;
 
+  const handleLoadEmailPreview = useCallback(async (quoteId: string, emailType: QuoteEmailType) => {
+    setIsLoadingEmailPreview(true);
+    setShowEmailPreview(true);
+    setPendingEmailAction({ quoteId, emailType });
+
+    try {
+      const result = await previewQuoteEmail(quoteId, emailType);
+
+      if (!result.success) {
+        toast.error('Failed to load email preview', {
+          description: result.error,
+        });
+        setShowEmailPreview(false);
+        return;
+      }
+
+      setEmailPreviewData(result.data);
+    } catch (error) {
+      toast.error('Failed to load email preview', {
+        description: error instanceof Error ? error.message : 'An error occurred',
+      });
+      setShowEmailPreview(false);
+    } finally {
+      setIsLoadingEmailPreview(false);
+    }
+  }, []);
+
   const handleAccept = useCallback(
     (id: string) => {
       markAsAcceptedMutation.mutate({ id });
@@ -65,9 +106,9 @@ export function QuoteList({
 
   const handleSend = useCallback(
     (id: string) => {
-      markAsSentMutation.mutate(id);
+      handleLoadEmailPreview(id, 'sent');
     },
-    [markAsSentMutation],
+    [handleLoadEmailPreview],
   );
 
   const handleDownloadPdf = useCallback(
@@ -79,17 +120,60 @@ export function QuoteList({
 
   const handleSendEmail = useCallback(
     (id: string) => {
-      sendEmailMutation.mutate({ quoteId: id, type: 'sent' });
+      handleLoadEmailPreview(id, 'sent');
     },
-    [sendEmailMutation],
+    [handleLoadEmailPreview],
   );
 
   const handleSendFollowUp = useCallback(
     (id: string) => {
-      sendFollowUpMutation.mutate(id);
+      handleLoadEmailPreview(id, 'followup');
     },
-    [sendFollowUpMutation],
+    [handleLoadEmailPreview],
   );
+
+  const handleConfirmSendEmail = useCallback(() => {
+    if (!pendingEmailAction) {
+      return;
+    }
+
+    const onSuccessCallback = () => {
+      setShowEmailPreview(false);
+      setEmailPreviewData(null);
+      setPendingEmailAction(null);
+    };
+
+    const { quoteId, emailType } = pendingEmailAction;
+
+    // Handle different email types
+    if (emailType === 'followup') {
+      sendFollowUpMutation.mutate(quoteId, { onSuccess: onSuccessCallback });
+    } else if (emailType === 'sent') {
+      // Mark as sent AND send email via Inngest
+      markAsSentMutation.mutate(quoteId, { onSuccess: onSuccessCallback });
+    } else if (emailType === 'reminder' || emailType === 'accepted' || emailType === 'rejected') {
+      sendEmailMutation.mutate({ quoteId, type: emailType }, { onSuccess: onSuccessCallback });
+    }
+  }, [pendingEmailAction, sendEmailMutation, sendFollowUpMutation, markAsSentMutation]);
+
+  const handleMarkAsSentWithoutEmail = useCallback(() => {
+    if (!pendingEmailAction) {
+      return;
+    }
+
+    // Mark as sent but skip email
+    setShowEmailPreview(false);
+    setEmailPreviewData(null);
+    setPendingEmailAction(null);
+
+    markAsSentMutation.mutate({ id: pendingEmailAction.quoteId, sendEmail: false });
+  }, [pendingEmailAction, markAsSentMutation]);
+
+  const handleCancelEmailPreview = useCallback(() => {
+    setShowEmailPreview(false);
+    setEmailPreviewData(null);
+    setPendingEmailAction(null);
+  }, []);
 
   const handleCreateVersion = useCallback(
     (id: string) => {
@@ -103,6 +187,13 @@ export function QuoteList({
       duplicateQuoteMutation.mutate(id);
     },
     [duplicateQuoteMutation],
+  );
+
+  const handleToggleFavourite = useCallback(
+    (id: string) => {
+      toggleFavouriteMutation.mutate(id);
+    },
+    [toggleFavouriteMutation],
   );
 
   const columns = useMemo(
@@ -120,6 +211,7 @@ export function QuoteList({
         handleSendFollowUp,
         handleCreateVersion,
         handleDuplicate,
+        handleToggleFavourite,
       ),
     [
       openDelete,
@@ -134,6 +226,7 @@ export function QuoteList({
       handleSendFollowUp,
       handleCreateVersion,
       handleDuplicate,
+      handleToggleFavourite,
     ],
   );
 
@@ -146,15 +239,30 @@ export function QuoteList({
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
-      <QuoteTable
-        table={table}
-        items={data.items}
-        totalItems={data.pagination.totalItems}
-        onBulkUpdateStatus={handleBulkUpdateStatus}
-        onBulkDelete={handleBulkDelete}
-        isBulkPending={isBulkPending}
+    <>
+      <Box className="space-y-4 min-w-0 w-full">
+        <QuoteTable
+          table={table}
+          items={data.items}
+          totalItems={data.pagination.totalItems}
+          onBulkUpdateStatus={handleBulkUpdateStatus}
+          onBulkDelete={handleBulkDelete}
+          isBulkPending={isBulkPending}
+        />
+      </Box>
+
+      <EmailPreviewDialog
+        open={showEmailPreview}
+        onOpenChange={setShowEmailPreview}
+        emailData={emailPreviewData}
+        isLoading={isLoadingEmailPreview}
+        onConfirm={handleConfirmSendEmail}
+        onConfirmWithoutEmail={handleMarkAsSentWithoutEmail}
+        onCancel={handleCancelEmailPreview}
+        isSending={sendEmailMutation.isPending || sendFollowUpMutation.isPending}
+        isMarkingAsSent={markAsSentMutation.isPending}
+        showMarkAsSentOption={pendingEmailAction?.emailType === 'sent'}
       />
-    </Box>
+    </>
   );
 }

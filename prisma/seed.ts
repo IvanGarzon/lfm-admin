@@ -5,6 +5,8 @@ import { seedProducts } from './seeds/seed-products';
 import { seedEmployees } from './seeds/seed-employees';
 import { seedInvoices } from './seeds/seed-invoices';
 import { seedQuotes } from './seeds/seed-quotes';
+import { seedPriceListItems } from './seeds/seed-price-list-items';
+import { seedRecipes } from './seeds/seed-recipes';
 
 async function main() {
   console.log('Cleaning up tables...');
@@ -19,6 +21,12 @@ async function main() {
   await prisma.quoteItemAttachment.deleteMany();
   await prisma.quoteItem.deleteMany();
   await prisma.quote.deleteMany();
+  await prisma.recipeGroupItem.deleteMany();
+  await prisma.recipeGroup.deleteMany();
+  await prisma.recipeItem.deleteMany();
+  await prisma.recipe.deleteMany();
+  await prisma.priceListCostHistory.deleteMany();
+  await prisma.priceListItem.deleteMany();
   await prisma.customer.deleteMany();
   await prisma.employee.deleteMany();
   await prisma.organization.deleteMany();
@@ -76,24 +84,52 @@ async function main() {
       console.log('');
     }
 
-    // Step 5: Seed quotes
-    console.log('📋 Step 5: Seeding quotes...');
+    // Step 5: Seed price list items
+    const priceListItemCount = await prisma.priceListItem.count();
+    if (priceListItemCount === 0) {
+      console.log('📋 Step 5: Seeding price list items...');
+      await seedPriceListItems();
+      console.log('');
+    } else {
+      console.log('✅ Price list items already exist (skipping)');
+      console.log(`   Price List Items: ${priceListItemCount}`);
+      console.log('');
+    }
+
+    // Step 6: Seed recipes
+    const recipeCount = await prisma.recipe.count();
+    if (recipeCount === 0) {
+      console.log('📋 Step 6: Seeding recipes...');
+      await seedRecipes();
+      console.log('');
+    } else {
+      console.log('✅ Recipes already exist (skipping)');
+      console.log(`   Recipes: ${recipeCount}`);
+      console.log('');
+    }
+
+    // Step 7: Seed quotes
+    console.log('📋 Step 7: Seeding quotes...');
     await seedQuotes();
     console.log('');
 
-    // Step 6: Seed invoices
-    console.log('📋 Step 6: Seeding invoices...');
+    // Step 8: Seed invoices
+    console.log('📋 Step 8: Seeding invoices...');
     await seedInvoices();
     console.log('');
 
     console.log('🎉 All seeding completed!');
     console.log('');
     console.log('📊 Final Summary:');
+
     const stats = {
       organizations: await prisma.organization.count(),
       customers: await prisma.customer.count(),
       employees: await prisma.employee.count(),
       products: await prisma.product.count(),
+      priceListItems: await prisma.priceListItem.count(),
+      recipes: await prisma.recipe.count(),
+      recipeItems: await prisma.recipeItem.count(),
       invoices: await prisma.invoice.count(),
       invoiceItems: await prisma.invoiceItem.count(),
       quotes: await prisma.quote.count(),
@@ -104,6 +140,9 @@ async function main() {
     console.log(`   Customers: ${stats.customers}`);
     console.log(`   Employees: ${stats.employees}`);
     console.log(`   Products: ${stats.products}`);
+    console.log(`   Price List Items: ${stats.priceListItems}`);
+    console.log(`   Recipes: ${stats.recipes}`);
+    console.log(`   Recipe Items: ${stats.recipeItems}`);
     console.log(`   Invoices: ${stats.invoices}`);
     console.log(`   Invoice Items: ${stats.invoiceItems}`);
     console.log(`   Quotes: ${stats.quotes}`);

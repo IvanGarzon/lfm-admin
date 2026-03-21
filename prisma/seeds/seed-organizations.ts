@@ -104,7 +104,11 @@ export async function seedOrganizations() {
   const createdOrganizations = [];
   for (const org of organizations) {
     const created = await prisma.organization.create({
-      data: org,
+      data: {
+        ...org,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
     createdOrganizations.push(created);
   }

@@ -8,6 +8,7 @@ import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 
 type QuotePreviewProps = {
   quote: QuoteWithDetails;
+  logoUrl?: string;
 };
 
 const styles = StyleSheet.create({
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function QuoteDocument({ quote }: QuotePreviewProps) {
+export function QuoteDocument({ quote, logoUrl }: QuotePreviewProps) {
   const subtotal = quote.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * quote.gst) / 100;
   const total = subtotal + gstAmount - quote.discount;
@@ -328,7 +329,7 @@ export function QuoteDocument({ quote }: QuotePreviewProps) {
             <Text style={styles.quoteNumber}>Quote Number #{quote.quoteNumber}</Text>
           </View>
           <View style={styles.headerRight}>
-            <Image src="/static/logo-green-800.png" style={styles.logo} />
+            <Image src={logoUrl || '/static/logo-green-800.png'} style={styles.logo} />
           </View>
         </View>
 

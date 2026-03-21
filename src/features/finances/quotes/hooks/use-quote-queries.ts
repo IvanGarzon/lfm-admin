@@ -42,6 +42,7 @@ import {
   getConversionFunnel,
   getTopCustomersByQuotedValue,
   getAverageTimeToDecision,
+  toggleQuoteFavourite,
 } from '@/actions/finances/quotes';
 import type {
   QuoteFilters,
@@ -489,14 +490,18 @@ export function useMarkQuoteAsSent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const result = await markQuoteAsSent(id);
+    mutationFn: async (params: string | { id: string; sendEmail?: boolean }) => {
+      const id = typeof params === 'string' ? params : params.id;
+      const options = typeof params === 'string' ? undefined : { sendEmail: params.sendEmail };
+      const result = await markQuoteAsSent(id, options);
       if (!result.success) {
         throw new Error(result.error);
       }
       return { ...result.data, message: result.message };
     },
-    onMutate: async (id: string) => {
+    onMutate: async (params: string | { id: string; sendEmail?: boolean }) => {
+      const id = typeof params === 'string' ? params : params.id;
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(id) });
       await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
@@ -515,14 +520,16 @@ export function useMarkQuoteAsSent() {
 
       return { previousQuote, id };
     },
-    onError: (err, id, context) => {
+    onError: (err, params, context) => {
+      const id = typeof params === 'string' ? params : params.id;
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousQuote) {
         queryClient.setQueryData(QUOTE_KEYS.detail(id), context.previousQuote);
       }
       toast.error(err.message || 'Failed to mark quote as sent');
     },
-    onSettled: (_data, _error, id) => {
+    onSettled: (_data, _error, params) => {
+      const id = typeof params === 'string' ? params : params.id;
       invalidateQuoteQueries(queryClient, { quoteId: id });
     },
     onSuccess: (data) => {
@@ -1295,6 +1302,47 @@ export function useBulkDeleteQuotes() {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete quotes');
+    },
+  });
+}
+
+export function useToggleQuoteFavourite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await toggleQuoteFavourite(id);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: QUOTE_KEYS.lists() });
+
+      const previousQuote = queryClient.getQueryData(QUOTE_KEYS.detail(id));
+
+      if (previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(id), (old: QuoteWithDetails) => ({
+          ...old,
+          isFavourite: !old.isFavourite,
+        }));
+      }
+
+      return { previousQuote, id };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousQuote) {
+        queryClient.setQueryData(QUOTE_KEYS.detail(id), context.previousQuote);
+      }
+      toast.error(err.message || 'Failed to update favourite status');
+    },
+    onSettled: (_data, _error, id) => {
+      invalidateQuoteQueries(queryClient, { quoteId: id });
+    },
+    onSuccess: (data) => {
+      toast.success(data.isFavourite ? 'Added to favourites' : 'Removed from favourites');
     },
   });
 }

@@ -20,6 +20,7 @@ export type QuoteListItem = {
   itemCount: number;
   versionNumber: number;
   parentQuoteId: string | null;
+  isFavourite: boolean;
 };
 
 export type QuoteStatusHistoryItem = {
@@ -52,6 +53,7 @@ export type QuoteWithDetails = {
   versionNumber: number;
   parentQuoteId?: string | null;
   versionsCount: number;
+  isFavourite: boolean;
   customer: {
     id: string;
     firstName: string;

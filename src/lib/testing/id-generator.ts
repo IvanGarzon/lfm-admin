@@ -7,7 +7,8 @@
  */
 
 // Base CUID prefix that satisfies the CUID format requirements
-const CUID_BASE = 'cjld2cjxh0000qzrmn83';
+// CUID format: starts with 'c', uses lowercase alphanumeric, 25 chars
+const CUID_BASE = 'cltest000000000000';
 
 // Counter for generating unique IDs within a test run
 let idCounter = 0;
@@ -26,8 +27,8 @@ export function resetIdCounter(): void {
  * @returns A valid CUID-format string
  *
  * @example
- * generateTestId('cust') // 'cjld2cjxh0000qzrmn83cust0001'
- * generateTestId('quot') // 'cjld2cjxh0000qzrmn83quot0002'
+ * generateTestId('cust') // 'cltest000000000000cust0001'
+ * generateTestId('quot') // 'cltest000000000000quot0002'
  */
 export function generateTestId(prefix = 'test'): string {
   const paddedCounter = String(idCounter++).padStart(4, '0');

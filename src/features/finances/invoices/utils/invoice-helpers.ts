@@ -13,7 +13,6 @@
 
 import { isAfter, differenceInDays } from 'date-fns';
 import crypto from 'crypto';
-import { absoluteUrl } from '@/lib/utils';
 import { generatePdfBuffer } from '@/lib/pdf';
 import { InvoiceStatus } from '@/prisma/client';
 import type { InvoiceListItem, InvoiceWithDetails } from '@/features/finances/invoices/types';
@@ -73,6 +72,7 @@ export function generateReceiptFilename(receiptNumber: string): string {
 export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<Buffer> {
   // Lazy load template only when generating PDF
   const invoiceTemplate = await import('@/templates/invoice-template');
+  const { absoluteUrl } = await import('@/lib/utils');
   const logoUrl = absoluteUrl('/static/logo-green-800.png');
   const pdfDoc = invoiceTemplate.InvoiceDocument({ invoice, logoUrl });
   return generatePdfBuffer(pdfDoc);
@@ -96,6 +96,7 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<B
 export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<Buffer> {
   // Lazy load template only when generating PDF
   const receiptTemplate = await import('@/templates/receipt-template');
+  const { absoluteUrl } = await import('@/lib/utils');
   const logoUrl = absoluteUrl('/static/logo-green-800.png');
   const pdfDoc = receiptTemplate.ReceiptDocument({ invoice, logoUrl });
   return generatePdfBuffer(pdfDoc);

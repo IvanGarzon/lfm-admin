@@ -16,6 +16,7 @@ import {
   Pause,
   Ban,
   Mail,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -49,6 +50,7 @@ interface QuoteActionsProps {
   onSendFollowUp: (id: string) => void;
   onCreateVersion: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onToggleFavourite: (id: string) => void;
 }
 
 export function QuoteActions({
@@ -65,6 +67,7 @@ export function QuoteActions({
   onSendFollowUp,
   onCreateVersion,
   onDuplicate,
+  onToggleFavourite,
 }: QuoteActionsProps) {
   const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quote.id}`;
@@ -92,6 +95,18 @@ export function QuoteActions({
 
   return (
     <Box className="flex items-center gap-1 justify-end">
+      <Button
+        variant="secondary"
+        size="icon"
+        className="h-8 w-8 p-0"
+        onClick={() => onToggleFavourite(quote.id)}
+        title={quote.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+      >
+        <span className="sr-only">
+          {quote.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+        </span>
+        <Star className={`h-4 w-4 ${quote.isFavourite ? 'fill-amber-400 text-amber-400' : ''}`} />
+      </Button>
       <Button
         variant="secondary"
         size="icon"

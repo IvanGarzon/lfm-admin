@@ -89,6 +89,7 @@ export const createQuoteColumns = (
   onSendFollowUp: (id: string) => void,
   onCreateVersion: (id: string) => void,
   onDuplicate: (id: string) => void,
+  onToggleFavourite: (id: string) => void,
 ): ColumnDef<QuoteListItem>[] => [
   {
     id: 'select',
@@ -226,6 +227,7 @@ export const createQuoteColumns = (
         onSendFollowUp={onSendFollowUp}
         onCreateVersion={onCreateVersion}
         onDuplicate={onDuplicate}
+        onToggleFavourite={onToggleFavourite}
       />
     ),
   },

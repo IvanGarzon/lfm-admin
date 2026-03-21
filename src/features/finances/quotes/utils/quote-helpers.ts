@@ -329,7 +329,9 @@ export function generateQuoteFilename(quoteNumber: string): string {
 export async function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer> {
   // Lazy load template only when generating PDF
   const quoteTemplate = await import('@/templates/quote-template');
-  const pdfDoc = quoteTemplate.QuoteDocument({ quote });
+  const { absoluteUrl } = await import('@/lib/utils');
+  const logoUrl = absoluteUrl('/static/logo-green-800.png');
+  const pdfDoc = quoteTemplate.QuoteDocument({ quote, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
 

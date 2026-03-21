@@ -184,7 +184,10 @@ export async function markQuoteAsRejected(
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: string }>> {
+export async function markQuoteAsSent(
+  id: string,
+  options?: { sendEmail?: boolean },
+): Promise<ActionResult<{ id: string }>> {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -199,15 +202,19 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
       return { success: false, error: 'Quote not found' };
     }
 
-    // Auto-send email when quote is marked as SENT
+    // Auto-send email when quote is marked as SENT (unless explicitly disabled)
+    const shouldSendEmail = options?.sendEmail !== false;
     let emailWarning: string | undefined;
-    try {
-      const emailResult = await sendQuoteEmail({ quoteId: id, type: 'sent' });
-      if (!emailResult.success) {
-        emailWarning = emailResult.error;
+
+    if (shouldSendEmail) {
+      try {
+        const emailResult = await sendQuoteEmail({ quoteId: id, type: 'sent' });
+        if (!emailResult.success) {
+          emailWarning = emailResult.error;
+        }
+      } catch (emailError) {
+        emailWarning = 'Failed to queue automatic email';
       }
-    } catch (emailError) {
-      emailWarning = 'Failed to queue automatic email';
     }
 
     revalidatePath('/finances/quotes');
@@ -216,7 +223,7 @@ export async function markQuoteAsSent(id: string): Promise<ActionResult<{ id: st
     return {
       success: true,
       data: { id: quote.id },
-      message: emailWarning,
+      message: shouldSendEmail ? emailWarning : 'Quote marked as sent (no email sent)',
     };
   } catch (error) {
     return handleActionError(error, 'Failed to mark quote as sent');
@@ -962,5 +969,40 @@ export async function bulkDeleteQuotes(ids: string[]): Promise<
     };
   } catch (error) {
     return handleActionError(error, 'Failed to delete quotes');
+  }
+}
+
+/**
+ * Toggles the favourite status of a quote.
+ * @param id - The ID of the quote to toggle favourite status.
+ * @returns A promise that resolves to an `ActionResult` containing the updated quote ID and favourite status.
+ */
+export async function toggleQuoteFavourite(
+  id: string,
+): Promise<ActionResult<{ id: string; isFavourite: boolean }>> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  try {
+    requirePermission(session.user, 'canManageQuotes');
+
+    const result = await quoteRepo.toggleFavourite(id);
+
+    if (!result) {
+      return { success: false, error: 'Quote not found' };
+    }
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${id}`);
+
+    return {
+      success: true,
+      data: result,
+      message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to toggle quote favourite');
   }
 }

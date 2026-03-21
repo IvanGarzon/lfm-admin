@@ -359,12 +359,12 @@ export function QuoteDrawer({
       return;
     }
 
-    // Mark as sent but skip email (by closing preview first to prevent Inngest trigger)
+    // Mark as sent but skip email
     setShowEmailPreview(false);
     setEmailPreviewData(null);
     setPendingEmailType(null);
 
-    markAsSent.mutate(quote.id);
+    markAsSent.mutate({ id: quote.id, sendEmail: false });
   }, [quote, markAsSent]);
 
   const handleCancelEmailPreview = useCallback(() => {

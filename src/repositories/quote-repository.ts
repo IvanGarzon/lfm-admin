@@ -117,6 +117,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         parentQuoteId: true,
         gst: true,
         discount: true,
+        isFavourite: true,
         customer: {
           select: {
             id: true,
@@ -156,6 +157,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       itemCount: quote._count.items,
       versionNumber: quote.versionNumber,
       parentQuoteId: quote.parentQuoteId,
+      isFavourite: quote.isFavourite,
     }));
 
     return {
@@ -189,6 +191,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         terms: true,
         versionNumber: true,
         parentQuoteId: true,
+        isFavourite: true,
         customer: {
           select: {
             id: true,
@@ -290,6 +293,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         terms: true,
         versionNumber: true,
         parentQuoteId: true,
+        isFavourite: true,
         customer: {
           select: {
             id: true,
@@ -2158,5 +2162,35 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       return results;
     });
+  }
+
+  /**
+   * Toggle the favourite status of a quote.
+   * @param id - The ID of the quote to toggle favourite status
+   * @returns A promise that resolves to the updated quote with new favourite status, or null if quote not found
+   */
+  async toggleFavourite(id: string): Promise<{ id: string; isFavourite: boolean } | null> {
+    const quote = await this.prisma.quote.findUnique({
+      where: { id, deletedAt: null },
+      select: { isFavourite: true },
+    });
+
+    if (!quote) {
+      return null;
+    }
+
+    const updated = await this.prisma.quote.update({
+      where: { id, deletedAt: null },
+      data: {
+        isFavourite: !quote.isFavourite,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        isFavourite: true,
+      },
+    });
+
+    return updated;
   }
 }
