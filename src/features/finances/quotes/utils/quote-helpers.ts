@@ -267,7 +267,6 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
     canSendQuote:
       status === QuoteStatus.SENT ||
       status === QuoteStatus.ACCEPTED ||
-      status === QuoteStatus.EXPIRED ||
       status === QuoteStatus.ON_HOLD,
     canPutOnHold: status === QuoteStatus.SENT,
     canConvert: status === QuoteStatus.ACCEPTED,

@@ -3,6 +3,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes';
+import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
 import { QuoteStatus } from '@/prisma/client';
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
@@ -57,6 +59,10 @@ export function QuoteDrawer({
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('details');
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
+  const [isLoadingEmailPreview, setIsLoadingEmailPreview] = useState(false);
+  const [pendingEmailType, setPendingEmailType] = useState<QuoteEmailType | null>(null);
 
   const mode: DrawerMode = id ? 'edit' : 'create';
 
@@ -145,13 +151,67 @@ export function QuoteDrawer({
     openReject(quote.id, quote.quoteNumber);
   }, [quote, openReject]);
 
+  const handleLoadEmailPreview = useCallback(
+    async (emailType: QuoteEmailType) => {
+      if (!quote) {
+        return;
+      }
+
+      setIsLoadingEmailPreview(true);
+      setShowEmailPreview(true);
+      setPendingEmailType(emailType);
+
+      try {
+        const result = await previewQuoteEmail(quote.id, emailType);
+
+        if (!result.success) {
+          toast.error('Failed to load email preview', {
+            description: result.error,
+          });
+          setShowEmailPreview(false);
+          return;
+        }
+
+        setEmailPreviewData(result.data);
+      } catch (error) {
+        toast.error('Failed to load email preview', {
+          description: error instanceof Error ? error.message : 'An error occurred',
+        });
+        setShowEmailPreview(false);
+      } finally {
+        setIsLoadingEmailPreview(false);
+      }
+    },
+    [quote],
+  );
+
   const handleSend = useCallback(() => {
     if (!quote) {
       return;
     }
 
-    markAsSent.mutate(quote.id);
-  }, [quote, markAsSent]);
+    if (hasUnsavedChanges) {
+      toast.warning('You have unsaved changes', {
+        description:
+          'Please save your changes before sending the quote to ensure it reflects the latest data.',
+        duration: 5000,
+        action: {
+          label: 'Save Now',
+          onClick: () => {
+            const form = document.getElementById('form-rhf-quote');
+            if (form && form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          },
+        },
+      });
+
+      return;
+    }
+
+    // Show email preview before sending
+    handleLoadEmailPreview('sent');
+  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
 
   const handleOnHold = useCallback(() => {
     if (!quote) return;
@@ -265,6 +325,54 @@ export function QuoteDrawer({
     downloadPdf.mutate(quote.id);
   }, [quote, hasUnsavedChanges, downloadPdf]);
 
+  const handleConfirmSendEmail = useCallback(() => {
+    if (!quote || !pendingEmailType) {
+      return;
+    }
+
+    const onSuccessCallback = () => {
+      setShowEmailPreview(false);
+      setEmailPreviewData(null);
+      setPendingEmailType(null);
+    };
+
+    // Handle different email types
+    if (pendingEmailType === 'followup') {
+      sendFollowUp.mutate(quote.id, { onSuccess: onSuccessCallback });
+    } else if (pendingEmailType === 'sent') {
+      // Mark as sent AND send email via Inngest
+      markAsSent.mutate(quote.id, { onSuccess: onSuccessCallback });
+    } else if (
+      pendingEmailType === 'reminder' ||
+      pendingEmailType === 'accepted' ||
+      pendingEmailType === 'rejected'
+    ) {
+      sendEmail.mutate(
+        { quoteId: quote.id, type: pendingEmailType },
+        { onSuccess: onSuccessCallback },
+      );
+    }
+  }, [quote, pendingEmailType, sendEmail, sendFollowUp, markAsSent]);
+
+  const handleMarkAsSentWithoutEmail = useCallback(() => {
+    if (!quote) {
+      return;
+    }
+
+    // Mark as sent but skip email (by closing preview first to prevent Inngest trigger)
+    setShowEmailPreview(false);
+    setEmailPreviewData(null);
+    setPendingEmailType(null);
+
+    markAsSent.mutate(quote.id);
+  }, [quote, markAsSent]);
+
+  const handleCancelEmailPreview = useCallback(() => {
+    setShowEmailPreview(false);
+    setEmailPreviewData(null);
+    setPendingEmailType(null);
+  }, []);
+
   const handleSendEmail = useCallback(() => {
     if (!quote) {
       return;
@@ -289,10 +397,10 @@ export function QuoteDrawer({
       return;
     }
 
-    // Determine email type based on quote status
+    // Determine email type based on quote status and show preview
     const emailType = quote.status === QuoteStatus.SENT ? 'sent' : 'sent';
-    sendEmail.mutate({ quoteId: quote.id, type: emailType });
-  }, [quote, hasUnsavedChanges, sendEmail]);
+    handleLoadEmailPreview(emailType);
+  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
 
   const handleSendFollowUp = useCallback(() => {
     if (!quote) {
@@ -318,8 +426,9 @@ export function QuoteDrawer({
       return;
     }
 
-    sendFollowUp.mutate(quote.id);
-  }, [quote, hasUnsavedChanges, sendFollowUp]);
+    // Show preview for follow-up email
+    handleLoadEmailPreview('followup');
+  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
 
   const showFollowUp = useMemo(() => {
     if (!quote) {
@@ -381,151 +490,166 @@ export function QuoteDrawer({
   );
 
   return (
-    <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent
-        className="overflow-x-hidden dark:bg-gray-925 pb-0!"
-        style={{
-          maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
-        }}
-      >
-        {isLoading ? <QuoteDrawerSkeleton /> : null}
+    <>
+      <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
+        <DrawerContent
+          className="overflow-x-hidden dark:bg-gray-925 pb-0!"
+          style={{
+            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
+          }}
+        >
+          {isLoading ? <QuoteDrawerSkeleton /> : null}
 
-        {isError ? (
-          <Box className="p-6 text-destructive">
-            <DrawerHeader>
-              <DrawerTitle>Error</DrawerTitle>
-            </DrawerHeader>
-            <p className="mt-4">Could not load quote details: {error?.message}</p>
-          </Box>
-        ) : null}
+          {isError ? (
+            <Box className="p-6 text-destructive">
+              <DrawerHeader>
+                <DrawerTitle>Error</DrawerTitle>
+              </DrawerHeader>
+              <p className="mt-4">Could not load quote details: {error?.message}</p>
+            </Box>
+          ) : null}
 
-        {(quote && !isLoading && !isError) || mode === 'create' ? (
-          <>
-            <QuoteDrawerHeader
-              mode={mode}
-              title={title}
-              status={status}
-              hasUnsavedChanges={hasUnsavedChanges}
-              showPreview={showPreview}
-              onPreviewToggle={() => setShowPreview(!showPreview)}
-              versions={versions}
-              currentVersionIndex={currentVersionIndex}
-              onNavigateToVersion={handleNavigateToVersion}
-              quote={quote}
-              isCreating={createQuote.isPending}
-              isUpdating={updateQuote.isPending}
-              actionsMenuHandlers={actionsMenuHandlers}
-              showFollowUp={showFollowUp}
-              onClose={() => handleOpenChange(false)}
-            />
+          {(quote && !isLoading && !isError) || mode === 'create' ? (
+            <>
+              <QuoteDrawerHeader
+                mode={mode}
+                title={title}
+                status={status}
+                hasUnsavedChanges={hasUnsavedChanges}
+                showPreview={showPreview}
+                onPreviewToggle={() => setShowPreview(!showPreview)}
+                versions={versions}
+                currentVersionIndex={currentVersionIndex}
+                onNavigateToVersion={handleNavigateToVersion}
+                quote={quote}
+                isCreating={createQuote.isPending}
+                isUpdating={updateQuote.isPending}
+                actionsMenuHandlers={actionsMenuHandlers}
+                showFollowUp={showFollowUp}
+                onClose={() => handleOpenChange(false)}
+              />
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent">
-              <Box className="flex h-full">
-                <Box
-                  className="h-full"
-                  style={{
-                    width: mode === 'edit' && showPreview ? '50%' : '100%',
-                  }}
-                >
-                  {mode === 'create' ? (
-                    <QuoteForm
-                      onCreate={handleCreate}
-                      isCreating={createQuote.isPending}
-                      onDirtyStateChange={setHasUnsavedChanges}
+              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent">
+                <Box className="flex h-full">
+                  <Box
+                    className="h-full"
+                    style={{
+                      width: mode === 'edit' && showPreview ? '50%' : '100%',
+                    }}
+                  >
+                    {mode === 'create' ? (
+                      <QuoteForm
+                        onCreate={handleCreate}
+                        isCreating={createQuote.isPending}
+                        onDirtyStateChange={setHasUnsavedChanges}
+                      />
+                    ) : (
+                      <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="w-full h-full flex flex-col"
+                      >
+                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
+                          <TabsTrigger value="details" className="relative">
+                            Quote Details
+                          </TabsTrigger>
+                          <TabsTrigger value="versions" className="relative">
+                            Versions
+                            {quote && quote.versionsCount > 1 ? (
+                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                {quote.versionsCount}
+                              </Badge>
+                            ) : null}
+                          </TabsTrigger>
+                          <TabsTrigger value="history" className="relative">
+                            History
+                            {quote &&
+                            quote._count?.statusHistory &&
+                            quote._count.statusHistory > 0 ? (
+                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                                {quote._count.statusHistory}
+                              </Badge>
+                            ) : null}
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                          {quote && items ? (
+                            <QuoteForm
+                              quote={quote}
+                              items={items}
+                              onUpdate={handleUpdate}
+                              isUpdating={updateQuote.isPending}
+                              onDirtyStateChange={setHasUnsavedChanges}
+                            />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              Loading quote details...
+                            </Box>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="versions" className="mt-0 p-6">
+                          {isLoadingVersions ? (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              Loading versions...
+                            </Box>
+                          ) : versions && versions.length > 1 && quote ? (
+                            <QuoteVersions
+                              currentVersionId={quote.id}
+                              versions={versions}
+                              isLoading={isLoadingVersions}
+                            />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              No versions available
+                            </Box>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="history" className="mt-0 p-6">
+                          {isLoadingHistory ? (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              Loading history...
+                            </Box>
+                          ) : history && history.length > 0 ? (
+                            <QuoteStatusHistory history={history} />
+                          ) : (
+                            <Box className="text-center py-12 text-muted-foreground">
+                              No history available
+                            </Box>
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    )}
+                  </Box>
+
+                  {mode === 'edit' && showPreview && quote && items ? (
+                    <QuotePreviewPanel
+                      quote={quote}
+                      items={items}
+                      onDownloadPdf={handleDownloadPdf}
                     />
-                  ) : (
-                    <Tabs
-                      value={activeTab}
-                      onValueChange={setActiveTab}
-                      className="w-full h-full flex flex-col"
-                    >
-                      <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
-                        <TabsTrigger value="details" className="relative">
-                          Quote Details
-                        </TabsTrigger>
-                        <TabsTrigger value="versions" className="relative">
-                          Versions
-                          {quote && quote.versionsCount > 1 ? (
-                            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
-                              {quote.versionsCount}
-                            </Badge>
-                          ) : null}
-                        </TabsTrigger>
-                        <TabsTrigger value="history" className="relative">
-                          History
-                          {quote &&
-                          quote._count?.statusHistory &&
-                          quote._count.statusHistory > 0 ? (
-                            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
-                              {quote._count.statusHistory}
-                            </Badge>
-                          ) : null}
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="details" className="mt-0 h-full flex flex-col">
-                        {quote && items ? (
-                          <QuoteForm
-                            quote={quote}
-                            items={items}
-                            onUpdate={handleUpdate}
-                            isUpdating={updateQuote.isPending}
-                            onDirtyStateChange={setHasUnsavedChanges}
-                          />
-                        ) : (
-                          <Box className="text-center py-12 text-muted-foreground">
-                            Loading quote details...
-                          </Box>
-                        )}
-                      </TabsContent>
-
-                      <TabsContent value="versions" className="mt-0 p-6">
-                        {isLoadingVersions ? (
-                          <Box className="text-center py-12 text-muted-foreground">
-                            Loading versions...
-                          </Box>
-                        ) : versions && versions.length > 1 && quote ? (
-                          <QuoteVersions
-                            currentVersionId={quote.id}
-                            versions={versions}
-                            isLoading={isLoadingVersions}
-                          />
-                        ) : (
-                          <Box className="text-center py-12 text-muted-foreground">
-                            No versions available
-                          </Box>
-                        )}
-                      </TabsContent>
-
-                      <TabsContent value="history" className="mt-0 p-6">
-                        {isLoadingHistory ? (
-                          <Box className="text-center py-12 text-muted-foreground">
-                            Loading history...
-                          </Box>
-                        ) : history && history.length > 0 ? (
-                          <QuoteStatusHistory history={history} />
-                        ) : (
-                          <Box className="text-center py-12 text-muted-foreground">
-                            No history available
-                          </Box>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  )}
+                  ) : null}
                 </Box>
+              </DrawerBody>
+            </>
+          ) : null}
+        </DrawerContent>
+      </Drawer>
 
-                {mode === 'edit' && showPreview && quote && items ? (
-                  <QuotePreviewPanel
-                    quote={quote}
-                    items={items}
-                    onDownloadPdf={handleDownloadPdf}
-                  />
-                ) : null}
-              </Box>
-            </DrawerBody>
-          </>
-        ) : null}
-      </DrawerContent>
-    </Drawer>
+      <EmailPreviewDialog
+        open={showEmailPreview}
+        onOpenChange={setShowEmailPreview}
+        emailData={emailPreviewData}
+        isLoading={isLoadingEmailPreview}
+        onConfirm={handleConfirmSendEmail}
+        onConfirmWithoutEmail={handleMarkAsSentWithoutEmail}
+        onCancel={handleCancelEmailPreview}
+        isSending={sendEmail.isPending || sendFollowUp.isPending}
+        isMarkingAsSent={markAsSent.isPending}
+        showMarkAsSentOption={pendingEmailType === 'sent'}
+      />
+    </>
   );
 }
