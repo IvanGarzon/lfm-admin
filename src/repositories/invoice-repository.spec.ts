@@ -514,7 +514,7 @@ describe('InvoiceRepository', () => {
     });
   });
 
-  describe('cancel', () => {
+  describe('cancelInvoice', () => {
     it('cancels invoice and creates status history', async () => {
       const invoiceId = testIds.invoice();
       const userId = testIds.user();
@@ -534,7 +534,7 @@ describe('InvoiceRepository', () => {
         createInvoiceDetails({ id: invoiceId, status: 'CANCELLED' }),
       );
 
-      const result = await repository.cancel(invoiceId, cancelDate, cancelReason, userId);
+      const result = await repository.cancelInvoice(invoiceId, cancelDate, cancelReason, userId);
 
       expect(result).not.toBeNull();
       expect(result?.status).toBe('CANCELLED');
@@ -584,7 +584,7 @@ describe('InvoiceRepository', () => {
     });
   });
 
-  describe('softDelete', () => {
+  describe('deleteInvoice', () => {
     it('soft deletes DRAFT invoice successfully', async () => {
       const invoiceId = testIds.invoice();
 
@@ -595,7 +595,7 @@ describe('InvoiceRepository', () => {
 
       mockPrisma.invoice.update.mockResolvedValue({ id: invoiceId });
 
-      const result = await repository.softDelete(invoiceId);
+      const result = await repository.deleteInvoice(invoiceId);
 
       expect(result).toBe(true);
       expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
@@ -628,7 +628,7 @@ describe('InvoiceRepository', () => {
     });
   });
 
-  describe('duplicate', () => {
+  describe('duplicateInvoice', () => {
     it('creates a new DRAFT invoice with copied items', async () => {
       const originalId = testIds.invoice();
       const duplicateId = testIds.invoice();
@@ -808,45 +808,45 @@ describe('InvoiceRepository', () => {
   // SIMPLE QUERY TESTS
   // ============================================================================
 
-  // describe('findInvoiceMetadata ', () => {
-  //   it('returns basic invoice info with counts', async () => {
-  //     const invoiceId = testIds.invoice();
+  describe('findByIdMetadata ', () => {
+    it('returns basic invoice info with counts', async () => {
+      const invoiceId = testIds.invoice();
 
-  //     mockPrisma.invoice.findUnique.mockResolvedValue({
-  //       id: invoiceId,
-  //       invoiceNumber: 'INV-001',
-  //       status: InvoiceStatus.PENDING,
-  //       amount: { toNumber: () => 100 },
-  //       gst: { toNumber: () => 10 },
-  //       discount: { toNumber: () => 0 },
-  //       amountPaid: { toNumber: () => 0 },
-  //       amountDue: { toNumber: () => 100 },
-  //       currency: 'AUD',
-  //       issuedDate: new Date(),
-  //       dueDate: new Date(),
-  //       customer: { id: testIds.customer(), firstName: 'John', lastName: 'Doe' },
-  //       _count: { payments: 2, statusHistory: 3, items: 5 },
-  //     });
+      mockPrisma.invoice.findUnique.mockResolvedValue({
+        id: invoiceId,
+        invoiceNumber: 'INV-001',
+        status: InvoiceStatus.PENDING,
+        amount: { toNumber: () => 100 },
+        gst: { toNumber: () => 10 },
+        discount: { toNumber: () => 0 },
+        amountPaid: { toNumber: () => 0 },
+        amountDue: { toNumber: () => 100 },
+        currency: 'AUD',
+        issuedDate: new Date(),
+        dueDate: new Date(),
+        customer: { id: testIds.customer(), firstName: 'John', lastName: 'Doe' },
+        _count: { payments: 2, statusHistory: 3, items: 5 },
+      });
 
-  //     const result = await repository.findInvoiceMetadata(invoiceId);
+      const result = await repository.findByIdMetadata(invoiceId);
 
-  //     expect(result).not.toBeNull();
-  //     expect(result?.invoiceNumber).toBe('INV-001');
-  //     expect(mockPrisma.invoice.findUnique).toHaveBeenCalledWith(
-  //       expect.objectContaining({
-  //         where: { id: invoiceId, deletedAt: null },
-  //       }),
-  //     );
-  //   });
+      expect(result).not.toBeNull();
+      expect(result?.invoiceNumber).toBe('INV-001');
+      expect(mockPrisma.invoice.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: invoiceId, deletedAt: null },
+        }),
+      );
+    });
 
-  //   it('returns null when invoice not found', async () => {
-  //     mockPrisma.invoice.findUnique.mockResolvedValue(null);
+    it('returns null when invoice not found', async () => {
+      mockPrisma.invoice.findUnique.mockResolvedValue(null);
 
-  //     const result = await repository.findInvoiceMetadata('non-existent');
+      const result = await repository.findByIdMetadata('non-existent');
 
-  //     expect(result).toBeNull();
-  //   });
-  // });
+      expect(result).toBeNull();
+    });
+  });
 
   describe('findInvoiceItems', () => {
     it('returns invoice items with transformed decimal values', async () => {

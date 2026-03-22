@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { QuoteRepository } from '@/repositories/quote-repository';
-import { generateEmailPreview, type EmailPreviewResult } from '@/lib/email-preview';
+import { createEmailPreviewFunction } from '@/lib/email-preview-factory';
 
 const quoteRepository = new QuoteRepository(prisma);
 
@@ -10,19 +10,19 @@ export type QuoteEmailType = 'sent' | 'reminder' | 'accepted' | 'rejected' | 'ex
 
 /**
  * Preview quote email without sending
+ *
+ * Uses the email preview factory to eliminate duplication with invoice previews
  */
-export async function previewQuoteEmail(
-  quoteId: string,
-  type: QuoteEmailType,
-): Promise<EmailPreviewResult> {
-  try {
-    const quote = await quoteRepository.findByIdWithDetails(quoteId);
-
+export const previewQuoteEmail = createEmailPreviewFunction<
+  Awaited<ReturnType<typeof quoteRepository.findByIdWithDetails>>,
+  QuoteEmailType
+>({
+  entityName: 'Quote',
+  fetchEntity: (id) => quoteRepository.findByIdWithDetails(id),
+  getCustomerEmail: (quote) => quote!.customer.email,
+  buildEmailConfig: (quote, type) => {
     if (!quote) {
-      return {
-        success: false,
-        error: 'Quote not found',
-      };
+      return { error: 'Quote not found' };
     }
 
     const quoteData = {
@@ -35,75 +35,85 @@ export async function previewQuoteEmail(
       itemCount: quote.items.length,
     };
 
-    // Prepare email data based on type
-    let subject: string;
-    let template: string;
-    let hasAttachment: boolean;
-
     switch (type) {
       case 'sent':
-        subject = `Quote ${quoteData.quoteNumber} from Las Flores`;
-        template = 'quote';
-        hasAttachment = true;
-        break;
+        return {
+          subject: `Quote ${quoteData.quoteNumber} from Las Flores`,
+          template: 'quote' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: true,
+          attachmentName: `${quote.quoteNumber}.pdf`,
+        };
 
       case 'reminder': {
         const daysUntilExpiry = Math.max(
           0,
           Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
         );
-        subject = `Reminder: Quote ${quoteData.quoteNumber} expires ${daysUntilExpiry === 0 ? 'today' : `in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}`}`;
-        template = 'quote';
-        hasAttachment = true;
-        break;
+        return {
+          subject: `Reminder: Quote ${quoteData.quoteNumber} expires ${daysUntilExpiry === 0 ? 'today' : `in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}`}`,
+          template: 'quote' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: true,
+          attachmentName: `${quote.quoteNumber}.pdf`,
+        };
       }
 
       case 'accepted':
-        subject = `Quote ${quoteData.quoteNumber} Accepted - Thank You!`;
-        template = 'quote';
-        hasAttachment = true;
-        break;
+        return {
+          subject: `Quote ${quoteData.quoteNumber} Accepted - Thank You!`,
+          template: 'quote' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: true,
+          attachmentName: `${quote.quoteNumber}.pdf`,
+        };
 
       case 'rejected':
-        subject = `Quote ${quoteData.quoteNumber} - We Value Your Feedback`;
-        template = 'quote';
-        hasAttachment = true;
-        break;
+        return {
+          subject: `Quote ${quoteData.quoteNumber} - We Value Your Feedback`,
+          template: 'quote' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: true,
+          attachmentName: `${quote.quoteNumber}.pdf`,
+        };
 
       case 'expired':
-        subject = `Quote ${quoteData.quoteNumber} Has Expired`;
-        template = 'quote';
-        hasAttachment = false;
-        break;
+        return {
+          subject: `Quote ${quoteData.quoteNumber} Has Expired`,
+          template: 'quote' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: false,
+        };
 
       case 'followup':
-        subject = `Following up: Quote ${quoteData.quoteNumber} from Las Flores`;
-        template = 'quote-followup';
-        hasAttachment = true;
-        break;
+        return {
+          subject: `Following up: Quote ${quoteData.quoteNumber} from Las Flores`,
+          template: 'quote-followup' as const,
+          props: {
+            quoteData,
+            pdfUrl: '#',
+          },
+          hasAttachment: true,
+          attachmentName: `${quote.quoteNumber}.pdf`,
+        };
 
       default:
-        return {
-          success: false,
-          error: `Unknown email type: ${type}`,
-        };
+        return { error: `Unknown email type: ${type}` };
     }
-
-    return await generateEmailPreview({
-      to: quote.customer.email,
-      subject,
-      template,
-      props: {
-        quoteData,
-        pdfUrl: '#',
-      },
-      hasAttachment,
-      attachmentName: hasAttachment ? `${quote.quoteNumber}.pdf` : undefined,
-    });
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to preview quote email',
-    };
-  }
-}
+  },
+});

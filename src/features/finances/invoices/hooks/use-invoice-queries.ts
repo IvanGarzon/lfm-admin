@@ -34,7 +34,6 @@ import {
 } from '@/actions/finances/invoices/mutations';
 import type {
   InvoiceFilters,
-  InvoiceWithDetails,
   InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,

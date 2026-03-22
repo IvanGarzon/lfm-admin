@@ -35,6 +35,12 @@ interface EmailPreviewDialogProps {
   isSending?: boolean;
   isMarkingAsSent?: boolean;
   showMarkAsSentOption?: boolean;
+  /**
+   * Label for the status (e.g., "Sent" for quotes, "Pending" for invoices)
+   * Used in "Mark as {status} (No Email)" button
+   * @default "Sent"
+   */
+  statusLabel?: string;
 }
 
 export function EmailPreviewDialog({
@@ -48,6 +54,7 @@ export function EmailPreviewDialog({
   isSending = false,
   isMarkingAsSent = false,
   showMarkAsSentOption = false,
+  statusLabel = 'Sent',
 }: EmailPreviewDialogProps) {
   const [showRawHtml, setShowRawHtml] = useState(false);
 
@@ -178,12 +185,12 @@ export function EmailPreviewDialog({
               {isMarkingAsSent ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Marking as sent...
+                  Marking as {statusLabel.toLowerCase()}...
                 </>
               ) : (
                 <>
                   <FileCheck className="h-4 w-4 mr-2" />
-                  Mark as Sent (No Email)
+                  Mark as {statusLabel} (No Email)
                 </>
               )}
             </Button>
