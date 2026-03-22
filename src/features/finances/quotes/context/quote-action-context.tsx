@@ -99,7 +99,7 @@ export function QuoteActionProvider({ children }: { children: React.ReactNode })
   );
 
   const handleConfirmCancel = useCallback(
-    (data: { id: string; reason?: string }) => {
+    (data: { id: string; cancelReason?: string }) => {
       markAsCancelled.mutate(data, {
         onSuccess: close,
       });

@@ -17,6 +17,7 @@ import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkQuoteAsCancelledSchema, type MarkQuoteAsCancelledInput } from '@/schemas/quotes';
+import { VALIDATION_LIMITS } from '@/lib/validation';
 
 interface CancelQuoteDialogProps {
   open: boolean;
@@ -39,7 +40,7 @@ export function CancelQuoteDialog({
     resolver: zodResolver(MarkQuoteAsCancelledSchema),
     defaultValues: {
       id: quoteId,
-      reason: '',
+      cancelReason: '',
     },
   });
 
@@ -76,16 +77,19 @@ export function CancelQuoteDialog({
           >
             <FieldGroup>
               <Controller
-                name="reason"
+                name="cancelReason"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid} className="flex flex-col">
                     <FieldContent>
-                      <FieldLabel htmlFor="cancel-quote-form-reason">Reason (Optional)</FieldLabel>
+                      <FieldLabel htmlFor="cancel-quote-form-cancelReason">Reason</FieldLabel>
+                      <span className="text-xs text-muted-foreground">
+                        {field.value?.length || 0} / {VALIDATION_LIMITS.REASON_MAX}
+                      </span>
                     </FieldContent>
                     <Textarea
                       {...field}
-                      id="cancel-quote-form-reason"
+                      id="cancel-quote-form-cancelReason"
                       placeholder="Enter reason for cancelling this quote..."
                       rows={3}
                       className="resize-none"

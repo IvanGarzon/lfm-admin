@@ -389,6 +389,9 @@ model Quote {
   issuedDate DateTime @map(name: "issued_date") @db.Date
   validUntil DateTime @map(name: "valid_until") @db.Date
 
+  cancelledDate DateTime? @map(name: "cancelled_date") @db.Timestamptz()
+  cancelReason  String?   @map(name: "cancel_reason") @db.Text
+
   invoiceId String? @unique @map(name: "invoice_id")
   notes String? @db.Text
   terms String? @db.Text
@@ -414,6 +417,7 @@ model Quote {
   @@index([isLatestVersion, deletedAt])
   @@index([isFavourite, deletedAt])
   @@index([status, isLatestVersion, deletedAt])
+  @@index([status, cancelledDate])
   @@map(name: "quotes")
 }
 

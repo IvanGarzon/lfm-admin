@@ -54,7 +54,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * ```
    */
   async searchAndPaginate(params: QuoteFilters): Promise<QuotePagination> {
-    const { search, status, page, perPage, sort } = params;
+    console.log('params', params);
+
+    const { search, status, isFavourite, page, perPage, sort } = params;
 
     const whereClause: Prisma.QuoteWhereInput = {
       deletedAt: null,
@@ -81,6 +83,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           },
         },
       ];
+    }
+
+    if (isFavourite === true) {
+      whereClause.isFavourite = true;
     }
 
     const skip = page > 0 ? perPage * (page - 1) : 0;
@@ -923,10 +929,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
   /**
    * Mark a quote as cancelled.
-   * Validates the status transition and creates a status history entry with the optional reason.
+   * Validates the status transition and creates a status history entry with the optional cancellation reason.
    *
    * @param id - The ID of the quote to cancel
-   * @param reason - Optional reason for cancelling the quote
+   * @param cancelReason - Optional reason for cancelling the quote
    * @param updatedBy - Optional ID of the user who cancelled the quote (for audit trail)
    * @returns A promise that resolves to the updated quote with full details, or null if quote not found
    *
@@ -934,7 +940,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async markAsCancelled(
     id: string,
-    reason?: string,
+    cancelReason?: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
@@ -948,7 +954,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const previousStatus = quote.status;
-    const updatedAt = new Date();
 
     // Validate status transition
     validateQuoteStatusTransition(previousStatus, QuoteStatus.CANCELLED);
@@ -960,7 +965,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, deletedAt: null },
         data: {
           status: QuoteStatus.CANCELLED,
-          updatedAt: updatedAt,
+          cancelledDate: new Date(),
+          cancelReason: cancelReason || 'Quote cancelled',
         },
       });
 
@@ -970,9 +976,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           quoteId: id,
           status: QuoteStatus.CANCELLED,
           previousStatus,
-          updatedAt,
           updatedBy,
-          notes: reason || 'Quote cancelled',
+          notes: cancelReason || 'Quote cancelled',
         },
       });
 

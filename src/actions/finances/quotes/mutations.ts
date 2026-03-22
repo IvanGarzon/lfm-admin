@@ -287,7 +287,7 @@ export async function markQuoteAsCancelled(
     const validatedData = MarkQuoteAsCancelledSchema.parse(data);
     const quote = await quoteRepo.markAsCancelled(
       validatedData.id,
-      validatedData.reason,
+      validatedData.cancelReason,
       session?.user?.id,
     );
 

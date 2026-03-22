@@ -124,13 +124,13 @@ export const MarkQuoteAsOnHoldSchema = z.object({
  */
 export const MarkQuoteAsCancelledSchema = z.object({
   id: z.cuid({ error: 'Quote ID is required' }),
-  reason: z
+  cancelReason: z
     .string()
     .trim()
+    .min(1, { error: 'Cancellation reason is required' })
     .max(VALIDATION_LIMITS.REASON_MAX, {
       error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
-    })
-    .optional(),
+    }),
 });
 
 /**

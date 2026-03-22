@@ -291,7 +291,7 @@ describe('Quote Mutations', () => {
 
       const result = await markQuoteAsCancelled({
         id: TEST_QUOTE_ID,
-        reason: 'Customer cancelled',
+        cancelReason: 'Customer cancelled',
       });
 
       expect(result.success).toBe(true);

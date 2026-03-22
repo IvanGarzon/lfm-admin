@@ -54,6 +54,8 @@ export type QuoteWithDetails = {
   parentQuoteId?: string | null;
   versionsCount: number;
   isFavourite: boolean;
+  cancelledDate?: Date | null;
+  cancelReason?: string | null;
   customer: {
     id: string;
     firstName: string;
@@ -112,6 +114,7 @@ export type QuoteItemAttachment = {
 export interface QuoteFilters {
   search?: string;
   status?: QuoteStatusType[];
+  isFavourite?: boolean;
   page: number;
   perPage: number;
   sort?: {
