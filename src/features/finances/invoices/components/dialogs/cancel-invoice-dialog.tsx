@@ -1,13 +1,10 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -43,26 +39,23 @@ export function CancelInvoiceDialog({
     resolver: zodResolver(CancelInvoiceSchema),
     defaultValues: {
       id: invoiceId,
-      cancelledDate: new Date(),
       cancelReason: '',
     },
   });
 
-  const handleSubmit = (data: CancelInvoiceInput) => {
-    onConfirm(data);
-    form.reset({ id: invoiceId, cancelledDate: new Date(), cancelReason: '' });
-    onOpenChange(false);
-  };
+  const handleSubmit = useCallback(
+    (data: CancelInvoiceInput) => {
+      onConfirm(data);
+      form.reset();
+      onOpenChange(false);
+    },
+    [onConfirm, form, onOpenChange],
+  );
 
-  const handleError = (errors: unknown) => {
-    // Form validation errors are already displayed via form.formState.errors
-    // No need to log them separately
-  };
-
-  const handleCancel = () => {
-    form.reset({ id: invoiceId, cancelledDate: new Date(), cancelReason: '' });
+  const handleCancel = useCallback(() => {
+    form.reset();
     onOpenChange(false);
-  };
+  }, [form, onOpenChange]);
 
   const cancelReason = form.watch('cancelReason');
 
@@ -80,43 +73,9 @@ export function CancelInvoiceDialog({
         <Form {...form}>
           <form
             id="cancel-invoice-form"
-            onSubmit={form.handleSubmit(handleSubmit, handleError)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
-            <FieldGroup>
-              <Controller
-                name="cancelledDate"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
-                    <FieldContent>
-                      <FieldLabel htmlFor="cancel-invoice-form-cancelled-date">
-                        Cancellation Date
-                      </FieldLabel>
-                    </FieldContent>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
-                      </PopoverContent>
-                    </Popover>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                  </Field>
-                )}
-              />
-            </FieldGroup>
-
             <FieldGroup>
               <Controller
                 name="cancelReason"

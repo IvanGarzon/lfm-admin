@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes';
+import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
 import { QuoteStatus } from '@/prisma/client';

@@ -1042,15 +1042,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Validates status transition before updating (PAID invoices cannot be cancelled).
    * Cancelled invoices are in a terminal state and cannot be changed.
    * @param id - The unique identifier of the invoice
-   * @param cancelledDate - The date the invoice was cancelled
    * @param cancelReason - The reason for cancellation (required for audit purposes)
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    * @throws {Error} If the status transition is invalid (e.g., trying to cancel PAID invoice)
    */
-  async cancel(
+  async cancelInvoice(
     id: string,
-    cancelledDate: Date,
     cancelReason: string,
     updatedBy?: string,
   ): Promise<InvoiceWithDetails | null> {
@@ -1067,23 +1065,25 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Validate status transition
     validateInvoiceStatusTransition(currentInvoice.status, InvoiceStatus.CANCELLED);
 
+    const status = InvoiceStatus.CANCELLED;
+    const today = new Date();
+
     const updated = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.update({
         where: { id, deletedAt: null },
         data: {
-          status: InvoiceStatus.CANCELLED,
-          cancelledDate,
+          status,
           cancelReason,
-          updatedAt: new Date(),
+          cancelledDate: today,
         },
       });
 
       await tx.invoiceStatusHistory.create({
         data: {
           invoiceId: id,
-          status: InvoiceStatus.CANCELLED,
+          status,
           previousStatus: currentInvoice.status,
-          updatedAt: new Date(),
+          updatedAt: today,
           updatedBy,
           notes: `Cancelled: ${cancelReason}`,
         },
@@ -1124,7 +1124,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @returns A promise that resolves to true if deletion was successful, false otherwise
    * @throws {Error} If invoice is not found or is not in DRAFT status
    */
-  async softDelete(id: string): Promise<boolean> {
+  async deleteInvoice(id: string): Promise<boolean> {
     // First check if the invoice exists and is in DRAFT status
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, deletedAt: null },
@@ -1148,27 +1148,6 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     });
 
     return result !== null;
-  }
-
-  /**
-   * Check if an invoice number already exists in the database.
-   * Useful for validation and preventing duplicate invoice numbers.
-   * @param invoiceNumber - The invoice number to check
-   * @param excludeId - Optional invoice ID to exclude from the check (useful for updates)
-   * @returns A promise that resolves to true if the invoice number exists, false otherwise
-   */
-  async invoiceNumberExists(invoiceNumber: string, excludeId?: string): Promise<boolean> {
-    const where: Prisma.InvoiceWhereInput = {
-      invoiceNumber,
-      deletedAt: null,
-    };
-
-    if (excludeId) {
-      where.id = { not: excludeId };
-    }
-
-    const count = await this.prisma.invoice.count({ where });
-    return count > 0;
   }
 
   /**

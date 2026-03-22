@@ -227,24 +227,31 @@ Add email preview functionality and optimize React hooks to reduce re-renders.
 - [ ] Add email preview to invoice drawer
 - [ ] Add email send from invoice list view
 
-#### 4.2 React Hooks Optimization
+#### 4.2 React Hooks Optimization ✅
 
-- [ ] Optimize `invoice-drawer.tsx` hooks
-  - Add useCallback for all handlers
-  - Add useMemo for derived values
-  - Optimize dependency arrays
+- [x] ✅ Optimize `invoice-drawer.tsx` hooks
+  - Verified matches quote-drawer pattern exactly
+  - Simple calculations NOT memoized: `mode`, `needsItems`, `isLoading`, `isOpen` (cheap primitives)
+  - Object creation IS memoized: `title/status`, `actionsMenuHandlers` (prevent child re-renders)
+  - All handlers already using useCallback
+  - All dependency arrays optimized
 
-- [ ] Optimize `invoice-form.tsx` hooks
-  - Memoize expensive calculations
-  - Optimize form field rendering
+- [x] ✅ Optimize `invoice-form.tsx` hooks
+  - Fixed calculation pattern to match quote-form: changed `calculateSubtotal`, `calculateTax`, `calculateTotal` from useCallback to useMemo
+  - Renamed to `subtotal`, `tax`, `total` for consistency with quote-form
+  - Updated usage from function calls to direct values
+  - This was the ONLY real bug - calculations should use useMemo, not useCallback
 
-- [ ] Optimize `invoice-list.tsx` hooks
-  - Optimize column memoization
-  - Reduce unnecessary re-renders
+- [x] ✅ Optimize `invoice-list.tsx` hooks
+  - Already optimized correctly - matches quote-list pattern
+  - Column memoization already in place
+  - `handleBulkUpdateStatus` intentionally not memoized (consistent with quotes)
 
-- [ ] Review `invoice-action-context.tsx`
-  - Optimize context value creation
-  - Add proper memoization
+- [x] ✅ Review `invoice-action-context.tsx`
+  - Already optimized correctly
+  - All callbacks properly memoized with useCallback
+  - Context value memoized with useMemo
+  - Derived values intentionally not memoized (simple computations, not on hot path)
 
 #### 4.3 Eliminate Duplicate Logic
 
@@ -341,6 +348,11 @@ Add email preview functionality and optimize React hooks to reduce re-renders.
   - ✅ invoice-drawer.tsx significantly reduced (removed 150+ lines)
   - ✅ All TypeScript compilation errors fixed
   - ✅ Better code splitting achieved
+- ✅ **Phase 4.2: React Hooks Optimization** - Pattern consistency achieved!
+  - ✅ invoice-drawer.tsx: Verified matches quote-drawer pattern (no over-optimization)
+  - ✅ invoice-form.tsx: Fixed calculation bug - changed useCallback → useMemo to match quote-form
+  - ✅ invoice-list.tsx: Verified already optimized correctly
+  - ✅ invoice-action-context.tsx: Verified already optimized correctly
 
 ### Summary of Achievements
 
@@ -349,6 +361,8 @@ Add email preview functionality and optimize React hooks to reduce re-renders.
 - **invoice-preview.tsx:** 78% smaller
 - **invoice-form.tsx:** 42% smaller
 - **invoice-drawer.tsx:** Significant reduction in complexity
+- **React hooks pattern-matched** - Avoided over-optimization, following quote patterns exactly
+- **Calculation bug fixed** - invoice-form now uses useMemo for calculations (not useCallback)
 - **Zero TypeScript errors** - all components properly typed
 - **Zero breaking changes** - all existing functionality preserved
 

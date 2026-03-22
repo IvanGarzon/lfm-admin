@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { constructMetadata } from '@/lib/utils';
-import { getQuotes } from '@/actions/finances/quotes';
+import { getQuotes } from '@/actions/finances/quotes/queries';
 import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 
 export const metadata = constructMetadata({

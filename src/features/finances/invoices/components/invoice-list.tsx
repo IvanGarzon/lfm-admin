@@ -9,7 +9,6 @@ import { InvoiceTable } from '@/features/finances/invoices/components/invoice-ta
 import { BulkActionsBar } from '@/features/finances/invoices/components/bulk-actions-bar';
 import {
   useSendInvoiceReminder,
-  useMarkInvoiceAsPending,
   useDownloadInvoicePdf,
   useBulkUpdateInvoiceStatus,
   useDuplicateInvoice,
@@ -28,13 +27,13 @@ export function InvoiceList({
   data: InvoicePagination;
   searchParams: SearchParams;
 }) {
-  const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
+  const { openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending } =
+    useInvoiceActions();
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(data.pagination.totalItems / perPage);
 
   const sendReminder = useSendInvoiceReminder();
-  const markAsPending = useMarkInvoiceAsPending();
   const downloadPdf = useDownloadInvoicePdf();
   const bulkUpdateStatus = useBulkUpdateInvoiceStatus();
   const duplicateInvoice = useDuplicateInvoice();
@@ -45,7 +44,7 @@ export function InvoiceList({
       createInvoiceColumns(
         (id, number) => openDelete(id, number),
         (id) => sendReminder.mutate(id),
-        (id) => markAsPending.mutate(id),
+        (id, number) => openMarkAsPending(id, number),
         (id, number) => openRecordPayment(id, number),
         (id, number) => openCancel(id, number),
         (id) => downloadPdf.mutate(id),
@@ -55,7 +54,7 @@ export function InvoiceList({
       ),
     [
       sendReminder,
-      markAsPending,
+      openMarkAsPending,
       downloadPdf,
       openDelete,
       openRecordPayment,

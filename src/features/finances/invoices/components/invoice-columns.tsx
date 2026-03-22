@@ -84,7 +84,7 @@ function InvoiceLink({ invoiceId, invoiceNumber }: { invoiceId: string; invoiceN
 export const createInvoiceColumns = (
   onDelete: (id: string, invoiceNumber: string) => void,
   onSendReminder: (id: string) => void,
-  onMarkAsPending: (id: string) => void,
+  onMarkAsPending: (id: string, invoiceNumber: string) => void,
   onRecordPayment: (id: string, invoiceNumber: string) => void,
   onCancel: (id: string, invoiceNumber: string) => void,
   onDownloadPdf: (id: string) => void,

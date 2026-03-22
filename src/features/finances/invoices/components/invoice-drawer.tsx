@@ -21,7 +21,6 @@ import {
   useInvoiceHistory,
   useInvoicePayments,
   useCreateInvoice,
-  useMarkInvoiceAsPending,
   useMarkInvoiceAsDraft,
   useUpdateInvoice,
   useSendInvoiceReminder,
@@ -70,14 +69,14 @@ export function InvoiceDrawer({
   });
 
   const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id, {
-    enabled: mode === 'edit' && activeTab === 'payments',
+    enabled: mode === 'edit' && (activeTab === 'payments' || showPreview),
   });
 
-  const { openDelete, openRecordPayment, openCancel, openSendReceipt } = useInvoiceActions();
+  const { openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending } =
+    useInvoiceActions();
 
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
-  const markAsPending = useMarkInvoiceAsPending();
   const sendReminder = useSendInvoiceReminder();
   const downloadPdf = useDownloadInvoicePdf();
   const duplicateInvoice = useDuplicateInvoice();
@@ -161,13 +160,13 @@ export function InvoiceDrawer({
     sendReminder.mutate(invoice.id);
   }, [invoice, sendReminder]);
 
-  const handleMarkAsPending = useCallback(() => {
+  const handleMarkAsPendingDialog = useCallback(() => {
     if (!invoice) {
       return;
     }
 
-    markAsPending.mutate(invoice.id);
-  }, [invoice, markAsPending]);
+    openMarkAsPending(invoice.id, invoice.invoiceNumber);
+  }, [invoice, openMarkAsPending]);
 
   const handleMarkAsDraft = useCallback(() => {
     if (!invoice) {
@@ -240,7 +239,7 @@ export function InvoiceDrawer({
   const actionsMenuHandlers = useMemo(
     () => ({
       onDuplicate: handleDuplicate,
-      onMarkAsPending: handleMarkAsPending,
+      onMarkAsPending: handleMarkAsPendingDialog,
       onMarkAsDraft: handleMarkAsDraft,
       onRecordPayment: handleRecordPaymentDialog,
       onSendReminder: handleSendReminder,
@@ -251,7 +250,7 @@ export function InvoiceDrawer({
     }),
     [
       handleDuplicate,
-      handleMarkAsPending,
+      handleMarkAsPendingDialog,
       handleMarkAsDraft,
       handleRecordPaymentDialog,
       handleSendReminder,

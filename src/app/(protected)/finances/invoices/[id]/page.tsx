@@ -1,6 +1,6 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
-import { getInvoices } from '@/actions/finances/invoices';
+import { getInvoices } from '@/actions/finances/invoices/queries';
 import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
 import dynamic from 'next/dynamic';
 

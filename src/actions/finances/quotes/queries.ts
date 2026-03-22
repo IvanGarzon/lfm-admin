@@ -277,7 +277,6 @@ export async function getQuoteVersions(quoteId: string): Promise<
 
     const versions = await quoteRepo.getQuoteVersions(quoteId);
 
-    // Convert Decimal to number
     const normalizedVersions = versions.map((v) => ({
       ...v,
       amount: Number(v.amount),

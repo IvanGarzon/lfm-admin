@@ -210,20 +210,16 @@ export function InvoiceForm({
     [isLocked, mode, onCreate, onUpdate, invoice?.id],
   );
 
-  const calculateSubtotal = useCallback(() => {
+  const subtotal = useMemo(() => {
     return watchedItems.reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
       0,
     );
   }, [watchedItems]);
 
-  const calculateTax = useCallback(() => {
-    return (calculateSubtotal() * gst) / 100;
-  }, [calculateSubtotal, gst]);
+  const tax = useMemo(() => (subtotal * gst) / 100, [subtotal, gst]);
 
-  const calculateTotal = useCallback(() => {
-    return calculateSubtotal() + calculateTax() - discount;
-  }, [calculateSubtotal, calculateTax, discount]);
+  const total = useMemo(() => subtotal + tax - discount, [subtotal, tax, discount]);
 
   return (
     <Form {...form}>
@@ -307,11 +303,11 @@ export function InvoiceForm({
         </Box>
 
         <InvoiceTotalSummary
-          subtotal={calculateSubtotal()}
+          subtotal={subtotal}
           gst={gst}
-          gstAmount={calculateTax()}
+          gstAmount={tax}
           discount={discount}
-          total={calculateTotal()}
+          total={total}
         />
       </form>
     </Form>

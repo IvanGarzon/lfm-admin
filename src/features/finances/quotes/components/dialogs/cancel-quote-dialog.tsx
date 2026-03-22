@@ -63,7 +63,9 @@ export function CancelQuoteDialog({
         <DialogHeader>
           <DialogTitle>Cancel Quote</DialogTitle>
           <DialogDescription>
-            Cancel quote {quoteNumber}. Optionally provide a reason for cancellation.
+            {quoteNumber
+              ? `Cancel quote ${quoteNumber}. This action cannot be undone.`
+              : 'Enter the cancellation details below. This action cannot be undone.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

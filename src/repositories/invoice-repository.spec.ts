@@ -998,48 +998,6 @@ describe('InvoiceRepository', () => {
     });
   });
 
-  describe('invoiceNumberExists', () => {
-    it('returns true when invoice number exists', async () => {
-      mockPrisma.invoice.count.mockResolvedValue(1);
-
-      const result = await repository.invoiceNumberExists('INV-2026-0001');
-
-      expect(result).toBe(true);
-      expect(mockPrisma.invoice.count).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            invoiceNumber: 'INV-2026-0001',
-            deletedAt: null,
-          }),
-        }),
-      );
-    });
-
-    it('returns false when invoice number does not exist', async () => {
-      mockPrisma.invoice.count.mockResolvedValue(0);
-
-      const result = await repository.invoiceNumberExists('INV-2026-9999');
-
-      expect(result).toBe(false);
-    });
-
-    it('excludes specific invoice when excludeId provided', async () => {
-      const excludeId = testIds.invoice();
-      mockPrisma.invoice.count.mockResolvedValue(0);
-
-      await repository.invoiceNumberExists('INV-2026-0001', excludeId);
-
-      expect(mockPrisma.invoice.count).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            invoiceNumber: 'INV-2026-0001',
-            id: { not: excludeId },
-          }),
-        }),
-      );
-    });
-  });
-
   describe('incrementReminderCount', () => {
     it('increments reminder count for existing invoice', async () => {
       const invoiceId = testIds.invoice();

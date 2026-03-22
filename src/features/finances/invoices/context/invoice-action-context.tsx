@@ -9,11 +9,13 @@ import {
   useInvoiceMetadata,
   useInvoiceItems,
   useInvoicePayments,
+  useMarkInvoiceAsPending,
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import { DeleteInvoiceDialog } from '@/features/finances/invoices/components/delete-invoice-dialog';
-import { RecordPaymentDialog } from '@/features/finances/invoices/components/record-payment-dialog';
-import { CancelInvoiceDialog } from '@/features/finances/invoices/components/cancel-invoice-dialog';
-import { SendReceiptDialog } from '@/features/finances/invoices/components/send-receipt-dialog';
+import { DeleteInvoiceDialog } from '@/features/finances/invoices/components/dialogs/delete-invoice-dialog';
+import { RecordPaymentDialog } from '@/features/finances/invoices/components/dialogs/record-payment-dialog';
+import { CancelInvoiceDialog } from '@/features/finances/invoices/components/dialogs/cancel-invoice-dialog';
+import { SendReceiptDialog } from '@/features/finances/invoices/components/dialogs/send-receipt-dialog';
+import { MarkAsPendingDialog } from '@/features/finances/invoices/components/dialogs/mark-as-pending-dialog';
 import type {
   InvoiceWithDetails,
   InvoiceMetadata,
@@ -21,7 +23,7 @@ import type {
 } from '@/features/finances/invoices/types';
 import type { RecordPaymentInput } from '@/schemas/invoices';
 
-type ModalType = 'DELETE' | 'RECORD_PAYMENT' | 'CANCEL' | 'SEND_RECEIPT';
+type ModalType = 'DELETE' | 'RECORD_PAYMENT' | 'CANCEL' | 'SEND_RECEIPT' | 'MARK_AS_PENDING';
 
 interface ModalState {
   type: ModalType;
@@ -45,6 +47,7 @@ interface InvoiceActionContextType {
     invoice?: InvoiceWithDetails | InvoiceMetadata,
     onSuccess?: () => void,
   ) => void;
+  openMarkAsPending: (id: string, invoiceNumber?: string, onSuccess?: () => void) => void;
   close: () => void;
 }
 
@@ -57,6 +60,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   const recordPayment = useRecordPayment();
   const cancelInvoice = useCancelInvoice();
   const downloadReceiptPdf = useDownloadReceiptPdf();
+  const markInvoiceAsPending = useMarkInvoiceAsPending();
 
   // Fetch basic invoice details if needed (e.g. for Send Receipt dialog if opened from list)
   // useInvoiceMetadata is much lighter than useInvoice as it skips items and history
@@ -96,6 +100,13 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   const openSendReceipt = useCallback(
     (id: string, invoice?: InvoiceWithDetails | InvoiceMetadata, onSuccess?: () => void) => {
       setState({ type: 'SEND_RECEIPT', id, invoice, onSuccess });
+    },
+    [],
+  );
+
+  const openMarkAsPending = useCallback(
+    (id: string, invoiceNumber?: string, onSuccess?: () => void) => {
+      setState({ type: 'MARK_AS_PENDING', id, invoiceNumber, onSuccess });
     },
     [],
   );
@@ -145,6 +156,17 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     [cancelInvoice, state, close],
   );
 
+  const handleConfirmMarkAsPending = useCallback(() => {
+    if (state?.type === 'MARK_AS_PENDING' && state.id) {
+      markInvoiceAsPending.mutate(state.id, {
+        onSuccess: () => {
+          close();
+          state.onSuccess?.();
+        },
+      });
+    }
+  }, [state, markInvoiceAsPending, close]);
+
   const handleDownloadReceipt = useCallback(async () => {
     if (state?.id) {
       await downloadReceiptPdf.mutateAsync(state.id);
@@ -157,7 +179,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     }
 
     // Import the server action dynamically to avoid bundling issues
-    const { sendInvoiceReceipt } = await import('@/actions/finances/invoices');
+    const { sendInvoiceReceipt } = await import('@/actions/finances/invoices/mutations');
 
     // Send the receipt email with PDF attachment
     const result = await sendInvoiceReceipt(state.id);
@@ -176,9 +198,10 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
       openRecordPayment,
       openCancel,
       openSendReceipt,
+      openMarkAsPending,
       close,
     }),
-    [openDelete, openRecordPayment, openCancel, openSendReceipt, close],
+    [openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending, close],
   );
 
   return (
@@ -234,6 +257,14 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
           onSendEmail={handleSendEmailReceipt}
         />
       )}
+
+      <MarkAsPendingDialog
+        open={state?.type === 'MARK_AS_PENDING'}
+        onOpenChange={(open) => !open && close()}
+        onConfirm={handleConfirmMarkAsPending}
+        invoiceNumber={state?.invoiceNumber}
+        isPending={markInvoiceAsPending.isPending}
+      />
     </InvoiceActionContext.Provider>
   );
 }

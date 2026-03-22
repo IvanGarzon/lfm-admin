@@ -3,11 +3,9 @@
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
-import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
-import { TransactionType, TransactionStatus } from '@/prisma/client';
 import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
@@ -25,7 +23,6 @@ import { InvoiceStatus } from '@/prisma/client';
 import type { ActionResult } from '@/types/actions';
 
 const invoiceRepo = new InvoiceRepository(prisma);
-const transactionRepo = new TransactionRepository(prisma);
 
 /**
  * Creates a new invoice with the provided data.
@@ -274,9 +271,8 @@ export async function cancelInvoice(
     requirePermission(session.user, 'canManageInvoices');
     const validatedData = CancelInvoiceSchema.parse(data);
 
-    const invoice = await invoiceRepo.cancel(
+    const invoice = await invoiceRepo.cancelInvoice(
       validatedData.id,
-      validatedData.cancelledDate,
       validatedData.cancelReason,
       session.user.id,
     );
@@ -328,6 +324,7 @@ export async function sendInvoiceReceipt(id: string): Promise<ActionResult<{ id:
       // Generate receipt number if missing
       const receiptNumber = await invoiceRepo.generateReceiptNumber();
 
+      // TODO: Create a repository function, repository should handle this
       // Update invoice with receipt number
       await prisma.invoice.update({
         where: { id },
@@ -470,6 +467,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       return { success: false, error: 'Cannot send reminder for invoice that is not overdue' };
     }
 
+    // TODO: Create a repository function, repository should handle this
     // Rate limiting: 1 reminder per invoice per 24 hours
     const lastInvoiceReminder = await prisma.emailAudit.findFirst({
       where: {
@@ -490,6 +488,7 @@ export async function sendInvoiceReminder(id: string): Promise<ActionResult<{ id
       };
     }
 
+    // TODO: Create a repository function, repository should handle this
     // Rate limiting: 1 reminder per customer per 1 hour (prevent email bombing across multiple invoices)
     const lastCustomerReminder = await prisma.emailAudit.findFirst({
       where: {
@@ -588,7 +587,7 @@ export async function deleteInvoice(id: string): Promise<ActionResult<{ id: stri
 
   try {
     requirePermission(session.user, 'canManageInvoices');
-    const success = await invoiceRepo.softDelete(id);
+    const success = await invoiceRepo.deleteInvoice(id);
 
     if (!success) {
       return { success: false, error: 'Invoice not found' };

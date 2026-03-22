@@ -23,7 +23,7 @@ import type { QuotePagination } from '@/features/finances/quotes/types';
 import { createQuoteColumns } from '@/features/finances/quotes/components/quote-columns';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
 import { QuoteStatus } from '@/prisma/client';
-import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes';
+import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
 const DEFAULT_PAGE_SIZE = 20;

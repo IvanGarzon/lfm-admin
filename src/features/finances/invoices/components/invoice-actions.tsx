@@ -33,7 +33,7 @@ interface InvoiceActionsProps {
   invoice: InvoiceListItem;
   onDelete: (id: string, invoiceNumber: string) => void;
   onSendReminder: (id: string) => void;
-  onMarkAsPending: (id: string) => void;
+  onMarkAsPending: (id: string, invoiceNumber: string) => void;
   onRecordPayment: (id: string, invoiceNumber: string) => void;
   onCancel: (id: string, invoiceNumber: string) => void;
   onDownloadPdf: (id: string) => void;
@@ -91,7 +91,7 @@ export function InvoiceActions({
             Duplicate invoice
           </DropdownMenuItem>
           {invoice.status === InvoiceStatus.DRAFT && (
-            <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id)}>
+            <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id, invoice.invoiceNumber)}>
               <Hourglass className="h-4 w-4" />
               Mark as pending
             </DropdownMenuItem>

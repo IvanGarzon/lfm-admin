@@ -123,7 +123,6 @@ export type MarkInvoiceAsPaidData = {
 
 export type CancelInvoiceData = {
   id: string;
-  cancelledDate: Date;
   cancelReason: string;
 };
 

@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
-import { getQuotes } from '@/actions/finances/quotes';
+import { getQuotes } from '@/actions/finances/quotes/queries';
 
 export const metadata = {
   title: 'Quote Detail | Finance',

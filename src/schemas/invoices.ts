@@ -96,7 +96,6 @@ export const MarkInvoiceAsPendingSchema = z.object({
  */
 export const CancelInvoiceSchema = z.object({
   id: z.cuid({ error: 'Invoice ID is required' }),
-  cancelledDate: z.date(),
   cancelReason: z
     .string()
     .trim()
