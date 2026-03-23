@@ -9,6 +9,7 @@ import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/em
 import { QuoteStatus } from '@/prisma/client';
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { Box } from '@/components/ui/box';
+import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerBody,
@@ -18,6 +19,16 @@ import {
 } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   useQuoteMetadata,
   useQuoteItems,
@@ -64,6 +75,7 @@ export function QuoteDrawer({
   const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
   const [isLoadingEmailPreview, setIsLoadingEmailPreview] = useState(false);
   const [pendingEmailType, setPendingEmailType] = useState<QuoteEmailType | null>(null);
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState<boolean>(false);
 
   const mode: DrawerMode = id ? 'edit' : 'create';
 
@@ -109,6 +121,12 @@ export function QuoteDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
+        // Check for unsaved changes before closing
+        if (hasUnsavedChanges) {
+          setShowUnsavedChangesDialog(true);
+          return;
+        }
+
         if (id) {
           const basePath = '/finances/quotes';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
@@ -118,8 +136,29 @@ export function QuoteDrawer({
         }
       }
     },
-    [id, onClose, router, queryString],
+    [id, onClose, router, queryString, hasUnsavedChanges],
   );
+
+  const handleDiscardChanges = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    setHasUnsavedChanges(false);
+
+    if (id) {
+      const basePath = '/finances/quotes';
+      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+      router.push(targetPath);
+    } else {
+      onClose?.();
+    }
+  }, [id, onClose, router, queryString]);
+
+  const handleSaveChanges = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    const form = document.getElementById('form-rhf-quote');
+    if (form && form instanceof HTMLFormElement) {
+      form.requestSubmit();
+    }
+  }, []);
 
   const handleCreate = useCallback(
     (data: CreateQuoteInput) => {
@@ -566,6 +605,24 @@ export function QuoteDrawer({
         isMarkingAsSent={markAsSent.isPending}
         showMarkAsSentOption={pendingEmailType === 'sent'}
       />
+
+      <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save them before closing?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="outline" onClick={handleDiscardChanges}>
+              Discard changes
+            </Button>
+            <AlertDialogAction onClick={handleSaveChanges}>Save changes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
