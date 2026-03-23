@@ -41,6 +41,7 @@ import { InvoicePreviewPanel } from '@/features/finances/invoices/components/inv
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, invoiceSearchParamsDefaults } from '@/filters/invoices/invoices-filters';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
+import { useUnsavedChangesWarning } from '@/hooks/use-unsaved-changes-warning';
 
 type DrawerMode = 'edit' | 'create';
 
@@ -57,9 +58,9 @@ export function InvoiceDrawer({
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('details');
-  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState<boolean>(false);
   const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
-  const [isLoadingEmailPreview, setIsLoadingEmailPreview] = useState(false);
+  const [isLoadingEmailPreview, setIsLoadingEmailPreview] = useState<boolean>(false);
   const [pendingEmailType, setPendingEmailType] = useState<InvoiceEmailType | null>(null);
 
   const mode: DrawerMode = id ? 'edit' : 'create';
@@ -93,6 +94,10 @@ export function InvoiceDrawer({
 
   const router = useRouter();
   const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
+
+  const checkUnsavedChanges = useUnsavedChangesWarning(hasUnsavedChanges, {
+    formId: 'form-rhf-invoice',
+  });
 
   const isOpen = id ? (pathname?.includes(`/invoices/${id}`) ?? false) : (open ?? false);
 
@@ -139,27 +144,11 @@ export function InvoiceDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-invoice');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    downloadPdf.mutate(invoice.id);
-  }, [invoice, hasUnsavedChanges, downloadPdf]);
+    checkUnsavedChanges(
+      () => downloadPdf.mutate(invoice.id),
+      'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
+    );
+  }, [invoice, checkUnsavedChanges, downloadPdf]);
 
   const handleLoadEmailPreview = useCallback(
     async (emailType: InvoiceEmailType) => {
@@ -200,56 +189,22 @@ export function InvoiceDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before sending the reminder to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-invoice');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    // Show email preview before sending reminder
-    handleLoadEmailPreview('reminder');
-  }, [invoice, hasUnsavedChanges, handleLoadEmailPreview]);
+    checkUnsavedChanges(
+      () => handleLoadEmailPreview('reminder'),
+      'Please save your changes before sending the reminder to ensure it reflects the latest data.',
+    );
+  }, [invoice, checkUnsavedChanges, handleLoadEmailPreview]);
 
   const handleMarkAsPendingDialog = useCallback(() => {
     if (!invoice) {
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before marking as pending to ensure the invoice reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-invoice');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    // Show email preview before marking as pending
-    handleLoadEmailPreview('sent');
-  }, [invoice, hasUnsavedChanges, handleLoadEmailPreview]);
+    checkUnsavedChanges(
+      () => handleLoadEmailPreview('sent'),
+      'Please save your changes before marking as pending to ensure the invoice reflects the latest data.',
+    );
+  }, [invoice, checkUnsavedChanges, handleLoadEmailPreview]);
 
   const handleMarkAsDraft = useCallback(() => {
     if (!invoice) {

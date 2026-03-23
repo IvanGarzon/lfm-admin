@@ -43,6 +43,7 @@ import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
 import { needsAttention } from '@/features/finances/quotes/utils/quote-helpers';
+import { useUnsavedChangesWarning } from '@/hooks/use-unsaved-changes-warning';
 
 type DrawerMode = 'edit' | 'create';
 
@@ -97,6 +98,10 @@ export function QuoteDrawer({
 
   const router = useRouter();
   const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
+
+  const checkUnsavedChanges = useUnsavedChangesWarning(hasUnsavedChanges, {
+    formId: 'form-rhf-quote',
+  });
 
   const currentVersionIndex = versions?.findIndex((v) => v.id === id) ?? -1;
   const isOpen = id ? (pathname?.includes(`/quotes/${id}`) ?? false) : (open ?? false);
@@ -190,28 +195,11 @@ export function QuoteDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before sending the quote to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-quote');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    // Show email preview before sending
-    handleLoadEmailPreview('sent');
-  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
+    checkUnsavedChanges(
+      () => handleLoadEmailPreview('sent'),
+      'Please save your changes before sending the quote to ensure it reflects the latest data.',
+    );
+  }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);
 
   const handleOnHold = useCallback(() => {
     if (!quote) return;
@@ -253,34 +241,17 @@ export function QuoteDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before duplicating to ensure the copy reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-quote');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
+    checkUnsavedChanges(() => {
+      duplicateQuote.mutate(quote.id, {
+        onSuccess: (data) => {
+          // Navigate to the newly created duplicate
+          const basePath = `/finances/quotes/${data.id}`;
+          const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+          router.push(targetPath);
         },
       });
-
-      return;
-    }
-
-    duplicateQuote.mutate(quote.id, {
-      onSuccess: (data) => {
-        // Navigate to the newly created duplicate
-        const basePath = `/finances/quotes/${data.id}`;
-        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
-        router.push(targetPath);
-      },
-    });
-  }, [quote, duplicateQuote, router, hasUnsavedChanges, queryString]);
+    }, 'Please save your changes before duplicating to ensure the copy reflects the latest data.');
+  }, [quote, duplicateQuote, router, checkUnsavedChanges, queryString]);
 
   const handleNavigateToVersion = useCallback(
     (versionId: string) => {
@@ -303,27 +274,11 @@ export function QuoteDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-quote');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    downloadPdf.mutate(quote.id);
-  }, [quote, hasUnsavedChanges, downloadPdf]);
+    checkUnsavedChanges(
+      () => downloadPdf.mutate(quote.id),
+      'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
+    );
+  }, [quote, checkUnsavedChanges, downloadPdf]);
 
   const handleConfirmSendEmail = useCallback(() => {
     if (!quote || !pendingEmailType) {
@@ -378,57 +333,23 @@ export function QuoteDrawer({
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before sending the email to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-quote');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    // Determine email type based on quote status and show preview
-    const emailType = quote.status === QuoteStatus.SENT ? 'sent' : 'sent';
-    handleLoadEmailPreview(emailType);
-  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
+    checkUnsavedChanges(() => {
+      // Determine email type based on quote status and show preview
+      const emailType = quote.status === QuoteStatus.SENT ? 'sent' : 'sent';
+      handleLoadEmailPreview(emailType);
+    }, 'Please save your changes before sending the email to ensure it reflects the latest data.');
+  }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);
 
   const handleSendFollowUp = useCallback(() => {
     if (!quote) {
       return;
     }
 
-    if (hasUnsavedChanges) {
-      toast.warning('You have unsaved changes', {
-        description:
-          'Please save your changes before sending the follow-up to ensure it reflects the latest data.',
-        duration: 5000,
-        action: {
-          label: 'Save Now',
-          onClick: () => {
-            const form = document.getElementById('form-rhf-quote');
-            if (form && form instanceof HTMLFormElement) {
-              form.requestSubmit();
-            }
-          },
-        },
-      });
-
-      return;
-    }
-
-    // Show preview for follow-up email
-    handleLoadEmailPreview('followup');
-  }, [quote, hasUnsavedChanges, handleLoadEmailPreview]);
+    checkUnsavedChanges(
+      () => handleLoadEmailPreview('followup'),
+      'Please save your changes before sending the follow-up to ensure it reflects the latest data.',
+    );
+  }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);
 
   const showFollowUp = useMemo(() => {
     if (!quote) {
