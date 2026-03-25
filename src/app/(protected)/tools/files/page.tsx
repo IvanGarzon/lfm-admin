@@ -20,6 +20,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { formatFileSize } from '@/lib/file-constants';
+import { uploadFile, deleteFile } from '@/actions/files/mutations';
+import { listFiles, getFileDownloadUrl, checkStorageHealth } from '@/actions/files/queries';
 
 type TestResult = {
   type: 'success' | 'error' | 'info';
@@ -67,11 +69,10 @@ export default function TestS3Page() {
   const loadS3Files = async () => {
     setIsLoadingFiles(true);
     try {
-      const response = await fetch('/api/test-s3/list');
-      const data = await response.json();
+      const result = await listFiles();
 
-      if (data.success) {
-        setS3Files(data.files);
+      if (result.success && result.data) {
+        setS3Files(result.data.files);
       }
     } catch (error) {
       console.error('Failed to load files:', error);
@@ -83,16 +84,10 @@ export default function TestS3Page() {
   // Download file from explorer
   const downloadFileFromExplorer = async (s3Key: string) => {
     try {
-      const response = await fetch('/api/test-s3/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Key }),
-      });
+      const result = await getFileDownloadUrl(s3Key);
 
-      const data = await response.json();
-
-      if (data.success) {
-        window.open(data.url, '_blank');
+      if (result.success && result.data) {
+        window.open(result.data.url, '_blank');
       }
     } catch (error) {
       console.error('Download failed:', error);
@@ -106,15 +101,9 @@ export default function TestS3Page() {
     }
 
     try {
-      const response = await fetch('/api/test-s3/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Key }),
-      });
+      const result = await deleteFile(s3Key);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success) {
         await loadS3Files(); // Reload the file list
         // Clear uploadedFile if it was the deleted file
         if (uploadedFile?.s3Key === s3Key) {
@@ -188,20 +177,19 @@ export default function TestS3Page() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/test-s3/health');
-      const data = await response.json();
+      const result = await checkStorageHealth();
 
-      if (data.success && data.healthy) {
+      if (result.success && result.data?.healthy) {
         addResult({
           type: 'success',
           message: 'LocalStack S3 is available!',
-          details: `Endpoint: ${data.endpoint}\nVersion: ${data.version}\nEdition: ${data.edition}\nS3 Status: ${data.services?.s3}`,
+          details: `Endpoint: ${result.data.endpoint}\nVersion: ${result.data.version}\nEdition: ${result.data.edition}\nS3 Status: ${result.data.services?.s3}`,
         });
       } else {
         addResult({
           type: 'error',
           message: 'LocalStack S3 is not available',
-          details: data.error || JSON.stringify(data, null, 2),
+          details: result.error || 'Storage health check failed',
         });
       }
     } catch (error) {
@@ -228,30 +216,25 @@ export default function TestS3Page() {
       formData.append('file', file);
       formData.append('quoteId', 'test-quote-123');
 
-      const response = await fetch('/api/test-s3/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const result = await uploadFile(formData);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success && result.data) {
         setUploadedFile({
-          s3Key: data.s3Key,
-          s3Url: data.s3Url,
-          fileName: data.fileName,
+          s3Key: result.data.s3Key,
+          s3Url: result.data.s3Url,
+          fileName: result.data.fileName,
         });
         addResult({
           type: 'success',
           message: 'Text file uploaded successfully!',
-          details: `S3 Key: ${data.s3Key}\nS3 URL: ${data.s3Url}\nFile Size: ${formatFileSize(data.fileSize)}`,
+          details: `S3 Key: ${result.data.s3Key}\nS3 URL: ${result.data.s3Url}\nFile Size: ${formatFileSize(result.data.fileSize)}`,
         });
         await loadS3Files(); // Reload file list
       } else {
         addResult({
           type: 'error',
           message: 'Upload failed',
-          details: data.error || 'Unknown error',
+          details: result.error || 'Unknown error',
         });
       }
     } catch (error) {
@@ -280,30 +263,25 @@ export default function TestS3Page() {
       formData.append('file', file);
       formData.append('quoteId', 'test-quote-123');
 
-      const response = await fetch('/api/test-s3/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const result = await uploadFile(formData);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success && result.data) {
         setUploadedFile({
-          s3Key: data.s3Key,
-          s3Url: data.s3Url,
-          fileName: data.fileName,
+          s3Key: result.data.s3Key,
+          s3Url: result.data.s3Url,
+          fileName: result.data.fileName,
         });
         addResult({
           type: 'success',
           message: 'File uploaded successfully!',
-          details: `File: ${data.fileName}\nS3 Key: ${data.s3Key}\nSize: ${formatFileSize(data.fileSize)}`,
+          details: `File: ${result.data.fileName}\nS3 Key: ${result.data.s3Key}\nSize: ${formatFileSize(result.data.fileSize)}`,
         });
         await loadS3Files(); // Reload file list
       } else {
         addResult({
           type: 'error',
           message: 'Upload failed',
-          details: data.error || 'Unknown error',
+          details: result.error || 'Unknown error',
         });
       }
     } catch (error) {
@@ -330,28 +308,22 @@ export default function TestS3Page() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/test-s3/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Key: uploadedFile.s3Key }),
-      });
+      const result = await getFileDownloadUrl(uploadedFile.s3Key);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success && result.data) {
         addResult({
           type: 'success',
           message: 'Download URL generated!',
-          details: `URL: ${data.url}\nExpires in: 24 hours`,
+          details: `URL: ${result.data.url}\nExpires in: 24 hours`,
         });
 
         // Open in new tab
-        window.open(data.url, '_blank');
+        window.open(result.data.url, '_blank');
       } else {
         addResult({
           type: 'error',
           message: 'Failed to generate download URL',
-          details: data.error || 'Unknown error',
+          details: result.error || 'Unknown error',
         });
       }
     } catch (error) {
@@ -375,15 +347,9 @@ export default function TestS3Page() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/test-s3/delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Key: uploadedFile.s3Key }),
-      });
+      const result = await deleteFile(uploadedFile.s3Key);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success) {
         addResult({
           type: 'success',
           message: 'File deleted successfully!',
@@ -395,7 +361,7 @@ export default function TestS3Page() {
         addResult({
           type: 'error',
           message: 'Delete failed',
-          details: data.error || 'Unknown error',
+          details: result.error || 'Unknown error',
         });
       }
     } catch (error) {
@@ -418,19 +384,18 @@ export default function TestS3Page() {
 
     try {
       // Test 1: Connectivity
-      const healthResponse = await fetch('/api/test-s3/health');
-      const healthData = await healthResponse.json();
-      if (healthData.success && healthData.healthy) {
+      const healthResult = await checkStorageHealth();
+      if (healthResult.success && healthResult.data?.healthy) {
         addResult({
           type: 'success',
           message: 'LocalStack S3 is available!',
-          details: `Endpoint: ${healthData.endpoint}\nVersion: ${healthData.version}\nEdition: ${healthData.edition}\nS3 Status: ${healthData.services?.s3}`,
+          details: `Endpoint: ${healthResult.data.endpoint}\nVersion: ${healthResult.data.version}\nEdition: ${healthResult.data.edition}\nS3 Status: ${healthResult.data.services?.s3}`,
         });
       } else {
         addResult({
           type: 'error',
           message: 'LocalStack S3 is not available',
-          details: healthData.error || JSON.stringify(healthData, null, 2),
+          details: healthResult.error || 'Storage health check failed',
         });
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -443,29 +408,25 @@ export default function TestS3Page() {
       formData.append('file', file);
       formData.append('quoteId', 'test-quote-123');
 
-      const uploadResponse = await fetch('/api/test-s3/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const uploadData = await uploadResponse.json();
+      const uploadResult = await uploadFile(formData);
 
-      if (uploadData.success) {
+      if (uploadResult.success && uploadResult.data) {
         testFile = {
-          s3Key: uploadData.s3Key,
-          s3Url: uploadData.s3Url,
-          fileName: uploadData.fileName,
+          s3Key: uploadResult.data.s3Key,
+          s3Url: uploadResult.data.s3Url,
+          fileName: uploadResult.data.fileName,
         };
         setUploadedFile(testFile);
         addResult({
           type: 'success',
           message: 'Text file uploaded successfully!',
-          details: `S3 Key: ${uploadData.s3Key}\nS3 URL: ${uploadData.s3Url}\nFile Size: ${formatFileSize(uploadData.fileSize)}`,
+          details: `S3 Key: ${uploadResult.data.s3Key}\nS3 URL: ${uploadResult.data.s3Url}\nFile Size: ${formatFileSize(uploadResult.data.fileSize)}`,
         });
       } else {
         addResult({
           type: 'error',
           message: 'Upload failed',
-          details: uploadData.error || 'Unknown error',
+          details: uploadResult.error || 'Unknown error',
         });
         setIsLoading(false);
         return;
@@ -474,25 +435,20 @@ export default function TestS3Page() {
 
       // Test 3: Download (only if upload succeeded)
       if (testFile) {
-        const downloadResponse = await fetch('/api/test-s3/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ s3Key: testFile.s3Key }),
-        });
-        const downloadData = await downloadResponse.json();
+        const downloadResult = await getFileDownloadUrl(testFile.s3Key);
 
-        if (downloadData.success) {
+        if (downloadResult.success && downloadResult.data) {
           addResult({
             type: 'success',
             message: 'Download URL generated!',
-            details: `URL: ${downloadData.url}\nExpires in: 24 hours`,
+            details: `URL: ${downloadResult.data.url}\nExpires in: 24 hours`,
           });
-          window.open(downloadData.url, '_blank');
+          window.open(downloadResult.data.url, '_blank');
         } else {
           addResult({
             type: 'error',
             message: 'Failed to generate download URL',
-            details: downloadData.error || 'Unknown error',
+            details: downloadResult.error || 'Unknown error',
           });
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -500,14 +456,9 @@ export default function TestS3Page() {
 
       // Test 4: Delete (only if upload succeeded)
       if (testFile) {
-        const deleteResponse = await fetch('/api/test-s3/delete', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ s3Key: testFile.s3Key }),
-        });
-        const deleteData = await deleteResponse.json();
+        const deleteResult = await deleteFile(testFile.s3Key);
 
-        if (deleteData.success) {
+        if (deleteResult.success) {
           addResult({
             type: 'success',
             message: 'File deleted successfully!',
@@ -518,7 +469,7 @@ export default function TestS3Page() {
           addResult({
             type: 'error',
             message: 'Delete failed',
-            details: deleteData.error || 'Unknown error',
+            details: deleteResult.error || 'Unknown error',
           });
         }
       }
@@ -541,10 +492,8 @@ export default function TestS3Page() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <Box className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">S3 LocalStack Test Page</h1>
-          <p className="text-muted-foreground">
-            Test S3 upload, download, and delete operations with LocalStack
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Files Management</h1>
+          <p className="text-muted-foreground">Manage and test file storage operations with S3</p>
           <Box className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-900 dark:text-blue-100">
               <strong>Prerequisites:</strong> Make sure LocalStack is running (

@@ -46,8 +46,8 @@ export async function updateTask(
     const task = await taskRepo.update(taskId, data);
 
     // Revalidate pages that might display this task
-    revalidatePath('/tasks');
-    revalidatePath(`/tasks/${taskId}`);
+    revalidatePath('/tools/tasks');
+    revalidatePath(`/tools/tasks/${taskId}`);
 
     return { success: true, data: task };
   } catch (error) {
@@ -84,8 +84,8 @@ export async function setTaskEnabled(
     const task = await taskRepo.setEnabled(taskId, isEnabled);
 
     // Revalidate pages
-    revalidatePath('/tasks');
-    revalidatePath(`/tasks/${taskId}`);
+    revalidatePath('/tools/tasks');
+    revalidatePath(`/tools/tasks/${taskId}`);
 
     return { success: true, data: task };
   } catch (error) {
@@ -166,8 +166,8 @@ export async function executeTask(taskId: string): Promise<
     });
 
     // Revalidate execution pages
-    revalidatePath(`/tasks/${taskId}`);
-    revalidatePath(`/tasks/${taskId}/executions`);
+    revalidatePath(`/tools/tasks/${taskId}`);
+    revalidatePath(`/tools/tasks/${taskId}/executions`);
 
     return {
       success: true,
@@ -224,7 +224,7 @@ export async function syncTasks(): Promise<
     });
 
     // Revalidate tasks page
-    revalidatePath('/tasks');
+    revalidatePath('/tools/tasks');
 
     return { success: true, data: result };
   } catch (error) {
@@ -233,4 +233,188 @@ export async function syncTasks(): Promise<
       userId: session.user.id,
     });
   }
+}
+
+/**
+ * Executes a task directly without using Inngest events.
+ * Bypasses Inngest's event system by calling task handlers directly.
+ * Useful for manual triggers without INNGEST_EVENT_KEY configuration.
+ * @param taskId - The unique identifier of the task to execute.
+ * @returns A promise that resolves to an `ActionResult` with execution and task IDs,
+ * or an error if the task is not found or disabled.
+ */
+export async function executeTaskDirect(taskId: string): Promise<
+  ActionResult<{
+    executionId: string;
+    taskId: string;
+  }>
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  // Check if user has permission (ADMIN or MANAGER can trigger tasks)
+  if (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER') {
+    return { success: false, error: 'Forbidden: Insufficient permissions to trigger tasks' };
+  }
+
+  try {
+    // Get task from database
+    const dbTask = await taskRepo.findById(taskId);
+    if (!dbTask) {
+      return { success: false, error: 'Task not found' };
+    }
+
+    if (!dbTask.isEnabled) {
+      return { success: false, error: 'Task is disabled' };
+    }
+
+    // Get task definition
+    const taskDef = getTaskById(dbTask.functionId);
+    if (!taskDef) {
+      return { success: false, error: 'Task definition not found' };
+    }
+
+    logger.info('Executing task directly', {
+      context: 'task-execute-direct',
+      metadata: {
+        taskId,
+        functionId: dbTask.functionId,
+        userId: session.user.id,
+      },
+    });
+
+    // Create execution record
+    const execution = await executionRepo.create({
+      taskId,
+      triggeredBy: 'MANUAL',
+      triggeredByUser: session.user.id,
+    });
+
+    // Execute task in background
+    executeTaskInBackground(execution.id, taskDef, dbTask.functionId);
+
+    // Revalidate execution pages
+    revalidatePath(`/tools/tasks/${taskId}`);
+    revalidatePath(`/tools/tasks/${taskId}/executions`);
+
+    return {
+      success: true,
+      data: {
+        executionId: execution.id,
+        taskId,
+      },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to execute task directly', {
+      action: 'executeTaskDirect',
+      userId: session.user.id,
+      taskId,
+    });
+  }
+}
+
+/**
+ * Execute task in background and update execution status
+ */
+async function executeTaskInBackground(executionId: string, taskDef: any, functionId: string) {
+  const startTime = Date.now();
+
+  try {
+    // Create a mock span for compatibility
+    const mockSpan = {
+      log: (message: string, options?: any) => {
+        logger.info(message, {
+          context: `task:${functionId}`,
+          metadata: options,
+        });
+      },
+      setAttributes: (attrs: Record<string, any>) => {
+        logger.info('Task attributes', {
+          context: `task:${functionId}`,
+          metadata: attrs,
+        });
+      },
+      recordException: (error: Error) => {
+        logger.error('Task exception', error, {
+          context: `task:${functionId}`,
+        });
+      },
+    };
+
+    // Find and execute the Inngest function handler
+    const inngestFn = taskDef.inngestFunction;
+
+    // Execute with timeout
+    const timeoutMs = taskDef.timeout || 300000;
+    const result = await Promise.race([
+      executeInngestFunction(inngestFn, mockSpan),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Task timeout')), timeoutMs)),
+    ]);
+
+    const duration = Date.now() - startTime;
+
+    await executionRepo.update(executionId, {
+      status: 'COMPLETED',
+      completedAt: new Date(),
+      duration,
+      result: typeof result === 'string' ? { message: result } : result,
+    });
+
+    logger.info('Task executed successfully', {
+      context: 'task-execute-direct',
+      metadata: { executionId, duration, functionId },
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const stackTrace = error instanceof Error ? error.stack : undefined;
+
+    await executionRepo.update(executionId, {
+      status: 'FAILED',
+      completedAt: new Date(),
+      duration,
+      error: errorMessage,
+      stackTrace,
+    });
+
+    logger.error('Task execution failed', error, {
+      context: 'task-execute-direct',
+      metadata: { executionId, duration, functionId },
+    });
+  }
+}
+
+/**
+ * Execute an Inngest function's handler directly
+ */
+async function executeInngestFunction(inngestFn: any, mockSpan: any) {
+  const fnConfig = (inngestFn as any)._def || (inngestFn as any).config || {};
+  const handler = fnConfig.fn || fnConfig.handler;
+
+  if (!handler) {
+    throw new Error('Could not find function handler');
+  }
+
+  // Call the handler with mock context
+  const mockContext = {
+    event: {
+      id: `direct-${Date.now()}`,
+      name: 'manual-trigger',
+      data: {},
+      ts: Date.now(),
+    },
+    step: {
+      run: async (name: string, fn: () => any) => {
+        mockSpan.log(`Step: ${name}`);
+        return await fn();
+      },
+      sleep: async (duration: number) => {
+        return new Promise((resolve) => setTimeout(resolve, duration));
+      },
+    },
+  };
+
+  return await handler(mockContext, mockSpan);
 }

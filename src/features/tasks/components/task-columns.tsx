@@ -106,7 +106,7 @@ export function createTaskColumns(
       header: 'Task Name',
       cell: ({ row }) => (
         <div>
-          <Link href={`/tasks/${row.original.id}`} className="hover:underline font-medium">
+          <Link href={`/tools/tasks/${row.original.id}`} className="hover:underline font-medium">
             {row.original.functionName}
           </Link>
           {row.original.description && (

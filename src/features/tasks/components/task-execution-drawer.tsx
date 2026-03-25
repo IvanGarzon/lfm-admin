@@ -63,7 +63,7 @@ export function TaskExecutionDrawer({
   const router = useRouter();
 
   // Support both controlled (via open prop) and URL-based opening
-  const isPathnameBased = taskId && pathname?.includes(`/tasks/${taskId}/executions`);
+  const isPathnameBased = taskId && pathname?.includes(`/tools/tasks/${taskId}/executions`);
   const isOpen = isPathnameBased || (open ?? false);
 
   const handleOpenChange = useCallback(

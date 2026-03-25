@@ -117,6 +117,13 @@ export const navItems: NavItem[] = [
     shortcut: ['s', 's'],
     authorizeOnly: ['*'],
   },
+  {
+    title: 'Tools',
+    href: '/tools',
+    icon: 'flask',
+    shortcut: ['t', 'o'],
+    authorizeOnly: ['canAccessTools'],
+  },
 ];
 
 export const lasFloresAccount = {

@@ -68,6 +68,11 @@ export const PERMISSIONS = {
   canManagePriceList: {
     label: 'Can create, edit, and delete price list items',
   },
+
+  // Developer Tools Permissions
+  canAccessTools: {
+    label: 'Can access developer tools',
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -211,7 +216,7 @@ const MANAGER: RolePolicy = {
  * Same as MANAGER plus deletion permissions
  */
 const ADMIN: RolePolicy = {
-  allow: [...MANAGER.allow],
+  allow: [...MANAGER.allow, 'canAccessTools'],
   deny: [],
   actions: {
     allow: [

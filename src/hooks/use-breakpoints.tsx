@@ -1,16 +1,17 @@
 import { useMediaQuery } from 'react-responsive';
-import resolveConfig from 'tailwindcss/resolveConfig';
-import { Config, ScreensConfig } from 'tailwindcss/types/config';
+import tailwindConfig from '../../tailwind.config';
 
-import tailwindConfig from '@/tailwind.config';
-const fullConfig = resolveConfig(tailwindConfig as unknown as Config);
-
-const breakpoints = fullConfig?.theme?.screens || {
+/**
+ * Tailwind CSS breakpoints from tailwind.config.ts
+ * @see https://tailwindcss.com/docs/breakpoints
+ */
+const breakpoints = tailwindConfig.theme?.screens || {
   xs: '480px',
   sm: '640px',
   md: '768px',
   lg: '1024px',
   xl: '1280px',
+  '2xl': '1536px',
 };
 
 export function useBreakpoint<K extends string>(breakpointKey: K) {

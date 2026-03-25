@@ -61,7 +61,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <Box className="flex items-center justify-between">
         <Box className="flex items-center gap-4">
-          <Link href="/tasks">
+          <Link href="/tools/tasks">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>

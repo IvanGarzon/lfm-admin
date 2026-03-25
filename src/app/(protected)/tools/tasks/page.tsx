@@ -1,6 +1,6 @@
 import { TasksList } from '@/features/tasks/components/tasks-list';
 import { Shell } from '@/components/shared/shell';
-import { getTasks } from '@/actions/tasks';
+import { getTasks } from '@/actions/tasks/queries';
 
 export default async function TasksPage() {
   const result = await getTasks();

@@ -1,51 +1,29 @@
-import { useQueryClient, QueryFunction, useMutation } from '@tanstack/react-query';
-import {
-  getTasks as getTasksAction,
-  getTaskById as getTaskByIdAction,
-  getTaskExecutions as getTaskExecutionsAction,
-  getRecentExecutions as getRecentExecutionsAction,
-  updateTask,
-  setTaskEnabled,
-  executeTask,
-  syncTasks,
-} from '@/actions/tasks';
+'use client';
+
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type {
-  ScheduledTask,
-  TaskExecution,
-  TaskCategory,
-  ScheduleType,
-  ExecutionStatus,
-} from '@/prisma/client';
+import type { ScheduledTask, TaskCategory, ScheduleType, ExecutionStatus } from '@/prisma/client';
+import {
+  getTasks,
+  getTaskById,
+  getTaskExecutions,
+  getExecutionById,
+  getRecentExecutions,
+} from '@/actions/tasks/queries';
+import { updateTask, setTaskEnabled, executeTask, syncTasks } from '@/actions/tasks/mutations';
 
-// Query keys as constants
-export const QueryKeys = {
-  TASK: {
-    GET_ALL: 'TASKS_GET_ALL',
-    GET_BY_ID: 'TASK_GET_BY_ID',
-    GET_EXECUTIONS: 'TASK_GET_EXECUTIONS',
-    GET_EXECUTION_BY_ID: 'TASK_GET_EXECUTION_BY_ID',
-    GET_RECENT_EXECUTIONS: 'TASK_GET_RECENT_EXECUTIONS',
-  },
-};
+// -- Task Query Keys -------------------------------------------------------
 
-export const MutationKeys = {
-  TASK: {
-    UPDATE: 'TASK_UPDATE',
-    SET_ENABLED: 'TASK_SET_ENABLED',
-    EXECUTE: 'TASK_EXECUTE',
-  },
-};
-
-type QueryOptions<T, E = Error> = {
-  queryKey: readonly [string, ...unknown[]];
-  queryFn: QueryFunction<T, readonly [string, ...unknown[]], E>;
-  placeholderData?: (previousData: T | undefined) => T | undefined;
-  initialData?: () => T | undefined;
-  refetchOnWindowFocus?: boolean;
-  refetchInterval?: number | false;
-  staleTime?: number;
-  gcTime?: number;
+export const TASK_KEYS = {
+  all: ['tasks'] as const,
+  lists: () => [...TASK_KEYS.all, 'list'] as const,
+  list: (filters?: { category?: TaskCategory; isEnabled?: boolean; scheduleType?: ScheduleType }) =>
+    [...TASK_KEYS.lists(), { filters }] as const,
+  details: () => [...TASK_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...TASK_KEYS.details(), id] as const,
+  executions: (id: string) => [...TASK_KEYS.detail(id), 'executions'] as const,
+  execution: (executionId: string) => [...TASK_KEYS.all, 'execution', executionId] as const,
+  recentExecutions: () => [...TASK_KEYS.all, 'recent-executions'] as const,
 };
 
 export type TaskWithStats = ScheduledTask & {
@@ -65,17 +43,42 @@ export type TaskWithStats = ScheduledTask & {
 };
 
 /**
- * Query options for fetching all tasks
+ * Invalidates task-related queries after mutations.
+ * Ensures cache consistency across task lists, details, and executions.
  */
-export const getTasks = (filters?: {
+function invalidateTaskQueries(
+  queryClient: QueryClient,
+  options?: {
+    taskId?: string;
+    invalidateExecutions?: boolean;
+  },
+) {
+  if (options?.taskId) {
+    queryClient.invalidateQueries({ queryKey: TASK_KEYS.detail(options.taskId) });
+    if (options.invalidateExecutions) {
+      queryClient.invalidateQueries({ queryKey: TASK_KEYS.executions(options.taskId) });
+    }
+  }
+
+  queryClient.invalidateQueries({ queryKey: TASK_KEYS.lists() });
+}
+
+/**
+ * Fetches all scheduled tasks with optional filters.
+ * Use this hook for task list views and tables.
+ *
+ * @param filters - Optional filtering options (category, isEnabled, scheduleType)
+ * @returns Query result containing the filtered task list
+ */
+export function useTasks(filters?: {
   category?: TaskCategory;
   isEnabled?: boolean;
   scheduleType?: ScheduleType;
-}): Pick<QueryOptions<TaskWithStats[], Error>, 'queryKey' | 'queryFn'> => {
-  return {
-    queryKey: [QueryKeys.TASK.GET_ALL, filters || {}] as const,
+}) {
+  return useQuery({
+    queryKey: TASK_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getTasksAction(filters);
+      const result = await getTasks(filters);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch tasks');
@@ -83,56 +86,24 @@ export const getTasks = (filters?: {
 
       return result.data;
     },
-  };
-};
-
-/**
- * Hook to fetch all scheduled tasks with optional filters
- */
-export function useTasks(filters?: {
-  category?: TaskCategory;
-  isEnabled?: boolean;
-  scheduleType?: ScheduleType;
-}): QueryOptions<TaskWithStats[], Error> {
-  const queryClient = useQueryClient();
-
-  return {
-    ...getTasks(filters),
-    placeholderData: (previousData) => previousData,
-    initialData: () =>
-      queryClient.getQueryData<TaskWithStats[]>([QueryKeys.TASK.GET_ALL, filters || {}]) ||
-      undefined,
     refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Poll every 30 seconds (reduced from 5s to prevent memory churn)
-    staleTime: 10000, // 10 seconds - prevents immediate refetch
-    gcTime: 5 * 60 * 1000, // 5 minutes - explicit garbage collection
-  };
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
 }
 
 /**
- * Query options for fetching a task by ID with stats
+ * Fetches a single task by ID with statistics.
+ * Use this hook for task detail views.
+ *
+ * @param taskId - The unique identifier of the task
+ * @returns Query result containing the task with statistics
  */
-export const getTaskById = (
-  taskId: string,
-): Pick<
-  QueryOptions<
-    ScheduledTask & {
-      _count: { executions: number };
-      lastExecution?: {
-        id: string;
-        status: string;
-        startedAt: Date;
-        completedAt: Date | null;
-      } | null;
-    },
-    Error
-  >,
-  'queryKey' | 'queryFn'
-> => {
-  return {
-    queryKey: [QueryKeys.TASK.GET_BY_ID, taskId] as const,
+export function useTask(taskId: string) {
+  return useQuery({
+    queryKey: TASK_KEYS.detail(taskId),
     queryFn: async () => {
-      const result = await getTaskByIdAction(taskId);
+      const result = await getTaskById(taskId);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch task');
@@ -140,77 +111,18 @@ export const getTaskById = (
 
       return result.data;
     },
-  };
-};
-
-/**
- * Hook to fetch a task by ID with statistics
- */
-export function useTask(taskId: string): QueryOptions<
-  ScheduledTask & {
-    _count: { executions: number };
-    lastExecution?: {
-      id: string;
-      status: string;
-      startedAt: Date;
-      completedAt: Date | null;
-    } | null;
-  },
-  Error
-> {
-  const queryClient = useQueryClient();
-
-  return {
-    ...getTaskById(taskId),
-    placeholderData: (previousData) => previousData,
-    initialData: () => queryClient.getQueryData([QueryKeys.TASK.GET_BY_ID, taskId]) || undefined,
     refetchOnWindowFocus: true,
-    staleTime: 10000, // 10 seconds
-  };
+    staleTime: 10000,
+  });
 }
 
 /**
- * Query options for fetching task executions
- */
-export const getTaskExecutions = (
-  taskId: string,
-  options?: {
-    limit?: number;
-    offset?: number;
-    status?: ExecutionStatus;
-  },
-): Pick<
-  QueryOptions<
-    {
-      executions: TaskExecution[];
-      stats: {
-        total: number;
-        completed: number;
-        failed: number;
-        running: number;
-        avgDuration: number | null;
-      };
-    },
-    Error
-  >,
-  'queryKey' | 'queryFn'
-> => {
-  return {
-    queryKey: [QueryKeys.TASK.GET_EXECUTIONS, taskId, options || {}] as const,
-    queryFn: async () => {
-      const result = await getTaskExecutionsAction(taskId, options);
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch task executions');
-      }
-
-      return result.data;
-    },
-  };
-};
-
-/**
- * Hook to fetch execution history for a task
+ * Fetches execution history for a task.
+ * Use this hook for viewing task execution logs and statistics.
+ *
+ * @param taskId - The unique identifier of the task
+ * @param options - Pagination and filtering options
+ * @returns Query result containing executions and statistics
  */
 export function useTaskExecutions(
   taskId: string,
@@ -219,39 +131,81 @@ export function useTaskExecutions(
     offset?: number;
     status?: ExecutionStatus;
   },
-): QueryOptions<
-  {
-    executions: TaskExecution[];
-    stats: {
-      total: number;
-      completed: number;
-      failed: number;
-      running: number;
-      avgDuration: number | null;
-    };
-  },
-  Error
-> {
-  return {
-    ...getTaskExecutions(taskId, options),
-    placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: false, // Polling handles updates, no need for window focus refetch
-    refetchInterval: 15000, // Poll every 15 seconds (reduced from 3s to prevent memory churn)
-    staleTime: 5000, // 5 seconds - prevents immediate refetch
-    gcTime: 2 * 60 * 1000, // 2 minutes - faster cleanup for execution data
-  };
+) {
+  return useQuery({
+    queryKey: TASK_KEYS.executions(taskId),
+    queryFn: async () => {
+      const result = await getTaskExecutions(taskId, options);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch task executions');
+      }
+
+      return result.data;
+    },
+    refetchOnWindowFocus: false,
+    refetchInterval: 15000, // Poll every 15 seconds
+    staleTime: 5000, // 5 seconds
+  });
 }
 
 /**
- * Hook to update task configuration
+ * Fetches a single execution by ID.
+ * Use this hook for execution detail views.
+ *
+ * @param executionId - The unique identifier of the execution
+ * @returns Query result containing the execution details
+ */
+export function useExecution(executionId: string) {
+  return useQuery({
+    queryKey: TASK_KEYS.execution(executionId),
+    queryFn: async () => {
+      const result = await getExecutionById(executionId);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch execution');
+      }
+
+      return result.data;
+    },
+    staleTime: 5000,
+  });
+}
+
+/**
+ * Fetches recent executions across all tasks.
+ * Use this hook for dashboard views or recent activity lists.
+ *
+ * @param limit - Maximum number of executions to return (default: 10)
+ * @returns Query result containing recent executions
+ */
+export function useRecentExecutions(limit: number = 10) {
+  return useQuery({
+    queryKey: TASK_KEYS.recentExecutions(),
+    queryFn: async () => {
+      const result = await getRecentExecutions(limit);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch recent executions');
+      }
+
+      return result.data;
+    },
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
+  });
+}
+
+/**
+ * Updates task configuration.
+ * Use this hook to modify task settings like cron schedule, retries, etc.
+ *
+ * @returns Mutation hook for updating tasks
  */
 export function useUpdateTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: [MutationKeys.TASK.UPDATE],
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     mutationFn: async (params: {
       taskId: string;
       data: {
@@ -272,8 +226,7 @@ export function useUpdateTask() {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_ALL] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_BY_ID, data.id] });
+      invalidateTaskQueries(queryClient, { taskId: data.id });
       toast.success('Task updated successfully');
     },
     onError: (error: Error) => {
@@ -283,15 +236,15 @@ export function useUpdateTask() {
 }
 
 /**
- * Hook to enable or disable a task
+ * Enables or disables a task.
+ * Use this hook to toggle task execution status.
+ *
+ * @returns Mutation hook for enabling/disabling tasks
  */
 export function useSetTaskEnabled() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: [MutationKeys.TASK.SET_ENABLED],
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     mutationFn: async (params: { taskId: string; isEnabled: boolean }) => {
       const result = await setTaskEnabled(params.taskId, params.isEnabled);
 
@@ -302,8 +255,7 @@ export function useSetTaskEnabled() {
       return result.data;
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_ALL] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_BY_ID, data.id] });
+      invalidateTaskQueries(queryClient, { taskId: data.id });
       toast.success(`Task ${variables.isEnabled ? 'enabled' : 'disabled'} successfully`);
     },
     onError: (error: Error) => {
@@ -313,15 +265,15 @@ export function useSetTaskEnabled() {
 }
 
 /**
- * Hook to manually execute a task
+ * Manually executes a task.
+ * Use this hook to trigger task execution on demand.
+ *
+ * @returns Mutation hook for executing tasks
  */
 export function useExecuteTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: [MutationKeys.TASK.EXECUTE],
-    retry: 1,
-    retryDelay: 1000,
     mutationFn: async (taskId: string) => {
       const result = await executeTask(taskId);
 
@@ -332,9 +284,8 @@ export function useExecuteTask() {
       return result.data;
     },
     onSuccess: (data, taskId) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_BY_ID, taskId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_EXECUTIONS, taskId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_RECENT_EXECUTIONS] });
+      invalidateTaskQueries(queryClient, { taskId, invalidateExecutions: true });
+      queryClient.invalidateQueries({ queryKey: TASK_KEYS.recentExecutions() });
       toast.success('Task triggered successfully');
     },
     onError: (error: Error) => {
@@ -344,68 +295,15 @@ export function useExecuteTask() {
 }
 
 /**
- * Query options for fetching recent executions
- */
-export const getRecentExecutions = (
-  limit: number = 10,
-): Pick<
-  QueryOptions<
-    (TaskExecution & {
-      task: {
-        id: string;
-        functionName: string;
-        category: string;
-      };
-    })[],
-    Error
-  >,
-  'queryKey' | 'queryFn'
-> => {
-  return {
-    queryKey: [QueryKeys.TASK.GET_RECENT_EXECUTIONS, limit] as const,
-    queryFn: async () => {
-      const result = await getRecentExecutionsAction(limit);
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch recent executions');
-      }
-
-      return result.data;
-    },
-  };
-};
-
-/**
- * Hook to fetch recent executions across all tasks
- */
-export function useRecentExecutions(limit: number = 10): QueryOptions<
-  (TaskExecution & {
-    task: {
-      id: string;
-      functionName: string;
-      category: string;
-    };
-  })[],
-  Error
-> {
-  return {
-    ...getRecentExecutions(limit),
-    placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: true,
-    staleTime: 5000, // 5 seconds
-  };
-}
-
-/**
- * Hook to sync tasks from code definitions to database
+ * Syncs task definitions from code to database.
+ * Use this hook to update database with latest task configurations.
+ *
+ * @returns Mutation hook for syncing tasks
  */
 export function useSyncTasks() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ['TASK_SYNC'],
-    retry: 1,
-    retryDelay: 1000,
     mutationFn: async () => {
       const result = await syncTasks();
 
@@ -416,7 +314,7 @@ export function useSyncTasks() {
       return result.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.TASK.GET_ALL] });
+      queryClient.invalidateQueries({ queryKey: TASK_KEYS.all });
       toast.success(`Synced ${data.synced} tasks successfully`);
     },
     onError: (error: Error) => {
