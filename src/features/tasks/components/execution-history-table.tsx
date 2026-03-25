@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useTaskExecutions } from '../hooks/use-tasks';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +22,7 @@ interface ExecutionHistoryTableProps {
 }
 
 export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTableProps) {
-  const { data, isLoading, error } = useQuery(useTaskExecutions(taskId, { limit }));
+  const { data, isLoading, error } = useTaskExecutions(taskId, { limit });
 
   const getStatusIcon = (status: ExecutionStatus) => {
     switch (status) {
@@ -103,7 +102,11 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
     );
   }
 
-  const { executions, stats } = data || { executions: [], stats: null };
+  if (!data) {
+    return null;
+  }
+
+  const { executions, stats } = data;
 
   return (
     <Card>

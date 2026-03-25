@@ -94,6 +94,7 @@ export async function uploadFile(formData: FormData): Promise<
     });
 
     // Revalidate relevant pages
+    revalidatePath('/tools/files');
     revalidatePath('/finances/quotes');
 
     return {
@@ -147,6 +148,7 @@ export async function deleteFile(s3Key: string): Promise<ActionResult<{ message:
     });
 
     // Revalidate relevant pages
+    revalidatePath('/tools/files');
     revalidatePath('/finances/quotes');
     revalidatePath('/finances/invoices');
 

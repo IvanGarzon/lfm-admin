@@ -3,22 +3,38 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
-import { Play, Eye, Clock, CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Play,
+  Eye,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  Zap,
+  Repeat,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import type { TaskCategory, ExecutionStatus } from '@/prisma/client';
-import type { TaskWithStats } from '../hooks/use-tasks';
+import { TaskCategorySchema, type TaskCategory } from '@/zod/schemas/enums/TaskCategory.schema';
+import {
+  ExecutionStatusSchema,
+  type ExecutionStatus,
+} from '@/zod/schemas/enums/ExecutionStatus.schema';
+import { ScheduleTypeSchema, type ScheduleType } from '@/zod/schemas/enums/ScheduleType.schema';
+import type { TaskWithStats } from '@/features/tasks/types';
 
 const getCategoryColor = (category: TaskCategory) => {
   const colors: Record<TaskCategory, string> = {
-    SYSTEM: 'bg-gray-100 text-gray-800',
-    EMAIL: 'bg-blue-100 text-blue-800',
-    CLEANUP: 'bg-orange-100 text-orange-800',
-    FINANCE: 'bg-green-100 text-green-800',
-    CUSTOM: 'bg-purple-100 text-purple-800',
+    [TaskCategorySchema.enum.SYSTEM]: 'bg-gray-100 text-gray-800',
+    [TaskCategorySchema.enum.EMAIL]: 'bg-blue-100 text-blue-800',
+    [TaskCategorySchema.enum.CLEANUP]: 'bg-orange-100 text-orange-800',
+    [TaskCategorySchema.enum.FINANCE]: 'bg-green-100 text-green-800',
+    [TaskCategorySchema.enum.CUSTOM]: 'bg-purple-100 text-purple-800',
   };
+
   return colors[category] || 'bg-gray-100 text-gray-800';
 };
 
@@ -35,38 +51,41 @@ const getStatusBadge = (status?: string) => {
     ExecutionStatus,
     { color: string; icon: React.ReactNode; label: string }
   > = {
-    RUNNING: {
+    [ExecutionStatusSchema.enum.RUNNING]: {
       color: 'bg-blue-100 text-blue-800',
       icon: <Loader2 className="h-3 w-3 animate-spin mr-1" />,
       label: 'Running',
     },
-    COMPLETED: {
+    [ExecutionStatusSchema.enum.COMPLETED]: {
       color: 'bg-green-100 text-green-800',
       icon: <CheckCircle2 className="h-3 w-3 mr-1" />,
       label: 'Completed',
     },
-    FAILED: {
+    [ExecutionStatusSchema.enum.FAILED]: {
       color: 'bg-red-100 text-red-800',
       icon: <XCircle className="h-3 w-3 mr-1" />,
       label: 'Failed',
     },
-    CANCELLED: {
+    [ExecutionStatusSchema.enum.CANCELLED]: {
       color: 'bg-gray-100 text-gray-800',
       icon: <AlertCircle className="h-3 w-3 mr-1" />,
       label: 'Cancelled',
     },
-    TIMEOUT: {
+    [ExecutionStatusSchema.enum.TIMEOUT]: {
       color: 'bg-orange-100 text-orange-800',
       icon: <Clock className="h-3 w-3 mr-1" />,
       label: 'Timeout',
     },
   };
 
-  const config = statusConfig[status as ExecutionStatus] || {
-    color: 'bg-gray-100 text-gray-800',
-    icon: null,
-    label: status,
-  };
+  const parsedStatus = ExecutionStatusSchema.safeParse(status);
+  const config = parsedStatus.success
+    ? statusConfig[parsedStatus.data]
+    : {
+        color: 'bg-gray-100 text-gray-800',
+        icon: null,
+        label: status,
+      };
 
   return (
     <Badge className={`${config.color} flex items-center w-fit`} variant="secondary">
@@ -76,9 +95,16 @@ const getStatusBadge = (status?: string) => {
   );
 };
 
-const getScheduleTypeIcon = (scheduleType: 'CRON' | 'EVENT') => {
-  if (scheduleType === 'CRON') return <Clock className="h-4 w-4" />;
-  return <span className="text-xs">⚡</span>;
+const getScheduleTypeIcon = (scheduleType: ScheduleType) => {
+  if (scheduleType === ScheduleTypeSchema.enum.CRON) {
+    return <Clock className="h-4 w-4" />;
+  }
+
+  if (scheduleType === ScheduleTypeSchema.enum.EVENT) {
+    return <Zap className="h-4 w-4" />;
+  }
+
+  return <Repeat className="h-4 w-4" />;
 };
 
 export function createTaskColumns(
@@ -171,29 +197,31 @@ export function createTaskColumns(
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 justify-end">
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 p-0"
             onClick={() => onExecute(row.original.id)}
             disabled={
               !row.original.isEnabled || (isExecuting && executingTaskId === row.original.id)
             }
+            title="Run task"
           >
             {isExecuting && executingTaskId === row.original.id ? (
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Play className="h-4 w-4 mr-1" />
+              <Play className="h-4 w-4" />
             )}
-            Run Now
           </Button>
           <Button
-            size="sm"
-            variant="ghost"
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 p-0"
             onClick={() => onViewExecutions(row.original.id, row.original.functionName)}
+            title="View executions"
           >
-            <Eye className="h-4 w-4 mr-1" />
-            View
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
       ),

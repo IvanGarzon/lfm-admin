@@ -2,7 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { ScheduledTask, TaskCategory, ScheduleType, ExecutionStatus } from '@/prisma/client';
+import type { TaskCategory, ScheduleType, ExecutionStatus } from '@/prisma/client';
+import type { TaskPagination } from '@/features/tasks/types';
 import {
   getTasks,
   getTaskById,
@@ -24,22 +25,6 @@ export const TASK_KEYS = {
   executions: (id: string) => [...TASK_KEYS.detail(id), 'executions'] as const,
   execution: (executionId: string) => [...TASK_KEYS.all, 'execution', executionId] as const,
   recentExecutions: () => [...TASK_KEYS.all, 'recent-executions'] as const,
-};
-
-export type TaskWithStats = ScheduledTask & {
-  _count: { executions: number };
-  lastExecution?: {
-    id: string;
-    status: string;
-    startedAt: Date;
-    completedAt: Date | null;
-    triggeredByUser: string | null;
-    user?: {
-      firstName: string;
-      lastName: string;
-      email: string | null;
-    } | null;
-  } | null;
 };
 
 /**
@@ -68,13 +53,17 @@ function invalidateTaskQueries(
  * Use this hook for task list views and tables.
  *
  * @param filters - Optional filtering options (category, isEnabled, scheduleType)
+ * @param initialData - Optional initial data for server-side rendering
  * @returns Query result containing the filtered task list
  */
-export function useTasks(filters?: {
-  category?: TaskCategory;
-  isEnabled?: boolean;
-  scheduleType?: ScheduleType;
-}) {
+export function useTasks(
+  filters?: {
+    category?: TaskCategory;
+    isEnabled?: boolean;
+    scheduleType?: ScheduleType;
+  },
+  initialData?: TaskPagination,
+) {
   return useQuery({
     queryKey: TASK_KEYS.list(filters),
     queryFn: async () => {
@@ -86,6 +75,7 @@ export function useTasks(filters?: {
 
       return result.data;
     },
+    initialData,
     refetchOnWindowFocus: true,
     refetchInterval: 30000,
     staleTime: 10000,
@@ -144,8 +134,13 @@ export function useTaskExecutions(
       return result.data;
     },
     refetchOnWindowFocus: false,
-    refetchInterval: 15000, // Poll every 15 seconds
-    staleTime: 5000, // 5 seconds
+    // Only poll if there are running tasks
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      const hasRunningTasks = data?.executions?.some((exec) => exec.status === 'RUNNING');
+      return hasRunningTasks ? 5000 : false; // Poll every 5s if running, otherwise stop
+    },
+    staleTime: 5000,
   });
 }
 

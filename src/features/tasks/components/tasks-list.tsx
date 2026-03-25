@@ -1,20 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
+import { SearchParams } from 'nuqs/server';
 import { RefreshCw } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { useDataTable } from '@/hooks/use-data-table';
-import {
-  useSetTaskEnabled,
-  useExecuteTask,
-  useSyncTasks,
-  type TaskWithStats,
-} from '../hooks/use-tasks';
+import { useSetTaskEnabled, useExecuteTask, useSyncTasks } from '../hooks/use-tasks';
 import { createTaskColumns } from './task-columns';
 import { TaskTable } from './task-table';
+import type { TaskPagination } from '@/features/tasks/types';
 
 const TaskExecutionDrawer = dynamic(
   () =>
@@ -27,51 +24,79 @@ const TaskExecutionDrawer = dynamic(
   },
 );
 
+const DEFAULT_PAGE_SIZE = 20;
+
 interface TasksListProps {
-  data: TaskWithStats[];
+  initialData: TaskPagination;
+  searchParams: SearchParams;
 }
 
-export function TasksList({ data }: TasksListProps) {
-  const { mutate: setEnabled, isPending: isTogglingEnabled } = useSetTaskEnabled();
-  const {
-    mutate: executeMutate,
-    isPending: isExecuting,
-    variables: executingTaskId,
-  } = useExecuteTask();
-  const { mutate: syncTasks, isPending: isSyncing } = useSyncTasks();
+export function TasksList({ initialData, searchParams: serverSearchParams }: TasksListProps) {
+  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
+  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTaskName, setSelectedTaskName] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleViewExecutions = (taskId: string, taskName: string) => {
+  const setEnabledMutation = useSetTaskEnabled();
+  const executeTaskMutation = useExecuteTask();
+  const syncTasksMutation = useSyncTasks();
+
+  const handleToggleEnabled = useCallback(
+    (taskId: string, isEnabled: boolean) => {
+      setEnabledMutation.mutate({ taskId, isEnabled });
+    },
+    [setEnabledMutation],
+  );
+
+  const handleExecuteTask = useCallback(
+    (taskId: string) => {
+      executeTaskMutation.mutate(taskId);
+    },
+    [executeTaskMutation],
+  );
+
+  const handleViewExecutions = useCallback((taskId: string, taskName: string) => {
     setSelectedTaskId(taskId);
     setSelectedTaskName(taskName);
     setDrawerOpen(true);
-  };
+  }, []);
 
-  const handleCloseDrawer = () => {
+  const handleCloseDrawer = useCallback(() => {
     setDrawerOpen(false);
     setSelectedTaskId(null);
     setSelectedTaskName(null);
-  };
+  }, []);
+
+  const handleSyncTasks = useCallback(() => {
+    syncTasksMutation.mutate();
+  }, [syncTasksMutation]);
 
   const columns = useMemo(
     () =>
       createTaskColumns(
-        (taskId, isEnabled) => setEnabled({ taskId, isEnabled }),
-        (taskId) => executeMutate(taskId),
+        handleToggleEnabled,
+        handleExecuteTask,
         handleViewExecutions,
-        isExecuting,
-        executingTaskId,
-        isTogglingEnabled,
+        executeTaskMutation.isPending,
+        executeTaskMutation.variables,
+        setEnabledMutation.isPending,
       ),
-    [setEnabled, executeMutate, isExecuting, executingTaskId, isTogglingEnabled],
+    [
+      handleToggleEnabled,
+      handleExecuteTask,
+      handleViewExecutions,
+      executeTaskMutation.isPending,
+      executeTaskMutation.variables,
+      setEnabledMutation.isPending,
+    ],
   );
 
   const { table } = useDataTable({
-    data,
+    data: initialData.items,
     columns,
-    pageCount: 1,
+    pageCount: pageCount,
     shallow: false,
     debounceMs: 500,
   });
@@ -87,22 +112,34 @@ export function TasksList({ data }: TasksListProps) {
             </p>
           </Box>
           <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-            <Button onClick={() => syncTasks()} disabled={isSyncing} className="w-full sm:w-auto">
-              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            <Button
+              onClick={handleSyncTasks}
+              disabled={syncTasksMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${syncTasksMutation.isPending ? 'animate-spin' : ''}`}
+              />
               Sync Tasks
             </Button>
           </Box>
         </Box>
 
-        <TaskTable table={table} items={data} totalItems={data.length} />
+        <TaskTable
+          table={table}
+          items={initialData.items}
+          totalItems={initialData.pagination.totalItems}
+        />
       </Box>
 
-      <TaskExecutionDrawer
-        taskId={selectedTaskId || undefined}
-        taskName={selectedTaskName || undefined}
-        open={drawerOpen}
-        onClose={handleCloseDrawer}
-      />
+      {drawerOpen ? (
+        <TaskExecutionDrawer
+          id={selectedTaskId || undefined}
+          taskName={selectedTaskName || undefined}
+          open={drawerOpen}
+          onClose={handleCloseDrawer}
+        />
+      ) : null}
     </>
   );
 }

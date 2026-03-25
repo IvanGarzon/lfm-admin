@@ -141,21 +141,21 @@ export function CustomerDrawer({
         ) : null}
 
         {isError ? (
-          <>
+          <Box className="p-6 text-destructive">
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
             <Box className="p-6 text-destructive">
               <p className="mt-4">Could not load customer details: {error?.message}</p>
             </Box>
-          </>
+          </Box>
         ) : null}
 
         {(customer && !isLoading && !isError) || mode === 'create' ? (
           <>
             <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
               <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
-                {customer && (
+                {customer ? (
                   <UserAvatar
                     user={{
                       name: `${customer.firstName} ${customer.lastName}`,
@@ -163,7 +163,7 @@ export function CustomerDrawer({
                     }}
                     className="size-12"
                   />
-                )}
+                ) : null}
                 <Box className="flex flex-col">
                   <Box className="flex items-center gap-2">
                     <DrawerTitle className="text-xl font-semibold tracking-tight">
@@ -189,7 +189,7 @@ export function CustomerDrawer({
               </Box>
 
               <Box className="flex items-center gap-2">
-                {mode === 'edit' && !isEditing && (
+                {mode === 'edit' && !isEditing ? (
                   <Button
                     variant="outline"
                     size="sm"
@@ -199,7 +199,7 @@ export function CustomerDrawer({
                     <Edit2 className="size-4" />
                     Edit
                   </Button>
-                )}
+                ) : null}
                 <Button
                   variant="ghost"
                   className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"

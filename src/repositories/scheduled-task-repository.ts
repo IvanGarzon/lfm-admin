@@ -182,7 +182,9 @@ export class ScheduledTaskRepository {
       },
     });
 
-    if (!task) return null;
+    if (!task) {
+      return null;
+    }
 
     const { executions, ...taskData } = task;
 

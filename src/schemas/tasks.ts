@@ -35,7 +35,7 @@ export const UpdateTaskSchema = z.object({
     .min(1000, { error: 'Timeout must be at least 1000ms (1 second)' })
     .max(600000, { error: 'Timeout cannot exceed 600000ms (10 minutes)' })
     .optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**

@@ -6,6 +6,7 @@ import { TaskExecutionRepository } from '@/repositories/task-execution-repositor
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import type { ActionResult } from '@/types/actions';
+import type { TaskPagination } from '@/features/tasks/types';
 import type {
   ScheduledTask,
   TaskExecution,
@@ -21,31 +22,13 @@ const executionRepo = new TaskExecutionRepository(prisma);
  * Retrieves all scheduled tasks with execution statistics.
  * Supports filtering by category, enabled status, and schedule type.
  * @param filters - Optional filters including category, isEnabled, and scheduleType.
- * @returns A promise that resolves to an `ActionResult` containing the tasks with stats.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated tasks.
  */
 export async function getTasks(filters?: {
   category?: TaskCategory;
   isEnabled?: boolean;
   scheduleType?: ScheduleType;
-}): Promise<
-  ActionResult<
-    (ScheduledTask & {
-      _count: { executions: number };
-      lastExecution?: {
-        id: string;
-        status: string;
-        startedAt: Date;
-        completedAt: Date | null;
-        triggeredByUser: string | null;
-        user?: {
-          firstName: string;
-          lastName: string;
-          email: string | null;
-        } | null;
-      } | null;
-    })[]
-  >
-> {
+}): Promise<ActionResult<TaskPagination>> {
   const session = await auth();
   if (!session?.user) {
     return { success: false, error: 'Unauthorized' };
@@ -53,7 +36,25 @@ export async function getTasks(filters?: {
 
   try {
     const tasks = await taskRepo.findAllWithStats(filters);
-    return { success: true, data: tasks };
+
+    // Create pagination structure (simple pagination for now, all items on one page)
+    const pagination = {
+      totalItems: tasks.length,
+      totalPages: 1,
+      currentPage: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      nextPage: null,
+      previousPage: null,
+    };
+
+    return {
+      success: true,
+      data: {
+        items: tasks,
+        pagination,
+      },
+    };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch tasks', {
       action: 'getTasks',

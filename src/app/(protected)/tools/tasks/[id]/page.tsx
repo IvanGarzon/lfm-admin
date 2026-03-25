@@ -1,7 +1,6 @@
 'use client';
 
 import { use } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useTask, useSetTaskEnabled, useExecuteTask } from '@/features/tasks/hooks/use-tasks';
 import { ExecutionHistoryTable } from '@/features/tasks/components/execution-history-table';
 import { Box } from '@/components/ui/box';
@@ -17,7 +16,7 @@ import type { TaskCategory } from '@/prisma/client';
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: task, isLoading, error } = useQuery(useTask(id));
+  const { data: task, isLoading, error } = useTask(id);
   const { mutate: setEnabled, isPending: isTogglingEnabled } = useSetTaskEnabled();
   const { mutate: executeMutate, isPending: isExecuting } = useExecuteTask();
 
