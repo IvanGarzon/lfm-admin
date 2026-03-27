@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 // Credentials for a user with MANAGER or ADMIN role
 const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL || 'test@example.com',
-  password: process.env.TEST_USER_PASSWORD || 'password',
+  email: 'test@example.com',
+  password: 'password',
 };
 
 test.describe('Invoice Management Flow', () => {

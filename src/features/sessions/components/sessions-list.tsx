@@ -4,10 +4,10 @@ import { useMemo, useCallback, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { LogOut } from 'lucide-react';
 
-import { deleteSession, deleteOtherSessions } from '@/actions/sessions';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import {
+  useSessions,
   useDeleteSession,
   useDeleteOtherSessions,
   useDeleteSessions,
@@ -18,14 +18,9 @@ import { SessionCard } from '@/features/sessions/components/session-card';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { getSessionLimit } from '@/config/session';
 
-const EMPTY_SESSIONS: SessionWithUser[] = [];
-
-export function SessionsList({
-  initialData = EMPTY_SESSIONS,
-}: {
-  initialData?: SessionWithUser[];
-}) {
+export function SessionsList() {
   const { data: currentSession } = useSession();
+  const { data: sessions = [], isLoading } = useSessions();
   const deleteMutation = useDeleteSession();
   const deleteOthersMutation = useDeleteOtherSessions();
   const deleteSessionsMutation = useDeleteSessions();
@@ -36,55 +31,53 @@ export function SessionsList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  // Use prefetched data directly
-  const sessions = initialData;
-
   const sessionLimit = useMemo(() => {
     return getSessionLimit(currentSession?.user?.role);
   }, [currentSession?.user?.role]);
 
-  const totalSessionsCount = useMemo(() => {
-    if (!Array.isArray(sessions)) return 0;
-    return sessions.length;
-  }, [sessions]);
+  const totalSessionsCount = sessions.length;
+
+  const currentSessionInList = useMemo(() => sessions.find((s) => s.isCurrent), [sessions]);
 
   const handleOpenDeleteDialog = useCallback((session: SessionWithUser) => {
     setSelectedSession(session);
     setDeleteDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async () => {
-    if (selectedSession) {
-      const isCurrentSession = (selectedSession as any).isCurrent || false;
+  const handleDelete = useCallback(() => {
+    if (!selectedSession) return;
 
-      if (isCurrentSession) {
-        setDeleteDialogOpen(false);
-        setSelectedSession(null);
-        try {
-          await deleteSession({ sessionId: selectedSession.id });
-        } catch (error) {}
-        signOut({ callbackUrl: '/signin' });
-      } else {
-        deleteMutation.mutate(selectedSession.id, {
-          onSuccess: () => {
-            setDeleteDialogOpen(false);
-            setSelectedSession(null);
-          },
-        });
-      }
+    const isCurrentSession = selectedSession.isCurrent ?? false;
+
+    if (isCurrentSession) {
+      // For current session, sign out immediately after deactivating
+      deleteMutation.mutate(selectedSession.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setSelectedSession(null);
+          signOut({ callbackUrl: '/signin' });
+        },
+      });
+    } else {
+      // For other sessions, just deactivate
+      deleteMutation.mutate(selectedSession.id, {
+        onSuccess: () => {
+          setDeleteDialogOpen(false);
+          setSelectedSession(null);
+        },
+      });
     }
   }, [selectedSession, deleteMutation]);
 
-  const handleDeleteOthers = useCallback(async () => {
-    const currentSessionId = sessions?.find((s) => s.isCurrent)?.id;
-    if (currentSessionId) {
-      setDeleteOthersDialogOpen(false);
-      try {
-        await deleteOtherSessions({ currentSessionId });
-      } catch (error) {}
-      signOut({ callbackUrl: '/signin' });
-    }
-  }, [sessions]);
+  const handleDeleteOthers = useCallback(() => {
+    if (!currentSessionInList) return;
+
+    deleteOthersMutation.mutate(currentSessionInList.id, {
+      onSuccess: () => {
+        setDeleteOthersDialogOpen(false);
+      },
+    });
+  }, [currentSessionInList, deleteOthersMutation]);
 
   const toggleSelection = useCallback((sessionId: string, checked: boolean) => {
     setSelectedIds((prev) => {
@@ -99,7 +92,6 @@ export function SessionsList({
   }, []);
 
   const toggleSelectAll = useCallback(() => {
-    if (!sessions) return;
     if (selectedIds.size === sessions.length) {
       setSelectedIds(new Set());
     } else {
@@ -107,12 +99,11 @@ export function SessionsList({
     }
   }, [sessions, selectedIds]);
 
-  const handleBulkDelete = useCallback(async () => {
+  const handleBulkDelete = useCallback(() => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
 
-    // Check if current session is selected
-    const currentSessionId = sessions?.find((s) => s.isCurrent)?.id;
+    const currentSessionId = currentSessionInList?.id;
     const isCurrentSelected = currentSessionId && ids.includes(currentSessionId);
 
     deleteSessionsMutation.mutate(ids, {
@@ -124,11 +115,16 @@ export function SessionsList({
         }
       },
     });
-  }, [selectedIds, sessions, deleteSessionsMutation]);
+  }, [selectedIds, currentSessionInList, deleteSessionsMutation]);
 
   const sessionList = useMemo(() => {
-    if (!Array.isArray(sessions)) return null;
-    if (sessions.length === 0) return <p>No active sessions found.</p>;
+    if (isLoading) {
+      return <p className="text-muted-foreground">Loading sessions...</p>;
+    }
+
+    if (sessions.length === 0) {
+      return <p className="text-muted-foreground">No active sessions found.</p>;
+    }
 
     return sessions.map((session) => (
       <SessionCard
@@ -140,7 +136,7 @@ export function SessionsList({
         onSelect={toggleSelection}
       />
     ));
-  }, [sessions, handleOpenDeleteDialog, isSelectionMode, selectedIds, toggleSelection]);
+  }, [sessions, isLoading, handleOpenDeleteDialog, isSelectionMode, selectedIds, toggleSelection]);
 
   return (
     <>
@@ -194,12 +190,12 @@ export function SessionsList({
                 </>
               ) : (
                 <>
-                  {totalSessionsCount > 1 && (
+                  {totalSessionsCount > 1 ? (
                     <Button onClick={() => setIsSelectionMode(true)} variant="outline" size="sm">
                       Select Multiple
                     </Button>
-                  )}
-                  {totalSessionsCount > 1 && (
+                  ) : null}
+                  {totalSessionsCount > 1 ? (
                     <Button
                       onClick={() => setDeleteOthersDialogOpen(true)}
                       className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2"
@@ -208,7 +204,7 @@ export function SessionsList({
                       <LogOut className="w-4 h-4" />
                       Sign Out All
                     </Button>
-                  )}
+                  ) : null}
                 </>
               )}
             </Box>
@@ -222,7 +218,7 @@ export function SessionsList({
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDelete}
         deviceName={selectedSession?.deviceName}
-        isCurrentSession={(selectedSession as any)?.isCurrent || false}
+        isCurrentSession={selectedSession?.isCurrent ?? false}
         isPending={deleteMutation.isPending}
       />
 

@@ -27,10 +27,8 @@ export function SignIn() {
           <form
             onSubmit={async (e: any) => {
               e.preventDefault();
-              console.log('SignIn form submitted');
               const email = e.target.email.value;
               const password = e.target.password.value;
-              console.log('SignIn calling next-auth signIn with:', email);
               await signIn('credentials', { email, password, callbackUrl: '/' });
             }}
             className="flex flex-col gap-2 w-full"

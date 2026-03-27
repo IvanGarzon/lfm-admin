@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 import type { ActionResult } from '@/types/actions';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { revalidatePath } from 'next/cache';
+import { env } from '@/env';
 
 /**
  * Uploads a file to S3 storage.
@@ -58,7 +59,7 @@ export async function uploadFile(formData: FormData): Promise<
       if (isTextFile) {
         const s3Key = generateS3Key('quotes', quoteId, file.name, 'attachments');
         const command = new PutObjectCommand({
-          Bucket: process.env.AWS_S3_BUCKET_NAME!,
+          Bucket: env.AWS_S3_BUCKET_NAME!,
           Key: s3Key,
           Body: buffer,
           ContentType: file.type,

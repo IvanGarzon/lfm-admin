@@ -1,58 +1,78 @@
-import { useQueryClient, QueryFunction, useMutation } from '@tanstack/react-query';
+'use client';
+
 import {
-  getSessions as getSessionsAction,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  skipToken,
+  type QueryClient,
+} from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { getSessions as getSessionsAction } from '@/actions/sessions/queries';
+import {
   deleteSession,
   deleteOtherSessions,
+  deleteSessions,
   extendSession,
-} from '@/actions/sessions';
-import { toast } from 'sonner';
+} from '@/actions/sessions/mutations';
 import type { SessionWithUser } from '@/features/sessions/types';
 
-// Query keys as constants
-export const QueryKeys = {
-  SESSION: {
-    GET_ALL: 'SESSIONS_GET_ALL',
-    GET_BY_ID: 'SESSION_GET_BY_ID',
-  },
-};
-
-export const MutationKeys = {
-  SESSION: {
-    DELETE: 'SESSION_DELETE',
-    DELETE_OTHERS: 'SESSION_DELETE_OTHERS',
-  },
-};
-
-// Create a type that's compatible with both useQuery and useSuspenseQuery
-type QueryOptions<T, E = Error> = {
-  queryKey: readonly [string, {}];
-  queryFn: QueryFunction<T, readonly [string, {}], E>;
-  placeholderData?: (previousData: T | undefined) => T | undefined;
-  initialData?: () => T | undefined;
-  refetchOnWindowFocus?: boolean;
-  staleTime?: number;
-  gcTime?: number;
-};
+// -- QUERY KEYS -------------------------------------------------------------
 
 /**
- * Creates query options for fetching all sessions.
- * This function is used internally by useSessions and can be used with useQuery or useSuspenseQuery.
+ * Query key factory for session-related queries.
+ * Provides type-safe, hierarchical query keys for React Query cache management.
+ */
+export const SESSION_KEYS = {
+  all: ['sessions'] as const,
+  lists: () => [...SESSION_KEYS.all, 'list'] as const,
+  list: () => [...SESSION_KEYS.lists()] as const,
+  details: () => [...SESSION_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...SESSION_KEYS.details(), id] as const,
+};
+
+// -- HELPER FUNCTIONS -------------------------------------------------------
+
+/**
+ * Invalidates session-related queries after mutations.
+ * Ensures cache consistency across session lists and details.
  *
- * @param queryParams - Query parameters (currently unused, reserved for future filtering)
- * @returns Query options object with queryKey and queryFn
- * @throws {Error} If the session fetch fails
+ * @param queryClient - The React Query client instance
+ * @param options - Optional configuration for targeted invalidation
+ * @param options.sessionId - Specific session ID to invalidate
+ */
+function invalidateSessionQueries(
+  queryClient: QueryClient,
+  options?: {
+    sessionId?: string;
+  },
+) {
+  if (options?.sessionId) {
+    queryClient.invalidateQueries({ queryKey: SESSION_KEYS.detail(options.sessionId) });
+  }
+
+  queryClient.invalidateQueries({ queryKey: SESSION_KEYS.lists() });
+}
+
+// -- QUERY HOOKS (Data Fetching) --------------------------------------------
+
+/**
+ * Fetches all active sessions for the current user.
+ * Automatically refetches when window regains focus to keep data synchronized across tabs.
+ *
+ * @returns Query result containing all active sessions
  *
  * @example
- * ```ts
- * const { data } = useQuery(getSessions({}));
- * ```
+ * const { data: sessions, isLoading } = useSessions();
+ *
+ * Cache behaviour:
+ * - Data is cached for 30 seconds to prevent excessive refetching
+ * - Automatically refetches when window regains focus
+ * - Cache is invalidated when sessions are deactivated, extended, or modified
  */
-export const getSessions = (queryParams: {}): Pick<
-  QueryOptions<SessionWithUser[], Error>,
-  'queryKey' | 'queryFn'
-> => {
-  return {
-    queryKey: [QueryKeys.SESSION.GET_ALL, queryParams] as const,
+export function useSessions() {
+  return useQuery({
+    queryKey: SESSION_KEYS.list(),
     queryFn: async () => {
       const result = await getSessionsAction();
 
@@ -62,57 +82,77 @@ export const getSessions = (queryParams: {}): Pick<
 
       return result.data;
     },
-  };
-};
-
-/**
- * Hook to fetch and manage all active sessions for the current user.
- * Automatically refetches when window regains focus to keep data synchronized across tabs.
- *
- * @param params - Query parameters (currently unused, reserved for future filtering)
- * @returns Query options with session data, loading state, and error handling
- *
- * @example
- * ```tsx
- * const { data: sessions, isLoading, error } = useQuery(useSessions({}));
- * ```
- */
-export function useSessions(params: {}): QueryOptions<SessionWithUser[], Error> {
-  const queryClient = useQueryClient();
-
-  return {
-    ...getSessions({}),
-    placeholderData: (previousData) => previousData,
-    initialData: () =>
-      queryClient.getQueryData<SessionWithUser[]>([QueryKeys.SESSION.GET_ALL]) || undefined,
-    refetchOnWindowFocus: true, // Refetch when window gets focus to sync across browsers
-    staleTime: 30000, // 30 seconds - prevents excessive refetches
-    gcTime: 5 * 60 * 1000, // 5 minutes - cleanup unused queries
-  };
+    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
 /**
- * Hook to delete (deactivate) a specific session.
- * Automatically invalidates the sessions cache and shows toast notifications.
+ * Fetches a single session by ID.
+ * Useful for displaying detailed session information.
  *
- * @returns Mutation object with mutate function and loading/error states
+ * @param id - The session ID (undefined disables the query)
+ * @returns Query result containing the session details
  *
  * @example
- * ```tsx
- * const { mutate: deleteSession, isPending } = useDeleteSession();
+ * const { data: session } = useSession(sessionId);
  *
- * const handleSignOut = (sessionId: string) => {
- *   deleteSession(sessionId);
- * };
- * ```
+ * Cache behaviour:
+ * - Automatically disabled when id is undefined
+ * - Data is cached for 30 seconds
+ * - Cache is invalidated when session is modified
+ */
+export function useSession(id: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: SESSION_KEYS.detail(id ?? ''),
+    queryFn: id
+      ? async () => {
+          // Try to find session in the list cache first
+          const cachedSessions = queryClient.getQueryData<SessionWithUser[]>(SESSION_KEYS.list());
+          const cachedSession = cachedSessions?.find((s) => s.id === id);
+
+          if (cachedSession) {
+            return cachedSession;
+          }
+
+          // If not in cache, we'd need a getSessionById action
+          // For now, throw an error to indicate missing implementation
+          throw new Error('Session not found in cache');
+        }
+      : skipToken,
+    staleTime: 30 * 1000,
+  });
+}
+
+// -- MUTATION HOOKS (Create/Update) -----------------------------------------
+
+/**
+ * Deactivates a specific session.
+ * Implements optimistic updates for immediate UI feedback.
+ * Rolls back changes on error.
+ *
+ * @returns Mutation hook for deactivating sessions
+ *
+ * @example
+ * const { mutate: deactivateSession, isPending } = useDeleteSession();
+ * deactivateSession('session-id');
+ *
+ * Cache behaviour:
+ * - Optimistically removes session from cache
+ * - Invalidates session list on success
+ * - Rolls back to previous state on error
+ *
+ * Toast notifications:
+ * - Success: "Session signed out successfully"
+ * - Error: "Failed to sign out session"
  */
 export function useDeleteSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: [MutationKeys.SESSION.DELETE],
-    retry: 2, // Retry failed mutations up to 2 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     mutationFn: async (sessionId: string) => {
       const result = await deleteSession({ sessionId });
 
@@ -122,38 +162,59 @@ export function useDeleteSession() {
 
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SESSION.GET_ALL] });
-      toast.success('Session signed out successfully');
+    onMutate: async (sessionId: string) => {
+      const listKey = SESSION_KEYS.list();
+
+      await queryClient.cancelQueries({ queryKey: listKey });
+
+      const previousSessions = queryClient.getQueryData<SessionWithUser[]>(listKey);
+
+      if (previousSessions) {
+        queryClient.setQueryData<SessionWithUser[]>(
+          listKey,
+          previousSessions.filter((s) => s.id !== sessionId),
+        );
+      }
+
+      return { previousSessions };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _sessionId, context) => {
+      if (context?.previousSessions) {
+        queryClient.setQueryData(SESSION_KEYS.list(), context.previousSessions);
+      }
       toast.error(error.message || 'Failed to sign out session');
+    },
+    onSuccess: () => {
+      invalidateSessionQueries(queryClient);
+      toast.success('Session signed out successfully');
     },
   });
 }
 
 /**
- * Hook to delete all sessions except the current one.
+ * Deactivates all sessions except the current one.
  * Useful for "Sign out all other devices" functionality.
+ * Implements optimistic updates for immediate UI feedback.
  *
- * @returns Mutation object with mutate function and loading/error states
+ * @returns Mutation hook for deactivating other sessions
  *
  * @example
- * ```tsx
- * const { mutate: deleteOthers, isPending } = useDeleteOtherSessions();
+ * const { mutate: signOutOthers, isPending } = useDeleteOtherSessions();
+ * signOutOthers('current-session-id');
  *
- * const handleSignOutAll = (currentSessionId: string) => {
- *   deleteOthers(currentSessionId);
- * };
- * ```
+ * Cache behaviour:
+ * - Optimistically removes other sessions from cache
+ * - Invalidates session list on success
+ * - Rolls back to previous state on error
+ *
+ * Toast notifications:
+ * - Success: "{count} session(s) signed out successfully"
+ * - Error: "Failed to sign out other sessions"
  */
 export function useDeleteOtherSessions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: [MutationKeys.SESSION.DELETE_OTHERS],
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     mutationFn: async (currentSessionId: string) => {
       const result = await deleteOtherSessions({ currentSessionId });
 
@@ -163,38 +224,59 @@ export function useDeleteOtherSessions() {
 
       return result.data;
     },
-    onSuccess: (data: { deactivatedCount: number }) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SESSION.GET_ALL] });
-      toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
+    onMutate: async (currentSessionId: string) => {
+      const listKey = SESSION_KEYS.list();
+
+      await queryClient.cancelQueries({ queryKey: listKey });
+
+      const previousSessions = queryClient.getQueryData<SessionWithUser[]>(listKey);
+
+      if (previousSessions) {
+        queryClient.setQueryData<SessionWithUser[]>(
+          listKey,
+          previousSessions.filter((s) => s.id === currentSessionId),
+        );
+      }
+
+      return { previousSessions };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _currentSessionId, context) => {
+      if (context?.previousSessions) {
+        queryClient.setQueryData(SESSION_KEYS.list(), context.previousSessions);
+      }
       toast.error(error.message || 'Failed to sign out other sessions');
+    },
+    onSuccess: (data: { deactivatedCount: number }) => {
+      invalidateSessionQueries(queryClient);
+      toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
     },
   });
 }
 
 /**
- * Hook to extend a session's expiration by 30 days.
+ * Extends a session's expiration by 30 days.
  * Useful when users want to stay logged in longer without re-authenticating.
+ * Implements optimistic updates for immediate UI feedback.
  *
- * @returns Mutation object with mutate function and loading/error states
+ * @returns Mutation hook for extending sessions
  *
  * @example
- * ```tsx
- * const { mutate: extendSession, isPending } = useExtendSession();
+ * const { mutate: extend, isPending } = useExtendSession();
+ * extend('session-id');
  *
- * const handleExtend = (sessionId: string) => {
- *   extendSession(sessionId);
- * };
- * ```
+ * Cache behaviour:
+ * - Optimistically updates session expiration in cache
+ * - Invalidates session list on success
+ * - Rolls back to previous state on error
+ *
+ * Toast notifications:
+ * - Success: "Session extended successfully"
+ * - Error: "Failed to extend session"
  */
 export function useExtendSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ['SESSION_EXTEND'],
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     mutationFn: async (sessionId: string) => {
       const result = await extendSession({ sessionId });
 
@@ -204,42 +286,63 @@ export function useExtendSession() {
 
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SESSION.GET_ALL] });
-      toast.success('Session extended successfully');
+    onMutate: async (sessionId: string) => {
+      const listKey = SESSION_KEYS.list();
+
+      await queryClient.cancelQueries({ queryKey: listKey });
+
+      const previousSessions = queryClient.getQueryData<SessionWithUser[]>(listKey);
+
+      if (previousSessions) {
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + 30);
+
+        queryClient.setQueryData<SessionWithUser[]>(
+          listKey,
+          previousSessions.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)),
+        );
+      }
+
+      return { previousSessions };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _sessionId, context) => {
+      if (context?.previousSessions) {
+        queryClient.setQueryData(SESSION_KEYS.list(), context.previousSessions);
+      }
       toast.error(error.message || 'Failed to extend session');
+    },
+    onSuccess: () => {
+      invalidateSessionQueries(queryClient);
+      toast.success('Session extended successfully');
     },
   });
 }
 
 /**
- * Hook to delete multiple sessions at once (bulk operation).
+ * Deactivates multiple sessions at once (bulk operation).
  * Used for selecting and signing out multiple sessions simultaneously.
+ * Implements optimistic updates for immediate UI feedback.
  *
- * @returns Mutation object with mutate function and loading/error states
+ * @returns Mutation hook for bulk deactivating sessions
  *
  * @example
- * ```tsx
- * const { mutate: deleteSessions, isPending } = useDeleteSessions();
+ * const { mutate: deleteMultiple, isPending } = useDeleteSessions();
+ * deleteMultiple(['session-1', 'session-2']);
  *
- * const handleBulkSignOut = (sessionIds: string[]) => {
- *   deleteSessions(sessionIds);
- * };
- * ```
+ * Cache behaviour:
+ * - Optimistically removes selected sessions from cache
+ * - Invalidates session list on success
+ * - Rolls back to previous state on error
+ *
+ * Toast notifications:
+ * - Success: "{count} session(s) signed out successfully"
+ * - Error: "Failed to sign out sessions"
  */
 export function useDeleteSessions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ['SESSION_DELETE_BULK'],
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     mutationFn: async (sessionIds: string[]) => {
-      // Lazy import to fix circular dependency if necessary, or just import at top?
-      // Re-use imports from top.
-      const { deleteSessions } = await import('@/actions/sessions');
       const result = await deleteSessions({ sessionIds });
 
       if (!result.success) {
@@ -248,12 +351,31 @@ export function useDeleteSessions() {
 
       return result.data;
     },
-    onSuccess: (data: { deactivatedCount: number }) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SESSION.GET_ALL] });
-      toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
+    onMutate: async (sessionIds: string[]) => {
+      const listKey = SESSION_KEYS.list();
+
+      await queryClient.cancelQueries({ queryKey: listKey });
+
+      const previousSessions = queryClient.getQueryData<SessionWithUser[]>(listKey);
+
+      if (previousSessions) {
+        queryClient.setQueryData<SessionWithUser[]>(
+          listKey,
+          previousSessions.filter((s) => !sessionIds.includes(s.id)),
+        );
+      }
+
+      return { previousSessions };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _sessionIds, context) => {
+      if (context?.previousSessions) {
+        queryClient.setQueryData(SESSION_KEYS.list(), context.previousSessions);
+      }
       toast.error(error.message || 'Failed to sign out sessions');
+    },
+    onSuccess: (data: { deactivatedCount: number }) => {
+      invalidateSessionQueries(queryClient);
+      toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
     },
   });
 }

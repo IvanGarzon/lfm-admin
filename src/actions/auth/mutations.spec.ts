@@ -1,26 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handleSignIn } from '@/services/auth.service';
+import { handleSignIn } from '@/actions/auth/mutations';
 import { testIds } from '@/lib/testing';
 
-const { mockUserRepo, mockAuditService, mockLogger, mockPrisma } = vi.hoisted(() => ({
+const { mockUserRepo, mockAccountRepo, mockAuditService, mockLogger } = vi.hoisted(() => ({
   mockUserRepo: {
     getUserByEmail: vi.fn(),
+    createUserWithAccount: vi.fn(),
+  },
+  mockAccountRepo: {
+    findByProviderAndAccountId: vi.fn(),
+    createAccount: vi.fn(),
   },
   mockAuditService: {
     LoggedIn: vi.fn(),
   },
   mockLogger: {
     error: vi.fn(),
-  },
-  mockPrisma: {
-    account: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-    user: {
-      create: vi.fn(),
-    },
-    $transaction: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
@@ -28,6 +24,14 @@ vi.mock('@/repositories/user-repository', () => {
   return {
     UserRepository: vi.fn().mockImplementation(function () {
       return mockUserRepo;
+    }),
+  };
+});
+
+vi.mock('@/repositories/account-repository', () => {
+  return {
+    AccountRepository: vi.fn().mockImplementation(function () {
+      return mockAccountRepo;
     }),
   };
 });
@@ -41,14 +45,13 @@ vi.mock('@/services/audit.service', () => {
 });
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: {},
 }));
 
 vi.mock('@/lib/logger', () => ({
   logger: mockLogger,
 }));
 
-// Test data factories
 const TEST_USER_ID = testIds.user();
 
 function createMockUser(
@@ -106,70 +109,85 @@ function createMockProfile(
   };
 }
 
-describe('Auth Service', () => {
+describe('Auth Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('handleSignIn', () => {
     describe('validation', () => {
-      it('returns false when account is null', async () => {
+      it('returns error when account is null', async () => {
         const result = await handleSignIn({ account: null });
 
-        expect(result).toBe(false);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toBeDefined();
+        }
       });
 
-      it('returns false when email is missing in profile', async () => {
+      it('returns error when email is missing in profile', async () => {
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: { given_name: 'No', family_name: 'Email' } as any,
         });
 
-        expect(result).toBe(false);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toBeDefined();
+        }
       });
 
-      it('returns false when email is empty string', async () => {
+      it('returns error when email is empty string', async () => {
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: createMockProfile({ email: '' }) as any,
         });
 
-        expect(result).toBe(false);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toBeDefined();
+        }
       });
     });
 
     describe('existing account sign-in', () => {
       it('allows sign-in and logs when account already exists', async () => {
         const existingAccount = { userId: TEST_USER_ID };
-        mockPrisma.account.findUnique.mockResolvedValue(existingAccount);
+        mockAccountRepo.findByProviderAndAccountId.mockResolvedValue(existingAccount);
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: createMockProfile() as any,
         });
 
-        expect(result).toBe(true);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toBe(true);
+        }
         expect(mockAuditService.LoggedIn).toHaveBeenCalledWith({
           data: { userId: TEST_USER_ID },
         });
-        expect(mockPrisma.account.create).not.toHaveBeenCalled();
+        expect(mockAccountRepo.createAccount).not.toHaveBeenCalled();
       });
     });
 
     describe('existing user without account', () => {
       it('creates account for existing user and allows sign-in', async () => {
         const existingUser = createMockUser();
-        mockPrisma.account.findUnique.mockResolvedValue(null);
+        mockAccountRepo.findByProviderAndAccountId.mockResolvedValue(null);
         mockUserRepo.getUserByEmail.mockResolvedValue(existingUser);
-        mockPrisma.account.create.mockResolvedValue({});
+        mockAccountRepo.createAccount.mockResolvedValue({});
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: createMockProfile({ email: existingUser.email }) as any,
         });
 
-        expect(result).toBe(true);
-        expect(mockPrisma.account.create).toHaveBeenCalled();
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toBe(true);
+        }
+        expect(mockAccountRepo.createAccount).toHaveBeenCalled();
         expect(mockAuditService.LoggedIn).toHaveBeenCalledWith({
           data: { userId: existingUser.id },
         });
@@ -179,81 +197,40 @@ describe('Auth Service', () => {
     describe('new user sign-in', () => {
       it('creates new user and account when user does not exist', async () => {
         const newUser = createMockUser({ email: 'newuser@example.com' });
-        mockPrisma.account.findUnique.mockResolvedValue(null);
+        mockAccountRepo.findByProviderAndAccountId.mockResolvedValue(null);
         mockUserRepo.getUserByEmail.mockResolvedValue(null);
-        mockPrisma.$transaction.mockImplementation(async (callback) => {
-          const tx = {
-            user: {
-              create: vi.fn().mockResolvedValue(newUser),
-            },
-            account: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-          };
-          return callback(tx);
-        });
+        mockUserRepo.createUserWithAccount.mockResolvedValue(newUser);
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: createMockProfile({ email: newUser.email }) as any,
         });
 
-        expect(result).toBe(true);
-        expect(mockPrisma.$transaction).toHaveBeenCalled();
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toBe(true);
+        }
+        expect(mockUserRepo.createUserWithAccount).toHaveBeenCalled();
         expect(mockAuditService.LoggedIn).toHaveBeenCalledWith({
           data: { userId: newUser.id },
         });
       });
 
-      it('returns false when user creation fails', async () => {
-        mockPrisma.account.findUnique.mockResolvedValue(null);
+      it('returns error when user creation fails', async () => {
+        mockAccountRepo.findByProviderAndAccountId.mockResolvedValue(null);
         mockUserRepo.getUserByEmail.mockResolvedValue(null);
-        mockPrisma.$transaction.mockImplementation(async (callback) => {
-          const tx = {
-            user: {
-              create: vi.fn().mockResolvedValue(null),
-            },
-            account: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-          };
-          return callback(tx);
-        });
+        mockUserRepo.createUserWithAccount.mockResolvedValue(null);
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
           profile: createMockProfile() as any,
         });
 
-        expect(result).toBe(false);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toBeDefined();
+        }
       });
     });
-
-    // describe('error handling', () => {
-    //   it('returns false when getUserByEmail throws', async () => {
-    //     mockPrisma.account.findUnique.mockResolvedValue(null);
-    //     mockUserRepo.getUserByEmail.mockRejectedValue(new Error('Database error'));
-
-    //     const result = await handleSignIn({
-    //       account: createMockAccount() as any,
-    //       profile: createMockProfile() as any,
-    //     });
-
-    //     expect(result).toBe(false);
-    //   });
-
-    //   it('returns false when transaction fails', async () => {
-    //     mockPrisma.account.findUnique.mockResolvedValue(null);
-    //     mockUserRepo.getUserByEmail.mockResolvedValue(null);
-    //     mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
-
-    //     const result = await handleSignIn({
-    //       account: createMockAccount() as any,
-    //       profile: createMockProfile() as any,
-    //     });
-
-    //     expect(result).toBe(false);
-    //   });
-    // });
   });
 });

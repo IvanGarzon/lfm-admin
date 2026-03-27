@@ -1,23 +1,24 @@
 import { type NextAuthConfig, type Account, type Profile } from 'next-auth';
-import { handleSignIn } from '@/services/auth.service';
+import { handleSignIn, type SignInArgs } from '@/actions/auth/mutations';
 import { prisma } from '@/lib/prisma';
 import { getClientDetails } from '@/lib/agent';
 import { env } from '@/env';
 import { generateSessionName } from '@/features/sessions/utils/session-icons';
 import { getSessionLimit } from '@/config/session';
 import { SessionRepository } from '@/repositories/session-repository';
-
-export interface SignInArgs {
-  account: Account | null; // Account can be null for credential logins
-  profile?: Profile; // Profile is provider-specific
-}
+import { UserRepository } from '@/repositories/user-repository';
+import { logger } from '@/lib/logger';
+import { GoogleProvider } from '@/auth/providers';
+import Credentials from 'next-auth/providers/credentials';
 
 export const authConfig = {
   // No adapter needed for JWT strategy
   debug: env.NODE_ENV === 'development',
   logger: {
     error(error) {
-      console.error('[error] [next-auth]:', JSON.stringify(error.message, null, 2));
+      logger.error('NextAuth error', error, {
+        context: 'next-auth',
+      });
     },
   },
   secret: env.NEXTAUTH_SECRET,
@@ -38,7 +39,10 @@ export const authConfig = {
     async createUser({ user }) {
       // Optional: Perform actions when a user is created for the first time
       // E.g., send welcome email, initialize other related data
-      console.log('New user created:', user);
+      logger.info('New user created', {
+        context: 'auth:createUser',
+        metadata: { userId: user.id, email: user.email },
+      });
     },
 
     async signOut(params) {
@@ -48,41 +52,38 @@ export const authConfig = {
         const token = 'token' in params ? params.token : null;
         if (token?.sessionToken) {
           // Only deactivate the current session, not all sessions for this user
-          await prisma.session.updateMany({
-            where: {
-              sessionToken: token.sessionToken as string,
-              isActive: true,
-            },
-            data: {
-              isActive: false,
-              expires: new Date(),
-            },
-          });
+          const sessionRepo = new SessionRepository(prisma);
+          await sessionRepo.deactivateBySessionToken(token.sessionToken as string);
         }
       } catch (error) {
-        console.error('Failed to update session records on sign out:', error);
+        logger.error('Failed to update session records on sign out', error, {
+          context: 'auth:signOut',
+        });
       }
     },
   },
   callbacks: {
     async authorized({ auth }) {
-      if (!auth?.user) return false;
+      if (!auth?.user) {
+        return false;
+      }
 
       // Verify session is still active in database
       const sessionToken = auth.sessionToken;
       if (sessionToken) {
         try {
-          const session = await prisma.session.findUnique({
-            where: { sessionToken },
-            select: { isActive: true, expires: true },
-          });
+          const sessionRepo = new SessionRepository(prisma);
+          const isActive = await sessionRepo.isSessionActive(sessionToken);
 
           // If session was revoked or expired, deny access
-          if (!session || !session.isActive || session.expires < new Date()) {
+          if (!isActive) {
             return false;
           }
         } catch (error) {
-          console.error('Failed to verify session:', error);
+          logger.error('Failed to verify session', error, {
+            context: 'auth:authorized',
+            metadata: { sessionToken },
+          });
           return false;
         }
       }
@@ -96,36 +97,36 @@ export const authConfig = {
         profile: profile as Profile | undefined,
       };
 
-      // 1. Check authorization first
-      const isAllowed = await handleSignIn(args);
-      if (!isAllowed) {
-        return false; // Deny sign-in
+      // 1. Check authorisation first
+      const result = await handleSignIn(args);
+      if (!result.success || !result.data) {
+        return false;
       }
 
       // 2. Ensure user exists in database (JWT doesn't use adapter)
       try {
         if (user.email) {
-          await prisma.user.upsert({
-            where: { email: user.email },
-            update: {
-              // Update existing user info
+          const userRepo = new UserRepository(prisma);
+
+          await userRepo.upsertByEmail(
+            user.email,
+            {
               avatarUrl: user.image,
               emailVerified: new Date(),
             },
-            create: {
-              // Create new user - split name into firstName/lastName
+            {
               email: user.email,
               firstName: user.name?.split(' ')[0] || '',
               lastName: user.name?.split(' ').slice(1).join(' ') || '',
               avatarUrl: user.image,
-              emailVerified: new Date(), // Assume verified since it's from OAuth
+              emailVerified: new Date(),
             },
-          });
+          );
 
           // Get the user ID for session creation
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            select: { id: true, role: true },
+          const dbUser = await userRepo.getUserByEmailWithSelect(user.email, {
+            id: true,
+            role: true,
           });
 
           if (dbUser) {
@@ -171,9 +172,7 @@ export const authConfig = {
               lastActiveAt: new Date(), // Initialize last active timestamp
             };
 
-            await prisma.session.create({
-              data: sessionData,
-            });
+            await sessionRepo.createSession(sessionData);
 
             // 🚀 PERFORMANCE: Update location in background (non-blocking)
             // This happens AFTER sign-in completes, so no delay for user
@@ -182,15 +181,25 @@ export const authConfig = {
               import('@/lib/location-service')
                 .then(({ updateSessionLocation }) => {
                   updateSessionLocation(sessionData.sessionToken, details.ipAddress!).catch((err) =>
-                    console.error('Background location update failed:', err),
+                    logger.error('Background location update failed', err, {
+                      context: 'auth:signIn',
+                      metadata: { sessionToken: sessionData.sessionToken },
+                    }),
                   );
                 })
-                .catch((err) => console.error('Failed to load location service:', err));
+                .catch((err) =>
+                  logger.error('Failed to load location service', err, {
+                    context: 'auth:signIn',
+                  }),
+                );
             }
           }
         }
       } catch (error) {
-        console.error('Failed to handle user/session creation:', error);
+        logger.error('Failed to handle user/session creation', error, {
+          context: 'auth:signIn',
+          metadata: { email: user.email },
+        });
         // Don't fail sign-in for session tracking errors
       }
 
@@ -201,9 +210,10 @@ export const authConfig = {
       if (user) {
         // On sign-in, `user` is the user object from the provider
         // We need to fetch our internal user to get the correct ID
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          select: { id: true, role: true },
+        const userRepo = new UserRepository(prisma);
+        const dbUser = await userRepo.getUserByEmailWithSelect(user.email!, {
+          id: true,
+          role: true,
         });
 
         if (dbUser) {
@@ -211,11 +221,8 @@ export const authConfig = {
           token.role = dbUser.role;
 
           // Get the most recent session token for this user to identify the current session
-          const latestSession = await prisma.session.findFirst({
-            where: { userId: dbUser.id, isActive: true },
-            orderBy: { createdAt: 'desc' },
-            select: { sessionToken: true },
-          });
+          const sessionRepo = new SessionRepository(prisma);
+          const latestSession = await sessionRepo.findLatestActiveByUserId(dbUser.id);
 
           if (latestSession) {
             token.sessionToken = latestSession.sessionToken;
@@ -229,17 +236,18 @@ export const authConfig = {
       // Verify session is still active in database before returning session data
       if (token.sessionToken) {
         try {
-          const dbSession = await prisma.session.findUnique({
-            where: { sessionToken: token.sessionToken as string },
-            select: { isActive: true, expires: true },
-          });
+          const sessionRepo = new SessionRepository(prisma);
+          const isActive = await sessionRepo.isSessionActive(token.sessionToken as string);
 
           // If session was revoked or expired, throw error to invalidate the session
-          if (!dbSession || !dbSession.isActive || dbSession.expires < new Date()) {
+          if (!isActive) {
             throw new Error('Session has been revoked');
           }
         } catch (error) {
-          console.error('Session validation failed:', error);
+          logger.error('Session validation failed', error, {
+            context: 'auth:session',
+            metadata: { sessionToken: token.sessionToken as string },
+          });
           throw error; // Re-throw to force session invalidation
         }
       }
@@ -266,5 +274,42 @@ export const authConfig = {
       return session;
     },
   },
-  providers: [],
+  providers: [
+    GoogleProvider,
+    ...(env.NODE_ENV !== 'production'
+      ? [
+          Credentials({
+            name: 'Credentials',
+            credentials: {
+              email: { label: 'Email', type: 'email' },
+              password: { label: 'Password', type: 'password' },
+            },
+            async authorize(credentials) {
+              if (
+                credentials?.email === 'test@example.com' &&
+                credentials?.password === 'password'
+              ) {
+                const userRepo = new UserRepository(prisma);
+
+                const user = await userRepo.upsertByEmail(
+                  credentials.email,
+                  {
+                    emailVerified: new Date(),
+                  },
+                  {
+                    email: credentials.email,
+                    firstName: 'Test',
+                    lastName: 'User',
+                    emailVerified: new Date(),
+                  },
+                );
+
+                return user;
+              }
+              return null;
+            },
+          }),
+        ]
+      : []),
+  ],
 } satisfies NextAuthConfig;

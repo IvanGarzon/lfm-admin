@@ -227,7 +227,9 @@ export class SessionRepository {
       },
     });
 
-    if (!oldestSession) return null;
+    if (!oldestSession) {
+      return null;
+    }
 
     return this.prisma.session.update({
       where: { id: oldestSession.id },
@@ -278,5 +280,126 @@ export class SessionRepository {
       },
     });
     return result.count;
+  }
+
+  /**
+   * Deactivates a session by its session token.
+   * Used during sign-out to invalidate the current session.
+   * @param sessionToken - The session token to deactivate
+   * @returns A promise that resolves to the count of deactivated sessions
+   */
+  async deactivateBySessionToken(sessionToken: string): Promise<number> {
+    const result = await this.prisma.session.updateMany({
+      where: {
+        sessionToken,
+        isActive: true,
+      },
+      data: {
+        isActive: false,
+        expires: new Date(),
+      },
+    });
+    return result.count;
+  }
+
+  /**
+   * Finds a session by its session token.
+   * @param sessionToken - The session token to search for
+   * @returns A promise that resolves to the session or null if not found
+   */
+  async findBySessionToken(sessionToken: string): Promise<Session | null> {
+    return this.prisma.session.findUnique({
+      where: { sessionToken },
+    });
+  }
+
+  /**
+   * Checks if a session is active and not expired.
+   * @param sessionToken - The session token to check
+   * @returns A promise that resolves to true if session is active and valid
+   */
+  async isSessionActive(sessionToken: string): Promise<boolean> {
+    const session = await this.prisma.session.findUnique({
+      where: { sessionToken },
+      select: { isActive: true, expires: true },
+    });
+
+    if (!session) return false;
+    return session.isActive && session.expires > new Date();
+  }
+
+  /**
+   * Finds the most recent active session for a user.
+   * @param userId - The user ID to search for
+   * @returns A promise that resolves to the latest session or null if none found
+   */
+  async findLatestActiveByUserId(userId: string): Promise<Session | null> {
+    return this.prisma.session.findFirst({
+      where: {
+        userId,
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  /**
+   * Creates a new session record.
+   * @param data - The session data to create
+   * @returns A promise that resolves to the created session
+   */
+  async createSession(data: {
+    userId: string;
+    sessionToken: string;
+    expires: Date;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    deviceType?: string | null;
+    deviceVendor?: string | null;
+    deviceModel?: string | null;
+    osName?: string | null;
+    osVersion?: string | null;
+    browserName?: string | null;
+    browserVersion?: string | null;
+    country?: string | null;
+    region?: string | null;
+    city?: string | null;
+    timezone?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    deviceName?: string | null;
+    lastActiveAt?: Date;
+  }): Promise<Session> {
+    return this.prisma.session.create({ data });
+  }
+
+  /**
+   * Updates the location data for a session.
+   * Used for background geolocation updates after sign-in.
+   * @param sessionToken - The session token to update
+   * @param locationData - Location information from IP geolocation
+   * @returns A promise that resolves to the updated session or null if not found
+   */
+  async updateLocation(
+    sessionToken: string,
+    locationData: {
+      country?: string;
+      region?: string;
+      city?: string;
+      timezone?: string;
+      latitude?: number;
+      longitude?: number;
+    },
+  ): Promise<Session | null> {
+    try {
+      return await this.prisma.session.update({
+        where: { sessionToken },
+        data: locationData,
+      });
+    } catch (error) {
+      return null;
+    }
   }
 }

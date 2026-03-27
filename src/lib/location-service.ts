@@ -5,14 +5,8 @@
  * Location is updated in the background after session is created.
  */
 
-export interface LocationData {
-  country?: string;
-  region?: string;
-  city?: string;
-  timezone?: string;
-  latitude?: number;
-  longitude?: number;
-}
+import type { LocationData } from '@/features/sessions/types';
+import { logger } from '@/lib/logger';
 
 /**
  * Fetch location from IP address (non-blocking)
@@ -32,7 +26,7 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const res = await fetch(`https://ipapi.co/${ip}/json/`, {
       signal: controller.signal,
@@ -41,7 +35,10 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
     clearTimeout(timeoutId);
 
     if (!res.ok) {
-      console.warn('IP lookup failed:', res.status);
+      logger.warn('IP lookup failed', {
+        context: 'getLocationFromIP',
+        metadata: { status: res.status, ip },
+      });
       return {};
     }
 
@@ -55,11 +52,17 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
       latitude: data.latitude,
       longitude: data.longitude,
     };
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      console.warn('IP lookup timed out');
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.warn('IP lookup timed out', {
+        context: 'getLocationFromIP',
+        metadata: { ip },
+      });
     } else {
-      console.error('IP lookup failed:', e);
+      logger.error('IP lookup failed', error, {
+        context: 'getLocationFromIP',
+        metadata: { ip },
+      });
     }
     return {};
   }
@@ -67,25 +70,39 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
 
 /**
  * Update session with location data (call this in background)
+ * Uses SessionRepository to avoid direct Prisma usage
  */
 export async function updateSessionLocation(sessionToken: string, ip: string): Promise<void> {
   try {
     const location = await getLocationFromIP(ip);
 
     if (Object.keys(location).length > 0) {
-      // Import prisma dynamically to avoid circular deps
       const { prisma } = await import('@/lib/prisma');
+      const { SessionRepository } = await import('@/repositories/session-repository');
 
-      await prisma.session.update({
-        where: { sessionToken },
-        data: location,
-      });
+      const sessionRepo = new SessionRepository(prisma);
+      const updatedSession = await sessionRepo.updateLocation(sessionToken, location);
 
-      console.log('Session location updated:', { sessionToken, ...location });
+      if (updatedSession) {
+        logger.info('Session location updated', {
+          context: 'updateSessionLocation',
+          metadata: {
+            sessionToken,
+            ...location,
+          },
+        });
+      } else {
+        logger.warn('Session not found for location update', {
+          context: 'updateSessionLocation',
+          metadata: { sessionToken },
+        });
+      }
     }
   } catch (error) {
-    console.error('Failed to update session location:', error);
-    // Don't throw - this is background work
+    logger.error('Failed to update session location', error, {
+      context: 'updateSessionLocation',
+      metadata: { sessionToken, ip },
+    });
   }
 }
 

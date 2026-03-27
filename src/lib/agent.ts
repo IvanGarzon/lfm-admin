@@ -1,20 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 import { env } from 'env';
-
-export interface SessionDeviceLocation {
-  ipAddress?: string;
-  userAgent?: string;
-  device?: Partial<UAParser.IDevice>; // Includes vendor, model, type (console, mobile, tablet, smarttv, wearable, embedded)
-  os?: Partial<UAParser.IOS>;
-  browser?: Partial<UAParser.IBrowser>;
-  // Location details
-  country?: string;
-  region?: string;
-  city?: string;
-  timezone?: string;
-  latitude?: number;
-  longitude?: number;
-}
+import type { SessionDeviceLocation } from '@/features/sessions/types';
 
 const FAKE_LOCATIONS: Record<string, SessionDeviceLocation> = {
   '103.1.206.0': {

@@ -2,12 +2,13 @@
 // import { NextRequest, NextResponse } from 'next/server';
 // import { kv } from '@vercel/kv'; // Vercel KV client
 // import { Ratelimit } from '@upstash/ratelimit'; // Rate limiting library
+// import { env } from '@/env';
 
 // let ratelimitInstance: Ratelimit | null = null;
 
 // Initialize Vercel KV and Ratelimit instances
 // This happens once when the module is first imported.
-// if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+// if (env.KV_REST_API_URL && env.KV_REST_API_TOKEN) {
 //   ratelimitInstance = new Ratelimit({
 //     redis: kv,
 //     // Example: Allow 10 requests per 10 seconds from the same IP address
@@ -17,7 +18,7 @@
 //   });
 //   console.log('Rate limiter initialized with Vercel KV.');
 // } else {
-//   if (process.env.NODE_ENV === 'development') {
+//   if (env.NODE_ENV === 'development') {
 //     console.warn(
 //       'Vercel KV environment variables not found for rate limiter. ' +
 //         'Rate limiting will be disabled. ' +

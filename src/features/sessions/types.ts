@@ -3,6 +3,39 @@
  * Centralized type definitions for the sessions feature
  */
 
+import type { UAParser } from 'ua-parser-js';
+
+/**
+ * Session device and location details
+ * Used when capturing session information during authentication
+ */
+export interface SessionDeviceLocation {
+  ipAddress?: string;
+  userAgent?: string;
+  device?: Partial<UAParser.IDevice>;
+  os?: Partial<UAParser.IOS>;
+  browser?: Partial<UAParser.IBrowser>;
+  country?: string;
+  region?: string;
+  city?: string;
+  timezone?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+/**
+ * Location data for IP geolocation
+ * Used for background location updates
+ */
+export interface LocationData {
+  country?: string;
+  region?: string;
+  city?: string;
+  timezone?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
 /**
  * Session with user details
  * This is the main type used throughout the sessions feature

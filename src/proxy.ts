@@ -1,10 +1,9 @@
-// middleware.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { authConfig } from '@/auth/config'; // Your NextAuth config
+import { authConfig } from '@/auth/config';
 import NextAuth from 'next-auth';
-import type { Session } from 'next-auth'; // Import Session type if needed, or use `any`
+import type { Session } from 'next-auth';
 
-import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, publicRoutes } from '@/routes'; // Your route definitions
+import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, publicRoutes } from '@/routes';
 
 // Import the rate limiting function
 // import { checkRequestRateLimit } from '@/lib/rate-limiter'; // Adjust path if your file is elsewhere
@@ -31,14 +30,11 @@ export default auth(async (req: NextRequest & { auth: Session | null | undefined
   const isLoggedIn = !!req.auth;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
-  const isTestS3ApiRoute = nextUrl.pathname.startsWith('/api/test-s3');
-  const isCronRoute = nextUrl.pathname.startsWith('/api/cron');
-  const isBackgroundRoute = nextUrl.pathname.startsWith('/api/background');
   const isInngestRoute = nextUrl.pathname.startsWith('/api/inngest');
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isApiAuthRoute || isTestS3ApiRoute || isCronRoute || isBackgroundRoute || isInngestRoute) {
+  if (isApiAuthRoute || isInngestRoute) {
     return;
   }
 
@@ -58,7 +54,6 @@ export default auth(async (req: NextRequest & { auth: Session | null | undefined
     return NextResponse.redirect(new URL(`/signin?callbackUrl=${encodedCallbackUrl}`, nextUrl));
   }
 
-  // ✅ Redirect /dashboard to /dashboard/overview
   if (nextUrl.pathname === '/') {
     return NextResponse.redirect(new URL('/overview', nextUrl));
   }
