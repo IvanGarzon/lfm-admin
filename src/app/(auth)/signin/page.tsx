@@ -1,4 +1,4 @@
-import { SignIn } from '@/components/Auth/SignIn';
+import { SignIn } from '@/features/sessions/components/sign-in';
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 

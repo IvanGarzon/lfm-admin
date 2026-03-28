@@ -1,11 +1,10 @@
 'use server';
 
-import { auth } from '@/auth';
 import { SessionRepository } from '@/repositories/session-repository';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import type { ActionResult } from '@/types/actions';
+import { withAuth } from '@/lib/action-auth';
 
 const sessionRepo = new SessionRepository(prisma);
 
@@ -14,12 +13,7 @@ const sessionRepo = new SessionRepository(prisma);
  * Marks the current session and sorts it to the top of the list.
  * @returns A promise that resolves to an `ActionResult` containing the list of active sessions.
  */
-export async function getSessions(): Promise<ActionResult<SessionWithUser[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getSessions = withAuth<void, SessionWithUser[]>(async (session) => {
   try {
     const currentSessionToken = session.sessionToken;
     const sessions = await sessionRepo.findActiveSessionsByUserId(
@@ -34,4 +28,4 @@ export async function getSessions(): Promise<ActionResult<SessionWithUser[]>> {
       userId: session.user.id,
     });
   }
-}
+});

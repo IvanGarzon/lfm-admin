@@ -6,3 +6,10 @@ export const AuthSchema = z.object({
 });
 
 export type AuthFormValues = z.infer<typeof AuthSchema>;
+
+export const SignInSchema = z.object({
+  email: commonValidators.email(),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export type SignInInput = z.infer<typeof SignInSchema>;

@@ -10,6 +10,7 @@ import { UserRepository } from '@/repositories/user-repository';
 import { logger } from '@/lib/logger';
 import { GoogleProvider } from '@/auth/providers';
 import Credentials from 'next-auth/providers/credentials';
+import { CreateSessionSchema, type CreateSessionInput } from '@/schemas/sessions';
 
 export const authConfig = {
   // No adapter needed for JWT strategy
@@ -142,7 +143,7 @@ export const authConfig = {
 
             // 3. Create session record for tracking
             const details = await getClientDetails();
-            const sessionData = {
+            const sessionData: CreateSessionInput = CreateSessionSchema.parse({
               userId: dbUser.id,
               sessionToken: crypto.randomUUID(),
               expires: new Date(Date.now() + 60 * 60 * 24 * 1000), // 1 day
@@ -170,7 +171,7 @@ export const authConfig = {
                 details.device?.type,
               ),
               lastActiveAt: new Date(), // Initialize last active timestamp
-            };
+            });
 
             await sessionRepo.createSession(sessionData);
 

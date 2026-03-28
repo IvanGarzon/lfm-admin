@@ -1,5 +1,6 @@
 import { Session, PrismaClient } from '@/prisma/client';
 import type { SessionWithUser } from '@/features/sessions/types';
+import type { CreateSessionInput } from '@/schemas/sessions';
 
 /**
  * Session Repository
@@ -350,28 +351,7 @@ export class SessionRepository {
    * @param data - The session data to create
    * @returns A promise that resolves to the created session
    */
-  async createSession(data: {
-    userId: string;
-    sessionToken: string;
-    expires: Date;
-    ipAddress?: string | null;
-    userAgent?: string | null;
-    deviceType?: string | null;
-    deviceVendor?: string | null;
-    deviceModel?: string | null;
-    osName?: string | null;
-    osVersion?: string | null;
-    browserName?: string | null;
-    browserVersion?: string | null;
-    country?: string | null;
-    region?: string | null;
-    city?: string | null;
-    timezone?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-    deviceName?: string | null;
-    lastActiveAt?: Date;
-  }): Promise<Session> {
+  async createSession(data: CreateSessionInput): Promise<Session> {
     return this.prisma.session.create({ data });
   }
 
