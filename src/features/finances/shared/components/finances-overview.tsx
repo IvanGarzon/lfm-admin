@@ -1,56 +1,32 @@
 'use client';
 
 import { useMemo } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { FileText, FileCheck, Receipt, DollarSign } from 'lucide-react';
+import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
+import {
+  useInvoiceStatistics,
+  useInvoices,
+} from '@/features/finances/invoices/hooks/use-invoice-queries';
+import { useQuoteStatistics, useQuotes } from '@/features/finances/quotes/hooks/use-quote-queries';
+import {
+  useTransactionStatistics,
+  useTransactions,
+} from '@/features/finances/transactions/hooks/use-transaction-queries';
+import { formatCurrency } from '@/lib/utils';
 import { RecentActivity } from './recent-activity';
 import { FinancialHealth } from './financial-health';
-import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import { useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
-import { FileText, FileCheck, Receipt, DollarSign } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
-const ModuleCard = dynamic(
-  () => import('./module-card').then((mod) => ({ default: mod.ModuleCard })),
-  {
-    ssr: false,
-    loading: () => (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-8 w-8 rounded" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-20 w-full" />
-        </CardContent>
-      </Card>
-    ),
-  },
-);
-
-const CashFlowWaterfallChart = dynamic(
-  () =>
-    import('./cash-flow-waterfall-chart').then((mod) => ({ default: mod.CashFlowWaterfallChart })),
-  {
-    ssr: false,
-    loading: () => <Skeleton className="h-[400px] w-full" />,
-  },
-);
+import ModuleCard from './module-card';
+import CashFlowWaterfallChart from './cash-flow-waterfall-chart';
 
 export function FinancesOverview() {
   const router = useRouter();
 
-  // Fetch summary statistics for all modules
   const { data: invoiceStats, isLoading: invoiceStatsLoading } = useInvoiceStatistics();
   const { data: quoteStats, isLoading: quoteStatsLoading } = useQuoteStatistics();
   const { data: transactionStats, isLoading: transactionStatsLoading } = useTransactionStatistics();
 
-  // Calculate metrics
   const collectionRate = invoiceStats
     ? (
         (invoiceStats.totalRevenue /
@@ -59,9 +35,8 @@ export function FinancesOverview() {
       ).toFixed(0)
     : '0';
 
-  const acceptanceRate = quoteStats ? (quoteStats.acceptanceRate?.toFixed(0) ?? '0') : '0';
+  const acceptanceRate = quoteStats ? quoteStats.acceptanceRate.toFixed(0) : '0';
 
-  // Prepare chart data for mini charts (last 30 days simulation)
   const invoiceChartData = useMemo(() => {
     if (!invoiceStats?.revenueTrend) return [];
     return invoiceStats.revenueTrend.slice(-30).map((item) => ({ value: item.paid }));
@@ -69,18 +44,17 @@ export function FinancesOverview() {
 
   const quoteChartData = useMemo(() => {
     if (!quoteStats?.quoteTrend) return [];
-    return quoteStats.quoteTrend.slice(-30).map((item) => ({ value: item.totalValue }));
+    return quoteStats.quoteTrend.slice(-30).map((item) => ({ value: item.total }));
   }, [quoteStats]);
 
   const transactionChartData = useMemo(() => {
     if (!transactionStats) return [];
     // Generate sample data for demonstration
-    return Array.from({ length: 30 }, (_, i) => ({
+    return Array.from({ length: 30 }, () => ({
       value: ((transactionStats.totalIncome || 0) * (0.8 + Math.random() * 0.4)) / 30,
     }));
   }, [transactionStats]);
 
-  // Prepare financial health metrics
   const healthMetrics = useMemo(() => {
     if (!invoiceStats || !quoteStats || !transactionStats) return [];
 
@@ -109,20 +83,60 @@ export function FinancesOverview() {
     ];
   }, [invoiceStats, quoteStats, transactionStats, collectionRate, acceptanceRate]);
 
-  // TODO: Fetch recent activity from all modules
-  const recentActivity = useMemo(() => [], []);
+  const recentFilter = { page: 1, perPage: 5, sort: [{ id: 'issuedDate', desc: true }] };
+  const recentTransactionFilter = { page: 1, perPage: 5, sort: [{ id: 'date', desc: true }] };
+
+  const { data: recentInvoices } = useInvoices(recentFilter);
+  const { data: recentQuotes } = useQuotes(recentFilter);
+  const { data: recentTransactions } = useTransactions(recentTransactionFilter);
+
+  const recentActivity = useMemo(() => {
+    const invoiceItems = (recentInvoices?.items ?? []).map((inv) => ({
+      id: inv.id,
+      type: 'invoice' as const,
+      title: inv.invoiceNumber,
+      subtitle: inv.customerName,
+      amount: Number(inv.amount),
+      date: new Date(inv.issuedDate),
+      status: inv.status,
+    }));
+
+    const quoteItems = (recentQuotes?.items ?? []).map((q) => ({
+      id: q.id,
+      type: 'quote' as const,
+      title: q.quoteNumber,
+      subtitle: q.customerName,
+      amount: Number(q.amount),
+      date: new Date(q.issuedDate),
+      status: q.status,
+    }));
+
+    const transactionItems = (recentTransactions?.items ?? []).map((t) => ({
+      id: t.id,
+      type: 'transaction' as const,
+      title: t.description,
+      subtitle: t.payee,
+      amount: Number(t.amount),
+      date: new Date(t.date),
+      status: t.status,
+    }));
+
+    return [...invoiceItems, ...quoteItems, ...transactionItems]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 5);
+  }, [recentInvoices, recentQuotes, recentTransactions]);
 
   return (
-    <div className="space-y-8">
+    <Box className="space-y-8">
       {/* Header with Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <Box className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <Box>
           <h1 className="text-3xl font-bold tracking-tight">Finances Overview</h1>
           <p className="text-muted-foreground mt-1">
             Monitor your business financial health across all modules
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+        </Box>
+        <Box className="flex flex-wrap gap-2">
           <Button onClick={() => router.push('/finances/invoices/new')}>
             <FileText className="h-4 w-4 mr-2" />
             New Invoice
@@ -135,12 +149,10 @@ export function FinancesOverview() {
             <Receipt className="h-4 w-4 mr-2" />
             New Transaction
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      {/* Module Cards - 3 Large Visual Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Invoices Module Card */}
+      <Box className="grid gap-6 md:grid-cols-3">
         <ModuleCard
           title="Invoices"
           icon={FileText}
@@ -171,7 +183,6 @@ export function FinancesOverview() {
           isLoading={invoiceStatsLoading}
         />
 
-        {/* Quotes Module Card */}
         <ModuleCard
           title="Quotes"
           icon={FileCheck}
@@ -199,7 +210,6 @@ export function FinancesOverview() {
           isLoading={quoteStatsLoading}
         />
 
-        {/* Transactions Module Card */}
         <ModuleCard
           title="Transactions"
           icon={DollarSign}
@@ -232,19 +242,20 @@ export function FinancesOverview() {
           href="/finances/transactions"
           isLoading={transactionStatsLoading}
         />
-      </div>
+      </Box>
 
-      {/* Combined Financial Chart */}
       <CashFlowWaterfallChart />
 
-      {/* Bottom Row: Recent Activity + Financial Health */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <RecentActivity items={recentActivity} isLoading={false} />
+      <Box className="grid gap-6 md:grid-cols-2">
+        <RecentActivity
+          items={recentActivity}
+          isLoading={!recentInvoices && !recentQuotes && !recentTransactions}
+        />
         <FinancialHealth
           metrics={healthMetrics}
           isLoading={invoiceStatsLoading || quoteStatsLoading || transactionStatsLoading}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

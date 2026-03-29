@@ -130,8 +130,7 @@ export function InvoiceList({
     setEmailPreviewData(null);
     setPendingEmailAction(null);
 
-    // TODO: Add sendEmail: false parameter to mark as pending
-    openMarkAsPending(pendingEmailAction.invoiceId, '');
+    openMarkAsPending(pendingEmailAction.invoiceId, '', undefined, false);
   }, [pendingEmailAction, openMarkAsPending]);
 
   const handleCancelEmailPreview = useCallback(() => {

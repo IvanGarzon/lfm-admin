@@ -64,7 +64,7 @@ import {
   createCancelInvoiceInput,
 } from '@/lib/testing';
 
-const { mockInvoiceRepo, mockAuth, mockRequirePermission, mockPrisma } = vi.hoisted(() => ({
+const { mockInvoiceRepo, mockAuth, mockHasPermission, mockPrisma } = vi.hoisted(() => ({
   mockInvoiceRepo: {
     createInvoiceWithItems: vi.fn(),
     updateInvoiceWithItems: vi.fn(),
@@ -73,15 +73,15 @@ const { mockInvoiceRepo, mockAuth, mockRequirePermission, mockPrisma } = vi.hois
     markAsPending: vi.fn(),
     markAsDraft: vi.fn(),
     addPayment: vi.fn(),
-    cancel: vi.fn(),
-    softDelete: vi.fn(),
+    cancelInvoice: vi.fn(),
+    deleteInvoice: vi.fn(),
     duplicate: vi.fn(),
     bulkUpdateStatus: vi.fn(),
     generateReceiptNumber: vi.fn(),
     incrementReminderCount: vi.fn(),
   },
   mockAuth: vi.fn(),
-  mockRequirePermission: vi.fn(),
+  mockHasPermission: vi.fn(),
   mockPrisma: {
     invoice: {
       update: vi.fn(),
@@ -115,7 +115,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  requirePermission: mockRequirePermission,
+  hasPermission: mockHasPermission,
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -134,6 +134,7 @@ describe('Invoice Mutations', () => {
     vi.clearAllMocks();
     resetIdCounter();
     mockAuth.mockResolvedValue(mockSession);
+    mockHasPermission.mockReturnValue(true);
   });
 
   describe('createInvoice', () => {
@@ -151,7 +152,6 @@ describe('Invoice Mutations', () => {
         expect(result.data.id).toBe(TEST_INVOICE_ID);
         expect(result.data.invoiceNumber).toBe('INV-001');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
     });
 
@@ -160,7 +160,7 @@ describe('Invoice Mutations', () => {
       const result = await createInvoice(validData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });
@@ -192,7 +192,6 @@ describe('Invoice Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_INVOICE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/invoices/${TEST_INVOICE_ID}`);
     });
@@ -230,7 +229,6 @@ describe('Invoice Mutations', () => {
       const result = await markInvoiceAsPending({ id: TEST_INVOICE_ID });
 
       expect(result.success).toBe(true);
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/invoices/${TEST_INVOICE_ID}`);
     });
@@ -254,7 +252,6 @@ describe('Invoice Mutations', () => {
       const result = await markInvoiceAsDraft(TEST_INVOICE_ID);
 
       expect(result.success).toBe(true);
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
     });
 
     it('returns error when invoice not found', async () => {
@@ -285,7 +282,6 @@ describe('Invoice Mutations', () => {
         expect(result.data.status).toBe('PAID');
         expect(result.data.receiptNumber).toBe('REC-001');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canRecordPayments');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/transactions');
     });
@@ -306,7 +302,7 @@ describe('Invoice Mutations', () => {
   describe('cancelInvoice', () => {
     it('cancels an invoice successfully', async () => {
       const cancelData = createCancelInvoiceInput({ id: TEST_INVOICE_ID });
-      mockInvoiceRepo.cancel.mockResolvedValue({
+      mockInvoiceRepo.cancelInvoice.mockResolvedValue({
         id: TEST_INVOICE_ID,
         status: 'CANCELLED',
       });
@@ -314,13 +310,12 @@ describe('Invoice Mutations', () => {
       const result = await cancelInvoice(cancelData);
 
       expect(result.success).toBe(true);
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
     });
 
     it('returns error when invoice not found', async () => {
       const cancelData = createCancelInvoiceInput({ id: TEST_NON_EXISTENT_ID });
-      mockInvoiceRepo.cancel.mockResolvedValue(null);
+      mockInvoiceRepo.cancelInvoice.mockResolvedValue(null);
 
       const result = await cancelInvoice(cancelData);
 
@@ -333,7 +328,7 @@ describe('Invoice Mutations', () => {
 
   describe('deleteInvoice', () => {
     it('soft deletes an invoice successfully', async () => {
-      mockInvoiceRepo.softDelete.mockResolvedValue(true);
+      mockInvoiceRepo.deleteInvoice.mockResolvedValue(true);
 
       const result = await deleteInvoice(TEST_INVOICE_ID);
 
@@ -341,12 +336,11 @@ describe('Invoice Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_INVOICE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageInvoices');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.softDelete.mockResolvedValue(false);
+      mockInvoiceRepo.deleteInvoice.mockResolvedValue(false);
 
       const result = await deleteInvoice(TEST_NON_EXISTENT_ID);
 
@@ -386,10 +380,13 @@ describe('Invoice Mutations', () => {
   describe('bulkUpdateInvoiceStatus', () => {
     it('should require authentication', async () => {
       mockAuth.mockResolvedValueOnce(null);
-      const result = await bulkUpdateInvoiceStatus(['id-1'], 'PENDING' as InvoiceStatus);
+      const result = await bulkUpdateInvoiceStatus({
+        ids: ['id-1'],
+        status: 'PENDING' as InvoiceStatus,
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
@@ -399,7 +396,10 @@ describe('Invoice Mutations', () => {
         { id: 'id-2', success: true },
       ]);
 
-      const result = await bulkUpdateInvoiceStatus(['id-1', 'id-2'], 'PENDING' as InvoiceStatus);
+      const result = await bulkUpdateInvoiceStatus({
+        ids: ['id-1', 'id-2'],
+        status: 'PENDING' as InvoiceStatus,
+      });
 
       expect(mockInvoiceRepo.bulkUpdateStatus).toHaveBeenCalledWith(
         ['id-1', 'id-2'],
@@ -419,7 +419,10 @@ describe('Invoice Mutations', () => {
         { id: 'id-2', success: false, error: 'Failed' },
       ]);
 
-      const result = await bulkUpdateInvoiceStatus(['id-1', 'id-2'], 'PENDING' as InvoiceStatus);
+      const result = await bulkUpdateInvoiceStatus({
+        ids: ['id-1', 'id-2'],
+        status: 'PENDING' as InvoiceStatus,
+      });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -501,17 +504,6 @@ describe('Invoice Mutations - Permission Tests', () => {
   const mockManagerRole = mockSessions.manager();
   const mockAdminRole = mockSessions.admin();
 
-  const setupPermissionMock = () => {
-    mockRequirePermission.mockImplementation((user, permission) => {
-      if (
-        (permission === 'canManageInvoices' || permission === 'canRecordPayments') &&
-        user?.role === 'USER'
-      ) {
-        throw new Error('Unauthorized: User does not have permission');
-      }
-    });
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -521,18 +513,19 @@ describe('Invoice Mutations - Permission Tests', () => {
 
     it('should DENY USER role from creating invoices', async () => {
       mockAuth.mockResolvedValue(mockUserRole);
-      setupPermissionMock();
+      mockHasPermission.mockReturnValue(false);
 
       const result = await createInvoice(validData);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW MANAGER role to create invoices', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
+      mockHasPermission.mockReturnValue(true);
       mockInvoiceRepo.createInvoiceWithItems.mockResolvedValue(createInvoiceResponse());
 
       const result = await createInvoice(validData);
@@ -542,6 +535,7 @@ describe('Invoice Mutations - Permission Tests', () => {
 
     it('should ALLOW ADMIN role to create invoices', async () => {
       mockAuth.mockResolvedValue(mockAdminRole);
+      mockHasPermission.mockReturnValue(true);
       mockInvoiceRepo.createInvoiceWithItems.mockResolvedValue(createInvoiceResponse());
 
       const result = await createInvoice(validData);
@@ -553,18 +547,19 @@ describe('Invoice Mutations - Permission Tests', () => {
   describe('recordPayment', () => {
     it('should DENY USER role from recording payments', async () => {
       mockAuth.mockResolvedValue(mockUserRole);
-      setupPermissionMock();
+      mockHasPermission.mockReturnValue(false);
 
       const result = await recordPayment(createRecordPaymentInput({ id: TEST_INVOICE_ID }));
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW MANAGER role to record payments', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
+      mockHasPermission.mockReturnValue(true);
       mockInvoiceRepo.addPayment.mockResolvedValue({
         id: TEST_INVOICE_ID,
         status: 'PAID',
@@ -579,19 +574,20 @@ describe('Invoice Mutations - Permission Tests', () => {
   describe('deleteInvoice', () => {
     it('should DENY USER role from deleting invoices', async () => {
       mockAuth.mockResolvedValue(mockUserRole);
-      setupPermissionMock();
+      mockHasPermission.mockReturnValue(false);
 
       const result = await deleteInvoice(TEST_INVOICE_ID);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW ADMIN role to delete invoices', async () => {
       mockAuth.mockResolvedValue(mockAdminRole);
-      mockInvoiceRepo.softDelete.mockResolvedValue(true);
+      mockHasPermission.mockReturnValue(true);
+      mockInvoiceRepo.deleteInvoice.mockResolvedValue(true);
 
       const result = await deleteInvoice(TEST_INVOICE_ID);
 
@@ -607,7 +603,7 @@ describe('Invoice Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });

@@ -1,11 +1,10 @@
 'use server';
 
-import { auth } from '@/auth';
 import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
-import { requirePermission } from '@/lib/permissions';
 import { handleActionError } from '@/lib/error-handler';
+import { withPermission } from '@/lib/action-auth';
 import type {
   InvoiceStatistics,
   InvoiceWithDetails,
@@ -29,25 +28,19 @@ const invoiceRepo = new InvoiceRepository(prisma);
  * @throws Will throw an error if the user is not authenticated or if the search parameters are invalid.
  *
  */
-export async function getInvoices(
-  searchParams: SearchParams,
-): Promise<ActionResult<InvoicePagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getInvoices = withPermission<SearchParams, InvoicePagination>(
+  'canReadInvoices',
+  async (session, searchParams) => {
+    try {
+      const filters = searchParamsCache.parse(searchParams);
+      const result = await invoiceRepo.searchAndPaginate(filters);
 
-  try {
-    requirePermission(session.user, 'canReadInvoices');
-
-    const filters = searchParamsCache.parse(searchParams);
-    const result = await invoiceRepo.searchAndPaginate(filters);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoices');
-  }
-}
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch invoices');
+    }
+  },
+);
 
 /**
  * Retrieves a single invoice by its unique identifier, including associated details.
@@ -56,25 +49,22 @@ export async function getInvoices(
  * or an error if the invoice is not found.
  *
  */
-export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWithDetails>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getInvoiceById = withPermission<string, InvoiceWithDetails>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const invoice = await invoiceRepo.findByIdWithDetails(id);
 
-  try {
-    requirePermission(session.user, 'canReadInvoices');
-    const invoice = await invoiceRepo.findByIdWithDetails(id);
+      if (!invoice) {
+        return { success: false, error: 'Invoice not found' };
+      }
 
-    if (!invoice) {
-      return { success: false, error: 'Invoice not found' };
+      return { success: true, data: invoice };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch invoice');
     }
-
-    return { success: true, data: invoice };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoice');
-  }
-}
+  },
+);
 
 /**
  * Retrieves basic invoice details without relations, but with relationship counts.
@@ -82,84 +72,73 @@ export async function getInvoiceById(id: string): Promise<ActionResult<InvoiceWi
  * @param id - The ID of the invoice to retrieve.
  * @returns A promise that resolves to an `ActionResult` containing basic invoice details.
  */
-export async function getInvoiceMetadata(id: string): Promise<ActionResult<InvoiceMetadata>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getInvoiceMetadata = withPermission<string, InvoiceMetadata>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const invoice = await invoiceRepo.findByIdMetadata(id);
 
-  try {
-    requirePermission(session.user, 'canReadInvoices');
-    const invoice = await invoiceRepo.findByIdMetadata(id);
+      if (!invoice) {
+        return { success: false, error: 'Invoice not found' };
+      }
 
-    if (!invoice) {
-      return { success: false, error: 'Invoice not found' };
+      return { success: true, data: invoice };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch basic invoice details');
     }
-
-    return { success: true, data: invoice };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch basic invoice details');
-  }
-}
+  },
+);
 
 /**
  * Retrieves all items for a specific invoice.
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the invoice items.
  */
-export async function getInvoiceItems(id: string): Promise<ActionResult<InvoiceItemDetail[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const items = await invoiceRepo.findInvoiceItems(id);
-    return { success: true, data: items };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoice items');
-  }
-}
+export const getInvoiceItems = withPermission<string, InvoiceItemDetail[]>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const items = await invoiceRepo.findInvoiceItems(id);
+      return { success: true, data: items };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch invoice items');
+    }
+  },
+);
 
 /**
  * Retrieves all payments for a specific invoice.
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the invoice payments.
  */
-export async function getInvoicePayments(id: string): Promise<ActionResult<InvoicePaymentItem[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const payments = await invoiceRepo.findInvoicePayments(id);
-    return { success: true, data: payments };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoice payments');
-  }
-}
+export const getInvoicePayments = withPermission<string, InvoicePaymentItem[]>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const payments = await invoiceRepo.findInvoicePayments(id);
+      return { success: true, data: payments };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch invoice payments');
+    }
+  },
+);
 
 /**
  * Retrieves the status history for a specific invoice.
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the status history events.
  */
-export async function getInvoiceStatusHistory(
-  id: string,
-): Promise<ActionResult<InvoiceStatusHistoryItem[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const history = await invoiceRepo.findInvoiceStatusHistory(id);
-    return { success: true, data: history };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch invoice status history');
-  }
-}
+export const getInvoiceStatusHistory = withPermission<string, InvoiceStatusHistoryItem[]>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const history = await invoiceRepo.findInvoiceStatusHistory(id);
+      return { success: true, data: history };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch invoice status history');
+    }
+  },
+);
 
 /**
  * Retrieves statistics about invoices, such as counts for different statuses.
@@ -168,62 +147,51 @@ export async function getInvoiceStatusHistory(
  * @returns A promise that resolves to an `ActionResult` containing the invoice statistics.
  *
  */
-export async function getInvoiceStatistics(dateFilter?: {
-  startDate?: Date;
-  endDate?: Date;
-}): Promise<ActionResult<InvoiceStatistics>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getInvoiceStatistics = withPermission<
+  { startDate?: Date; endDate?: Date } | undefined,
+  InvoiceStatistics
+>('canReadInvoices', async (session, dateFilter) => {
   try {
     const stats = await invoiceRepo.getStatistics(dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
   }
-}
+});
 
 /**
  * Retrieves the monthly revenue trend data for a specified number of months.
  * @param limit - The maximum number of months to retrieve. Defaults to 12.
  * @returns A promise that resolves to an `ActionResult` containing an array of `RevenueTrend` objects.
  */
-export async function getMonthlyRevenueTrend(
-  limit: number = 12,
-): Promise<ActionResult<RevenueTrend[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const trend = await invoiceRepo.getMonthlyRevenueTrend(limit);
-    return { success: true, data: trend };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch revenue trend');
-  }
-}
+export const getMonthlyRevenueTrend = withPermission<number | undefined, RevenueTrend[]>(
+  'canReadInvoices',
+  async (session, limit = 12) => {
+    try {
+      const trend = await invoiceRepo.getMonthlyRevenueTrend(limit);
+      return { success: true, data: trend };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch revenue trend');
+    }
+  },
+);
 
 /**
  * Retrieves a list of top customer debtors based on their outstanding balance.
  * @param limit - The maximum number of debtors to retrieve. Defaults to 5.
  * @returns A promise that resolves to an `ActionResult` containing an array of `TopCustomerDebtor` objects.
  */
-export async function getTopDebtors(limit: number = 5): Promise<ActionResult<TopCustomerDebtor[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const debtors = await invoiceRepo.getTopDebtors(limit);
-    return { success: true, data: debtors };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch top debtors');
-  }
-}
+export const getTopDebtors = withPermission<number | undefined, TopCustomerDebtor[]>(
+  'canReadInvoices',
+  async (session, limit = 5) => {
+    try {
+      const debtors = await invoiceRepo.getTopDebtors(limit);
+      return { success: true, data: debtors };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch top debtors');
+    }
+  },
+);
 
 /**
  * Retrieves the URL for the invoice PDF.
@@ -232,34 +200,32 @@ export async function getTopDebtors(limit: number = 5): Promise<ActionResult<Top
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the PDF URL.
  */
-export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getInvoicePdfUrl = withPermission<string, { url: string }>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const invoice = await invoiceRepo.findByIdWithDetails(id);
+      if (!invoice) {
+        return { success: false, error: 'Invoice not found' };
+      }
 
-  try {
-    const invoice = await invoiceRepo.findByIdWithDetails(id);
-    if (!invoice) {
-      return { success: false, error: 'Invoice not found' };
+      // Generate or retrieve PDF using centralized service
+      // Note: skipDownload=true since we only need the URL, not the buffer
+      const { getOrGenerateInvoicePdf } =
+        await import('@/features/finances/invoices/services/invoice-pdf.service');
+      const result = await getOrGenerateInvoicePdf(invoice, {
+        context: 'getInvoicePdfUrl',
+        skipDownload: true,
+      });
+
+      const { pdfUrl } = result;
+
+      return { success: true, data: { url: pdfUrl } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to get invoice PDF URL');
     }
-
-    // Generate or retrieve PDF using centralized service
-    // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateInvoicePdf } =
-      await import('@/features/finances/invoices/services/invoice-pdf.service');
-    const result = await getOrGenerateInvoicePdf(invoice, {
-      context: 'getInvoicePdfUrl',
-      skipDownload: true,
-    });
-
-    const { pdfUrl } = result;
-
-    return { success: true, data: { url: pdfUrl } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to get invoice PDF URL');
-  }
-}
+  },
+);
 
 /**
  * Retrieves the URL for the receipt PDF.
@@ -268,31 +234,29 @@ export async function getInvoicePdfUrl(id: string): Promise<ActionResult<{ url: 
  * @param id - The ID of the invoice.
  * @returns A promise that resolves to an `ActionResult` containing the PDF URL.
  */
-export async function getReceiptPdfUrl(id: string): Promise<ActionResult<{ url: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getReceiptPdfUrl = withPermission<string, { url: string }>(
+  'canReadInvoices',
+  async (session, id) => {
+    try {
+      const invoice = await invoiceRepo.findByIdWithDetails(id);
+      if (!invoice) {
+        return { success: false, error: 'Invoice not found' };
+      }
 
-  try {
-    const invoice = await invoiceRepo.findByIdWithDetails(id);
-    if (!invoice) {
-      return { success: false, error: 'Invoice not found' };
+      // Generate or retrieve PDF using centralized service
+      // Note: skipDownload=true since we only need the URL, not the buffer
+      const { getOrGenerateReceiptPdf } =
+        await import('@/features/finances/invoices/services/invoice-pdf.service');
+      const result = await getOrGenerateReceiptPdf(invoice, {
+        context: 'getReceiptPdfUrl',
+        skipDownload: true,
+      });
+
+      const { pdfUrl } = result;
+
+      return { success: true, data: { url: pdfUrl } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to get receipt PDF URL');
     }
-
-    // Generate or retrieve PDF using centralized service
-    // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateReceiptPdf } =
-      await import('@/features/finances/invoices/services/invoice-pdf.service');
-    const result = await getOrGenerateReceiptPdf(invoice, {
-      context: 'getReceiptPdfUrl',
-      skipDownload: true,
-    });
-
-    const { pdfUrl } = result;
-
-    return { success: true, data: { url: pdfUrl } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to get receipt PDF URL');
-  }
-}
+  },
+);

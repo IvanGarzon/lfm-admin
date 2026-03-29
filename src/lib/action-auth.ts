@@ -1,7 +1,18 @@
+import { cache } from 'react';
 import { auth } from '@/auth';
 import type { Session } from 'next-auth';
 import type { ActionResult } from '@/types/actions';
 import { hasActionPermission, type PermissionKey, hasPermission } from './permissions';
+
+// -- Cached Session Getter --------------------------------------------------
+
+/**
+ * Cached session getter - memoizes auth() calls within a single request.
+ * Prevents redundant JWT verification when multiple actions are called.
+ */
+const getSession = cache(async (): Promise<Session | null> => {
+  return auth();
+});
 
 // -- Types ------------------------------------------------------------------
 
@@ -54,7 +65,7 @@ export function withAuth<TInput, TOutput>(
   handler: AuthenticatedHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await auth();
+    const session = await getSession();
 
     if (!isAuthenticatedSession(session)) {
       return {
@@ -90,7 +101,7 @@ export function withActionPermission<TInput, TOutput>(
   handler: AuthenticatedHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await auth();
+    const session = await getSession();
 
     if (!isAuthenticatedSession(session)) {
       return {
@@ -113,13 +124,15 @@ export function withActionPermission<TInput, TOutput>(
 // -- Feature Permission Wrapper ---------------------------------------------
 
 /**
- * Wraps a server action to require authentication AND specific feature permission.
+ * Wraps a server action to require authentication AND specific feature permission(s).
  * Checks both authentication and high-level permissions (e.g., canManageInvoices).
+ * When multiple permissions are provided, ALL permissions are required (AND logic).
  *
- * @param permission - The permission key from PERMISSIONS
+ * @param permission - Single permission key or array of permission keys from PERMISSIONS
  * @param handler - The authenticated handler function
  *
  * @example
+ * // Single permission
  * export const bulkUpdateInvoices = withPermission<BulkUpdateInput, { count: number }>(
  *   'canManageInvoices',
  *   async (session, data) => {
@@ -127,13 +140,23 @@ export function withActionPermission<TInput, TOutput>(
  *     return { success: true, data: { count } };
  *   }
  * );
+ *
+ * @example
+ * // Multiple permissions (all required)
+ * export const bulkDeleteInvoices = withPermission<DeleteInput, { count: number }>(
+ *   ['canManageInvoices', 'canDeleteInvoices'],
+ *   async (session, data) => {
+ *     const count = await invoiceRepo.bulkDelete(data);
+ *     return { success: true, data: { count } };
+ *   }
+ * );
  */
 export function withPermission<TInput, TOutput>(
-  permission: PermissionKey,
+  permission: PermissionKey | PermissionKey[],
   handler: AuthenticatedHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await auth();
+    const session = await getSession();
 
     if (!isAuthenticatedSession(session)) {
       return {
@@ -142,7 +165,10 @@ export function withPermission<TInput, TOutput>(
       };
     }
 
-    if (!hasPermission(session.user, permission)) {
+    const permissions = Array.isArray(permission) ? permission : [permission];
+    const missingPermissions = permissions.filter((p) => !hasPermission(session.user, p));
+
+    if (missingPermissions.length > 0) {
       return {
         success: false,
         error: 'You do not have permission to perform this action',
@@ -172,7 +198,7 @@ export function withOptionalAuth<TInput, TOutput>(
   handler: (session: Session | null, input: TInput) => Promise<ActionResult<TOutput>>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await auth();
+    const session = await getSession();
     return handler(session, input);
   };
 }

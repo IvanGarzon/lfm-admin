@@ -9,11 +9,12 @@ import { sendEmailEvent } from '@/lib/inngest/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repository';
+import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { env } from '@/env';
 import type { QueueEmailPayload } from '@/types/email';
 
-// Singleton repository instance
 const taskRepo = new ScheduledTaskRepository(prisma);
+const emailAuditRepo = new EmailAuditRepository(prisma);
 
 /**
  * Queue an email for background processing
@@ -86,29 +87,21 @@ export async function queueEmail(
     }
 
     // Create email audit record
-    const emailAudit = await prisma.emailAudit.create({
-      data: {
-        emailType: payload.emailType,
-        templateName: payload.templateName,
-        recipient,
-        subject: payload.subject,
-        status: 'QUEUED',
-
-        // Polymorphic relations
-        invoiceId: payload.invoiceId,
-        quoteId: payload.quoteId,
-        customerId: payload.customerId,
-
-        // Metadata
-        metadata: {
-          entityType: payload.entityType,
-          entityId: payload.entityId,
-          priority: payload.priority,
-          attachments: payload.attachments,
-          ...payload.metadata,
-          // Track original recipient when in test mode
-          ...(isTestMode && { originalRecipient: payload.recipient }),
-        },
+    const emailAudit = await emailAuditRepo.create({
+      emailType: payload.emailType,
+      templateName: payload.templateName,
+      recipient,
+      subject: payload.subject,
+      invoiceId: payload.invoiceId,
+      quoteId: payload.quoteId,
+      customerId: payload.customerId,
+      metadata: {
+        entityType: payload.entityType,
+        entityId: payload.entityId,
+        priority: payload.priority,
+        attachments: payload.attachments,
+        ...payload.metadata,
+        ...(isTestMode && { originalRecipient: payload.recipient }),
       },
     });
 
@@ -119,10 +112,7 @@ export async function queueEmail(
     await sendEmailEvent({ auditId: emailAudit.id, email: payload }, { id: eventId });
 
     // Update audit record with Inngest event ID
-    await prisma.emailAudit.update({
-      where: { id: emailAudit.id },
-      data: { inngestEventId: eventId },
-    });
+    await emailAuditRepo.updateInngestEventId(emailAudit.id, eventId);
 
     logger.info('Email queued successfully', {
       context: 'email-queue',

@@ -148,8 +148,11 @@ function handlePrismaError<T = never>(
   switch (error.code) {
     // Unique constraint violation
     case 'P2002': {
-      const target: string[] = error.meta?.target;
-      const field = target?.join(', ') || 'field';
+      const rawTarget = error.meta?.target;
+      const target = Array.isArray(rawTarget)
+        ? rawTarget.filter((item): item is string => typeof item === 'string')
+        : [];
+      const field = target.join(', ') || 'field';
       return {
         success: false,
         error: `A record with this ${field} already exists`,
@@ -160,8 +163,11 @@ function handlePrismaError<T = never>(
 
     // Foreign key constraint violation
     case 'P2003': {
-      const fieldName: string[] = error.meta?.target;
-      const field = fieldName?.join(', ') || 'field';
+      const rawFieldName = error.meta?.target;
+      const field = Array.isArray(rawFieldName)
+        ? rawFieldName.filter((item): item is string => typeof item === 'string').join(', ') ||
+          'field'
+        : 'field';
       return {
         success: false,
         error: field ? `Related ${field} not found` : 'Related record not found',

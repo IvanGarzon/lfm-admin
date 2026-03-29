@@ -1,12 +1,11 @@
 'use server';
 
-import { auth } from '@/auth';
 import { SearchParams } from 'nuqs/server';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { requirePermission } from '@/lib/permissions';
+import { withPermission } from '@/lib/action-auth';
 import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
   QuoteStatistics,
@@ -31,25 +30,19 @@ const quoteRepo = new QuoteRepository(prisma);
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated quote data.
  */
-export async function getQuotes(
-  searchParams: SearchParams,
-): Promise<ActionResult<QuotePagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getQuotes = withPermission<SearchParams, QuotePagination>(
+  'canReadQuotes',
+  async (session, searchParams) => {
+    try {
+      const filters = searchParamsCache.parse(searchParams);
+      const result = await quoteRepo.searchAndPaginate(filters);
 
-  try {
-    requirePermission(session.user, 'canReadQuotes');
-
-    const filters = searchParamsCache.parse(searchParams);
-    const result = await quoteRepo.searchAndPaginate(filters);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quotes');
-  }
-}
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quotes');
+    }
+  },
+);
 
 /**
  * Retrieves a single quote by its unique identifier, including associated details.
@@ -57,25 +50,22 @@ export async function getQuotes(
  * @returns A promise that resolves to an `ActionResult` containing the quote details,
  * or an error if the quote is not found.
  */
-export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDetails>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getQuoteById = withPermission<string, QuoteWithDetails>(
+  'canReadQuotes',
+  async (session, id) => {
+    try {
+      const quote = await quoteRepo.findByIdWithDetails(id);
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      return { success: true, data: quote };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quote');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-    const quote = await quoteRepo.findByIdWithDetails(id);
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    return { success: true, data: quote };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quote');
-  }
-}
+  },
+);
 
 /**
  * Retrieves lightweight quote metadata without items.
@@ -85,25 +75,22 @@ export async function getQuoteById(id: string): Promise<ActionResult<QuoteWithDe
  * @returns A promise that resolves to an `ActionResult` containing the quote metadata,
  * or an error if the quote is not found.
  */
-export async function getQuoteMetadata(id: string): Promise<ActionResult<QuoteMetadata>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getQuoteMetadata = withPermission<string, QuoteMetadata>(
+  'canReadQuotes',
+  async (session, id) => {
+    try {
+      const quote = await quoteRepo.findByIdMetadata(id);
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      return { success: true, data: quote };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quote metadata');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-    const quote = await quoteRepo.findByIdMetadata(id);
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    return { success: true, data: quote };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quote metadata');
-  }
-}
+  },
+);
 
 /**
  * Retrieves quote items with attachments for a specific quote.
@@ -111,42 +98,36 @@ export async function getQuoteMetadata(id: string): Promise<ActionResult<QuoteMe
  * @param quoteId - The ID of the quote to retrieve items for.
  * @returns A promise that resolves to an `ActionResult` containing the quote items.
  */
-export async function getQuoteItems(quoteId: string): Promise<ActionResult<QuoteItem[]>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getQuoteItems = withPermission<string, QuoteItem[]>(
+  'canReadQuotes',
+  async (session, quoteId) => {
+    try {
+      const items = await quoteRepo.findQuoteItems(quoteId);
+
+      return { success: true, data: items };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quote items');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-    const items = await quoteRepo.findQuoteItems(quoteId);
-
-    return { success: true, data: items };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quote items');
-  }
-}
+  },
+);
 
 /**
  * Retrieves the status history for a specific quote.
  * @param id - The ID of the quote.
  * @returns A promise that resolves to an `ActionResult` containing the quote status history.
  */
-export async function getQuoteStatusHistory(id: string): Promise<ActionResult<any[]>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getQuoteStatusHistory = withPermission<string, any[]>(
+  'canReadQuotes',
+  async (session, id) => {
+    try {
+      const history = await quoteRepo.findQuoteStatusHistory(id);
+
+      return { success: true, data: history };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quote status history');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-    const history = await quoteRepo.findQuoteStatusHistory(id);
-
-    return { success: true, data: history };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quote status history');
-  }
-}
+  },
+);
 
 /**
  * Retrieves statistics about quotes, such as counts for different statuses.
@@ -154,61 +135,48 @@ export async function getQuoteStatusHistory(id: string): Promise<ActionResult<an
  * @param dateFilter - An optional object with startDate and endDate to filter the statistics.
  * @returns A promise that resolves to an `ActionResult` containing the quote statistics.
  */
-export async function getQuoteStatistics(dateFilter?: {
-  startDate?: Date;
-  endDate?: Date;
-}): Promise<ActionResult<QuoteStatistics>> {
+export const getQuoteStatistics = withPermission<
+  { startDate?: Date; endDate?: Date } | undefined,
+  QuoteStatistics
+>('canReadQuotes', async (session, dateFilter) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
     const stats = await quoteRepo.getStatistics(dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
   }
-}
+});
 
 /**
  * Retrieves all attachments associated with a specific quote item.
  * @param quoteItemId - The ID of the quote item.
  * @returns A promise that resolves to an `ActionResult` containing an array of quote item attachments.
  */
-export async function getQuoteItemAttachments(
-  quoteItemId: string,
-): Promise<ActionResult<QuoteItemAttachment[]>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getQuoteItemAttachments = withPermission<string, QuoteItemAttachment[]>(
+  'canReadQuotes',
+  async (session, quoteItemId) => {
+    try {
+      const attachments = await quoteRepo.getQuoteItemAttachments(quoteItemId);
+
+      return {
+        success: true,
+        data: attachments.map((attachment) => ({
+          id: attachment.id,
+          quoteItemId: attachment.quoteItemId,
+          fileName: attachment.fileName,
+          fileSize: attachment.fileSize,
+          mimeType: attachment.mimeType,
+          s3Key: attachment.s3Key,
+          s3Url: attachment.s3Url,
+          uploadedBy: attachment.uploadedBy,
+          uploadedAt: attachment.uploadedAt,
+        })),
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch item attachments');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-
-    const attachments = await quoteRepo.getQuoteItemAttachments(quoteItemId);
-
-    return {
-      success: true,
-      data: attachments.map((attachment) => ({
-        id: attachment.id,
-        quoteItemId: attachment.quoteItemId,
-        fileName: attachment.fileName,
-        fileSize: attachment.fileSize,
-        mimeType: attachment.mimeType,
-        s3Key: attachment.s3Key,
-        s3Url: attachment.s3Url,
-        uploadedBy: attachment.uploadedBy,
-        uploadedAt: attachment.uploadedAt,
-      })),
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch item attachments');
-  }
-}
+  },
+);
 
 /**
  * Generates a temporary, signed URL for downloading a quote item attachment from S3.
@@ -216,17 +184,11 @@ export async function getQuoteItemAttachments(
  * @returns A promise that resolves to an `ActionResult` containing the signed URL and the original file name,
  * or an error if the attachment is not found.
  */
-export async function getItemAttachmentDownloadUrl(
-  attachmentId: string,
-): Promise<ActionResult<{ url: string; fileName: string }>> {
+export const getItemAttachmentDownloadUrl = withPermission<
+  string,
+  { url: string; fileName: string }
+>('canReadQuotes', async (session, attachmentId) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
     // Get attachment details
     const attachment = await quoteRepo.getItemAttachmentById(attachmentId);
     if (!attachment) {
@@ -246,35 +208,27 @@ export async function getItemAttachmentDownloadUrl(
   } catch (error) {
     return handleActionError(error, 'Failed to generate download URL');
   }
-}
+});
 
 /**
  * Gets all versions of a quote.
  * @param quoteId - The ID of any quote in the version chain.
  * @returns A promise that resolves to an `ActionResult` with all versions.
  */
-export async function getQuoteVersions(quoteId: string): Promise<
-  ActionResult<
-    {
-      id: string;
-      quoteNumber: string;
-      versionNumber: number;
-      status: QuoteStatus;
-      amount: number;
-      issuedDate: Date;
-      createdAt: Date;
-      updatedAt: Date;
-    }[]
-  >
-> {
+export const getQuoteVersions = withPermission<
+  string,
+  {
+    id: string;
+    quoteNumber: string;
+    versionNumber: number;
+    status: QuoteStatus;
+    amount: number;
+    issuedDate: Date;
+    createdAt: Date;
+    updatedAt: Date;
+  }[]
+>('canReadQuotes', async (session, quoteId) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
     const versions = await quoteRepo.getQuoteVersions(quoteId);
 
     const normalizedVersions = versions.map((v) => ({
@@ -286,131 +240,103 @@ export async function getQuoteVersions(quoteId: string): Promise<
   } catch (error) {
     return handleActionError(error, 'Failed to fetch quote versions');
   }
-}
+});
 
 /**
  * Get or generate a quote PDF and return the signed download URL.
  * @param id - The ID of the quote.
  * @returns A promise that resolves to an `ActionResult` containing the PDF URL and filename.
  */
-export async function getQuotePdfUrl(
-  id: string,
-): Promise<ActionResult<{ url: string; filename: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getQuotePdfUrl = withPermission<string, { url: string; filename: string }>(
+  'canReadQuotes',
+  async (session, id) => {
+    try {
+      const quote = await quoteRepo.findByIdWithDetails(id);
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
 
-  try {
-    requirePermission(session.user, 'canReadQuotes');
+      // Generate or retrieve PDF using centralized service
+      // Note: skipDownload=true since we only need the URL, not the buffer
+      const { getOrGenerateQuotePdf } =
+        await import('@/features/finances/quotes/services/quote-pdf.service');
+      const result = await getOrGenerateQuotePdf(quote, {
+        context: 'getQuotePdfUrl',
+        skipDownload: true,
+      });
 
-    const quote = await quoteRepo.findByIdWithDetails(id);
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
+      const { pdfUrl, pdfFilename } = result;
+
+      return { success: true, data: { url: pdfUrl, filename: pdfFilename } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to get quote PDF URL');
     }
-
-    // Generate or retrieve PDF using centralized service
-    // Note: skipDownload=true since we only need the URL, not the buffer
-    const { getOrGenerateQuotePdf } =
-      await import('@/features/finances/quotes/services/quote-pdf.service');
-    const result = await getOrGenerateQuotePdf(quote, {
-      context: 'getQuotePdfUrl',
-      skipDownload: true,
-    });
-
-    const { pdfUrl, pdfFilename } = result;
-
-    return { success: true, data: { url: pdfUrl, filename: pdfFilename } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to get quote PDF URL');
-  }
-}
+  },
+);
 
 /**
  * Retrieves monthly quote value trend data for visualization.
  * @param limit - Number of months to retrieve. Defaults to 12.
  * @returns A promise that resolves to an `ActionResult` containing the monthly quote value trends.
  */
-export async function getMonthlyQuoteValueTrend(
-  limit?: number,
-): Promise<ActionResult<QuoteValueTrend[]>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getMonthlyQuoteValueTrend = withPermission<number | undefined, QuoteValueTrend[]>(
+  'canReadQuotes',
+  async (session, limit) => {
+    try {
+      const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit);
+      return { success: true, data: trend };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch quote value trend');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-
-    const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit);
-    return { success: true, data: trend };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch quote value trend');
-  }
-}
+  },
+);
 
 /**
  * Retrieves conversion funnel data showing the flow from sent to converted quotes.
  * @param dateFilter - Optional date range filter.
  * @returns A promise that resolves to an `ActionResult` containing the conversion funnel data.
  */
-export async function getConversionFunnel(
-  dateFilter?: StatsDateFilter,
-): Promise<ActionResult<ConversionFunnelData>> {
+export const getConversionFunnel = withPermission<
+  StatsDateFilter | undefined,
+  ConversionFunnelData
+>('canReadQuotes', async (session, dateFilter) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
     const funnel = await quoteRepo.getConversionFunnel(dateFilter);
     return { success: true, data: funnel };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch conversion funnel');
   }
-}
+});
 
 /**
  * Retrieves top customers by total quoted value with conversion metrics.
  * @param limit - Number of customers to retrieve. Defaults to 5.
  * @returns A promise that resolves to an `ActionResult` containing the top customers.
  */
-export async function getTopCustomersByQuotedValue(
-  limit?: number,
-): Promise<ActionResult<TopCustomerByQuotedValue[]>> {
+export const getTopCustomersByQuotedValue = withPermission<
+  number | undefined,
+  TopCustomerByQuotedValue[]
+>('canReadQuotes', async (session, limit) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canReadQuotes');
-
     const topCustomers = await quoteRepo.getTopCustomersByQuotedValue(limit);
     return { success: true, data: topCustomers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch top customers');
   }
-}
+});
 
 /**
  * Retrieves average time to decision metrics for quotes.
  * @returns A promise that resolves to an `ActionResult` containing average time to decision data.
  */
-export async function getAverageTimeToDecision(): Promise<ActionResult<AverageTimeToDecision>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const getAverageTimeToDecision = withPermission<void, AverageTimeToDecision>(
+  'canReadQuotes',
+  async (session) => {
+    try {
+      const avgTime = await quoteRepo.getAverageTimeToDecision();
+      return { success: true, data: avgTime };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch average time to decision');
     }
-
-    requirePermission(session.user, 'canReadQuotes');
-
-    const avgTime = await quoteRepo.getAverageTimeToDecision();
-    return { success: true, data: avgTime };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch average time to decision');
-  }
-}
+  },
+);

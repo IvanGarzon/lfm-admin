@@ -8,19 +8,30 @@ export const publicRoutes: string[] = [
 ];
 
 /**
- * These routes are used for authentication
- * redirect logged-in users to /settings
- * @type {string[]}
+ * Named authentication route constants with type safety
+ * Single source of truth for all auth routes
  * */
-export const authRoutes: string[] = [
-  '/signin',
-  // "/register",
-  // "/error",
-  // "/resend",
-  // "/reset",
-  // "/new-password",
-  // "/two-factor"
-];
+export const AUTH_ROUTES = {
+  SIGN_IN: '/signin',
+  // REGISTER: '/register',
+  // ERROR: '/error',
+  // RESEND: '/resend',
+  // RESET: '/reset',
+  // NEW_PASSWORD: '/new-password',
+  // TWO_FACTOR: '/two-factor',
+} as const;
+
+/**
+ * Array of authentication routes for .includes() checks
+ * Auto-derived from AUTH_ROUTES for backward compatibility
+ * */
+export const authRoutes: string[] = Object.values(AUTH_ROUTES);
+
+/**
+ * Primary sign-in route for unauthenticated users
+ * @type {string}
+ * */
+export const DEFAULT_SIGNIN_ROUTE = AUTH_ROUTES.SIGN_IN;
 
 /**
  * The prefix for API authentication routes

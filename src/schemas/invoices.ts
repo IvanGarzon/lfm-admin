@@ -89,6 +89,7 @@ export const RecordPaymentSchema = z.object({
  */
 export const MarkInvoiceAsPendingSchema = z.object({
   id: z.cuid({ error: 'Invoice ID is required' }),
+  sendEmail: z.boolean().optional(),
 });
 
 /**

@@ -695,7 +695,7 @@ export function useMarkQuoteAsSent() {
     mutationFn: async (params: string | { id: string; sendEmail?: boolean }) => {
       const id = typeof params === 'string' ? params : params.id;
       const options = typeof params === 'string' ? undefined : { sendEmail: params.sendEmail };
-      const result = await markQuoteAsSent(id, options);
+      const result = await markQuoteAsSent({ id, options });
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -1817,7 +1817,7 @@ export function useBulkUpdateQuoteStatus() {
 
   return useMutation({
     mutationFn: async ({ ids, status }: { ids: string[]; status: QuoteStatus }) => {
-      const result = await bulkUpdateQuoteStatus(ids, status);
+      const result = await bulkUpdateQuoteStatus({ ids, status });
       if (!result.success) {
         throw new Error(result.error);
       }

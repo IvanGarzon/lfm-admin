@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/auth';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
+import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { requirePermission } from '@/lib/permissions';
+import { withPermission } from '@/lib/action-auth';
 import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
@@ -36,6 +36,7 @@ import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.servi
 
 const quoteRepo = new QuoteRepository(prisma);
 const invoiceRepo = new InvoiceRepository(prisma);
+const emailAuditRepo = new EmailAuditRepository(prisma);
 
 /**
  * Creates a new quote with the provided data.
@@ -43,30 +44,24 @@ const invoiceRepo = new InvoiceRepository(prisma);
  * @param data - The input data for creating the quote, conforming to `CreateQuoteInput`.
  * @returns A promise that resolves to an `ActionResult` with the new quote's ID and number.
  */
-export async function createQuote(
-  data: CreateQuoteInput,
-): Promise<ActionResult<{ id: string; quoteNumber: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const createQuote = withPermission<CreateQuoteInput, { id: string; quoteNumber: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      // Validate input
+      const validatedData = CreateQuoteSchema.parse(data);
+      const quote = await quoteRepo.createQuoteWithItems(validatedData, session.user.id);
+      revalidatePath('/finances/quotes');
 
-  try {
-    requirePermission(session.user, 'canManageQuotes');
-
-    // Validate input
-    const validatedData = CreateQuoteSchema.parse(data);
-    const quote = await quoteRepo.createQuoteWithItems(validatedData, session.user.id);
-    revalidatePath('/finances/quotes');
-
-    return {
-      success: true,
-      data: { id: quote.id, quoteNumber: quote.quoteNumber },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to create quote');
-  }
-}
+      return {
+        success: true,
+        data: { id: quote.id, quoteNumber: quote.quoteNumber },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to create quote');
+    }
+  },
+);
 
 /**
  * Updates an existing quote with the provided data.
@@ -74,39 +69,35 @@ export async function createQuote(
  * @param data - The input data for updating the quote, conforming to `UpdateQuoteInput`.
  * @returns A promise that resolves to an `ActionResult` with the updated quote's ID.
  */
-export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const updateQuote = withPermission<UpdateQuoteInput, { id: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      const validatedData = UpdateQuoteSchema.parse(data);
+      const existing = await quoteRepo.findById(validatedData.id);
+      if (!existing) {
+        return { success: false, error: 'Quote not found' };
+      }
 
-  try {
-    requirePermission(session.user, 'canManageQuotes');
+      const quote = await quoteRepo.updateQuoteWithItems(
+        validatedData.id,
+        validatedData,
+        session.user.id,
+      );
 
-    const validatedData = UpdateQuoteSchema.parse(data);
-    const existing = await quoteRepo.findById(validatedData.id);
-    if (!existing) {
-      return { success: false, error: 'Quote not found' };
+      if (!quote) {
+        return { success: false, error: 'Failed to update quote' };
+      }
+
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${quote.id}`);
+
+      return { success: true, data: { id: quote.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update quote');
     }
-
-    const quote = await quoteRepo.updateQuoteWithItems(
-      validatedData.id,
-      validatedData,
-      session.user.id,
-    );
-
-    if (!quote) {
-      return { success: false, error: 'Failed to update quote' };
-    }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${quote.id}`);
-
-    return { success: true, data: { id: quote.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to update quote');
-  }
-}
+  },
+);
 
 /**
  * Marks a quote as accepted.
@@ -114,32 +105,26 @@ export async function updateQuote(data: UpdateQuoteInput): Promise<ActionResult<
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsAccepted(
-  data: MarkQuoteAsAcceptedInput,
-): Promise<ActionResult<{ id: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const markQuoteAsAccepted = withPermission<MarkQuoteAsAcceptedInput, { id: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
+      const quote = await quoteRepo.markAsAccepted(validatedData.id, session.user.id);
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+      return { success: true, data: { id: quote.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to mark quote as accepted');
     }
-
-    requirePermission(session.user, 'canManageQuotes');
-
-    const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
-    const quote = await quoteRepo.markAsAccepted(validatedData.id, session?.user?.id);
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${validatedData.id}`);
-
-    return { success: true, data: { id: quote.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to mark quote as accepted');
-  }
-}
+  },
+);
 
 /**
  * Marks a quote as rejected.
@@ -147,57 +132,46 @@ export async function markQuoteAsAccepted(
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsRejected(
-  data: MarkQuoteAsRejectedInput,
-): Promise<ActionResult<{ id: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const markQuoteAsRejected = withPermission<MarkQuoteAsRejectedInput, { id: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      const validatedData = MarkQuoteAsRejectedSchema.parse(data);
+      const quote = await quoteRepo.markAsRejected(
+        validatedData.id,
+        validatedData.rejectReason,
+        session.user.id,
+      );
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+      return { success: true, data: { id: quote.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to mark quote as rejected');
     }
-
-    requirePermission(session.user, 'canManageQuotes');
-
-    const validatedData = MarkQuoteAsRejectedSchema.parse(data);
-    const quote = await quoteRepo.markAsRejected(
-      validatedData.id,
-      validatedData.rejectReason,
-      session?.user?.id,
-    );
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${validatedData.id}`);
-
-    return { success: true, data: { id: quote.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to mark quote as rejected');
-  }
-}
+  },
+);
 
 /**
  * Marks a quote as sent.
- * @param id - The ID of the quote to mark as sent.
+ * @param data - Object containing the quote ID and optional email sending flag.
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsSent(
-  id: string,
-  options?: { sendEmail?: boolean },
-): Promise<ActionResult<{ id: string }>> {
+export const markQuoteAsSent = withPermission<
+  { id: string; options?: { sendEmail?: boolean } },
+  { id: string }
+>('canManageQuotes', async (session, data) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canManageQuotes');
+    const { id, options } = data;
 
     // Fetch quote with customer details
-    const quote = await quoteRepo.markAsSent(id, session?.user?.id);
+    const quote = await quoteRepo.markAsSent(id, session.user.id);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -228,7 +202,7 @@ export async function markQuoteAsSent(
   } catch (error) {
     return handleActionError(error, 'Failed to mark quote as sent');
   }
-}
+});
 
 /**
  * Marks a quote as on hold.
@@ -236,36 +210,30 @@ export async function markQuoteAsSent(
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsOnHold(
-  data: MarkQuoteAsOnHoldInput,
-): Promise<ActionResult<{ id: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const markQuoteAsOnHold = withPermission<MarkQuoteAsOnHoldInput, { id: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
+      const quote = await quoteRepo.markAsOnHold(
+        validatedData.id,
+        validatedData.reason,
+        session.user.id,
+      );
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+      return { success: true, data: { id: quote.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to mark quote as on hold');
     }
-
-    requirePermission(session.user, 'canManageQuotes');
-
-    const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
-    const quote = await quoteRepo.markAsOnHold(
-      validatedData.id,
-      validatedData.reason,
-      session?.user?.id,
-    );
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${validatedData.id}`);
-
-    return { success: true, data: { id: quote.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to mark quote as on hold');
-  }
-}
+  },
+);
 
 /**
  * Marks a quote as cancelled.
@@ -273,36 +241,30 @@ export async function markQuoteAsOnHold(
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export async function markQuoteAsCancelled(
-  data: MarkQuoteAsCancelledInput,
-): Promise<ActionResult<{ id: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const markQuoteAsCancelled = withPermission<MarkQuoteAsCancelledInput, { id: string }>(
+  'canManageQuotes',
+  async (session, data) => {
+    try {
+      const validatedData = MarkQuoteAsCancelledSchema.parse(data);
+      const quote = await quoteRepo.markAsCancelled(
+        validatedData.id,
+        validatedData.cancelReason,
+        session.user.id,
+      );
+
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${validatedData.id}`);
+
+      return { success: true, data: { id: quote.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to cancel quote');
     }
-
-    requirePermission(session.user, 'canManageQuotes');
-
-    const validatedData = MarkQuoteAsCancelledSchema.parse(data);
-    const quote = await quoteRepo.markAsCancelled(
-      validatedData.id,
-      validatedData.cancelReason,
-      session?.user?.id,
-    );
-
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${validatedData.id}`);
-
-    return { success: true, data: { id: quote.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to cancel quote');
-  }
-}
+  },
+);
 
 /**
  * Converts a quote into a new invoice with PENDING status.
@@ -312,17 +274,11 @@ export async function markQuoteAsCancelled(
  * @returns A promise that resolves to an `ActionResult` containing the new invoice's ID and number,
  * or an error if the quote is not found or the status transition is invalid.
  */
-export async function convertQuoteToInvoice(
-  data: ConvertQuoteToInvoiceInput,
-): Promise<ActionResult<{ invoiceId: string; invoiceNumber: string }>> {
+export const convertQuoteToInvoice = withPermission<
+  ConvertQuoteToInvoiceInput,
+  { invoiceId: string; invoiceNumber: string }
+>('canManageQuotes', async (session, data) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canManageQuotes');
-
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
     const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
 
@@ -335,7 +291,7 @@ export async function convertQuoteToInvoice(
         discount: validatedData.discount,
         dueDate: validatedData.dueDate,
       },
-      session?.user?.id,
+      session.user.id,
     );
 
     // Auto-send invoice email to customer
@@ -371,7 +327,7 @@ export async function convertQuoteToInvoice(
   } catch (error) {
     return handleActionError(error, 'Failed to convert quote to invoice');
   }
-}
+});
 
 /**
  * Checks for quotes that are past their 'validUntil' date and updates their status to 'EXPIRED'.
@@ -399,28 +355,24 @@ export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: numb
  * @returns A promise that resolves to an `ActionResult` with the ID of the soft-deleted quote,
  * or an error if the quote is not found.
  */
-export async function deleteQuote(id: string): Promise<ActionResult<{ id: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
+export const deleteQuote = withPermission<string, { id: string }>(
+  'canManageQuotes',
+  async (session, id) => {
+    try {
+      const success = await quoteRepo.softDelete(id);
+
+      if (!success) {
+        return { success: false, error: 'Quote not found' };
+      }
+
+      revalidatePath('/finances/quotes');
+
+      return { success: true, data: { id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to delete quote');
     }
-
-    requirePermission(session.user, 'canManageQuotes');
-
-    const success = await quoteRepo.softDelete(id);
-
-    if (!success) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    revalidatePath('/finances/quotes');
-
-    return { success: true, data: { id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete quote');
-  }
-}
+  },
+);
 
 /**
  * Uploads an image attachment for a specific quote item.
@@ -428,93 +380,87 @@ export async function deleteQuote(id: string): Promise<ActionResult<{ id: string
  * @param formData - The form data containing the file, quote ID, and quote item ID.
  * @returns A promise that resolves to an `ActionResult` with the new item attachment's data.
  */
-export async function uploadQuoteItemAttachment(
-  formData: FormData,
-): Promise<ActionResult<QuoteItemAttachment>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const uploadQuoteItemAttachment = withPermission<FormData, QuoteItemAttachment>(
+  'canManageQuotes',
+  async (session, formData) => {
+    try {
+      const quoteItemId = formData.get('quoteItemId');
+      const quoteId = formData.get('quoteId');
+      const fileEntry = formData.get('file');
 
-  requirePermission(session.user, 'canManageQuotes');
+      if (
+        typeof quoteItemId !== 'string' ||
+        typeof quoteId !== 'string' ||
+        !(fileEntry instanceof File)
+      ) {
+        return { success: false, error: 'Missing required fields' };
+      }
 
-  try {
-    const quoteItemId = formData.get('quoteItemId');
-    const quoteId = formData.get('quoteId');
-    const fileEntry = formData.get('file');
+      const file: File = fileEntry;
 
-    if (
-      typeof quoteItemId !== 'string' ||
-      typeof quoteId !== 'string' ||
-      !(fileEntry instanceof File)
-    ) {
-      return { success: false, error: 'Missing required fields' };
+      // Validate inputs with file properties
+      const validatedData = UploadItemAttachmentSchema.parse({
+        quoteItemId,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+      });
+
+      // Convert file to buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const params = {
+        file: buffer,
+        fileName: validatedData.fileName,
+        mimeType: validatedData.mimeType,
+        quoteId,
+      };
+
+      const { s3Key, s3Url } = await uploadFileToS3({
+        ...params,
+        resourceType: 'quotes',
+        resourceId: params.quoteId,
+        subPath: `items/${validatedData.quoteItemId}`,
+        allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+        metadata: {
+          quoteId: params.quoteId,
+          itemId: validatedData.quoteItemId,
+        },
+      });
+
+      // Create database record
+      const attachment = await quoteRepo.createItemAttachment({
+        quoteItemId: validatedData.quoteItemId,
+        fileName: validatedData.fileName,
+        fileSize: validatedData.fileSize,
+        mimeType: validatedData.mimeType,
+        s3Key,
+        s3Url,
+        uploadedBy: session.user.id,
+      });
+
+      revalidatePath(`/finances/quotes/${quoteId}`);
+
+      return {
+        success: true,
+        data: {
+          id: attachment.id,
+          quoteItemId: attachment.quoteItemId,
+          fileName: attachment.fileName,
+          fileSize: attachment.fileSize,
+          mimeType: attachment.mimeType,
+          s3Key: attachment.s3Key,
+          s3Url: attachment.s3Url,
+          uploadedBy: attachment.uploadedBy,
+          uploadedAt: attachment.uploadedAt,
+        },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to upload item attachment');
     }
-
-    const file: File = fileEntry;
-
-    // Validate inputs with file properties
-    const validatedData = UploadItemAttachmentSchema.parse({
-      quoteItemId,
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-    });
-
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const params = {
-      file: buffer,
-      fileName: validatedData.fileName,
-      mimeType: validatedData.mimeType,
-      quoteId,
-    };
-
-    const { s3Key, s3Url } = await uploadFileToS3({
-      ...params,
-      resourceType: 'quotes',
-      resourceId: params.quoteId,
-      subPath: `items/${validatedData.quoteItemId}`,
-      allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
-      metadata: {
-        quoteId: params.quoteId,
-        itemId: validatedData.quoteItemId,
-      },
-    });
-
-    // Create database record
-    const attachment = await quoteRepo.createItemAttachment({
-      quoteItemId: validatedData.quoteItemId,
-      fileName: validatedData.fileName,
-      fileSize: validatedData.fileSize,
-      mimeType: validatedData.mimeType,
-      s3Key,
-      s3Url,
-      uploadedBy: session.user.id,
-    });
-
-    revalidatePath(`/finances/quotes/${quoteId}`);
-
-    return {
-      success: true,
-      data: {
-        id: attachment.id,
-        quoteItemId: attachment.quoteItemId,
-        fileName: attachment.fileName,
-        fileSize: attachment.fileSize,
-        mimeType: attachment.mimeType,
-        s3Key: attachment.s3Key,
-        s3Url: attachment.s3Url,
-        uploadedBy: attachment.uploadedBy,
-        uploadedAt: attachment.uploadedAt,
-      },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to upload item attachment');
-  }
-}
+  },
+);
 
 /**
  * Deletes a quote item attachment from both S3 and the database.
@@ -523,17 +469,10 @@ export async function uploadQuoteItemAttachment(
  * @returns A promise that resolves to an `ActionResult` with the ID of the deleted attachment,
  * or an error if the attachment is not found.
  */
-export async function deleteQuoteItemAttachment(data: {
-  attachmentId: string;
-  quoteId: string;
-}): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  requirePermission(session.user, 'canManageQuotes');
-
+export const deleteQuoteItemAttachment = withPermission<
+  { attachmentId: string; quoteId: string },
+  { id: string }
+>('canManageQuotes', async (session, data) => {
   try {
     const validatedData = DeleteItemAttachmentSchema.parse(data);
 
@@ -568,7 +507,7 @@ export async function deleteQuoteItemAttachment(data: {
   } catch (error) {
     return handleActionError(error, 'Failed to delete item attachment');
   }
-}
+});
 
 /**
  * Updates the notes for a specific quote item.
@@ -577,18 +516,10 @@ export async function deleteQuoteItemAttachment(data: {
  * @returns A promise that resolves to an `ActionResult` with the updated item's ID and notes,
  * or an error if the update fails.
  */
-export async function updateQuoteItemNotes(data: {
-  quoteItemId: string;
-  quoteId: string;
-  notes: string;
-}): Promise<ActionResult<{ id: string; notes: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  requirePermission(session.user, 'canManageQuotes');
-
+export const updateQuoteItemNotes = withPermission<
+  { quoteItemId: string; quoteId: string; notes: string },
+  { id: string; notes: string }
+>('canManageQuotes', async (session, data) => {
   try {
     // Update notes in database
     const quoteItem = await quoteRepo.updateQuoteItemNotes(data.quoteItemId, data.notes);
@@ -605,7 +536,7 @@ export async function updateQuoteItemNotes(data: {
   } catch (error) {
     return handleActionError(error, 'Failed to update quote item notes');
   }
-}
+});
 
 /**
  * Updates the color palette for a specific quote item.
@@ -614,18 +545,10 @@ export async function updateQuoteItemNotes(data: {
  * @returns A promise that resolves to an `ActionResult` with the updated item's ID and colors,
  * or an error if the update fails.
  */
-export async function updateQuoteItemColors(data: {
-  quoteItemId: string;
-  quoteId: string;
-  colors: string[];
-}): Promise<ActionResult<{ id: string; colors: string[] }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  requirePermission(session.user, 'canManageQuotes');
-
+export const updateQuoteItemColors = withPermission<
+  { quoteItemId: string; quoteId: string; colors: string[] },
+  { id: string; colors: string[] }
+>('canManageQuotes', async (session, data) => {
   try {
     // Validate that colors are valid hex codes
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
@@ -654,7 +577,7 @@ export async function updateQuoteItemColors(data: {
   } catch (error) {
     return handleActionError(error, 'Failed to update quote item colors');
   }
-}
+});
 
 /**
  * Creates a new version of an existing quote.
@@ -662,22 +585,16 @@ export async function updateQuoteItemColors(data: {
  * @param data - An object containing the quote ID to create a version from.
  * @returns A promise that resolves to an `ActionResult` with the new version's details.
  */
-export async function createQuoteVersion(data: CreateVersionInput): Promise<
-  ActionResult<{
+export const createQuoteVersion = withPermission<
+  CreateVersionInput,
+  {
     id: string;
     quoteNumber: string;
     versionNumber: number;
     parentQuoteNumber: string;
-  }>
-> {
+  }
+>('canManageQuotes', async (session, data) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canManageQuotes');
-
     const validatedData = CreateVersionSchema.parse(data);
 
     // Get parent quote to include its number in the response
@@ -704,25 +621,18 @@ export async function createQuoteVersion(data: CreateVersionInput): Promise<
   } catch (error) {
     return handleActionError(error, 'Failed to create quote version');
   }
-}
+});
 
 /**
  * Queues a quote email for background processing via Inngest.
  * @param data - An object containing the quote ID and email type.
  * @returns A promise that resolves to an `ActionResult` with the email audit ID.
  */
-export async function sendQuoteEmail(data: {
-  quoteId: string;
-  type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'followup';
-}): Promise<ActionResult<{ auditId: string; eventId: string }>> {
+export const sendQuoteEmail = withPermission<
+  { quoteId: string; type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'followup' },
+  { auditId: string; eventId: string }
+>('canManageQuotes', async (session, data) => {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    requirePermission(session.user, 'canManageQuotes');
-
     // Fetch quote with customer details
     const quote = await quoteRepo.findByIdWithDetails(data.quoteId);
     if (!quote) {
@@ -765,88 +675,74 @@ export async function sendQuoteEmail(data: {
   } catch (error) {
     return handleActionError(error, 'Failed to queue quote email');
   }
-}
+});
 
 /**
  * Sends a follow-up email for a quote with rate limiting (1 per 24h)
  * @param quoteId - The ID of the quote to send follow-up for
  * @returns A promise that resolves to an `ActionResult` with the email audit ID
  */
-export async function sendQuoteFollowUp(
-  quoteId: string,
-): Promise<ActionResult<{ auditId: string; eventId: string }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
+export const sendQuoteFollowUp = withPermission<string, { auditId: string; eventId: string }>(
+  'canManageQuotes',
+  async (session, quoteId) => {
+    try {
+      // Fetch quote with customer details
+      const quote = await quoteRepo.findByIdWithDetails(quoteId);
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
 
-    requirePermission(session.user, 'canManageQuotes');
+      // Check rate limiting - no follow-up sent in last 24 hours
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Fetch quote with customer details
-    const quote = await quoteRepo.findByIdWithDetails(quoteId);
-    if (!quote) {
-      return { success: false, error: 'Quote not found' };
-    }
-
-    // Check rate limiting - no follow-up sent in last 24 hours
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-    const recentFollowUp = await prisma.emailAudit.findFirst({
-      where: {
-        quoteId: quoteId,
-        emailType: 'quote.followup',
-        status: 'SENT',
-        sentAt: {
-          gte: twentyFourHoursAgo,
-        },
-      },
-      orderBy: {
-        sentAt: 'desc',
-      },
-    });
-
-    if (recentFollowUp) {
-      const hoursSinceLastFollowUp = Math.floor(
-        (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60),
+      const recentFollowUp = await emailAuditRepo.findLastSentByQuote(
+        quoteId,
+        'quote.followup',
+        twentyFourHoursAgo,
       );
-      const hoursRemaining = 24 - hoursSinceLastFollowUp;
 
-      return {
-        success: false,
-        error: `Please wait ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} before sending another follow-up`,
+      if (recentFollowUp) {
+        const hoursSinceLastFollowUp = Math.floor(
+          (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60),
+        );
+        const hoursRemaining = 24 - hoursSinceLastFollowUp;
+
+        return {
+          success: false,
+          error: `Please wait ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} before sending another follow-up`,
+        };
+      }
+
+      // Prepare email data
+      const emailData = {
+        quoteNumber: quote.quoteNumber,
+        customerName: `${quote.customer.firstName} ${quote.customer.lastName}`,
+        amount: quote.amount,
+        currency: quote.currency,
+        issuedDate: quote.issuedDate,
+        validUntil: quote.validUntil,
+        itemCount: quote.items.length,
       };
+
+      // Queue follow-up email via Inngest
+      const result = await queueQuoteEmail({
+        quoteId: quote.id,
+        customerId: quote.customer.id,
+        type: 'followup' as any, // Will be handled as 'quote.followup'
+        recipient: quote.customer.email,
+        subject: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
+        emailData,
+      });
+
+      revalidatePath(`/finances/quotes/${quoteId}`);
+
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to send quote follow-up');
     }
-
-    // Prepare email data
-    const emailData = {
-      quoteNumber: quote.quoteNumber,
-      customerName: `${quote.customer.firstName} ${quote.customer.lastName}`,
-      amount: quote.amount,
-      currency: quote.currency,
-      issuedDate: quote.issuedDate,
-      validUntil: quote.validUntil,
-      itemCount: quote.items.length,
-    };
-
-    // Queue follow-up email via Inngest
-    const result = await queueQuoteEmail({
-      quoteId: quote.id,
-      customerId: quote.customer.id,
-      type: 'followup' as any, // Will be handled as 'quote.followup'
-      recipient: quote.customer.email,
-      subject: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
-      emailData,
-    });
-
-    revalidatePath(`/finances/quotes/${quoteId}`);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to send quote follow-up');
-  }
-}
+  },
+);
 
 /**
  * Duplicates an existing quote to create an independent copy.
@@ -862,56 +758,40 @@ export async function sendQuoteFollowUp(
  * @param id - The ID of the quote to duplicate
  * @returns A promise that resolves to an `ActionResult` with the duplicate quote's ID and number
  */
-export async function duplicateQuote(
-  id: string,
-): Promise<ActionResult<{ id: string; quoteNumber: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const duplicateQuote = withPermission<string, { id: string; quoteNumber: string }>(
+  'canManageQuotes',
+  async (session, id) => {
+    try {
+      const result = await quoteRepo.duplicate(id);
 
-  try {
-    requirePermission(session.user, 'canManageQuotes');
+      revalidatePath('/finances/quotes');
 
-    const result = await quoteRepo.duplicate(id);
-
-    revalidatePath('/finances/quotes');
-
-    return {
-      success: true,
-      data: { id: result.id, quoteNumber: result.quoteNumber },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to duplicate quote');
-  }
-}
+      return {
+        success: true,
+        data: { id: result.id, quoteNumber: result.quoteNumber },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to duplicate quote');
+    }
+  },
+);
 
 /**
  * Updates the status of multiple quotes in a single operation.
- * @param ids - An array of quote IDs to update.
- * @param status - The new status to apply to the quotes.
+ * @param data - An object containing IDs and status.
  * @returns A promise that resolves to an `ActionResult` containing bulk update results,
  * including success and failure counts and individual operation results.
  */
-export async function bulkUpdateQuoteStatus(
-  ids: string[],
-  status: QuoteStatus,
-): Promise<
-  ActionResult<{
+export const bulkUpdateQuoteStatus = withPermission<
+  { ids: string[]; status: QuoteStatus },
+  {
     successCount: number;
     failureCount: number;
     results: { id: string; success: boolean; error?: string }[];
-  }>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
   }
-
+>('canManageQuotes', async (session, data) => {
   try {
-    requirePermission(session.user, 'canManageQuotes');
-
-    const results = await quoteRepo.bulkUpdateStatus(ids, status, session.user.id);
+    const results = await quoteRepo.bulkUpdateStatus(data.ids, data.status, session.user.id);
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -929,7 +809,7 @@ export async function bulkUpdateQuoteStatus(
   } catch (error) {
     return handleActionError(error, 'Failed to update quotes');
   }
-}
+});
 
 /**
  * Bulk deletes multiple quotes.
@@ -937,21 +817,15 @@ export async function bulkUpdateQuoteStatus(
  * @param ids - An array of quote IDs to delete.
  * @returns A promise that resolves to an `ActionResult` containing bulk deletion results.
  */
-export async function bulkDeleteQuotes(ids: string[]): Promise<
-  ActionResult<{
+export const bulkDeleteQuotes = withPermission<
+  string[],
+  {
     successCount: number;
     failureCount: number;
     results: { id: string; success: boolean; error?: string }[];
-  }>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
   }
-
+>('canManageQuotes', async (session, ids) => {
   try {
-    requirePermission(session.user, 'canManageQuotes');
-
     const results = await quoteRepo.bulkSoftDelete(ids);
 
     const successCount = results.filter((r) => r.success).length;
@@ -970,39 +844,33 @@ export async function bulkDeleteQuotes(ids: string[]): Promise<
   } catch (error) {
     return handleActionError(error, 'Failed to delete quotes');
   }
-}
+});
 
 /**
  * Toggles the favourite status of a quote.
  * @param id - The ID of the quote to toggle favourite status.
  * @returns A promise that resolves to an `ActionResult` containing the updated quote ID and favourite status.
  */
-export async function toggleQuoteFavourite(
-  id: string,
-): Promise<ActionResult<{ id: string; isFavourite: boolean }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const toggleQuoteFavourite = withPermission<string, { id: string; isFavourite: boolean }>(
+  'canManageQuotes',
+  async (session, id) => {
+    try {
+      const result = await quoteRepo.toggleFavourite(id);
 
-  try {
-    requirePermission(session.user, 'canManageQuotes');
+      if (!result) {
+        return { success: false, error: 'Quote not found' };
+      }
 
-    const result = await quoteRepo.toggleFavourite(id);
+      revalidatePath('/finances/quotes');
+      revalidatePath(`/finances/quotes/${id}`);
 
-    if (!result) {
-      return { success: false, error: 'Quote not found' };
+      return {
+        success: true,
+        data: result,
+        message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to toggle quote favourite');
     }
-
-    revalidatePath('/finances/quotes');
-    revalidatePath(`/finances/quotes/${id}`);
-
-    return {
-      success: true,
-      data: result,
-      message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to toggle quote favourite');
-  }
-}
+  },
+);

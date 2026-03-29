@@ -31,6 +31,7 @@ interface ModalState {
   invoiceNumber?: string;
   invoice?: InvoiceWithDetails | InvoiceMetadata;
   onSuccess?: () => void;
+  sendEmail?: boolean;
 }
 
 interface InvoiceActionContextType {
@@ -47,7 +48,12 @@ interface InvoiceActionContextType {
     invoice?: InvoiceWithDetails | InvoiceMetadata,
     onSuccess?: () => void,
   ) => void;
-  openMarkAsPending: (id: string, invoiceNumber?: string, onSuccess?: () => void) => void;
+  openMarkAsPending: (
+    id: string,
+    invoiceNumber?: string,
+    onSuccess?: () => void,
+    sendEmail?: boolean,
+  ) => void;
   close: () => void;
 }
 
@@ -105,8 +111,8 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
   );
 
   const openMarkAsPending = useCallback(
-    (id: string, invoiceNumber?: string, onSuccess?: () => void) => {
-      setState({ type: 'MARK_AS_PENDING', id, invoiceNumber, onSuccess });
+    (id: string, invoiceNumber?: string, onSuccess?: () => void, sendEmail?: boolean) => {
+      setState({ type: 'MARK_AS_PENDING', id, invoiceNumber, onSuccess, sendEmail });
     },
     [],
   );
@@ -158,12 +164,15 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
 
   const handleConfirmMarkAsPending = useCallback(() => {
     if (state?.type === 'MARK_AS_PENDING' && state.id) {
-      markInvoiceAsPending.mutate(state.id, {
-        onSuccess: () => {
-          close();
-          state.onSuccess?.();
+      markInvoiceAsPending.mutate(
+        { id: state.id, sendEmail: state.sendEmail },
+        {
+          onSuccess: () => {
+            close();
+            state.onSuccess?.();
+          },
         },
-      });
+      );
     }
   }, [state, markInvoiceAsPending, close]);
 

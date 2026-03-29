@@ -670,6 +670,20 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   }
 
   /**
+   * Update the receipt number on an invoice.
+   * Used when a receipt number needs to be assigned after the invoice was marked as paid.
+   * @param id - The invoice ID
+   * @param receiptNumber - The receipt number to set
+   * @returns A promise that resolves to the updated invoice
+   */
+  async updateReceiptNumber(id: string, receiptNumber: string): Promise<Invoice> {
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { receiptNumber },
+    });
+  }
+
+  /**
    * Create a new invoice with associated line items in a single transaction.
    * Automatically generates invoice number and calculates total amount.
    * Retries up to 3 times if invoice number collision occurs.

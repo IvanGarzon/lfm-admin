@@ -13,24 +13,24 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { processInvoiceEmail } from '@/features/finances/invoices/services/invoice-email.service';
 import { processQuoteEmail } from '@/features/finances/quotes/services/quote-email.service';
+import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import type { QueueEmailPayload } from '@/types/email';
+
+const emailAuditRepo = new EmailAuditRepository(prisma);
 
 export const sendEmailFunction = inngest.createFunction(
   {
     id: 'send-email',
     name: 'Send Email',
-    retries: 3, // Auto-retry failed emails up to 3 times
+    retries: 3,
     concurrency: {
-      limit: 10, // Process up to 10 emails concurrently
+      limit: 10,
     },
     timeouts: {
-      finish: '5m', // Max 5 minutes to complete (includes PDF generation)
+      finish: '5m',
     },
   },
-  [
-    { event: 'email/send' },
-    { event: 'send-email/manual' }, // Manual trigger
-  ],
+  [{ event: 'email/send' }, { event: 'send-email/manual' }],
   async ({ event, step }) => {
     const { auditId, email } = event.data as { auditId: string; email: QueueEmailPayload };
 
@@ -47,10 +47,7 @@ export const sendEmailFunction = inngest.createFunction(
 
     // Idempotency check: Skip if email was already sent
     const existingAudit = await step.run('check-idempotency', async () => {
-      return prisma.emailAudit.findUnique({
-        where: { id: auditId },
-        select: { status: true, sentAt: true },
-      });
+      return emailAuditRepo.findStatusById(auditId);
     });
 
     if (existingAudit?.status === 'SENT') {
@@ -64,15 +61,8 @@ export const sendEmailFunction = inngest.createFunction(
       return { success: true, skipped: true, reason: 'already_sent' };
     }
 
-    // Step 1: Update audit status to SENDING
     await step.run('update-status-sending', async () => {
-      await prisma.emailAudit.update({
-        where: { id: auditId },
-        data: {
-          status: 'SENDING',
-          inngestRunId: event.id,
-        },
-      });
+      await emailAuditRepo.markAsSending(auditId, event.id);
     });
 
     // Step 2: Process email based on entity type
@@ -83,28 +73,13 @@ export const sendEmailFunction = inngest.createFunction(
           return await processInvoiceEmailHandler(email);
         } else if (email.entityType === 'quote') {
           return await processQuoteEmailHandler(email);
-        } else if (email.entityType === 'report') {
-          return await processReportEmailHandler(email);
-        } else if (email.entityType === 'customer') {
-          return await processCustomerEmailHandler(email);
         } else {
           throw new Error(`Unknown entity type: ${email.entityType}`);
         }
       });
 
-      // Step 3: Update audit status to SENT
       await step.run('update-status-sent', async () => {
-        await prisma.emailAudit.update({
-          where: { id: auditId },
-          data: {
-            status: 'SENT',
-            sentAt: new Date(),
-            metadata: {
-              ...(email.metadata || {}),
-              emailId: result.emailId,
-            },
-          },
-        });
+        await emailAuditRepo.markAsSent(auditId, result.emailId, email.metadata ?? {});
       });
 
       logger.info('Email sent successfully', {
@@ -118,17 +93,11 @@ export const sendEmailFunction = inngest.createFunction(
 
       return { success: true, emailId: result.emailId };
     } catch (error) {
-      // Step 4: Update audit status to FAILED
       await step.run('update-status-failed', async () => {
-        await prisma.emailAudit.update({
-          where: { id: auditId },
-          data: {
-            status: 'FAILED',
-            failedAt: new Date(),
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
-            retryCount: { increment: 1 },
-          },
-        });
+        await emailAuditRepo.markAsFailed(
+          auditId,
+          error instanceof Error ? error.message : 'Unknown error',
+        );
       });
 
       logger.error('Email sending failed', error, {
@@ -139,7 +108,7 @@ export const sendEmailFunction = inngest.createFunction(
         },
       });
 
-      throw error; // Re-throw to trigger Inngest retry
+      throw error;
     }
   },
 );
@@ -154,12 +123,11 @@ async function processInvoiceEmailHandler(email: any): Promise<{ emailId?: strin
     | 'receipt'
     | 'overdue';
 
-  // Map email types to processor types
   const typeMapping: Record<typeof type, 'pending_notification' | 'receipt' | 'reminder'> = {
     pending: 'pending_notification',
     receipt: 'receipt',
     reminder: 'reminder',
-    overdue: 'reminder', // Use reminder template for overdue
+    overdue: 'reminder',
   };
 
   const processorType = typeMapping[type];
@@ -178,7 +146,6 @@ async function processQuoteEmailHandler(email: any): Promise<{ emailId?: string 
     | 'expired'
     | 'followup';
 
-  // Map email types directly (no mapping needed, types match)
   const processorType = type as
     | 'sent'
     | 'reminder'
@@ -188,30 +155,4 @@ async function processQuoteEmailHandler(email: any): Promise<{ emailId?: string 
     | 'followup';
 
   return await processQuoteEmail(email.entityId, processorType);
-}
-
-/**
- * Process report emails (to be implemented)
- */
-async function processReportEmailHandler(email: any): Promise<{ emailId?: string }> {
-  logger.warn('Report email processing not yet implemented', {
-    context: 'inngest-send-email',
-    metadata: { emailType: email.emailType },
-  });
-
-  // TODO: Implement report email processing
-  return { emailId: undefined };
-}
-
-/**
- * Process customer notification emails (to be implemented)
- */
-async function processCustomerEmailHandler(email: any): Promise<{ emailId?: string }> {
-  logger.warn('Customer email processing not yet implemented', {
-    context: 'inngest-send-email',
-    metadata: { emailType: email.emailType },
-  });
-
-  // TODO: Implement customer notification email processing
-  return { emailId: undefined };
 }

@@ -17,7 +17,6 @@
  */
 
 import pino from 'pino';
-import { env } from '@/env';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -31,11 +30,11 @@ class Logger {
   private pinoLogger?: pino.Logger;
 
   constructor() {
-    this.isDevelopment = env.NODE_ENV === 'development';
+    this.isDevelopment = process.env.NODE_ENV === 'development';
 
     if (!this.isDevelopment) {
       this.pinoLogger = pino({
-        level: env.LOG_LEVEL || 'info',
+        level: process.env.LOG_LEVEL ?? 'info',
         formatters: {
           level: (label) => {
             return { level: label };

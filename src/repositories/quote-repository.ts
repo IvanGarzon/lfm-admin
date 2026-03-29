@@ -448,8 +448,33 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }
     }
 
-    // OPTIMIZED: Use only 2 queries instead of 6
-    const [statusGroupsWithSums, aggregateData] = await Promise.all([
+    // Determine previous period for growth comparison
+    let previousWhereClause: Prisma.QuoteWhereInput | null = null;
+    if (dateFilter?.startDate && dateFilter?.endDate) {
+      const duration = dateFilter.endDate.getTime() - dateFilter.startDate.getTime();
+      previousWhereClause = {
+        deletedAt: null,
+        isLatestVersion: true,
+        issuedDate: {
+          gte: new Date(dateFilter.startDate.getTime() - duration),
+          lte: new Date(dateFilter.endDate.getTime() - duration),
+        },
+      };
+    } else if (!dateFilter?.startDate && !dateFilter?.endDate) {
+      const now = new Date();
+      const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      previousWhereClause = {
+        deletedAt: null,
+        isLatestVersion: true,
+        issuedDate: {
+          gte: firstDayLastMonth,
+          lt: firstDayThisMonth,
+        },
+      };
+    }
+
+    const [statusGroupsWithSums, aggregateData, prevAggregate, quoteTrend] = await Promise.all([
       // Query 1: Group by status with counts AND sums in a single query
       this.prisma.quote.groupBy({
         by: ['status'],
@@ -475,6 +500,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           amount: true,
         },
       }),
+
+      // Query 3: Previous period aggregate for growth calculation
+      previousWhereClause
+        ? this.prisma.quote.aggregate({
+            where: previousWhereClause,
+            _sum: { amount: true },
+          })
+        : Promise.resolve(null),
+
+      // Query 4: Monthly trend data
+      this.getMonthlyQuoteValueTrend(6),
     ]);
 
     // Initialize stats with totals from aggregate
@@ -492,7 +528,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       totalAcceptedValue: 0,
       totalConvertedValue: 0,
       conversionRate: 0,
+      acceptanceRate: 0,
       avgQuoteValue: Number(aggregateData._avg.amount ?? 0),
+      quoteTrend,
     };
 
     // Map status counts and sums from grouped data
@@ -530,13 +568,24 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       }
     });
 
-    // Calculate conversion rate after status counts are populated
-    // Conversion rate = accepted / (all quotes that were sent to customers)
+    // Calculate rates after status counts are populated
     const totalSentQuotes =
       stats.sent + stats.accepted + stats.rejected + stats.expired + stats.converted;
     stats.conversionRate = totalSentQuotes > 0 ? (stats.accepted / totalSentQuotes) * 100 : 0;
+    stats.acceptanceRate = stats.total > 0 ? (stats.accepted / stats.total) * 100 : 0;
+
+    // Calculate growth against previous period
+    if (prevAggregate) {
+      const prevTotalQuotedValue = Number(prevAggregate._sum.amount ?? 0);
+      stats.quotedValueGrowth = this.calculateGrowth(stats.totalQuotedValue, prevTotalQuotedValue);
+    }
 
     return stats;
+  }
+
+  private calculateGrowth(current: number, previous: number): number {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Number((((current - previous) / previous) * 100).toFixed(1));
   }
 
   /**

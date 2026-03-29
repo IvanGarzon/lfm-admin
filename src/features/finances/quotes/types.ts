@@ -144,7 +144,7 @@ export type MarkQuoteAsOnHoldData = {
 
 export type MarkQuoteAsCancelledData = {
   id: string;
-  reason?: string;
+  cancelReason: string;
 };
 
 export type ConvertQuoteToInvoiceData = {
@@ -168,7 +168,10 @@ export type QuoteStatistics = {
   totalAcceptedValue: number;
   totalConvertedValue: number;
   conversionRate: number;
+  acceptanceRate: number;
   avgQuoteValue: number;
+  quotedValueGrowth?: number;
+  quoteTrend?: QuoteValueTrend[];
 };
 
 export type StatsDateFilter = {

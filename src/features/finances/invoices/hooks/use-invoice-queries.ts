@@ -696,14 +696,14 @@ export function useMarkInvoiceAsPending() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const result = await markInvoiceAsPending({ id });
+    mutationFn: async ({ id, sendEmail }: { id: string; sendEmail?: boolean }) => {
+      const result = await markInvoiceAsPending({ id, sendEmail });
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onMutate: async (id: string) => {
+    onMutate: async ({ id }: { id: string; sendEmail?: boolean }) => {
       const metadataKey = INVOICE_KEYS.metadata(id);
 
       // Cancel any outgoing refetches
@@ -726,7 +726,7 @@ export function useMarkInvoiceAsPending() {
       // Return context for rollback
       return { previousMetadata, id };
     },
-    onError: (err, id, context) => {
+    onError: (err, { id }, context) => {
       const metadataKey = INVOICE_KEYS.metadata(id);
 
       // Roll back optimistic update
@@ -735,7 +735,7 @@ export function useMarkInvoiceAsPending() {
       }
       toast.error(err.message || 'Failed to mark invoice as pending');
     },
-    onSettled: (_data, _error, id) => {
+    onSettled: (_data, _error, { id }) => {
       invalidateInvoiceQueries(queryClient, { invoiceId: id });
     },
     onSuccess: () => {
@@ -1128,7 +1128,7 @@ export function useBulkUpdateInvoiceStatus() {
 
   return useMutation({
     mutationFn: async ({ ids, status }: { ids: string[]; status: InvoiceStatus }) => {
-      const result = await bulkUpdateInvoiceStatus(ids, status);
+      const result = await bulkUpdateInvoiceStatus({ ids, status });
       if (!result.success) {
         throw new Error(result.error);
       }

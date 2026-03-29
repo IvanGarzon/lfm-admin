@@ -313,8 +313,7 @@ export function InvoiceDrawer({
     setEmailPreviewData(null);
     setPendingEmailType(null);
 
-    // TODO: Add sendEmail: false parameter to mark as pending
-    openMarkAsPending(invoice.id, invoice.invoiceNumber);
+    openMarkAsPending(invoice.id, invoice.invoiceNumber, undefined, false);
   }, [invoice, openMarkAsPending]);
 
   const handleCancelEmailPreview = useCallback(() => {
@@ -328,7 +327,10 @@ export function InvoiceDrawer({
   }, []);
 
   const handleDuplicate = useCallback(() => {
-    if (!invoice) return;
+    if (!invoice) {
+      return;
+    }
+
     duplicateInvoice.mutate(invoice.id, {
       onSuccess: (data) => {
         // Navigate to the new duplicated invoice
