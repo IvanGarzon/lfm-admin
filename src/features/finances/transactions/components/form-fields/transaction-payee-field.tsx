@@ -1,61 +1,76 @@
 import { Controller, type Control } from 'react-hook-form';
 
-import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldError } from '@/components/ui/field';
+import { CustomerSelect } from '@/components/shared/customer-select';
 import { VendorSelect } from '@/features/inventory/vendors/components/vendor-select';
 import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
 import type { TransactionFormInput } from '@/features/finances/transactions/types';
+import type { CustomerSelectItem } from '@/features/crm/customers/types';
+import type { VendorSelectItem } from '@/features/inventory/vendors/types';
 
 export function TransactionPayeeField({
   control,
   isDisabled,
   transactionType,
+  customers,
+  vendors,
+  isLoadingCustomers,
+  isLoadingVendors,
+  onVendorChange,
+  onCustomerChange,
 }: {
   control: Control<TransactionFormInput>;
   isDisabled: boolean;
   transactionType: string;
+  customers: CustomerSelectItem[];
+  vendors: VendorSelectItem[];
+  isLoadingCustomers: boolean;
+  isLoadingVendors: boolean;
+  onVendorChange: (vendorId: string) => void;
+  onCustomerChange: (customerId: string) => void;
 }) {
+  if (transactionType === TransactionTypeSchema.enum.EXPENSE) {
+    return (
+      <Controller
+        name="vendorId"
+        control={control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <VendorSelect
+              vendors={vendors}
+              value={field.value ?? undefined}
+              onValueChange={onVendorChange}
+              placeholder="Select a vendor (optional)"
+              label="Vendor (Optional)"
+              isLoading={isLoadingVendors}
+              disabled={isDisabled}
+            />
+            {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+          </Field>
+        )}
+      />
+    );
+  }
+
   return (
-    <FieldGroup>
-      {transactionType === TransactionTypeSchema.enum.EXPENSE ? (
-        <Controller
-          name="vendorId"
-          control={control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <VendorSelect
-                value={field.value ?? undefined}
-                onValueChange={field.onChange}
-                placeholder="Select or create a vendor"
-                label="Vendor (Optional)"
-                showAddVendorLink={false}
-                disabled={isDisabled}
-              />
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      ) : (
-        <Controller
-          name="payee"
-          control={control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldContent>
-                <FieldLabel htmlFor="form-rhf-payee">From (Customer/Client)</FieldLabel>
-              </FieldContent>
-              <Input
-                {...field}
-                id="form-rhf-input-payee"
-                aria-invalid={fieldState.invalid}
-                placeholder="Enter customer name"
-                disabled={isDisabled}
-              />
-              {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-            </Field>
-          )}
-        />
+    <Controller
+      name="customerId"
+      control={control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <CustomerSelect
+            customers={customers}
+            value={field.value ?? undefined}
+            onValueChange={onCustomerChange}
+            placeholder="Select a customer"
+            label="From (Customer/Client)"
+            isLoading={isLoadingCustomers}
+            disabled={isDisabled}
+            showAddCustomerLink={false}
+          />
+          {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+        </Field>
       )}
-    </FieldGroup>
+    />
   );
 }

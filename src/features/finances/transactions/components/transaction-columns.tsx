@@ -80,7 +80,7 @@ function TransactionLink({
 }
 
 export const createTransactionColumns = (
-  onDelete: (id: string) => void,
+  onDelete: (id: string, referenceNumber?: string) => void,
 ): ColumnDef<TransactionListItem>[] => [
   {
     id: 'select',
@@ -286,7 +286,12 @@ export const createTransactionColumns = (
   },
   {
     id: 'actions',
-    cell: ({ row }) => <TransactionActions transaction={row.original} onDelete={onDelete} />,
+    cell: ({ row }) => (
+      <TransactionActions
+        transaction={row.original}
+        onDelete={(id) => onDelete(id, row.original.referenceNumber ?? undefined)}
+      />
+    ),
     enableHiding: false,
     meta: {
       className: 'text-right',

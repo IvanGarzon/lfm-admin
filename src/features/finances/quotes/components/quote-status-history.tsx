@@ -1,6 +1,6 @@
 'use client';
 
-import { StatusHistory } from '@/features/finances/shared';
+import { StatusHistory } from '@/features/finances/shared/components/status-history';
 import { QuoteStatusBadge } from './quote-status-badge';
 import type { QuoteStatusHistoryItem } from '../types';
 

@@ -129,6 +129,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             name: true,
           },
         },
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
       orderBy,
       skip,
@@ -143,7 +150,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     const items: TransactionListItem[] = transactions.map((transaction) => ({
       ...transaction,
       amount: Number(transaction.amount),
-    })) as unknown as TransactionListItem[];
+    }));
 
     return {
       items,
@@ -204,6 +211,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             name: true,
           },
         },
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     });
 
@@ -253,6 +267,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         referenceId: data.referenceId,
         invoiceId: data.invoiceId,
         vendorId: data.vendorId,
+        customerId: data.customerId,
         categories: data.categoryIds
           ? {
               create: data.categoryIds.map((categoryId) => ({
@@ -306,6 +321,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
           referenceId: data.referenceId,
           invoiceId: data.invoiceId,
           vendorId: data.vendorId,
+          customerId: data.customerId,
           categories: data.categoryIds
             ? {
                 create: data.categoryIds.map((categoryId) => ({
@@ -473,21 +489,6 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     startDate?: Date;
     endDate?: Date;
   }): Promise<TransactionCategoryBreakdown[]> {
-    // Build WHERE clause for date filter
-    let dateCondition = '';
-    const params: any[] = [TransactionStatus.COMPLETED];
-
-    if (dateFilter?.startDate && dateFilter?.endDate) {
-      dateCondition = 'AND t.date >= $2 AND t.date <= $3';
-      params.push(dateFilter.startDate, dateFilter.endDate);
-    } else if (dateFilter?.startDate) {
-      dateCondition = 'AND t.date >= $2';
-      params.push(dateFilter.startDate);
-    } else if (dateFilter?.endDate) {
-      dateCondition = 'AND t.date <= $2';
-      params.push(dateFilter.endDate);
-    }
-
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       WITH category_totals AS (
         SELECT
@@ -552,5 +553,87 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       transactionCount: item.transactionCount || 0,
       avgTransactionAmount: item.avgTransactionAmount || 0,
     }));
+  }
+
+  /**
+   * Retrieves all active transaction categories ordered by name.
+   * @returns A promise resolving to an array of active categories.
+   */
+  async getActiveCategories(): Promise<
+    Array<{ id: string; name: string; description: string | null }>
+  > {
+    return this.prisma.transactionCategory.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, description: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+   * Finds an existing active category by name (case-insensitive) or creates a new one.
+   * @param name - The category name to find or create.
+   * @returns A promise resolving to the found or created category.
+   */
+  async findOrCreateCategory(
+    name: string,
+  ): Promise<{ id: string; name: string; description: string | null }> {
+    const existing = await this.prisma.transactionCategory.findFirst({
+      where: { name: { equals: name, mode: 'insensitive' } },
+      select: { id: true, name: true, description: true },
+    });
+
+    if (existing) {
+      return existing;
+    }
+
+    return this.prisma.transactionCategory.create({
+      data: { name, isActive: true },
+      select: { id: true, name: true, description: true },
+    });
+  }
+
+  /**
+   * Finds a transaction attachment by its ID.
+   * @param id - The attachment ID.
+   * @returns A promise resolving to the attachment or undefined if not found.
+   */
+  async findAttachmentById(
+    id: string,
+  ): Promise<{ s3Key: string; transactionId: string; fileName: string } | undefined> {
+    const result = await this.prisma.transactionAttachment.findUnique({
+      where: { id },
+      select: { s3Key: true, transactionId: true, fileName: true },
+    });
+
+    return result ?? undefined;
+  }
+
+  /**
+   * Creates a new attachment record for a transaction.
+   * @param data - The attachment data including S3 location and metadata.
+   * @returns A promise resolving to the created attachment.
+   */
+  async createAttachment(data: {
+    transactionId: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    s3Key: string;
+    s3Url: string;
+    uploadedBy: string;
+  }): Promise<{ id: string; fileName: string; fileSize: number; mimeType: string; s3Url: string }> {
+    return this.prisma.transactionAttachment.create({
+      data,
+      select: { id: true, fileName: true, fileSize: true, mimeType: true, s3Url: true },
+    });
+  }
+
+  /**
+   * Deletes a transaction attachment record by its ID.
+   * @param id - The attachment ID to delete.
+   * @returns A promise that resolves when the deletion is complete.
+   */
+  async deleteAttachment(id: string): Promise<void> {
+    await this.prisma.transactionAttachment.delete({ where: { id } });
   }
 }

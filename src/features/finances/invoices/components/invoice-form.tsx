@@ -1,22 +1,13 @@
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';
-import {
-  Controller,
-  useForm,
-  useFieldArray,
-  useWatch,
-  type Resolver,
-  SubmitHandler,
-} from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 import { InvoiceStatus } from '@/prisma/client';
 import { Box } from '@/components/ui/box';
 import { Form } from '@/components/ui/form';
-import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
 
 import {
   CreateInvoiceSchema,
@@ -35,6 +26,7 @@ import { useActiveProducts } from '@/features/inventory/products/hooks/use-produ
 import { InvoiceItemsList } from '@/features/finances/invoices/components/invoice-items-list';
 import { InvoiceHeaderFields } from '@/features/finances/invoices/components/form-fields/invoice-header-fields';
 import { InvoiceTaxDiscountFields } from '@/features/finances/invoices/components/form-fields/invoice-tax-discount-fields';
+import { InvoiceNotesField } from '@/features/finances/invoices/components/form-fields/invoice-notes-field';
 import { InvoiceTotalSummary } from '@/features/finances/invoices/components/form-fields/invoice-total-summary';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useFormReset } from '@/hooks/use-form-reset';
@@ -275,31 +267,7 @@ export function InvoiceForm({
 
           <InvoiceTaxDiscountFields control={form.control} isLocked={isLocked} />
 
-          {/* Notes */}
-          <FieldGroup>
-            <Controller
-              name="notes"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-notes">Notes</FieldLabel>
-                  </FieldContent>
-                  <Textarea
-                    {...field}
-                    id="form-rhf-textarea-notes"
-                    aria-invalid={fieldState.invalid}
-                    value={field.value ?? ''}
-                    placeholder="Add any additional comments or notes for this invoice..."
-                    rows={3}
-                    className="resize-none"
-                    disabled={isLocked}
-                  />
-                  {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                </Field>
-              )}
-            />
-          </FieldGroup>
+          <InvoiceNotesField control={form.control} isLocked={isLocked} />
         </Box>
 
         <InvoiceTotalSummary

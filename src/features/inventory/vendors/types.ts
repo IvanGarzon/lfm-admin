@@ -5,6 +5,12 @@ import type { PaginationMeta } from '@/types/pagination';
 
 export type VendorFormInput = CreateVendorInput | UpdateVendorInput;
 
+export type VendorSelectItem = {
+  id: string;
+  vendorCode: string;
+  name: string;
+};
+
 export type VendorListItem = {
   id: string;
   vendorCode: string;

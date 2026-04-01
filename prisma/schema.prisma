@@ -106,9 +106,10 @@ model Customer {
   formattedAddress       String?  @map("formatted_address")
   useOrganizationAddress Boolean  @default(false) @map("use_organization_address")
 
-  invoices   Invoice[]
-  quotes     Quote[]
-  emailAudit EmailAudit[]
+  invoices     Invoice[]
+  quotes       Quote[]
+  emailAudit   EmailAudit[]
+  transactions Transaction[] @relation("CustomerTransactions")
 
   @@index([status])
   @@index([email])
@@ -666,6 +667,8 @@ model Transaction {
   invoice     Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
   vendorId    String?           @map(name: "vendor_id")
   vendor      Vendor?           @relation("VendorTransactions", fields: [vendorId], references: [id], onDelete: SetNull)
+  customerId  String?           @map(name: "customer_id")
+  customer    Customer?         @relation("CustomerTransactions", fields: [customerId], references: [id], onDelete: SetNull)
 
   categories  TransactionCategoryOnTransaction[]
   attachments TransactionAttachment[]
@@ -678,6 +681,7 @@ model Transaction {
   @@index([date], map: "transactions_date_idx")
   @@index([invoiceId])
   @@index([vendorId])
+  @@index([customerId])
   @@index([type, status])
   @@index([date(sort: Desc)], map: "transactions_date_desc_idx")
   @@map(name: "transactions")

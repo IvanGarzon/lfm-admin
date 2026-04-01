@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useActiveVendors } from '@/features/inventory/vendors/hooks/use-vendor-queries';
+import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
 import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
 
@@ -47,12 +48,12 @@ const defaultFormState: CreateTransactionInput = {
   referenceId: null,
   invoiceId: null,
   vendorId: null,
+  customerId: null,
 };
 
 const mapTransactionToFormValues = (transaction: TransactionListItem): UpdateTransactionInput => {
-  // Extract category IDs from the categories relation
   const categoryIds =
-    transaction.categories?.map((cat: { category: { id: string } }) => cat.category.id) || [];
+    transaction.categories?.map((cat: { category: { id: string } }) => cat.category.id) ?? [];
 
   return {
     id: transaction.id,
@@ -68,6 +69,7 @@ const mapTransactionToFormValues = (transaction: TransactionListItem): UpdateTra
     referenceId: transaction.referenceId ?? null,
     invoiceId: transaction.invoiceId ?? null,
     vendorId: transaction.vendorId ?? null,
+    customerId: transaction.customerId ?? null,
   };
 };
 
@@ -80,7 +82,7 @@ export function TransactionForm({
   onDirtyStateChange,
   onClose,
 }: {
-  transaction?: TransactionListItem;
+  transaction?: TransactionListItem | null;
   onCreate?: (data: CreateTransactionInput) => void;
   onUpdate?: (data: UpdateTransactionInput) => void;
   isCreating?: boolean;
@@ -91,7 +93,8 @@ export function TransactionForm({
   const mode = transaction ? 'edit' : 'create';
   const queryClient = useQueryClient();
 
-  const { data: vendors = [] } = useActiveVendors();
+  const { data: vendors = [], isLoading: isLoadingVendors } = useActiveVendors();
+  const { data: customers = [], isLoading: isLoadingCustomers } = useActiveCustomers();
   const { data: categories = [], isLoading: isLoadingCategories } = useTransactionCategories();
 
   const defaultValues: TransactionFormInput =
@@ -120,25 +123,39 @@ export function TransactionForm({
       onDirtyStateChange?.(false);
       return values;
     }, [transaction, onDirtyStateChange]),
-    isUpdating, // Reset form when update completes (true -> false)
+    isUpdating,
   );
 
   const { isDirty } = form.formState;
 
-  const [watchedType, watchedVendorId] = useWatch({
+  const watchedType = useWatch({
     control: form.control,
-    name: ['type', 'vendorId'],
+    name: 'type',
   });
 
-  // Auto-populate payee when vendor is selected
-  useEffect(() => {
-    if (watchedVendorId && watchedType === TransactionTypeSchema.enum.EXPENSE) {
-      const selectedVendor = vendors.find((v) => v.id === watchedVendorId);
-      if (selectedVendor) {
-        form.setValue('payee', selectedVendor.name, { shouldDirty: true });
+  const handleVendorChange = useCallback(
+    (vendorId: string) => {
+      form.setValue('vendorId', vendorId, { shouldDirty: true, shouldValidate: true });
+      const vendor = vendors.find((v) => v.id === vendorId);
+      if (vendor) {
+        form.setValue('payee', vendor.name, { shouldDirty: true });
       }
-    }
-  }, [watchedVendorId, vendors, watchedType, form]);
+    },
+    [vendors, form],
+  );
+
+  const handleCustomerChange = useCallback(
+    (customerId: string) => {
+      form.setValue('customerId', customerId, { shouldDirty: true, shouldValidate: true });
+      const customer = customers.find((c) => c.id === customerId);
+      if (customer) {
+        form.setValue('payee', `${customer.firstName} ${customer.lastName}`.trim(), {
+          shouldDirty: true,
+        });
+      }
+    },
+    [customers, form],
+  );
 
   useUnsavedChanges(form.formState.isDirty);
 
@@ -217,12 +234,18 @@ export function TransactionForm({
             control={form.control}
             isDisabled={isDisabled}
             transactionType={watchedType}
+            customers={customers}
+            vendors={vendors}
+            isLoadingCustomers={isLoadingCustomers}
+            isLoadingVendors={isLoadingVendors}
+            onVendorChange={handleVendorChange}
+            onCustomerChange={handleCustomerChange}
           />
           <TransactionDescriptionField control={form.control} isDisabled={isDisabled} />
           <TransactionDateStatusFields control={form.control} isDisabled={isDisabled} />
           <TransactionAttachments
             transactionId={transaction?.id}
-            attachments={transaction?.attachments || []}
+            attachments={transaction?.attachments ?? []}
             disabled={isDisabled}
             mode={mode}
           />
@@ -234,7 +257,7 @@ export function TransactionForm({
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isDisabled || (transaction && !isDirty)}>
+          <Button type="submit" disabled={isDisabled || (Boolean(transaction) && !isDirty)}>
             {isDisabled ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

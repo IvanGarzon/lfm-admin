@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Check, ChevronDown, Store } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -15,86 +15,45 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useActiveVendors } from '@/features/inventory/vendors/hooks/use-vendor-queries';
+import type { VendorSelectItem } from '@/features/inventory/vendors/types';
 
-export interface Vendor {
-  id: string;
-  vendorCode: string;
-  name: string;
-}
+const EMPTY_VENDORS: VendorSelectItem[] = [];
 
 interface VendorSelectProps {
+  vendors?: VendorSelectItem[];
   value?: string;
   onValueChange?: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
   isLoading?: boolean;
   label?: string;
-  showAddVendorLink?: boolean;
 }
 
 export function VendorSelect({
+  vendors = EMPTY_VENDORS,
   value,
   onValueChange,
   disabled = false,
   placeholder = 'Select a vendor',
-  isLoading: isLoadingProp = false,
+  isLoading = false,
   label = 'Vendor',
-  showAddVendorLink = false,
 }: VendorSelectProps) {
   const [open, setOpen] = useState<boolean>(false);
   const listboxId = useId();
-  const { data: vendors = [], isLoading: isLoadingVendors } = useActiveVendors();
-
-  const isLoading = isLoadingProp || isLoadingVendors;
 
   const selectedVendor = useMemo(
     () => vendors.find((vendor) => vendor.id === value),
     [vendors, value],
   );
 
-  const getVendorDisplayName = useMemo(() => {
-    return (vendor: Vendor) => {
-      return vendor.name ?? '';
-    };
-  }, []);
-
-  const getVendorSecondaryText = useMemo(() => {
-    return (vendor: Vendor) => {
-      return vendor.vendorCode;
-    };
-  }, []);
-
-  const handleVendorCreated = useCallback(
-    (vendorId: string) => {
-      onValueChange?.(vendorId);
-    },
-    [onValueChange],
-  );
-
   return (
     <Box className="space-y-2">
-      {/* Header with label and add vendor link */}
       <Box className="flex items-center justify-between">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {label}
         </label>
-        {showAddVendorLink ? (
-          <button
-            type="button"
-            onClick={() => {
-              // TODO: Implement create vendor dialog
-              console.log('Add vendor clicked');
-            }}
-            className="text-sm text-primary hover:underline focus:outline-none cursor-pointer"
-            tabIndex={-1}
-          >
-            Add vendor
-          </button>
-        ) : null}
       </Box>
 
-      {/* Vendor Select Popover */}
       <Popover open={open} onOpenChange={setOpen} modal={true}>
         <PopoverTrigger asChild>
           <Button
@@ -112,10 +71,10 @@ export function VendorSelect({
                 </Box>
                 <Box className="flex flex-col items-start min-w-0 flex-1">
                   <span className="font-medium text-sm truncate w-full text-left">
-                    {getVendorDisplayName(selectedVendor)}
+                    {selectedVendor.name}
                   </span>
                   <span className="text-xs text-muted-foreground truncate w-full text-left font-mono">
-                    {getVendorSecondaryText(selectedVendor)}
+                    {selectedVendor.vendorCode}
                   </span>
                 </Box>
               </Box>
@@ -152,11 +111,9 @@ export function VendorSelect({
                       <Store className="h-4 w-4 text-primary" />
                     </Box>
                     <Box className="flex flex-col items-start min-w-0 flex-1">
-                      <span className="font-medium text-sm truncate w-full">
-                        {getVendorDisplayName(vendor)}
-                      </span>
+                      <span className="font-medium text-sm truncate w-full">{vendor.name}</span>
                       <span className="text-xs text-muted-foreground truncate w-full font-mono">
-                        {getVendorSecondaryText(vendor)}
+                        {vendor.vendorCode}
                       </span>
                     </Box>
                     <Check

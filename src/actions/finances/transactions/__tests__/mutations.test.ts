@@ -16,25 +16,18 @@ import {
   createTransactionCategory as createCategoryFactory,
 } from '@/lib/testing';
 
-const { mockTransactionRepo, mockAuth, mockPrisma } = vi.hoisted(() => ({
+const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
   mockTransactionRepo: {
     createTransaction: vi.fn(),
     updateTransaction: vi.fn(),
     deleteTransaction: vi.fn(),
     findById: vi.fn(),
+    findOrCreateCategory: vi.fn(),
+    createAttachment: vi.fn(),
+    findAttachmentById: vi.fn(),
+    deleteAttachment: vi.fn(),
   },
   mockAuth: vi.fn(),
-  mockPrisma: {
-    transactionCategory: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-    },
-    transactionAttachment: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      delete: vi.fn(),
-    },
-  },
 }));
 
 vi.mock('@/repositories/transaction-repository', () => {
@@ -50,7 +43,7 @@ vi.mock('@/auth', () => ({
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: {},
 }));
 
 vi.mock('next/cache', () => ({
@@ -59,6 +52,7 @@ vi.mock('next/cache', () => ({
 
 const TEST_TRANSACTION_ID = testIds.transaction();
 const TEST_CATEGORY_ID = testIds.category();
+const unauthorizedError = 'You must be signed in to perform this action';
 
 describe('Transaction Mutations', () => {
   const mockSession = mockSessions.manager();
@@ -114,14 +108,14 @@ describe('Transaction Mutations', () => {
       const result = await createTransaction(input);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
 
     it('returns validation error for invalid input', async () => {
       const invalidInput = {
         ...createTransactionInput(),
-        amount: -100, // Invalid: negative amount
+        amount: -100,
       };
 
       const result = await createTransaction(invalidInput);
@@ -175,7 +169,7 @@ describe('Transaction Mutations', () => {
       const result = await updateTransaction(input);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
@@ -207,15 +201,14 @@ describe('Transaction Mutations', () => {
       const result = await deleteTransaction(TEST_TRANSACTION_ID);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
 
   describe('createTransactionCategory', () => {
     it('creates a new category successfully', async () => {
-      mockPrisma.transactionCategory.findFirst.mockResolvedValue(null);
-      mockPrisma.transactionCategory.create.mockResolvedValue(
+      mockTransactionRepo.findOrCreateCategory.mockResolvedValue(
         createCategoryFactory({ id: TEST_CATEGORY_ID, name: 'New Category' }),
       );
 
@@ -225,6 +218,7 @@ describe('Transaction Mutations', () => {
       if (result.success) {
         expect(result.data.name).toBe('New Category');
       }
+      expect(mockTransactionRepo.findOrCreateCategory).toHaveBeenCalledWith('New Category');
     });
 
     it('returns existing category if name already exists', async () => {
@@ -232,7 +226,7 @@ describe('Transaction Mutations', () => {
         id: TEST_CATEGORY_ID,
         name: 'Existing Category',
       });
-      mockPrisma.transactionCategory.findFirst.mockResolvedValue(existingCategory);
+      mockTransactionRepo.findOrCreateCategory.mockResolvedValue(existingCategory);
 
       const result = await createTransactionCategory('Existing Category');
 
@@ -240,7 +234,6 @@ describe('Transaction Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_CATEGORY_ID);
       }
-      expect(mockPrisma.transactionCategory.create).not.toHaveBeenCalled();
     });
 
     it('returns validation error for empty name', async () => {
@@ -250,7 +243,7 @@ describe('Transaction Mutations', () => {
     });
 
     it('returns validation error for name that is too long', async () => {
-      const longName = 'a'.repeat(51); // Exceeds 50 character limit
+      const longName = 'a'.repeat(51);
       const result = await createTransactionCategory(longName);
 
       expect(result.success).toBe(false);
@@ -261,7 +254,7 @@ describe('Transaction Mutations', () => {
       const result = await createTransactionCategory('Test Category');
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
@@ -272,6 +265,7 @@ describe('Transaction Mutations', () => {
         type: 'application/pdf',
       });
       const formData = new FormData();
+      formData.append('transactionId', TEST_TRANSACTION_ID);
       formData.append('file', mockFile);
 
       const { uploadFileToS3 } = await import('@/lib/s3');
@@ -280,7 +274,7 @@ describe('Transaction Mutations', () => {
         s3Url: 'https://test.s3.amazonaws.com/test-key',
       });
 
-      mockPrisma.transactionAttachment.create.mockResolvedValue({
+      mockTransactionRepo.createAttachment.mockResolvedValue({
         id: testIds.attachment(),
         fileName: 'test.pdf',
         fileSize: 12,
@@ -288,7 +282,7 @@ describe('Transaction Mutations', () => {
         s3Url: 'https://test.s3.amazonaws.com/test-key',
       });
 
-      const result = await uploadTransactionAttachment(TEST_TRANSACTION_ID, formData);
+      const result = await uploadTransactionAttachment(formData);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -298,22 +292,23 @@ describe('Transaction Mutations', () => {
 
     it('returns error when no file provided', async () => {
       const formData = new FormData();
+      formData.append('transactionId', TEST_TRANSACTION_ID);
 
-      const result = await uploadTransactionAttachment(TEST_TRANSACTION_ID, formData);
+      const result = await uploadTransactionAttachment(formData);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('No file provided');
+        expect(result.error).toBe('Missing required fields');
       }
     });
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
       const formData = new FormData();
-      const result = await uploadTransactionAttachment(TEST_TRANSACTION_ID, formData);
+      const result = await uploadTransactionAttachment(formData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
@@ -322,7 +317,7 @@ describe('Transaction Mutations', () => {
     const TEST_ATTACHMENT_ID = testIds.attachment();
 
     it('deletes attachment successfully', async () => {
-      mockPrisma.transactionAttachment.findUnique.mockResolvedValue({
+      mockTransactionRepo.findAttachmentById.mockResolvedValue({
         s3Key: 'test-key',
         transactionId: TEST_TRANSACTION_ID,
         fileName: 'test.pdf',
@@ -331,7 +326,7 @@ describe('Transaction Mutations', () => {
       const { deleteFileFromS3 } = await import('@/lib/s3');
       vi.mocked(deleteFileFromS3).mockResolvedValue(undefined);
 
-      mockPrisma.transactionAttachment.delete.mockResolvedValue({});
+      mockTransactionRepo.deleteAttachment.mockResolvedValue(undefined);
 
       const result = await deleteTransactionAttachment(TEST_ATTACHMENT_ID);
 
@@ -339,7 +334,7 @@ describe('Transaction Mutations', () => {
     });
 
     it('returns error when attachment not found', async () => {
-      mockPrisma.transactionAttachment.findUnique.mockResolvedValue(null);
+      mockTransactionRepo.findAttachmentById.mockResolvedValue(undefined);
 
       const result = await deleteTransactionAttachment('non-existent');
 
@@ -354,7 +349,7 @@ describe('Transaction Mutations', () => {
       const result = await deleteTransactionAttachment(TEST_ATTACHMENT_ID);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
@@ -370,16 +365,17 @@ describe('Transaction Mutations - Permission Tests', () => {
     mockTransactionRepo.createTransaction.mockResolvedValue(createTransactionResponse());
     mockTransactionRepo.findById.mockResolvedValue(createTransactionWithDetails());
     mockTransactionRepo.updateTransaction.mockResolvedValue(createTransactionResponse());
+    mockTransactionRepo.deleteTransaction.mockResolvedValue(undefined);
   });
 
   describe('createTransaction', () => {
-    it('should allow USER role to create transactions', async () => {
+    it('should deny USER role from creating transactions', async () => {
       mockAuth.mockResolvedValue(mockUserRole);
       const input = createTransactionInput();
 
       const result = await createTransaction(input);
 
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
     });
 
     it('should allow MANAGER role to create transactions', async () => {
@@ -408,16 +404,28 @@ describe('Transaction Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe('You must be signed in to perform this action');
       }
     });
   });
 
   describe('updateTransaction', () => {
-    it('should allow USER role to update transactions', async () => {
+    it('should deny USER role from updating transactions', async () => {
       mockAuth.mockResolvedValue(mockUserRole);
       const input = {
-        id: TEST_TRANSACTION_ID,
+        id: testIds.transaction(),
+        ...createTransactionInput(),
+      };
+
+      const result = await updateTransaction(input);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should allow MANAGER role to update transactions', async () => {
+      mockAuth.mockResolvedValue(mockManagerRole);
+      const input = {
+        id: testIds.transaction(),
         ...createTransactionInput(),
       };
 
@@ -430,9 +438,8 @@ describe('Transaction Mutations - Permission Tests', () => {
   describe('deleteTransaction', () => {
     it('should allow MANAGER role to delete transactions', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
-      mockTransactionRepo.deleteTransaction.mockResolvedValue(undefined);
 
-      const result = await deleteTransaction(TEST_TRANSACTION_ID);
+      const result = await deleteTransaction(testIds.transaction());
 
       expect(result.success).toBe(true);
     });

@@ -212,13 +212,3 @@ export type AverageTimeToDecision = {
   avgDaysToReject: number;
   avgDaysToDecision: number; // Combined average for accept/reject
 };
-
-export type UploadAttachmentData = {
-  quoteId: string;
-  file: File;
-};
-
-export type DeleteAttachmentData = {
-  attachmentId: string;
-  s3Key: string;
-};

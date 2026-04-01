@@ -483,12 +483,7 @@ export const deleteQuoteItemAttachment = withPermission<
     }
 
     // Check if other attachments use the same S3 key (e.g. from duplicated quotes)
-    const usageCount = await prisma.quoteItemAttachment.count({
-      where: {
-        s3Key: attachment.s3Key,
-        id: { not: attachment.id }, // Exclude current attachment
-      },
-    });
+    const usageCount = await quoteRepo.countItemAttachmentsByS3Key(attachment.s3Key, attachment.id);
 
     // Only delete from S3 if no other records reference this file
     if (usageCount === 0) {
@@ -729,7 +724,7 @@ export const sendQuoteFollowUp = withPermission<string, { auditId: string; event
       const result = await queueQuoteEmail({
         quoteId: quote.id,
         customerId: quote.customer.id,
-        type: 'followup' as any, // Will be handled as 'quote.followup'
+        type: 'followup',
         recipient: quote.customer.email,
         subject: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
         emailData,

@@ -32,6 +32,7 @@ import type {
   TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
 import { getPaginationMetadata } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 import type { CreateInvoiceInput, UpdateInvoiceInput } from '@/schemas/invoices';
 
@@ -1405,10 +1406,15 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           });
         }
       } catch (error) {
-        console.error('[addPayment] Error stack:', error instanceof Error ? error.stack : error);
+        logger.error('Failed to attach document to transaction', error, {
+          context: 'addPayment',
+          metadata: { transactionId: createdTransactionId },
+        });
       }
     } else {
-      console.warn('[addPayment] No transaction ID available for document attachment');
+      logger.warn('No transaction ID available for document attachment', {
+        context: 'addPayment',
+      });
     }
 
     return updated;

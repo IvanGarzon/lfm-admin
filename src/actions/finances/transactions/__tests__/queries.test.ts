@@ -19,21 +19,17 @@ import {
   createTransactionCategory,
 } from '@/lib/testing';
 
-const { mockTransactionRepo, mockAuth, mockPrisma } = vi.hoisted(() => ({
+const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
   mockTransactionRepo: {
     searchAndPaginate: vi.fn(),
     findByIdWithDetails: vi.fn(),
     getStatistics: vi.fn(),
+    getActiveCategories: vi.fn(),
     getMonthlyTransactionTrend: vi.fn(),
     getCategoryBreakdown: vi.fn(),
     getTopCategories: vi.fn(),
   },
   mockAuth: vi.fn(),
-  mockPrisma: {
-    transactionCategory: {
-      findMany: vi.fn(),
-    },
-  },
 }));
 
 vi.mock('@/repositories/transaction-repository', () => {
@@ -49,10 +45,11 @@ vi.mock('@/auth', () => ({
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: {},
 }));
 
 const TEST_TRANSACTION_ID = testIds.transaction();
+const unauthorizedError = 'You must be signed in to perform this action';
 
 describe('Transaction Queries', () => {
   const mockSession = mockSessions.manager();
@@ -88,7 +85,7 @@ describe('Transaction Queries', () => {
       const result = await getTransactions({});
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
 
@@ -136,14 +133,14 @@ describe('Transaction Queries', () => {
       const result = await getTransactionById(TEST_TRANSACTION_ID);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
 
     it('converts Decimal amount to number', async () => {
       const mockTransaction = {
         ...createTransactionWithDetails(),
-        amount: { toNumber: () => 150.5 } as any,
+        amount: { toNumber: () => 150.5 } as unknown as number,
       };
 
       mockTransactionRepo.findByIdWithDetails.mockResolvedValue(mockTransaction);
@@ -163,7 +160,7 @@ describe('Transaction Queries', () => {
 
       mockTransactionRepo.getStatistics.mockResolvedValue(mockStats);
 
-      const result = await getTransactionStatistics();
+      const result = await getTransactionStatistics(undefined);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -189,7 +186,7 @@ describe('Transaction Queries', () => {
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTransactionStatistics();
+      const result = await getTransactionStatistics(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -201,27 +198,23 @@ describe('Transaction Queries', () => {
         createTransactionCategory({ id: '2', name: 'Office Supplies' }),
       ];
 
-      mockPrisma.transactionCategory.findMany.mockResolvedValue(mockCategories);
+      mockTransactionRepo.getActiveCategories.mockResolvedValue(mockCategories);
 
-      const result = await getTransactionCategories();
+      const result = await getTransactionCategories(undefined);
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toHaveLength(2);
       }
-      expect(mockPrisma.transactionCategory.findMany).toHaveBeenCalledWith({
-        where: { isActive: true },
-        select: { id: true, name: true, description: true },
-        orderBy: { name: 'asc' },
-      });
+      expect(mockTransactionRepo.getActiveCategories).toHaveBeenCalled();
     });
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTransactionCategories();
+      const result = await getTransactionCategories(undefined);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe(unauthorizedError);
       }
     });
   });
@@ -247,14 +240,14 @@ describe('Transaction Queries', () => {
     it('uses default limit of 12 months', async () => {
       mockTransactionRepo.getMonthlyTransactionTrend.mockResolvedValue([]);
 
-      await getTransactionTrend();
+      await getTransactionTrend(undefined);
 
       expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(12);
     });
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTransactionTrend();
+      const result = await getTransactionTrend(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -268,7 +261,7 @@ describe('Transaction Queries', () => {
 
       mockTransactionRepo.getCategoryBreakdown.mockResolvedValue(mockBreakdown);
 
-      const result = await getTransactionCategoryBreakdown();
+      const result = await getTransactionCategoryBreakdown(undefined);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -291,7 +284,7 @@ describe('Transaction Queries', () => {
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTransactionCategoryBreakdown();
+      const result = await getTransactionCategoryBreakdown(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -317,14 +310,14 @@ describe('Transaction Queries', () => {
     it('uses default limit of 5 categories', async () => {
       mockTransactionRepo.getTopCategories.mockResolvedValue([]);
 
-      await getTopTransactionCategories();
+      await getTopTransactionCategories(undefined);
 
       expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(5);
     });
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTopTransactionCategories();
+      const result = await getTopTransactionCategories(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -373,7 +366,7 @@ describe('Transaction Queries - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toBe('You must be signed in to perform this action');
       }
     });
   });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
@@ -36,16 +36,12 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
 
-  // Use useMemo to ensure stable date between server and client renders
   const today = useMemo(() => new Date(), []);
-
-  // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
     to: today,
   }));
 
-  // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
@@ -54,18 +50,21 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
     [today],
   );
 
-  // Stats for Overview (current month)
   const { data: overviewStats, isLoading: overviewLoading } =
     useTransactionStatistics(currentMonthFilter);
 
-  // Stats for Analytics (custom date range)
-  const { data: analyticsStats, isLoading: analyticsLoading } = useTransactionStatistics({
-    startDate: dateRange?.from,
-    endDate: dateRange?.to,
-  });
+  const analyticsFilter = useMemo(
+    () => ({ startDate: dateRange?.from, endDate: dateRange?.to }),
+    [dateRange?.from, dateRange?.to],
+  );
 
-  const getComparisonLabel = () => {
-    if (!dateRange?.from || !dateRange?.to) return 'vs. previous period';
+  const { data: analyticsStats, isLoading: analyticsLoading } =
+    useTransactionStatistics(analyticsFilter);
+
+  const comparisonLabel = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) {
+      return 'vs. previous period';
+    }
 
     const diffInDays =
       Math.round((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -75,13 +74,11 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
     if (diffInDays === 30 || diffInDays === 31) return 'vs. last month';
 
     return `vs. previous ${diffInDays} days`;
-  };
+  }, [dateRange]);
 
-  const comparisonLabel = getComparisonLabel();
-
-  const handleShowCreateModal = () => {
+  const handleShowCreateModal = useCallback(() => {
     setShowCreateModal((prev) => !prev);
-  };
+  }, []);
 
   return (
     <Box className="space-y-4 min-w-0 w-full">

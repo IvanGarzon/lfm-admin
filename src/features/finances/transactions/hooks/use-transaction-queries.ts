@@ -16,12 +16,14 @@ import {
   getTransactionCategoryBreakdown,
   getTopTransactionCategories,
   getTransactionCategories,
+} from '@/actions/finances/transactions/queries';
+import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
   uploadTransactionAttachment,
   deleteTransactionAttachment,
-} from '@/actions/finances/transactions';
+} from '@/actions/finances/transactions/mutations';
 import {
   TransactionFilters,
   type TransactionListItem,
@@ -29,6 +31,12 @@ import {
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { formatDateNormalizer } from '@/lib/utils';
 
+// -- QUERY KEYS -------------------------------------------------------------
+
+/**
+ * Query key factory for transaction-related queries.
+ * Provides type-safe, hierarchical query keys for React Query cache management.
+ */
 export const TRANSACTION_KEYS = {
   all: ['transactions'] as const,
   lists: () => [...TRANSACTION_KEYS.all, 'list'] as const,
@@ -47,47 +55,30 @@ export const TRANSACTION_KEYS = {
   topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const,
 };
 
+// -- QUERY HOOKS (Data Fetching) --------------------------------------------
+
+/**
+ * Fetches a paginated, filtered list of transactions.
+ *
+ * @param filters - Filter criteria including search, type, status, and pagination
+ * @returns Query result containing the filtered transaction list
+ *
+ * Cache behaviour:
+ * - Data is cached for 30 seconds to prevent excessive refetching
+ * - Query automatically refetches when filters change
+ * - Cache is invalidated when transactions are created, updated, or deleted
+ */
 export function useTransactions(filters: Partial<TransactionFilters> = {}) {
   return useQuery({
     queryKey: TRANSACTION_KEYS.list(filters),
     queryFn: async () => {
       const searchParams: Record<string, string | string[]> = {};
 
-      if (filters.search) {
-        searchParams.search = filters.search;
-      }
-
-      if (filters.type) {
-        searchParams.type = filters.type;
-      }
-
-      if (filters.status && filters.status.length > 0) {
-        searchParams.status = filters.status;
-      }
-
-      // if (filters.startDate) {
-      //   searchParams.startDate = filters.startDate.toISOString();
-      // }
-
-      // if (filters.endDate) {
-      //   searchParams.endDate = filters.endDate.toISOString();
-      // }
-
-      // if (filters.minAmount !== undefined) {
-      //   searchParams.minAmount = String(filters.minAmount);
-      // }
-
-      // if (filters.maxAmount !== undefined) {
-      //   searchParams.maxAmount = String(filters.maxAmount);
-      // }
-
-      if (filters.page) {
-        searchParams.page = String(filters.page);
-      }
-
-      if (filters.perPage) {
-        searchParams.perPage = String(filters.perPage);
-      }
+      if (filters.search) searchParams.search = filters.search;
+      if (filters.type) searchParams.type = filters.type;
+      if (filters.status && filters.status.length > 0) searchParams.status = filters.status;
+      if (filters.page) searchParams.page = String(filters.page);
+      if (filters.perPage) searchParams.perPage = String(filters.perPage);
 
       const result = await getTransactions(searchParams);
       if (!result.success) {
@@ -100,9 +91,20 @@ export function useTransactions(filters: Partial<TransactionFilters> = {}) {
   });
 }
 
+/**
+ * Fetches full details for a single transaction by ID.
+ *
+ * @param id - The transaction ID to fetch, or undefined to skip the query
+ * @returns Query result containing the transaction with categories and attachments
+ *
+ * Cache behaviour:
+ * - Data is cached for 30 seconds
+ * - Query is skipped when id is undefined
+ * - Cache is invalidated on update or delete
+ */
 export function useTransaction(id: string | undefined) {
   return useQuery({
-    queryKey: TRANSACTION_KEYS.detail(id ?? ''), // Keep for type safety
+    queryKey: TRANSACTION_KEYS.detail(id ?? ''),
     queryFn: id
       ? async () => {
           const result = await getTransactionById(id);
@@ -113,30 +115,50 @@ export function useTransaction(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
   });
 }
 
+/**
+ * Fetches all active transaction categories.
+ *
+ * @returns Query result containing the list of active categories
+ *
+ * Cache behaviour:
+ * - Data is cached for 5 minutes as categories change infrequently
+ * - Cache is invalidated when a category is created
+ */
 export function useTransactionCategories() {
   return useQuery({
     queryKey: TRANSACTION_KEYS.categories(),
     queryFn: async () => {
-      const result = await getTransactionCategories();
+      const result = await getTransactionCategories(undefined);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data ?? [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - categories don't change often
+    staleTime: 5 * 60 * 1000,
   });
 }
 
+/**
+ * Fetches transaction statistics, optionally filtered by a date range.
+ *
+ * @param dateFilter - Optional date range to scope the statistics
+ * @param options - Query options
+ * @param options.enabled - Whether the query should run automatically
+ * @returns Query result containing income, expense, and cash flow totals
+ *
+ * Cache behaviour:
+ * - Data is cached for 1 minute
+ * - Date filter is normalised to ISO strings for stable cache keys
+ * - Returns previous data while fetching new results (keepPreviousData)
+ */
 export function useTransactionStatistics(
   dateFilter?: { startDate?: Date; endDate?: Date },
   options?: { enabled?: boolean },
 ) {
-  // Normalize date filter to ISO date strings for stable query keys
-  // This prevents cache misses when component remounts with logically identical dates
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
@@ -154,12 +176,106 @@ export function useTransactionStatistics(
 
       return result.data;
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
     enabled: options?.enabled,
   });
 }
 
+/**
+ * Fetches monthly transaction trend data showing income vs expense over time.
+ *
+ * @param limit - Number of months to retrieve. Defaults to 12.
+ * @returns Query result containing monthly income, expense, and net values
+ *
+ * Cache behaviour:
+ * - Data is cached for 5 minutes
+ */
+export function useTransactionTrend(limit: number = 12) {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.trend(limit),
+    queryFn: async () => {
+      const result = await getTransactionTrend(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Fetches transaction breakdown by category with percentage of total.
+ *
+ * @param dateFilter - Optional date range to scope the breakdown
+ * @returns Query result containing per-category amounts and percentages
+ *
+ * Cache behaviour:
+ * - Data is cached for 5 minutes
+ * - Date filter is normalised to ISO strings for stable cache keys
+ * - Returns previous data while fetching new results (keepPreviousData)
+ */
+export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: Date }) {
+  const normalizedDateFilter = dateFilter
+    ? {
+        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+      }
+    : undefined;
+
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.categoryBreakdown(normalizedDateFilter),
+    queryFn: async () => {
+      const result = await getTransactionCategoryBreakdown(dateFilter);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Fetches the top transaction categories ranked by total amount.
+ *
+ * @param limit - Maximum number of categories to return. Defaults to 5.
+ * @returns Query result containing the top categories with totals and averages
+ *
+ * Cache behaviour:
+ * - Data is cached for 5 minutes
+ */
+export function useTopCategories(limit: number = 5) {
+  return useQuery({
+    queryKey: TRANSACTION_KEYS.topCategories(limit),
+    queryFn: async () => {
+      const result = await getTopTransactionCategories(limit);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// -- MUTATION HOOKS (Data Writing) -----------------------------------------
+
+/**
+ * Creates a new transaction.
+ *
+ * @returns Mutation object for creating a transaction
+ *
+ * Cache behaviour:
+ * - Cancels in-flight list queries before mutating
+ * - Invalidates lists and statistics on success
+ *
+ * Toast notifications:
+ * - Success: "Transaction {referenceNumber} created successfully"
+ * - Error: server error message or "Failed to create transaction"
+ */
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
 
@@ -172,7 +288,6 @@ export function useCreateTransaction() {
       return result.data;
     },
     onMutate: async () => {
-      // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
     },
     onSuccess: (data) => {
@@ -188,6 +303,20 @@ export function useCreateTransaction() {
   });
 }
 
+/**
+ * Updates an existing transaction with optimistic cache update.
+ *
+ * @returns Mutation object for updating a transaction
+ *
+ * Cache behaviour:
+ * - Optimistically updates the detail cache for instant UI feedback
+ * - Rolls back on error
+ * - Invalidates detail, lists, and statistics on settled
+ *
+ * Toast notifications:
+ * - Success: "Transaction updated successfully"
+ * - Error: server error message or "Failed to update transaction"
+ */
 export function useUpdateTransaction() {
   const queryClient = useQueryClient();
 
@@ -200,14 +329,11 @@ export function useUpdateTransaction() {
       return result.data;
     },
     onMutate: async (newData) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(newData.id) });
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
 
-      // Snapshot the previous value
       const previousTransaction = queryClient.getQueryData(TRANSACTION_KEYS.detail(newData.id));
 
-      // Optimistically update transaction with new data
       queryClient.setQueryData(
         TRANSACTION_KEYS.detail(newData.id),
         (old: TransactionListItem | undefined) => {
@@ -225,14 +351,12 @@ export function useUpdateTransaction() {
       return { previousTransaction };
     },
     onError: (err, newData, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousTransaction) {
         queryClient.setQueryData(TRANSACTION_KEYS.detail(newData.id), context.previousTransaction);
       }
       toast.error(err.message || 'Failed to update transaction');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch after error or success to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
@@ -243,6 +367,20 @@ export function useUpdateTransaction() {
   });
 }
 
+/**
+ * Deletes a transaction with optimistic cache removal.
+ *
+ * @returns Mutation object for deleting a transaction
+ *
+ * Cache behaviour:
+ * - Optimistically removes transaction from detail and list caches
+ * - Rolls back on error
+ * - Invalidates lists and statistics on settled
+ *
+ * Toast notifications:
+ * - Success: "Transaction deleted successfully"
+ * - Error: server error message or "Failed to delete transaction"
+ */
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();
 
@@ -255,22 +393,17 @@ export function useDeleteTransaction() {
       return result.data;
     },
     onMutate: async (id: string) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(id) });
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
 
-      // Snapshot the previous values
       const previousTransaction = queryClient.getQueryData(TRANSACTION_KEYS.detail(id));
       const previousLists = queryClient.getQueriesData({ queryKey: TRANSACTION_KEYS.lists() });
 
-      // Optimistically remove from detail cache
       queryClient.removeQueries({ queryKey: TRANSACTION_KEYS.detail(id) });
 
-      // Return context for rollback
       return { previousTransaction, previousLists, id };
     },
     onError: (error: Error, id, context) => {
-      // Rollback optimistic update
       if (context?.previousTransaction) {
         queryClient.setQueryData(TRANSACTION_KEYS.detail(id), context.previousTransaction);
       }
@@ -282,7 +415,6 @@ export function useDeleteTransaction() {
       toast.error(error.message || 'Failed to delete transaction');
     },
     onSettled: () => {
-      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
     },
@@ -292,15 +424,28 @@ export function useDeleteTransaction() {
   });
 }
 
+/**
+ * Uploads a file attachment to a transaction.
+ *
+ * @returns Mutation object for uploading an attachment
+ *
+ * Cache behaviour:
+ * - Invalidates the transaction detail and list caches on success
+ *
+ * Toast notifications:
+ * - Success: "Attachment uploaded successfully"
+ * - Error: server error message or "Failed to upload attachment"
+ */
 export function useUploadTransactionAttachment() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: { transactionId: string; file: File }) => {
       const formData = new FormData();
+      formData.append('transactionId', data.transactionId);
       formData.append('file', data.file);
 
-      const result = await uploadTransactionAttachment(data.transactionId, formData);
+      const result = await uploadTransactionAttachment(formData);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -317,6 +462,20 @@ export function useUploadTransactionAttachment() {
   });
 }
 
+/**
+ * Deletes an attachment from a transaction with optimistic cache update.
+ *
+ * @returns Mutation object for deleting an attachment
+ *
+ * Cache behaviour:
+ * - Optimistically removes the attachment from the transaction detail cache
+ * - Rolls back on error
+ * - Invalidates the transaction detail and list caches on settled
+ *
+ * Toast notifications:
+ * - Success: "Attachment deleted successfully"
+ * - Error: server error message or "Failed to delete attachment"
+ */
 export function useDeleteTransactionAttachment() {
   const queryClient = useQueryClient();
 
@@ -335,23 +494,20 @@ export function useDeleteTransactionAttachment() {
       return { ...result.data, transactionId };
     },
     onMutate: async (data) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.detail(data.transactionId) });
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
 
-      // Snapshot the previous values
       const previousTransaction = queryClient.getQueryData(
         TRANSACTION_KEYS.detail(data.transactionId),
       );
 
-      // Optimistically remove attachment from transaction detail
       queryClient.setQueryData(
         TRANSACTION_KEYS.detail(data.transactionId),
         (old: TransactionListItem | undefined) => {
           if (!old) return old;
           return {
             ...old,
-            attachments: old.attachments?.filter((att) => att.id !== data.attachmentId) || [],
+            attachments: old.attachments?.filter((att) => att.id !== data.attachmentId) ?? [],
           };
         },
       );
@@ -359,7 +515,6 @@ export function useDeleteTransactionAttachment() {
       return { previousTransaction };
     },
     onError: (error: Error, data, context) => {
-      // Rollback optimistic update
       if (context?.previousTransaction) {
         queryClient.setQueryData(
           TRANSACTION_KEYS.detail(data.transactionId),
@@ -369,7 +524,6 @@ export function useDeleteTransactionAttachment() {
       toast.error(error.message || 'Failed to delete attachment');
     },
     onSettled: (_data, _error, variables) => {
-      // Always refetch to ensure cache consistency
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.detail(variables.transactionId) });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
     },
@@ -379,57 +533,18 @@ export function useDeleteTransactionAttachment() {
   });
 }
 
-export function useTransactionTrend(limit: number = 12) {
-  return useQuery({
-    queryKey: TRANSACTION_KEYS.trend(limit),
-    queryFn: async () => {
-      const result = await getTransactionTrend(limit);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
+// -- PREFETCH HOOKS --------------------------------------------------------
 
-export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: Date }) {
-  // Normalize date filter to ISO date strings for stable query keys
-  const normalizedDateFilter = dateFilter
-    ? {
-        startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
-      }
-    : undefined;
-
-  return useQuery({
-    queryKey: TRANSACTION_KEYS.categoryBreakdown(normalizedDateFilter),
-    queryFn: async () => {
-      const result = await getTransactionCategoryBreakdown(dateFilter);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: keepPreviousData,
-  });
-}
-
-export function useTopCategories(limit: number = 5) {
-  return useQuery({
-    queryKey: TRANSACTION_KEYS.topCategories(limit),
-    queryFn: async () => {
-      const result = await getTopTransactionCategories(limit);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return result.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
+/**
+ * Returns a function that prefetches a transaction by ID into the React Query cache.
+ * Useful for hover-based prefetching to improve perceived navigation speed.
+ *
+ * @returns A prefetch function that accepts a transaction ID
+ *
+ * Cache behaviour:
+ * - Data is cached for 30 seconds, consistent with useTransaction
+ * - No-ops if the data is already fresh in cache
+ */
 export function usePrefetchTransaction() {
   const queryClient = useQueryClient();
 
@@ -438,7 +553,10 @@ export function usePrefetchTransaction() {
       queryKey: TRANSACTION_KEYS.detail(transactionId),
       queryFn: async () => {
         const result = await getTransactionById(transactionId);
-        if (!result.success) throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       },
       staleTime: 30 * 1000,

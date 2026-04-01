@@ -5,18 +5,6 @@ import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/t
 
 export type TransactionFormInput = CreateTransactionInput | UpdateTransactionInput;
 
-export type TransactionCategory =
-  | 'SALES'
-  | 'OFFICE_SUPPLIES'
-  | 'SALARY'
-  | 'RENT'
-  | 'CONTRACTORS'
-  | 'SOFTWARE'
-  | 'MARKETING'
-  | 'UTILITIES'
-  | 'TAXES'
-  | 'OTHER';
-
 export type TransactionAttachment = {
   id: string;
   fileName: string;
@@ -41,6 +29,7 @@ export type TransactionListItem = {
   referenceId: string | null;
   invoiceId: string | null;
   vendorId: string | null;
+  customerId: string | null;
   createdAt: Date;
   updatedAt: Date;
   categories: {
@@ -52,6 +41,7 @@ export type TransactionListItem = {
   attachments?: TransactionAttachment[];
   invoice?: {
     id: string;
+
     invoiceNumber: string;
     customer: {
       firstName: string;
@@ -61,6 +51,11 @@ export type TransactionListItem = {
   vendor?: {
     id: string;
     name: string;
+  } | null;
+  customer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
   } | null;
 };
 

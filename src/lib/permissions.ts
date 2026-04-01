@@ -104,6 +104,7 @@ const USER: RolePolicy = {
   allow: [
     'canReadInvoices',
     'canReadQuotes',
+    'canReadTransactions',
     'canReadRecipes',
     'canReadProducts',
     'canReadVendors',
@@ -157,6 +158,7 @@ const MANAGER: RolePolicy = {
     ...USER.allow,
     'canManageInvoices',
     'canManageQuotes',
+    'canManageTransactions',
     'canRecordPayments',
     'canManageProducts',
     'canManageVendors',

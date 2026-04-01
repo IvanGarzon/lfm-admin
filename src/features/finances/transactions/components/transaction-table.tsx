@@ -4,15 +4,15 @@ import { Box } from '@/components/ui/box';
 import { DataTable } from '@/components/shared/tableV3/data-table';
 import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { usePrefetchTransaction } from '@/features/finances/transactions/hooks/use-transaction-queries';
-import type { Transaction } from '../types';
+import type { TransactionListItem } from '@/features/finances/transactions/types';
 
-interface TransactionTableProps<TData extends Transaction> {
+interface TransactionTableProps<TData extends TransactionListItem> {
   table: Table<TData>;
   items: TData[];
   totalItems: number;
 }
 
-export function TransactionTable<TData extends Transaction>({
+export function TransactionTable<TData extends TransactionListItem>({
   table,
   items,
   totalItems,

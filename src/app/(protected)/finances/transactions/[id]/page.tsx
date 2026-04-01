@@ -1,5 +1,5 @@
 import { SearchParams } from 'nuqs/server';
-import { getTransactions } from '@/actions/finances/transactions';
+import { getTransactions } from '@/actions/finances/transactions/queries';
 import { Shell } from '@/components/shared/shell';
 import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
 import dynamic from 'next/dynamic';

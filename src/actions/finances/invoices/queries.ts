@@ -16,7 +16,6 @@ import type {
   RevenueTrend,
   TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
-import type { ActionResult } from '@/types/actions';
 import { searchParamsCache } from '@/filters/invoices/invoices-filters';
 
 const invoiceRepo = new InvoiceRepository(prisma);

@@ -19,16 +19,7 @@ import {
 } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import {
   useQuoteMetadata,
   useQuoteItems,
@@ -606,23 +597,12 @@ export function QuoteDrawer({
         showMarkAsSentOption={pendingEmailType === 'sent'}
       />
 
-      <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Would you like to save them before closing?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="outline" onClick={handleDiscardChanges}>
-              Discard changes
-            </Button>
-            <AlertDialogAction onClick={handleSaveChanges}>Save changes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UnsavedChangesDialog
+        open={showUnsavedChangesDialog}
+        onOpenChange={setShowUnsavedChangesDialog}
+        onDiscard={handleDiscardChanges}
+        onSave={handleSaveChanges}
+      />
     </>
   );
 }

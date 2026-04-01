@@ -11,6 +11,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
+import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import { TransactionForm } from './transaction-form';
 import {
   useCreateTransaction,
@@ -25,6 +26,7 @@ import {
   searchParams,
   transactionSearchParamsDefaults,
 } from '@/filters/transactions/transactions-filters';
+import { TransactionDrawerSkeleton } from './transaction-drawer-skeleton';
 
 export function TransactionDrawer({
   id,
@@ -37,6 +39,7 @@ export function TransactionDrawer({
 }) {
   const { data: transaction, isLoading, error, isError } = useTransaction(id);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState<boolean>(false);
 
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
@@ -51,10 +54,12 @@ export function TransactionDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
-        setHasUnsavedChanges(false);
+        if (hasUnsavedChanges) {
+          setShowUnsavedChangesDialog(true);
+          return;
+        }
 
         if (id && pathname?.includes(`/transactions/${id}`)) {
-          // Navigate back to list preserving filters
           const basePath = '/finances/transactions';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
@@ -63,14 +68,35 @@ export function TransactionDrawer({
         }
       }
     },
-    [id, pathname, onClose, router, queryString],
+    [id, pathname, onClose, router, queryString, hasUnsavedChanges],
   );
+
+  const handleDiscardChanges = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    setHasUnsavedChanges(false);
+
+    if (id) {
+      const basePath = '/finances/transactions';
+      const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+      router.push(targetPath);
+    } else {
+      onClose?.();
+    }
+  }, [id, onClose, router, queryString]);
+
+  const handleSaveChanges = useCallback(() => {
+    setShowUnsavedChangesDialog(false);
+    const form = document.getElementById('form-rhf-transaction');
+    if (form instanceof HTMLFormElement) {
+      form.requestSubmit();
+    }
+  }, []);
 
   const handleCreate = useCallback(
     (data: CreateTransactionInput) => {
       createTransaction.mutate(data, {
         onSuccess: () => {
-          handleOpenChange(false);
+          onClose?.();
         },
       });
     },
@@ -89,78 +115,88 @@ export function TransactionDrawer({
         },
       });
     },
-    [updateTransaction],
+    [id, updateTransaction],
   );
 
   return (
-    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
-        {/* {isLoading ? <InvoiceDrawerSkeleton /> : null} */}
+    <>
+      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+        <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+          {isLoading ? <TransactionDrawerSkeleton /> : null}
 
-        {isError ? (
-          <>
-            <DrawerHeader>
-              <DrawerTitle>Error</DrawerTitle>
-            </DrawerHeader>
-            <Box className="p-6 text-destructive">
-              <p className="mt-4">Could not load transaction details: {error?.message}</p>
-            </Box>
-          </>
-        ) : null}
+          {isError ? (
+            <>
+              <DrawerHeader>
+                <DrawerTitle>Error</DrawerTitle>
+              </DrawerHeader>
+              <Box className="p-6 text-destructive">
+                <p className="mt-4">Could not load transaction details: {error?.message}</p>
+              </Box>
+            </>
+          ) : null}
 
-        {/* <DrawerHeader> */}
-        <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-          <Box className="mt-1 flex flex-col flex-1">
-            <Box className="flex items-center gap-2 flex-wrap">
-              <DrawerTitle>
-                {mode === 'create' ? 'New Transaction' : 'Edit Transaction'}
-              </DrawerTitle>
-              {mode === 'edit' && hasUnsavedChanges ? (
-                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
-                  <AlertCircle className="h-3 w-3" />
-                  Unsaved changes
-                </span>
-              ) : null}
+          <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+            <Box className="mt-1 flex flex-col flex-1">
+              <Box className="flex items-center gap-2 flex-wrap">
+                <DrawerTitle>
+                  {mode === 'create' ? 'New Transaction' : 'Edit Transaction'}
+                </DrawerTitle>
+                {mode === 'edit' && hasUnsavedChanges ? (
+                  <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Unsaved changes
+                  </span>
+                ) : null}
+              </Box>
+              <DrawerDescription>
+                {mode === 'create'
+                  ? 'Create a new income or expense transaction.'
+                  : 'Update the transaction details below.'}
+              </DrawerDescription>
             </Box>
-            <DrawerDescription>
-              {mode === 'create'
-                ? 'Create a new income or expense transaction.'
-                : 'Update the transaction details below.'}
-            </DrawerDescription>
+            <Button
+              variant="ghost"
+              className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+              onClick={() => handleOpenChange(false)}
+            >
+              <X className="size-5" aria-hidden="true" />
+              <span className="sr-only">Close</span>
+            </Button>
           </Box>
-          <Button
-            variant="ghost"
-            className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
-            onClick={() => handleOpenChange(false)}
-          >
-            <X className="size-5" aria-hidden="true" />
-            <span className="sr-only">Close</span>
-          </Button>
-        </Box>
 
-        <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
-          <Box className="flex h-full">
-            <Box className="overflow-y-auto w-full">
-              {isLoading && mode === 'edit' ? (
-                <Box className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <span className="ml-2 text-sm text-muted-foreground">Loading transaction...</span>
-                </Box>
-              ) : (
-                <TransactionForm
-                  transaction={transaction ?? null}
-                  onCreate={handleCreate}
-                  onUpdate={handleUpdate}
-                  isCreating={createTransaction.isPending}
-                  isUpdating={updateTransaction.isPending}
-                  onDirtyStateChange={setHasUnsavedChanges}
-                  onClose={onClose}
-                />
-              )}
+          <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
+            <Box className="flex h-full">
+              <Box className="overflow-y-auto w-full">
+                {isLoading && mode === 'edit' ? (
+                  <Box className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      Loading transaction...
+                    </span>
+                  </Box>
+                ) : (
+                  <TransactionForm
+                    transaction={transaction ?? null}
+                    onCreate={handleCreate}
+                    onUpdate={handleUpdate}
+                    isCreating={createTransaction.isPending}
+                    isUpdating={updateTransaction.isPending}
+                    onDirtyStateChange={setHasUnsavedChanges}
+                    onClose={onClose}
+                  />
+                )}
+              </Box>
             </Box>
-          </Box>
-        </DrawerBody>
-      </DrawerContent>
-    </Drawer>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      <UnsavedChangesDialog
+        open={showUnsavedChangesDialog}
+        onOpenChange={setShowUnsavedChangesDialog}
+        onDiscard={handleDiscardChanges}
+        onSave={handleSaveChanges}
+      />
+    </>
   );
 }

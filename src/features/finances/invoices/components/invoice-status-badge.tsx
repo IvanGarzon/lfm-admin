@@ -7,7 +7,10 @@ import {
   SquareDashedTopSolid,
 } from 'lucide-react';
 import { InvoiceStatus } from '@/prisma/client';
-import { StatusBadge, type StatusBadgeConfig } from '@/features/finances/shared';
+import {
+  StatusBadge,
+  type StatusBadgeConfig,
+} from '@/features/finances/shared/components/status-badge';
 
 type InvoiceStatusBadgeProps = {
   status: InvoiceStatus;

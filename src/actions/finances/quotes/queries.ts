@@ -9,6 +9,7 @@ import { withPermission } from '@/lib/action-auth';
 import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
   QuoteStatistics,
+  QuoteStatusHistoryItem,
   QuoteWithDetails,
   QuoteMetadata,
   QuoteItem,
@@ -20,7 +21,6 @@ import type {
   AverageTimeToDecision,
   StatsDateFilter,
 } from '@/features/finances/quotes/types';
-import type { ActionResult } from '@/types/actions';
 import { getSignedDownloadUrl } from '@/lib/s3';
 
 const quoteRepo = new QuoteRepository(prisma);
@@ -116,7 +116,7 @@ export const getQuoteItems = withPermission<string, QuoteItem[]>(
  * @param id - The ID of the quote.
  * @returns A promise that resolves to an `ActionResult` containing the quote status history.
  */
-export const getQuoteStatusHistory = withPermission<string, any[]>(
+export const getQuoteStatusHistory = withPermission<string, QuoteStatusHistoryItem[]>(
   'canReadQuotes',
   async (session, id) => {
     try {

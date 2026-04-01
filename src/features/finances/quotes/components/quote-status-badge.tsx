@@ -1,6 +1,9 @@
 import { X, Ban, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
 import type { QuoteStatus as QuoteStatusType } from '@/zod/schemas/enums/QuoteStatus.schema';
-import { StatusBadge, type StatusBadgeConfig } from '@/features/finances/shared';
+import {
+  StatusBadge,
+  type StatusBadgeConfig,
+} from '@/features/finances/shared/components/status-badge';
 
 type QuoteStatusBadgeProps = {
   status: QuoteStatusType;

@@ -54,8 +54,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * ```
    */
   async searchAndPaginate(params: QuoteFilters): Promise<QuotePagination> {
-    console.log('params', params);
-
     const { search, status, isFavourite, page, perPage, sort } = params;
 
     const whereClause: Prisma.QuoteWhereInput = {
@@ -1544,6 +1542,19 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async countQuoteItemAttachments(itemId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
       where: { quoteItemId: itemId },
+    });
+  }
+
+  /**
+   * Count attachments sharing the same S3 key, excluding a specific attachment.
+   * Used to determine whether a file can be safely deleted from S3.
+   * @param s3Key - The S3 key to check for shared usage
+   * @param excludeId - The attachment ID to exclude from the count
+   * @returns A promise that resolves to the number of other attachments referencing the same key
+   */
+  async countItemAttachmentsByS3Key(s3Key: string, excludeId: string): Promise<number> {
+    return this.prisma.quoteItemAttachment.count({
+      where: { s3Key, id: { not: excludeId } },
     });
   }
 
