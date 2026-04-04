@@ -237,9 +237,22 @@ const ADMIN: RolePolicy = {
 };
 
 /**
+ * SUPER_ADMIN role: Full platform-wide access, no restrictions
+ */
+const SUPER_ADMIN: RolePolicy = {
+  allow: [...ADMIN.allow],
+  deny: [],
+  actions: {
+    allow: [...ADMIN.actions.allow],
+    deny: [],
+  },
+};
+
+/**
  * Role policies mapping
  */
 export const RolePolicies: Record<UserRole, RolePolicy> = {
+  SUPER_ADMIN,
   USER,
   MANAGER,
   ADMIN,

@@ -215,11 +215,15 @@ export const authConfig = {
         const dbUser = await userRepo.getUserByEmailWithSelect(user.email!, {
           id: true,
           role: true,
+          tenantId: true,
+          tenant: { select: { slug: true } },
         });
 
         if (dbUser) {
           token.sub = dbUser.id; // Set the token's subject to our internal user ID
           token.role = dbUser.role;
+          token.tenantId = dbUser.tenantId ?? null;
+          token.tenantSlug = dbUser.tenant?.slug ?? null;
 
           // Get the most recent session token for this user to identify the current session
           const sessionRepo = new SessionRepository(prisma);
@@ -266,6 +270,8 @@ export const authConfig = {
             email: token.email || session.user.email,
             image: token.picture || session.user.image,
             role: token.role || 'USER',
+            tenantId: token.tenantId,
+            tenantSlug: token.tenantSlug,
           },
           // Include session token for identifying current session in database
           sessionToken: token.sessionToken as string | undefined,

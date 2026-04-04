@@ -56,10 +56,14 @@ model User {
   QuoteStatusHistory QuoteStatusHistory[] @relation("user")
   InvoiceStatusHistory InvoiceStatusHistory[] @relation("user")
 
-  role                  UserRole               @default(USER)
+  role     UserRole @default(USER)
+  tenantId String?  @map("tenant_id")
+  tenant   Tenant?  @relation(fields: [tenantId], references: [id])
+
   // isTwoFactorEnabled    Boolean                @default(false)
   // twoFactorConfirmation TwoFactorConfirmation?
 
+  @@index([tenantId])
   @@map(name: "users")
 }
 
@@ -963,9 +967,15 @@ enum EmailStatus {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   MANAGER
   USER
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
 }
 
 enum ScheduleType {
@@ -1026,5 +1036,48 @@ enum RoundingMethod {
   NEAREST
   PSYCHOLOGICAL_99
   PSYCHOLOGICAL_95
+}
+
+model Tenant {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  name      String
+  status    TenantStatus   @default(ACTIVE)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+
+  users    User[]
+  settings TenantSettings?
+
+  @@index([slug])
+  @@index([status])
+  @@map("tenants")
+}
+
+model TenantSettings {
+  id            String  @id @default(cuid())
+  tenantId      String  @unique @map("tenant_id")
+  tenant        Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  logoUrl       String? @map("logo_url")
+  abn           String?
+  email         String?
+  phone         String?
+  website       String?
+  bankName      String? @map("bank_name")
+  bsb           String?
+  accountNumber String? @map("account_number")
+  accountName   String? @map("account_name")
+
+  address   String?
+  city      String?
+  state     States?
+  postcode  String?
+  country   String? @default("Australia")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("tenant_settings")
 }
 

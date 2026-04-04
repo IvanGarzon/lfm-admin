@@ -10,6 +10,8 @@ declare module 'next-auth' {
       lastName?: string | null;
       activeSessions?: number;
       role: UserRole;
+      tenantId: string | null;
+      tenantSlug: string | null;
     };
     sessionToken?: string;
     id: string;
@@ -27,5 +29,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     role: UserRole;
     sessionToken?: string;
+    tenantId?: string | null;
+    tenantSlug?: string | null;
   }
 }

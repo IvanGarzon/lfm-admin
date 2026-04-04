@@ -20,6 +20,17 @@ type AuthenticatedSession = Session & {
   user: NonNullable<Session['user']>;
 };
 
+/**
+ * A session where the user is authenticated AND belongs to a tenant.
+ * SUPER_ADMIN users do not have a tenantId and cannot use this type.
+ */
+type TenantSession = Session & {
+  user: NonNullable<Session['user']> & {
+    tenantId: string;
+    tenantSlug: string;
+  };
+};
+
 type AuthenticatedHandler<TInput, TOutput> = (
   session: AuthenticatedSession,
   input: TInput,
@@ -176,6 +187,46 @@ export function withPermission<TInput, TOutput>(
     }
 
     return handler(session, input);
+  };
+}
+
+// -- Tenant Auth Wrapper ----------------------------------------------------
+
+/**
+ * Wraps a server action to require authentication AND a valid tenant context.
+ * Rejects SUPER_ADMIN users (who have no tenantId) and unauthenticated requests.
+ *
+ * Use this for all actions that operate on tenant-scoped data.
+ *
+ * @example
+ * export const getInvoices = withTenant<SearchParams, InvoicePagination>(
+ *   async (session, input) => {
+ *     const result = await invoiceRepo.searchAndPaginate(input, session.user.tenantId);
+ *     return { success: true, data: result };
+ *   }
+ * );
+ */
+export function withTenant<TInput, TOutput>(
+  handler: (session: TenantSession, input: TInput) => Promise<ActionResult<TOutput>>,
+): UnauthenticatedHandler<TInput, TOutput> {
+  return async (input: TInput): Promise<ActionResult<TOutput>> => {
+    const session = await getSession();
+
+    if (!isAuthenticatedSession(session)) {
+      return {
+        success: false,
+        error: 'You must be signed in to perform this action',
+      };
+    }
+
+    if (!session.user.tenantId || !session.user.tenantSlug) {
+      return {
+        success: false,
+        error: 'No tenant context found for this session',
+      };
+    }
+
+    return handler(session as TenantSession, input);
   };
 }
 
