@@ -1,0 +1,11 @@
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - bufferutil
+  - core-js
+  - esbuild
+  - msw
+  - prisma
+  - prisma-zod-generator
+  - protobufjs
+  - sharp
+  - unrs-resolver
