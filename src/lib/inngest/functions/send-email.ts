@@ -29,8 +29,8 @@ export const sendEmailFunction = inngest.createFunction(
     timeouts: {
       finish: '5m',
     },
+    triggers: [{ event: 'email/send' }, { event: 'send-email/manual' }],
   },
-  [{ event: 'email/send' }, { event: 'send-email/manual' }],
   async ({ event, step }) => {
     const { auditId, email } = event.data as { auditId: string; email: QueueEmailPayload };
 
@@ -70,9 +70,15 @@ export const sendEmailFunction = inngest.createFunction(
       const result = await step.run('send-email', async () => {
         // Route to appropriate processor based on entity type
         if (email.entityType === 'invoice') {
-          return await processInvoiceEmailHandler(email);
+          if (!isInvoiceEmailType(email.emailType)) {
+            throw new Error(`Invalid email type for invoice: ${email.emailType}`);
+          }
+          return await processInvoiceEmailHandler(email.entityId, email.emailType);
         } else if (email.entityType === 'quote') {
-          return await processQuoteEmailHandler(email);
+          if (!isQuoteEmailType(email.emailType)) {
+            throw new Error(`Invalid email type for quote: ${email.emailType}`);
+          }
+          return await processQuoteEmailHandler(email.entityId, email.emailType);
         } else {
           throw new Error(`Unknown entity type: ${email.entityType}`);
         }
@@ -113,46 +119,75 @@ export const sendEmailFunction = inngest.createFunction(
   },
 );
 
+type InvoiceEmailType =
+  | 'invoice.pending'
+  | 'invoice.reminder'
+  | 'invoice.receipt'
+  | 'invoice.overdue';
+type QuoteEmailType =
+  | 'quote.sent'
+  | 'quote.reminder'
+  | 'quote.accepted'
+  | 'quote.rejected'
+  | 'quote.expired';
+
+const invoiceEmailTypes: readonly InvoiceEmailType[] = [
+  'invoice.pending',
+  'invoice.reminder',
+  'invoice.receipt',
+  'invoice.overdue',
+];
+
+const quoteEmailTypes: readonly QuoteEmailType[] = [
+  'quote.sent',
+  'quote.reminder',
+  'quote.accepted',
+  'quote.rejected',
+  'quote.expired',
+];
+
+function isInvoiceEmailType(type: string): type is InvoiceEmailType {
+  return (invoiceEmailTypes as readonly string[]).includes(type);
+}
+
+function isQuoteEmailType(type: string): type is QuoteEmailType {
+  return (quoteEmailTypes as readonly string[]).includes(type);
+}
+
 /**
  * Process invoice emails
  */
-async function processInvoiceEmailHandler(email: any): Promise<{ emailId?: string }> {
-  const type = email.emailType.replace('invoice.', '') as
-    | 'pending'
-    | 'reminder'
-    | 'receipt'
-    | 'overdue';
-
-  const typeMapping: Record<typeof type, 'pending_notification' | 'receipt' | 'reminder'> = {
-    pending: 'pending_notification',
-    receipt: 'receipt',
-    reminder: 'reminder',
-    overdue: 'reminder',
+async function processInvoiceEmailHandler(
+  entityId: string,
+  emailType: InvoiceEmailType,
+): Promise<{ emailId?: string }> {
+  const typeMapping: Record<InvoiceEmailType, 'pending_notification' | 'receipt' | 'reminder'> = {
+    'invoice.pending': 'pending_notification',
+    'invoice.receipt': 'receipt',
+    'invoice.reminder': 'reminder',
+    'invoice.overdue': 'reminder',
   };
 
-  const processorType = typeMapping[type];
-  return await processInvoiceEmail(email.entityId, processorType);
+  return await processInvoiceEmail(entityId, typeMapping[emailType]);
 }
 
 /**
  * Process quote emails
  */
-async function processQuoteEmailHandler(email: any): Promise<{ emailId?: string }> {
-  const type = email.emailType.replace('quote.', '') as
-    | 'sent'
-    | 'reminder'
-    | 'accepted'
-    | 'rejected'
-    | 'expired'
-    | 'followup';
+async function processQuoteEmailHandler(
+  entityId: string,
+  emailType: QuoteEmailType,
+): Promise<{ emailId?: string }> {
+  const typeMapping: Record<
+    QuoteEmailType,
+    'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired'
+  > = {
+    'quote.sent': 'sent',
+    'quote.reminder': 'reminder',
+    'quote.accepted': 'accepted',
+    'quote.rejected': 'rejected',
+    'quote.expired': 'expired',
+  };
 
-  const processorType = type as
-    | 'sent'
-    | 'reminder'
-    | 'accepted'
-    | 'rejected'
-    | 'expired'
-    | 'followup';
-
-  return await processQuoteEmail(email.entityId, processorType);
+  return await processQuoteEmail(entityId, typeMapping[emailType]);
 }

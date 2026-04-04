@@ -18,11 +18,11 @@ export const checkExpiredQuotesFunction = inngest.createFunction(
     timeouts: {
       finish: '2m', // Max 2 minutes for batch update
     },
+    triggers: [
+      { cron: '0 0 * * *' }, // Daily at midnight
+      { event: 'check-expired-quotes/manual' }, // Manual trigger
+    ],
   },
-  [
-    { cron: '0 0 * * *' }, // Daily at midnight
-    { event: 'check-expired-quotes/manual' }, // Manual trigger
-  ],
   async ({ step }) => {
     logger.info('Inngest function triggered - check expired quotes', {
       context: 'inngest-check-expired-quotes',

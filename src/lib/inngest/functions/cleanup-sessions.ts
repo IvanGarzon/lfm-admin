@@ -21,11 +21,11 @@ export const cleanupSessionsFunction = inngest.createFunction(
     timeouts: {
       finish: '2m', // Max 2 minutes for batch deactivation
     },
+    triggers: [
+      { cron: '0 0 * * *' }, // Daily at midnight
+      { event: 'cleanup-sessions/manual' }, // Manual trigger
+    ],
   },
-  [
-    { cron: '0 0 * * *' }, // Daily at midnight
-    { event: 'cleanup-sessions/manual' }, // Manual trigger
-  ],
   async ({ step }) => {
     logger.info('Inngest function triggered - cleanup inactive sessions', {
       context: 'inngest-cleanup-sessions',
