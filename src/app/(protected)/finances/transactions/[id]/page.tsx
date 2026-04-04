@@ -4,7 +4,6 @@ import { Shell } from '@/components/shared/shell';
 import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
 import dynamic from 'next/dynamic';
 
-// Lazy load TransactionDrawer to reduce initial bundle size
 const TransactionDrawer = dynamic(
   () =>
     import('@/features/finances/transactions/components/transaction-drawer').then(
