@@ -69,35 +69,35 @@ ALTER TABLE "transaction_categories" ADD CONSTRAINT "transaction_categories_tena
 -- -- Step 5: Drop old global unique constraints, add per-tenant composites ----
 
 -- customers.email was globally unique; now unique per tenant
-ALTER TABLE "customers" DROP CONSTRAINT "customers_email_key";
+DROP INDEX "customers_email_key";
 CREATE UNIQUE INDEX "customers_tenant_id_email_key" ON "customers"("tenant_id", "email");
 
 -- vendors.vendor_code was globally unique; now unique per tenant
-ALTER TABLE "vendors" DROP CONSTRAINT "vendors_vendor_code_key";
+DROP INDEX "vendors_vendor_code_key";
 CREATE UNIQUE INDEX "vendors_tenant_id_vendor_code_key" ON "vendors"("tenant_id", "vendor_code");
 
 -- employees.email was globally unique; now unique per tenant
-ALTER TABLE "employees" DROP CONSTRAINT "employees_email_key";
+DROP INDEX "employees_email_key";
 CREATE UNIQUE INDEX "employees_tenant_id_email_key" ON "employees"("tenant_id", "email");
 
 -- invoices.invoice_number was globally unique; now unique per tenant
-ALTER TABLE "invoices" DROP CONSTRAINT "invoices_invoice_number_key";
+DROP INDEX "invoices_invoice_number_key";
 CREATE UNIQUE INDEX "invoices_tenant_id_invoice_number_key" ON "invoices"("tenant_id", "invoice_number");
 
 -- quotes.quote_number was globally unique; now unique per tenant
-ALTER TABLE "quotes" DROP CONSTRAINT "quotes_quote_number_key";
+DROP INDEX "quotes_quote_number_key";
 CREATE UNIQUE INDEX "quotes_tenant_id_quote_number_key" ON "quotes"("tenant_id", "quote_number");
 
 -- transactions.reference_number was globally unique; now unique per tenant
-ALTER TABLE "transactions" DROP CONSTRAINT "transactions_reference_number_key";
+DROP INDEX "transactions_reference_number_key";
 CREATE UNIQUE INDEX "transactions_tenant_id_reference_number_key" ON "transactions"("tenant_id", "reference_number");
 
 -- recipe_units.name was globally unique; now unique per tenant
-ALTER TABLE "recipe_units" DROP CONSTRAINT "recipe_units_name_key";
+DROP INDEX "recipe_units_name_key";
 CREATE UNIQUE INDEX "recipe_units_tenant_id_name_key" ON "recipe_units"("tenant_id", "name");
 
 -- transaction_categories.name was globally unique; now unique per tenant
-ALTER TABLE "transaction_categories" DROP CONSTRAINT "transaction_categories_name_key";
+DROP INDEX "transaction_categories_name_key";
 CREATE UNIQUE INDEX "transaction_categories_tenant_id_name_key" ON "transaction_categories"("tenant_id", "name");
 
 -- -- Step 6: Add tenant_id indexes for query performance ---------------------
