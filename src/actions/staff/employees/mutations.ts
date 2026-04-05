@@ -1,6 +1,5 @@
 'use server';
 
-import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import {
   UpdateEmployeeSchema,
@@ -12,7 +11,7 @@ import { prisma } from '@/lib/prisma';
 import { EmployeeRepository } from '@/repositories/employee-repository';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
-import type { ActionResult } from '@/types/actions';
+import { withTenant } from '@/lib/action-auth';
 
 const employeeRepo = new EmployeeRepository(prisma);
 
@@ -21,91 +20,76 @@ const employeeRepo = new EmployeeRepository(prisma);
  * @param data - The input data for creating the employee.
  * @returns A promise that resolves to an `ActionResult` with the new employee's ID.
  */
-export async function createEmployee(
-  data: CreateEmployeeInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const createEmployee = withTenant<CreateEmployeeInput, { id: string }>(
+  async (_session, data) => {
+    try {
+      const validatedData = CreateEmployeeSchema.parse(data);
+      const employee = await employeeRepo.create(validatedData);
 
-  try {
-    const validatedData = CreateEmployeeSchema.parse(data);
-    const employee = await employeeRepo.create(validatedData);
+      logger.info('Employee created', {
+        context: 'createEmployee',
+        metadata: {
+          employeeId: employee.id,
+          name: `${employee.firstName} ${employee.lastName}`,
+        },
+      });
 
-    logger.info('Employee created', {
-      context: 'createEmployee',
-      metadata: {
-        employeeId: employee.id,
-        name: `${employee.firstName} ${employee.lastName}`,
-      },
-    });
+      revalidatePath('/staff/employees');
 
-    revalidatePath('/staff/employees');
-
-    return {
-      success: true,
-      data: { id: employee.id },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to create employee');
-  }
-}
+      return {
+        success: true,
+        data: { id: employee.id },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to create employee');
+    }
+  },
+);
 
 /**
  * Updates an existing employee with the provided data.
  * @param data - The input data for updating the employee.
  * @returns A promise that resolves to an `ActionResult` with the updated employee's ID.
  */
-export async function updateEmployee(
-  data: UpdateEmployeeInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const updateEmployee = withTenant<UpdateEmployeeInput, { id: string }>(
+  async (_session, data) => {
+    try {
+      const validatedData = UpdateEmployeeSchema.parse(data);
+      const existing = await employeeRepo.findById(validatedData.id);
 
-  try {
-    const validatedData = UpdateEmployeeSchema.parse(data);
-    const existing = await employeeRepo.findById(validatedData.id);
+      if (!existing) {
+        return { success: false, error: 'Employee not found' };
+      }
 
-    if (!existing) {
-      return { success: false, error: 'Employee not found' };
+      const employee = await employeeRepo.update(validatedData.id, validatedData);
+
+      if (!employee) {
+        return { success: false, error: 'Failed to update employee' };
+      }
+
+      logger.info('Employee updated', {
+        context: 'updateEmployee',
+        metadata: {
+          employeeId: employee.id,
+        },
+      });
+
+      revalidatePath('/staff/employees');
+      revalidatePath(`/staff/employees/${employee.id}`);
+
+      return { success: true, data: { id: employee.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update employee');
     }
-
-    const employee = await employeeRepo.update(validatedData.id, validatedData);
-
-    if (!employee) {
-      return { success: false, error: 'Failed to update employee' };
-    }
-
-    logger.info('Employee updated', {
-      context: 'updateEmployee',
-      metadata: {
-        employeeId: employee.id,
-      },
-    });
-
-    revalidatePath('/staff/employees');
-    revalidatePath(`/staff/employees/${employee.id}`);
-
-    return { success: true, data: { id: employee.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to update employee');
-  }
-}
+  },
+);
 
 /**
  * Deletes an employee.
  * @param id - The ID of the employee to delete.
  * @returns A promise that resolves to an `ActionResult` with success status.
  */
-export async function deleteEmployee(id: string): Promise<ActionResult<{ success: true }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const deleteEmployee = withTenant<string, { success: true }>(async (_session, id) => {
   try {
     const existing = await employeeRepo.findById(id);
     if (!existing) {
@@ -127,4 +111,4 @@ export async function deleteEmployee(id: string): Promise<ActionResult<{ success
   } catch (error) {
     return handleActionError(error, 'Failed to delete employee');
   }
-}
+});

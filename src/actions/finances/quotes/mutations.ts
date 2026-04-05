@@ -7,7 +7,7 @@ import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withPermission } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
@@ -44,24 +44,28 @@ const emailAuditRepo = new EmailAuditRepository(prisma);
  * @param data - The input data for creating the quote, conforming to `CreateQuoteInput`.
  * @returns A promise that resolves to an `ActionResult` with the new quote's ID and number.
  */
-export const createQuote = withPermission<CreateQuoteInput, { id: string; quoteNumber: string }>(
-  'canManageQuotes',
-  async (session, data) => {
-    try {
-      // Validate input
-      const validatedData = CreateQuoteSchema.parse(data);
-      const quote = await quoteRepo.createQuoteWithItems(validatedData, session.user.id);
-      revalidatePath('/finances/quotes');
+export const createQuote = withTenantPermission<
+  CreateQuoteInput,
+  { id: string; quoteNumber: string }
+>('canManageQuotes', async (session, data) => {
+  try {
+    // Validate input
+    const validatedData = CreateQuoteSchema.parse(data);
+    const quote = await quoteRepo.createQuoteWithItems(
+      validatedData,
+      session.user.tenantId,
+      session.user.id,
+    );
+    revalidatePath('/finances/quotes');
 
-      return {
-        success: true,
-        data: { id: quote.id, quoteNumber: quote.quoteNumber },
-      };
-    } catch (error) {
-      return handleActionError(error, 'Failed to create quote');
-    }
-  },
-);
+    return {
+      success: true,
+      data: { id: quote.id, quoteNumber: quote.quoteNumber },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to create quote');
+  }
+});
 
 /**
  * Updates an existing quote with the provided data.
@@ -69,7 +73,7 @@ export const createQuote = withPermission<CreateQuoteInput, { id: string; quoteN
  * @param data - The input data for updating the quote, conforming to `UpdateQuoteInput`.
  * @returns A promise that resolves to an `ActionResult` with the updated quote's ID.
  */
-export const updateQuote = withPermission<UpdateQuoteInput, { id: string }>(
+export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }>(
   'canManageQuotes',
   async (session, data) => {
     try {
@@ -105,7 +109,7 @@ export const updateQuote = withPermission<UpdateQuoteInput, { id: string }>(
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export const markQuoteAsAccepted = withPermission<MarkQuoteAsAcceptedInput, { id: string }>(
+export const markQuoteAsAccepted = withTenantPermission<MarkQuoteAsAcceptedInput, { id: string }>(
   'canManageQuotes',
   async (session, data) => {
     try {
@@ -132,7 +136,7 @@ export const markQuoteAsAccepted = withPermission<MarkQuoteAsAcceptedInput, { id
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export const markQuoteAsRejected = withPermission<MarkQuoteAsRejectedInput, { id: string }>(
+export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput, { id: string }>(
   'canManageQuotes',
   async (session, data) => {
     try {
@@ -163,7 +167,7 @@ export const markQuoteAsRejected = withPermission<MarkQuoteAsRejectedInput, { id
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export const markQuoteAsSent = withPermission<
+export const markQuoteAsSent = withTenantPermission<
   { id: string; options?: { sendEmail?: boolean } },
   { id: string }
 >('canManageQuotes', async (session, data) => {
@@ -210,7 +214,7 @@ export const markQuoteAsSent = withPermission<
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export const markQuoteAsOnHold = withPermission<MarkQuoteAsOnHoldInput, { id: string }>(
+export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { id: string }>(
   'canManageQuotes',
   async (session, data) => {
     try {
@@ -241,7 +245,7 @@ export const markQuoteAsOnHold = withPermission<MarkQuoteAsOnHoldInput, { id: st
  * @returns A promise that resolves to an `ActionResult` with the quote's ID upon success,
  * or an error if the quote is not found.
  */
-export const markQuoteAsCancelled = withPermission<MarkQuoteAsCancelledInput, { id: string }>(
+export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInput, { id: string }>(
   'canManageQuotes',
   async (session, data) => {
     try {
@@ -274,13 +278,13 @@ export const markQuoteAsCancelled = withPermission<MarkQuoteAsCancelledInput, { 
  * @returns A promise that resolves to an `ActionResult` containing the new invoice's ID and number,
  * or an error if the quote is not found or the status transition is invalid.
  */
-export const convertQuoteToInvoice = withPermission<
+export const convertQuoteToInvoice = withTenantPermission<
   ConvertQuoteToInvoiceInput,
   { invoiceId: string; invoiceNumber: string }
 >('canManageQuotes', async (session, data) => {
   try {
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
-    const invoiceNumber = await invoiceRepo.generateInvoiceNumber();
+    const invoiceNumber = await invoiceRepo.generateInvoiceNumber(session.user.tenantId);
 
     // Convert quote to invoice
     const result = await quoteRepo.convertToInvoice(
@@ -296,7 +300,10 @@ export const convertQuoteToInvoice = withPermission<
 
     // Auto-send invoice email to customer
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(result.invoiceId);
+      const invoice = await invoiceRepo.findByIdWithDetails(
+        result.invoiceId,
+        session.user.tenantId,
+      );
       if (invoice) {
         await queueInvoiceEmail({
           invoiceId: invoice.id,
@@ -316,7 +323,6 @@ export const convertQuoteToInvoice = withPermission<
       }
     } catch (emailError) {
       // Log error but don't fail the conversion
-      console.error('Failed to queue invoice email:', emailError);
     }
 
     revalidatePath('/finances/quotes');
@@ -355,7 +361,7 @@ export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: numb
  * @returns A promise that resolves to an `ActionResult` with the ID of the soft-deleted quote,
  * or an error if the quote is not found.
  */
-export const deleteQuote = withPermission<string, { id: string }>(
+export const deleteQuote = withTenantPermission<string, { id: string }>(
   'canManageQuotes',
   async (session, id) => {
     try {
@@ -380,7 +386,7 @@ export const deleteQuote = withPermission<string, { id: string }>(
  * @param formData - The form data containing the file, quote ID, and quote item ID.
  * @returns A promise that resolves to an `ActionResult` with the new item attachment's data.
  */
-export const uploadQuoteItemAttachment = withPermission<FormData, QuoteItemAttachment>(
+export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteItemAttachment>(
   'canManageQuotes',
   async (session, formData) => {
     try {
@@ -469,7 +475,7 @@ export const uploadQuoteItemAttachment = withPermission<FormData, QuoteItemAttac
  * @returns A promise that resolves to an `ActionResult` with the ID of the deleted attachment,
  * or an error if the attachment is not found.
  */
-export const deleteQuoteItemAttachment = withPermission<
+export const deleteQuoteItemAttachment = withTenantPermission<
   { attachmentId: string; quoteId: string },
   { id: string }
 >('canManageQuotes', async (session, data) => {
@@ -511,7 +517,7 @@ export const deleteQuoteItemAttachment = withPermission<
  * @returns A promise that resolves to an `ActionResult` with the updated item's ID and notes,
  * or an error if the update fails.
  */
-export const updateQuoteItemNotes = withPermission<
+export const updateQuoteItemNotes = withTenantPermission<
   { quoteItemId: string; quoteId: string; notes: string },
   { id: string; notes: string }
 >('canManageQuotes', async (session, data) => {
@@ -540,7 +546,7 @@ export const updateQuoteItemNotes = withPermission<
  * @returns A promise that resolves to an `ActionResult` with the updated item's ID and colors,
  * or an error if the update fails.
  */
-export const updateQuoteItemColors = withPermission<
+export const updateQuoteItemColors = withTenantPermission<
   { quoteItemId: string; quoteId: string; colors: string[] },
   { id: string; colors: string[] }
 >('canManageQuotes', async (session, data) => {
@@ -580,7 +586,7 @@ export const updateQuoteItemColors = withPermission<
  * @param data - An object containing the quote ID to create a version from.
  * @returns A promise that resolves to an `ActionResult` with the new version's details.
  */
-export const createQuoteVersion = withPermission<
+export const createQuoteVersion = withTenantPermission<
   CreateVersionInput,
   {
     id: string;
@@ -598,7 +604,11 @@ export const createQuoteVersion = withPermission<
       return { success: false, error: 'Quote not found' };
     }
 
-    const newVersion = await quoteRepo.createVersion(validatedData.quoteId, session.user.id);
+    const newVersion = await quoteRepo.createVersion(
+      validatedData.quoteId,
+      session.user.tenantId,
+      session.user.id,
+    );
 
     revalidatePath('/finances/quotes');
     revalidatePath(`/finances/quotes/${validatedData.quoteId}`);
@@ -623,13 +633,13 @@ export const createQuoteVersion = withPermission<
  * @param data - An object containing the quote ID and email type.
  * @returns A promise that resolves to an `ActionResult` with the email audit ID.
  */
-export const sendQuoteEmail = withPermission<
+export const sendQuoteEmail = withTenantPermission<
   { quoteId: string; type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'followup' },
   { auditId: string; eventId: string }
 >('canManageQuotes', async (session, data) => {
   try {
     // Fetch quote with customer details
-    const quote = await quoteRepo.findByIdWithDetails(data.quoteId);
+    const quote = await quoteRepo.findByIdWithDetails(data.quoteId, session.user.tenantId);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -677,12 +687,12 @@ export const sendQuoteEmail = withPermission<
  * @param quoteId - The ID of the quote to send follow-up for
  * @returns A promise that resolves to an `ActionResult` with the email audit ID
  */
-export const sendQuoteFollowUp = withPermission<string, { auditId: string; eventId: string }>(
+export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string; eventId: string }>(
   'canManageQuotes',
   async (session, quoteId) => {
     try {
       // Fetch quote with customer details
-      const quote = await quoteRepo.findByIdWithDetails(quoteId);
+      const quote = await quoteRepo.findByIdWithDetails(quoteId, session.user.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
@@ -753,7 +763,7 @@ export const sendQuoteFollowUp = withPermission<string, { auditId: string; event
  * @param id - The ID of the quote to duplicate
  * @returns A promise that resolves to an `ActionResult` with the duplicate quote's ID and number
  */
-export const duplicateQuote = withPermission<string, { id: string; quoteNumber: string }>(
+export const duplicateQuote = withTenantPermission<string, { id: string; quoteNumber: string }>(
   'canManageQuotes',
   async (session, id) => {
     try {
@@ -777,7 +787,7 @@ export const duplicateQuote = withPermission<string, { id: string; quoteNumber: 
  * @returns A promise that resolves to an `ActionResult` containing bulk update results,
  * including success and failure counts and individual operation results.
  */
-export const bulkUpdateQuoteStatus = withPermission<
+export const bulkUpdateQuoteStatus = withTenantPermission<
   { ids: string[]; status: QuoteStatus },
   {
     successCount: number;
@@ -812,7 +822,7 @@ export const bulkUpdateQuoteStatus = withPermission<
  * @param ids - An array of quote IDs to delete.
  * @returns A promise that resolves to an `ActionResult` containing bulk deletion results.
  */
-export const bulkDeleteQuotes = withPermission<
+export const bulkDeleteQuotes = withTenantPermission<
   string[],
   {
     successCount: number;
@@ -846,26 +856,26 @@ export const bulkDeleteQuotes = withPermission<
  * @param id - The ID of the quote to toggle favourite status.
  * @returns A promise that resolves to an `ActionResult` containing the updated quote ID and favourite status.
  */
-export const toggleQuoteFavourite = withPermission<string, { id: string; isFavourite: boolean }>(
-  'canManageQuotes',
-  async (session, id) => {
-    try {
-      const result = await quoteRepo.toggleFavourite(id);
+export const toggleQuoteFavourite = withTenantPermission<
+  string,
+  { id: string; isFavourite: boolean }
+>('canManageQuotes', async (session, id) => {
+  try {
+    const result = await quoteRepo.toggleFavourite(id);
 
-      if (!result) {
-        return { success: false, error: 'Quote not found' };
-      }
-
-      revalidatePath('/finances/quotes');
-      revalidatePath(`/finances/quotes/${id}`);
-
-      return {
-        success: true,
-        data: result,
-        message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
-      };
-    } catch (error) {
-      return handleActionError(error, 'Failed to toggle quote favourite');
+    if (!result) {
+      return { success: false, error: 'Quote not found' };
     }
-  },
-);
+
+    revalidatePath('/finances/quotes');
+    revalidatePath(`/finances/quotes/${id}`);
+
+    return {
+      success: true,
+      data: result,
+      message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to toggle quote favourite');
+  }
+});

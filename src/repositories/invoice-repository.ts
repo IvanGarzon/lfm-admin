@@ -72,10 +72,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    *   sort: [{ id: "dueDate", desc: true }]
    * });
    */
-  async searchAndPaginate(params: InvoiceFilters): Promise<InvoicePagination> {
+  async searchAndPaginate(params: InvoiceFilters, tenantId: string): Promise<InvoicePagination> {
     const { search, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.InvoiceWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -173,9 +174,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param id - The unique identifier of the invoice
    * @returns A promise that resolves to the invoice with all details, or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<InvoiceWithDetails | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<InvoiceWithDetails | null> {
     const invoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
         invoiceNumber: true,
@@ -289,9 +290,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param id - The ID of the invoice
    * @returns A promise that resolves to the invoice metadata, or null if not found
    */
-  async findByIdMetadata(id: string): Promise<InvoiceMetadata | null> {
+  async findByIdMetadata(id: string, tenantId: string): Promise<InvoiceMetadata | null> {
     const invoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
         invoiceNumber: true,
@@ -438,11 +439,15 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param dateFilter.endDate - End date for filtering invoices
    * @returns A promise that resolves to invoice statistics object
    */
-  async getStatistics(dateFilter?: {
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<InvoiceStatistics> {
+  async getStatistics(
+    tenantId: string,
+    dateFilter?: {
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<InvoiceStatistics> {
     const whereClause: Prisma.InvoiceWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -462,6 +467,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     if (dateFilter?.startDate && dateFilter?.endDate) {
       const duration = dateFilter.endDate.getTime() - dateFilter.startDate.getTime();
       previousWhereClause = {
+        tenantId,
         deletedAt: null,
         issuedDate: {
           gte: new Date(dateFilter.startDate.getTime() - duration),
@@ -474,6 +480,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       previousWhereClause = {
+        tenantId,
         deletedAt: null,
         issuedDate: {
           gte: firstDayLastMonth,
@@ -487,6 +494,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       SELECT AVG(amount::numeric)::float as avg
       FROM invoices
       WHERE deleted_at IS NULL
+      AND tenant_id = ${tenantId}
       AND status::text = ${InvoiceStatus.PAID}
     `;
 
@@ -509,8 +517,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           }),
           this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
           previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
-          this.getMonthlyRevenueTrend(12),
-          this.getTopDebtors(5),
+          this.getMonthlyRevenueTrend(12, tenantId),
+          this.getTopDebtors(5, tenantId),
         ]),
       );
 
@@ -627,12 +635,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @returns A promise that resolves to the generated invoice number
    * @example "INV-2025-0001", "INV-2025-0042"
    */
-  async generateInvoiceNumber(): Promise<string> {
+  async generateInvoiceNumber(tenantId: string): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `INV-${year}-`;
 
     const lastInvoice = await this.model.findFirst({
       where: {
+        tenantId,
         invoiceNumber: {
           startsWith: prefix,
         },
@@ -695,6 +704,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    */
   async createInvoiceWithItems(
     data: CreateInvoiceInput,
+    tenantId: string,
     createdBy?: string,
   ): Promise<{ id: string; invoiceNumber: string }> {
     let attempts = 0;
@@ -703,7 +713,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     while (attempts < maxAttempts) {
       try {
         // Generate invoice number
-        const invoiceNumber = await this.generateInvoiceNumber();
+        const invoiceNumber = await this.generateInvoiceNumber(tenantId);
 
         // Calculate total amount
         const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -714,6 +724,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         return await this.prisma.$transaction(async (tx) => {
           const invoice = await tx.invoice.create({
             data: {
+              tenantId,
               invoiceNumber,
               customerId: data.customerId,
               status: data.status,
@@ -1584,10 +1595,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Get monthly revenue trend for the last N months.
    * @param limit - Number of months to retrieve. Defaults to 12.
    */
-  async getMonthlyRevenueTrend(limit: number = 12): Promise<RevenueTrend[]> {
+  async getMonthlyRevenueTrend(limit: number = 12, tenantId: string): Promise<RevenueTrend[]> {
     const data = await withDatabaseRetry(() =>
       this.prisma.$queryRaw<any[]>(Prisma.sql`
-        SELECT 
+        SELECT
           to_char(issued_date, 'Mon') as month,
           extract(month from issued_date) as month_num,
           extract(year from issued_date) as year,
@@ -1595,6 +1606,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           SUM(CASE WHEN status::text = ${InvoiceStatus.PAID} THEN amount::numeric ELSE 0 END)::float as paid
         FROM invoices
         WHERE deleted_at IS NULL
+        AND tenant_id = ${tenantId}
         GROUP BY year, month_num, month
         ORDER BY year DESC, month_num DESC
         LIMIT ${limit}
@@ -1614,17 +1626,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Get top customers by outstanding balance.
    * @param limit - Number of debtors to retrieve. Defaults to 5.
    */
-  async getTopDebtors(limit: number = 5): Promise<TopCustomerDebtor[]> {
+  async getTopDebtors(limit: number = 5, tenantId: string): Promise<TopCustomerDebtor[]> {
     const data = await withDatabaseRetry(() =>
       this.prisma.$queryRaw<any[]>(Prisma.sql`
-        SELECT 
+        SELECT
           c.id as "customerId",
           concat(c.first_name, ' ', c.last_name) as "customerName",
           SUM(i.amount::numeric - COALESCE((SELECT SUM(amount::numeric) FROM payments p WHERE p.invoice_id = i.id), 0))::float as "amountDue",
           COUNT(i.id)::int as "invoiceCount"
         FROM invoices i
         JOIN customers c ON i.customer_id = c.id
-        WHERE i.deleted_at IS NULL 
+        WHERE i.deleted_at IS NULL
+        AND i.tenant_id = ${tenantId}
         AND i.status::text IN (${InvoiceStatus.PENDING}, ${InvoiceStatus.OVERDUE}, ${InvoiceStatus.PARTIALLY_PAID})
         GROUP BY c.id, "customerName"
         ORDER BY "amountDue" DESC

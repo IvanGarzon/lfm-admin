@@ -20,10 +20,11 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     >;
   }
 
-  async searchAndPaginate(params: RecipeFilters): Promise<RecipePagination> {
+  async searchAndPaginate(params: RecipeFilters, tenantId: string): Promise<RecipePagination> {
     const { search, page, perPage, sort } = params;
 
     const whereClause: Prisma.RecipeWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -97,9 +98,9 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     };
   }
 
-  async findByIdWithDetails(id: string): Promise<RecipeWithDetails | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<RecipeWithDetails | null> {
     const recipe = await this.prisma.recipe.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       include: {
         items: {
           orderBy: { order: 'asc' },
@@ -141,9 +142,10 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     };
   }
 
-  async createWithItems(data: CreateRecipeInput): Promise<RecipeListItem> {
+  async createWithItems(data: CreateRecipeInput, tenantId: string): Promise<RecipeListItem> {
     const recipe = await this.prisma.recipe.create({
       data: {
+        tenantId,
         name: data.name,
         description: data.description,
         labourCostType: data.labourCostType,
@@ -171,7 +173,7 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
       },
     });
 
-    const createdRecipe = await this.findByIdWithDetails(recipe.id);
+    const createdRecipe = await this.findByIdWithDetails(recipe.id, tenantId);
 
     if (!createdRecipe) {
       throw new Error('Failed to retrieve created recipe');

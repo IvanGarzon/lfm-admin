@@ -1,4 +1,5 @@
 import { generateEmailPreview, type EmailPreviewResult } from '@/lib/email-preview';
+import { auth } from '@/auth';
 import type { EmailTemplateName } from '@/emails';
 
 /**
@@ -42,9 +43,9 @@ interface EmailPreviewFactoryConfig<TEntity, TEmailType extends string> {
   entityName: string;
 
   /**
-   * Function to fetch entity by ID
+   * Function to fetch entity by ID, scoped to a tenant.
    */
-  fetchEntity: (id: string) => Promise<TEntity | null>;
+  fetchEntity: (id: string, tenantId: string) => Promise<TEntity | null>;
 
   /**
    * Function to get the customer email from the entity
@@ -100,10 +101,16 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
     emailType: TEmailType,
   ): Promise<EmailPreviewResult> {
     try {
-      // Step 1: Fetch entity
-      const entity = await fetchEntity(entityId);
+      // Step 1: Resolve tenant from session
+      const session = await auth();
+      if (!session?.user?.tenantId) {
+        return { success: false, error: 'No tenant context found for this session' };
+      }
 
-      // Step 2: Validate entity exists
+      // Step 2: Fetch entity scoped to tenant
+      const entity = await fetchEntity(entityId, session.user.tenantId);
+
+      // Step 3: Validate entity exists
       if (!entity) {
         return {
           success: false,
@@ -111,10 +118,10 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
         };
       }
 
-      // Step 3: Get customer email
+      // Step 4: Get customer email
       const customerEmail = getCustomerEmail(entity);
 
-      // Step 4: Build email configuration
+      // Step 5: Build email configuration
       const emailConfig = buildEmailConfig(entity, emailType);
 
       // Check if buildEmailConfig returned an error
@@ -125,7 +132,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
         };
       }
 
-      // Step 5: Generate preview
+      // Step 6: Generate preview
       // Type assertion is safe here because buildEmailConfig ensures props match the template
       return await generateEmailPreview({
         to: customerEmail,
@@ -136,7 +143,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
         attachmentName: emailConfig.attachmentName,
       });
     } catch (error) {
-      // Step 6: Handle errors
+      // Step 7: Handle errors
       return {
         success: false,
         error:

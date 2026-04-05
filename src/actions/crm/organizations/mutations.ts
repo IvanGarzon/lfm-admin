@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
+import { withTenant } from '@/lib/action-auth';
 import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
@@ -12,113 +12,103 @@ import {
   type UpdateOrganizationInput,
   type DeleteOrganizationInput,
 } from '@/schemas/organizations';
-import type { ActionResult } from '@/types/actions';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 
 const organizationRepo = new OrganizationRepository(prisma);
 
 /**
- * Creates a new organization with the provided data.
- * Validates input and creates a new organization record in the database.
- * @param data - The input data for creating the organization, conforming to `CreateOrganizationInput`.
- * @returns A promise that resolves to an `ActionResult` with the new organization's ID and name.
+ * Creates a new organisation with the provided data.
+ * Validates input and creates a new organisation record in the database.
+ * @param data - The input data for creating the organisation, conforming to `CreateOrganizationInput`.
+ * @returns A promise that resolves to an `ActionResult` with the new organisation's ID and name.
  */
-export async function createOrganization(
-  data: CreateOrganizationInput,
-): Promise<ActionResult<{ id: string; name: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const createOrganization = withTenant<CreateOrganizationInput, { id: string; name: string }>(
+  async (session, data) => {
+    try {
+      const validatedData = CreateOrganizationSchema.parse(data);
 
-  try {
-    const validatedData = CreateOrganizationSchema.parse(data);
+      const organization = await organizationRepo.createOrganization(
+        validatedData,
+        session.user.tenantId,
+      );
 
-    const organization = await organizationRepo.createOrganization(validatedData);
+      // Revalidate paths that use organisations
+      revalidatePath('/customers');
+      revalidatePath('/organizations');
 
-    // Revalidate paths that use organizations
-    revalidatePath('/customers');
-    revalidatePath('/organizations');
-
-    return {
-      success: true,
-      data: {
-        id: organization.id,
-        name: organization.name,
-      },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to create organization');
-  }
-}
+      return {
+        success: true,
+        data: {
+          id: organization.id,
+          name: organization.name,
+        },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to create organisation');
+    }
+  },
+);
 
 /**
- * Updates an existing organization with the provided data.
- * Validates input and checks that the organization exists before updating.
- * @param data - The input data for updating the organization, conforming to `UpdateOrganizationInput`.
- * @returns A promise that resolves to an `ActionResult` with the updated organization's ID.
+ * Updates an existing organisation with the provided data.
+ * Validates input and checks that the organisation exists before updating.
+ * @param data - The input data for updating the organisation, conforming to `UpdateOrganizationInput`.
+ * @returns A promise that resolves to an `ActionResult` with the updated organisation's ID.
  */
-export async function updateOrganization(
-  data: UpdateOrganizationInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const updateOrganization = withTenant<UpdateOrganizationInput, { id: string }>(
+  async (_session, data) => {
+    try {
+      const validatedData = UpdateOrganizationSchema.parse(data);
 
-  try {
-    const validatedData = UpdateOrganizationSchema.parse(data);
+      const existing = await organizationRepo.findById(validatedData.id);
+      if (!existing) {
+        return { success: false, error: 'Organisation not found' };
+      }
 
-    const existing = await organizationRepo.findById(validatedData.id);
-    if (!existing) {
-      return { success: false, error: 'Organization not found' };
+      const organization = await organizationRepo.updateOrganization(
+        validatedData.id,
+        validatedData,
+      );
+
+      if (!organization) {
+        return { success: false, error: 'Failed to update organisation' };
+      }
+
+      revalidatePath('/customers');
+      revalidatePath('/organizations');
+
+      return { success: true, data: { id: organization.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update organisation');
     }
-
-    const organization = await organizationRepo.updateOrganization(validatedData.id, validatedData);
-
-    if (!organization) {
-      return { success: false, error: 'Failed to update organization' };
-    }
-
-    revalidatePath('/customers');
-    revalidatePath('/organizations');
-
-    return { success: true, data: { id: organization.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to update organization');
-  }
-}
+  },
+);
 
 /**
- * Deletes an organization from the system.
- * Verifies the organization exists before attempting deletion.
- * @param data - An object containing the organization ID to delete.
- * @returns A promise that resolves to an `ActionResult` with the deleted organization's ID.
+ * Deletes an organisation from the system.
+ * Verifies the organisation exists before attempting deletion.
+ * @param data - An object containing the organisation ID to delete.
+ * @returns A promise that resolves to an `ActionResult` with the deleted organisation's ID.
  */
-export async function deleteOrganization(
-  data: DeleteOrganizationInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const deleteOrganization = withTenant<DeleteOrganizationInput, { id: string }>(
+  async (_session, data) => {
+    try {
+      const validatedData = DeleteOrganizationSchema.parse(data);
+      const { id } = validatedData;
 
-  try {
-    const validatedData = DeleteOrganizationSchema.parse(data);
-    const { id } = validatedData;
+      const existing = await organizationRepo.findById(id);
+      if (!existing) {
+        return { success: false, error: 'Organisation not found' };
+      }
 
-    const existing = await organizationRepo.findById(id);
-    if (!existing) {
-      return { success: false, error: 'Organization not found' };
+      await organizationRepo.deleteOrganization(id);
+
+      revalidatePath('/customers');
+      revalidatePath('/organizations');
+
+      return { success: true, data: { id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to delete organisation');
     }
-
-    await organizationRepo.deleteOrganization(id);
-
-    revalidatePath('/customers');
-    revalidatePath('/organizations');
-
-    return { success: true, data: { id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete organization');
-  }
-}
+  },
+);

@@ -5,7 +5,7 @@ import { QuoteRepository } from '@/repositories/quote-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withPermission } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
   QuoteStatistics,
@@ -30,12 +30,12 @@ const quoteRepo = new QuoteRepository(prisma);
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated quote data.
  */
-export const getQuotes = withPermission<SearchParams, QuotePagination>(
+export const getQuotes = withTenantPermission<SearchParams, QuotePagination>(
   'canReadQuotes',
   async (session, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await quoteRepo.searchAndPaginate(filters);
+      const result = await quoteRepo.searchAndPaginate(filters, session.user.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -50,11 +50,11 @@ export const getQuotes = withPermission<SearchParams, QuotePagination>(
  * @returns A promise that resolves to an `ActionResult` containing the quote details,
  * or an error if the quote is not found.
  */
-export const getQuoteById = withPermission<string, QuoteWithDetails>(
+export const getQuoteById = withTenantPermission<string, QuoteWithDetails>(
   'canReadQuotes',
   async (session, id) => {
     try {
-      const quote = await quoteRepo.findByIdWithDetails(id);
+      const quote = await quoteRepo.findByIdWithDetails(id, session.user.tenantId);
 
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -75,11 +75,11 @@ export const getQuoteById = withPermission<string, QuoteWithDetails>(
  * @returns A promise that resolves to an `ActionResult` containing the quote metadata,
  * or an error if the quote is not found.
  */
-export const getQuoteMetadata = withPermission<string, QuoteMetadata>(
+export const getQuoteMetadata = withTenantPermission<string, QuoteMetadata>(
   'canReadQuotes',
   async (session, id) => {
     try {
-      const quote = await quoteRepo.findByIdMetadata(id);
+      const quote = await quoteRepo.findByIdMetadata(id, session.user.tenantId);
 
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -98,7 +98,7 @@ export const getQuoteMetadata = withPermission<string, QuoteMetadata>(
  * @param quoteId - The ID of the quote to retrieve items for.
  * @returns A promise that resolves to an `ActionResult` containing the quote items.
  */
-export const getQuoteItems = withPermission<string, QuoteItem[]>(
+export const getQuoteItems = withTenantPermission<string, QuoteItem[]>(
   'canReadQuotes',
   async (session, quoteId) => {
     try {
@@ -116,7 +116,7 @@ export const getQuoteItems = withPermission<string, QuoteItem[]>(
  * @param id - The ID of the quote.
  * @returns A promise that resolves to an `ActionResult` containing the quote status history.
  */
-export const getQuoteStatusHistory = withPermission<string, QuoteStatusHistoryItem[]>(
+export const getQuoteStatusHistory = withTenantPermission<string, QuoteStatusHistoryItem[]>(
   'canReadQuotes',
   async (session, id) => {
     try {
@@ -135,12 +135,12 @@ export const getQuoteStatusHistory = withPermission<string, QuoteStatusHistoryIt
  * @param dateFilter - An optional object with startDate and endDate to filter the statistics.
  * @returns A promise that resolves to an `ActionResult` containing the quote statistics.
  */
-export const getQuoteStatistics = withPermission<
+export const getQuoteStatistics = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   QuoteStatistics
 >('canReadQuotes', async (session, dateFilter) => {
   try {
-    const stats = await quoteRepo.getStatistics(dateFilter);
+    const stats = await quoteRepo.getStatistics(session.user.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
@@ -152,7 +152,7 @@ export const getQuoteStatistics = withPermission<
  * @param quoteItemId - The ID of the quote item.
  * @returns A promise that resolves to an `ActionResult` containing an array of quote item attachments.
  */
-export const getQuoteItemAttachments = withPermission<string, QuoteItemAttachment[]>(
+export const getQuoteItemAttachments = withTenantPermission<string, QuoteItemAttachment[]>(
   'canReadQuotes',
   async (session, quoteItemId) => {
     try {
@@ -184,7 +184,7 @@ export const getQuoteItemAttachments = withPermission<string, QuoteItemAttachmen
  * @returns A promise that resolves to an `ActionResult` containing the signed URL and the original file name,
  * or an error if the attachment is not found.
  */
-export const getItemAttachmentDownloadUrl = withPermission<
+export const getItemAttachmentDownloadUrl = withTenantPermission<
   string,
   { url: string; fileName: string }
 >('canReadQuotes', async (session, attachmentId) => {
@@ -215,7 +215,7 @@ export const getItemAttachmentDownloadUrl = withPermission<
  * @param quoteId - The ID of any quote in the version chain.
  * @returns A promise that resolves to an `ActionResult` with all versions.
  */
-export const getQuoteVersions = withPermission<
+export const getQuoteVersions = withTenantPermission<
   string,
   {
     id: string;
@@ -247,11 +247,11 @@ export const getQuoteVersions = withPermission<
  * @param id - The ID of the quote.
  * @returns A promise that resolves to an `ActionResult` containing the PDF URL and filename.
  */
-export const getQuotePdfUrl = withPermission<string, { url: string; filename: string }>(
+export const getQuotePdfUrl = withTenantPermission<string, { url: string; filename: string }>(
   'canReadQuotes',
   async (session, id) => {
     try {
-      const quote = await quoteRepo.findByIdWithDetails(id);
+      const quote = await quoteRepo.findByIdWithDetails(id, session.user.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
@@ -279,29 +279,29 @@ export const getQuotePdfUrl = withPermission<string, { url: string; filename: st
  * @param limit - Number of months to retrieve. Defaults to 12.
  * @returns A promise that resolves to an `ActionResult` containing the monthly quote value trends.
  */
-export const getMonthlyQuoteValueTrend = withPermission<number | undefined, QuoteValueTrend[]>(
-  'canReadQuotes',
-  async (session, limit) => {
-    try {
-      const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit);
-      return { success: true, data: trend };
-    } catch (error) {
-      return handleActionError(error, 'Failed to fetch quote value trend');
-    }
-  },
-);
+export const getMonthlyQuoteValueTrend = withTenantPermission<
+  number | undefined,
+  QuoteValueTrend[]
+>('canReadQuotes', async (session, limit) => {
+  try {
+    const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit, session.user.tenantId);
+    return { success: true, data: trend };
+  } catch (error) {
+    return handleActionError(error, 'Failed to fetch quote value trend');
+  }
+});
 
 /**
  * Retrieves conversion funnel data showing the flow from sent to converted quotes.
  * @param dateFilter - Optional date range filter.
  * @returns A promise that resolves to an `ActionResult` containing the conversion funnel data.
  */
-export const getConversionFunnel = withPermission<
+export const getConversionFunnel = withTenantPermission<
   StatsDateFilter | undefined,
   ConversionFunnelData
 >('canReadQuotes', async (session, dateFilter) => {
   try {
-    const funnel = await quoteRepo.getConversionFunnel(dateFilter);
+    const funnel = await quoteRepo.getConversionFunnel(session.user.tenantId, dateFilter);
     return { success: true, data: funnel };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch conversion funnel');
@@ -313,12 +313,12 @@ export const getConversionFunnel = withPermission<
  * @param limit - Number of customers to retrieve. Defaults to 5.
  * @returns A promise that resolves to an `ActionResult` containing the top customers.
  */
-export const getTopCustomersByQuotedValue = withPermission<
+export const getTopCustomersByQuotedValue = withTenantPermission<
   number | undefined,
   TopCustomerByQuotedValue[]
 >('canReadQuotes', async (session, limit) => {
   try {
-    const topCustomers = await quoteRepo.getTopCustomersByQuotedValue(limit);
+    const topCustomers = await quoteRepo.getTopCustomersByQuotedValue(limit, session.user.tenantId);
     return { success: true, data: topCustomers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch top customers');
@@ -329,11 +329,11 @@ export const getTopCustomersByQuotedValue = withPermission<
  * Retrieves average time to decision metrics for quotes.
  * @returns A promise that resolves to an `ActionResult` containing average time to decision data.
  */
-export const getAverageTimeToDecision = withPermission<void, AverageTimeToDecision>(
+export const getAverageTimeToDecision = withTenantPermission<void, AverageTimeToDecision>(
   'canReadQuotes',
   async (session) => {
     try {
-      const avgTime = await quoteRepo.getAverageTimeToDecision();
+      const avgTime = await quoteRepo.getAverageTimeToDecision(session.user.tenantId);
       return { success: true, data: avgTime };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch average time to decision');

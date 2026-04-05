@@ -68,10 +68,11 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    *   perPage: 20
    * });
    */
-  async searchAndPaginate(params: CustomerFilters): Promise<CustomerPagination> {
+  async searchAndPaginate(params: CustomerFilters, tenantId: string): Promise<CustomerPagination> {
     const { search, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.CustomerWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -166,9 +167,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @param id - The unique identifier of the customer
    * @returns A promise that resolves to the customer details or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<CustomerListItem | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<CustomerListItem | null> {
     const customer = await this.prisma.customer.findUnique({
-      where: { id },
+      where: { id, tenantId },
       select: {
         id: true,
         firstName: true,
@@ -243,9 +244,10 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * Returns a minimal set of fields needed for dropdowns and pickers.
    * @returns A promise that resolves to an array of active customer summaries
    */
-  async findActiveSelection() {
+  async findActiveSelection(tenantId: string) {
     return this.prisma.customer.findMany({
       where: {
+        tenantId,
         deletedAt: null,
         status: CustomerStatus.ACTIVE,
       },
@@ -273,14 +275,15 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @param data - The customer creation input data
    * @returns A promise that resolves to the newly created customer
    */
-  async createCustomer(data: CreateCustomerInput) {
+  async createCustomer(data: CreateCustomerInput, tenantId: string) {
     const { organizationId, useOrganizationAddress, ...customerData } = data;
 
-    // If using organization address, don't store customer address
+    // If using organisation address, don't store customer address
     const addressData = useOrganizationAddress ? {} : customerData.address || {};
 
     return this.prisma.customer.create({
       data: {
+        tenantId,
         firstName: customerData.firstName,
         lastName: customerData.lastName,
         email: customerData.email,

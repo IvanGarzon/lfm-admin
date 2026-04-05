@@ -41,10 +41,14 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param params.sort - Sorting criteria (supports custom sorting by metadata like customer count)
    * @returns Paginated results containing organization list items and metadata
    */
-  async searchAndPaginate(params: OrganizationFilters): Promise<OrganizationPagination> {
+  async searchAndPaginate(
+    params: OrganizationFilters,
+    tenantId: string,
+  ): Promise<OrganizationPagination> {
     const { name, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.OrganizationWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -150,9 +154,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param id - The organization ID
    * @returns Organization details or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<OrganizationListItem | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<OrganizationListItem | null> {
     const organization = await this.prisma.organization.findUnique({
-      where: { id },
+      where: { id, tenantId },
       select: {
         id: true,
         name: true,
@@ -206,8 +210,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * Useful for population of dropdowns and searchable lists.
    * @returns Array of organization objects (id and name)
    */
-  async findAllForSelection() {
+  async findAllForSelection(tenantId: string) {
     return this.prisma.organization.findMany({
+      where: { tenantId },
       select: {
         id: true,
         name: true,
@@ -223,9 +228,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param name - The organization name to search for
    * @returns The organization object or null
    */
-  async findByName(name: string) {
+  async findByName(name: string, tenantId: string) {
     return this.prisma.organization.findFirst({
       where: {
+        tenantId,
         name: {
           equals: name,
           mode: Prisma.QueryMode.insensitive,
@@ -239,9 +245,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param data - The organization creation input data
    * @returns The newly created organization
    */
-  async createOrganization(data: CreateOrganizationInput) {
+  async createOrganization(data: CreateOrganizationInput, tenantId: string) {
     return this.prisma.organization.create({
       data: {
+        tenantId,
         name: data.name,
         address: data.address,
         city: data.city,
@@ -263,14 +270,14 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param name - The organization name
    * @returns The existing or newly created organization
    */
-  async findOrCreate(name: string) {
-    const existing = await this.findByName(name);
+  async findOrCreate(name: string, tenantId: string) {
+    const existing = await this.findByName(name, tenantId);
     if (existing) {
       return existing;
     }
 
     return this.prisma.organization.create({
-      data: { name },
+      data: { tenantId, name },
     });
   }
 

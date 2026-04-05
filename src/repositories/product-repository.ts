@@ -45,11 +45,11 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @param params.sort - Sorting criteria
    * @returns A promise that resolves to paginated products with metadata
    */
-  async searchAndPaginate(params: ProductFilters): Promise<ProductPagination> {
+  async searchAndPaginate(params: ProductFilters, tenantId: string): Promise<ProductPagination> {
     const { search, status, page = 1, perPage = 20, sort } = params;
 
     // Build where clause
-    const whereClause: Prisma.ProductWhereInput = {};
+    const whereClause: Prisma.ProductWhereInput = { tenantId };
 
     // Search filter
     if (search && search.trim()) {
@@ -123,9 +123,9 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @param id - The unique identifier of the product
    * @returns A promise that resolves to the product with all details, or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<ProductWithDetails | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<ProductWithDetails | null> {
     const product = await this.prisma.product.findUnique({
-      where: { id },
+      where: { id, tenantId },
       include: {
         _count: {
           select: {
@@ -159,7 +159,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * Calculate product statistics including inventory value and stock alerts.
    * @returns A promise that resolves to product statistics object
    */
-  async getStatistics(): Promise<ProductStatistics> {
+  async getStatistics(tenantId: string): Promise<ProductStatistics> {
     const LOW_STOCK_THRESHOLD = 10;
 
     const [
@@ -170,17 +170,19 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       lowStockProducts,
       aggregates,
     ] = await Promise.all([
-      this.prisma.product.count(),
-      this.prisma.product.count({ where: { status: ProductStatus.ACTIVE } }),
-      this.prisma.product.count({ where: { status: ProductStatus.INACTIVE } }),
-      this.prisma.product.count({ where: { status: ProductStatus.OUT_OF_STOCK } }),
+      this.prisma.product.count({ where: { tenantId } }),
+      this.prisma.product.count({ where: { tenantId, status: ProductStatus.ACTIVE } }),
+      this.prisma.product.count({ where: { tenantId, status: ProductStatus.INACTIVE } }),
+      this.prisma.product.count({ where: { tenantId, status: ProductStatus.OUT_OF_STOCK } }),
       this.prisma.product.count({
         where: {
+          tenantId,
           stock: { lte: LOW_STOCK_THRESHOLD },
           status: ProductStatus.ACTIVE,
         },
       }),
       this.prisma.product.aggregate({
+        where: { tenantId },
         _sum: { price: true },
         _avg: { price: true },
       }),
@@ -188,6 +190,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
 
     // Calculate total inventory value (price * stock for all products)
     const products = await this.prisma.product.findMany({
+      where: { tenantId },
       select: { price: true, stock: true },
     });
     const totalValue = products.reduce((sum, p) => sum + Number(p.price) * p.stock, 0);
@@ -211,9 +214,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @param data - The product creation input data
    * @returns A promise that resolves to an object containing the new product ID
    */
-  async createProduct(data: CreateProductInput): Promise<{ id: string }> {
+  async createProduct(data: CreateProductInput, tenantId: string): Promise<{ id: string }> {
     const product = await this.prisma.product.create({
       data: {
+        tenantId,
         name: data.name,
         description: data.description,
         status: data.status,
@@ -372,9 +376,11 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * Retrieves active products with mandatory fields for selection components.
    * @returns A promise that resolves to an array of products for selection
    */
-  async getActiveProducts(): Promise<Array<{ id: string; name: string; price: number }>> {
+  async getActiveProducts(
+    tenantId: string,
+  ): Promise<Array<{ id: string; name: string; price: number }>> {
     const products = await this.prisma.product.findMany({
-      where: { status: ProductStatus.ACTIVE },
+      where: { tenantId, status: ProductStatus.ACTIVE },
       orderBy: { name: 'asc' },
       select: {
         id: true,

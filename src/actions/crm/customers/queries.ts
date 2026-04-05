@@ -1,12 +1,11 @@
 'use server';
 
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { SearchParams } from 'nuqs/server';
 
-import type { ActionResult } from '@/types/actions';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { handleActionError } from '@/lib/error-handler';
+import { withTenant } from '@/lib/action-auth';
 import type {
   CustomerPagination,
   CustomerListItem,
@@ -21,59 +20,44 @@ const customerRepo = new CustomerRepository(prisma);
  * Returns a lightweight list of customers with only essential fields for dropdowns.
  * @returns A promise that resolves to an `ActionResult` containing an array of customer select items.
  */
-export async function getActiveCustomers(): Promise<ActionResult<CustomerSelectItem[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getActiveCustomers = withTenant<void, CustomerSelectItem[]>(async (session) => {
   try {
-    const customers = await customerRepo.findActiveSelection();
+    const customers = await customerRepo.findActiveSelection(session.user.tenantId);
     return { success: true, data: customers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch customers');
   }
-}
+});
 
 /**
  * Retrieves a paginated list of customers based on search and filter criteria.
- * Supports filtering by name, email, organization, and status.
+ * Supports filtering by name, email, organisation, and status.
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated customer data.
  */
-export async function getCustomers(
-  searchParams: SearchParams,
-): Promise<ActionResult<CustomerPagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getCustomers = withTenant<SearchParams, CustomerPagination>(
+  async (session, searchParams) => {
+    try {
+      const filters = searchParamsCache.parse(searchParams);
+      const result = await customerRepo.searchAndPaginate(filters, session.user.tenantId);
 
-  try {
-    const filters = searchParamsCache.parse(searchParams);
-    const result = await customerRepo.searchAndPaginate(filters);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch customers');
-  }
-}
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch customers');
+    }
+  },
+);
 
 /**
  * Retrieves a single customer by ID with full details.
- * Includes associated organization data and related information.
+ * Includes associated organisation data and related information.
  * @param id - The unique identifier of the customer to retrieve.
  * @returns A promise that resolves to an `ActionResult` containing the customer details,
  * or an error if the customer is not found.
  */
-export async function getCustomerById(id: string): Promise<ActionResult<CustomerListItem | null>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getCustomerById = withTenant<string, CustomerListItem | null>(async (session, id) => {
   try {
-    const customer = await customerRepo.findByIdWithDetails(id);
+    const customer = await customerRepo.findByIdWithDetails(id, session.user.tenantId);
     if (!customer) {
       return { success: false, error: 'Customer not found' };
     }
@@ -82,4 +66,4 @@ export async function getCustomerById(id: string): Promise<ActionResult<Customer
   } catch (error) {
     return handleActionError(error, 'Failed to fetch customer');
   }
-}
+});

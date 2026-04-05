@@ -5,7 +5,7 @@ import { SearchParams } from 'nuqs/server';
 import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withPermission } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import type {
   TransactionListItem,
   TransactionPagination,
@@ -23,12 +23,12 @@ const transactionRepo = new TransactionRepository(prisma);
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated transaction data.
  */
-export const getTransactions = withPermission<SearchParams, TransactionPagination>(
+export const getTransactions = withTenantPermission<SearchParams, TransactionPagination>(
   'canReadTransactions',
-  async (_session, searchParams) => {
+  async (session, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await transactionRepo.searchAndPaginate(filters);
+      const result = await transactionRepo.searchAndPaginate(filters, session.user.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transactions');
@@ -41,11 +41,11 @@ export const getTransactions = withPermission<SearchParams, TransactionPaginatio
  * @param id - The ID of the transaction to retrieve.
  * @returns A promise that resolves to an `ActionResult` containing the transaction details.
  */
-export const getTransactionById = withPermission<string, TransactionListItem>(
+export const getTransactionById = withTenantPermission<string, TransactionListItem>(
   'canReadTransactions',
-  async (_session, id) => {
+  async (session, id) => {
     try {
-      const transaction = await transactionRepo.findByIdWithDetails(id);
+      const transaction = await transactionRepo.findByIdWithDetails(id, session.user.tenantId);
 
       if (!transaction) {
         return { success: false, error: 'Transaction not found' };
@@ -71,12 +71,12 @@ export const getTransactionById = withPermission<string, TransactionListItem>(
  * @param dateFilter - An optional object with startDate and endDate to filter the statistics.
  * @returns A promise that resolves to an `ActionResult` containing the transaction statistics.
  */
-export const getTransactionStatistics = withPermission<
+export const getTransactionStatistics = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   TransactionStatistics
->('canReadTransactions', async (_session, dateFilter) => {
+>('canReadTransactions', async (session, dateFilter) => {
   try {
-    const stats = await transactionRepo.getStatistics(dateFilter);
+    const stats = await transactionRepo.getStatistics(session.user.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch transaction statistics');
@@ -87,7 +87,7 @@ export const getTransactionStatistics = withPermission<
  * Retrieves all active transaction categories.
  * @returns A promise that resolves to an `ActionResult` containing the list of active categories.
  */
-export const getTransactionCategories = withPermission<
+export const getTransactionCategories = withTenantPermission<
   void,
   Array<{ id: string; name: string; description: string | null }>
 >('canReadTransactions', async (_session) => {
@@ -104,11 +104,14 @@ export const getTransactionCategories = withPermission<
  * @param limit - The number of months to retrieve. Defaults to 12.
  * @returns A promise that resolves to an `ActionResult` containing the transaction trend data.
  */
-export const getTransactionTrend = withPermission<number | undefined, TransactionTrend[]>(
+export const getTransactionTrend = withTenantPermission<number | undefined, TransactionTrend[]>(
   'canReadTransactions',
-  async (_session, limit) => {
+  async (session, limit) => {
     try {
-      const trend = await transactionRepo.getMonthlyTransactionTrend(limit ?? 12);
+      const trend = await transactionRepo.getMonthlyTransactionTrend(
+        limit ?? 12,
+        session.user.tenantId,
+      );
       return { success: true, data: trend };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transaction trend');
@@ -121,12 +124,12 @@ export const getTransactionTrend = withPermission<number | undefined, Transactio
  * @param dateFilter - An optional object with startDate and endDate to filter the data.
  * @returns A promise that resolves to an `ActionResult` containing the category breakdown.
  */
-export const getTransactionCategoryBreakdown = withPermission<
+export const getTransactionCategoryBreakdown = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   TransactionCategoryBreakdown[]
->('canReadTransactions', async (_session, dateFilter) => {
+>('canReadTransactions', async (session, dateFilter) => {
   try {
-    const breakdown = await transactionRepo.getCategoryBreakdown(dateFilter);
+    const breakdown = await transactionRepo.getCategoryBreakdown(session.user.tenantId, dateFilter);
     return { success: true, data: breakdown };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch category breakdown');
@@ -138,12 +141,12 @@ export const getTransactionCategoryBreakdown = withPermission<
  * @param limit - The maximum number of categories to retrieve. Defaults to 5.
  * @returns A promise that resolves to an `ActionResult` containing an array of top categories.
  */
-export const getTopTransactionCategories = withPermission<
+export const getTopTransactionCategories = withTenantPermission<
   number | undefined,
   TopTransactionCategory[]
->('canReadTransactions', async (_session, limit) => {
+>('canReadTransactions', async (session, limit) => {
   try {
-    const topCategories = await transactionRepo.getTopCategories(limit ?? 5);
+    const topCategories = await transactionRepo.getTopCategories(limit ?? 5, session.user.tenantId);
     return { success: true, data: topCategories };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch top categories');

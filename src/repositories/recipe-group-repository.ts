@@ -32,7 +32,10 @@ interface SearchParams {
 }
 
 export class RecipeGroupRepository {
-  async searchAndPaginate(params: SearchParams): Promise<{
+  async searchAndPaginate(
+    params: SearchParams,
+    tenantId: string,
+  ): Promise<{
     items: RecipeGroupListItem[];
     pagination: PaginationMeta;
   }> {
@@ -40,6 +43,7 @@ export class RecipeGroupRepository {
     const perPage = Math.min(100, Math.max(1, Number(params.perPage) || 10));
 
     const where: Prisma.RecipeGroupWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -121,9 +125,9 @@ export class RecipeGroupRepository {
     };
   }
 
-  async findById(id: string): Promise<RecipeGroupWithItems | null> {
+  async findById(id: string, tenantId: string): Promise<RecipeGroupWithItems | null> {
     const recipeGroup = await prisma.recipeGroup.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       include: {
         items: {
           include: {
@@ -158,11 +162,14 @@ export class RecipeGroupRepository {
     } as RecipeGroupWithItems;
   }
 
-  async create(data: {
-    name: string;
-    description?: string | null;
-    items: { recipeId: string; quantity: number; order: number }[];
-  }): Promise<RecipeGroup> {
+  async create(
+    data: {
+      name: string;
+      description?: string | null;
+      items: { recipeId: string; quantity: number; order: number }[];
+    },
+    tenantId: string,
+  ): Promise<RecipeGroup> {
     // Fetch recipe prices to calculate subtotals
     const recipeIds = data.items.map((item) => item.recipeId);
     const recipes = await prisma.recipe.findMany({
@@ -187,6 +194,7 @@ export class RecipeGroupRepository {
 
     return prisma.recipeGroup.create({
       data: {
+        tenantId,
         name: data.name,
         description: data.description,
         totalCost,
@@ -258,9 +266,9 @@ export class RecipeGroupRepository {
     });
   }
 
-  async getAll(): Promise<RecipeGroupListItem[]> {
+  async getAll(tenantId: string): Promise<RecipeGroupListItem[]> {
     const items = await prisma.recipeGroup.findMany({
-      where: { deletedAt: null },
+      where: { tenantId, deletedAt: null },
       orderBy: { name: 'asc' },
       include: {
         _count: {

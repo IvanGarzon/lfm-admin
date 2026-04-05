@@ -18,7 +18,7 @@ export const previewQuoteEmail = createEmailPreviewFunction<
   QuoteEmailType
 >({
   entityName: 'Quote',
-  fetchEntity: (id) => quoteRepository.findByIdWithDetails(id),
+  fetchEntity: (id, tenantId) => quoteRepository.findByIdWithDetails(id, tenantId),
   getCustomerEmail: (quote) => quote!.customer.email,
   buildEmailConfig: (quote, type) => {
     if (!quote) {

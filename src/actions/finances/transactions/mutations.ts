@@ -6,7 +6,7 @@ import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
-import { withPermission } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
@@ -23,12 +23,15 @@ const transactionRepo = new TransactionRepository(prisma);
  * @param data - The input data for creating the transaction.
  * @returns A promise that resolves to an `ActionResult` with the new transaction.
  */
-export const createTransaction = withPermission<CreateTransactionInput, TransactionListItem>(
+export const createTransaction = withTenantPermission<CreateTransactionInput, TransactionListItem>(
   'canManageTransactions',
-  async (_session, data) => {
+  async (session, data) => {
     try {
       const validatedData = CreateTransactionSchema.parse(data);
-      const transaction = await transactionRepo.createTransaction(validatedData);
+      const transaction = await transactionRepo.createTransaction(
+        validatedData,
+        session.user.tenantId,
+      );
 
       logger.info('Transaction created', {
         context: 'createTransaction',
@@ -52,7 +55,7 @@ export const createTransaction = withPermission<CreateTransactionInput, Transact
  * @param data - The input data for updating the transaction.
  * @returns A promise that resolves to an `ActionResult` with the updated transaction's ID.
  */
-export const updateTransaction = withPermission<UpdateTransactionInput, { id: string }>(
+export const updateTransaction = withTenantPermission<UpdateTransactionInput, { id: string }>(
   'canManageTransactions',
   async (_session, data) => {
     try {
@@ -87,7 +90,7 @@ export const updateTransaction = withPermission<UpdateTransactionInput, { id: st
  * @param id - The ID of the transaction to delete.
  * @returns A promise that resolves to an `ActionResult` with success status.
  */
-export const deleteTransaction = withPermission<string, { success: true }>(
+export const deleteTransaction = withTenantPermission<string, { success: true }>(
   'canManageTransactions',
   async (_session, id) => {
     try {
@@ -117,10 +120,10 @@ export const deleteTransaction = withPermission<string, { success: true }>(
  * @param name - The category name.
  * @returns A promise that resolves to an `ActionResult` with the category data.
  */
-export const createTransactionCategory = withPermission<
+export const createTransactionCategory = withTenantPermission<
   string,
   { id: string; name: string; description: string | null }
->('canManageTransactions', async (_session, name) => {
+>('canManageTransactions', async (session, name) => {
   try {
     const schema = z
       .string()
@@ -129,7 +132,10 @@ export const createTransactionCategory = withPermission<
       .max(50, 'Category name is too long');
     const validatedName = schema.parse(name);
 
-    const category = await transactionRepo.findOrCreateCategory(validatedName);
+    const category = await transactionRepo.findOrCreateCategory(
+      validatedName,
+      session.user.tenantId,
+    );
 
     logger.info('Transaction category created', {
       context: 'createTransactionCategory',
@@ -150,7 +156,7 @@ export const createTransactionCategory = withPermission<
  * @param formData - The form data containing the file and transaction ID.
  * @returns A promise that resolves to an `ActionResult` with the attachment data.
  */
-export const uploadTransactionAttachment = withPermission<
+export const uploadTransactionAttachment = withTenantPermission<
   FormData,
   { id: string; fileName: string; fileSize: number; mimeType: string; s3Url: string }
 >('canManageTransactions', async (session, formData) => {
@@ -210,7 +216,7 @@ export const uploadTransactionAttachment = withPermission<
  * @param attachmentId - The ID of the attachment to delete.
  * @returns A promise that resolves to an `ActionResult`.
  */
-export const deleteTransactionAttachment = withPermission<string, { success: boolean }>(
+export const deleteTransactionAttachment = withTenantPermission<string, { success: boolean }>(
   'canManageTransactions',
   async (_session, attachmentId) => {
     try {

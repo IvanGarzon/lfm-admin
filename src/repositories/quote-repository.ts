@@ -53,10 +53,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * });
    * ```
    */
-  async searchAndPaginate(params: QuoteFilters): Promise<QuotePagination> {
+  async searchAndPaginate(params: QuoteFilters, tenantId: string): Promise<QuotePagination> {
     const { search, status, isFavourite, page, perPage, sort } = params;
 
     const whereClause: Prisma.QuoteWhereInput = {
+      tenantId,
       deletedAt: null,
       isLatestVersion: true,
     };
@@ -177,9 +178,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The unique identifier of the quote
    * @returns A promise that resolves to the quote with all details, or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<QuoteWithDetails | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<QuoteWithDetails | null> {
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
         quoteNumber: true,
@@ -279,9 +280,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The ID of the quote
    * @returns A promise that resolves to the quote metadata, or null if not found
    */
-  async findByIdMetadata(id: string): Promise<QuoteMetadata | null> {
+  async findByIdMetadata(id: string, tenantId: string): Promise<QuoteMetadata | null> {
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
         quoteNumber: true,
@@ -427,8 +428,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param dateFilter.endDate - The end date (inclusive) for filtering quotes
    * @returns A promise that resolves to statistics object with counts, values, and conversion rate
    */
-  async getStatistics(dateFilter?: { startDate?: Date; endDate?: Date }): Promise<QuoteStatistics> {
+  async getStatistics(
+    tenantId: string,
+    dateFilter?: { startDate?: Date; endDate?: Date },
+  ): Promise<QuoteStatistics> {
     const whereClause: Prisma.QuoteWhereInput = {
+      tenantId,
       deletedAt: null,
       // Only count latest versions
       isLatestVersion: true,
@@ -451,6 +456,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     if (dateFilter?.startDate && dateFilter?.endDate) {
       const duration = dateFilter.endDate.getTime() - dateFilter.startDate.getTime();
       previousWhereClause = {
+        tenantId,
         deletedAt: null,
         isLatestVersion: true,
         issuedDate: {
@@ -463,6 +469,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       previousWhereClause = {
+        tenantId,
         deletedAt: null,
         isLatestVersion: true,
         issuedDate: {
@@ -508,7 +515,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         : Promise.resolve(null),
 
       // Query 4: Monthly trend data
-      this.getMonthlyQuoteValueTrend(6),
+      this.getMonthlyQuoteValueTrend(6, tenantId),
     ]);
 
     // Initialize stats with totals from aggregate
@@ -599,6 +606,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async createQuoteWithItems(
     data: CreateQuoteInput,
+    tenantId: string,
     createdBy?: string,
   ): Promise<{ id: string; quoteNumber: string }> {
     let attempts = 0;
@@ -607,7 +615,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     while (attempts < maxAttempts) {
       try {
         // Generate quote number
-        const quoteNumber = await this.generateQuoteNumber();
+        const quoteNumber = await this.generateQuoteNumber(tenantId);
 
         // Calculate total amount
         const totalAmount = data.items.reduce(
@@ -621,6 +629,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         return await this.prisma.$transaction(async (tx) => {
           const quote = await tx.quote.create({
             data: {
+              tenantId,
               quoteNumber,
               customerId: data.customerId,
               status: data.status,
@@ -697,6 +706,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async updateQuoteWithItems(
     id: string,
     data: UpdateQuoteInput,
+    tenantId: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Calculate total amount
@@ -812,7 +822,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedQuote.id);
+    return await this.findByIdWithDetails(updatedQuote.id, tenantId);
   }
 
   /**
@@ -821,12 +831,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @returns A promise that resolves to the next available quote number for the current year
    */
-  async generateQuoteNumber(): Promise<string> {
+  async generateQuoteNumber(tenantId: string): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `QUO-${year}-`;
 
     const lastQuote = await this.prisma.quote.findFirst({
       where: {
+        tenantId,
         quoteNumber: {
           startsWith: prefix,
         },
@@ -859,7 +870,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot accept a cancelled quote)
    */
-  async markAsAccepted(id: string, updatedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsAccepted(
+    id: string,
+    tenantId: string,
+    updatedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -906,7 +921,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findByIdWithDetails(updated.id, tenantId);
   }
 
   /**
@@ -1179,6 +1194,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     quoteId: string,
     invoiceData: {
       invoiceNumber: string;
+      tenantId: string;
       gst: number;
       discount: number;
       dueDate: Date;
@@ -1208,6 +1224,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       // Create invoice from quote with PENDING status
       const invoice = await tx.invoice.create({
         data: {
+          tenantId: invoiceData.tenantId,
           invoiceNumber: invoiceData.invoiceNumber,
           customerId: quote.customerId,
           status: 'PENDING',
@@ -1579,6 +1596,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async createVersion(
     parentQuoteId: string,
+    tenantId: string,
     createdBy?: string,
   ): Promise<{ id: string; quoteNumber: string; versionNumber: number }> {
     return this.prisma.$transaction(async (tx) => {
@@ -1619,7 +1637,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       const nextVersionNumber = (highestVersionQuote?.versionNumber || 1) + 1;
 
       // Generate a new quote number for the version
-      const newQuoteNumber = await this.generateQuoteNumber();
+      const newQuoteNumber = await this.generateQuoteNumber(tenantId);
 
       const createdDate = new Date();
 
@@ -1630,6 +1648,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       // Create the new version
       const newVersion = await tx.quote.create({
         data: {
+          tenantId,
           quoteNumber: newQuoteNumber,
           customerId: parentQuote.customerId,
           status: QuoteStatus.DRAFT, // New versions start as DRAFT
@@ -1724,7 +1743,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param limit - Number of months to retrieve. Defaults to 12.
    * @returns A promise that resolves to an array of monthly quote value trends
    */
-  async getMonthlyQuoteValueTrend(limit: number = 12): Promise<QuoteValueTrend[]> {
+  async getMonthlyQuoteValueTrend(
+    limit: number = 12,
+    tenantId: string,
+  ): Promise<QuoteValueTrend[]> {
     const data = await this.prisma.$queryRaw<
       {
         month: string;
@@ -1744,6 +1766,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         SUM(CASE WHEN status::text = ${QuoteStatus.CONVERTED} THEN amount::numeric ELSE 0 END)::float as converted
       FROM quotes
       WHERE deleted_at IS NULL
+        AND tenant_id = ${tenantId}
         AND is_latest_version = true
       GROUP BY year, month_num, month
       ORDER BY year DESC, month_num DESC
@@ -1767,8 +1790,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param dateFilter - Optional date range filter
    * @returns A promise that resolves to conversion funnel data
    */
-  async getConversionFunnel(dateFilter?: StatsDateFilter): Promise<ConversionFunnelData> {
+  async getConversionFunnel(
+    tenantId: string,
+    dateFilter?: StatsDateFilter,
+  ): Promise<ConversionFunnelData> {
     const whereClause: Prisma.QuoteWhereInput = {
+      tenantId,
       deletedAt: null,
       // Only count latest versions
       isLatestVersion: true,
@@ -1848,7 +1875,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param limit - Number of customers to retrieve. Defaults to 5.
    * @returns A promise that resolves to an array of top customers with quote metrics
    */
-  async getTopCustomersByQuotedValue(limit: number = 5): Promise<TopCustomerByQuotedValue[]> {
+  async getTopCustomersByQuotedValue(
+    limit: number = 5,
+    tenantId: string,
+  ): Promise<TopCustomerByQuotedValue[]> {
     const data = await this.prisma.$queryRaw<
       {
         customerId: string;
@@ -1867,6 +1897,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       FROM quotes q
       JOIN customers c ON q.customer_id = c.id
       WHERE q.deleted_at IS NULL
+        AND q.tenant_id = ${tenantId}
         AND q.is_latest_version = true
       GROUP BY c.id, "customerName"
       ORDER BY "totalQuotedValue" DESC
@@ -1890,10 +1921,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @returns A promise that resolves to average time to decision metrics
    */
-  async getAverageTimeToDecision(): Promise<AverageTimeToDecision> {
+  async getAverageTimeToDecision(tenantId: string): Promise<AverageTimeToDecision> {
     // Get quotes that were accepted or rejected, with their status history
     const quotes = await this.prisma.quote.findMany({
       where: {
+        tenantId,
         deletedAt: null,
         status: {
           in: [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED],
@@ -1967,7 +1999,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @returns A promise that resolves to an object containing the duplicate quote's ID and number
    * @throws {Error} If the quote is not found or duplication fails
    */
-  async duplicate(id: string): Promise<{ id: string; quoteNumber: string }> {
+  async duplicate(id: string, tenantId: string): Promise<{ id: string; quoteNumber: string }> {
     // Get the original quote with all details
     const original = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -2008,7 +2040,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
     while (attempts < maxAttempts) {
       try {
-        const quoteNumber = await this.generateQuoteNumber();
+        const quoteNumber = await this.generateQuoteNumber(tenantId);
 
         // Calculate total amount from items
         const totalAmount = Number(original.amount);
@@ -2022,6 +2054,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         const duplicate = await this.prisma.$transaction(async (tx) => {
           const newQuote = await tx.quote.create({
             data: {
+              tenantId,
               quoteNumber,
               customerId: original.customerId,
               status: QuoteStatus.DRAFT, // Always start as DRAFT

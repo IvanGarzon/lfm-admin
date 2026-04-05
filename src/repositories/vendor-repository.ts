@@ -43,10 +43,11 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @param params.sort - Optional array of sort criteria with id and desc properties
    * @returns A promise that resolves to paginated vendor results with metadata
    */
-  async searchAndPaginate(params: VendorFilters): Promise<VendorPagination> {
+  async searchAndPaginate(params: VendorFilters, tenantId: string): Promise<VendorPagination> {
     const { search, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.VendorWhereInput = {
+      tenantId,
       deletedAt: null,
     };
 
@@ -148,9 +149,9 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @param id - The unique identifier of the vendor
    * @returns A promise that resolves to the vendor with details, or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<VendorWithDetails | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<VendorWithDetails | null> {
     const vendor = await this.prisma.vendor.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
         vendorCode: true,
@@ -227,12 +228,13 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @returns A promise that resolves to the generated vendor code
    * @example "VEN-2026-0001", "VEN-2026-0042"
    */
-  async generateVendorCode(): Promise<string> {
+  async generateVendorCode(tenantId: string): Promise<string> {
     const year = new Date().getFullYear();
     const prefix = `VEN-${year}-`;
 
     const lastVendor = await this.model.findFirst({
       where: {
+        tenantId,
         vendorCode: {
           startsWith: prefix,
         },
@@ -262,17 +264,21 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @returns A promise that resolves to an object with the new vendor ID and code
    * @throws {Error} If unique code generation fails after 3 attempts
    */
-  async createVendor(data: CreateVendorInput): Promise<{ id: string; vendorCode: string }> {
+  async createVendor(
+    data: CreateVendorInput,
+    tenantId: string,
+  ): Promise<{ id: string; vendorCode: string }> {
     let attempts = 0;
     const maxAttempts = 3;
 
     while (attempts < maxAttempts) {
       try {
         // Generate vendor code
-        const vendorCode = await this.generateVendorCode();
+        const vendorCode = await this.generateVendorCode(tenantId);
 
         const vendor = await this.prisma.vendor.create({
           data: {
+            tenantId,
             vendorCode,
             name: data.name,
             email: data.email,
@@ -410,12 +416,18 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * Includes total counts and status-based breakdowns.
    * @returns A promise that resolves to a VendorStatistics object
    */
-  async getStatistics(): Promise<VendorStatistics> {
+  async getStatistics(tenantId: string): Promise<VendorStatistics> {
     const [total, active, inactive, suspended] = await Promise.all([
-      this.prisma.vendor.count({ where: { deletedAt: null } }),
-      this.prisma.vendor.count({ where: { status: VendorStatus.ACTIVE, deletedAt: null } }),
-      this.prisma.vendor.count({ where: { status: VendorStatus.INACTIVE, deletedAt: null } }),
-      this.prisma.vendor.count({ where: { status: VendorStatus.SUSPENDED, deletedAt: null } }),
+      this.prisma.vendor.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.vendor.count({
+        where: { tenantId, status: VendorStatus.ACTIVE, deletedAt: null },
+      }),
+      this.prisma.vendor.count({
+        where: { tenantId, status: VendorStatus.INACTIVE, deletedAt: null },
+      }),
+      this.prisma.vendor.count({
+        where: { tenantId, status: VendorStatus.SUSPENDED, deletedAt: null },
+      }),
     ]);
 
     return {
@@ -430,9 +442,12 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * Retrieves active vendors with mandatory fields for selection components.
    * @returns A promise that resolves to an array of vendor identifiers and names
    */
-  async getActiveVendors(): Promise<Array<{ id: string; vendorCode: string; name: string }>> {
+  async getActiveVendors(
+    tenantId: string,
+  ): Promise<Array<{ id: string; vendorCode: string; name: string }>> {
     return await this.prisma.vendor.findMany({
       where: {
+        tenantId,
         status: VendorStatus.ACTIVE,
         deletedAt: null,
       },

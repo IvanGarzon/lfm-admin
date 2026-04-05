@@ -61,9 +61,9 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    * @param params.sort - Sorting criteria
    * @returns Paginated results with metadata
    */
-  async searchAndPaginate(params: EmployeeFilters): Promise<EmployeePagination> {
+  async searchAndPaginate(params: EmployeeFilters, tenantId: string): Promise<EmployeePagination> {
     const { search, alphabet, gender, status, page, perPage, sort } = params;
-    const whereClause: Prisma.EmployeeWhereInput = {};
+    const whereClause: Prisma.EmployeeWhereInput = { tenantId };
 
     if (search) {
       const searchFilter: Prisma.StringFilter = {
@@ -172,9 +172,9 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    * @param id - The ID of the employee
    * @returns The employee details or null if not found
    */
-  async findEmployeeById(id: string | number): Promise<EmployeeListItem | null> {
+  async findEmployeeById(id: string, tenantId: string): Promise<EmployeeListItem | null> {
     const employee = await this.model.findUnique({
-      where: { id: id as string },
+      where: { id, tenantId },
     });
 
     return employee ? this.mapToListItem(employee) : null;

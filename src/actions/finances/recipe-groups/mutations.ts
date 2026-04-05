@@ -2,8 +2,8 @@
 
 import { auth } from '@/auth';
 import { RecipeGroupRepository } from '@/repositories/recipe-group-repository';
-import { requirePermission } from '@/lib/permissions';
 import { handleActionError } from '@/lib/error-handler';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   createRecipeGroupSchema,
   updateRecipeGroupSchema,
@@ -13,46 +13,40 @@ import {
 import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
 import type { ActionResult } from '@/types/actions';
 import { revalidatePath } from 'next/cache';
+import { requirePermission } from '@/lib/permissions';
 
 const recipeGroupRepo = new RecipeGroupRepository();
 
 /**
  * Creates a new recipe group with its associated recipes.
  */
-export async function createRecipeGroup(
-  input: CreateRecipeGroupInput,
-): Promise<ActionResult<RecipeGroupListItem>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const createRecipeGroup = withTenantPermission<CreateRecipeGroupInput, RecipeGroupListItem>(
+  'canManageRecipes',
+  async (session, input) => {
+    try {
+      const validatedInput = createRecipeGroupSchema.parse(input);
 
-  try {
-    requirePermission(session.user, 'canManageRecipes');
+      const recipeGroup = await recipeGroupRepo.create(validatedInput, session.user.tenantId);
 
-    // Validate input
-    const validatedInput = createRecipeGroupSchema.parse(input);
+      revalidatePath('/finances/recipe-groups');
 
-    const recipeGroup = await recipeGroupRepo.create(validatedInput);
-
-    revalidatePath('/finances/recipe-groups');
-
-    return {
-      success: true,
-      data: {
-        id: recipeGroup.id,
-        name: recipeGroup.name,
-        description: recipeGroup.description,
-        totalCost: Number(recipeGroup.totalCost),
-        itemCount: validatedInput.items.length,
-        createdAt: recipeGroup.createdAt,
-        updatedAt: recipeGroup.updatedAt,
-      },
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to create recipe group');
-  }
-}
+      return {
+        success: true,
+        data: {
+          id: recipeGroup.id,
+          name: recipeGroup.name,
+          description: recipeGroup.description,
+          totalCost: Number(recipeGroup.totalCost),
+          itemCount: validatedInput.items.length,
+          createdAt: recipeGroup.createdAt,
+          updatedAt: recipeGroup.updatedAt,
+        },
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to create recipe group');
+    }
+  },
+);
 
 /**
  * Updates an existing recipe group and its recipes.
@@ -66,10 +60,13 @@ export async function updateRecipeGroup(
     return { success: false, error: 'Unauthorized' };
   }
 
+  if (!session.user.tenantId) {
+    return { success: false, error: 'No tenant context found for this session' };
+  }
+
   try {
     requirePermission(session.user, 'canManageRecipes');
 
-    // Validate input
     const validatedInput = updateRecipeGroupSchema.parse(input);
 
     const recipeGroup = await recipeGroupRepo.update(id, validatedInput);
@@ -97,21 +94,17 @@ export async function updateRecipeGroup(
 /**
  * Soft deletes a recipe group.
  */
-export async function deleteRecipeGroup(id: string): Promise<ActionResult<void>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const deleteRecipeGroup = withTenantPermission<string, void>(
+  'canManageRecipes',
+  async (_session, id) => {
+    try {
+      await recipeGroupRepo.delete(id);
 
-  try {
-    requirePermission(session.user, 'canManageRecipes');
+      revalidatePath('/finances/recipe-groups');
 
-    await recipeGroupRepo.delete(id);
-
-    revalidatePath('/finances/recipe-groups');
-
-    return { success: true, data: undefined };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete recipe group');
-  }
-}
+      return { success: true, data: undefined };
+    } catch (error) {
+      return handleActionError(error, 'Failed to delete recipe group');
+    }
+  },
+);

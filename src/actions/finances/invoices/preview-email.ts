@@ -18,7 +18,7 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
   InvoiceEmailType
 >({
   entityName: 'Invoice',
-  fetchEntity: (id) => invoiceRepository.findByIdMetadata(id),
+  fetchEntity: (id, tenantId) => invoiceRepository.findByIdMetadata(id, tenantId),
   getCustomerEmail: (invoice) => invoice!.customer.email,
   buildEmailConfig: (invoice, type) => {
     if (!invoice) {

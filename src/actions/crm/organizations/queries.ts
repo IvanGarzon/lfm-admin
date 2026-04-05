@@ -1,10 +1,9 @@
 'use server';
 
-import { auth } from '@/auth';
 import { SearchParams } from 'nuqs/server';
 import { prisma } from '@/lib/prisma';
-import type { ActionResult } from '@/types/actions';
 import { handleActionError } from '@/lib/error-handler';
+import { withTenant } from '@/lib/action-auth';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 import type {
   OrganizationListItem,
@@ -18,18 +17,14 @@ import {
 const organizationRepo = new OrganizationRepository(prisma);
 
 /**
- * Retrieves all active organizations with customer counts.
- * Returns a list of all organizations sorted alphabetically by name.
- * @returns A promise that resolves to an `ActionResult` containing an array of organization items.
+ * Retrieves all active organisations with customer counts.
+ * Returns a list of all organisations sorted alphabetically by name.
+ * @returns A promise that resolves to an `ActionResult` containing an array of organisation items.
  */
-export async function getActiveOrganizations(): Promise<ActionResult<OrganizationListItem[]>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(async (session) => {
   try {
     const organizations = await prisma.organization.findMany({
+      where: { tenantId: session.user.tenantId },
       select: {
         id: true,
         name: true,
@@ -79,57 +74,50 @@ export async function getActiveOrganizations(): Promise<ActionResult<Organizatio
       })),
     };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch organizations');
+    return handleActionError(error, 'Failed to fetch organisations');
   }
-}
+});
 
 /**
- * Retrieves a paginated list of organizations based on search and filter criteria.
+ * Retrieves a paginated list of organisations based on search and filter criteria.
  * Supports filtering by name, status, sorting, and pagination.
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
- * @returns A promise that resolves to an `ActionResult` containing the paginated organization data.
+ * @returns A promise that resolves to an `ActionResult` containing the paginated organisation data.
  */
-export async function getOrganizations(
-  searchParams: SearchParams,
-): Promise<ActionResult<OrganizationPagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getOrganizations = withTenant<SearchParams, OrganizationPagination>(
+  async (session, searchParams) => {
+    try {
+      const parsedParams = searchParamsCache.parse(searchParams);
+      const validatedFilters = validateOrganizationSearchParams(parsedParams);
+      const result = await organizationRepo.searchAndPaginate(
+        validatedFilters,
+        session.user.tenantId,
+      );
 
-  try {
-    const parsedParams = searchParamsCache.parse(searchParams);
-    const validatedFilters = validateOrganizationSearchParams(parsedParams);
-    const result = await organizationRepo.searchAndPaginate(validatedFilters);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch organizations');
-  }
-}
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch organisations');
+    }
+  },
+);
 
 /**
- * Retrieves a single organization by ID with full details.
- * Includes all organization fields, customer count, and related metadata.
- * @param id - The unique identifier of the organization to retrieve.
- * @returns A promise that resolves to an `ActionResult` containing the organization details,
- * or an error if the organization is not found.
+ * Retrieves a single organisation by ID with full details.
+ * Includes all organisation fields, customer count, and related metadata.
+ * @param id - The unique identifier of the organisation to retrieve.
+ * @returns A promise that resolves to an `ActionResult` containing the organisation details,
+ * or an error if the organisation is not found.
  */
-export async function getOrganizationById(id: string): Promise<ActionResult<OrganizationListItem>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getOrganizationById = withTenant<string, OrganizationListItem>(async (session, id) => {
   try {
-    const organization = await organizationRepo.findByIdWithDetails(id);
+    const organization = await organizationRepo.findByIdWithDetails(id, session.user.tenantId);
 
     if (!organization) {
-      return { success: false, error: 'Organization not found' };
+      return { success: false, error: 'Organisation not found' };
     }
 
     return { success: true, data: organization };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch organization');
+    return handleActionError(error, 'Failed to fetch organisation');
   }
-}
+});

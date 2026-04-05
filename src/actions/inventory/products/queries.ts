@@ -1,8 +1,7 @@
 'use server';
 
-import { auth } from '@/auth';
 import { handleActionError } from '@/lib/error-handler';
-import { requirePermission } from '@/lib/permissions';
+import { withTenantPermission } from '@/lib/action-auth';
 import { ProductFiltersSchema } from '@/schemas/products';
 import {
   productRepo,
@@ -10,7 +9,6 @@ import {
   type ProductWithDetails,
   type ProductStatistics,
 } from '@/repositories/product-repository';
-import type { ActionResult } from '@/types/actions';
 import type { SearchParams } from 'nuqs/server';
 
 /**
@@ -19,36 +17,29 @@ import type { SearchParams } from 'nuqs/server';
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated product data.
  */
-export async function getProducts(
-  searchParams: SearchParams,
-): Promise<ActionResult<ProductPagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getProducts = withTenantPermission<SearchParams, ProductPagination>(
+  'canReadProducts',
+  async (session, searchParams) => {
+    try {
+      const filters = ProductFiltersSchema.parse({
+        search: searchParams.search ?? '',
+        status: searchParams.status
+          ? Array.isArray(searchParams.status)
+            ? searchParams.status
+            : [searchParams.status]
+          : undefined,
+        page: searchParams.page ? Number(searchParams.page) : 1,
+        perPage: searchParams.perPage ? Number(searchParams.perPage) : 20,
+        sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
+      });
 
-  try {
-    requirePermission(session.user, 'canReadProducts');
-
-    // Parse and validate filters
-    const filters = ProductFiltersSchema.parse({
-      search: searchParams.search ?? '',
-      status: searchParams.status
-        ? Array.isArray(searchParams.status)
-          ? searchParams.status
-          : [searchParams.status]
-        : undefined,
-      page: searchParams.page ? Number(searchParams.page) : 1,
-      perPage: searchParams.perPage ? Number(searchParams.perPage) : 20,
-      sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
-    });
-
-    const result = await productRepo.searchAndPaginate(filters);
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch products');
-  }
-}
+      const result = await productRepo.searchAndPaginate(filters, session.user.tenantId);
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch products');
+    }
+  },
+);
 
 /**
  * Retrieves a single product by ID with full details.
@@ -57,64 +48,53 @@ export async function getProducts(
  * @returns A promise that resolves to an `ActionResult` containing the product details,
  * or an error if the product is not found.
  */
-export async function getProductById(id: string): Promise<ActionResult<ProductWithDetails>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const getProductById = withTenantPermission<string, ProductWithDetails>(
+  'canReadProducts',
+  async (session, id) => {
+    try {
+      const product = await productRepo.findByIdWithDetails(id, session.user.tenantId);
 
-  try {
-    requirePermission(session.user, 'canReadProducts');
-    const product = await productRepo.findByIdWithDetails(id);
+      if (!product) {
+        return { success: false, error: 'Product not found' };
+      }
 
-    if (!product) {
-      return { success: false, error: 'Product not found' };
+      return { success: true, data: product };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch product');
     }
-
-    return { success: true, data: product };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch product');
-  }
-}
+  },
+);
 
 /**
  * Retrieves aggregated product statistics for dashboard displays.
  * Returns counts and metrics including total, active, and low stock products.
  * @returns A promise that resolves to an `ActionResult` containing the product statistics.
  */
-export async function getProductStatistics(): Promise<ActionResult<ProductStatistics>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    requirePermission(session.user, 'canReadProducts');
-    const stats = await productRepo.getStatistics();
-    return { success: true, data: stats };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch product statistics');
-  }
-}
+export const getProductStatistics = withTenantPermission<void, ProductStatistics>(
+  'canReadProducts',
+  async (session) => {
+    try {
+      const stats = await productRepo.getStatistics(session.user.tenantId);
+      return { success: true, data: stats };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch product statistics');
+    }
+  },
+);
 
 /**
  * Retrieves all active products for dropdown selections.
  * Returns a lightweight list with only essential fields (id, name, price).
  * @returns A promise that resolves to an `ActionResult` containing an array of active products.
  */
-export async function getActiveProducts(): Promise<
-  ActionResult<Array<{ id: string; name: string; price: number }>>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getActiveProducts = withTenantPermission<
+  void,
+  Array<{ id: string; name: string; price: number }>
+>('canReadProducts', async (session) => {
   try {
-    requirePermission(session.user, 'canReadProducts');
-    const products = await productRepo.getActiveProducts();
+    const products = await productRepo.getActiveProducts(session.user.tenantId);
     return { success: true, data: products };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch active products');
   }
-}
+});

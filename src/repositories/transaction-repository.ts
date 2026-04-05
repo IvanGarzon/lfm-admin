@@ -41,10 +41,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param params.sort - Sorting criteria
    * @returns A promise that resolves to paginated transaction results with metadata
    */
-  async searchAndPaginate(params: TransactionFilters): Promise<TransactionPagination> {
+  async searchAndPaginate(
+    params: TransactionFilters,
+    tenantId: string,
+  ): Promise<TransactionPagination> {
     const { search, type, status, page, perPage, sort } = params;
 
-    const whereClause: Prisma.TransactionWhereInput = {};
+    const whereClause: Prisma.TransactionWhereInput = { tenantId };
 
     // Type filter
     if (type && type.length > 0) {
@@ -164,9 +167,9 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param id - The ID of the transaction
    * @returns A promise that resolves to the transaction with details or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<TransactionListItem | null> {
+  async findByIdWithDetails(id: string, tenantId: string): Promise<TransactionListItem | null> {
     const transaction = await this.prisma.transaction.findUnique({
-      where: { id },
+      where: { id, tenantId },
       include: {
         categories: {
           select: {
@@ -251,11 +254,15 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @returns A promise that resolves to the created transaction with full details
    * @throws {Error} If retrieval of the created transaction fails
    */
-  async createTransaction(data: CreateTransactionInput): Promise<TransactionListItem> {
+  async createTransaction(
+    data: CreateTransactionInput,
+    tenantId: string,
+  ): Promise<TransactionListItem> {
     const referenceNumber = await TransactionRepository.generateReferenceNumber();
 
     const transaction = await this.prisma.transaction.create({
       data: {
+        tenantId,
         type: data.type,
         date: data.date,
         amount: data.amount,
@@ -281,7 +288,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       },
     });
 
-    const createdTransaction = await this.findByIdWithDetails(transaction.id);
+    const createdTransaction = await this.findByIdWithDetails(transaction.id, tenantId);
 
     if (!createdTransaction) {
       throw new Error('Failed to retrieve created transaction');
@@ -395,11 +402,15 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param dateFilter.endDate - Inclusive end date
    * @returns A promise that resolves to a transaction statistics object
    */
-  async getStatistics(dateFilter?: {
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<TransactionStatistics> {
+  async getStatistics(
+    tenantId: string,
+    dateFilter?: {
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<TransactionStatistics> {
     const whereClause: Prisma.TransactionWhereInput = {
+      tenantId,
       status: TransactionStatus.COMPLETED,
     };
 
@@ -453,7 +464,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param limit - Max number of months to retrieve (defaults to 12)
    * @returns A promise that resolves to an array of trend data points
    */
-  async getMonthlyTransactionTrend(limit: number = 12): Promise<TransactionTrend[]> {
+  async getMonthlyTransactionTrend(
+    limit: number = 12,
+    tenantId: string,
+  ): Promise<TransactionTrend[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       SELECT
         to_char(date, 'Mon') as month,
@@ -464,6 +478,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         SUM(CASE WHEN type::text = ${TransactionType.EXPENSE} AND status::text = ${TransactionStatus.COMPLETED}
           THEN amount::numeric ELSE 0 END)::float as expense
       FROM transactions
+      WHERE tenant_id = ${tenantId}
       GROUP BY year, month_num, month
       ORDER BY year DESC, month_num DESC
       LIMIT ${limit}
@@ -485,10 +500,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param dateFilter - Optional date range for the breakdown
    * @returns A promise that resolves to an array of category breakdown objects
    */
-  async getCategoryBreakdown(dateFilter?: {
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<TransactionCategoryBreakdown[]> {
+  async getCategoryBreakdown(
+    tenantId: string,
+    dateFilter?: {
+      startDate?: Date;
+      endDate?: Date;
+    },
+  ): Promise<TransactionCategoryBreakdown[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       WITH category_totals AS (
         SELECT
@@ -499,6 +517,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         JOIN transaction_category_on_transaction tcot ON t.id = tcot.transaction_id
         JOIN transaction_categories tc ON tcot.category_id = tc.id
         WHERE t.status::text = ${TransactionStatus.COMPLETED}
+          AND t.tenant_id = ${tenantId}
           ${dateFilter?.startDate || dateFilter?.endDate ? Prisma.sql`AND t.date >= ${dateFilter.startDate || new Date(0)} AND t.date <= ${dateFilter.endDate || new Date()}` : Prisma.empty}
         GROUP BY tc.name
       ),
@@ -529,7 +548,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param limit - Number of top categories to return
    * @returns A promise that resolves to an array of top transaction categories
    */
-  async getTopCategories(limit: number = 5): Promise<TopTransactionCategory[]> {
+  async getTopCategories(limit: number = 5, tenantId: string): Promise<TopTransactionCategory[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       SELECT
         tc.id as "categoryId",
@@ -541,6 +560,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       JOIN transaction_category_on_transaction tcot ON t.id = tcot.transaction_id
       JOIN transaction_categories tc ON tcot.category_id = tc.id
       WHERE t.status::text = ${TransactionStatus.COMPLETED}
+      AND t.tenant_id = ${tenantId}
       GROUP BY tc.id, tc.name
       ORDER BY "totalAmount" DESC
       LIMIT ${limit}
@@ -576,9 +596,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async findOrCreateCategory(
     name: string,
+    tenantId: string,
   ): Promise<{ id: string; name: string; description: string | null }> {
     const existing = await this.prisma.transactionCategory.findFirst({
-      where: { name: { equals: name, mode: 'insensitive' } },
+      where: { tenantId, name: { equals: name, mode: 'insensitive' } },
       select: { id: true, name: true, description: true },
     });
 
@@ -587,7 +608,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     }
 
     return this.prisma.transactionCategory.create({
-      data: { name, isActive: true },
+      data: { tenantId, name, isActive: true },
       select: { id: true, name: true, description: true },
     });
   }

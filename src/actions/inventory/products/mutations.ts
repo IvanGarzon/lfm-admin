@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { handleActionError } from '@/lib/error-handler';
 import { requirePermission } from '@/lib/permissions';
+import { withTenantPermission } from '@/lib/action-auth';
 import { ProductStatus } from '@/prisma/client';
 import {
   CreateProductSchema,
@@ -22,26 +23,21 @@ const PRODUCTS_PATH = '/inventory/products';
  * @param data - The input data for creating the product, conforming to `CreateProductInput`.
  * @returns A promise that resolves to an `ActionResult` with the new product's ID.
  */
-export async function createProduct(
-  data: CreateProductInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const createProduct = withTenantPermission<CreateProductInput, { id: string }>(
+  'canManageProducts',
+  async (session, data) => {
+    try {
+      const validatedData = CreateProductSchema.parse(data);
 
-  try {
-    requirePermission(session.user, 'canManageProducts');
-    const validatedData = CreateProductSchema.parse(data);
+      const result = await productRepo.createProduct(validatedData, session.user.tenantId);
+      revalidatePath(PRODUCTS_PATH);
 
-    const result = await productRepo.createProduct(validatedData);
-    revalidatePath(PRODUCTS_PATH);
-
-    return { success: true, data: result };
-  } catch (error) {
-    return handleActionError(error, 'Failed to create product');
-  }
-}
+      return { success: true, data: result };
+    } catch (error) {
+      return handleActionError(error, 'Failed to create product');
+    }
+  },
+);
 
 /**
  * Updates an existing product with the provided data.

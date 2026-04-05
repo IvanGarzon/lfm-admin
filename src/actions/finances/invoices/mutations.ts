@@ -6,7 +6,7 @@ import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
-import { withPermission } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
@@ -30,14 +30,18 @@ const emailAuditRepo = new EmailAuditRepository(prisma);
  * @param data - The input data for creating the invoice, conforming to `CreateInvoiceInput`.
  * @returns A promise that resolves to an `ActionResult` with the new invoice's ID and number.
  */
-export const createInvoice = withPermission<
+export const createInvoice = withTenantPermission<
   CreateInvoiceInput,
   { id: string; invoiceNumber: string }
 >('canManageInvoices', async (session, data) => {
   try {
     const validatedData = CreateInvoiceSchema.parse(data);
 
-    const invoice = await invoiceRepo.createInvoiceWithItems(validatedData, session.user.id);
+    const invoice = await invoiceRepo.createInvoiceWithItems(
+      validatedData,
+      session.user.tenantId,
+      session.user.id,
+    );
 
     revalidatePath('/finances/invoices');
 
@@ -56,7 +60,7 @@ export const createInvoice = withPermission<
  * @param data - The input data for updating the invoice, conforming to `UpdateInvoiceInput`.
  * @returns A promise that resolves to an `ActionResult` with the updated invoice's ID.
  */
-export const updateInvoice = withPermission<UpdateInvoiceInput, { id: string }>(
+export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: string }>(
   'canManageInvoices',
   async (session, data) => {
     try {
@@ -88,7 +92,7 @@ export const updateInvoice = withPermission<UpdateInvoiceInput, { id: string }>(
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
  * or an error if the invoice is not found.
  */
-export const markInvoiceAsPending = withPermission<MarkInvoiceAsPendingInput, { id: string }>(
+export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInput, { id: string }>(
   'canManageInvoices',
   async (session, data) => {
     try {
@@ -155,7 +159,7 @@ export const markInvoiceAsPending = withPermission<MarkInvoiceAsPendingInput, { 
  * @param id - The ID of the invoice to revert.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success.
  */
-export const markInvoiceAsDraft = withPermission<string, { id: string }>(
+export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (session, id) => {
     try {
@@ -180,7 +184,7 @@ export const markInvoiceAsDraft = withPermission<string, { id: string }>(
  * @param data - The payment data including amount, method, and date.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID, status, and receipt number upon success.
  */
-export const recordPayment = withPermission<
+export const recordPayment = withTenantPermission<
   RecordPaymentInput,
   { id: string; status: string; receiptNumber?: string | null }
 >('canRecordPayments', async (session, data) => {
@@ -237,7 +241,7 @@ export const recordPayment = withPermission<
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success,
  * or an error if the invoice is not found.
  */
-export const cancelInvoice = withPermission<CancelInvoiceInput, { id: string }>(
+export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: string }>(
   'canManageInvoices',
   async (session, data) => {
     try {
@@ -268,12 +272,12 @@ export const cancelInvoice = withPermission<CancelInvoiceInput, { id: string }>(
  * @param id - The ID of the invoice to send a receipt for.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success.
  */
-export const sendInvoiceReceipt = withPermission<string, { id: string }>(
+export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (session, id) => {
     try {
       // Get full invoice details
-      let invoice = await invoiceRepo.findByIdWithDetails(id);
+      let invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -296,7 +300,7 @@ export const sendInvoiceReceipt = withPermission<string, { id: string }>(
         await invoiceRepo.updateReceiptNumber(id, receiptNumber);
 
         // Refetch invoice with receipt number
-        const updatedInvoice = await invoiceRepo.findByIdWithDetails(id);
+        const updatedInvoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
         if (!updatedInvoice) {
           return { success: false, error: 'Failed to update invoice' };
         }
@@ -364,7 +368,7 @@ export const sendInvoiceReceipt = withPermission<string, { id: string }>(
  * @returns A promise that resolves to an `ActionResult` containing bulk update results,
  * including success and failure counts and individual operation results.
  */
-export const bulkUpdateInvoiceStatus = withPermission<
+export const bulkUpdateInvoiceStatus = withTenantPermission<
   { ids: string[]; status: InvoiceStatus },
   {
     successCount: number;
@@ -398,12 +402,12 @@ export const bulkUpdateInvoiceStatus = withPermission<
  * @param id - The ID of the overdue invoice.
  * @returns A promise that resolves to an `ActionResult` with the invoice's ID upon success.
  */
-export const sendInvoiceReminder = withPermission<string, { id: string }>(
+export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (session, id) => {
     try {
       // Get full invoice details
-      const invoice = await invoiceRepo.findByIdWithDetails(id);
+      const invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -521,7 +525,7 @@ export const sendInvoiceReminder = withPermission<string, { id: string }>(
  * @returns A promise that resolves to an `ActionResult` with the ID of the soft-deleted invoice,
  * or an error if the invoice is not found or is not in DRAFT status.
  */
-export const deleteInvoice = withPermission<string, { id: string }>(
+export const deleteInvoice = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (session, id) => {
     try {
@@ -547,7 +551,7 @@ export const deleteInvoice = withPermission<string, { id: string }>(
  * @param id - The ID of the invoice to duplicate.
  * @returns A promise that resolves to an `ActionResult` with the new invoice's ID and number.
  */
-export const duplicateInvoice = withPermission<string, { id: string; invoiceNumber: string }>(
+export const duplicateInvoice = withTenantPermission<string, { id: string; invoiceNumber: string }>(
   'canManageInvoices',
   async (session, id) => {
     try {

@@ -1,11 +1,11 @@
 'use server';
 
-import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { VendorRepository } from '@/repositories/vendor-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   CreateVendorSchema,
   UpdateVendorSchema,
@@ -16,8 +16,6 @@ import {
   type UpdateVendorStatusInput,
   type DeleteVendorInput,
 } from '@/schemas/vendors';
-import { requirePermission } from '@/lib/permissions';
-import type { ActionResult } from '@/types/actions';
 
 const vendorRepo = new VendorRepository(prisma);
 
@@ -27,19 +25,14 @@ const vendorRepo = new VendorRepository(prisma);
  * @param data - The input data for creating the vendor
  * @returns A promise that resolves to an ActionResult with the new vendor's ID and code
  */
-export async function createVendor(
-  data: CreateVendorInput,
-): Promise<ActionResult<{ id: string; vendorCode: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const createVendor = withTenantPermission<
+  CreateVendorInput,
+  { id: string; vendorCode: string }
+>('canManageVendors', async (session, data) => {
   try {
-    requirePermission(session.user, 'canManageVendors');
     const validatedData = CreateVendorSchema.parse(data);
 
-    const vendor = await vendorRepo.createVendor(validatedData);
+    const vendor = await vendorRepo.createVendor(validatedData, session.user.tenantId);
 
     logger.info(`Vendor created: ${vendor.vendorCode}`, {
       context: 'createVendor',
@@ -59,84 +52,76 @@ export async function createVendor(
   } catch (error) {
     return handleActionError(error, 'Failed to create vendor');
   }
-}
+});
 
 /**
  * Updates an existing vendor with the provided data.
  * @param data - The input data for updating the vendor
  * @returns A promise that resolves to an ActionResult with the updated vendor's ID
  */
-export async function updateVendor(data: UpdateVendorInput): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string }>(
+  'canManageVendors',
+  async (session, data) => {
+    try {
+      const validatedData = UpdateVendorSchema.parse(data);
 
-  try {
-    requirePermission(session.user, 'canManageVendors');
-    const validatedData = UpdateVendorSchema.parse(data);
+      const vendor = await vendorRepo.updateVendor(validatedData.id, validatedData);
 
-    const vendor = await vendorRepo.updateVendor(validatedData.id, validatedData);
+      if (!vendor) {
+        return { success: false, error: 'Failed to update vendor' };
+      }
 
-    if (!vendor) {
-      return { success: false, error: 'Failed to update vendor' };
+      logger.info(`Vendor updated: ${vendor.vendorCode}`, {
+        context: 'updateVendor',
+        metadata: {
+          vendorId: vendor.id,
+          vendorCode: vendor.vendorCode,
+          userId: session.user.id,
+        },
+      });
+
+      revalidatePath('/inventory/vendors');
+      revalidatePath(`/inventory/vendors/${vendor.id}`);
+
+      return { success: true, data: { id: vendor.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update vendor');
     }
-
-    logger.info(`Vendor updated: ${vendor.vendorCode}`, {
-      context: 'updateVendor',
-      metadata: {
-        vendorId: vendor.id,
-        vendorCode: vendor.vendorCode,
-        userId: session.user.id,
-      },
-    });
-
-    revalidatePath('/inventory/vendors');
-    revalidatePath(`/inventory/vendors/${vendor.id}`);
-
-    return { success: true, data: { id: vendor.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to update vendor');
-  }
-}
+  },
+);
 
 /**
  * Updates a vendor's status.
  * @param data - An object containing the vendor ID and new status
  * @returns A promise that resolves to an ActionResult with the updated vendor's ID
  */
-export async function updateVendorStatus(
-  data: UpdateVendorStatusInput,
-): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, { id: string }>(
+  'canManageVendors',
+  async (session, data) => {
+    try {
+      const validatedData = UpdateVendorStatusSchema.parse(data);
 
-  try {
-    requirePermission(session.user, 'canManageVendors');
-    const validatedData = UpdateVendorStatusSchema.parse(data);
+      const vendor = await vendorRepo.updateVendorStatus(validatedData.id, validatedData.status);
 
-    const vendor = await vendorRepo.updateVendorStatus(validatedData.id, validatedData.status);
+      logger.info(`Vendor status updated: ${vendor.vendorCode} -> ${vendor.status}`, {
+        context: 'updateVendorStatus',
+        metadata: {
+          vendorId: vendor.id,
+          vendorCode: vendor.vendorCode,
+          status: vendor.status,
+          userId: session.user.id,
+        },
+      });
 
-    logger.info(`Vendor status updated: ${vendor.vendorCode} -> ${vendor.status}`, {
-      context: 'updateVendorStatus',
-      metadata: {
-        vendorId: vendor.id,
-        vendorCode: vendor.vendorCode,
-        status: vendor.status,
-        userId: session.user.id,
-      },
-    });
+      revalidatePath('/inventory/vendors');
+      revalidatePath(`/inventory/vendors/${vendor.id}`);
 
-    revalidatePath('/inventory/vendors');
-    revalidatePath(`/inventory/vendors/${vendor.id}`);
-
-    return { success: true, data: { id: vendor.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to update vendor status');
-  }
-}
+      return { success: true, data: { id: vendor.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update vendor status');
+    }
+  },
+);
 
 /**
  * Soft deletes a vendor.
@@ -144,31 +129,28 @@ export async function updateVendorStatus(
  * @param data - An object containing the vendor ID to delete
  * @returns A promise that resolves to an ActionResult with the deleted vendor's ID
  */
-export async function deleteVendor(data: DeleteVendorInput): Promise<ActionResult<{ id: string }>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string }>(
+  'canManageVendors',
+  async (session, data) => {
+    try {
+      const validatedData = DeleteVendorSchema.parse(data);
 
-  try {
-    requirePermission(session.user, 'canManageVendors');
-    const validatedData = DeleteVendorSchema.parse(data);
+      const vendor = await vendorRepo.softDeleteVendor(validatedData.id);
 
-    const vendor = await vendorRepo.softDeleteVendor(validatedData.id);
+      logger.info(`Vendor deleted: ${vendor.vendorCode}`, {
+        context: 'deleteVendor',
+        metadata: {
+          vendorId: vendor.id,
+          vendorCode: vendor.vendorCode,
+          userId: session.user.id,
+        },
+      });
 
-    logger.info(`Vendor deleted: ${vendor.vendorCode}`, {
-      context: 'deleteVendor',
-      metadata: {
-        vendorId: vendor.id,
-        vendorCode: vendor.vendorCode,
-        userId: session.user.id,
-      },
-    });
+      revalidatePath('/inventory/vendors');
 
-    revalidatePath('/inventory/vendors');
-
-    return { success: true, data: { id: vendor.id } };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete vendor');
-  }
-}
+      return { success: true, data: { id: vendor.id } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to delete vendor');
+    }
+  },
+);

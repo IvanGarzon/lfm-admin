@@ -75,6 +75,8 @@ model Product {
   status      ProductStatus @default(ACTIVE)
   price       Decimal       @default(0) @db.Decimal(15, 2)
   stock       Int           @default(0)
+  tenantId    String        @map("tenant_id")
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
   createdAt   DateTime      @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt   DateTime      @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
   availableAt DateTime?     @map(name: "available_at") @db.Timestamptz()
@@ -82,6 +84,7 @@ model Product {
   invoiceItems InvoiceItem[]
   quoteItems   QuoteItem[]
 
+  @@index([tenantId])
   @@map(name: "products")
 }
 
@@ -90,11 +93,13 @@ model Customer {
   firstName      String         @map(name: "first_name")
   lastName       String         @map(name: "last_name")
   gender         Gender
-  email          String         @unique
+  email          String
   phone          String?
   status         CustomerStatus @default(ACTIVE)
   organizationId String?        @map(name: "organization_id")
   organization   Organization?  @relation(fields: [organizationId], references: [id])
+  tenantId       String         @map("tenant_id")
+  tenant         Tenant         @relation(fields: [tenantId], references: [id])
   createdAt      DateTime       @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
@@ -115,8 +120,9 @@ model Customer {
   emailAudit   EmailAudit[]
   transactions Transaction[] @relation("CustomerTransactions")
 
+  @@unique([tenantId, email])
+  @@index([tenantId])
   @@index([status])
-  @@index([email])
   @@index([organizationId])
   @@index([createdAt])
   @@index([status, deletedAt])
@@ -137,10 +143,13 @@ model Organization {
   postcode  String?
   country   String?            @default("Australia")
   customers Customer[]
+  tenantId  String             @map("tenant_id")
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime           @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt DateTime?          @map("deleted_at") @db.Timestamptz()
 
+  @@index([tenantId])
   @@index([name])
   @@index([status, deletedAt])
   @@map(name: "organizations")
@@ -148,7 +157,7 @@ model Organization {
 
 model Vendor {
   id           String       @id @default(cuid())
-  vendorCode   String       @unique @map(name: "vendor_code")
+  vendorCode   String       @map(name: "vendor_code")
   name         String
   email        String
   phone        String?
@@ -175,14 +184,18 @@ model Vendor {
   // Relations
   transactions Transaction[] @relation("VendorTransactions")
 
+  tenantId     String       @map("tenant_id")
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+
   // Audit fields
   createdAt    DateTime     @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt    DateTime     @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt    DateTime?    @map(name: "deleted_at") @db.Timestamptz()
 
+  @@unique([tenantId, vendorCode])
+  @@index([tenantId])
   @@index([status])
   @@index([email])
-  @@index([vendorCode])
   @@index([status, deletedAt])
   @@index([name])
   @@map(name: "vendors")
@@ -192,19 +205,22 @@ model Employee {
   id        String         @id @default(cuid())
   firstName String         @map(name: "first_name")
   lastName  String         @map(name: "last_name")
-  email     String         @unique
+  email     String
   phone     String
   gender    Gender
   dob       DateTime       @db.Date()
   rate      Decimal        @default(0) @db.Decimal(15, 2)
   status    EmployeeStatus @default(ACTIVE)
   avatarUrl String?        @map(name: "avatar_url")
-  
+  tenantId  String         @map("tenant_id")
+  tenant    Tenant         @relation(fields: [tenantId], references: [id])
+
   createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime  @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
 
-  @@index([email])
+  @@unique([tenantId, email])
+  @@index([tenantId])
   @@index([status, deletedAt])
   @@map(name: "employees")
 }
@@ -263,10 +279,13 @@ model Session {
 
 model Invoice {
   id            String @id @default(cuid())
-  invoiceNumber String @unique @map(name: "invoice_number")
+  invoiceNumber String @map(name: "invoice_number")
 
   customerId String   @map(name: "customer_id")
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  tenantId   String   @map("tenant_id")
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
 
   status InvoiceStatus @default(DRAFT)
 
@@ -301,6 +320,8 @@ model Invoice {
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
 
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
   @@index([customerId])
   @@index([status])
   @@index([issuedDate])
@@ -374,9 +395,12 @@ model Payment {
 
 model Quote {
   id          String   @id @default(cuid())
-  quoteNumber String   @unique @map(name: "quote_number")
+  quoteNumber String   @map(name: "quote_number")
   customerId  String   @map(name: "customer_id")
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  tenantId    String   @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   status QuoteStatus @default(DRAFT)
 
@@ -410,6 +434,8 @@ model Quote {
   updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
   deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
 
+  @@unique([tenantId, quoteNumber])
+  @@index([tenantId])
   @@index([customerId])
   @@index([status])
   @@index([issuedDate])
@@ -665,7 +691,7 @@ model Transaction {
   description String
   payee       String
   status          TransactionStatus                 @default(COMPLETED)
-  referenceNumber String                           @unique @map(name: "reference_number")
+  referenceNumber String                           @map(name: "reference_number")
   referenceId     String?                           @map(name: "reference_id")
   invoiceId   String?           @map(name: "invoice_id")
   invoice     Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
@@ -677,9 +703,14 @@ model Transaction {
   categories  TransactionCategoryOnTransaction[]
   attachments TransactionAttachment[]
 
+  tenantId    String            @map("tenant_id")
+  tenant      Tenant            @relation(fields: [tenantId], references: [id])
+
   createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
 
+  @@unique([tenantId, referenceNumber])
+  @@index([tenantId])
   @@index([type])
   @@index([status])
   @@index([date], map: "transactions_date_idx")
@@ -693,14 +724,18 @@ model Transaction {
 
 model TransactionCategory {
   id          String   @id @default(cuid())
-  name        String   @unique
+  name        String
   description String?
   isActive    Boolean  @default(true) @map(name: "is_active")
+  tenantId    String   @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
   createdAt   DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
   updatedAt   DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
 
   transactions TransactionCategoryOnTransaction[]
 
+  @@unique([tenantId, name])
+  @@index([tenantId])
   @@map(name: "transaction_categories")
 }
 
@@ -756,10 +791,14 @@ model Recipe {
   items              RecipeItem[]
   recipeGroupItems   RecipeGroupItem[]
 
+  tenantId           String          @map("tenant_id")
+  tenant             Tenant          @relation(fields: [tenantId], references: [id])
+
   createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt          DateTime?       @map("deleted_at") @db.Timestamptz()
 
+  @@index([tenantId])
   @@map("recipes")
 }
 
@@ -789,11 +828,15 @@ model RecipeItem {
 
 model RecipeUnit {
   id        String   @id @default(cuid())
-  name      String   @unique
+  name      String
   isActive  Boolean  @default(true) @map("is_active")
+  tenantId  String   @map("tenant_id")
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
+  @@unique([tenantId, name])
+  @@index([tenantId])
   @@map("recipe_units")
 }
 
@@ -808,10 +851,14 @@ model RecipeGroup {
   // Relation to recipe group items
   items       RecipeGroupItem[]
 
+  tenantId    String   @map("tenant_id")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz()
 
+  @@index([tenantId])
   @@index([deletedAt])
   @@map("recipe_groups")
 }
@@ -858,10 +905,14 @@ model PriceListItem {
   costHistory PriceListCostHistory[]
   recipeItems RecipeItem[]
 
+  tenantId    String    @map("tenant_id")
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
 
+  @@index([tenantId])
   @@index([name])
   @@index([category])
   @@index([deletedAt])
@@ -1046,8 +1097,21 @@ model Tenant {
   createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
 
-  users    User[]
-  settings TenantSettings?
+  users                 User[]
+  settings              TenantSettings?
+  customers             Customer[]
+  organizations         Organization[]
+  vendors               Vendor[]
+  employees             Employee[]
+  products              Product[]
+  invoices              Invoice[]
+  quotes                Quote[]
+  transactions          Transaction[]
+  recipes               Recipe[]
+  recipeGroups          RecipeGroup[]
+  recipeUnits           RecipeUnit[]
+  priceListItems        PriceListItem[]
+  transactionCategories TransactionCategory[]
 
   @@index([slug])
   @@index([status])

@@ -190,6 +190,59 @@ export function withPermission<TInput, TOutput>(
   };
 }
 
+// -- Tenant + Permission Wrapper --------------------------------------------
+
+/**
+ * Wraps a server action to require authentication, a valid tenant context,
+ * AND specific feature permission(s).
+ *
+ * Use this for all tenant-scoped business entity actions (invoices, quotes, etc.)
+ * where both role-based permission checking and tenant isolation are needed.
+ *
+ * @example
+ * export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>(
+ *   'canReadInvoices',
+ *   async (session, input) => {
+ *     const result = await invoiceRepo.searchAndPaginate(input, session.user.tenantId);
+ *     return { success: true, data: result };
+ *   }
+ * );
+ */
+export function withTenantPermission<TInput, TOutput>(
+  permission: PermissionKey | PermissionKey[],
+  handler: (session: TenantSession, input: TInput) => Promise<ActionResult<TOutput>>,
+): UnauthenticatedHandler<TInput, TOutput> {
+  return async (input: TInput): Promise<ActionResult<TOutput>> => {
+    const session = await getSession();
+
+    if (!isAuthenticatedSession(session)) {
+      return {
+        success: false,
+        error: 'You must be signed in to perform this action',
+      };
+    }
+
+    const permissions = Array.isArray(permission) ? permission : [permission];
+    const missingPermissions = permissions.filter((p) => !hasPermission(session.user, p));
+
+    if (missingPermissions.length > 0) {
+      return {
+        success: false,
+        error: 'You do not have permission to perform this action',
+      };
+    }
+
+    if (!session.user.tenantId || !session.user.tenantSlug) {
+      return {
+        success: false,
+        error: 'No tenant context found for this session',
+      };
+    }
+
+    return handler(session as TenantSession, input);
+  };
+}
+
 // -- Tenant Auth Wrapper ----------------------------------------------------
 
 /**

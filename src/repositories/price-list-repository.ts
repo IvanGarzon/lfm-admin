@@ -61,10 +61,14 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
    * @param params - Filter parameters for the search
    * @returns A promise that resolves to paginated price list items with metadata
    */
-  async searchAndPaginate(params: PriceListFilters): Promise<PriceListPagination> {
+  async searchAndPaginate(
+    params: PriceListFilters,
+    tenantId: string,
+  ): Promise<PriceListPagination> {
     const { search, category, page, perPage, sort } = params;
 
     const where: Prisma.PriceListItemWhereInput = {
+      tenantId,
       deletedAt: null,
       ...(search
         ? {
@@ -122,9 +126,12 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
    * @param id - The unique identifier of the item
    * @returns A promise that resolves to the item with details, or null if not found
    */
-  async findByIdWithDetails(id: string): Promise<PriceListItemWithDetails | null> {
+  async findByIdWithDetails(
+    id: string,
+    tenantId: string,
+  ): Promise<PriceListItemWithDetails | null> {
     const item = await this.prisma.priceListItem.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       include: {
         costHistory: {
           orderBy: { changedAt: 'desc' },
@@ -164,7 +171,7 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
    * @param data - The creation input data
    * @returns A promise that resolves to an object containing the new item ID
    */
-  async createItem(data: CreatePriceListItemInput): Promise<{ id: string }> {
+  async createItem(data: CreatePriceListItemInput, tenantId: string): Promise<{ id: string }> {
     const retailPrice = calculateRetailPrice({
       costPerUnit: data.costPerUnit,
       multiplier: data.multiplier,
@@ -173,6 +180,7 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
 
     const item = await this.prisma.priceListItem.create({
       data: {
+        tenantId,
         name: data.name,
         description: data.description,
         category: data.category,
@@ -327,9 +335,9 @@ class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetPayload<
    * Retrieves all active price list items for selection in recipes.
    * @returns A promise that resolves to an array of active price list items
    */
-  async findAllActive(): Promise<PriceListItemListItem[]> {
+  async findAllActive(tenantId: string): Promise<PriceListItemListItem[]> {
     const items = await this.prisma.priceListItem.findMany({
-      where: { deletedAt: null },
+      where: { tenantId, deletedAt: null },
       orderBy: { name: 'asc' },
     });
 
