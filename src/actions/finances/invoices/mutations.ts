@@ -109,6 +109,7 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
 
         try {
           await queueInvoiceEmail({
+            tenantId: session.user.tenantId,
             invoiceId: invoice.id,
             customerId: invoice.customer.id,
             type: 'pending',
@@ -313,6 +314,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
 
       try {
         await queueInvoiceEmail({
+          tenantId: session.user.tenantId,
           invoiceId: invoice.id,
           customerId: invoice.customer.id,
           type: 'receipt',
@@ -460,6 +462,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
 
       try {
         await queueInvoiceEmail({
+          tenantId: session.user.tenantId,
           invoiceId: invoice.id,
           customerId: invoice.customer.id,
           type: 'reminder',

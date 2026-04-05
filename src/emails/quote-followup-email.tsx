@@ -49,9 +49,7 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
       </Text>
 
       <Text style={styles.text}>
-        At Las Flores Melbourne, we're committed to creating beautiful floral arrangements that
-        bring your vision to life. Our team is here to help with any customizations or adjustments
-        you might need.
+        Our team is here to help with any customizations or adjustments you might need.
       </Text>
 
       <Hr style={styles.hr} />
@@ -107,7 +105,7 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
       <Text style={styles.footer}>
         Best regards,
         <br />
-        The Las Flores Melbourne Team
+        The Team
       </Text>
     </>
   );
@@ -115,9 +113,7 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
 
 export function QuoteFollowUpEmail(props: QuoteFollowUpEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail
-      previewText={`Following up on Quote ${props.quoteData.quoteNumber} from Las Flores Melbourne`}
-    >
+    <BaseTemplateEmail previewText={`Following up on Quote ${props.quoteData.quoteNumber}`}>
       <QuoteFollowUpContent {...props} />
     </BaseTemplateEmail>
   );

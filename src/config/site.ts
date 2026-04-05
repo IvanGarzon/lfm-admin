@@ -5,14 +5,14 @@ const site_url = env.NEXT_PUBLIC_APP_URL;
 
 export const site = {
   author: 'lehenbizico',
-  name: 'Las Flores Melbourne',
-  description: '(Admin) - Las Flores Melbourne',
-  title: 'Las Flores Melbourne',
+  name: 'Admin',
+  description: 'Business Admin Platform',
+  title: 'Admin',
   theme: 'system',
-  email: 'lasfloresmelb@gmail.com',
+  email: '',
   links: {
-    instagram: 'https://www.instagram.com/lasfloresmelb',
-    facebook: 'https://www.facebook.com/lasfloresmelbourne',
+    instagram: '',
+    facebook: '',
   },
   url: site_url,
   logo: `${site_url}/static/images/logo.png`,

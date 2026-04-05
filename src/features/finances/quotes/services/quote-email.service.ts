@@ -4,6 +4,7 @@ import { sendEmailNotification } from '@/lib/email-service';
 import { env } from '@/env';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { QuoteRepository } from '@/repositories/quote-repository';
+import { getTenantBrandingById } from '@/actions/tenant/queries';
 
 const quoteRepository = new QuoteRepository(prisma);
 
@@ -32,25 +33,26 @@ function getEmailRecipient(originalRecipient: string): string {
 export async function processQuoteEmail(
   quoteId: string,
   type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup',
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
-  const quote = await quoteRepository.findByIdWithDetails(quoteId);
+  const quote = await quoteRepository.findByIdWithDetails(quoteId, tenantId);
 
   if (!quote) {
     throw new Error('Quote not found');
   }
 
   if (type === 'sent') {
-    return await processSentNotification(quote);
+    return await processSentNotification(quote, tenantId);
   } else if (type === 'reminder') {
-    return await processReminder(quote);
+    return await processReminder(quote, tenantId);
   } else if (type === 'accepted') {
-    return await processAccepted(quote);
+    return await processAccepted(quote, tenantId);
   } else if (type === 'rejected') {
-    return await processRejected(quote);
+    return await processRejected(quote, tenantId);
   } else if (type === 'expired') {
-    return await processExpired(quote);
+    return await processExpired(quote, tenantId);
   } else if (type === 'followup') {
-    return await processFollowUp(quote);
+    return await processFollowUp(quote, tenantId);
   }
 
   throw new Error(`Unknown email type: ${type}`);
@@ -61,17 +63,20 @@ export async function processQuoteEmail(
  */
 async function processSentNotification(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // 1. Generate PDF
-  const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
-    context: 'inngest_sent_notification',
-    skipDownload: false,
-  });
+  const [{ pdfBuffer, pdfUrl, pdfFilename }, branding] = await Promise.all([
+    getOrGenerateQuotePdf(quote, {
+      context: 'inngest_sent_notification',
+      skipDownload: false,
+    }),
+    getTenantBrandingById(tenantId),
+  ]);
 
-  // 2. Prepare Data
+  const tenantName = branding?.name ?? '';
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -83,10 +88,9 @@ async function processSentNotification(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email
   const result = await sendEmailNotification({
     to: recipient,
-    subject: `Quote ${quoteData.quoteNumber} from Las Flores`,
+    subject: `Quote ${quoteData.quoteNumber} from ${tenantName}`,
     template: 'quote',
     props: {
       quoteData,
@@ -112,23 +116,23 @@ async function processSentNotification(
  */
 async function processReminder(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // Calculate days until expiry
   const daysUntilExpiry = Math.max(
     0,
     Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
   );
 
-  // 1. Generate PDF
-  const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
-    context: 'inngest_reminder',
-    skipDownload: false,
-  });
+  const [{ pdfBuffer, pdfUrl, pdfFilename }] = await Promise.all([
+    getOrGenerateQuotePdf(quote, {
+      context: 'inngest_reminder',
+      skipDownload: false,
+    }),
+  ]);
 
-  // 2. Prepare Data
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -140,7 +144,6 @@ async function processReminder(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email
   const result = await sendEmailNotification({
     to: recipient,
     subject: `Reminder: Quote ${quoteData.quoteNumber} expires ${daysUntilExpiry === 0 ? 'today' : `in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}`}`,
@@ -170,17 +173,16 @@ async function processReminder(
  */
 async function processAccepted(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // 1. Generate PDF (use cached version, no regeneration needed)
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_accepted',
     skipDownload: false,
   });
 
-  // 2. Prepare Data
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -192,7 +194,6 @@ async function processAccepted(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email
   const result = await sendEmailNotification({
     to: recipient,
     subject: `Quote ${quoteData.quoteNumber} Accepted - Thank You!`,
@@ -221,17 +222,16 @@ async function processAccepted(
  */
 async function processRejected(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_rejected',
     skipDownload: false,
   });
 
-  // 2. Prepare Data
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -243,7 +243,6 @@ async function processRejected(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email
   const result = await sendEmailNotification({
     to: recipient,
     subject: `Quote ${quoteData.quoteNumber} - We Value Your Feedback`,
@@ -272,18 +271,16 @@ async function processRejected(
  */
 async function processExpired(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
-  // For expired quotes, we can skip PDF attachment to reduce overhead
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // 1. Generate PDF URL only (no buffer download)
   const { pdfUrl } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_expired',
-    skipDownload: true, // No need for buffer, just URL
+    skipDownload: true,
   });
 
-  // 2. Prepare Data
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -295,7 +292,6 @@ async function processExpired(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email (no PDF attachment for expired quotes)
   const result = await sendEmailNotification({
     to: recipient,
     subject: `Quote ${quoteData.quoteNumber} Has Expired`,
@@ -304,7 +300,7 @@ async function processExpired(
       quoteData,
       pdfUrl,
     },
-    attachments: [], // No attachment for expired quotes
+    attachments: [],
   });
 
   logger.info('Expired notification email sent', {
@@ -324,17 +320,20 @@ async function processExpired(
  */
 async function processFollowUp(
   quote: QuoteWithDetails,
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
-  // 1. Generate PDF
-  const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
-    context: 'inngest_followup',
-    skipDownload: false,
-  });
+  const [{ pdfBuffer, pdfUrl, pdfFilename }, branding] = await Promise.all([
+    getOrGenerateQuotePdf(quote, {
+      context: 'inngest_followup',
+      skipDownload: false,
+    }),
+    getTenantBrandingById(tenantId),
+  ]);
 
-  // 2. Prepare Data
+  const tenantName = branding?.name ?? '';
   const recipient = getEmailRecipient(quote.customer.email);
   const quoteData = {
     quoteNumber: quote.quoteNumber,
@@ -346,10 +345,9 @@ async function processFollowUp(
     itemCount: quote.items.length,
   };
 
-  // 3. Send Email
   const result = await sendEmailNotification({
     to: recipient,
-    subject: `Following up: Quote ${quoteData.quoteNumber} from Las Flores`,
+    subject: `Following up: Quote ${quoteData.quoteNumber} from ${tenantName}`,
     template: 'quote-followup',
     props: {
       quoteData,

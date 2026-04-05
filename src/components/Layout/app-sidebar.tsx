@@ -36,51 +36,31 @@ import {
 } from 'lucide-react';
 
 import Link from 'next/link';
-import Image from 'next/image';
-
 import { Box } from '@/components/ui/box';
 import { usePathname } from 'next/navigation';
 import { Icons } from '../icons';
 import { useSession } from 'next-auth/react';
 import { navItems } from '@/constants/data';
 import { UserAvatar } from '@/components/shared/user-avatar';
-
-export const company = {
-  name: 'Las Flores',
-  logo: GalleryVerticalEnd,
-  plan: 'Melbourne',
-  logoUrl: '/lfm.svg',
-};
+import { useTenantBranding } from '@/components/providers/TenantBrandingProvider';
 
 export function AppSidebar() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const branding = useTenantBranding();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Box className="flex gap-2 py-2 text-sidebar-accent-foreground ">
           <Box className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <company.logo className="size-4" />
+            <GalleryVerticalEnd className="size-4" />
           </Box>
           <Box className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{company.name}</span>
-            <span className="truncate text-xs">{company.plan}</span>
+            <span className="truncate font-semibold">{branding?.name ?? ''}</span>
           </Box>
         </Box>
       </SidebarHeader>
-
-      {/* <SidebarHeader>
-        <div className="flex py-2 justify-center text-sidebar-accent-foreground">
-          <Image
-            src={company.logoUrl}
-            alt="Las Flores Melbourne"
-            width={160}
-            height={50}
-            className="object-contain"
-          />
-        </div>
-      </SidebarHeader> */}
 
       <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>

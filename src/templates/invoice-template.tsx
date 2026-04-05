@@ -2,12 +2,13 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { format } from 'date-fns';
 
 import { InvoiceStatus } from '@/prisma/client';
-import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
+import type { TenantBranding } from '@/actions/tenant/queries';
 
 type InvoicePreviewProps = {
   invoice: InvoiceWithDetails;
+  settings: TenantBranding;
   logoUrl?: string;
 };
 
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
+export function InvoiceDocument({ invoice, settings, logoUrl }: InvoicePreviewProps) {
   const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * invoice.gst) / 100;
   const total = subtotal + gstAmount - invoice.discount;
@@ -328,10 +329,10 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
         <View style={styles.billingSection}>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Billed by:</Text>
-            <Text style={styles.companyName}>{lasFloresAccount.accountName}</Text>
-            <Text style={styles.text}>{lasFloresAccount.phone}</Text>
-            <Text style={styles.text}>lasfloresmelb@gmail.com</Text>
-            <Text style={styles.text}>AU ABN {lasFloresAccount.email}</Text>
+            <Text style={styles.companyName}>{settings.accountName ?? settings.name}</Text>
+            {settings.phone ? <Text style={styles.text}>{settings.phone}</Text> : null}
+            {settings.email ? <Text style={styles.text}>{settings.email}</Text> : null}
+            {settings.abn ? <Text style={styles.text}>AU ABN {settings.abn}</Text> : null}
           </View>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Billed to:</Text>
@@ -447,10 +448,12 @@ export function InvoiceDocument({ invoice, logoUrl }: InvoicePreviewProps) {
 
         <View style={styles.paymentDetails} wrap={false}>
           <Text style={styles.sectionTitle}>Payment Information</Text>
-          <Text style={styles.companyName}>{lasFloresAccount.accountName}</Text>
-          <Text style={styles.text}>Bank: {lasFloresAccount.bankName}</Text>
-          <Text style={styles.text}>BSB: {lasFloresAccount.bsb}</Text>
-          <Text style={styles.text}>Account: {lasFloresAccount.accountNumber}</Text>
+          <Text style={styles.companyName}>{settings.accountName ?? settings.name}</Text>
+          {settings.bankName ? <Text style={styles.text}>Bank: {settings.bankName}</Text> : null}
+          {settings.bsb ? <Text style={styles.text}>BSB: {settings.bsb}</Text> : null}
+          {settings.accountNumber ? (
+            <Text style={styles.text}>Account: {settings.accountNumber}</Text>
+          ) : null}
           <Text style={styles.text}>
             <Text style={{ fontWeight: 'bold' }}>Reference: </Text>
             {invoice.invoiceNumber}

@@ -20,7 +20,7 @@ export const previewQuoteEmail = createEmailPreviewFunction<
   entityName: 'Quote',
   fetchEntity: (id, tenantId) => quoteRepository.findByIdWithDetails(id, tenantId),
   getCustomerEmail: (quote) => quote!.customer.email,
-  buildEmailConfig: (quote, type) => {
+  buildEmailConfig: (quote, type, tenantName) => {
     if (!quote) {
       return { error: 'Quote not found' };
     }
@@ -38,7 +38,7 @@ export const previewQuoteEmail = createEmailPreviewFunction<
     switch (type) {
       case 'sent':
         return {
-          subject: `Quote ${quoteData.quoteNumber} from Las Flores`,
+          subject: `Quote ${quoteData.quoteNumber} from ${tenantName}`,
           template: 'quote' as const,
           props: {
             quoteData,
@@ -102,7 +102,7 @@ export const previewQuoteEmail = createEmailPreviewFunction<
 
       case 'followup':
         return {
-          subject: `Following up: Quote ${quoteData.quoteNumber} from Las Flores`,
+          subject: `Following up: Quote ${quoteData.quoteNumber} from ${tenantName}`,
           template: 'quote-followup' as const,
           props: {
             quoteData,

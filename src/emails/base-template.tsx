@@ -39,13 +39,7 @@ export function BaseTemplateEmail({
           }}
         ></Container>
         <Container style={{ ...container }}>
-          <Img
-            src={logoUrl}
-            width="150"
-            height="150"
-            alt="Las Flores Melbourne"
-            style={{ ...logo }}
-          />
+          <Img src={logoUrl} width="150" height="150" alt="Logo" style={{ ...logo }} />
           {children}
         </Container>
         {/* <Container>

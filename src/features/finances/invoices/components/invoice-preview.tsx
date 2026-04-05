@@ -6,7 +6,7 @@ import type {
   InvoiceItemDetail,
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
-import { lasFloresAccount } from '@/constants/data';
+import { useTenantBranding } from '@/components/providers/TenantBrandingProvider';
 import { InvoicePreviewHeader } from '@/features/finances/invoices/components/preview/invoice-preview-header';
 import { InvoicePreviewBillingInfo } from '@/features/finances/invoices/components/preview/invoice-preview-billing-info';
 import { InvoicePreviewItemsTable } from '@/features/finances/invoices/components/preview/invoice-preview-items-table';
@@ -31,6 +31,7 @@ export function InvoicePreview({
   isLoadingItems = false,
   isLoadingPayments = false,
 }: InvoiceHtmlPreviewProps) {
+  const branding = useTenantBranding();
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * invoice.gst) / 100;
   const total = subtotal + gstAmount - invoice.discount;
@@ -60,18 +61,24 @@ export function InvoicePreview({
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
                 Payment Details:
               </p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
-                {lasFloresAccount.accountName}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Bank: {lasFloresAccount.bankName}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                BSB: {lasFloresAccount.bsb}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Account: {lasFloresAccount.accountNumber}
-              </p>
+              {branding?.accountName ? (
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
+                  {branding.accountName}
+                </p>
+              ) : null}
+              {branding?.bankName ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Bank: {branding.bankName}
+                </p>
+              ) : null}
+              {branding?.bsb ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">BSB: {branding.bsb}</p>
+              ) : null}
+              {branding?.accountNumber ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Account: {branding.accountNumber}
+                </p>
+              ) : null}
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 <strong>Reference: </strong>
                 {invoice.invoiceNumber}

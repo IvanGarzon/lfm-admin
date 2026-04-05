@@ -143,6 +143,7 @@ export async function queueEmail(
  * Helper function to queue invoice emails
  */
 export async function queueInvoiceEmail(params: {
+  tenantId: string;
   invoiceId: string;
   customerId: string;
   type: 'pending' | 'reminder' | 'receipt' | 'overdue';
@@ -152,6 +153,7 @@ export async function queueInvoiceEmail(params: {
   attachments?: QueueEmailPayload['attachments'];
 }) {
   return queueEmail({
+    tenantId: params.tenantId,
     entityType: 'invoice',
     entityId: params.invoiceId,
     emailType: `invoice.${params.type}` as any,
@@ -171,6 +173,7 @@ export async function queueInvoiceEmail(params: {
  * Helper function to queue quote emails
  */
 export async function queueQuoteEmail(params: {
+  tenantId: string;
   quoteId: string;
   customerId: string;
   type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
@@ -180,6 +183,7 @@ export async function queueQuoteEmail(params: {
   attachments?: QueueEmailPayload['attachments'];
 }) {
   return queueEmail({
+    tenantId: params.tenantId,
     entityType: 'quote',
     entityId: params.quoteId,
     emailType: `quote.${params.type}` as any,

@@ -1,13 +1,14 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 
-import { lasFloresAccount } from '@/constants/data';
 import { formatCurrency } from '@/lib/utils';
 import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
+import type { TenantBranding } from '@/actions/tenant/queries';
 
 type QuotePreviewProps = {
   quote: QuoteWithDetails;
+  settings: TenantBranding;
   logoUrl?: string;
 };
 
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export function QuoteDocument({ quote, logoUrl }: QuotePreviewProps) {
+export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
   const subtotal = quote.items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * quote.gst) / 100;
   const total = subtotal + gstAmount - quote.discount;
@@ -336,10 +337,10 @@ export function QuoteDocument({ quote, logoUrl }: QuotePreviewProps) {
         <View style={styles.billingSection}>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Quoted by:</Text>
-            <Text style={styles.companyName}>{lasFloresAccount.accountName}</Text>
-            <Text style={styles.text}>{lasFloresAccount.phone}</Text>
-            <Text style={styles.text}>lasfloresmelb@gmail.com</Text>
-            <Text style={styles.text}>AU ABN {lasFloresAccount.email}</Text>
+            <Text style={styles.companyName}>{settings.accountName ?? settings.name}</Text>
+            {settings.phone ? <Text style={styles.text}>{settings.phone}</Text> : null}
+            {settings.email ? <Text style={styles.text}>{settings.email}</Text> : null}
+            {settings.abn ? <Text style={styles.text}>AU ABN {settings.abn}</Text> : null}
           </View>
           <View style={styles.billingColumn}>
             <Text style={styles.sectionTitle}>Quoted to:</Text>

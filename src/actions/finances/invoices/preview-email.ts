@@ -20,7 +20,7 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
   entityName: 'Invoice',
   fetchEntity: (id, tenantId) => invoiceRepository.findByIdMetadata(id, tenantId),
   getCustomerEmail: (invoice) => invoice!.customer.email,
-  buildEmailConfig: (invoice, type) => {
+  buildEmailConfig: (invoice, type, tenantName) => {
     if (!invoice) {
       return { error: 'Invoice not found' };
     }
@@ -37,7 +37,7 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
     switch (type) {
       case 'sent':
         return {
-          subject: `Invoice ${invoiceData.invoiceNumber} from Las Flores`,
+          subject: `Invoice ${invoiceData.invoiceNumber} from ${tenantName}`,
           template: 'invoice' as const,
           props: {
             invoiceData,

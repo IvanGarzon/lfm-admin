@@ -33,6 +33,7 @@ import type { ActionResult } from '@/types/actions';
 import { uploadFileToS3, deleteFileFromS3 } from '@/lib/s3';
 import { ALLOWED_IMAGE_MIME_TYPES } from '@/lib/file-constants';
 import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.service';
+import { getTenantBranding } from '@/actions/tenant/queries';
 
 const quoteRepo = new QuoteRepository(prisma);
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -655,17 +656,21 @@ export const sendQuoteEmail = withTenantPermission<
       itemCount: quote.items.length,
     };
 
+    const branding = await getTenantBranding();
+    const tenantName = branding?.name ?? '';
+
     // Generate subject based on type
     const subjects = {
-      sent: `Quote ${quote.quoteNumber} from Las Flores`,
+      sent: `Quote ${quote.quoteNumber} from ${tenantName}`,
       reminder: `Reminder: Quote ${quote.quoteNumber} expiring soon`,
       accepted: `Quote ${quote.quoteNumber} Accepted - Thank You!`,
       rejected: `Quote ${quote.quoteNumber} - We Value Your Feedback`,
-      followup: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
+      followup: `Following up: Quote ${quote.quoteNumber} from ${tenantName}`,
     };
 
     // Queue email via Inngest
     const result = await queueQuoteEmail({
+      tenantId: session.user.tenantId,
       quoteId: quote.id,
       customerId: quote.customer.id,
       type: data.type,
@@ -730,13 +735,17 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
         itemCount: quote.items.length,
       };
 
+      const branding = await getTenantBranding();
+      const tenantName = branding?.name ?? '';
+
       // Queue follow-up email via Inngest
       const result = await queueQuoteEmail({
+        tenantId: session.user.tenantId,
         quoteId: quote.id,
         customerId: quote.customer.id,
         type: 'followup',
         recipient: quote.customer.email,
-        subject: `Following up: Quote ${quote.quoteNumber} from Las Flores`,
+        subject: `Following up: Quote ${quote.quoteNumber} from ${tenantName}`,
         emailData,
       });
 

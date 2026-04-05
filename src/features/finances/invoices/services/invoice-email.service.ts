@@ -40,8 +40,9 @@ function getEmailRecipient(originalRecipient: string): string {
 export async function processInvoiceEmail(
   invoiceId: string,
   type: 'pending_notification' | 'receipt' | 'reminder',
+  tenantId: string,
 ): Promise<{ success: true; emailId?: string }> {
-  const invoice = await invoiceRepository.findByIdWithDetails(invoiceId);
+  const invoice = await invoiceRepository.findByIdWithDetails(invoiceId, tenantId);
 
   if (!invoice) {
     throw new Error('Invoice not found');

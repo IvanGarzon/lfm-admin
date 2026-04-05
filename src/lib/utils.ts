@@ -63,7 +63,7 @@ export function constructMetadata({
   return {
     title,
     description,
-    keywords: ['Flowers', 'Admin', 'Las Flores Melbourne'],
+    keywords: ['Admin'],
     authors: [
       {
         name: site.author,

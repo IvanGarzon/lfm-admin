@@ -9,7 +9,7 @@ import type {
   InvoiceItemDetail,
   InvoicePaymentItem,
 } from '@/features/finances/invoices/types';
-import { lasFloresAccount } from '@/constants/data';
+import { useTenantBranding } from '@/components/providers/TenantBrandingProvider';
 
 const EMPTY_ITEMS: InvoiceItemDetail[] = [];
 const EMPTY_PAYMENTS: InvoicePaymentItem[] = [];
@@ -29,6 +29,7 @@ export function ReceiptPreview({
   isLoadingItems = false,
   isLoadingPayments = false,
 }: ReceiptHtmlPreviewProps) {
+  const branding = useTenantBranding();
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const gstAmount = (subtotal * invoice.gst) / 100;
   const total = subtotal + gstAmount - invoice.discount;
@@ -88,7 +89,7 @@ export function ReceiptPreview({
             <Box>
               <Image
                 src="/static/logo-green-800.png"
-                alt="Las Flores Melbourne Logo"
+                alt={branding?.name ?? 'Logo'}
                 width={160}
                 height={160}
                 className="h-40 w-auto"
@@ -101,13 +102,17 @@ export function ReceiptPreview({
           <Box className="grid grid-cols-2 gap-8 mb-8">
             <Box>
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
-                {lasFloresAccount.accountName}
+                {branding?.accountName ?? branding?.name ?? ''}
               </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.phone}</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.email}</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                AU ABN {lasFloresAccount.abn}
-              </p>
+              {branding?.phone ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">{branding.phone}</p>
+              ) : null}
+              {branding?.email ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">{branding.email}</p>
+              ) : null}
+              {branding?.abn ? (
+                <p className="text-sm text-gray-700 dark:text-gray-300">AU ABN {branding.abn}</p>
+              ) : null}
             </Box>
             <Box>
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">

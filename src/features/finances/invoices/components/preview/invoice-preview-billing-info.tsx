@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { Box } from '@/components/ui/box';
-import { lasFloresAccount } from '@/constants/data';
+import { useTenantBranding } from '@/components/providers/TenantBrandingProvider';
 import type { InvoiceMetadata } from '@/features/finances/invoices/types';
 
 interface InvoicePreviewBillingInfoProps {
@@ -10,6 +10,8 @@ interface InvoicePreviewBillingInfoProps {
 }
 
 export function InvoicePreviewBillingInfo({ invoice }: InvoicePreviewBillingInfoProps) {
+  const branding = useTenantBranding();
+
   return (
     <>
       {/* Billing Information */}
@@ -17,11 +19,17 @@ export function InvoicePreviewBillingInfo({ invoice }: InvoicePreviewBillingInfo
         <Box>
           <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Billed by:</p>
           <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mb-1">
-            {lasFloresAccount.accountName}
+            {branding?.accountName ?? branding?.name ?? ''}
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.phone}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{lasFloresAccount.email}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">AU ABN {lasFloresAccount.abn}</p>
+          {branding?.phone ? (
+            <p className="text-sm text-gray-700 dark:text-gray-300">{branding.phone}</p>
+          ) : null}
+          {branding?.email ? (
+            <p className="text-sm text-gray-700 dark:text-gray-300">{branding.email}</p>
+          ) : null}
+          {branding?.abn ? (
+            <p className="text-sm text-gray-700 dark:text-gray-300">AU ABN {branding.abn}</p>
+          ) : null}
         </Box>
         <Box>
           <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">Billed to:</p>

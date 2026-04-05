@@ -1,5 +1,6 @@
 import { generateEmailPreview, type EmailPreviewResult } from '@/lib/email-preview';
 import { auth } from '@/auth';
+import { getTenantBranding } from '@/actions/tenant/queries';
 import type { EmailTemplateName } from '@/emails';
 
 /**
@@ -53,9 +54,14 @@ interface EmailPreviewFactoryConfig<TEntity, TEmailType extends string> {
   getCustomerEmail: (entity: TEntity) => string;
 
   /**
-   * Function to build email configuration based on entity and email type
+   * Function to build email configuration based on entity, email type, and tenant name.
+   * The tenant name is resolved from TenantSettings at preview time.
    */
-  buildEmailConfig: (entity: TEntity, emailType: TEmailType) => EmailTypeConfig | { error: string };
+  buildEmailConfig: (
+    entity: TEntity,
+    emailType: TEmailType,
+    tenantName: string,
+  ) => EmailTypeConfig | { error: string };
 }
 
 /**
@@ -101,8 +107,8 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
     emailType: TEmailType,
   ): Promise<EmailPreviewResult> {
     try {
-      // Step 1: Resolve tenant from session
-      const session = await auth();
+      // Step 1: Resolve tenant from session and fetch branding in parallel
+      const [session, branding] = await Promise.all([auth(), getTenantBranding()]);
       if (!session?.user?.tenantId) {
         return { success: false, error: 'No tenant context found for this session' };
       }
@@ -122,7 +128,8 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
       const customerEmail = getCustomerEmail(entity);
 
       // Step 5: Build email configuration
-      const emailConfig = buildEmailConfig(entity, emailType);
+      const tenantName = branding?.name ?? '';
+      const emailConfig = buildEmailConfig(entity, emailType, tenantName);
 
       // Check if buildEmailConfig returned an error
       if ('error' in emailConfig) {

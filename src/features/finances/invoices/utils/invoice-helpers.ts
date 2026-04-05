@@ -17,6 +17,7 @@ import { generatePdfBuffer } from '@/lib/pdf';
 import { InvoiceStatus } from '@/prisma/client';
 import type { InvoiceListItem, InvoiceWithDetails } from '@/features/finances/invoices/types';
 import { INVOICE_CONFIG } from '../config/invoice-config';
+import { getTenantBranding, emptyBranding } from '@/actions/tenant/queries';
 
 // ============================================================================
 // PDF GENERATION
@@ -74,7 +75,8 @@ export async function generateInvoicePDF(invoice: InvoiceWithDetails): Promise<B
   const invoiceTemplate = await import('@/templates/invoice-template');
   const { absoluteUrl } = await import('@/lib/utils');
   const logoUrl = absoluteUrl('/static/logo-green-800.png');
-  const pdfDoc = invoiceTemplate.InvoiceDocument({ invoice, logoUrl });
+  const settings = (await getTenantBranding()) ?? emptyBranding;
+  const pdfDoc = invoiceTemplate.InvoiceDocument({ invoice, settings, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
 
@@ -98,7 +100,8 @@ export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<B
   const receiptTemplate = await import('@/templates/receipt-template');
   const { absoluteUrl } = await import('@/lib/utils');
   const logoUrl = absoluteUrl('/static/logo-green-800.png');
-  const pdfDoc = receiptTemplate.ReceiptDocument({ invoice, logoUrl });
+  const settings = (await getTenantBranding()) ?? emptyBranding;
+  const pdfDoc = receiptTemplate.ReceiptDocument({ invoice, settings, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }
 

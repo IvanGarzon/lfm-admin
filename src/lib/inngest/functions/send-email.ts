@@ -73,12 +73,12 @@ export const sendEmailFunction = inngest.createFunction(
           if (!isInvoiceEmailType(email.emailType)) {
             throw new Error(`Invalid email type for invoice: ${email.emailType}`);
           }
-          return await processInvoiceEmailHandler(email.entityId, email.emailType);
+          return await processInvoiceEmailHandler(email.entityId, email.emailType, email.tenantId);
         } else if (email.entityType === 'quote') {
           if (!isQuoteEmailType(email.emailType)) {
             throw new Error(`Invalid email type for quote: ${email.emailType}`);
           }
-          return await processQuoteEmailHandler(email.entityId, email.emailType);
+          return await processQuoteEmailHandler(email.entityId, email.emailType, email.tenantId);
         } else {
           throw new Error(`Unknown entity type: ${email.entityType}`);
         }
@@ -160,6 +160,7 @@ function isQuoteEmailType(type: string): type is QuoteEmailType {
 async function processInvoiceEmailHandler(
   entityId: string,
   emailType: InvoiceEmailType,
+  tenantId: string,
 ): Promise<{ emailId?: string }> {
   const typeMapping: Record<InvoiceEmailType, 'pending_notification' | 'receipt' | 'reminder'> = {
     'invoice.pending': 'pending_notification',
@@ -168,7 +169,7 @@ async function processInvoiceEmailHandler(
     'invoice.overdue': 'reminder',
   };
 
-  return await processInvoiceEmail(entityId, typeMapping[emailType]);
+  return await processInvoiceEmail(entityId, typeMapping[emailType], tenantId);
 }
 
 /**
@@ -177,6 +178,7 @@ async function processInvoiceEmailHandler(
 async function processQuoteEmailHandler(
   entityId: string,
   emailType: QuoteEmailType,
+  tenantId: string,
 ): Promise<{ emailId?: string }> {
   const typeMapping: Record<
     QuoteEmailType,
@@ -189,5 +191,5 @@ async function processQuoteEmailHandler(
     'quote.expired': 'expired',
   };
 
-  return await processQuoteEmail(entityId, typeMapping[emailType]);
+  return await processQuoteEmail(entityId, typeMapping[emailType], tenantId);
 }

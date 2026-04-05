@@ -60,6 +60,9 @@ export type EmailEntityType = z.infer<typeof EmailEntityTypeEnum>;
  * Generic email queue payload
  */
 export const QueueEmailSchema = z.object({
+  // Tenant context (required for data isolation in background jobs)
+  tenantId: z.string(),
+
   // Entity information (polymorphic)
   entityType: EmailEntityTypeEnum,
   entityId: z.string(),

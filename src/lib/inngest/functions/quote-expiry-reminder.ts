@@ -67,6 +67,7 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
       await step.run(`queue-reminder-${quote.id}`, async () => {
         try {
           await queueQuoteEmail({
+            tenantId: quote.tenantId,
             quoteId: quote.id,
             customerId: quote.customer.id,
             type: 'reminder',

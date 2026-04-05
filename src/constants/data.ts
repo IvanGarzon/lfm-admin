@@ -125,13 +125,3 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['canAccessTools'],
   },
 ];
-
-export const lasFloresAccount = {
-  bankName: 'Commonwealth Bank',
-  bsb: '063-162',
-  accountNumber: '1073 0539',
-  accountName: 'Las Flores Melbourne',
-  abn: '39586352580',
-  email: 'lasfloresmelb@gmail.com',
-  phone: '0451001507',
-};
