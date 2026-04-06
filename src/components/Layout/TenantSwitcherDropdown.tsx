@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { ChevronsUpDown, Building2, Check } from 'lucide-react';
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { useSwitchActiveTenant } from '@/features/admin/tenants/hooks/use-tenant
 import type { TenantListItem } from '@/features/admin/tenants/types';
 
 export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: string | undefined }) {
+  const router = useRouter();
   const switchTenant = useSwitchActiveTenant();
 
   const { data: result } = useQuery({
@@ -29,7 +31,13 @@ export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: str
   const activeTenant = tenants.find((t) => t.id === activeTenantId);
 
   const handleSelect = (tenantId: string | null) => {
-    switchTenant.mutate(tenantId);
+    switchTenant.mutate(tenantId, {
+      onSuccess: (result) => {
+        if (result.success) {
+          router.refresh();
+        }
+      },
+    });
   };
 
   return (

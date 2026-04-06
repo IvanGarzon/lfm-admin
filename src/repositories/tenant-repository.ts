@@ -3,6 +3,7 @@ import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseReposito
 import type {
   TenantListItem,
   TenantWithSettings,
+  TenantBranding,
   CreateTenantInput,
   UpdateTenantInput,
   UpdateTenantSettingsInput,
@@ -126,5 +127,53 @@ export class TenantRepository extends BaseRepository<Prisma.QuoteGetPayload<obje
 
   async getTenantUserCount(tenantId: string): Promise<number> {
     return this.prisma.user.count({ where: { tenantId } });
+  }
+
+  async findBranding(tenantId: string): Promise<TenantBranding | null> {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: {
+        name: true,
+        settings: {
+          select: {
+            email: true,
+            phone: true,
+            abn: true,
+            logoUrl: true,
+            website: true,
+            bankName: true,
+            bsb: true,
+            accountNumber: true,
+            accountName: true,
+            address: true,
+            city: true,
+            state: true,
+            postcode: true,
+            country: true,
+          },
+        },
+      },
+    });
+
+    if (!tenant) return null;
+
+    const s = tenant.settings;
+    return {
+      name: tenant.name,
+      email: s?.email ?? null,
+      phone: s?.phone ?? null,
+      abn: s?.abn ?? null,
+      logoUrl: s?.logoUrl ?? null,
+      website: s?.website ?? null,
+      bankName: s?.bankName ?? null,
+      bsb: s?.bsb ?? null,
+      accountNumber: s?.accountNumber ?? null,
+      accountName: s?.accountName ?? tenant.name,
+      address: s?.address ?? null,
+      city: s?.city ?? null,
+      state: s?.state ?? null,
+      postcode: s?.postcode ?? null,
+      country: s?.country ?? null,
+    };
   }
 }

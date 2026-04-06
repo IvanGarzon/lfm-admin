@@ -4,7 +4,11 @@ export const PAGE_SIZE = 20;
 export const DEFAULT_LIMIT = 5;
 export const RANGE_LIMIT = [5, 10, 20, 50];
 
-export const navItems: NavItem[] = [
+// -- Tenant nav items --------------------------------------------------------
+// Visible to all authenticated tenant users (ADMIN, MANAGER, USER).
+// For SUPER_ADMIN these are only shown after selecting an active tenant.
+
+export const tenantNavItems: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/',
@@ -118,22 +122,21 @@ export const navItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
-    title: 'Tools',
-    href: '/tools',
-    icon: 'flask',
-    shortcut: ['t', 'o'],
-    authorizeOnly: ['canAccessTools'],
-  },
-  {
     title: 'Settings',
     href: '/settings/tenant',
     icon: 'settings',
     authorizeOnly: ['canManageSettings'],
   },
+];
+
+// -- Super admin nav items ---------------------------------------------------
+// Only visible to SUPER_ADMIN. Never requires an active tenant.
+
+export const superAdminNavItems: NavItem[] = [
   {
     title: 'Admin',
     href: '#',
-    icon: 'shield',
+    icon: 'building',
     authorizeOnly: ['SUPER_ADMIN'],
     items: [
       {
@@ -148,4 +151,14 @@ export const navItems: NavItem[] = [
       },
     ],
   },
+  {
+    title: 'Tools',
+    href: '/tools',
+    icon: 'flask',
+    shortcut: ['t', 'o'],
+    authorizeOnly: ['SUPER_ADMIN'],
+  },
 ];
+
+// -- Combined (kept for any consumers that still import navItems) -------------
+export const navItems: NavItem[] = [...tenantNavItems, ...superAdminNavItems];

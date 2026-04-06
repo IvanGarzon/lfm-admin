@@ -1,13 +1,19 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import type { Session } from 'next-auth';
-import type { ActionResult } from '@/types/actions';
+import type {
+  ActionResult,
+  TenantSession,
+  SuperAdminSession,
+  AuthenticatedSession,
+  AuthenticatedHandler,
+  UnauthenticatedHandler,
+} from '@/types/actions';
 import { hasActionPermission, type PermissionKey, hasPermission } from './permissions';
 
 export const SUPER_ADMIN_TENANT_COOKIE = 'sa_active_tenant_id';
-
-// -- Cached Session Getter --------------------------------------------------
 
 /**
  * Cached session getter - memoizes auth() calls within a single request.
@@ -17,32 +23,6 @@ const getSession = cache(async (): Promise<Session | null> => {
   return auth();
 });
 
-// -- Types ------------------------------------------------------------------
-
-type AuthenticatedSession = Session & {
-  user: NonNullable<Session['user']>;
-};
-
-/**
- * A session where the user is authenticated AND belongs to a tenant.
- * SUPER_ADMIN users do not have a tenantId and cannot use this type.
- */
-type TenantSession = Session & {
-  user: NonNullable<Session['user']> & {
-    tenantId: string;
-    tenantSlug: string;
-  };
-};
-
-type AuthenticatedHandler<TInput, TOutput> = (
-  session: AuthenticatedSession,
-  input: TInput,
-) => Promise<ActionResult<TOutput>>;
-
-type UnauthenticatedHandler<TInput, TOutput> = (input: TInput) => Promise<ActionResult<TOutput>>;
-
-// -- Type Guards ------------------------------------------------------------
-
 /**
  * Type guard to check if a session has a valid user.
  * Narrows the type from Session | null to AuthenticatedSession.
@@ -50,8 +30,6 @@ type UnauthenticatedHandler<TInput, TOutput> = (input: TInput) => Promise<Action
 function isAuthenticatedSession(session: Session | null): session is AuthenticatedSession {
   return session !== null && session.user !== undefined && session.user !== null;
 }
-
-// -- Basic Auth Wrapper -----------------------------------------------------
 
 /**
  * Wraps a server action to require authentication.
@@ -235,22 +213,55 @@ export function withTenantPermission<TInput, TOutput>(
       };
     }
 
-    if (!session.user.tenantId || !session.user.tenantSlug) {
-      return {
-        success: false,
-        error: 'No tenant context found for this session',
-      };
+    if (session.user.tenantId && session.user.tenantSlug) {
+      return handler(session as TenantSession, input);
     }
 
-    return handler(session as TenantSession, input);
+    // SUPER_ADMIN has no tenantId in JWT — resolve from active tenant cookie
+    if (session.user.role === 'SUPER_ADMIN') {
+      const tenant = await resolveTenantForSuperAdmin();
+      if (!tenant) {
+        return {
+          success: false,
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
+        };
+      }
+      const enriched = {
+        ...session,
+        user: { ...session.user, tenantId: tenant.id, tenantSlug: tenant.slug },
+      } as TenantSession;
+      return handler(enriched, input);
+    }
+
+    return { success: false, error: 'No tenant context found for this session' };
   };
+}
+
+// -- Tenant Context Resolution ----------------------------------------------
+
+/**
+ * For SUPER_ADMIN users with no tenantId in their JWT, resolves tenant context
+ * from the sa_active_tenant_id cookie. Returns null if no active tenant is set.
+ */
+async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string } | null> {
+  const cookieStore = await cookies();
+  const tenantId = cookieStore.get(SUPER_ADMIN_TENANT_COOKIE)?.value;
+  if (!tenantId) return null;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { id: true, slug: true },
+  });
+
+  return tenant ?? null;
 }
 
 // -- Tenant Auth Wrapper ----------------------------------------------------
 
 /**
  * Wraps a server action to require authentication AND a valid tenant context.
- * Rejects SUPER_ADMIN users (who have no tenantId) and unauthenticated requests.
+ * For regular users, tenant context comes from the JWT.
+ * For SUPER_ADMIN, tenant context is resolved from the sa_active_tenant_id cookie.
  *
  * Use this for all actions that operate on tenant-scoped data.
  *
@@ -269,28 +280,32 @@ export function withTenant<TInput, TOutput>(
     const session = await getSession();
 
     if (!isAuthenticatedSession(session)) {
-      return {
-        success: false,
-        error: 'You must be signed in to perform this action',
-      };
+      return { success: false, error: 'You must be signed in to perform this action' };
     }
 
-    if (!session.user.tenantId || !session.user.tenantSlug) {
-      return {
-        success: false,
-        error: 'No tenant context found for this session',
-      };
+    if (session.user.tenantId && session.user.tenantSlug) {
+      return handler(session as TenantSession, input);
     }
 
-    return handler(session as TenantSession, input);
+    // SUPER_ADMIN has no tenantId in JWT — resolve from active tenant cookie
+    if (session.user.role === 'SUPER_ADMIN') {
+      const tenant = await resolveTenantForSuperAdmin();
+      if (!tenant) {
+        return {
+          success: false,
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
+        };
+      }
+      const enriched = {
+        ...session,
+        user: { ...session.user, tenantId: tenant.id, tenantSlug: tenant.slug },
+      } as TenantSession;
+      return handler(enriched, input);
+    }
+
+    return { success: false, error: 'No tenant context found for this session' };
   };
 }
-
-// -- Super Admin Wrapper ----------------------------------------------------
-
-type SuperAdminSession = AuthenticatedSession & {
-  activeTenantId: string | undefined;
-};
 
 /**
  * Wraps a server action to require SUPER_ADMIN role.
