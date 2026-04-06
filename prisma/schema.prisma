@@ -22,6 +22,63 @@ generator json {
   provider = "prisma-json-types-generator"
 }
 
+model Tenant {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  name      String
+  status    TenantStatus   @default(ACTIVE)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+
+  users                 User[]
+  settings              TenantSettings?
+  invitations           Invitation[]
+  customers             Customer[]
+  organizations         Organization[]
+  vendors               Vendor[]
+  employees             Employee[]
+  products              Product[]
+  invoices              Invoice[]
+  quotes                Quote[]
+  transactions          Transaction[]
+  recipes               Recipe[]
+  recipeGroups          RecipeGroup[]
+  recipeUnits           RecipeUnit[]
+  priceListItems        PriceListItem[]
+  transactionCategories TransactionCategory[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("tenants")
+}
+
+model TenantSettings {
+  id            String  @id @default(cuid())
+  tenantId      String  @unique @map("tenant_id")
+  tenant        Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  logoUrl       String? @map("logo_url")
+  abn           String?
+  email         String?
+  phone         String?
+  website       String?
+  bankName      String? @map("bank_name")
+  bsb           String?
+  accountNumber String? @map("account_number")
+  accountName   String? @map("account_name")
+
+  address   String?
+  city      String?
+  state     States?
+  postcode  String?
+  country   String? @default("Australia")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@map("tenant_settings")
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String  @map(name: "user_id")
@@ -59,6 +116,8 @@ model User {
   role     UserRole @default(USER)
   tenantId String?  @map("tenant_id")
   tenant   Tenant?  @relation(fields: [tenantId], references: [id])
+
+  sentInvitations Invitation[] @relation("SentInvitations")
 
   // isTwoFactorEnabled    Boolean                @default(false)
   // twoFactorConfirmation TwoFactorConfirmation?
@@ -1029,6 +1088,33 @@ enum TenantStatus {
   SUSPENDED
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+model Invitation {
+  id        String           @id @default(cuid())
+  email     String
+  token     String           @unique @default(cuid())
+  role      UserRole         @default(USER)
+  tenantId  String           @map("tenant_id")
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy String           @map("invited_by")
+  inviter   User             @relation("SentInvitations", fields: [invitedBy], references: [id])
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime         @map("expires_at") @db.Timestamptz()
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@unique([tenantId, email])
+  @@index([token])
+  @@index([tenantId])
+  @@map("invitations")
+}
+
 enum ScheduleType {
   CRON
   EVENT
@@ -1088,60 +1174,3 @@ enum RoundingMethod {
   PSYCHOLOGICAL_99
   PSYCHOLOGICAL_95
 }
-
-model Tenant {
-  id        String         @id @default(cuid())
-  slug      String         @unique
-  name      String
-  status    TenantStatus   @default(ACTIVE)
-  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
-
-  users                 User[]
-  settings              TenantSettings?
-  customers             Customer[]
-  organizations         Organization[]
-  vendors               Vendor[]
-  employees             Employee[]
-  products              Product[]
-  invoices              Invoice[]
-  quotes                Quote[]
-  transactions          Transaction[]
-  recipes               Recipe[]
-  recipeGroups          RecipeGroup[]
-  recipeUnits           RecipeUnit[]
-  priceListItems        PriceListItem[]
-  transactionCategories TransactionCategory[]
-
-  @@index([slug])
-  @@index([status])
-  @@map("tenants")
-}
-
-model TenantSettings {
-  id            String  @id @default(cuid())
-  tenantId      String  @unique @map("tenant_id")
-  tenant        Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  logoUrl       String? @map("logo_url")
-  abn           String?
-  email         String?
-  phone         String?
-  website       String?
-  bankName      String? @map("bank_name")
-  bsb           String?
-  accountNumber String? @map("account_number")
-  accountName   String? @map("account_name")
-
-  address   String?
-  city      String?
-  state     States?
-  postcode  String?
-  country   String? @default("Australia")
-
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
-
-  @@map("tenant_settings")
-}
-

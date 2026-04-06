@@ -1,8 +1,11 @@
 import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { auth } from '@/auth';
 import type { Session } from 'next-auth';
 import type { ActionResult } from '@/types/actions';
 import { hasActionPermission, type PermissionKey, hasPermission } from './permissions';
+
+export const SUPER_ADMIN_TENANT_COOKIE = 'sa_active_tenant_id';
 
 // -- Cached Session Getter --------------------------------------------------
 
@@ -280,6 +283,45 @@ export function withTenant<TInput, TOutput>(
     }
 
     return handler(session as TenantSession, input);
+  };
+}
+
+// -- Super Admin Wrapper ----------------------------------------------------
+
+type SuperAdminSession = AuthenticatedSession & {
+  activeTenantId: string | undefined;
+};
+
+/**
+ * Wraps a server action to require SUPER_ADMIN role.
+ * Reads the `sa_active_tenant_id` cookie and injects `activeTenantId` into the session.
+ *
+ * @example
+ * export const getAdminTenants = withSuperAdmin<void, TenantListItem[]>(
+ *   async (session) => {
+ *     const tenants = await tenantRepo.findAll();
+ *     return { success: true, data: tenants };
+ *   }
+ * );
+ */
+export function withSuperAdmin<TInput, TOutput>(
+  handler: (session: SuperAdminSession, input: TInput) => Promise<ActionResult<TOutput>>,
+): UnauthenticatedHandler<TInput, TOutput> {
+  return async (input: TInput): Promise<ActionResult<TOutput>> => {
+    const session = await getSession();
+
+    if (!isAuthenticatedSession(session)) {
+      return { success: false, error: 'You must be signed in to perform this action' };
+    }
+
+    if (session.user.role !== 'SUPER_ADMIN') {
+      return { success: false, error: 'You do not have permission to perform this action' };
+    }
+
+    const cookieStore = await cookies();
+    const activeTenantId = cookieStore.get(SUPER_ADMIN_TENANT_COOKIE)?.value;
+
+    return handler({ ...session, activeTenantId }, input);
   };
 }
 

@@ -68,27 +68,44 @@ export const getTenantBranding = cache(async (): Promise<TenantBranding | null> 
   });
 
   if (!tenant) {
-    return null;
+    // return null;
+    return {
+      name: '',
+      email: null,
+      phone: null,
+      abn: null,
+      logoUrl: null,
+      website: null,
+      bankName: null,
+      bsb: null,
+      accountNumber: null,
+      accountName: null,
+      address: null,
+      city: null,
+      state: null,
+      postcode: null,
+      country: null,
+    };
   }
 
-  const s = tenant.settings;
+  const settings = tenant.settings;
 
   return {
     name: tenant.name,
-    email: s?.email ?? null,
-    phone: s?.phone ?? null,
-    abn: s?.abn ?? null,
-    logoUrl: s?.logoUrl ?? null,
-    website: s?.website ?? null,
-    bankName: s?.bankName ?? null,
-    bsb: s?.bsb ?? null,
-    accountNumber: s?.accountNumber ?? null,
-    accountName: s?.accountName ?? tenant.name,
-    address: s?.address ?? null,
-    city: s?.city ?? null,
-    state: s?.state ?? null,
-    postcode: s?.postcode ?? null,
-    country: s?.country ?? null,
+    email: settings?.email ?? null,
+    phone: settings?.phone ?? null,
+    abn: settings?.abn ?? null,
+    logoUrl: settings?.logoUrl ?? null,
+    website: settings?.website ?? null,
+    bankName: settings?.bankName ?? null,
+    bsb: settings?.bsb ?? null,
+    accountNumber: settings?.accountNumber ?? null,
+    accountName: settings?.accountName ?? tenant.name,
+    address: settings?.address ?? null,
+    city: settings?.city ?? null,
+    state: settings?.state ?? null,
+    postcode: settings?.postcode ?? null,
+    country: settings?.country ?? null,
   };
 });
 
@@ -128,50 +145,52 @@ export async function getTenantBrandingById(tenantId: string): Promise<TenantBra
     return null;
   }
 
-  const s = tenant.settings;
+  const settings = tenant.settings;
 
   return {
     name: tenant.name,
-    email: s?.email ?? null,
-    phone: s?.phone ?? null,
-    abn: s?.abn ?? null,
-    logoUrl: s?.logoUrl ?? null,
-    website: s?.website ?? null,
-    bankName: s?.bankName ?? null,
-    bsb: s?.bsb ?? null,
-    accountNumber: s?.accountNumber ?? null,
-    accountName: s?.accountName ?? tenant.name,
-    address: s?.address ?? null,
-    city: s?.city ?? null,
-    state: s?.state ?? null,
-    postcode: s?.postcode ?? null,
-    country: s?.country ?? null,
+    email: settings?.email ?? null,
+    phone: settings?.phone ?? null,
+    abn: settings?.abn ?? null,
+    logoUrl: settings?.logoUrl ?? null,
+    website: settings?.website ?? null,
+    bankName: settings?.bankName ?? null,
+    bsb: settings?.bsb ?? null,
+    accountNumber: settings?.accountNumber ?? null,
+    accountName: settings?.accountName ?? tenant.name,
+    address: settings?.address ?? null,
+    city: settings?.city ?? null,
+    state: settings?.state ?? null,
+    postcode: settings?.postcode ?? null,
+    country: settings?.country ?? null,
   };
 }
 
 // -- Fallback ----------------------------------------------------------------
 
 /**
- * Empty branding used as a safe fallback when tenant settings are unavailable
+ * Returns empty branding as a safe fallback when tenant settings are unavailable
  * (e.g. in Inngest background jobs that run outside a request context).
  */
-export const emptyBranding: TenantBranding = {
-  name: '',
-  email: null,
-  phone: null,
-  abn: null,
-  logoUrl: null,
-  website: null,
-  bankName: null,
-  bsb: null,
-  accountNumber: null,
-  accountName: null,
-  address: null,
-  city: null,
-  state: null,
-  postcode: null,
-  country: null,
-};
+export async function getEmptyBranding(): Promise<TenantBranding> {
+  return {
+    name: '',
+    email: null,
+    phone: null,
+    abn: null,
+    logoUrl: null,
+    website: null,
+    bankName: null,
+    bsb: null,
+    accountNumber: null,
+    accountName: null,
+    address: null,
+    city: null,
+    state: null,
+    postcode: null,
+    country: null,
+  };
+}
 
 // -- Server action wrapper ---------------------------------------------------
 

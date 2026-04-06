@@ -76,13 +76,21 @@ export default auth(async (req: AuthenticatedRequest) => {
     return NextResponse.redirect(signinUrl);
   }
 
-  // -- 6. Root Redirect ------------------------------------------------------
+  // -- 6. Admin Route Guard --------------------------------------------------
+
+  if (pathname.startsWith('/admin')) {
+    if (!req.auth?.user || req.auth.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.redirect(new URL('/overview', nextUrl));
+    }
+  }
+
+  // -- 7. Root Redirect ------------------------------------------------------
 
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/overview', nextUrl));
   }
 
-  // -- 7. Continue to Route --------------------------------------------------
+  // -- 8. Continue to Route --------------------------------------------------
 
   return NextResponse.next();
 });

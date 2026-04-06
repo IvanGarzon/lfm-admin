@@ -1,7 +1,10 @@
-import { Prisma, User, PrismaClient } from '@/prisma/client';
+import { Prisma, User, UserRole, PrismaClient } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import type { CreateAccountData } from './account-repository';
+import type { UserListItem, CreateUserForTenantInput } from '@/features/admin/users/types';
+
+export type { UserListItem, CreateUserForTenantInput };
 
 export interface CreateUserData {
   firstName: string;
@@ -24,24 +27,12 @@ export class UserRepository extends BaseRepository<User> {
     return this.prismaClient.user as unknown as ModelDelegateOperations<User>;
   }
 
-  /**
-   * Locates a single user record by their matching email address.
-   * @param email - The email string to query
-   * @returns A promise that resolves to the user object if found, or null
-   */
   async getUserByEmail(email: string): Promise<User | null> {
     return await this.prismaClient.user.findUnique({
       where: { email },
     });
   }
 
-  /**
-   * Creates a new user and their OAuth account atomically in a transaction.
-   * This ensures data consistency when registering via OAuth providers.
-   * @param userData - User profile data from OAuth provider
-   * @param accountData - OAuth account credentials and metadata
-   * @returns The newly created user
-   */
   async createUserWithAccount(
     userData: CreateUserData,
     accountData: CreateAccountData,
@@ -75,14 +66,6 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  /**
-   * Creates or updates a user by email.
-   * If user exists, updates their information. If not, creates a new user.
-   * @param email - The email to search for
-   * @param updateData - Data to update if user exists
-   * @param createData - Data to create if user doesn't exist
-   * @returns The created or updated user
-   */
   async upsertByEmail(
     email: string,
     updateData: {
@@ -104,12 +87,6 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  /**
-   * Finds a user by email with specific fields selected.
-   * @param email - The email to search for
-   * @param select - Optional fields to select
-   * @returns The user with selected fields or null
-   */
   async getUserByEmailWithSelect<T extends { id?: boolean; role?: boolean }>(
     email: string,
     select: T,
@@ -119,4 +96,59 @@ export class UserRepository extends BaseRepository<User> {
       select,
     }) as Promise<Pick<User, keyof T extends keyof User ? keyof T : never> | null>;
   }
+
+  async findByTenant(tenantId: string): Promise<UserListItem[]> {
+    return this.prismaClient.user.findMany({
+      where: { tenantId },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        tenantId: true,
+        tenant: { select: { name: true } },
+      },
+    });
+  }
+
+  async findAllWithTenant(): Promise<UserListItem[]> {
+    return this.prismaClient.user.findMany({
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        tenantId: true,
+        tenant: { select: { name: true } },
+      },
+    });
+  }
+
+  async createForTenant(data: CreateUserForTenantInput): Promise<User> {
+    return this.prismaClient.user.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        role: data.role,
+        tenantId: data.tenantId,
+        password: data.password,
+      },
+    });
+  }
+
+  async updateRole(id: string, role: UserRole): Promise<User> {
+    return this.prismaClient.user.update({ where: { id }, data: { role } });
+  }
+
+  async reassignTenant(id: string, tenantId: string): Promise<User> {
+    return this.prismaClient.user.update({ where: { id }, data: { tenantId } });
+  }
 }
+
+// Singleton instance
+export const userRepo = new UserRepository(prisma);

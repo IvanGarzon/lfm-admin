@@ -16,7 +16,7 @@ import { isAfter, differenceInDays, startOfToday } from 'date-fns';
 import { QuoteStatus } from '@/prisma/client';
 import { generatePdfBuffer } from '@/lib/pdf';
 import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
-import { getTenantBranding, emptyBranding } from '@/actions/tenant/queries';
+import { getTenantBranding, getEmptyBranding } from '@/actions/tenant/queries';
 
 /**
  * Get human-readable label for a quote status
@@ -332,7 +332,7 @@ export async function generateQuotePDF(quote: QuoteWithDetails): Promise<Buffer>
   const quoteTemplate = await import('@/templates/quote-template');
   const { absoluteUrl } = await import('@/lib/utils');
   const logoUrl = absoluteUrl('/static/logo-green-800.png');
-  const settings = (await getTenantBranding()) ?? emptyBranding;
+  const settings = (await getTenantBranding()) ?? (await getEmptyBranding());
   const pdfDoc = quoteTemplate.QuoteDocument({ quote, settings, logoUrl });
   return generatePdfBuffer(pdfDoc);
 }

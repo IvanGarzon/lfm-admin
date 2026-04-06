@@ -13,6 +13,7 @@ import { ReceiptEmail } from './receipt-email';
 import { ReminderEmail } from './reminder-email';
 import { QuoteEmail } from './quote-email';
 import { QuoteFollowUpEmail } from './quote-followup-email';
+import { InvitationEmail } from './invitation-email';
 
 // Export types for template props
 export type { InvoiceEmail as InvoiceEmailComponent } from './invoice-email';
@@ -20,6 +21,7 @@ export type { ReceiptEmail as ReceiptEmailComponent } from './receipt-email';
 export type { ReminderEmail as ReminderEmailComponent } from './reminder-email';
 export type { QuoteEmail as QuoteEmailComponent } from './quote-email';
 export type { QuoteFollowUpEmail as QuoteFollowUpEmailComponent } from './quote-followup-email';
+export type { InvitationEmail as InvitationEmailComponent } from './invitation-email';
 
 /**
  * Registry of all available email templates
@@ -30,6 +32,7 @@ const emailTemplates = {
   reminder: ReminderEmail,
   quote: QuoteEmail,
   'quote-followup': QuoteFollowUpEmail,
+  invitation: InvitationEmail,
 } as const;
 
 /**

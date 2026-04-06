@@ -124,4 +124,28 @@ export const navItems: NavItem[] = [
     shortcut: ['t', 'o'],
     authorizeOnly: ['canAccessTools'],
   },
+  {
+    title: 'Settings',
+    href: '/settings/tenant',
+    icon: 'settings',
+    authorizeOnly: ['canManageSettings'],
+  },
+  {
+    title: 'Admin',
+    href: '#',
+    icon: 'shield',
+    authorizeOnly: ['SUPER_ADMIN'],
+    items: [
+      {
+        title: 'Tenants',
+        href: '/admin/tenants',
+        authorizeOnly: ['SUPER_ADMIN'],
+      },
+      {
+        title: 'All Users',
+        href: '/admin/users',
+        authorizeOnly: ['SUPER_ADMIN'],
+      },
+    ],
+  },
 ];

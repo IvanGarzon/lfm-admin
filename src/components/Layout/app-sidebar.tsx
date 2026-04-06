@@ -43,72 +43,94 @@ import { useSession } from 'next-auth/react';
 import { navItems } from '@/constants/data';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { useTenantBranding } from '@/components/providers/TenantBrandingProvider';
+import { TenantSwitcherDropdown } from '@/components/Layout/TenantSwitcherDropdown';
+import { hasPermission } from '@/lib/permissions';
+import type { PermissionKey } from '@/lib/permissions';
 
-export function AppSidebar() {
+export function AppSidebar({ activeTenantId }: { activeTenantId?: string }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const branding = useTenantBranding();
+  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+
+  const isVisible = (authorizeOnly?: string[]) => {
+    if (!authorizeOnly || authorizeOnly.includes('*')) return true;
+    if (authorizeOnly.includes('SUPER_ADMIN')) return isSuperAdmin;
+    return authorizeOnly.some((p) => hasPermission(session?.user, p as PermissionKey));
+  };
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Box className="flex gap-2 py-2 text-sidebar-accent-foreground ">
-          <Box className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <GalleryVerticalEnd className="size-4" />
+        {isSuperAdmin ? (
+          <TenantSwitcherDropdown activeTenantId={activeTenantId} />
+        ) : (
+          <Box className="flex gap-2 py-2 text-sidebar-accent-foreground">
+            <Box className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <GalleryVerticalEnd className="size-4" />
+            </Box>
+            <Box className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">{branding?.name ?? ''}</span>
+            </Box>
           </Box>
-          <Box className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{branding?.name ?? ''}</span>
-          </Box>
-        </Box>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => {
-              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
-              return item?.items && item?.items?.length > 0 ? (
-                <Collapsible
-                  key={item.title}
-                  asChild
-                  defaultOpen={pathname === item.href}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title} isActive={pathname === item.href}>
-                        {item.icon && <Icon />}
+            {navItems
+              .filter((item) => isVisible(item.authorizeOnly))
+              .map((item) => {
+                const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                return item?.items && item?.items?.length > 0 ? (
+                  <Collapsible
+                    key={item.title}
+                    asChild
+                    defaultOpen={pathname === item.href}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip={item.title} isActive={pathname === item.href}>
+                          {item.icon && <Icon />}
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items
+                            ?.filter((sub) => isVisible(sub.authorizeOnly))
+                            .map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                  <Link href={subItem.href}>
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={pathname === item.href}
+                    >
+                      <Link href={item.href}>
+                        <Icon />
                         <span>{item.title}</span>
-                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                              <Link href={subItem.href}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} isActive={pathname === item.href}>
-                    <Link href={item.href}>
-                      <Icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+                );
+              })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

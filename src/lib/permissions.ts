@@ -73,6 +73,14 @@ export const PERMISSIONS = {
   canAccessTools: {
     label: 'Can access developer tools',
   },
+
+  // Tenant Management Permissions
+  canManageSettings: {
+    label: 'Can manage tenant settings',
+  },
+  canManageUsers: {
+    label: 'Can invite and manage users',
+  },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -218,7 +226,7 @@ const MANAGER: RolePolicy = {
  * Same as MANAGER plus deletion permissions
  */
 const ADMIN: RolePolicy = {
-  allow: [...MANAGER.allow, 'canAccessTools'],
+  allow: [...MANAGER.allow, 'canAccessTools', 'canManageSettings', 'canManageUsers'],
   deny: [],
   actions: {
     allow: [
