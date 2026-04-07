@@ -21,11 +21,11 @@ const PRICE_LIST_PATH = '/inventory/price-list';
  */
 export const createPriceListItem = withTenantPermission<CreatePriceListItemInput, { id: string }>(
   'canManagePriceList',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = CreatePriceListItemSchema.parse(data);
 
-      const result = await priceListRepo.createItem(validatedData, session.user.tenantId);
+      const result = await priceListRepo.createItem(validatedData, ctx.tenantId);
       revalidatePath(PRICE_LIST_PATH);
 
       return { success: true, data: result };

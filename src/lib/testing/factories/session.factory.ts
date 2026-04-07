@@ -6,7 +6,7 @@
 
 import { testIds } from '../id-generator';
 
-type UserRole = 'USER' | 'MANAGER' | 'ADMIN';
+type UserRole = 'USER' | 'MANAGER' | 'ADMIN' | 'SUPER_ADMIN';
 
 interface MockUser {
   id: string;
@@ -14,6 +14,8 @@ interface MockUser {
   firstName?: string;
   lastName?: string;
   role: UserRole;
+  tenantId: string;
+  tenantSlug: string;
 }
 
 interface MockSession {
@@ -28,6 +30,8 @@ interface CreateSessionOptions {
   email?: string;
   firstName?: string;
   lastName?: string;
+  tenantId?: string;
+  tenantSlug?: string;
 }
 
 /**
@@ -44,6 +48,8 @@ export function createMockSession(options: CreateSessionOptions = {}): MockSessi
     email = `test-${role.toLowerCase()}@example.com`,
     firstName = 'Test',
     lastName = role.charAt(0) + role.slice(1).toLowerCase(),
+    tenantId = testIds.tenant(),
+    tenantSlug = 'test-tenant',
   } = options;
 
   return {
@@ -54,6 +60,8 @@ export function createMockSession(options: CreateSessionOptions = {}): MockSessi
       firstName,
       lastName,
       role,
+      tenantId,
+      tenantSlug,
     },
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
   };

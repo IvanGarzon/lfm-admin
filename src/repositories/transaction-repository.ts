@@ -306,6 +306,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async updateTransaction(
     id: string,
+    tenantId: string,
     data: Partial<CreateTransactionInput>,
   ): Promise<TransactionListItem | null> {
     const updatedTransition = await this.prisma.$transaction(async (tx) => {
@@ -316,7 +317,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       }
 
       const transaction = await tx.transaction.update({
-        where: { id },
+        where: { id, tenantId },
         data: {
           type: data.type,
           date: data.date,
@@ -360,7 +361,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedTransition.id);
+    return await this.findByIdWithDetails(updatedTransition.id, tenantId);
   }
 
   /**
@@ -368,30 +369,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @param id - The ID of the transaction to remove
    * @returns A promise that resolves to the deleted transaction details
    */
-  async deleteTransaction(id: string): Promise<TransactionListItem | null> {
-    const transaction = await this.prisma.transaction.delete({
-      where: { id },
-      include: {
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-        invoice: {
-          include: {
-            customer: true,
-          },
-        },
-        vendor: true,
-        attachments: true,
-      },
+  async deleteTransaction(id: string, tenantId: string): Promise<{ id: string }> {
+    const deleted = await this.prisma.transaction.delete({
+      where: { id, tenantId },
+      select: { id: true },
     });
 
-    if (!transaction) {
-      return null;
-    }
-
-    return await this.findByIdWithDetails(transaction.id);
+    return deleted;
   }
 
   /**
@@ -579,11 +563,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * Retrieves all active transaction categories ordered by name.
    * @returns A promise resolving to an array of active categories.
    */
-  async getActiveCategories(): Promise<
-    Array<{ id: string; name: string; description: string | null }>
-  > {
+  async getActiveCategories(
+    tenantId: string,
+  ): Promise<Array<{ id: string; name: string; description: string | null }>> {
     return this.prisma.transactionCategory.findMany({
-      where: { isActive: true },
+      where: { tenantId, isActive: true },
       select: { id: true, name: true, description: true },
       orderBy: { name: 'asc' },
     });

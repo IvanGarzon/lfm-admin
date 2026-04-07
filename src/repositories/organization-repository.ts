@@ -6,6 +6,7 @@ import type {
   OrganizationPagination,
   OrganizationFilters,
 } from '@/features/crm/organizations/types';
+import { OrganizationStatus } from '@/prisma/client';
 import { getPaginationMetadata } from '@/lib/utils';
 
 /**
@@ -41,7 +42,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param params.sort - Sorting criteria (supports custom sorting by metadata like customer count)
    * @returns Paginated results containing organization list items and metadata
    */
-  async searchAndPaginate(
+  async searchOrganizations(
     params: OrganizationFilters,
     tenantId: string,
   ): Promise<OrganizationPagination> {
@@ -154,7 +155,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param id - The organization ID
    * @returns Organization details or null if not found
    */
-  async findByIdWithDetails(id: string, tenantId: string): Promise<OrganizationListItem | null> {
+  async findOrganizationById(id: string, tenantId: string): Promise<OrganizationListItem | null> {
     const organization = await this.prisma.organization.findUnique({
       where: { id, tenantId },
       select: {
@@ -210,17 +211,34 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * Useful for population of dropdowns and searchable lists.
    * @returns Array of organization objects (id and name)
    */
-  async findAllForSelection(tenantId: string) {
-    return this.prisma.organization.findMany({
-      where: { tenantId },
+  async findActiveOrganizations(tenantId: string): Promise<OrganizationListItem[]> {
+    const rows = await this.prisma.organization.findMany({
+      where: { tenantId, deletedAt: null, status: OrganizationStatus.ACTIVE },
       select: {
         id: true,
         name: true,
+        address: true,
+        city: true,
+        state: true,
+        postcode: true,
+        country: true,
+        phone: true,
+        email: true,
+        website: true,
+        abn: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+        _count: { select: { customers: true } },
       },
-      orderBy: {
-        name: 'asc',
-      },
+      orderBy: { name: 'asc' },
     });
+
+    return rows.map((row) => ({
+      ...row,
+      customersCount: row._count.customers,
+    }));
   }
 
   /**
@@ -228,7 +246,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param name - The organization name to search for
    * @returns The organization object or null
    */
-  async findByName(name: string, tenantId: string) {
+  async findOrganizationByName(name: string, tenantId: string) {
     return this.prisma.organization.findFirst({
       where: {
         tenantId,
@@ -270,8 +288,8 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * @param name - The organization name
    * @returns The existing or newly created organization
    */
-  async findOrCreate(name: string, tenantId: string) {
-    const existing = await this.findByName(name, tenantId);
+  async findOrCreateOrganization(name: string, tenantId: string) {
+    const existing = await this.findOrganizationByName(name, tenantId);
     if (existing) {
       return existing;
     }
@@ -284,15 +302,17 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   /**
    * Updates an existing organization record.
    * @param id - The ID of the organization to update
+   * @param tenantId - The ID of the tenant
    * @param data - The updated organization data
    * @returns The updated organization with detailed fields or null if update failed
    */
   async updateOrganization(
     id: string,
+    tenantId: string,
     data: UpdateOrganizationInput,
   ): Promise<OrganizationListItem | null> {
     const updatedOrganization = await this.prisma.organization.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         name: data.name,
         address: data.address,
@@ -312,18 +332,19 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedOrganization.id);
+    return await this.findOrganizationById(updatedOrganization.id, tenantId);
   }
 
   /**
    * Permanently removes an organization record from the database.
    * @param id - The ID of the organization to delete
+   * @param tenantId - The ID of the tenant
    * @returns The deleted organization (Prisma record)
    * @throws Will throw if there are foreign key constraint violations (e.g., related customers)
    */
-  async deleteOrganization(id: string) {
+  async deleteOrganization(id: string, tenantId: string) {
     return this.prisma.organization.delete({
-      where: { id },
+      where: { id, tenantId },
     });
   }
 }

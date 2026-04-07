@@ -25,13 +25,10 @@ const transactionRepo = new TransactionRepository(prisma);
  */
 export const createTransaction = withTenantPermission<CreateTransactionInput, TransactionListItem>(
   'canManageTransactions',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = CreateTransactionSchema.parse(data);
-      const transaction = await transactionRepo.createTransaction(
-        validatedData,
-        session.user.tenantId,
-      );
+      const transaction = await transactionRepo.createTransaction(validatedData, ctx.tenantId);
 
       logger.info('Transaction created', {
         context: 'createTransaction',
@@ -57,15 +54,19 @@ export const createTransaction = withTenantPermission<CreateTransactionInput, Tr
  */
 export const updateTransaction = withTenantPermission<UpdateTransactionInput, { id: string }>(
   'canManageTransactions',
-  async (_session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateTransactionSchema.parse(data);
-      const existing = await transactionRepo.findById(validatedData.id);
+      const existing = await transactionRepo.findByIdWithDetails(validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Transaction not found' };
       }
 
-      const transaction = await transactionRepo.updateTransaction(validatedData.id, validatedData);
+      const transaction = await transactionRepo.updateTransaction(
+        validatedData.id,
+        ctx.tenantId,
+        validatedData,
+      );
       if (!transaction) {
         return { success: false, error: 'Failed to update transaction' };
       }
@@ -92,14 +93,14 @@ export const updateTransaction = withTenantPermission<UpdateTransactionInput, { 
  */
 export const deleteTransaction = withTenantPermission<string, { success: true }>(
   'canManageTransactions',
-  async (_session, id) => {
+  async (ctx, id) => {
     try {
-      const existing = await transactionRepo.findById(id);
+      const existing = await transactionRepo.findByIdWithDetails(id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Transaction not found' };
       }
 
-      await transactionRepo.deleteTransaction(id);
+      await transactionRepo.deleteTransaction(id, ctx.tenantId);
 
       logger.info('Transaction deleted', {
         context: 'deleteTransaction',
@@ -123,7 +124,7 @@ export const deleteTransaction = withTenantPermission<string, { success: true }>
 export const createTransactionCategory = withTenantPermission<
   string,
   { id: string; name: string; description: string | null }
->('canManageTransactions', async (session, name) => {
+>('canManageTransactions', async (ctx, name) => {
   try {
     const schema = z
       .string()
@@ -132,10 +133,7 @@ export const createTransactionCategory = withTenantPermission<
       .max(50, 'Category name is too long');
     const validatedName = schema.parse(name);
 
-    const category = await transactionRepo.findOrCreateCategory(
-      validatedName,
-      session.user.tenantId,
-    );
+    const category = await transactionRepo.findOrCreateCategory(validatedName, ctx.tenantId);
 
     logger.info('Transaction category created', {
       context: 'createTransactionCategory',
@@ -159,7 +157,7 @@ export const createTransactionCategory = withTenantPermission<
 export const uploadTransactionAttachment = withTenantPermission<
   FormData,
   { id: string; fileName: string; fileSize: number; mimeType: string; s3Url: string }
->('canManageTransactions', async (session, formData) => {
+>('canManageTransactions', async (ctx, formData) => {
   try {
     const { uploadFileToS3 } = await import('@/lib/s3');
 
@@ -195,7 +193,7 @@ export const uploadTransactionAttachment = withTenantPermission<
       mimeType: file.type,
       s3Key,
       s3Url,
-      uploadedBy: session.user.id,
+      uploadedBy: ctx.userId,
     });
 
     logger.info('Transaction attachment uploaded', {

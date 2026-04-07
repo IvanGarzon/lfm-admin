@@ -45,3 +45,4 @@ prisma/zod/*
 localstack-data/
 
 *storybook.log
+e2e/.auth/

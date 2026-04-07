@@ -33,14 +33,14 @@ const emailAuditRepo = new EmailAuditRepository(prisma);
 export const createInvoice = withTenantPermission<
   CreateInvoiceInput,
   { id: string; invoiceNumber: string }
->('canManageInvoices', async (session, data) => {
+>('canManageInvoices', async (ctx, data) => {
   try {
     const validatedData = CreateInvoiceSchema.parse(data);
 
     const invoice = await invoiceRepo.createInvoiceWithItems(
       validatedData,
-      session.user.tenantId,
-      session.user.id,
+      ctx.tenantId,
+      ctx.userId,
     );
 
     revalidatePath('/finances/invoices');
@@ -62,7 +62,7 @@ export const createInvoice = withTenantPermission<
  */
 export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: string }>(
   'canManageInvoices',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateInvoiceSchema.parse(data);
       const existing = await invoiceRepo.findById(validatedData.id);
@@ -94,10 +94,10 @@ export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: stri
  */
 export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInput, { id: string }>(
   'canManageInvoices',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedInvoice = MarkInvoiceAsPendingSchema.parse(data);
-      const invoice = await invoiceRepo.markAsPending(validatedInvoice.id, session.user.id);
+      const invoice = await invoiceRepo.markAsPending(validatedInvoice.id, ctx.userId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -109,7 +109,7 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
 
         try {
           await queueInvoiceEmail({
-            tenantId: session.user.tenantId,
+            tenantId: ctx.tenantId,
             invoiceId: invoice.id,
             customerId: invoice.customer.id,
             type: 'pending',
@@ -162,9 +162,9 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
  */
 export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.markAsDraft(id, session.user.id);
+      const invoice = await invoiceRepo.markAsDraft(id, ctx.userId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -188,7 +188,7 @@ export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
 export const recordPayment = withTenantPermission<
   RecordPaymentInput,
   { id: string; status: string; receiptNumber?: string | null }
->('canRecordPayments', async (session, data) => {
+>('canRecordPayments', async (ctx, data) => {
   try {
     const validatedData = RecordPaymentSchema.parse(data);
 
@@ -198,7 +198,7 @@ export const recordPayment = withTenantPermission<
       validatedData.paymentMethod,
       validatedData.paidDate,
       validatedData.notes,
-      session.user.id,
+      ctx.userId,
     );
 
     if (!invoice) {
@@ -229,7 +229,7 @@ export const recordPayment = withTenantPermission<
   } catch (error) {
     return handleActionError(error, 'Failed to record payment', {
       action: 'recordPayment',
-      userId: session.user.id,
+      userId: ctx.userId,
       invoiceId: data.id,
       amount: data.amount,
     });
@@ -244,14 +244,14 @@ export const recordPayment = withTenantPermission<
  */
 export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: string }>(
   'canManageInvoices',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = CancelInvoiceSchema.parse(data);
 
       const invoice = await invoiceRepo.cancelInvoice(
         validatedData.id,
         validatedData.cancelReason,
-        session.user.id,
+        ctx.userId,
       );
 
       if (!invoice) {
@@ -275,10 +275,10 @@ export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: stri
  */
 export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       // Get full invoice details
-      let invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+      let invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -301,7 +301,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
         await invoiceRepo.updateReceiptNumber(id, receiptNumber);
 
         // Refetch invoice with receipt number
-        const updatedInvoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+        const updatedInvoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
         if (!updatedInvoice) {
           return { success: false, error: 'Failed to update invoice' };
         }
@@ -314,7 +314,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
 
       try {
         await queueInvoiceEmail({
-          tenantId: session.user.tenantId,
+          tenantId: ctx.tenantId,
           invoiceId: invoice.id,
           customerId: invoice.customer.id,
           type: 'receipt',
@@ -377,9 +377,9 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
     failureCount: number;
     results: { id: string; success: boolean; error?: string }[];
   }
->('canManageInvoices', async (session, data) => {
+>('canManageInvoices', async (ctx, data) => {
   try {
-    const results = await invoiceRepo.bulkUpdateStatus(data.ids, data.status, session.user.id);
+    const results = await invoiceRepo.bulkUpdateStatus(data.ids, data.status, ctx.userId);
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -406,10 +406,10 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
  */
 export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       // Get full invoice details
-      const invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -462,7 +462,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
 
       try {
         await queueInvoiceEmail({
-          tenantId: session.user.tenantId,
+          tenantId: ctx.tenantId,
           invoiceId: invoice.id,
           customerId: invoice.customer.id,
           type: 'reminder',
@@ -530,7 +530,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
  */
 export const deleteInvoice = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const success = await invoiceRepo.deleteInvoice(id);
 
@@ -556,7 +556,7 @@ export const deleteInvoice = withTenantPermission<string, { id: string }>(
  */
 export const duplicateInvoice = withTenantPermission<string, { id: string; invoiceNumber: string }>(
   'canManageInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const result = await invoiceRepo.duplicate(id);
 

@@ -91,7 +91,7 @@ export function QuoteDrawer({
 
   const createQuote = useCreateQuote();
   const updateQuote = useUpdateQuote();
-  const markAsAccepted = useMarkQuoteAsAccepted();
+  const markQuoteAsAccepted = useMarkQuoteAsAccepted();
   const markAsSent = useMarkQuoteAsSent();
   const createVersion = useCreateQuoteVersion();
   const downloadPdf = useDownloadQuotePdf();
@@ -178,8 +178,8 @@ export function QuoteDrawer({
       return;
     }
 
-    markAsAccepted.mutate({ id: quote.id });
-  }, [quote, markAsAccepted]);
+    markQuoteAsAccepted.mutate({ id: quote.id });
+  }, [quote, markQuoteAsAccepted]);
 
   const handleReject = useCallback(() => {
     if (!quote) return;

@@ -1,7 +1,7 @@
 'use server';
 
-import { auth } from '@/auth';
 import { RecipeGroupRepository } from '@/repositories/recipe-group-repository';
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import {
@@ -11,22 +11,22 @@ import {
   type UpdateRecipeGroupInput,
 } from '@/schemas/recipe-groups';
 import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
-import type { ActionResult } from '@/types/actions';
 import { revalidatePath } from 'next/cache';
-import { requirePermission } from '@/lib/permissions';
 
-const recipeGroupRepo = new RecipeGroupRepository();
+const recipeGroupRepo = new RecipeGroupRepository(prisma);
 
-/**
- * Creates a new recipe group with its associated recipes.
- */
+type UpdateRecipeGroupActionInput = {
+  id: string;
+  data: UpdateRecipeGroupInput;
+};
+
 export const createRecipeGroup = withTenantPermission<CreateRecipeGroupInput, RecipeGroupListItem>(
   'canManageRecipes',
-  async (session, input) => {
+  async (ctx, input) => {
     try {
       const validatedInput = createRecipeGroupSchema.parse(input);
 
-      const recipeGroup = await recipeGroupRepo.create(validatedInput, session.user.tenantId);
+      const recipeGroup = await recipeGroupRepo.createRecipeGroup(validatedInput, ctx.tenantId);
 
       revalidatePath('/finances/recipe-groups');
 
@@ -37,6 +37,7 @@ export const createRecipeGroup = withTenantPermission<CreateRecipeGroupInput, Re
           name: recipeGroup.name,
           description: recipeGroup.description,
           totalCost: Number(recipeGroup.totalCost),
+          totalSellingPrice: recipeGroup.totalSellingPrice,
           itemCount: validatedInput.items.length,
           createdAt: recipeGroup.createdAt,
           updatedAt: recipeGroup.updatedAt,
@@ -48,28 +49,14 @@ export const createRecipeGroup = withTenantPermission<CreateRecipeGroupInput, Re
   },
 );
 
-/**
- * Updates an existing recipe group and its recipes.
- */
-export async function updateRecipeGroup(
-  id: string,
-  input: UpdateRecipeGroupInput,
-): Promise<ActionResult<RecipeGroupListItem>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  if (!session.user.tenantId) {
-    return { success: false, error: 'No tenant context found for this session' };
-  }
-
+export const updateRecipeGroup = withTenantPermission<
+  UpdateRecipeGroupActionInput,
+  RecipeGroupListItem
+>('canManageRecipes', async (_ctx, { id, data }) => {
   try {
-    requirePermission(session.user, 'canManageRecipes');
+    const validatedInput = updateRecipeGroupSchema.parse(data);
 
-    const validatedInput = updateRecipeGroupSchema.parse(input);
-
-    const recipeGroup = await recipeGroupRepo.update(id, validatedInput);
+    const recipeGroup = await recipeGroupRepo.updateRecipeGroup(id, validatedInput);
 
     revalidatePath('/finances/recipe-groups');
     revalidatePath(`/finances/recipe-groups/${id}`);
@@ -81,6 +68,7 @@ export async function updateRecipeGroup(
         name: recipeGroup.name,
         description: recipeGroup.description,
         totalCost: Number(recipeGroup.totalCost),
+        totalSellingPrice: recipeGroup.totalSellingPrice,
         itemCount: validatedInput.items?.length ?? 0,
         createdAt: recipeGroup.createdAt,
         updatedAt: recipeGroup.updatedAt,
@@ -89,16 +77,13 @@ export async function updateRecipeGroup(
   } catch (error) {
     return handleActionError(error, 'Failed to update recipe group');
   }
-}
+});
 
-/**
- * Soft deletes a recipe group.
- */
 export const deleteRecipeGroup = withTenantPermission<string, void>(
   'canManageRecipes',
-  async (_session, id) => {
+  async (_ctx, id) => {
     try {
-      await recipeGroupRepo.delete(id);
+      await recipeGroupRepo.softDeleteRecipeGroup(id);
 
       revalidatePath('/finances/recipe-groups');
 

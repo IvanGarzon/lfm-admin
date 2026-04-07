@@ -20,9 +20,9 @@ const customerRepo = new CustomerRepository(prisma);
  * Returns a lightweight list of customers with only essential fields for dropdowns.
  * @returns A promise that resolves to an `ActionResult` containing an array of customer select items.
  */
-export const getActiveCustomers = withTenant<void, CustomerSelectItem[]>(async (session) => {
+export const getActiveCustomers = withTenant<void, CustomerSelectItem[]>(async (ctx) => {
   try {
-    const customers = await customerRepo.findActiveSelection(session.user.tenantId);
+    const customers = await customerRepo.findActiveCustomers(ctx.tenantId);
     return { success: true, data: customers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch customers');
@@ -36,10 +36,10 @@ export const getActiveCustomers = withTenant<void, CustomerSelectItem[]>(async (
  * @returns A promise that resolves to an `ActionResult` containing the paginated customer data.
  */
 export const getCustomers = withTenant<SearchParams, CustomerPagination>(
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await customerRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await customerRepo.searchCustomers(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -55,9 +55,9 @@ export const getCustomers = withTenant<SearchParams, CustomerPagination>(
  * @returns A promise that resolves to an `ActionResult` containing the customer details,
  * or an error if the customer is not found.
  */
-export const getCustomerById = withTenant<string, CustomerListItem | null>(async (session, id) => {
+export const getCustomerById = withTenant<string, CustomerListItem | null>(async (ctx, id) => {
   try {
-    const customer = await customerRepo.findByIdWithDetails(id, session.user.tenantId);
+    const customer = await customerRepo.findCustomerById(id, ctx.tenantId);
     if (!customer) {
       return { success: false, error: 'Customer not found' };
     }

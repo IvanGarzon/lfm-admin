@@ -5,13 +5,14 @@ import { prisma } from '@/lib/prisma';
 import type { Session } from 'next-auth';
 import type {
   ActionResult,
-  TenantSession,
   SuperAdminSession,
   AuthenticatedSession,
   AuthenticatedHandler,
+  TenantHandler,
+  TenantContext,
   UnauthenticatedHandler,
 } from '@/types/actions';
-import { hasActionPermission, type PermissionKey, hasPermission } from './permissions';
+import { type PermissionKey, hasPermission } from './permissions';
 
 export const SUPER_ADMIN_TENANT_COOKIE = 'sa_active_tenant_id';
 
@@ -70,107 +71,6 @@ export function withAuth<TInput, TOutput>(
   };
 }
 
-// -- Action Permission Wrapper ----------------------------------------------
-
-/**
- * Wraps a server action to require authentication AND specific action permission.
- * Checks both authentication and action-level permissions from RolePolicies.
- *
- * @param actionName - The action identifier from your permissions.ts (e.g., 'invoices.createInvoice')
- * @param handler - The authenticated handler function
- *
- * @example
- * export const deleteInvoice = withActionPermission<DeleteInvoiceInput, { id: string }>(
- *   'invoices.deleteInvoice',
- *   async (session, data) => {
- *     await invoiceRepo.delete(data.id);
- *     return { success: true, data: { id: data.id } };
- *   }
- * );
- */
-export function withActionPermission<TInput, TOutput>(
-  actionName: string,
-  handler: AuthenticatedHandler<TInput, TOutput>,
-): UnauthenticatedHandler<TInput, TOutput> {
-  return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await getSession();
-
-    if (!isAuthenticatedSession(session)) {
-      return {
-        success: false,
-        error: 'You must be signed in to perform this action',
-      };
-    }
-
-    if (!hasActionPermission(session.user, actionName)) {
-      return {
-        success: false,
-        error: `You do not have permission to ${actionName}`,
-      };
-    }
-
-    return handler(session, input);
-  };
-}
-
-// -- Feature Permission Wrapper ---------------------------------------------
-
-/**
- * Wraps a server action to require authentication AND specific feature permission(s).
- * Checks both authentication and high-level permissions (e.g., canManageInvoices).
- * When multiple permissions are provided, ALL permissions are required (AND logic).
- *
- * @param permission - Single permission key or array of permission keys from PERMISSIONS
- * @param handler - The authenticated handler function
- *
- * @example
- * // Single permission
- * export const bulkUpdateInvoices = withPermission<BulkUpdateInput, { count: number }>(
- *   'canManageInvoices',
- *   async (session, data) => {
- *     const count = await invoiceRepo.bulkUpdate(data);
- *     return { success: true, data: { count } };
- *   }
- * );
- *
- * @example
- * // Multiple permissions (all required)
- * export const bulkDeleteInvoices = withPermission<DeleteInput, { count: number }>(
- *   ['canManageInvoices', 'canDeleteInvoices'],
- *   async (session, data) => {
- *     const count = await invoiceRepo.bulkDelete(data);
- *     return { success: true, data: { count } };
- *   }
- * );
- */
-export function withPermission<TInput, TOutput>(
-  permission: PermissionKey | PermissionKey[],
-  handler: AuthenticatedHandler<TInput, TOutput>,
-): UnauthenticatedHandler<TInput, TOutput> {
-  return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await getSession();
-
-    if (!isAuthenticatedSession(session)) {
-      return {
-        success: false,
-        error: 'You must be signed in to perform this action',
-      };
-    }
-
-    const permissions = Array.isArray(permission) ? permission : [permission];
-    const missingPermissions = permissions.filter((p) => !hasPermission(session.user, p));
-
-    if (missingPermissions.length > 0) {
-      return {
-        success: false,
-        error: 'You do not have permission to perform this action',
-      };
-    }
-
-    return handler(session, input);
-  };
-}
-
 // -- Tenant + Permission Wrapper --------------------------------------------
 
 /**
@@ -183,15 +83,15 @@ export function withPermission<TInput, TOutput>(
  * @example
  * export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>(
  *   'canReadInvoices',
- *   async (session, input) => {
- *     const result = await invoiceRepo.searchAndPaginate(input, session.user.tenantId);
+ *   async (ctx, input) => {
+ *     const result = await invoiceRepo.searchAndPaginate(input, ctx.tenantId);
  *     return { success: true, data: result };
  *   }
  * );
  */
 export function withTenantPermission<TInput, TOutput>(
   permission: PermissionKey | PermissionKey[],
-  handler: (session: TenantSession, input: TInput) => Promise<ActionResult<TOutput>>,
+  handler: TenantHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -213,8 +113,15 @@ export function withTenantPermission<TInput, TOutput>(
       };
     }
 
+    const createContext = (tenantId: string, tenantSlug: string): TenantContext => ({
+      tenantId,
+      tenantSlug,
+      userId: session.user.id,
+      user: session.user,
+    });
+
     if (session.user.tenantId && session.user.tenantSlug) {
-      return handler(session as TenantSession, input);
+      return handler(createContext(session.user.tenantId, session.user.tenantSlug), input);
     }
 
     // SUPER_ADMIN has no tenantId in JWT — resolve from active tenant cookie
@@ -226,11 +133,7 @@ export function withTenantPermission<TInput, TOutput>(
           error: 'No tenant selected. Use the tenant switcher in the sidebar.',
         };
       }
-      const enriched = {
-        ...session,
-        user: { ...session.user, tenantId: tenant.id, tenantSlug: tenant.slug },
-      } as TenantSession;
-      return handler(enriched, input);
+      return handler(createContext(tenant.id, tenant.slug), input);
     }
 
     return { success: false, error: 'No tenant context found for this session' };
@@ -267,14 +170,14 @@ async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string 
  *
  * @example
  * export const getInvoices = withTenant<SearchParams, InvoicePagination>(
- *   async (session, input) => {
- *     const result = await invoiceRepo.searchAndPaginate(input, session.user.tenantId);
+ *   async ({ tenantId }, input) => {
+ *     const result = await invoiceRepo.searchAndPaginate(input, tenantId);
  *     return { success: true, data: result };
  *   }
  * );
  */
 export function withTenant<TInput, TOutput>(
-  handler: (session: TenantSession, input: TInput) => Promise<ActionResult<TOutput>>,
+  handler: TenantHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -283,8 +186,15 @@ export function withTenant<TInput, TOutput>(
       return { success: false, error: 'You must be signed in to perform this action' };
     }
 
+    const createContext = (tenantId: string, tenantSlug: string): TenantContext => ({
+      tenantId,
+      tenantSlug,
+      userId: session.user.id,
+      user: session.user,
+    });
+
     if (session.user.tenantId && session.user.tenantSlug) {
-      return handler(session as TenantSession, input);
+      return handler(createContext(session.user.tenantId, session.user.tenantSlug), input);
     }
 
     // SUPER_ADMIN has no tenantId in JWT — resolve from active tenant cookie
@@ -296,11 +206,7 @@ export function withTenant<TInput, TOutput>(
           error: 'No tenant selected. Use the tenant switcher in the sidebar.',
         };
       }
-      const enriched = {
-        ...session,
-        user: { ...session.user, tenantId: tenant.id, tenantSlug: tenant.slug },
-      } as TenantSession;
-      return handler(enriched, input);
+      return handler(createContext(tenant.id, tenant.slug), input);
     }
 
     return { success: false, error: 'No tenant context found for this session' };
@@ -337,29 +243,5 @@ export function withSuperAdmin<TInput, TOutput>(
     const activeTenantId = cookieStore.get(SUPER_ADMIN_TENANT_COOKIE)?.value;
 
     return handler({ ...session, activeTenantId }, input);
-  };
-}
-
-// -- Optional Auth Wrapper --------------------------------------------------
-
-/**
- * Wraps a server action where authentication is optional.
- * Handler receives session | null.
- *
- * @example
- * export const getPublicInvoices = withOptionalAuth<void, Invoice[]>(
- *   async (session) => {
- *     // Works for both authenticated and anonymous users
- *     const invoices = await invoiceRepo.getPublic(session?.user?.id);
- *     return { success: true, data: invoices };
- *   }
- * );
- */
-export function withOptionalAuth<TInput, TOutput>(
-  handler: (session: Session | null, input: TInput) => Promise<ActionResult<TOutput>>,
-): UnauthenticatedHandler<TInput, TOutput> {
-  return async (input: TInput): Promise<ActionResult<TOutput>> => {
-    const session = await getSession();
-    return handler(session, input);
   };
 }

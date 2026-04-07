@@ -28,18 +28,18 @@ const vendorRepo = new VendorRepository(prisma);
 export const createVendor = withTenantPermission<
   CreateVendorInput,
   { id: string; vendorCode: string }
->('canManageVendors', async (session, data) => {
+>('canManageVendors', async (ctx, data) => {
   try {
     const validatedData = CreateVendorSchema.parse(data);
 
-    const vendor = await vendorRepo.createVendor(validatedData, session.user.tenantId);
+    const vendor = await vendorRepo.createVendor(validatedData, ctx.tenantId);
 
     logger.info(`Vendor created: ${vendor.vendorCode}`, {
       context: 'createVendor',
       metadata: {
         vendorId: vendor.id,
         vendorCode: vendor.vendorCode,
-        userId: session.user.id,
+        userId: ctx.userId,
       },
     });
 
@@ -61,7 +61,7 @@ export const createVendor = withTenantPermission<
  */
 export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string }>(
   'canManageVendors',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateVendorSchema.parse(data);
 
@@ -76,7 +76,7 @@ export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string
         metadata: {
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
-          userId: session.user.id,
+          userId: ctx.userId,
         },
       });
 
@@ -97,7 +97,7 @@ export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string
  */
 export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, { id: string }>(
   'canManageVendors',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateVendorStatusSchema.parse(data);
 
@@ -109,7 +109,7 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
           status: vendor.status,
-          userId: session.user.id,
+          userId: ctx.userId,
         },
       });
 
@@ -131,7 +131,7 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
  */
 export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string }>(
   'canManageVendors',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = DeleteVendorSchema.parse(data);
 
@@ -142,7 +142,7 @@ export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string
         metadata: {
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
-          userId: session.user.id,
+          userId: ctx.userId,
         },
       });
 

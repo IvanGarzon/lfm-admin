@@ -25,10 +25,10 @@ const transactionRepo = new TransactionRepository(prisma);
  */
 export const getTransactions = withTenantPermission<SearchParams, TransactionPagination>(
   'canReadTransactions',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await transactionRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await transactionRepo.searchAndPaginate(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transactions');
@@ -43,9 +43,9 @@ export const getTransactions = withTenantPermission<SearchParams, TransactionPag
  */
 export const getTransactionById = withTenantPermission<string, TransactionListItem>(
   'canReadTransactions',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const transaction = await transactionRepo.findByIdWithDetails(id, session.user.tenantId);
+      const transaction = await transactionRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!transaction) {
         return { success: false, error: 'Transaction not found' };
@@ -74,9 +74,9 @@ export const getTransactionById = withTenantPermission<string, TransactionListIt
 export const getTransactionStatistics = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   TransactionStatistics
->('canReadTransactions', async (session, dateFilter) => {
+>('canReadTransactions', async (ctx, dateFilter) => {
   try {
-    const stats = await transactionRepo.getStatistics(session.user.tenantId, dateFilter);
+    const stats = await transactionRepo.getStatistics(ctx.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch transaction statistics');
@@ -90,9 +90,9 @@ export const getTransactionStatistics = withTenantPermission<
 export const getTransactionCategories = withTenantPermission<
   void,
   Array<{ id: string; name: string; description: string | null }>
->('canReadTransactions', async (_session) => {
+>('canReadTransactions', async (ctx) => {
   try {
-    const categories = await transactionRepo.getActiveCategories();
+    const categories = await transactionRepo.getActiveCategories(ctx.tenantId);
     return { success: true, data: categories };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch transaction categories');
@@ -106,12 +106,9 @@ export const getTransactionCategories = withTenantPermission<
  */
 export const getTransactionTrend = withTenantPermission<number | undefined, TransactionTrend[]>(
   'canReadTransactions',
-  async (session, limit) => {
+  async (ctx, limit) => {
     try {
-      const trend = await transactionRepo.getMonthlyTransactionTrend(
-        limit ?? 12,
-        session.user.tenantId,
-      );
+      const trend = await transactionRepo.getMonthlyTransactionTrend(limit ?? 12, ctx.tenantId);
       return { success: true, data: trend };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transaction trend');
@@ -127,9 +124,9 @@ export const getTransactionTrend = withTenantPermission<number | undefined, Tran
 export const getTransactionCategoryBreakdown = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   TransactionCategoryBreakdown[]
->('canReadTransactions', async (session, dateFilter) => {
+>('canReadTransactions', async (ctx, dateFilter) => {
   try {
-    const breakdown = await transactionRepo.getCategoryBreakdown(session.user.tenantId, dateFilter);
+    const breakdown = await transactionRepo.getCategoryBreakdown(ctx.tenantId, dateFilter);
     return { success: true, data: breakdown };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch category breakdown');
@@ -144,9 +141,9 @@ export const getTransactionCategoryBreakdown = withTenantPermission<
 export const getTopTransactionCategories = withTenantPermission<
   number | undefined,
   TopTransactionCategory[]
->('canReadTransactions', async (session, limit) => {
+>('canReadTransactions', async (ctx, limit) => {
   try {
-    const topCategories = await transactionRepo.getTopCategories(limit ?? 5, session.user.tenantId);
+    const topCategories = await transactionRepo.getTopCategories(limit ?? 5, ctx.tenantId);
     return { success: true, data: topCategories };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch top categories');

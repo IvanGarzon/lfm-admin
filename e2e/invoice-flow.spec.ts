@@ -14,7 +14,7 @@ test.describe('Invoice Management Flow', () => {
     // Login before each test
     await page.goto('/signin');
     await page.getByLabel('Email').fill(TEST_USER.email);
-    await page.getByLabel('Password').fill(TEST_USER.password);
+    await page.locator('[name="password"]').fill(TEST_USER.password);
     await page.getByRole('button', { name: /sign in/i }).click({ force: true });
 
     // Wait for redirect to dashboard or home

@@ -125,7 +125,7 @@ export function useTaskExecutions(
   return useQuery({
     queryKey: TASK_KEYS.executions(taskId),
     queryFn: async () => {
-      const result = await getTaskExecutions(taskId, options);
+      const result = await getTaskExecutions({ taskId, options });
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch task executions');
@@ -209,10 +209,10 @@ export function useUpdateTask() {
         retries?: number;
         concurrencyLimit?: number;
         timeout?: number;
-        metadata?: any;
+        metadata?: Record<string, unknown>;
       };
     }) => {
-      const result = await updateTask(params.taskId, params.data);
+      const result = await updateTask(params);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to update task');
@@ -241,7 +241,7 @@ export function useSetTaskEnabled() {
 
   return useMutation({
     mutationFn: async (params: { taskId: string; isEnabled: boolean }) => {
-      const result = await setTaskEnabled(params.taskId, params.isEnabled);
+      const result = await setTaskEnabled(params);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to update task status');

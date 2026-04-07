@@ -119,7 +119,7 @@ export function useUpdateRecipeGroup() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateRecipeGroupInput }) => {
-      const result = await updateRecipeGroup(id, data);
+      const result = await updateRecipeGroup({ id, data });
       if (!result.success) {
         throw new Error(result.error);
       }

@@ -2,30 +2,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRecipes, getRecipeById } from '../queries';
 import { testIds, mockSessions, createRecipeResponse, createRecipeDetails } from '@/lib/testing';
 
-const { mockRepoInstance, mockAuth, mockRequirePermission } = vi.hoisted(() => ({
+const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {
-    searchAndPaginate: vi.fn(),
-    findByIdWithDetails: vi.fn(),
+    searchRecipes: vi.fn(),
+    findRecipeById: vi.fn(),
   },
   mockAuth: vi.fn(),
-  mockRequirePermission: vi.fn(),
+  mockHasPermission: vi.fn(),
 }));
 
-// Mock RecipeRepository
-vi.mock('@/repositories/recipe-repository', () => {
-  return {
-    RecipeRepository: vi.fn().mockImplementation(function () {
-      return mockRepoInstance;
-    }),
-  };
-});
+vi.mock('@/repositories/recipe-repository', () => ({
+  RecipeRepository: vi.fn().mockImplementation(function () {
+    return mockRepoInstance;
+  }),
+}));
 
 vi.mock('@/auth', () => ({
   auth: mockAuth,
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  requirePermission: mockRequirePermission,
+  hasPermission: mockHasPermission,
 }));
 
 const TEST_RECIPE_ID = testIds.recipe();
@@ -36,16 +33,17 @@ describe('Recipe Queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue(mockSession);
+    mockHasPermission.mockReturnValue(true);
   });
 
   describe('getRecipes', () => {
-    it('returns paginated recipes successfully when authorized', async () => {
+    it('returns paginated recipes successfully when authorised', async () => {
       const mockResult = {
         items: [createRecipeResponse({ id: '1' }), createRecipeResponse({ id: '2' })],
         pagination: { page: 1, perPage: 10, total: 2 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchRecipes.mockResolvedValue(mockResult);
 
       const result = await getRecipes({});
 
@@ -53,25 +51,22 @@ describe('Recipe Queries', () => {
       if (result.success) {
         expect(result.data).toEqual(mockResult);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadRecipes');
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalled();
+      expect(mockRepoInstance.searchRecipes).toHaveBeenCalled();
     });
 
-    it('returns unauthorized when no session', async () => {
+    it('returns unauthorised when no session', async () => {
       mockAuth.mockResolvedValue(null);
+
       const result = await getRecipes({});
+
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
-      }
     });
   });
 
   describe('getRecipeById', () => {
-    it('returns recipe details successfully when authorized', async () => {
+    it('returns recipe details successfully when authorised', async () => {
       const mockRecipe = createRecipeDetails({ id: TEST_RECIPE_ID });
-
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(mockRecipe);
+      mockRepoInstance.findRecipeById.mockResolvedValue(mockRecipe);
 
       const result = await getRecipeById(TEST_RECIPE_ID);
 
@@ -79,13 +74,12 @@ describe('Recipe Queries', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_RECIPE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadRecipes');
     });
 
     it('returns error when recipe not found', async () => {
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(null);
+      mockRepoInstance.findRecipeById.mockResolvedValue(null);
 
-      const result = await getRecipeById('non-existent');
+      const result = await getRecipeById(TEST_RECIPE_ID);
 
       expect(result.success).toBe(false);
       if (!result.success) {

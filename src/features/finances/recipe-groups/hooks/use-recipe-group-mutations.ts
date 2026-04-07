@@ -32,7 +32,7 @@ export function useUpdateRecipeGroup() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateRecipeGroupInput }) =>
-      updateRecipeGroup(id, data),
+      updateRecipeGroup({ id, data }),
     onSuccess: (result) => {
       if (result.success) {
         toast.success('Recipe group updated successfully');

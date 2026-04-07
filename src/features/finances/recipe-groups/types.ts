@@ -3,6 +3,54 @@ import type { PaginationMeta } from '@/types/pagination';
 
 export type RecipeGroupFormInput = CreateRecipeGroupInput | UpdateRecipeGroupInput;
 
+export type RecipeGroupWithItems = {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  totalCost: number;
+  totalSellingPrice: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  items: {
+    id: string;
+    recipeGroupId: string;
+    recipeId: string;
+    quantity: number;
+    subtotal: number;
+    order: number;
+    createdAt: Date;
+    updatedAt: Date;
+    recipe: {
+      id: string;
+      name: string;
+      totalRetailPrice: number;
+      totalCost: number;
+      sellingPrice: number;
+    };
+  }[];
+};
+
+export type RecipeGroupSearchParams = {
+  search?: string;
+  page?: string;
+  perPage?: string;
+  sort?: string;
+};
+
+export type RecipeGroupCreateData = {
+  name: string;
+  description?: string | null;
+  items: { recipeId: string; quantity: number; order: number }[];
+};
+
+export type RecipeGroupUpdateData = {
+  name?: string;
+  description?: string | null;
+  items?: { recipeId: string; quantity: number; order: number }[];
+};
+
 export type RecipeGroupListItem = {
   id: string;
   name: string;

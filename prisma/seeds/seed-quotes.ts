@@ -141,7 +141,7 @@ export async function seedQuotes() {
 
     try {
       if (action === 'ACCEPTED') {
-        await quoteRepo.markAsAccepted(id);
+        await quoteRepo.markQuoteAsAccepted(id);
       } else if (action === 'REJECTED') {
         await quoteRepo.markAsRejected(
           id,

@@ -23,14 +23,11 @@ const organizationRepo = new OrganizationRepository(prisma);
  * @returns A promise that resolves to an `ActionResult` with the new organisation's ID and name.
  */
 export const createOrganization = withTenant<CreateOrganizationInput, { id: string; name: string }>(
-  async (session, data) => {
+  async ({ tenantId }, data) => {
     try {
       const validatedData = CreateOrganizationSchema.parse(data);
 
-      const organization = await organizationRepo.createOrganization(
-        validatedData,
-        session.user.tenantId,
-      );
+      const organization = await organizationRepo.createOrganization(validatedData, tenantId);
 
       // Revalidate paths that use organisations
       revalidatePath('/customers');
@@ -56,17 +53,18 @@ export const createOrganization = withTenant<CreateOrganizationInput, { id: stri
  * @returns A promise that resolves to an `ActionResult` with the updated organisation's ID.
  */
 export const updateOrganization = withTenant<UpdateOrganizationInput, { id: string }>(
-  async (_session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateOrganizationSchema.parse(data);
 
-      const existing = await organizationRepo.findById(validatedData.id);
+      const existing = await organizationRepo.findOrganizationById(validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Organisation not found' };
       }
 
       const organization = await organizationRepo.updateOrganization(
         validatedData.id,
+        ctx.tenantId,
         validatedData,
       );
 
@@ -91,17 +89,17 @@ export const updateOrganization = withTenant<UpdateOrganizationInput, { id: stri
  * @returns A promise that resolves to an `ActionResult` with the deleted organisation's ID.
  */
 export const deleteOrganization = withTenant<DeleteOrganizationInput, { id: string }>(
-  async (_session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = DeleteOrganizationSchema.parse(data);
       const { id } = validatedData;
 
-      const existing = await organizationRepo.findById(id);
+      const existing = await organizationRepo.findOrganizationById(id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Organisation not found' };
       }
 
-      await organizationRepo.deleteOrganization(id);
+      await organizationRepo.deleteOrganization(id, ctx.tenantId);
 
       revalidatePath('/customers');
       revalidatePath('/organizations');

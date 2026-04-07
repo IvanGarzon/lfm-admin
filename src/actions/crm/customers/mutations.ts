@@ -24,45 +24,46 @@ const organizationRepo = new OrganizationRepository(prisma);
  * @param data - The input data for creating the customer, conforming to `CreateCustomerInput`.
  * @returns A promise that resolves to an `ActionResult` with the new customer's ID.
  */
-export const createCustomer = withTenant<CreateCustomerInput, { id: string }>(
-  async (session, data) => {
-    try {
-      const validatedData = CreateCustomerSchema.parse(data);
-      const existingCustomer = await customerRepo.findByEmail(validatedData.email);
+export const createCustomer = withTenant<CreateCustomerInput, { id: string }>(async (ctx, data) => {
+  try {
+    const validatedData = CreateCustomerSchema.parse(data);
+    const existingCustomer = await customerRepo.findCustomerByEmail(
+      validatedData.email,
+      ctx.tenantId,
+    );
 
-      if (existingCustomer) {
-        return {
-          success: false,
-          error: 'A customer with this email already exists',
-        };
-      }
-
-      // Handle organisation creation if organisationName is provided
-      let finalOrganizationId = validatedData.organizationId ?? null;
-      if (validatedData.organizationName && !validatedData.organizationId) {
-        const organization = await organizationRepo.findOrCreate(
-          validatedData.organizationName,
-          session.user.tenantId,
-        );
-        finalOrganizationId = organization.id;
-      }
-
-      const customer = await customerRepo.createCustomer(
-        {
-          ...validatedData,
-          organizationId: finalOrganizationId,
-        },
-        session.user.tenantId,
-      );
-
-      revalidatePath('/customers');
-
-      return { success: true, data: { id: customer.id } };
-    } catch (error) {
-      return handleActionError(error, 'Failed to create customer');
+    if (existingCustomer) {
+      return {
+        success: false,
+        error: 'A customer with this email already exists',
+      };
     }
-  },
-);
+
+    // Handle organisation creation if organisationName is provided
+    let finalOrganizationId = validatedData.organizationId ?? null;
+    if (validatedData.organizationName && !validatedData.organizationId) {
+      const organization = await organizationRepo.findOrCreateOrganization(
+        validatedData.organizationName,
+        ctx.tenantId,
+      );
+      finalOrganizationId = organization.id;
+    }
+
+    const customer = await customerRepo.createCustomer(
+      {
+        ...validatedData,
+        organizationId: finalOrganizationId,
+      },
+      ctx.tenantId,
+    );
+
+    revalidatePath('/customers');
+
+    return { success: true, data: { id: customer.id } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to create customer');
+  }
+});
 
 /**
  * Updates an existing customer with the provided data.
@@ -70,47 +71,46 @@ export const createCustomer = withTenant<CreateCustomerInput, { id: string }>(
  * @param data - The input data for updating the customer, conforming to `UpdateCustomerInput`.
  * @returns A promise that resolves to an `ActionResult` with the updated customer's ID.
  */
-export const updateCustomer = withTenant<UpdateCustomerInput, { id: string }>(
-  async (session, data) => {
-    try {
-      const validatedData = UpdateCustomerSchema.parse(data);
-      const existing = await customerRepo.findById(validatedData.id);
-      if (!existing) {
-        return { success: false, error: 'Customer not found' };
-      }
-
-      // Handle organisation creation if organisationName is provided
-      let finalOrganizationId = validatedData.organizationId ?? null;
-      if (validatedData.organizationName && !validatedData.organizationId) {
-        const organization = await organizationRepo.findOrCreate(
-          validatedData.organizationName,
-          session.user.tenantId,
-        );
-        finalOrganizationId = organization.id;
-      }
-
-      const customer = await customerRepo.updateCustomer(
-        validatedData.id,
-        {
-          ...validatedData,
-          organizationId: finalOrganizationId,
-        },
-        session.user.id,
-      );
-
-      if (!customer) {
-        return { success: false, error: 'Failed to update customer' };
-      }
-
-      revalidatePath('/crm/customers');
-      revalidatePath(`/crm/customers/${customer.id}`);
-
-      return { success: true, data: { id: customer.id } };
-    } catch (error) {
-      return handleActionError(error, 'Failed to update customer');
+export const updateCustomer = withTenant<UpdateCustomerInput, { id: string }>(async (ctx, data) => {
+  try {
+    const validatedData = UpdateCustomerSchema.parse(data);
+    const existing = await customerRepo.findById(validatedData.id);
+    if (!existing) {
+      return { success: false, error: 'Customer not found' };
     }
-  },
-);
+
+    // Handle organisation creation if organisationName is provided
+    let finalOrganizationId = validatedData.organizationId ?? null;
+    if (validatedData.organizationName && !validatedData.organizationId) {
+      const organization = await organizationRepo.findOrCreateOrganization(
+        validatedData.organizationName,
+        ctx.tenantId,
+      );
+      finalOrganizationId = organization.id;
+    }
+
+    const customer = await customerRepo.updateCustomer(
+      validatedData.id,
+      ctx.tenantId,
+      {
+        ...validatedData,
+        organizationId: finalOrganizationId,
+      },
+      ctx.userId,
+    );
+
+    if (!customer) {
+      return { success: false, error: 'Failed to update customer' };
+    }
+
+    revalidatePath('/crm/customers');
+    revalidatePath(`/crm/customers/${customer.id}`);
+
+    return { success: true, data: { id: customer.id } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to update customer');
+  }
+});
 
 /**
  * Soft deletes a customer by setting its `deletedAt` timestamp.
@@ -118,21 +118,19 @@ export const updateCustomer = withTenant<UpdateCustomerInput, { id: string }>(
  * @param data - An object containing the customer ID to delete.
  * @returns A promise that resolves to an `ActionResult` with the deleted customer's ID.
  */
-export const deleteCustomer = withTenant<DeleteCustomerInput, { id: string }>(
-  async (_session, data) => {
-    try {
-      const { id } = DeleteCustomerSchema.parse(data);
-      const success = await customerRepo.softDelete(id);
+export const deleteCustomer = withTenant<DeleteCustomerInput, { id: string }>(async (ctx, data) => {
+  try {
+    const { id } = DeleteCustomerSchema.parse(data);
+    const success = await customerRepo.softDeleteCustomer(id, ctx.tenantId);
 
-      if (!success) {
-        return { success: false, error: 'Failed to delete customer' };
-      }
-
-      revalidatePath('/customers');
-
-      return { success: true, data: { id } };
-    } catch (error) {
-      return handleActionError(error, 'Failed to delete customer');
+    if (!success) {
+      return { success: false, error: 'Failed to delete customer' };
     }
-  },
-);
+
+    revalidatePath('/customers');
+
+    return { success: true, data: { id } };
+  } catch (error) {
+    return handleActionError(error, 'Failed to delete customer');
+  }
+});

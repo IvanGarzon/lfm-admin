@@ -21,7 +21,7 @@ const employeeRepo = new EmployeeRepository(prisma);
  * @returns A promise that resolves to an `ActionResult` with the new employee's ID.
  */
 export const createEmployee = withTenant<CreateEmployeeInput, { id: string }>(
-  async (_session, data) => {
+  async (_ctx, data) => {
     try {
       const validatedData = CreateEmployeeSchema.parse(data);
       const employee = await employeeRepo.create(validatedData);
@@ -52,7 +52,7 @@ export const createEmployee = withTenant<CreateEmployeeInput, { id: string }>(
  * @returns A promise that resolves to an `ActionResult` with the updated employee's ID.
  */
 export const updateEmployee = withTenant<UpdateEmployeeInput, { id: string }>(
-  async (_session, data) => {
+  async (_ctx, data) => {
     try {
       const validatedData = UpdateEmployeeSchema.parse(data);
       const existing = await employeeRepo.findById(validatedData.id);
@@ -89,7 +89,7 @@ export const updateEmployee = withTenant<UpdateEmployeeInput, { id: string }>(
  * @param id - The ID of the employee to delete.
  * @returns A promise that resolves to an `ActionResult` with success status.
  */
-export const deleteEmployee = withTenant<string, { success: true }>(async (_session, id) => {
+export const deleteEmployee = withTenant<string, { success: true }>(async (_ctx, id) => {
   try {
     const existing = await employeeRepo.findById(id);
     if (!existing) {

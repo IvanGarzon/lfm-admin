@@ -48,15 +48,11 @@ const emailAuditRepo = new EmailAuditRepository(prisma);
 export const createQuote = withTenantPermission<
   CreateQuoteInput,
   { id: string; quoteNumber: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     // Validate input
     const validatedData = CreateQuoteSchema.parse(data);
-    const quote = await quoteRepo.createQuoteWithItems(
-      validatedData,
-      session.user.tenantId,
-      session.user.id,
-    );
+    const quote = await quoteRepo.createQuoteWithItems(validatedData, ctx.tenantId, ctx.userId);
     revalidatePath('/finances/quotes');
 
     return {
@@ -76,7 +72,7 @@ export const createQuote = withTenantPermission<
  */
 export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }>(
   'canManageQuotes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateQuoteSchema.parse(data);
       const existing = await quoteRepo.findById(validatedData.id);
@@ -87,7 +83,7 @@ export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }
       const quote = await quoteRepo.updateQuoteWithItems(
         validatedData.id,
         validatedData,
-        session.user.id,
+        ctx.userId,
       );
 
       if (!quote) {
@@ -112,10 +108,10 @@ export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }
  */
 export const markQuoteAsAccepted = withTenantPermission<MarkQuoteAsAcceptedInput, { id: string }>(
   'canManageQuotes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
-      const quote = await quoteRepo.markAsAccepted(validatedData.id, session.user.id);
+      const quote = await quoteRepo.markQuoteAsAccepted(validatedData.id, ctx.userId);
 
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -139,13 +135,14 @@ export const markQuoteAsAccepted = withTenantPermission<MarkQuoteAsAcceptedInput
  */
 export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput, { id: string }>(
   'canManageQuotes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsRejectedSchema.parse(data);
       const quote = await quoteRepo.markAsRejected(
         validatedData.id,
+        ctx.tenantId,
         validatedData.rejectReason,
-        session.user.id,
+        ctx.userId,
       );
 
       if (!quote) {
@@ -171,12 +168,12 @@ export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput
 export const markQuoteAsSent = withTenantPermission<
   { id: string; options?: { sendEmail?: boolean } },
   { id: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     const { id, options } = data;
 
     // Fetch quote with customer details
-    const quote = await quoteRepo.markAsSent(id, session.user.id);
+    const quote = await quoteRepo.markAsSent(id, ctx.tenantId, ctx.userId);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -217,13 +214,14 @@ export const markQuoteAsSent = withTenantPermission<
  */
 export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { id: string }>(
   'canManageQuotes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
       const quote = await quoteRepo.markAsOnHold(
         validatedData.id,
+        ctx.tenantId,
         validatedData.reason,
-        session.user.id,
+        ctx.userId,
       );
 
       if (!quote) {
@@ -248,13 +246,14 @@ export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { 
  */
 export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInput, { id: string }>(
   'canManageQuotes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsCancelledSchema.parse(data);
       const quote = await quoteRepo.markAsCancelled(
         validatedData.id,
+        ctx.tenantId,
         validatedData.cancelReason,
-        session.user.id,
+        ctx.userId,
       );
 
       if (!quote) {
@@ -282,10 +281,10 @@ export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInp
 export const convertQuoteToInvoice = withTenantPermission<
   ConvertQuoteToInvoiceInput,
   { invoiceId: string; invoiceNumber: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
-    const invoiceNumber = await invoiceRepo.generateInvoiceNumber(session.user.tenantId);
+    const invoiceNumber = await invoiceRepo.generateInvoiceNumber(ctx.tenantId);
 
     // Convert quote to invoice
     const result = await quoteRepo.convertToInvoice(
@@ -296,15 +295,12 @@ export const convertQuoteToInvoice = withTenantPermission<
         discount: validatedData.discount,
         dueDate: validatedData.dueDate,
       },
-      session.user.id,
+      ctx.userId,
     );
 
     // Auto-send invoice email to customer
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(
-        result.invoiceId,
-        session.user.tenantId,
-      );
+      const invoice = await invoiceRepo.findByIdWithDetails(result.invoiceId, ctx.tenantId);
       if (invoice) {
         await queueInvoiceEmail({
           invoiceId: invoice.id,
@@ -364,7 +360,7 @@ export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: numb
  */
 export const deleteQuote = withTenantPermission<string, { id: string }>(
   'canManageQuotes',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const success = await quoteRepo.softDelete(id);
 
@@ -389,7 +385,7 @@ export const deleteQuote = withTenantPermission<string, { id: string }>(
  */
 export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteItemAttachment>(
   'canManageQuotes',
-  async (session, formData) => {
+  async (ctx, formData) => {
     try {
       const quoteItemId = formData.get('quoteItemId');
       const quoteId = formData.get('quoteId');
@@ -444,7 +440,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
         mimeType: validatedData.mimeType,
         s3Key,
         s3Url,
-        uploadedBy: session.user.id,
+        uploadedBy: ctx.userId,
       });
 
       revalidatePath(`/finances/quotes/${quoteId}`);
@@ -479,7 +475,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
 export const deleteQuoteItemAttachment = withTenantPermission<
   { attachmentId: string; quoteId: string },
   { id: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     const validatedData = DeleteItemAttachmentSchema.parse(data);
 
@@ -521,7 +517,7 @@ export const deleteQuoteItemAttachment = withTenantPermission<
 export const updateQuoteItemNotes = withTenantPermission<
   { quoteItemId: string; quoteId: string; notes: string },
   { id: string; notes: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     // Update notes in database
     const quoteItem = await quoteRepo.updateQuoteItemNotes(data.quoteItemId, data.notes);
@@ -550,7 +546,7 @@ export const updateQuoteItemNotes = withTenantPermission<
 export const updateQuoteItemColors = withTenantPermission<
   { quoteItemId: string; quoteId: string; colors: string[] },
   { id: string; colors: string[] }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     // Validate that colors are valid hex codes
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
@@ -595,7 +591,7 @@ export const createQuoteVersion = withTenantPermission<
     versionNumber: number;
     parentQuoteNumber: string;
   }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     const validatedData = CreateVersionSchema.parse(data);
 
@@ -607,8 +603,8 @@ export const createQuoteVersion = withTenantPermission<
 
     const newVersion = await quoteRepo.createVersion(
       validatedData.quoteId,
-      session.user.tenantId,
-      session.user.id,
+      ctx.tenantId,
+      ctx.userId,
     );
 
     revalidatePath('/finances/quotes');
@@ -637,10 +633,10 @@ export const createQuoteVersion = withTenantPermission<
 export const sendQuoteEmail = withTenantPermission<
   { quoteId: string; type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'followup' },
   { auditId: string; eventId: string }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
     // Fetch quote with customer details
-    const quote = await quoteRepo.findByIdWithDetails(data.quoteId, session.user.tenantId);
+    const quote = await quoteRepo.findQuoteById(data.quoteId, ctx.tenantId);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -670,7 +666,7 @@ export const sendQuoteEmail = withTenantPermission<
 
     // Queue email via Inngest
     const result = await queueQuoteEmail({
-      tenantId: session.user.tenantId,
+      tenantId: ctx.tenantId,
       quoteId: quote.id,
       customerId: quote.customer.id,
       type: data.type,
@@ -694,10 +690,10 @@ export const sendQuoteEmail = withTenantPermission<
  */
 export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string; eventId: string }>(
   'canManageQuotes',
-  async (session, quoteId) => {
+  async (ctx, quoteId) => {
     try {
       // Fetch quote with customer details
-      const quote = await quoteRepo.findByIdWithDetails(quoteId, session.user.tenantId);
+      const quote = await quoteRepo.findQuoteById(quoteId, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
@@ -740,7 +736,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
 
       // Queue follow-up email via Inngest
       const result = await queueQuoteEmail({
-        tenantId: session.user.tenantId,
+        tenantId: ctx.tenantId,
         quoteId: quote.id,
         customerId: quote.customer.id,
         type: 'followup',
@@ -774,7 +770,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
  */
 export const duplicateQuote = withTenantPermission<string, { id: string; quoteNumber: string }>(
   'canManageQuotes',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const result = await quoteRepo.duplicate(id);
 
@@ -803,9 +799,9 @@ export const bulkUpdateQuoteStatus = withTenantPermission<
     failureCount: number;
     results: { id: string; success: boolean; error?: string }[];
   }
->('canManageQuotes', async (session, data) => {
+>('canManageQuotes', async (ctx, data) => {
   try {
-    const results = await quoteRepo.bulkUpdateStatus(data.ids, data.status, session.user.id);
+    const results = await quoteRepo.bulkUpdateStatus(data.ids, data.status, ctx.userId);
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -838,7 +834,7 @@ export const bulkDeleteQuotes = withTenantPermission<
     failureCount: number;
     results: { id: string; success: boolean; error?: string }[];
   }
->('canManageQuotes', async (session, ids) => {
+>('canManageQuotes', async (ctx, ids) => {
   try {
     const results = await quoteRepo.bulkSoftDelete(ids);
 
@@ -868,7 +864,7 @@ export const bulkDeleteQuotes = withTenantPermission<
 export const toggleQuoteFavourite = withTenantPermission<
   string,
   { id: string; isFavourite: boolean }
->('canManageQuotes', async (session, id) => {
+>('canManageQuotes', async (ctx, id) => {
   try {
     const result = await quoteRepo.toggleFavourite(id);
 

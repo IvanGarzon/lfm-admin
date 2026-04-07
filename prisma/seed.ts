@@ -7,6 +7,7 @@ import { seedInvoices } from './seeds/seed-invoices';
 import { seedQuotes } from './seeds/seed-quotes';
 import { seedPriceListItems } from './seeds/seed-price-list-items';
 import { seedRecipes } from './seeds/seed-recipes';
+import { seedE2EUser } from './seeds/seed-e2e-user';
 
 async function main() {
   console.log('Cleaning up tables...');
@@ -116,6 +117,10 @@ async function main() {
     // Step 8: Seed invoices
     console.log('📋 Step 8: Seeding invoices...');
     await seedInvoices();
+    console.log('');
+
+    console.log('📋 Seeding e2e test user...');
+    await seedE2EUser();
     console.log('');
 
     console.log('🎉 All seeding completed!');

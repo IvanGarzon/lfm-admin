@@ -46,9 +46,9 @@ async function dispatchInvitationEmail(
 
 export const sendInvitation = withTenantPermission<{ email: string; role: UserRole }, void>(
   'canManageUsers',
-  async (session, { email, role }) => {
+  async (ctx, { email, role }) => {
     try {
-      const existing = await invitationRepo.findPendingByEmail(email, session.user.tenantId);
+      const existing = await invitationRepo.findPendingByEmail(email, ctx.tenantId);
       if (existing) {
         return { success: false, error: 'A pending invitation already exists for this email' };
       }
@@ -59,12 +59,12 @@ export const sendInvitation = withTenantPermission<{ email: string; role: UserRo
         invitationRepo.create({
           email,
           role,
-          tenantId: session.user.tenantId,
-          invitedBy: session.user.id,
+          tenantId: ctx.tenantId,
+          invitedBy: ctx.userId,
           expiresAt,
         }),
-        tenantRepo.findTenantById(session.user.tenantId),
-        userRepo.findById(session.user.id),
+        tenantRepo.findTenantById(ctx.tenantId),
+        userRepo.findById(ctx.userId),
       ]);
 
       if (!tenant || !inviter) {
@@ -107,7 +107,7 @@ export const revokeInvitation = withTenantPermission<string, void>(
 export const adminSendInvitation = withSuperAdmin<
   { email: string; role: UserRole; tenantId: string },
   void
->(async (session, { email, role, tenantId }) => {
+>(async (ctx, { email, role, tenantId }) => {
   try {
     const existing = await invitationRepo.findPendingByEmail(email, tenantId);
     if (existing) {
@@ -121,11 +121,11 @@ export const adminSendInvitation = withSuperAdmin<
         email,
         role,
         tenantId,
-        invitedBy: session.user.id,
+        invitedBy: ctx.userId,
         expiresAt,
       }),
       tenantRepo.findById(tenantId),
-      userRepo.findById(session.user.id),
+      userRepo.findById(ctx.userId),
     ]);
 
     if (!tenant || !inviter) {

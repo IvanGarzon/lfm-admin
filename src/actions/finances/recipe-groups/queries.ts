@@ -2,6 +2,7 @@
 
 import { SearchParams } from 'nuqs/server';
 import { RecipeGroupRepository } from '@/repositories/recipe-group-repository';
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import type {
@@ -10,7 +11,7 @@ import type {
   RecipeGroupListItem,
 } from '@/features/finances/recipe-groups/types';
 
-const recipeGroupRepo = new RecipeGroupRepository();
+const recipeGroupRepo = new RecipeGroupRepository(prisma);
 
 /**
  * Retrieves a paginated list of recipe groups based on specified search and filter criteria.
@@ -18,11 +19,11 @@ const recipeGroupRepo = new RecipeGroupRepository();
  */
 export const getRecipeGroups = withTenantPermission<SearchParams, RecipeGroupPagination>(
   'canReadRecipes',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
-      const result = await recipeGroupRepo.searchAndPaginate(
+      const result = await recipeGroupRepo.searchRecipeGroups(
         searchParams as Record<string, string | string[]>,
-        session.user.tenantId,
+        ctx.tenantId,
       );
 
       return { success: true, data: result };
@@ -38,9 +39,9 @@ export const getRecipeGroups = withTenantPermission<SearchParams, RecipeGroupPag
  */
 export const getRecipeGroupById = withTenantPermission<string, RecipeGroupWithDetails>(
   'canReadRecipes',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const recipeGroup = await recipeGroupRepo.findById(id, session.user.tenantId);
+      const recipeGroup = await recipeGroupRepo.findRecipeGroupById(id, ctx.tenantId);
 
       if (!recipeGroup) {
         return { success: false, error: 'Recipe group not found' };
@@ -51,6 +52,7 @@ export const getRecipeGroupById = withTenantPermission<string, RecipeGroupWithDe
         name: recipeGroup.name,
         description: recipeGroup.description,
         totalCost: Number(recipeGroup.totalCost),
+        totalSellingPrice: recipeGroup.totalSellingPrice,
         itemCount: recipeGroup.items.length,
         createdAt: recipeGroup.createdAt,
         updatedAt: recipeGroup.updatedAt,
@@ -82,9 +84,9 @@ export const getRecipeGroupById = withTenantPermission<string, RecipeGroupWithDe
  */
 export const getAllRecipeGroups = withTenantPermission<void, RecipeGroupListItem[]>(
   'canReadRecipes',
-  async (session) => {
+  async (ctx) => {
     try {
-      const items = await recipeGroupRepo.getAll(session.user.tenantId);
+      const items = await recipeGroupRepo.findAllRecipeGroups(ctx.tenantId);
 
       return { success: true, data: items };
     } catch (error) {

@@ -19,19 +19,20 @@ export type AuthenticatedSession = Session & {
   user: NonNullable<Session['user']>;
 };
 
-/**
- * A session where the user is authenticated AND belongs to a tenant.
- * SUPER_ADMIN users do not have a tenantId and cannot use this type.
- */
-export type TenantSession = Session & {
-  user: NonNullable<Session['user']> & {
-    tenantId: string;
-    tenantSlug: string;
-  };
-};
-
 export type AuthenticatedHandler<TInput, TOutput> = (
   session: AuthenticatedSession,
+  input: TInput,
+) => Promise<ActionResult<TOutput>>;
+
+export type TenantContext = {
+  tenantId: string;
+  tenantSlug: string;
+  userId: string;
+  user: AuthenticatedSession['user'];
+};
+
+export type TenantHandler<TInput, TOutput> = (
+  ctx: TenantContext,
   input: TInput,
 ) => Promise<ActionResult<TOutput>>;
 

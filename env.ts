@@ -40,6 +40,10 @@ export const env = createEnv({
       .optional()
       .transform((s) => s === 'true'),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
+
+    // E2E testing
+    E2E_EMAIL: z.email().optional(),
+    E2E_PASSWORD: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -70,5 +74,7 @@ export const env = createEnv({
     EMAIL_TEST_MODE: process.env.EMAIL_TEST_MODE,
     EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
     EMAIL_DRY_RUN: process.env.EMAIL_DRY_RUN,
+    E2E_EMAIL: process.env.E2E_EMAIL,
+    E2E_PASSWORD: process.env.E2E_PASSWORD,
   },
 });

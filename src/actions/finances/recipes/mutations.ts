@@ -18,20 +18,19 @@ const recipeRepo = new RecipeRepository(prisma);
 
 /**
  * Creates a new recipe with its associated items.
+ * @param input - Validated create input including recipe fields and items.
+ * @returns An ActionResult containing the created recipe as a list item.
  */
 export const createRecipe = withTenantPermission<CreateRecipeInput, RecipeListItem>(
   'canManageRecipes',
-  async (session, input) => {
+  async (ctx, input) => {
     try {
       const validatedInput = CreateRecipeSchema.parse(input);
-      const recipe = await recipeRepo.createWithItems(validatedInput, session.user.tenantId);
+      const recipe = await recipeRepo.createRecipeWithItems(validatedInput, ctx.tenantId);
 
       logger.info('Recipe created', {
         context: 'createRecipe',
-        metadata: {
-          id: recipe.id,
-          name: recipe.name,
-        },
+        metadata: { id: recipe.id, name: recipe.name },
       });
 
       revalidatePath('/finances/recipes');
@@ -44,26 +43,32 @@ export const createRecipe = withTenantPermission<CreateRecipeInput, RecipeListIt
 );
 
 /**
- * Updates an existing recipe and its items.
+ * Updates an existing recipe and replaces its items.
+ * @param data - Validated update input including recipe ID, fields, and replacement items.
+ * @returns An ActionResult containing the updated recipe's ID.
  */
 export const updateRecipe = withTenantPermission<UpdateRecipeInput, { id: string }>(
   'canManageRecipes',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateRecipeSchema.parse(data);
-      const existing = await recipeRepo.findById(validatedData.id);
+      const existing = await recipeRepo.findRecipeByIdAsListItem(validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Recipe not found' };
       }
 
-      const recipe = await recipeRepo.updateWithItems(validatedData.id, validatedData);
+      const recipe = await recipeRepo.updateRecipeWithItems(
+        validatedData.id,
+        ctx.tenantId,
+        validatedData,
+      );
       if (!recipe) {
         return { success: false, error: 'Failed to update recipe' };
       }
 
       logger.info('Recipe updated', {
         context: 'updateRecipe',
-        metadata: {},
+        metadata: { id: recipe.id },
       });
 
       revalidatePath('/finances/recipes');
@@ -77,17 +82,19 @@ export const updateRecipe = withTenantPermission<UpdateRecipeInput, { id: string
 );
 
 /**
- * Soft deletes a recipe.
+ * Soft-deletes a recipe by setting its deletedAt timestamp.
+ * @param id - The ID of the recipe to delete.
+ * @returns An ActionResult indicating success.
  */
 export const deleteRecipe = withTenantPermission<string, { success: true }>(
   'canManageRecipes',
-  async (_session, id) => {
+  async (ctx, id) => {
     try {
-      await recipeRepo.softDelete(id);
+      await recipeRepo.softDeleteRecipe(id, ctx.tenantId);
 
       logger.info('Recipe deleted', {
         context: 'deleteRecipe',
-        metadata: {},
+        metadata: { id },
       });
 
       revalidatePath('/finances/recipes');

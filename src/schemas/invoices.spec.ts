@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   InvoiceItemSchema,
-  InvoiceSchema,
+  CreateInvoiceSchema,
   RecordPaymentSchema,
   CancelInvoiceSchema,
   InvoiceFiltersSchema,
@@ -73,7 +73,7 @@ describe('Invoice Schemas', () => {
     };
 
     it('validates a correct invoice', () => {
-      const result = InvoiceSchema.safeParse(validInvoice);
+      const result = CreateInvoiceSchema.safeParse(validInvoice);
       expect(result.success).toBe(true);
     });
 
@@ -83,7 +83,7 @@ describe('Invoice Schemas', () => {
         dueDate: new Date('2023-12-31'),
       };
 
-      const result = InvoiceSchema.safeParse(invalidInvoice);
+      const result = CreateInvoiceSchema.safeParse(invalidInvoice);
       expect(result.success).toBe(false);
 
       if (!result.success) {
@@ -97,7 +97,7 @@ describe('Invoice Schemas', () => {
         items: [],
       };
 
-      const result = InvoiceSchema.safeParse(invalidInvoice);
+      const result = CreateInvoiceSchema.safeParse(invalidInvoice);
       expect(result.success).toBe(false);
     });
   });
