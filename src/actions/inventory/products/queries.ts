@@ -19,7 +19,7 @@ import type { SearchParams } from 'nuqs/server';
  */
 export const getProducts = withTenantPermission<SearchParams, ProductPagination>(
   'canReadProducts',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = ProductFiltersSchema.parse({
         search: searchParams.search ?? '',
@@ -33,7 +33,7 @@ export const getProducts = withTenantPermission<SearchParams, ProductPagination>
         sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
       });
 
-      const result = await productRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await productRepo.searchAndPaginate(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch products');
@@ -50,9 +50,9 @@ export const getProducts = withTenantPermission<SearchParams, ProductPagination>
  */
 export const getProductById = withTenantPermission<string, ProductWithDetails>(
   'canReadProducts',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const product = await productRepo.findByIdWithDetails(id, session.user.tenantId);
+      const product = await productRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!product) {
         return { success: false, error: 'Product not found' };
@@ -74,7 +74,7 @@ export const getProductStatistics = withTenantPermission<void, ProductStatistics
   'canReadProducts',
   async (session) => {
     try {
-      const stats = await productRepo.getStatistics(session.user.tenantId);
+      const stats = await productRepo.getStatistics(ctx.tenantId);
       return { success: true, data: stats };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch product statistics');
@@ -92,7 +92,7 @@ export const getActiveProducts = withTenantPermission<
   Array<{ id: string; name: string; price: number }>
 >('canReadProducts', async (session) => {
   try {
-    const products = await productRepo.getActiveProducts(session.user.tenantId);
+    const products = await productRepo.getActiveProducts(ctx.tenantId);
     return { success: true, data: products };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch active products');

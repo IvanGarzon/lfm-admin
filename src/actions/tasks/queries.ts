@@ -1,11 +1,10 @@
 'use server';
 
-import { auth } from '@/auth';
 import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repository';
 import { TaskExecutionRepository } from '@/repositories/task-execution-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import type { ActionResult } from '@/types/actions';
+import { withAuth } from '@/lib/action-auth';
 import type { TaskPagination } from '@/features/tasks/types';
 import type {
   ScheduledTask,
@@ -18,26 +17,31 @@ import type {
 const taskRepo = new ScheduledTaskRepository(prisma);
 const executionRepo = new TaskExecutionRepository(prisma);
 
-/**
- * Retrieves all scheduled tasks with execution statistics.
- * Supports filtering by category, enabled status, and schedule type.
- * @param filters - Optional filters including category, isEnabled, and scheduleType.
- * @returns A promise that resolves to an `ActionResult` containing the paginated tasks.
- */
-export async function getTasks(filters?: {
-  category?: TaskCategory;
-  isEnabled?: boolean;
-  scheduleType?: ScheduleType;
-}): Promise<ActionResult<TaskPagination>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
+// -- Input Types -----------------------------------------------------------
 
+type GetTasksInput =
+  | {
+      category?: TaskCategory;
+      isEnabled?: boolean;
+      scheduleType?: ScheduleType;
+    }
+  | undefined;
+
+type GetTaskExecutionsInput = {
+  taskId: string;
+  options?: {
+    limit?: number;
+    offset?: number;
+    status?: ExecutionStatus;
+  };
+};
+
+// -- Actions ---------------------------------------------------------------
+
+export const getTasks = withAuth<GetTasksInput, TaskPagination>(async (_session, filters) => {
   try {
     const tasks = await taskRepo.findAllWithStats(filters);
 
-    // Create pagination structure (simple pagination for now, all items on one page)
     const pagination = {
       totalItems: tasks.length,
       totalPages: 1,
@@ -48,46 +52,24 @@ export async function getTasks(filters?: {
       previousPage: null,
     };
 
-    return {
-      success: true,
-      data: {
-        items: tasks,
-        pagination,
-      },
-    };
+    return { success: true, data: { items: tasks, pagination } };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch tasks', {
-      action: 'getTasks',
-      userId: session.user.id,
-    });
+    return handleActionError(error, 'Failed to fetch tasks', { action: 'getTasks' });
   }
-}
+});
 
-/**
- * Retrieves a single scheduled task by ID with execution statistics.
- * Includes execution count and last execution details.
- * @param taskId - The unique identifier of the task to retrieve.
- * @returns A promise that resolves to an `ActionResult` containing the task with stats,
- * or an error if the task is not found.
- */
-export async function getTaskById(taskId: string): Promise<
-  ActionResult<
-    ScheduledTask & {
-      _count: { executions: number };
-      lastExecution?: {
-        id: string;
-        status: string;
-        startedAt: Date;
-        completedAt: Date | null;
-      } | null;
-    }
-  >
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
+export const getTaskById = withAuth<
+  string,
+  ScheduledTask & {
+    _count: { executions: number };
+    lastExecution?: {
+      id: string;
+      status: string;
+      startedAt: Date;
+      completedAt: Date | null;
+    } | null;
   }
-
+>(async (_session, taskId) => {
   try {
     const task = await taskRepo.findByIdWithStats(taskId);
 
@@ -97,30 +79,13 @@ export async function getTaskById(taskId: string): Promise<
 
     return { success: true, data: task };
   } catch (error) {
-    return handleActionError(error, 'Failed to fetch task', {
-      action: 'getTaskById',
-      userId: session.user.id,
-      taskId,
-    });
+    return handleActionError(error, 'Failed to fetch task', { action: 'getTaskById', taskId });
   }
-}
+});
 
-/**
- * Retrieves execution history for a specific task with statistics.
- * Supports pagination and filtering by status.
- * @param taskId - The unique identifier of the task.
- * @param options - Optional pagination and filtering options (limit, offset, status).
- * @returns A promise that resolves to an `ActionResult` containing executions and stats.
- */
-export async function getTaskExecutions(
-  taskId: string,
-  options?: {
-    limit?: number;
-    offset?: number;
-    status?: ExecutionStatus;
-  },
-): Promise<
-  ActionResult<{
+export const getTaskExecutions = withAuth<
+  GetTaskExecutionsInput,
+  {
     executions: TaskExecution[];
     stats: {
       total: number;
@@ -129,46 +94,22 @@ export async function getTaskExecutions(
       running: number;
       avgDuration: number | null;
     };
-  }>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
   }
-
+>(async (_session, { taskId, options }) => {
   try {
     const executions = await executionRepo.findByTaskId(taskId, options);
     const stats = await executionRepo.getStats(taskId);
 
-    return {
-      success: true,
-      data: {
-        executions,
-        stats,
-      },
-    };
+    return { success: true, data: { executions, stats } };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch task executions', {
       action: 'getTaskExecutions',
-      userId: session.user.id,
       taskId,
     });
   }
-}
+});
 
-/**
- * Retrieves a single task execution by ID.
- * Includes status, timing, result data, and error information.
- * @param executionId - The unique identifier of the execution to retrieve.
- * @returns A promise that resolves to an `ActionResult` containing the execution record,
- * or an error if the execution is not found.
- */
-export async function getExecutionById(executionId: string): Promise<ActionResult<TaskExecution>> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getExecutionById = withAuth<string, TaskExecution>(async (_session, executionId) => {
   try {
     const execution = await executionRepo.findById(executionId);
 
@@ -180,65 +121,34 @@ export async function getExecutionById(executionId: string): Promise<ActionResul
   } catch (error) {
     return handleActionError(error, 'Failed to fetch execution', {
       action: 'getExecutionById',
-      userId: session.user.id,
       executionId,
     });
   }
-}
+});
 
-/**
- * Retrieves recent executions across all tasks.
- * Each execution includes basic task information for context.
- * @param limit - Maximum number of executions to return. Defaults to 10.
- * @returns A promise that resolves to an `ActionResult` containing the recent executions.
- */
-export async function getRecentExecutions(limit: number = 10): Promise<
-  ActionResult<
-    (TaskExecution & {
-      task: {
-        id: string;
-        functionName: string;
-        category: string;
-      };
-    })[]
-  >
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
+export const getRecentExecutions = withAuth<
+  number | undefined,
+  (TaskExecution & { task: { id: string; functionName: string; category: string } })[]
+>(async (_session, limit) => {
   try {
-    const executions = await executionRepo.findRecent(limit);
+    const executions = await executionRepo.findRecent(limit ?? 10);
     return { success: true, data: executions };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch recent executions', {
       action: 'getRecentExecutions',
-      userId: session.user.id,
     });
   }
-}
+});
 
-/**
- * Retrieves task counts grouped by category.
- * Returns counts for SYSTEM, EMAIL, CLEANUP, FINANCE, and CUSTOM categories.
- * @returns A promise that resolves to an `ActionResult` containing category counts.
- */
-export async function getTaskCountsByCategory(): Promise<
-  ActionResult<Record<TaskCategory, number>>
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return { success: false, error: 'Unauthorized' };
-  }
-
-  try {
-    const counts = await taskRepo.countByCategory();
-    return { success: true, data: counts };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch task counts', {
-      action: 'getTaskCountsByCategory',
-      userId: session.user.id,
-    });
-  }
-}
+export const getTaskCountsByCategory = withAuth<void, Record<TaskCategory, number>>(
+  async (_session) => {
+    try {
+      const counts = await taskRepo.countByCategory();
+      return { success: true, data: counts };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch task counts', {
+        action: 'getTaskCountsByCategory',
+      });
+    }
+  },
+);

@@ -21,58 +21,10 @@ const organizationRepo = new OrganizationRepository(prisma);
  * Returns a list of all organisations sorted alphabetically by name.
  * @returns A promise that resolves to an `ActionResult` containing an array of organisation items.
  */
-export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(async (session) => {
+export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(async (ctx) => {
   try {
-    const organizations = await prisma.organization.findMany({
-      where: { tenantId: session.user.tenantId },
-      select: {
-        id: true,
-        name: true,
-        address: true,
-        city: true,
-        state: true,
-        postcode: true,
-        country: true,
-        phone: true,
-        email: true,
-        website: true,
-        abn: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-        _count: {
-          select: {
-            customers: true,
-          },
-        },
-      },
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
-    return {
-      success: true,
-      data: organizations.map((org) => ({
-        id: org.id,
-        name: org.name,
-        address: org.address,
-        city: org.city,
-        state: org.state,
-        postcode: org.postcode,
-        country: org.country,
-        phone: org.phone,
-        email: org.email,
-        website: org.website,
-        abn: org.abn,
-        status: org.status,
-        createdAt: org.createdAt,
-        updatedAt: org.updatedAt,
-        deletedAt: org.deletedAt,
-        customersCount: org._count.customers ?? 0,
-      })),
-    };
+    const organizations = await organizationRepo.findActiveOrganizations(ctx.tenantId);
+    return { success: true, data: organizations };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch organisations');
   }
@@ -85,14 +37,11 @@ export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(a
  * @returns A promise that resolves to an `ActionResult` containing the paginated organisation data.
  */
 export const getOrganizations = withTenant<SearchParams, OrganizationPagination>(
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const parsedParams = searchParamsCache.parse(searchParams);
       const validatedFilters = validateOrganizationSearchParams(parsedParams);
-      const result = await organizationRepo.searchAndPaginate(
-        validatedFilters,
-        session.user.tenantId,
-      );
+      const result = await organizationRepo.searchOrganizations(validatedFilters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -108,9 +57,9 @@ export const getOrganizations = withTenant<SearchParams, OrganizationPagination>
  * @returns A promise that resolves to an `ActionResult` containing the organisation details,
  * or an error if the organisation is not found.
  */
-export const getOrganizationById = withTenant<string, OrganizationListItem>(async (session, id) => {
+export const getOrganizationById = withTenant<string, OrganizationListItem>(async (ctx, id) => {
   try {
-    const organization = await organizationRepo.findByIdWithDetails(id, session.user.tenantId);
+    const organization = await organizationRepo.findOrganizationById(id, ctx.tenantId);
 
     if (!organization) {
       return { success: false, error: 'Organisation not found' };

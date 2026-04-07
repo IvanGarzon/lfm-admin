@@ -93,15 +93,23 @@ export function useCreateRecipe() {
       return result.data;
     },
     onMutate: async () => {
-      // Cancel any outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: RECIPE_KEYS.lists() });
+      const previousLists = queryClient.getQueriesData({ queryKey: RECIPE_KEYS.lists() });
+      return { previousLists };
+    },
+    onError: (error: Error, _data, context) => {
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      toast.error(error.message || 'Failed to create recipe');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: RECIPE_KEYS.lists() });
       toast.success(`Recipe ${data.name} created successfully`);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create recipe');
     },
   });
 }

@@ -64,7 +64,7 @@ describe('QuoteRepository', () => {
     repository = new QuoteRepository(mockPrisma);
   });
 
-  describe('findByIdWithDetails', () => {
+  describe('findQuoteById', () => {
     it('returns a quote with details when it exists', async () => {
       const mockQuote = {
         id: 'quote_123',
@@ -82,7 +82,7 @@ describe('QuoteRepository', () => {
       };
       mockPrisma.quote.findUnique.mockResolvedValue(mockQuote);
 
-      const result = await repository.findByIdWithDetails('quote_123');
+      const result = await repository.findQuoteById('quote_123');
 
       expect(result?.quoteNumber).toBe('Q-001');
       expect(mockPrisma.quote.findUnique).toHaveBeenCalledWith(
@@ -94,7 +94,7 @@ describe('QuoteRepository', () => {
 
     it('returns null when quote does not exist', async () => {
       mockPrisma.quote.findUnique.mockResolvedValue(null);
-      const result = await repository.findByIdWithDetails('non_existent');
+      const result = await repository.findQuoteById('non_existent');
       expect(result).toBeNull();
     });
   });
@@ -150,14 +150,14 @@ describe('QuoteRepository', () => {
     });
   });
 
-  describe('markAsAccepted', () => {
+  describe('markQuoteAsAccepted', () => {
     it('updates status to ACCEPTED and records history', async () => {
       const mockQuote = {
         id: 'q1',
         status: QuoteStatus.SENT, // Must be SENT to be ACCEPTED
         items: [],
         customer: { firstName: 'Test', lastName: 'User' },
-        amount: '100', // Required for findByIdWithDetails mapping
+        amount: '100', // Required for findQuoteById mapping
         gst: '0',
         discount: '0',
       };
@@ -178,7 +178,7 @@ describe('QuoteRepository', () => {
         return callback(mockPrisma);
       });
 
-      await repository.markAsAccepted('q1', 'user1');
+      await repository.markQuoteAsAccepted('q1', 'user1');
 
       expect(mockPrisma.quote.update).toHaveBeenCalledWith(
         expect.objectContaining({

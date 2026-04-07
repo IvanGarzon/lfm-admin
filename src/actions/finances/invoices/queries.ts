@@ -29,10 +29,10 @@ const invoiceRepo = new InvoiceRepository(prisma);
  */
 export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>(
   'canReadInvoices',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await invoiceRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await invoiceRepo.searchAndPaginate(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -50,9 +50,9 @@ export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>
  */
 export const getInvoiceById = withTenantPermission<string, InvoiceWithDetails>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -73,9 +73,9 @@ export const getInvoiceById = withTenantPermission<string, InvoiceWithDetails>(
  */
 export const getInvoiceMetadata = withTenantPermission<string, InvoiceMetadata>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdMetadata(id, session.user.tenantId);
+      const invoice = await invoiceRepo.findByIdMetadata(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -95,7 +95,7 @@ export const getInvoiceMetadata = withTenantPermission<string, InvoiceMetadata>(
  */
 export const getInvoiceItems = withTenantPermission<string, InvoiceItemDetail[]>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const items = await invoiceRepo.findInvoiceItems(id);
       return { success: true, data: items };
@@ -112,7 +112,7 @@ export const getInvoiceItems = withTenantPermission<string, InvoiceItemDetail[]>
  */
 export const getInvoicePayments = withTenantPermission<string, InvoicePaymentItem[]>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const payments = await invoiceRepo.findInvoicePayments(id);
       return { success: true, data: payments };
@@ -129,7 +129,7 @@ export const getInvoicePayments = withTenantPermission<string, InvoicePaymentIte
  */
 export const getInvoiceStatusHistory = withTenantPermission<string, InvoiceStatusHistoryItem[]>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
       const history = await invoiceRepo.findInvoiceStatusHistory(id);
       return { success: true, data: history };
@@ -149,9 +149,9 @@ export const getInvoiceStatusHistory = withTenantPermission<string, InvoiceStatu
 export const getInvoiceStatistics = withTenantPermission<
   { startDate?: Date; endDate?: Date } | undefined,
   InvoiceStatistics
->('canReadInvoices', async (session, dateFilter) => {
+>('canReadInvoices', async (ctx, dateFilter) => {
   try {
-    const stats = await invoiceRepo.getStatistics(session.user.tenantId, dateFilter);
+    const stats = await invoiceRepo.getStatistics(ctx.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
@@ -165,9 +165,9 @@ export const getInvoiceStatistics = withTenantPermission<
  */
 export const getMonthlyRevenueTrend = withTenantPermission<number | undefined, RevenueTrend[]>(
   'canReadInvoices',
-  async (session, limit = 12) => {
+  async (ctx, limit = 12) => {
     try {
-      const trend = await invoiceRepo.getMonthlyRevenueTrend(limit, session.user.tenantId);
+      const trend = await invoiceRepo.getMonthlyRevenueTrend(limit, ctx.tenantId);
       return { success: true, data: trend };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch revenue trend');
@@ -182,9 +182,9 @@ export const getMonthlyRevenueTrend = withTenantPermission<number | undefined, R
  */
 export const getTopDebtors = withTenantPermission<number | undefined, TopCustomerDebtor[]>(
   'canReadInvoices',
-  async (session, limit = 5) => {
+  async (ctx, limit = 5) => {
     try {
-      const debtors = await invoiceRepo.getTopDebtors(limit, session.user.tenantId);
+      const debtors = await invoiceRepo.getTopDebtors(limit, ctx.tenantId);
       return { success: true, data: debtors };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch top debtors');
@@ -201,9 +201,9 @@ export const getTopDebtors = withTenantPermission<number | undefined, TopCustome
  */
 export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }
@@ -235,9 +235,9 @@ export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
  */
 export const getReceiptPdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, session.user.tenantId);
+      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }

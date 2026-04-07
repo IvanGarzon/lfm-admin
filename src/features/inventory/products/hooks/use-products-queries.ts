@@ -247,7 +247,7 @@ export function useUpdateProductStatus() {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ProductStatus }) => {
-      const result = await updateProductStatus(id, status);
+      const result = await updateProductStatus({ id, status });
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -274,7 +274,7 @@ export function useUpdateProductStock() {
 
   return useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
-      const result = await updateProductStock(id, quantity);
+      const result = await updateProductStock({ id, quantity });
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -326,7 +326,7 @@ export function useBulkUpdateProductStatus() {
 
   return useMutation({
     mutationFn: async ({ ids, status }: { ids: string[]; status: ProductStatus }) => {
-      const result = await bulkUpdateProductStatus(ids, status);
+      const result = await bulkUpdateProductStatus({ ids, status });
       if (!result.success) {
         throw new Error(result.error);
       }

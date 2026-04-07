@@ -12,7 +12,7 @@ export const getTenantSettingsForAdmin = withTenantPermission<void, TenantWithSe
   'canManageSettings',
   async (session) => {
     try {
-      const tenant = await tenantRepo.findTenantById(session.user.tenantId);
+      const tenant = await tenantRepo.findTenantById(ctx.tenantId);
 
       if (!tenant) {
         return { success: false, error: 'Tenant not found' };

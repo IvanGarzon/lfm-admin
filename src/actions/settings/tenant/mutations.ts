@@ -11,9 +11,9 @@ const tenantRepo = new TenantRepository(prisma);
 
 export const updateTenantSettings = withTenantPermission<UpdateTenantSettingsInput, void>(
   'canManageSettings',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
-      await tenantRepo.updateTenantSettings(session.user.tenantId, data);
+      await tenantRepo.updateTenantSettings(ctx.tenantId, data);
       revalidatePath('/settings/tenant');
       return { success: true, data: undefined };
     } catch (error) {

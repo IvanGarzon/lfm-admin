@@ -21,10 +21,10 @@ const vendorRepo = new VendorRepository(prisma);
  */
 export const getVendors = withTenantPermission<SearchParams, VendorPagination>(
   'canReadVendors',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await vendorRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await vendorRepo.searchAndPaginate(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -40,9 +40,9 @@ export const getVendors = withTenantPermission<SearchParams, VendorPagination>(
  */
 export const getVendorById = withTenantPermission<string, VendorWithDetails>(
   'canReadVendors',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const vendor = await vendorRepo.findByIdWithDetails(id, session.user.tenantId);
+      const vendor = await vendorRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!vendor) {
         return { success: false, error: 'Vendor not found' };
@@ -63,7 +63,7 @@ export const getVendorStatistics = withTenantPermission<void, VendorStatistics>(
   'canReadVendors',
   async (session) => {
     try {
-      const statistics = await vendorRepo.getStatistics(session.user.tenantId);
+      const statistics = await vendorRepo.getStatistics(ctx.tenantId);
 
       return { success: true, data: statistics };
     } catch (error) {
@@ -82,7 +82,7 @@ export const getActiveVendors = withTenantPermission<
   Array<{ id: string; vendorCode: string; name: string }>
 >('canReadVendors', async (session) => {
   try {
-    const vendors = await vendorRepo.getActiveVendors(session.user.tenantId);
+    const vendors = await vendorRepo.getActiveVendors(ctx.tenantId);
 
     return { success: true, data: vendors };
   } catch (error) {

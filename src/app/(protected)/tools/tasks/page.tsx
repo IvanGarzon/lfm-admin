@@ -4,7 +4,7 @@ import { Shell } from '@/components/shared/shell';
 import { getTasks } from '@/actions/tasks/queries';
 
 export default async function TasksPage({ searchParams }: { searchParams: SearchParams }) {
-  const result = await getTasks();
+  const result = await getTasks(undefined);
 
   if (!result.success) {
     throw new Error(result.error);

@@ -1,4 +1,3 @@
-import { RecipeItemType } from '@/prisma/client';
 import { testIds } from '../id-generator';
 import type {
   RecipeListItem,
@@ -10,12 +9,15 @@ export const createRecipeResponse = (overrides: Partial<RecipeListItem> = {}): R
   id: testIds.recipe(),
   name: 'Test Recipe',
   description: 'A test recipe description',
+  labourCostType: 'FIXED_AMOUNT',
+  labourAmount: 25,
+  roundPrice: false,
+  roundingMethod: undefined,
   totalMaterialsCost: 100,
-  laborCost: 25,
-  totalProductionCost: 125,
+  labourCost: 25,
+  totalCost: 125,
+  totalRetailPrice: 150,
   sellingPrice: 178.57,
-  profitValue: 53.57,
-  profitPercentage: 30,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
@@ -26,14 +28,13 @@ export const createRecipeItemResponse = (
 ): RecipeItemListItem => ({
   id: testIds.recipeItem(),
   recipeId: testIds.recipe(),
-  description: 'Test Flower',
-  type: RecipeItemType.FLORAL,
-  purchaseUnit: 'Package',
-  purchaseUnitQuantity: 24,
-  purchaseCost: 48,
-  unitCost: 2,
-  quantityUsed: 12,
-  subtotal: 24,
+  priceListItemId: null,
+  name: 'Test Flower',
+  quantity: 10,
+  unitPrice: 2,
+  lineTotal: 20,
+  retailPrice: 3,
+  retailLineTotal: 30,
   order: 0,
   ...overrides,
 });
@@ -44,10 +45,8 @@ export const createRecipeDetails = (
   const recipe = createRecipeResponse(overrides);
   return {
     ...recipe,
-    laborRate: 25,
-    targetMargin: 30,
     notes: 'Test notes',
-    items: overrides.items || [createRecipeItemResponse({ recipeId: recipe.id })],
+    items: overrides.items ?? [createRecipeItemResponse({ recipeId: recipe.id })],
     ...overrides,
   };
 };

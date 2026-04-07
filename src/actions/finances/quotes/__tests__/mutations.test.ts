@@ -45,7 +45,7 @@ const {
     updateQuoteWithItems: vi.fn(),
     findById: vi.fn(),
     findByIdWithDetails: vi.fn(),
-    markAsAccepted: vi.fn(),
+    markQuoteAsAccepted: vi.fn(),
     markAsRejected: vi.fn(),
     markAsSent: vi.fn(),
     markAsOnHold: vi.fn(),
@@ -216,7 +216,7 @@ describe('Quote Mutations', () => {
 
   describe('markQuoteAsAccepted', () => {
     it('marks quote as accepted successfully', async () => {
-      mockQuoteRepo.markAsAccepted.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.markQuoteAsAccepted.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await markQuoteAsAccepted({ id: TEST_QUOTE_ID });
 
@@ -227,7 +227,7 @@ describe('Quote Mutations', () => {
     });
 
     it('returns error when quote not found', async () => {
-      mockQuoteRepo.markAsAccepted.mockResolvedValue(null);
+      mockQuoteRepo.markQuoteAsAccepted.mockResolvedValue(null);
 
       const result = await markQuoteAsAccepted({ id: TEST_NON_EXISTENT_ID });
 
@@ -862,7 +862,10 @@ describe('Quote Mutations - Permission Tests', () => {
 
     it('should ALLOW MANAGER role to mark quotes as accepted', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
-      mockQuoteRepo.markAsAccepted.mockResolvedValue({ id: TEST_QUOTE_ID, status: 'ACCEPTED' });
+      mockQuoteRepo.markQuoteAsAccepted.mockResolvedValue({
+        id: TEST_QUOTE_ID,
+        status: 'ACCEPTED',
+      });
 
       const result = await markQuoteAsAccepted({ id: TEST_QUOTE_ID });
 

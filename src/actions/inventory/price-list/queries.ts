@@ -20,7 +20,7 @@ import type {
  */
 export const getPriceListItems = withTenantPermission<SearchParams, PriceListPagination>(
   'canReadPriceList',
-  async (session, searchParams) => {
+  async (ctx, searchParams) => {
     try {
       const filters = PriceListFiltersSchema.parse({
         search: searchParams.search ?? '',
@@ -34,7 +34,7 @@ export const getPriceListItems = withTenantPermission<SearchParams, PriceListPag
         sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
       });
 
-      const result = await priceListRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await priceListRepo.searchAndPaginate(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');
@@ -49,9 +49,9 @@ export const getPriceListItems = withTenantPermission<SearchParams, PriceListPag
  */
 export const getPriceListItemById = withTenantPermission<string, PriceListItemWithDetails>(
   'canReadPriceList',
-  async (session, id) => {
+  async (ctx, id) => {
     try {
-      const item = await priceListRepo.findByIdWithDetails(id, session.user.tenantId);
+      const item = await priceListRepo.findByIdWithDetails(id, ctx.tenantId);
 
       if (!item) {
         return { success: false, error: 'Price list item not found' };
@@ -89,7 +89,7 @@ export const getActivePriceListItems = withTenantPermission<void, PriceListItemL
   'canReadPriceList',
   async (session) => {
     try {
-      const items = await priceListRepo.findAllActive(session.user.tenantId);
+      const items = await priceListRepo.findAllActive(ctx.tenantId);
       return { success: true, data: items };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');

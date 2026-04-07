@@ -18,10 +18,10 @@ const employeeRepo = new EmployeeRepository(prisma);
  * @returns A promise that resolves to an `ActionResult` containing the paginated employee data.
  */
 export const getEmployees = withTenant<SearchParams, EmployeePagination>(
-  async (session, searchParams) => {
+  async ({ tenantId }, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await employeeRepo.searchAndPaginate(filters, session.user.tenantId);
+      const result = await employeeRepo.searchAndPaginate(filters, tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -37,15 +37,17 @@ export const getEmployees = withTenant<SearchParams, EmployeePagination>(
  * @returns A promise that resolves to an `ActionResult` containing the employee details,
  * or an error if the employee is not found.
  */
-export const getEmployeeById = withTenant<string, EmployeeListItem | null>(async (session, id) => {
-  try {
-    const employee = await employeeRepo.findEmployeeById(id, session.user.tenantId);
-    if (!employee) {
-      return { success: false, error: 'Employee not found' };
-    }
+export const getEmployeeById = withTenant<string, EmployeeListItem | null>(
+  async ({ tenantId }, id) => {
+    try {
+      const employee = await employeeRepo.findEmployeeById(id, tenantId);
+      if (!employee) {
+        return { success: false, error: 'Employee not found' };
+      }
 
-    return { success: true, data: employee };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch employee');
-  }
-});
+      return { success: true, data: employee };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch employee');
+    }
+  },
+);

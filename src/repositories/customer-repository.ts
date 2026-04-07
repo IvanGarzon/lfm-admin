@@ -31,7 +31,17 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @returns An AddressInput object if address information exists, otherwise null
    * @private
    */
-  private mapToAddress(customer: any): AddressInput | null {
+  private mapToAddress(customer: {
+    address1: string | null;
+    address2?: string | null;
+    city?: string | null;
+    region?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    formattedAddress?: string | null;
+  }): AddressInput | null {
     if (!customer.address1) {
       return null;
     }
@@ -68,7 +78,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    *   perPage: 20
    * });
    */
-  async searchAndPaginate(params: CustomerFilters, tenantId: string): Promise<CustomerPagination> {
+  async searchCustomers(params: CustomerFilters, tenantId: string): Promise<CustomerPagination> {
     const { search, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.CustomerWhereInput = {
@@ -167,7 +177,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @param id - The unique identifier of the customer
    * @returns A promise that resolves to the customer details or null if not found
    */
-  async findByIdWithDetails(id: string, tenantId: string): Promise<CustomerListItem | null> {
+  async findCustomerById(id: string, tenantId: string): Promise<CustomerListItem | null> {
     const customer = await this.prisma.customer.findUnique({
       where: { id, tenantId },
       select: {
@@ -233,9 +243,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @param email - The email address to search for
    * @returns A promise that resolves to the customer or null
    */
-  async findByEmail(email: string) {
-    return this.prisma.customer.findUnique({
-      where: { email },
+  async findCustomerByEmail(email: string, tenantId: string) {
+    return this.prisma.customer.findFirst({
+      where: { email, tenantId },
     });
   }
 
@@ -244,7 +254,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * Returns a minimal set of fields needed for dropdowns and pickers.
    * @returns A promise that resolves to an array of active customer summaries
    */
-  async findActiveSelection(tenantId: string) {
+  async findActiveCustomers(tenantId: string) {
     return this.prisma.customer.findMany({
       where: {
         tenantId,
@@ -307,6 +317,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    */
   async updateCustomer(
     id: string,
+    tenantId: string,
     data: UpdateCustomerInput,
     updatedBy?: string,
   ): Promise<CustomerListItem | null> {
@@ -361,7 +372,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedCustomer.id);
+    return await this.findCustomerById(updatedCustomer.id, tenantId);
   }
 
   /**
@@ -369,9 +380,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    * @param id - The unique identifier of the customer to delete
    * @returns A promise that resolves to the soft-deleted customer
    */
-  async softDelete(id: string) {
+  async softDeleteCustomer(id: string, tenantId: string) {
     return this.prisma.customer.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         deletedAt: new Date(),
         status: CustomerStatus.DELETED,

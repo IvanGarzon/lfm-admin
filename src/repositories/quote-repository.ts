@@ -35,6 +35,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     return this.prisma.quote as unknown as ModelDelegateOperations<Prisma.QuoteGetPayload<object>>;
   }
 
+  private calculateGrowth(current: number, previous: number): number {
+    if (previous === 0) {
+      return current > 0 ? 100 : 0;
+    }
+
+    return Number((((current - previous) / previous) * 100).toFixed(1));
+  }
+
   /**
    * Search and paginate quotes with filters.
    * Only returns the latest versions of quotes (quotes without child versions).
@@ -178,7 +186,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The unique identifier of the quote
    * @returns A promise that resolves to the quote with all details, or null if not found
    */
-  async findByIdWithDetails(id: string, tenantId: string): Promise<QuoteWithDetails | null> {
+  async findQuoteById(id: string, tenantId: string): Promise<QuoteWithDetails | null> {
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
       select: {
@@ -280,7 +288,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The ID of the quote
    * @returns A promise that resolves to the quote metadata, or null if not found
    */
-  async findByIdMetadata(id: string, tenantId: string): Promise<QuoteMetadata | null> {
+  async findQuoteMetadata(id: string, tenantId: string): Promise<QuoteMetadata | null> {
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
       select: {
@@ -428,7 +436,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param dateFilter.endDate - The end date (inclusive) for filtering quotes
    * @returns A promise that resolves to statistics object with counts, values, and conversion rate
    */
-  async getStatistics(
+  async getQuoteStatistics(
     tenantId: string,
     dateFilter?: { startDate?: Date; endDate?: Date },
   ): Promise<QuoteStatistics> {
@@ -586,11 +594,6 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     return stats;
-  }
-
-  private calculateGrowth(current: number, previous: number): number {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return Number((((current - previous) / previous) * 100).toFixed(1));
   }
 
   /**
@@ -870,7 +873,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot accept a cancelled quote)
    */
-  async markAsAccepted(
+  async markQuoteAsAccepted(
     id: string,
     tenantId: string,
     updatedBy?: string,
@@ -937,6 +940,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async markAsOnHold(
     id: string,
+    tenantId: string,
     reason?: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
@@ -986,7 +990,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findByIdWithDetails(updated.id, tenantId);
   }
 
   /**
@@ -1002,6 +1006,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async markAsCancelled(
     id: string,
+    tenantId: string,
     cancelReason?: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
@@ -1050,7 +1055,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findByIdWithDetails(updated.id, tenantId);
   }
 
   /**
@@ -1066,6 +1071,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async markAsRejected(
     id: string,
+    tenantId: string,
     rejectReason: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
@@ -1111,7 +1117,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return updatedQuote;
     });
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findByIdWithDetails(updated.id, tenantId);
   }
 
   /**
@@ -1124,7 +1130,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot send a cancelled quote)
    */
-  async markAsSent(id: string, updatedBy?: string): Promise<QuoteWithDetails | null> {
+  async markAsSent(
+    id: string,
+    tenantId: string,
+    updatedBy?: string,
+  ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, deletedAt: null },
@@ -1171,7 +1181,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findByIdWithDetails(updated.id, tenantId);
   }
 
   /**

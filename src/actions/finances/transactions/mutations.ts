@@ -25,13 +25,10 @@ const transactionRepo = new TransactionRepository(prisma);
  */
 export const createTransaction = withTenantPermission<CreateTransactionInput, TransactionListItem>(
   'canManageTransactions',
-  async (session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = CreateTransactionSchema.parse(data);
-      const transaction = await transactionRepo.createTransaction(
-        validatedData,
-        session.user.tenantId,
-      );
+      const transaction = await transactionRepo.createTransaction(validatedData, ctx.tenantId);
 
       logger.info('Transaction created', {
         context: 'createTransaction',
@@ -123,7 +120,7 @@ export const deleteTransaction = withTenantPermission<string, { success: true }>
 export const createTransactionCategory = withTenantPermission<
   string,
   { id: string; name: string; description: string | null }
->('canManageTransactions', async (session, name) => {
+>('canManageTransactions', async (ctx, name) => {
   try {
     const schema = z
       .string()
@@ -132,10 +129,7 @@ export const createTransactionCategory = withTenantPermission<
       .max(50, 'Category name is too long');
     const validatedName = schema.parse(name);
 
-    const category = await transactionRepo.findOrCreateCategory(
-      validatedName,
-      session.user.tenantId,
-    );
+    const category = await transactionRepo.findOrCreateCategory(validatedName, ctx.tenantId);
 
     logger.info('Transaction category created', {
       context: 'createTransactionCategory',
@@ -159,7 +153,7 @@ export const createTransactionCategory = withTenantPermission<
 export const uploadTransactionAttachment = withTenantPermission<
   FormData,
   { id: string; fileName: string; fileSize: number; mimeType: string; s3Url: string }
->('canManageTransactions', async (session, formData) => {
+>('canManageTransactions', async (ctx, formData) => {
   try {
     const { uploadFileToS3 } = await import('@/lib/s3');
 
@@ -195,7 +189,7 @@ export const uploadTransactionAttachment = withTenantPermission<
       mimeType: file.type,
       s3Key,
       s3Url,
-      uploadedBy: session.user.id,
+      uploadedBy: ctx.userId,
     });
 
     logger.info('Transaction attachment uploaded', {
