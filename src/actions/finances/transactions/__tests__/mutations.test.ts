@@ -21,7 +21,7 @@ const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
     createTransaction: vi.fn(),
     updateTransaction: vi.fn(),
     deleteTransaction: vi.fn(),
-    findById: vi.fn(),
+    findByIdWithDetails: vi.fn(),
     findOrCreateCategory: vi.fn(),
     createAttachment: vi.fn(),
     findAttachmentById: vi.fn(),
@@ -131,7 +131,7 @@ describe('Transaction Mutations', () => {
         ...createTransactionInput(),
       };
 
-      mockTransactionRepo.findById.mockResolvedValue(createTransactionWithDetails());
+      mockTransactionRepo.findByIdWithDetails.mockResolvedValue(createTransactionWithDetails());
       mockTransactionRepo.updateTransaction.mockResolvedValue(
         createTransactionResponse({ id: TEST_TRANSACTION_ID }),
       );
@@ -150,7 +150,7 @@ describe('Transaction Mutations', () => {
         ...createTransactionInput(),
       };
 
-      mockTransactionRepo.findById.mockResolvedValue(null);
+      mockTransactionRepo.findByIdWithDetails.mockResolvedValue(null);
 
       const result = await updateTransaction(input);
 
@@ -176,17 +176,20 @@ describe('Transaction Mutations', () => {
 
   describe('deleteTransaction', () => {
     it('deletes a transaction successfully when authorized', async () => {
-      mockTransactionRepo.findById.mockResolvedValue(createTransactionWithDetails());
-      mockTransactionRepo.deleteTransaction.mockResolvedValue(undefined);
+      mockTransactionRepo.findByIdWithDetails.mockResolvedValue(createTransactionWithDetails());
+      mockTransactionRepo.deleteTransaction.mockResolvedValue({ id: TEST_TRANSACTION_ID });
 
       const result = await deleteTransaction(TEST_TRANSACTION_ID);
 
       expect(result.success).toBe(true);
-      expect(mockTransactionRepo.deleteTransaction).toHaveBeenCalledWith(TEST_TRANSACTION_ID);
+      expect(mockTransactionRepo.deleteTransaction).toHaveBeenCalledWith(
+        TEST_TRANSACTION_ID,
+        mockSession.user.tenantId,
+      );
     });
 
     it('returns error when transaction not found', async () => {
-      mockTransactionRepo.findById.mockResolvedValue(null);
+      mockTransactionRepo.findByIdWithDetails.mockResolvedValue(null);
 
       const result = await deleteTransaction('non-existent');
 
@@ -218,7 +221,10 @@ describe('Transaction Mutations', () => {
       if (result.success) {
         expect(result.data.name).toBe('New Category');
       }
-      expect(mockTransactionRepo.findOrCreateCategory).toHaveBeenCalledWith('New Category');
+      expect(mockTransactionRepo.findOrCreateCategory).toHaveBeenCalledWith(
+        'New Category',
+        mockSession.user.tenantId,
+      );
     });
 
     it('returns existing category if name already exists', async () => {
@@ -363,9 +369,9 @@ describe('Transaction Mutations - Permission Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockTransactionRepo.createTransaction.mockResolvedValue(createTransactionResponse());
-    mockTransactionRepo.findById.mockResolvedValue(createTransactionWithDetails());
+    mockTransactionRepo.findByIdWithDetails.mockResolvedValue(createTransactionWithDetails());
     mockTransactionRepo.updateTransaction.mockResolvedValue(createTransactionResponse());
-    mockTransactionRepo.deleteTransaction.mockResolvedValue(undefined);
+    mockTransactionRepo.deleteTransaction.mockResolvedValue({ id: testIds.transaction() });
   });
 
   describe('createTransaction', () => {

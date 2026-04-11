@@ -21,6 +21,66 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
   }
 
   /**
+   * Map a raw Prisma recipe row to the RecipeListItem plain type.
+   * Converts all Decimal fields to number.
+   * @param recipe - The raw Prisma recipe record.
+   * @returns A plain RecipeListItem with all numeric fields as number.
+   */
+  private toListItem(recipe: {
+    id: string;
+    name: string;
+    description?: string | null;
+    labourCostType: LabourCostType;
+    labourAmount: Prisma.Decimal;
+    roundPrice: boolean | null;
+    roundingMethod: RoundingMethod | null;
+    totalMaterialsCost: Prisma.Decimal;
+    labourCost: Prisma.Decimal;
+    totalCost: Prisma.Decimal;
+    totalRetailPrice: Prisma.Decimal;
+    sellingPrice: Prisma.Decimal;
+    createdAt: Date;
+    updatedAt: Date;
+  }): RecipeListItem {
+    const labourCost = Number(recipe.labourCost);
+    const totalRetailPrice = Number(recipe.totalRetailPrice);
+    let sellingPrice = Number(recipe.sellingPrice);
+
+    // Calculate selling price if it's 0 (for existing recipes created before this field was added)
+    if (sellingPrice === 0) {
+      sellingPrice = totalRetailPrice + labourCost;
+
+      if (recipe.roundPrice && sellingPrice > 0) {
+        const roundingMethod = recipe.roundingMethod ?? 'NEAREST';
+        if (roundingMethod === 'NEAREST') {
+          sellingPrice = Math.round(sellingPrice);
+        } else if (roundingMethod === 'PSYCHOLOGICAL_99') {
+          sellingPrice = Math.ceil(sellingPrice) - 0.01;
+        } else if (roundingMethod === 'PSYCHOLOGICAL_95') {
+          sellingPrice = Math.ceil(sellingPrice) - 0.05;
+        }
+      }
+    }
+
+    return {
+      id: recipe.id,
+      name: recipe.name,
+      description: recipe.description,
+      labourCostType: recipe.labourCostType,
+      labourAmount: Number(recipe.labourAmount),
+      roundPrice: recipe.roundPrice ?? undefined,
+      roundingMethod: recipe.roundingMethod ?? undefined,
+      totalMaterialsCost: Number(recipe.totalMaterialsCost),
+      labourCost,
+      totalCost: Number(recipe.totalCost),
+      totalRetailPrice,
+      sellingPrice,
+      createdAt: recipe.createdAt,
+      updatedAt: recipe.updatedAt,
+    };
+  }
+
+  /**
    * Search and paginate recipes with optional text search and sorting.
    * @param params - Filter parameters including search term, pagination, and sort options.
    * @param tenantId - The tenant scope for the query.
@@ -258,65 +318,5 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     } catch {
       return false;
     }
-  }
-
-  /**
-   * Map a raw Prisma recipe row to the RecipeListItem plain type.
-   * Converts all Decimal fields to number.
-   * @param recipe - The raw Prisma recipe record.
-   * @returns A plain RecipeListItem with all numeric fields as number.
-   */
-  private toListItem(recipe: {
-    id: string;
-    name: string;
-    description?: string | null;
-    labourCostType: LabourCostType;
-    labourAmount: Prisma.Decimal;
-    roundPrice: boolean | null;
-    roundingMethod: RoundingMethod | null;
-    totalMaterialsCost: Prisma.Decimal;
-    labourCost: Prisma.Decimal;
-    totalCost: Prisma.Decimal;
-    totalRetailPrice: Prisma.Decimal;
-    sellingPrice: Prisma.Decimal;
-    createdAt: Date;
-    updatedAt: Date;
-  }): RecipeListItem {
-    const labourCost = Number(recipe.labourCost);
-    const totalRetailPrice = Number(recipe.totalRetailPrice);
-    let sellingPrice = Number(recipe.sellingPrice);
-
-    // Calculate selling price if it's 0 (for existing recipes created before this field was added)
-    if (sellingPrice === 0) {
-      sellingPrice = totalRetailPrice + labourCost;
-
-      if (recipe.roundPrice && sellingPrice > 0) {
-        const roundingMethod = recipe.roundingMethod ?? 'NEAREST';
-        if (roundingMethod === 'NEAREST') {
-          sellingPrice = Math.round(sellingPrice);
-        } else if (roundingMethod === 'PSYCHOLOGICAL_99') {
-          sellingPrice = Math.ceil(sellingPrice) - 0.01;
-        } else if (roundingMethod === 'PSYCHOLOGICAL_95') {
-          sellingPrice = Math.ceil(sellingPrice) - 0.05;
-        }
-      }
-    }
-
-    return {
-      id: recipe.id,
-      name: recipe.name,
-      description: recipe.description,
-      labourCostType: recipe.labourCostType,
-      labourAmount: Number(recipe.labourAmount),
-      roundPrice: recipe.roundPrice ?? undefined,
-      roundingMethod: recipe.roundingMethod ?? undefined,
-      totalMaterialsCost: Number(recipe.totalMaterialsCost),
-      labourCost,
-      totalCost: Number(recipe.totalCost),
-      totalRetailPrice,
-      sellingPrice,
-      createdAt: recipe.createdAt,
-      updatedAt: recipe.updatedAt,
-    };
   }
 }

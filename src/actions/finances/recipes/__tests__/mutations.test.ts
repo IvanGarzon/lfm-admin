@@ -79,7 +79,7 @@ describe('Recipe Mutations', () => {
     mockHasPermission.mockReturnValue(true);
   });
 
-  describe('createRecipe', () => {
+  describe('createRecipeWithItems', () => {
     it('creates a recipe successfully when authorised', async () => {
       const mockCreated = createRecipeDetails({ id: TEST_RECIPE_ID, name: createInput.name });
       mockRepoInstance.createRecipeWithItems.mockResolvedValue(mockCreated);
@@ -100,7 +100,7 @@ describe('Recipe Mutations', () => {
     });
   });
 
-  describe('updateRecipe', () => {
+  describe('updateRecipeWithItems', () => {
     it('updates a recipe successfully when authorised', async () => {
       const mockExisting = createRecipeDetails({ id: TEST_RECIPE_ID });
       const mockUpdated = createRecipeDetails({ id: TEST_RECIPE_ID, name: updateInput.name });
@@ -126,7 +126,7 @@ describe('Recipe Mutations', () => {
     });
   });
 
-  describe('deleteRecipe', () => {
+  describe('softDeleteRecipe', () => {
     it('deletes a recipe successfully when authorised', async () => {
       mockRepoInstance.softDeleteRecipe.mockResolvedValue(true);
 

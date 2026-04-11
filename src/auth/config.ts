@@ -10,6 +10,7 @@ import { UserRepository } from '@/repositories/user-repository';
 import { logger } from '@/lib/logger';
 import { GoogleProvider } from '@/auth/providers';
 import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 import { CreateSessionSchema, type CreateSessionInput } from '@/schemas/sessions';
 
 export const authConfig = {
@@ -93,6 +94,62 @@ export const authConfig = {
     },
 
     async signIn({ user, account, profile }): Promise<boolean> {
+      // Credentials provider: skip OAuth-specific handleSignIn, user is already verified.
+      // Still create a session record so the session validation callback can find it.
+      if (account?.provider === 'credentials') {
+        if (!user?.email) return false;
+
+        try {
+          const userRepo = new UserRepository(prisma);
+          const dbUser = await userRepo.getUserByEmail(user.email);
+
+          if (dbUser) {
+            const sessionRepo = new SessionRepository(prisma);
+            const activeCount = await sessionRepo.countActiveSessions(dbUser.id);
+            const limit = getSessionLimit(dbUser.role);
+            if (activeCount >= limit) {
+              await sessionRepo.revokeOldestSession(dbUser.id);
+            }
+
+            const details = await getClientDetails();
+            const sessionData: CreateSessionInput = CreateSessionSchema.parse({
+              userId: dbUser.id,
+              sessionToken: crypto.randomUUID(),
+              expires: new Date(Date.now() + 60 * 60 * 24 * 1000),
+              ipAddress: details.ipAddress,
+              userAgent: details.userAgent,
+              deviceType: details.device?.type,
+              deviceVendor: details.device?.vendor,
+              deviceModel: details.device?.model,
+              osName: details.os?.name,
+              osVersion: details.os?.version,
+              browserName: details.browser?.name,
+              browserVersion: details.browser?.version,
+              country: details.country,
+              region: details.region,
+              city: details.city,
+              timezone: details.timezone,
+              latitude: details.latitude,
+              longitude: details.longitude,
+              deviceName: generateSessionName(
+                details.os?.name,
+                details.browser?.name,
+                details.device?.type,
+              ),
+              lastActiveAt: new Date(),
+            });
+
+            await sessionRepo.createSession(sessionData);
+          }
+        } catch (error) {
+          logger.error('Failed to create session for credentials sign-in', error, {
+            context: 'auth:signIn:credentials',
+          });
+        }
+
+        return true;
+      }
+
       const args: SignInArgs = {
         account: account as Account | null,
         profile: profile as Profile | undefined,
@@ -292,28 +349,21 @@ export const authConfig = {
               password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
-              if (
-                credentials?.email === 'test@example.com' &&
-                credentials?.password === 'password'
-              ) {
-                const userRepo = new UserRepository(prisma);
-
-                const user = await userRepo.upsertByEmail(
-                  credentials.email,
-                  {
-                    emailVerified: new Date(),
-                  },
-                  {
-                    email: credentials.email,
-                    firstName: 'Test',
-                    lastName: 'User',
-                    emailVerified: new Date(),
-                  },
-                );
-
-                return user;
+              if (!credentials?.email || !credentials?.password) {
+                return null;
               }
-              return null;
+
+              const userRepo = new UserRepository(prisma);
+              const user = await userRepo.getUserByEmail(credentials.email as string);
+
+              if (!user?.password) return null;
+
+              const passwordValid = await bcrypt.compare(
+                credentials.password as string,
+                user.password,
+              );
+
+              return passwordValid ? user : null;
             },
           }),
         ]

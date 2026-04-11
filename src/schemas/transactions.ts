@@ -4,7 +4,7 @@ import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schem
 import { VALIDATION_LIMITS } from '@/lib/validation';
 import { baseFiltersSchema, createEnumArrayFilter } from '@/schemas/common';
 
-const TransactionSchema = z.object({
+const BaseTransactionSchema = z.object({
   type: TransactionTypeSchema,
   date: z.date(),
   amount: z.number().positive('Amount must be greater than 0'),
@@ -32,8 +32,11 @@ const TransactionSchema = z.object({
   customerId: z.cuid().optional().nullable(),
 });
 
-export const CreateTransactionSchema = TransactionSchema;
-export const UpdateTransactionSchema = TransactionSchema.safeExtend({
+export const CreateTransactionSchema = BaseTransactionSchema;
+export const UpdateTransactionSchema = BaseTransactionSchema.extend({
+  id: z.cuid({ error: 'Invalid transaction ID' }),
+});
+export const DeleteTransactionSchema = z.object({
   id: z.cuid({ error: 'Invalid transaction ID' }),
 });
 
@@ -47,3 +50,4 @@ export const TransactionFiltersSchema = baseFiltersSchema.extend({
 
 export type CreateTransactionInput = z.infer<typeof CreateTransactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof UpdateTransactionSchema>;
+export type DeleteTransactionInput = z.infer<typeof DeleteTransactionSchema>;

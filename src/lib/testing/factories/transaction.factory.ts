@@ -73,7 +73,7 @@ export function createTransactionWithDetails(
   overrides: Partial<TransactionListItem> = {},
 ): TransactionListItem {
   return {
-    id: overrides.id ?? testIds.transaction(),
+    id: testIds.transaction(),
     type: 'INCOME',
     date: new Date(),
     amount: 100,
@@ -85,14 +85,13 @@ export function createTransactionWithDetails(
     referenceId: null,
     invoiceId: null,
     vendorId: null,
+    customerId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-    categories: overrides.categories ?? [
-      { category: { id: testIds.category(), name: 'Test Category' } },
-    ],
-    attachments: overrides.attachments ?? [],
-    invoice: overrides.invoice ?? null,
-    vendor: overrides.vendor ?? null,
+    categories: [{ category: { id: testIds.category(), name: 'Test Category' } }],
+    attachments: [],
+    invoice: null,
+    vendor: null,
     ...overrides,
   };
 }
@@ -176,30 +175,3 @@ export function createTopCategory(
     ...overrides,
   };
 }
-
-/**
- * Pre-built transaction factories for common test scenarios.
- */
-export const mockTransactions = {
-  /**
-   * Creates an income transaction input.
-   */
-  incomeInput: (amount?: number) =>
-    createTransactionInput({ type: 'INCOME', amount: amount ?? 100 }),
-
-  /**
-   * Creates an expense transaction input.
-   */
-  expenseInput: (amount?: number) =>
-    createTransactionInput({ type: 'EXPENSE', amount: amount ?? 100 }),
-
-  /**
-   * Creates a transaction response.
-   */
-  response: (id?: string, type?: TransactionType) => createTransactionResponse({ id, type }),
-
-  /**
-   * Creates a transaction with full details.
-   */
-  withDetails: (id?: string, type?: TransactionType) => createTransactionWithDetails({ id, type }),
-} as const;

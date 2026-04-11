@@ -90,9 +90,9 @@ export const getTransactionStatistics = withTenantPermission<
 export const getTransactionCategories = withTenantPermission<
   void,
   Array<{ id: string; name: string; description: string | null }>
->('canReadTransactions', async (_session) => {
+>('canReadTransactions', async (ctx) => {
   try {
-    const categories = await transactionRepo.getActiveCategories();
+    const categories = await transactionRepo.getActiveCategories(ctx.tenantId);
     return { success: true, data: categories };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch transaction categories');

@@ -54,15 +54,19 @@ export const createTransaction = withTenantPermission<CreateTransactionInput, Tr
  */
 export const updateTransaction = withTenantPermission<UpdateTransactionInput, { id: string }>(
   'canManageTransactions',
-  async (_session, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateTransactionSchema.parse(data);
-      const existing = await transactionRepo.findById(validatedData.id);
+      const existing = await transactionRepo.findByIdWithDetails(validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Transaction not found' };
       }
 
-      const transaction = await transactionRepo.updateTransaction(validatedData.id, validatedData);
+      const transaction = await transactionRepo.updateTransaction(
+        validatedData.id,
+        ctx.tenantId,
+        validatedData,
+      );
       if (!transaction) {
         return { success: false, error: 'Failed to update transaction' };
       }
@@ -89,14 +93,14 @@ export const updateTransaction = withTenantPermission<UpdateTransactionInput, { 
  */
 export const deleteTransaction = withTenantPermission<string, { success: true }>(
   'canManageTransactions',
-  async (_session, id) => {
+  async (ctx, id) => {
     try {
-      const existing = await transactionRepo.findById(id);
+      const existing = await transactionRepo.findByIdWithDetails(id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Transaction not found' };
       }
 
-      await transactionRepo.deleteTransaction(id);
+      await transactionRepo.deleteTransaction(id, ctx.tenantId);
 
       logger.info('Transaction deleted', {
         context: 'deleteTransaction',

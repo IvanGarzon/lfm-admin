@@ -47,6 +47,15 @@ export class TenantRepository extends BaseRepository<Prisma.QuoteGetPayload<obje
     }));
   }
 
+  /**
+   * Find a tenant by its slug.
+   * @param slug - The unique slug identifier for the tenant.
+   * @returns The tenant record or null if not found.
+   */
+  async findTenantBySlug(slug: string): Promise<Tenant | null> {
+    return this.prisma.tenant.findUnique({ where: { slug } });
+  }
+
   async findTenantById(id: string): Promise<TenantWithSettings | null> {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id },

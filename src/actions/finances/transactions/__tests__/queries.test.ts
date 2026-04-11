@@ -181,7 +181,10 @@ describe('Transaction Queries', () => {
       const result = await getTransactionStatistics(dateFilter);
 
       expect(result.success).toBe(true);
-      expect(mockTransactionRepo.getStatistics).toHaveBeenCalledWith(dateFilter);
+      expect(mockTransactionRepo.getStatistics).toHaveBeenCalledWith(
+        mockSession.user.tenantId,
+        dateFilter,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
@@ -234,7 +237,10 @@ describe('Transaction Queries', () => {
       if (result.success) {
         expect(result.data).toHaveLength(2);
       }
-      expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(12);
+      expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(
+        12,
+        mockSession.user.tenantId,
+      );
     });
 
     it('uses default limit of 12 months', async () => {
@@ -242,7 +248,10 @@ describe('Transaction Queries', () => {
 
       await getTransactionTrend(undefined);
 
-      expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(12);
+      expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(
+        12,
+        mockSession.user.tenantId,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
@@ -279,7 +288,10 @@ describe('Transaction Queries', () => {
 
       await getTransactionCategoryBreakdown(dateFilter);
 
-      expect(mockTransactionRepo.getCategoryBreakdown).toHaveBeenCalledWith(dateFilter);
+      expect(mockTransactionRepo.getCategoryBreakdown).toHaveBeenCalledWith(
+        mockSession.user.tenantId,
+        dateFilter,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
@@ -304,7 +316,10 @@ describe('Transaction Queries', () => {
       if (result.success) {
         expect(result.data).toHaveLength(2);
       }
-      expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(5);
+      expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(
+        5,
+        mockSession.user.tenantId,
+      );
     });
 
     it('uses default limit of 5 categories', async () => {
@@ -312,7 +327,10 @@ describe('Transaction Queries', () => {
 
       await getTopTransactionCategories(undefined);
 
-      expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(5);
+      expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(
+        5,
+        mockSession.user.tenantId,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
