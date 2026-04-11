@@ -319,9 +319,14 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
     id: string,
     tenantId: string,
     data: UpdateCustomerInput,
-    updatedBy?: string,
   ): Promise<CustomerListItem | null> {
-    const { organizationId, useOrganizationAddress, ...updateData } = data;
+    const {
+      id: _,
+      organizationId,
+      organizationName: _orgName,
+      useOrganizationAddress,
+      ...updateData
+    } = data;
 
     const { address, ...restUpdateData } = updateData;
 
@@ -350,29 +355,32 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
           formattedAddress: null,
         };
 
-    const updatedCustomer = await this.prisma.customer.update({
-      where: { id },
-      data: {
-        ...restUpdateData,
-        ...addressData,
-        useOrganizationAddress: useOrganizationAddress ?? false,
-        organization: organizationId ? { connect: { id: organizationId } } : { disconnect: true },
-      },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
+    try {
+      const updatedCustomer = await this.prisma.customer.update({
+        where: { id, tenantId },
+        data: {
+          ...restUpdateData,
+          ...addressData,
+          useOrganizationAddress: useOrganizationAddress ?? false,
+          organization: organizationId ? { connect: { id: organizationId } } : { disconnect: true },
+        },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!updatedCustomer) {
-      return null;
+      return await this.findCustomerById(updatedCustomer.id, tenantId);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return null;
+      }
+      throw error;
     }
-
-    return await this.findCustomerById(updatedCustomer.id, tenantId);
   }
 
   /**

@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
 import dynamic from 'next/dynamic';
 import { Shell } from '@/components/shared/shell';
-import { getVendors } from '@/actions/inventory/vendors';
+import { getVendors } from '@/actions/inventory/vendors/queries';
 import { VendorsView } from '@/features/inventory/vendors/components/vendor-view';
 
 const VendorDrawer = dynamic(

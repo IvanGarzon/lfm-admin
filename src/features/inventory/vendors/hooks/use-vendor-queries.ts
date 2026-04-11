@@ -8,11 +8,13 @@ import {
   getVendorById,
   getVendorStatistics,
   getActiveVendors,
+} from '@/actions/inventory/vendors/queries';
+import {
   createVendor,
   updateVendor,
   updateVendorStatus,
   deleteVendor,
-} from '@/actions/inventory/vendors';
+} from '@/actions/inventory/vendors/mutations';
 import type { VendorFilters, VendorWithDetails } from '@/features/inventory/vendors/types';
 import type {
   CreateVendorInput,

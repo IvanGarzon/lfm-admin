@@ -61,7 +61,7 @@ export const getVendorById = withTenantPermission<string, VendorWithDetails>(
  */
 export const getVendorStatistics = withTenantPermission<void, VendorStatistics>(
   'canReadVendors',
-  async (session) => {
+  async (ctx) => {
     try {
       const statistics = await vendorRepo.getStatistics(ctx.tenantId);
 
@@ -80,7 +80,7 @@ export const getVendorStatistics = withTenantPermission<void, VendorStatistics>(
 export const getActiveVendors = withTenantPermission<
   void,
   Array<{ id: string; vendorCode: string; name: string }>
->('canReadVendors', async (session) => {
+>('canReadVendors', async (ctx) => {
   try {
     const vendors = await vendorRepo.getActiveVendors(ctx.tenantId);
 

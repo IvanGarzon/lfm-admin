@@ -32,6 +32,8 @@ vi.mock('@/prisma/client', () => {
 // Import VendorStatus and Prisma after mock
 import { VendorStatus, Prisma } from '@/prisma/client';
 
+const TEST_TENANT_ID = 'tenant-1';
+
 const mockPrismaClient = {
   vendor: {
     findMany: vi.fn(),
@@ -51,14 +53,14 @@ describe('VendorRepository', () => {
 
   beforeEach(() => {
     repository = new VendorRepository(mockPrismaClient);
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('generateVendorCode', () => {
     it('should generate VEN-YYYY-0001 when no vendors exist for the year', async () => {
       vi.mocked(mockPrismaClient.vendor.findFirst).mockResolvedValue(null);
 
-      const code = await repository.generateVendorCode();
+      const code = await repository.generateVendorCode(TEST_TENANT_ID);
       const year = new Date().getFullYear();
 
       expect(code).toBe(`VEN-${year}-0001`);
@@ -70,7 +72,7 @@ describe('VendorRepository', () => {
         vendorCode: `VEN-${year}-0005`,
       } as never);
 
-      const code = await repository.generateVendorCode();
+      const code = await repository.generateVendorCode(TEST_TENANT_ID);
 
       expect(code).toBe(`VEN-${year}-0006`);
     });
@@ -81,7 +83,7 @@ describe('VendorRepository', () => {
         vendorCode: `VEN-${year}-0099`,
       } as never);
 
-      const code = await repository.generateVendorCode();
+      const code = await repository.generateVendorCode(TEST_TENANT_ID);
 
       expect(code).toBe(`VEN-${year}-0100`);
     });
@@ -106,12 +108,15 @@ describe('VendorRepository', () => {
       vi.mocked(mockPrismaClient.vendor.findMany).mockResolvedValue(mockVendors as never);
       vi.mocked(mockPrismaClient.vendor.count).mockResolvedValue(1);
 
-      const result = await repository.searchAndPaginate({
-        page: 1,
-        perPage: 20,
-        search: '',
-        status: [],
-      });
+      const result = await repository.searchAndPaginate(
+        {
+          page: 1,
+          perPage: 20,
+          search: '',
+          status: [],
+        },
+        TEST_TENANT_ID,
+      );
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].name).toBe('Acme Corp');
@@ -123,12 +128,15 @@ describe('VendorRepository', () => {
       vi.mocked(mockPrismaClient.vendor.findMany).mockResolvedValue([] as never);
       vi.mocked(mockPrismaClient.vendor.count).mockResolvedValue(0);
 
-      await repository.searchAndPaginate({
-        page: 1,
-        perPage: 20,
-        search: '',
-        status: [VendorStatus.ACTIVE],
-      });
+      await repository.searchAndPaginate(
+        {
+          page: 1,
+          perPage: 20,
+          search: '',
+          status: [VendorStatus.ACTIVE],
+        },
+        TEST_TENANT_ID,
+      );
 
       expect(mockPrismaClient.vendor.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -148,7 +156,7 @@ describe('VendorRepository', () => {
         .mockResolvedValueOnce(15) // inactive
         .mockResolvedValueOnce(5); // suspended
 
-      const stats = await repository.getStatistics();
+      const stats = await repository.getStatistics(TEST_TENANT_ID);
 
       expect(stats).toEqual({
         total: 100,
@@ -163,7 +171,7 @@ describe('VendorRepository', () => {
     it('should prevent deletion if vendor has transactions', async () => {
       vi.mocked(mockPrismaClient.transaction.count).mockResolvedValue(5);
 
-      await expect(repository.softDeleteVendor('vendor-id')).rejects.toThrow(
+      await expect(repository.softDeleteVendor('vendor-id', TEST_TENANT_ID)).rejects.toThrow(
         'Cannot delete vendor with associated transactions',
       );
     });
@@ -175,12 +183,12 @@ describe('VendorRepository', () => {
         deletedAt: new Date(),
       } as never);
 
-      const result = await repository.softDeleteVendor('vendor-id');
+      const result = await repository.softDeleteVendor('vendor-id', TEST_TENANT_ID);
 
       expect(result.deletedAt).toBeTruthy();
       expect(mockPrismaClient.vendor.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'vendor-id', deletedAt: null },
+          where: { id: 'vendor-id', tenantId: TEST_TENANT_ID, deletedAt: null },
           data: { deletedAt: expect.any(Date) },
         }),
       );
@@ -217,7 +225,7 @@ describe('VendorRepository', () => {
 
       vi.mocked(mockPrismaClient.vendor.findUnique).mockResolvedValue(mockVendor as never);
 
-      const result = await repository.findByIdWithDetails('vendor-1');
+      const result = await repository.findByIdWithDetails('vendor-1', TEST_TENANT_ID);
 
       expect(result).toBeTruthy();
       expect(result?.id).toBe('vendor-1');
@@ -240,7 +248,7 @@ describe('VendorRepository', () => {
     it('should return null when vendor not found', async () => {
       vi.mocked(mockPrismaClient.vendor.findUnique).mockResolvedValue(null);
 
-      const result = await repository.findByIdWithDetails('nonexistent');
+      const result = await repository.findByIdWithDetails('nonexistent', TEST_TENANT_ID);
 
       expect(result).toBeNull();
     });
@@ -274,7 +282,7 @@ describe('VendorRepository', () => {
 
       vi.mocked(mockPrismaClient.vendor.findUnique).mockResolvedValue(mockVendor as never);
 
-      const result = await repository.findByIdWithDetails('vendor-1');
+      const result = await repository.findByIdWithDetails('vendor-1', TEST_TENANT_ID);
 
       expect(result?.address).toBeNull();
     });
@@ -298,7 +306,7 @@ describe('VendorRepository', () => {
         status: VendorStatus.ACTIVE,
       };
 
-      const result = await repository.createVendor(input);
+      const result = await repository.createVendor(input, TEST_TENANT_ID);
 
       expect(result.id).toBe('vendor-new');
       expect(result.vendorCode).toBe(`VEN-${year}-0001`);
@@ -336,7 +344,7 @@ describe('VendorRepository', () => {
         status: VendorStatus.ACTIVE,
       };
 
-      const result = await repository.createVendor(input);
+      const result = await repository.createVendor(input, TEST_TENANT_ID);
 
       expect(result.vendorCode).toBe(`VEN-${year}-0002`);
       expect(mockPrismaClient.vendor.create).toHaveBeenCalledTimes(2);
@@ -356,7 +364,7 @@ describe('VendorRepository', () => {
         status: VendorStatus.ACTIVE,
       };
 
-      await expect(repository.createVendor(input)).rejects.toThrow(
+      await expect(repository.createVendor(input, TEST_TENANT_ID)).rejects.toThrow(
         'Failed to generate a unique vendor code',
       );
     });
@@ -367,6 +375,27 @@ describe('VendorRepository', () => {
       const mockExistingVendor = {
         id: 'vendor-1',
         vendorCode: 'VEN-2026-0001',
+        name: 'Old Name',
+        email: 'old@vendor.com',
+        phone: null,
+        abn: null,
+        status: VendorStatus.ACTIVE,
+        address1: null,
+        address2: null,
+        city: null,
+        region: null,
+        postalCode: null,
+        country: null,
+        lat: null,
+        lng: null,
+        formattedAddress: null,
+        website: null,
+        paymentTerms: null,
+        taxId: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        _count: { transactions: 0 },
       };
 
       const mockUpdatedVendor = {
@@ -432,11 +461,11 @@ describe('VendorRepository', () => {
         notes: 'Updated notes',
       };
 
-      const result = await repository.updateVendor('vendor-1', input);
+      const result = await repository.updateVendor('vendor-1', TEST_TENANT_ID, input);
 
       expect(mockPrismaClient.vendor.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'vendor-1', deletedAt: null },
+          where: { id: 'vendor-1', tenantId: TEST_TENANT_ID, deletedAt: null },
           data: expect.objectContaining({
             name: 'Updated Name',
             email: 'updated@vendor.com',
@@ -460,7 +489,7 @@ describe('VendorRepository', () => {
         status: VendorStatus.ACTIVE,
       };
 
-      const result = await repository.updateVendor('nonexistent', input);
+      const result = await repository.updateVendor('nonexistent', TEST_TENANT_ID, input);
 
       expect(result).toBeNull();
       expect(mockPrismaClient.vendor.update).not.toHaveBeenCalled();
@@ -477,11 +506,15 @@ describe('VendorRepository', () => {
 
       vi.mocked(mockPrismaClient.vendor.update).mockResolvedValue(mockUpdatedVendor as never);
 
-      const result = await repository.updateVendorStatus('vendor-1', VendorStatus.INACTIVE);
+      const result = await repository.updateVendorStatus(
+        'vendor-1',
+        TEST_TENANT_ID,
+        VendorStatus.INACTIVE,
+      );
 
       expect(mockPrismaClient.vendor.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'vendor-1', deletedAt: null },
+          where: { id: 'vendor-1', tenantId: TEST_TENANT_ID, deletedAt: null },
           data: { status: VendorStatus.INACTIVE },
         }),
       );
@@ -507,7 +540,7 @@ describe('VendorRepository', () => {
 
       vi.mocked(mockPrismaClient.vendor.findMany).mockResolvedValue(mockVendors as never);
 
-      const result = await repository.getActiveVendors();
+      const result = await repository.getActiveVendors(TEST_TENANT_ID);
 
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('Acme Corp');
@@ -515,6 +548,7 @@ describe('VendorRepository', () => {
       expect(mockPrismaClient.vendor.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
+            tenantId: TEST_TENANT_ID,
             status: VendorStatus.ACTIVE,
             deletedAt: null,
           },

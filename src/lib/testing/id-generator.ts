@@ -58,6 +58,7 @@ export const testIds = {
   payment: () => generateTestId('pymt'),
   recipe: () => generateTestId('rcpe'),
   recipeItem: () => generateTestId('ritm'),
+  vendor: () => generateTestId('vndr'),
   tenant: () => generateTestId('tnnt'),
   nonExistent: () => generateTestId('none'),
 } as const;

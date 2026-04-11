@@ -14,3 +14,4 @@ export * from './transaction.factory';
 export * from './recipe';
 export * from './customer.factory';
 export * from './organization.factory';
+export * from './vendor.factory';

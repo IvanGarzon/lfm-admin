@@ -65,7 +65,7 @@ export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string
     try {
       const validatedData = UpdateVendorSchema.parse(data);
 
-      const vendor = await vendorRepo.updateVendor(validatedData.id, validatedData);
+      const vendor = await vendorRepo.updateVendor(validatedData.id, ctx.tenantId, validatedData);
 
       if (!vendor) {
         return { success: false, error: 'Failed to update vendor' };
@@ -101,7 +101,11 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
     try {
       const validatedData = UpdateVendorStatusSchema.parse(data);
 
-      const vendor = await vendorRepo.updateVendorStatus(validatedData.id, validatedData.status);
+      const vendor = await vendorRepo.updateVendorStatus(
+        validatedData.id,
+        ctx.tenantId,
+        validatedData.status,
+      );
 
       logger.info(`Vendor status updated: ${vendor.vendorCode} -> ${vendor.status}`, {
         context: 'updateVendorStatus',
@@ -135,7 +139,7 @@ export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string
     try {
       const validatedData = DeleteVendorSchema.parse(data);
 
-      const vendor = await vendorRepo.softDeleteVendor(validatedData.id);
+      const vendor = await vendorRepo.softDeleteVendor(validatedData.id, ctx.tenantId);
 
       logger.info(`Vendor deleted: ${vendor.vendorCode}`, {
         context: 'deleteVendor',

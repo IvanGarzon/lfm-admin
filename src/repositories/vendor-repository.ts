@@ -2,7 +2,6 @@ import { Vendor, VendorStatus, Prisma, PrismaClient } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { isPrismaError } from '@/lib/error-handler';
 import { withDatabaseRetry } from '@/lib/retry';
-import { prisma } from '@/lib/prisma';
 
 import type {
   VendorListItem,
@@ -327,18 +326,23 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   /**
    * Update an existing vendor's information.
    * @param id - The unique identifier of the vendor to update
+   * @param tenantId - The tenant scope for the update
    * @param data - The update data payload
    * @returns A promise that resolves to the updated vendor with details, or null if not found
    */
-  async updateVendor(id: string, data: UpdateVendorInput): Promise<VendorWithDetails | null> {
-    const existing = await this.findById(id);
+  async updateVendor(
+    id: string,
+    tenantId: string,
+    data: UpdateVendorInput,
+  ): Promise<VendorWithDetails | null> {
+    const existing = await this.findByIdWithDetails(id, tenantId);
     if (!existing) {
       return null;
     }
 
     const updatedVendor = await withDatabaseRetry(() =>
       this.prisma.vendor.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           name: data.name,
           email: data.email,
@@ -366,19 +370,20 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedVendor.id);
+    return await this.findByIdWithDetails(updatedVendor.id, tenantId);
   }
 
   /**
    * Updates the operational status for a vendor.
    * @param id - The vendor ID
+   * @param tenantId - The tenant scope for the update
    * @param status - The new VendorStatus to apply
    * @returns A promise that resolves to the basic updated vendor record
    */
-  async updateVendorStatus(id: string, status: VendorStatus): Promise<Vendor> {
+  async updateVendorStatus(id: string, tenantId: string, status: VendorStatus): Promise<Vendor> {
     return await withDatabaseRetry(() =>
       this.prisma.vendor.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: { status },
       }),
     );
@@ -388,10 +393,11 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * Soft deletes a vendor by setting the deletedAt timestamp.
    * Prevents deletion if the vendor has associated financial transactions.
    * @param id - The ID of the vendor to delete
+   * @param tenantId - The tenant scope for the deletion
    * @returns A promise that resolves to the soft-deleted vendor record
    * @throws {Error} If vendor has existing transactions
    */
-  async softDeleteVendor(id: string): Promise<Vendor> {
+  async softDeleteVendor(id: string, tenantId: string): Promise<Vendor> {
     // Check if vendor has transactions
     const transactionCount = await this.prisma.transaction.count({
       where: { vendorId: id },
@@ -405,7 +411,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
 
     return await withDatabaseRetry(() =>
       this.prisma.vendor.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: { deletedAt: new Date() },
       }),
     );
@@ -460,6 +466,3 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
     });
   }
 }
-
-// Singleton instance
-export const vendorRepo = new VendorRepository(prisma);
