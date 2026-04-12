@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { LabourCostType, RoundingMethod } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+import { fileURLToPath } from 'url';
+import type { SeededTenant } from './seed-tenants';
 
 /**
  * Seed Recipes
@@ -223,129 +225,193 @@ const recipeTemplates: RecipeTemplate[] = [
   },
 ];
 
-export async function seedRecipes() {
-  console.log('📖 Seeding recipes...');
+// -- Types -------------------------------------------------------------------
 
-  // Get all price list items to match against
-  const priceListItems = await prisma.priceListItem.findMany({
-    where: { deletedAt: null },
-  });
+export type SeedRecipesOptions = {
+  tenants: SeededTenant[];
+};
 
-  if (priceListItems.length === 0) {
-    console.log('⚠️  No price list items found. Please seed price list items first.');
-    return;
+// -- Helpers -----------------------------------------------------------------
+
+function buildRecipeItems(
+  template: (typeof recipeTemplates)[number],
+  priceListItems: { id: string; name: string; costPerUnit: unknown; retailPrice: unknown }[],
+) {
+  const recipeItems: {
+    priceListItemId: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    retailPrice: number;
+    lineTotal: number;
+    retailLineTotal: number;
+    order: number;
+  }[] = [];
+  let totalMaterialsCost = 0;
+  let totalRetailPrice = 0;
+
+  for (const itemTemplate of template.items) {
+    const priceListItem = priceListItems.find((item) =>
+      item.name.toLowerCase().includes(itemTemplate.searchTerm.toLowerCase()),
+    );
+
+    if (!priceListItem) continue;
+
+    const quantity = itemTemplate.quantity;
+    const unitPrice = Number(priceListItem.costPerUnit);
+    const retailPrice = Number(priceListItem.retailPrice);
+    const lineTotal = quantity * unitPrice;
+    const retailLineTotal = quantity * retailPrice;
+
+    totalMaterialsCost += lineTotal;
+    totalRetailPrice += retailLineTotal;
+
+    recipeItems.push({
+      priceListItemId: priceListItem.id,
+      name: priceListItem.name,
+      quantity,
+      unitPrice,
+      retailPrice,
+      lineTotal,
+      retailLineTotal,
+      order: recipeItems.length,
+    });
   }
 
-  console.log(`   Found ${priceListItems.length} price list items to use`);
+  return { recipeItems, totalMaterialsCost, totalRetailPrice };
+}
 
-  const createdRecipes = [];
+// -- Seed function -----------------------------------------------------------
 
-  for (const template of recipeTemplates) {
-    try {
-      // Find matching price list items for each recipe item
-      const recipeItems = [];
-      let totalMaterialsCost = 0;
-      let totalRetailPrice = 0;
+/**
+ * Seeds floral arrangement recipes for each supplied tenant. Each recipe is
+ * matched against the tenant's own price list items by name. Tenants that
+ * have no price list items are skipped.
+ * @param options - The tenants to seed for.
+ * @returns The total number of recipes created across all tenants.
+ */
+export async function seedRecipes(options: SeedRecipesOptions): Promise<number> {
+  const { tenants } = options;
 
-      for (const itemTemplate of template.items) {
-        // Search for matching price list item
-        const priceListItem = priceListItems.find((item) =>
-          item.name.toLowerCase().includes(itemTemplate.searchTerm.toLowerCase()),
+  console.log(`\n📖 Seeding recipes for ${tenants.length} tenant(s)...`);
+
+  let grandTotal = 0;
+
+  for (const tenant of tenants) {
+    const priceListItems = await prisma.priceListItem.findMany({
+      where: { tenantId: tenant.id, deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+
+    if (priceListItems.length === 0) {
+      console.log(`   ⚠️  ${tenant.name}: no price list items — skipping recipes`);
+      continue;
+    }
+
+    let created = 0;
+
+    for (const template of recipeTemplates) {
+      try {
+        const { recipeItems, totalMaterialsCost, totalRetailPrice } = buildRecipeItems(
+          template,
+          priceListItems,
         );
 
-        if (!priceListItem) {
-          console.warn(
-            `   ⚠️  Could not find price list item matching: ${itemTemplate.searchTerm}`,
-          );
-          continue;
+        if (recipeItems.length === 0) continue;
+
+        let labourCost = 0;
+        if (template.labourCostType === LabourCostType.FIXED_AMOUNT) {
+          labourCost = template.labourAmount;
+        } else if (template.labourCostType === LabourCostType.PERCENTAGE_OF_RETAIL) {
+          labourCost = (totalRetailPrice * template.labourAmount) / 100;
+        } else if (template.labourCostType === LabourCostType.PERCENTAGE_OF_MATERIAL) {
+          labourCost = (totalMaterialsCost * template.labourAmount) / 100;
         }
 
-        const quantity = itemTemplate.quantity;
-        const unitPrice = Number(priceListItem.costPerUnit);
-        const retailPrice = Number(priceListItem.retailPrice);
-        const lineTotal = quantity * unitPrice;
-        const retailLineTotal = quantity * retailPrice;
+        const totalCost = totalMaterialsCost + labourCost;
+        let sellingPrice = totalRetailPrice + labourCost;
 
-        totalMaterialsCost += lineTotal;
-        totalRetailPrice += retailLineTotal;
-
-        recipeItems.push({
-          priceListItemId: priceListItem.id,
-          name: priceListItem.name,
-          quantity,
-          unitPrice,
-          retailPrice,
-          lineTotal,
-          retailLineTotal,
-          order: recipeItems.length,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
-
-      if (recipeItems.length === 0) {
-        console.warn(`   ⚠️  No items found for recipe: ${template.name}`);
-        continue;
-      }
-
-      // Calculate labour cost
-      let labourCost = 0;
-      if (template.labourCostType === LabourCostType.FIXED_AMOUNT) {
-        labourCost = template.labourAmount;
-      } else if (template.labourCostType === LabourCostType.PERCENTAGE_OF_RETAIL) {
-        labourCost = (totalRetailPrice * template.labourAmount) / 100;
-      } else if (template.labourCostType === LabourCostType.PERCENTAGE_OF_MATERIAL) {
-        labourCost = (totalMaterialsCost * template.labourAmount) / 100;
-      }
-
-      const totalCost = totalMaterialsCost + labourCost;
-      let sellingPrice = totalRetailPrice + labourCost;
-
-      // Apply rounding
-      if (template.roundPrice && sellingPrice > 0) {
-        if (template.roundingMethod === RoundingMethod.NEAREST) {
-          sellingPrice = Math.round(sellingPrice);
-        } else if (template.roundingMethod === RoundingMethod.PSYCHOLOGICAL_99) {
-          sellingPrice = Math.ceil(sellingPrice) - 0.01;
-        } else if (template.roundingMethod === RoundingMethod.PSYCHOLOGICAL_95) {
-          sellingPrice = Math.ceil(sellingPrice) - 0.05;
+        if (template.roundPrice && sellingPrice > 0) {
+          if (template.roundingMethod === RoundingMethod.NEAREST) {
+            sellingPrice = Math.round(sellingPrice);
+          } else if (template.roundingMethod === RoundingMethod.PSYCHOLOGICAL_99) {
+            sellingPrice = Math.ceil(sellingPrice) - 0.01;
+          } else if (template.roundingMethod === RoundingMethod.PSYCHOLOGICAL_95) {
+            sellingPrice = Math.ceil(sellingPrice) - 0.05;
+          }
         }
-      }
 
-      // Create recipe with items
-      const recipe = await prisma.recipe.create({
-        data: {
-          name: template.name,
-          description: template.description,
-          labourCostType: template.labourCostType,
-          labourAmount: template.labourAmount,
-          labourCost,
-          totalMaterialsCost,
-          totalRetailPrice,
-          totalCost,
-          sellingPrice,
-          roundPrice: template.roundPrice,
-          roundingMethod: template.roundingMethod,
-          notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.2 }),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          items: {
-            create: recipeItems,
+        await prisma.recipe.create({
+          data: {
+            tenantId: tenant.id,
+            name: template.name,
+            description: template.description,
+            labourCostType: template.labourCostType,
+            labourAmount: template.labourAmount,
+            labourCost,
+            totalMaterialsCost,
+            totalRetailPrice,
+            totalCost,
+            sellingPrice,
+            roundPrice: template.roundPrice,
+            roundingMethod: template.roundingMethod,
+            notes:
+              faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.2 }) ?? undefined,
+            items: {
+              create: recipeItems.map((item, index) => ({
+                priceListItemId: item.priceListItemId,
+                name: item.name,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                lineTotal: item.lineTotal,
+                retailPrice: item.retailPrice,
+                retailLineTotal: item.retailLineTotal,
+                order: item.order ?? index,
+              })),
+            },
           },
-        },
-        include: {
-          items: true,
-        },
-      });
+        });
 
-      createdRecipes.push(recipe);
-    } catch (error) {
-      console.error(`Failed to create recipe: ${template.name}`, error);
+        created++;
+      } catch (error) {
+        console.error(`Failed to create recipe "${template.name}" for ${tenant.name}:`, error);
+      }
     }
+
+    grandTotal += created;
+    console.log(`   ✅ ${tenant.name}: ${created} recipes`);
   }
 
-  console.log(`✅ Created ${createdRecipes.length} recipes`);
-  console.log(`   Total items: ${createdRecipes.reduce((sum, r) => sum + r.items.length, 0)}`);
+  console.log(`✅ Created ${grandTotal} recipe(s) across ${tenants.length} tenant(s)`);
+  return grandTotal;
+}
 
-  return createdRecipes;
+// -- CLI entry point ---------------------------------------------------------
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMain) {
+  (async () => {
+    const tenants = await prisma.tenant.findMany({ select: { id: true, name: true, slug: true } });
+
+    if (tenants.length === 0) {
+      console.error('No tenants found. Run seed-tenants.ts first.');
+      process.exit(1);
+    }
+
+    const seededTenants = tenants.map((t) => ({
+      ...t,
+      adminEmail: '',
+      managerEmail: '',
+      password: '',
+    }));
+
+    await seedRecipes({ tenants: seededTenants });
+    console.log('\nDone.');
+  })()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
 }

@@ -10,7 +10,7 @@ const tenantRepo = new TenantRepository(prisma);
 
 export const getTenantSettingsForAdmin = withTenantPermission<void, TenantWithSettings>(
   'canManageSettings',
-  async (session) => {
+  async (ctx) => {
     try {
       const tenant = await tenantRepo.findTenantById(ctx.tenantId);
 

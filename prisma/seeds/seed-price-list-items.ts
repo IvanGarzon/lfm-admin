@@ -1,5 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { faker } from '@faker-js/faker';
+import { fileURLToPath } from 'url';
+import type { SeededTenant } from './seed-tenants';
+import { batchAll } from './seed-helpers';
 
 /**
  * Seed Price List Items
@@ -698,42 +701,93 @@ const supplyItems = [
   },
 ];
 
-export async function seedPriceListItems() {
-  console.log('💐 Seeding price list items...');
+// -- Types -------------------------------------------------------------------
+
+export type SeedPriceListItemsOptions = {
+  tenants: SeededTenant[];
+};
+
+// -- Seed function -----------------------------------------------------------
+
+/**
+ * Seeds the full price list catalogue for each supplied tenant. Each tenant
+ * receives its own independent copy of all price list items.
+ * @param options - The tenants to seed for.
+ * @returns The total number of price list items created across all tenants.
+ */
+export async function seedPriceListItems(options: SeedPriceListItemsOptions): Promise<number> {
+  const { tenants } = options;
+
+  console.log(`\n💐 Seeding price list items for ${tenants.length} tenant(s)...`);
 
   const allItems = [
-    ...floralItems.map((item) => ({ ...item, category: 'FLORAL' })),
+    ...floralItems.map((item) => ({ ...item, category: 'FLORAL' as const })),
     ...foliageItems,
     ...supplyItems,
   ];
 
-  const createdItems = [];
+  let total = 0;
 
-  for (const item of allItems) {
-    try {
-      const created = await prisma.priceListItem.create({
+  for (const tenant of tenants) {
+    const fns = allItems.map((item) => async () => {
+      const retailPrice = Math.round(item.costPerUnit * item.multiplier * 100) / 100;
+      return prisma.priceListItem.create({
         data: {
+          tenantId: tenant.id,
           name: item.name,
           category: item.category,
           costPerUnit: item.costPerUnit,
-          retailPrice: item.retailPrice,
           multiplier: item.multiplier,
+          retailPrice,
           unitType: item.unitType,
           bunchSize: item.bunchSize,
           season: item.season,
-          wholesalePrice: item.costPerUnit * 0.9, // 10% less than cost for wholesale
-          description: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          wholesalePrice: item.costPerUnit * 0.9,
+          description:
+            faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
         },
+        select: { id: true },
       });
+    });
 
-      createdItems.push(created);
-    } catch (error) {
-      console.error(`Failed to create price list item: ${item.name}`, error);
-    }
+    const { results, failed } = await batchAll(fns);
+    const created = results.length;
+    total += created;
+
+    const suffix = failed > 0 ? ` (${failed} failed)` : '';
+    console.log(`   ✅ ${tenant.name}: ${created} price list items${suffix}`);
   }
 
-  console.log(`✅ Created ${createdItems.length} price list items`);
-  return createdItems;
+  console.log(`✅ Created ${total} price list item(s) across ${tenants.length} tenant(s)`);
+  return total;
+}
+
+// -- CLI entry point ---------------------------------------------------------
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMain) {
+  (async () => {
+    const tenants = await prisma.tenant.findMany({ select: { id: true, name: true, slug: true } });
+
+    if (tenants.length === 0) {
+      console.error('No tenants found. Run seed-tenants.ts first.');
+      process.exit(1);
+    }
+
+    const seededTenants = tenants.map((t) => ({
+      ...t,
+      adminEmail: '',
+      managerEmail: '',
+      password: '',
+    }));
+
+    await seedPriceListItems({ tenants: seededTenants });
+    console.log('\nDone.');
+  })()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
 }

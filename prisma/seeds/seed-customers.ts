@@ -1,84 +1,108 @@
 import { prisma } from '@/lib/prisma';
-import { Gender, CustomerStatus } from '@/prisma/client';
 import { faker } from '@faker-js/faker';
+import { fileURLToPath } from 'url';
+import type { SeededTenant } from './seed-tenants';
+import { fakeAuPhone, batchAll } from './seed-helpers';
 
-interface Customer {
-  firstName: string;
-  lastName: string;
-  gender: Gender;
-  email: string;
-  phone: string | null;
-  status: CustomerStatus;
-  organizationId: string | null;
-}
+// -- Types -------------------------------------------------------------------
+
+export type SeedCustomersOptions = {
+  tenants: SeededTenant[];
+  countPerTenant?: number;
+};
+
+// -- Seed function -----------------------------------------------------------
 
 /**
- * Seed Customers
- * Creates customer records with optional organization links
+ * Seeds customers for each supplied tenant. Customers are linked to
+ * organisations within the same tenant (30% probability). Each tenant gets
+ * its own isolated set of customer records.
+ * @param options - The tenants to seed for and optional count per tenant.
+ * @returns The total number of customers created across all tenants.
  */
+export async function seedCustomers(options: SeedCustomersOptions): Promise<number> {
+  const { tenants, countPerTenant = 50 } = options;
 
-export async function seedCustomers() {
-  console.log('👥 Seeding customers...');
+  console.log(`\n👥 Seeding customers for ${tenants.length} tenant(s)...`);
 
-  // Get existing organizations
-  const organizations = await prisma.organization.findMany();
-  const customers: Customer[] = [];
+  let total = 0;
 
-  // Create 50 customers
-  for (let i = 0; i < 50; i++) {
-    const gender = faker.helpers.arrayElement(['MALE', 'FEMALE']);
-    const firstName = faker.person.firstName(gender === 'MALE' ? 'male' : 'female');
-    const lastName = faker.person.lastName();
-    const email = faker.internet.email({ firstName, lastName }).toLowerCase();
+  for (const tenant of tenants) {
+    const organisations = await prisma.organization.findMany({
+      where: { tenantId: tenant.id },
+      select: { id: true },
+    });
 
-    // 30% of customers belong to an organization
-    const hasOrganization = faker.datatype.boolean({ probability: 0.3 });
-    const organizationId =
-      hasOrganization && organizations.length > 0
-        ? faker.helpers.arrayElement(organizations).id
-        : null;
+    const fns = Array.from({ length: countPerTenant }, () => async () => {
+      const genderValue = faker.helpers.arrayElement(['MALE', 'FEMALE'] as const);
+      const firstName = faker.person.firstName(genderValue === 'MALE' ? 'male' : 'female');
+      const lastName = faker.person.lastName();
+      const email = faker.internet.email({ firstName, lastName }).toLowerCase();
 
-    const customer: Customer = {
-      firstName,
-      lastName,
-      gender,
-      email,
-      phone:
-        faker.helpers.maybe(
-          () => {
-            // Australian phone numbers
-            const mobile = faker.helpers.arrayElement([
-              `04${faker.string.numeric(8)}`,
-              `+614${faker.string.numeric(8)}`,
-            ]);
+      const hasOrganisation = faker.datatype.boolean({ probability: 0.3 });
+      const organisationId =
+        hasOrganisation && organisations.length > 0
+          ? faker.helpers.arrayElement(organisations).id
+          : null;
 
-            return mobile;
-          },
-          { probability: 0.8 },
-        ) ?? null,
-      status: faker.helpers.weightedArrayElement([
-        { value: 'ACTIVE', weight: 0.9 },
-        { value: 'INACTIVE', weight: 0.1 },
-      ]),
-      organizationId,
-    };
-
-    customers.push(customer);
-  }
-
-  // Bulk create customers
-  let created = 0;
-  for (const customer of customers) {
-    try {
-      await prisma.customer.create({
-        data: customer,
+      return prisma.customer.create({
+        data: {
+          tenantId: tenant.id,
+          firstName,
+          lastName,
+          email,
+          gender: genderValue,
+          phone: faker.helpers.maybe(() => fakeAuPhone(), { probability: 0.8 }) ?? null,
+          status: 'ACTIVE',
+          organizationId: organisationId,
+          useOrganizationAddress: Boolean(organisationId),
+          address1: organisationId ? null : faker.location.streetAddress(),
+          city: organisationId ? null : faker.location.city(),
+          postalCode: organisationId ? null : faker.location.zipCode('####'),
+          country: organisationId ? null : 'Australia',
+        },
+        select: { id: true },
       });
-      created++;
-    } catch (error) {
-      // Skip duplicates
-      console.log(`⚠️  Skipped duplicate email: ${customer.email}`);
-    }
+    });
+
+    const { results, failed } = await batchAll(fns);
+    const created = results.length;
+    total += created;
+
+    const suffix = failed > 0 ? ` (${failed} skipped — duplicate emails)` : '';
+    console.log(`   ✅ ${tenant.name}: ${created} customers${suffix}`);
   }
 
-  console.log(`✅ Created ${created} customers`);
+  console.log(`✅ Created ${total} customer(s) across ${tenants.length} tenant(s)`);
+  return total;
+}
+
+// -- CLI entry point ---------------------------------------------------------
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMain) {
+  (async () => {
+    const tenants = await prisma.tenant.findMany({ select: { id: true, name: true, slug: true } });
+
+    if (tenants.length === 0) {
+      console.error('No tenants found. Run seed-tenants.ts first.');
+      process.exit(1);
+    }
+
+    const seededTenants = tenants.map((tenant) => ({
+      ...tenant,
+      adminEmail: '',
+      managerEmail: '',
+      password: '',
+    }));
+
+    await seedCustomers({ tenants: seededTenants });
+    console.log('\nDone.');
+  })()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
 }

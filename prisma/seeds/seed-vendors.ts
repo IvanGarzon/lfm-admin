@@ -1,176 +1,133 @@
 import { prisma } from '@/lib/prisma';
-import { States, VendorStatus } from '@/prisma/client';
+import { faker } from '@faker-js/faker';
+import { fileURLToPath } from 'url';
+import type { SeededTenant } from './seed-tenants';
+import { fakeAbn, fakeAuPhone } from './seed-helpers';
 
-interface Vendor {
-  vendorCode: string;
-  name: string;
-  email: string;
-  phone?: string;
-  abn?: string;
-  status: VendorStatus;
-  address1?: string;
-  city?: string;
-  region?: string;
-  postalCode?: string;
-  country?: string;
-  website?: string;
-  paymentTerms?: number;
-  notes?: string;
+// -- Types -------------------------------------------------------------------
+
+export type SeedVendorsOptions = {
+  tenants: SeededTenant[];
+  countPerTenant?: number;
+};
+
+// -- Data --------------------------------------------------------------------
+
+const VENDOR_TYPES = [
+  { suffix: 'Flower Market', category: 'wholesale' },
+  { suffix: 'Nursery & Growers', category: 'wholesale' },
+  { suffix: 'Floral Supplies', category: 'supplies' },
+  { suffix: 'Eco Packaging', category: 'supplies' },
+  { suffix: 'Logistics & Couriers', category: 'delivery' },
+  { suffix: 'Premium Orchid Growers', category: 'wholesale' },
+  { suffix: 'Event Equipment Hire', category: 'services' },
+  { suffix: 'Design Studio Supplies', category: 'supplies' },
+] as const;
+
+// -- Helpers -----------------------------------------------------------------
+
+function buildVendor() {
+  const type = faker.helpers.arrayElement(VENDOR_TYPES);
+  const city = faker.location.city();
+  const name = `${city} ${type.suffix}`;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  return {
+    name,
+    email: `orders@${slug}.com.au`,
+    phone: faker.helpers.maybe(() => fakeAuPhone(), { probability: 0.85 }) ?? null,
+    abn: faker.helpers.maybe(() => fakeAbn(), { probability: 0.8 }) ?? null,
+    status: faker.helpers.weightedArrayElement([
+      { value: 'ACTIVE' as const, weight: 0.9 },
+      { value: 'INACTIVE' as const, weight: 0.1 },
+    ]),
+    address: null,
+    website: faker.helpers.maybe(() => `https://www.${slug}.com.au`, { probability: 0.6 }) ?? null,
+    paymentTerms: faker.helpers.arrayElement([7, 14, 30, 60]),
+    notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null,
+  };
 }
 
+// -- Seed function -----------------------------------------------------------
+
 /**
- * Seed Vendors
- * Creates florist wholesale suppliers and service providers
+ * Seeds wholesale suppliers and vendors for each supplied tenant.
+ * Each tenant gets its own independent set of vendor records.
+ * Vendor codes are generated inline as VEN-{year}-{counter}.
+ * @param options - The tenants to seed for and optional count per tenant.
+ * @returns The total number of vendors created across all tenants.
  */
+export async function seedVendors(options: SeedVendorsOptions): Promise<number> {
+  const { tenants, countPerTenant = 8 } = options;
 
-export async function seedVendors() {
-  console.log('🏪 Seeding vendors...');
+  console.log(`\n🏪 Seeding vendors for ${tenants.length} tenant(s)...`);
 
-  const vendors: Vendor[] = [
-    {
-      vendorCode: 'VEN-001',
-      name: 'Melbourne Flower Market',
-      email: 'orders@melbflowermarket.com.au',
-      phone: '03 9320 5200',
-      abn: '12 345 678 901',
-      status: VendorStatus.ACTIVE,
-      address1: '2 Footscray Road',
-      city: 'West Melbourne',
-      region: 'VIC',
-      postalCode: '3003',
-      country: 'Australia',
-      website: 'https://melbourneflowermarket.com.au',
-      paymentTerms: 14,
-      notes: 'Primary wholesale flower supplier. Early morning pickups available.',
-    },
-    {
-      vendorCode: 'VEN-002',
-      name: 'Sydney Flower Markets',
-      email: 'wholesale@sydneyflowers.com.au',
-      phone: '02 9764 3200',
-      abn: '23 456 789 012',
-      status: VendorStatus.ACTIVE,
-      address1: 'Parramatta Road',
-      city: 'Flemington',
-      region: 'NSW',
-      postalCode: '2140',
-      country: 'Australia',
-      website: 'https://sfm.com.au',
-      paymentTerms: 7,
-      notes: 'Interstate supplier for special orders.',
-    },
-    {
-      vendorCode: 'VEN-003',
-      name: 'Green Valley Nursery',
-      email: 'sales@greenvalleynursery.com.au',
-      phone: '03 9876 5432',
-      abn: '34 567 890 123',
-      status: VendorStatus.ACTIVE,
-      address1: '120 Nursery Road',
-      city: 'Kensington',
-      region: 'VIC',
-      postalCode: '3031',
-      country: 'Australia',
-      paymentTerms: 30,
-      notes: 'Potted plants and greenery supplier.',
-    },
-    {
-      vendorCode: 'VEN-004',
-      name: 'Koch & Co',
-      email: 'orders@kochandco.com.au',
-      phone: '1300 562 426',
-      abn: '45 678 901 234',
-      status: VendorStatus.ACTIVE,
-      address1: '45 Business Park Drive',
-      city: 'Notting Hill',
-      region: 'VIC',
-      postalCode: '3168',
-      country: 'Australia',
-      website: 'https://kochandco.com.au',
-      paymentTerms: 30,
-      notes: 'Floral supplies, vases, ribbons, and accessories.',
-    },
-    {
-      vendorCode: 'VEN-005',
-      name: 'Australian Blooms Direct',
-      email: 'hello@ausblooms.com.au',
-      phone: '1800 456 789',
-      abn: '56 789 012 345',
-      status: VendorStatus.ACTIVE,
-      address1: 'Online Only',
-      city: 'Melbourne',
-      region: 'VIC',
-      postalCode: '3000',
-      country: 'Australia',
-      website: 'https://australianblooms.com.au',
-      paymentTerms: 7,
-      notes: 'Online bulk flower supplier with next-day delivery.',
-    },
-    {
-      vendorCode: 'VEN-006',
-      name: 'Eco Packaging Solutions',
-      email: 'sales@ecopack.com.au',
-      phone: '03 9111 2222',
-      abn: '67 890 123 456',
-      status: VendorStatus.ACTIVE,
-      address1: '88 Industrial Avenue',
-      city: 'Sunshine',
-      region: 'VIC',
-      postalCode: '3020',
-      country: 'Australia',
-      website: 'https://ecopackaging.com.au',
-      paymentTerms: 30,
-      notes: 'Sustainable and eco-friendly packaging supplies.',
-    },
-    {
-      vendorCode: 'VEN-007',
-      name: 'Metro Logistics',
-      email: 'bookings@metrologistics.com.au',
-      phone: '13 13 13',
-      abn: '78 901 234 567',
-      status: VendorStatus.ACTIVE,
-      address1: '500 Delivery Road',
-      city: 'Port Melbourne',
-      region: 'VIC',
-      postalCode: '3207',
-      country: 'Australia',
-      paymentTerms: 14,
-      notes: 'Courier and delivery services for wedding flower transport.',
-    },
-    {
-      vendorCode: 'VEN-008',
-      name: 'Premium Orchids Australia',
-      email: 'info@premiumorchids.com.au',
-      phone: '03 5555 6666',
-      abn: '89 012 345 678',
-      status: VendorStatus.ACTIVE,
-      address1: '15 Greenhouse Lane',
-      city: 'Warrandyte',
-      region: 'VIC',
-      postalCode: '3113',
-      country: 'Australia',
-      website: 'https://premiumorchids.com.au',
-      paymentTerms: 30,
-      notes: 'Specialist orchid grower for premium arrangements.',
-    },
-  ];
+  let total = 0;
 
-  const createdVendors = [];
-  for (const vendor of vendors) {
-    try {
-      const created = await prisma.vendor.create({
+  const year = new Date().getFullYear();
+
+  for (const tenant of tenants) {
+    const lastVendor = await prisma.vendor.findFirst({
+      where: { tenantId: tenant.id, vendorCode: { startsWith: `VEN-${year}-` } },
+      orderBy: { vendorCode: 'desc' },
+      select: { vendorCode: true },
+    });
+    const startCounter = lastVendor ? parseInt(lastVendor.vendorCode.split('-')[2], 10) + 1 : 1;
+
+    const creates = Array.from({ length: countPerTenant }, (_, i) => {
+      const vendor = buildVendor();
+      const vendorCode = `VEN-${year}-${String(startCounter + i).padStart(4, '0')}`;
+      return prisma.vendor.create({
         data: {
-          ...vendor,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          tenantId: tenant.id,
+          vendorCode,
+          name: vendor.name,
+          email: vendor.email,
+          phone: vendor.phone,
+          abn: vendor.abn,
+          status: vendor.status,
+          website: vendor.website,
+          paymentTerms: vendor.paymentTerms,
+          notes: vendor.notes,
         },
       });
-      createdVendors.push(created);
-    } catch (error) {
-      console.error(`Failed to create vendor: ${vendor.name}`, error);
-    }
+    });
+
+    await Promise.all(creates);
+    total += countPerTenant;
+    console.log(`   ✅ ${tenant.name}: ${countPerTenant} vendors`);
   }
 
-  console.log(`✅ Created ${createdVendors.length} vendors`);
-  return createdVendors;
+  console.log(`✅ Created ${total} vendor(s) across ${tenants.length} tenant(s)`);
+  return total;
+}
+
+// -- CLI entry point ---------------------------------------------------------
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isMain) {
+  (async () => {
+    const tenants = await prisma.tenant.findMany({ select: { id: true, name: true, slug: true } });
+
+    if (tenants.length === 0) {
+      console.error('No tenants found. Run seed-tenants.ts first.');
+      process.exit(1);
+    }
+
+    const seededTenants = tenants.map((t) => ({
+      ...t,
+      adminEmail: '',
+      managerEmail: '',
+      password: '',
+    }));
+
+    await seedVendors({ tenants: seededTenants });
+    console.log('\nDone.');
+  })()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
 }

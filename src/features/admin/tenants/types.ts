@@ -1,4 +1,4 @@
-import type { TenantStatus, States } from '@/prisma/client';
+import type { TenantStatus, States, UserRole } from '@/prisma/client';
 
 // -- Branding -----------------------------------------------------------------
 
@@ -87,6 +87,21 @@ export type CreateTenantInput = {
 export type UpdateTenantInput = {
   name?: string;
   slug?: string;
+};
+
+export type CreateTenantUserInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  hashedPassword: string;
+  role: UserRole;
+};
+
+export type CreateTenantWithDetailsInput = {
+  name: string;
+  slug: string;
+  settings?: UpdateTenantSettingsInput;
+  users?: CreateTenantUserInput[];
 };
 
 export type UpdateTenantSettingsInput = {

@@ -6,6 +6,7 @@ import type {
   EmployeeListItem,
   EmployeeFilters,
 } from '@/features/staff/employees/types';
+import type { CreateEmployeeInput } from '@/schemas/employees';
 
 /**
  * Employee Repository
@@ -170,6 +171,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
   /**
    * Locates an employee by their ID.
    * @param id - The ID of the employee
+   * @param tenantId - The tenant to scope the query to
    * @returns The employee details or null if not found
    */
   async findEmployeeById(id: string, tenantId: string): Promise<EmployeeListItem | null> {
@@ -178,5 +180,31 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     });
 
     return employee ? this.mapToListItem(employee) : null;
+  }
+
+  /**
+   * Creates a new employee record scoped to the given tenant.
+   * @param data - The employee creation input data
+   * @param tenantId - The tenant this employee belongs to
+   * @returns A promise that resolves to the new employee's ID
+   */
+  async createEmployee(data: CreateEmployeeInput, tenantId: string): Promise<{ id: string }> {
+    const employee = await this.prisma.employee.create({
+      data: {
+        tenantId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender ?? null,
+        dob: data.dob ?? null,
+        rate: data.rate,
+        status: data.status ?? EmployeeStatus.ACTIVE,
+        avatarUrl: data.avatarUrl || null,
+      },
+      select: { id: true },
+    });
+
+    return { id: employee.id };
   }
 }
