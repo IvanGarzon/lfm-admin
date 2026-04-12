@@ -1,5 +1,11 @@
 # Inngest Email System Setup Guide
 
+**Author:** Ivancho Garzon \<Lehenbizico>
+**Last Updated:** 2026-04-12
+**Status:** Complete
+
+---
+
 ## Overview
 
 This document describes the generic email queue system using Inngest. It works for **invoices, quotes, reports**, and any future features.
@@ -26,8 +32,12 @@ Action/Feature → queueEmail() → Inngest → Background Function → PDF + Em
 
 - `src/lib/inngest/client.ts` - Inngest client configuration
 - `src/services/email-queue.service.ts` - Email queuing service
-- `src/lib/inngest/functions/send-email.ts` - Background email processing function (to be created)
-- `src/app/api/inngest/route.ts` - Inngest API endpoint (to be created)
+- `src/lib/inngest/functions/send-email.ts` - Background email processing function
+- `src/lib/inngest/functions/check-expired-quotes.ts` - Quote expiry automation
+- `src/lib/inngest/functions/mark-overdue-invoices.ts` - Invoice overdue automation
+- `src/lib/inngest/functions/quote-expiry-reminder.ts` - Quote expiry reminders
+- `src/lib/inngest/functions/cleanup-sessions.ts` - Session cleanup
+- `src/app/api/inngest/route.ts` - Inngest API endpoint
 
 ## Environment Variables Needed
 
@@ -136,11 +146,13 @@ View email status at:
 - **Inngest**: https://app.inngest.com (events, retries, errors)
 - **Database**: Query `EmailAudit` table for audit history
 
-## Next Steps
+## Current Status
 
-- [ ] Create migration for EmailAudit model
-- [ ] Add env variables
-- [ ] Create Inngest background function
-- [ ] Create Inngest API route
-- [ ] Update invoice actions
-- [ ] Test email sending
+All setup steps are complete:
+
+- [x] `EmailAudit` model migrated to the database
+- [x] Env variables documented
+- [x] Inngest background functions created (`send-email.ts`, `check-expired-quotes.ts`, `mark-overdue-invoices.ts`, `quote-expiry-reminder.ts`, `cleanup-sessions.ts`)
+- [x] Inngest API route live at `src/app/api/inngest/route.ts`
+- [x] Invoice and quote actions use the email queue
+- [x] Email sending tested and operational

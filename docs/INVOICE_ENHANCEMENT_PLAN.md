@@ -374,20 +374,20 @@ model Invoice {
 
 ---
 
-## Code Quality Fixes (Do Immediately)
+## Code Quality Fixes
 
-### Critical Issues to Address
+### Outstanding Issues
 
 1. **Replace console.error with logger** (CLAUDE.md violation):
-   - `/src/features/finances/invoices/components/dialogs/record-payment-dialog.tsx:100`
-   - `/src/repositories/invoice-repository.ts:1394, 1397`
+   - `/src/features/finances/invoices/components/dialogs/record-payment-dialog.tsx:100` — still pending
 
-2. **Resolve TODOs:**
-   - `/src/features/finances/invoices/components/invoice-drawer.tsx:322`
-   - `/src/features/finances/invoices/components/invoice-list.tsx:133`
+2. **Fix Export Placeholder:**
+   - `/src/features/finances/invoices/components/invoice-analytics.tsx:67-69` — verify if still showing an alert placeholder
 
-3. **Fix Export Placeholder:**
-   - `/src/features/finances/invoices/components/invoice-analytics.tsx:67-69` (currently shows alert)
+### Resolved
+
+- TODO comments in `invoice-drawer.tsx` and `invoice-list.tsx` — resolved
+- `console.error` in `invoice-repository.ts` — verify current state
 
 ---
 
@@ -397,11 +397,11 @@ model Invoice {
 
 **Goal:** Immediate improvements + prepare for Stripe integration
 
-1. ✅ Fix console.error → logger migration (code quality)
+1. 🔄 Fix console.error → logger migration (code quality) — `record-payment-dialog.tsx:100` still pending
 2. ✅ Resolve TODO comments - sendEmail parameter (UX parity)
-3. ✅ Implement automated payment reminders (CASH FLOW IMPACT)
-4. ✅ Add bulk send reminders action (EFFICIENCY)
-5. ✅ Stripe account setup & API key configuration (PREP)
+3. 🔄 Implement automated payment reminders (CASH FLOW IMPACT) — Inngest infrastructure in place, reminder function not yet built
+4. 🔄 Add bulk send reminders action (EFFICIENCY)
+5. 🔄 Stripe account setup & API key configuration (PREP)
 
 **Deliverables:**
 
@@ -715,6 +715,7 @@ This plan prioritizes **high-impact, achievable improvements** that:
 
 ---
 
-**Last Updated:** 2026-03-22
-**Status:** Ready for implementation
+**Author:** Ivancho Garzon \<Lehenbizico>
+**Last Updated:** 2026-04-12
+**Status:** Ready for implementation — Phase 1 items partially complete (see notes below)
 **Priority:** Focus on cash flow improvements (automated reminders, payment links, late fees)

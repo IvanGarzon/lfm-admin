@@ -1,5 +1,11 @@
 # Quotes Feature Documentation
 
+**Author:** Ivancho Garzon \<Lehenbizico>
+**Last Updated:** 2026-04-12
+**Status:** Current
+
+---
+
 ## Overview
 
 The Quotes feature allows users to create, manage, and track price estimates for customers. It supports a full lifecycle from Draft to Invoiced, including versioning and duplication capabilities.
@@ -43,7 +49,7 @@ stateDiagram-v2
 
 - New quotes start in **DRAFT**.
 - Users can add items, select customers, and attach files.
-- **Permissions**: `canCreateQuotes` (Manager/Admin).
+- **Permissions**: `canManageQuotes` (Manager/Admin).
 
 ### 2. Sending
 
@@ -80,8 +86,9 @@ stateDiagram-v2
 
 ## Folder Structure
 
-- `src/features/finances/quotes`: Feature-specific UI and hooks.
-  - `/components`: UI components (`QuoteTable`, `QuoteForm`, etc.)
-  - `/hooks`: React Query hooks.
-- `src/repositories/quote-repository.ts`: Data access layer.
-- `src/actions/quotes.ts`: Server Actions entry point.
+- `src/features/finances/quotes/` — Feature-specific UI and hooks.
+  - `components/` — UI components (`QuoteTable`, `QuoteForm`, etc.)
+  - `hooks/` — React Query hooks.
+- `src/repositories/quote-repository.ts` — Data access layer.
+- `src/actions/finances/quotes/mutations.ts` — Server action mutations (create, update, delete, status changes).
+- `src/actions/finances/quotes/queries.ts` — Server action queries (list, detail, statistics).

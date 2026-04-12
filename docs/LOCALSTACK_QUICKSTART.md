@@ -1,5 +1,11 @@
 # LocalStack Quick Start Guide
 
+**Author:** Ivancho Garzon \<Lehenbizico>
+**Last Updated:** 2026-04-12
+**Status:** Current
+
+---
+
 ## Prerequisites
 
 You need Docker installed and running on your machine.
@@ -253,16 +259,6 @@ pnpm localstack:start
 
 ---
 
-## Next Steps
-
-Once LocalStack is running:
-
-1. **Continue Phase 4 implementation** - Backend (repository + actions)
-2. **Test file uploads** - Create UI components
-3. **Verify attachments work** - Upload/download/delete tests
-
----
-
 ## Testing LocalStack is Working
 
 Create a simple test script to verify S3 operations:
@@ -319,4 +315,3 @@ chmod +x scripts/test-s3.sh
 
 - [LocalStack Docs](https://docs.localstack.cloud/)
 - [AWS S3 CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/s3/)
-- [Phase 4 Setup Guide](./PHASE4_SETUP.md)

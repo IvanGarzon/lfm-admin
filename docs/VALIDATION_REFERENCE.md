@@ -1,5 +1,11 @@
 # Validation Reference Guide
 
+**Author:** Ivancho Garzon \<Lehenbizico>
+**Last Updated:** 2026-04-12
+**Status:** Current
+
+---
+
 Quick reference for validation rules and constraints across the application.
 
 ## Validation Limits
@@ -141,7 +147,7 @@ export const MyResourceSchema = z.object({
 import { sanitizeSearchQuery, validatePaginationParams } from '@/lib/validation';
 
 export const searchParams = {
-  name: parseAsString.withDefault(''),
+  search: parseAsString.withDefault(''),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   // ... other params
@@ -150,7 +156,7 @@ export const searchParams = {
 export function validateMyResourceSearchParams(params) {
   const { page, perPage } = validatePaginationParams(params.page, params.perPage);
   return {
-    name: sanitizeSearchQuery(params.name),
+    search: sanitizeSearchQuery(params.search),
     page,
     perPage,
     // ... other params
@@ -204,7 +210,7 @@ describe('Organizations API', () => {
   });
 
   it('should sanitize search input', async () => {
-    const result = await getOrganizations({ name: 'test\x00injection' });
+    const result = await getOrganizations({ search: 'test\x00injection' });
     // Validates that control characters are removed
   });
 });
@@ -250,7 +256,3 @@ describe('Organizations API', () => {
 6. ✅ Keep validation limits reasonable for UX and security
 7. ✅ Document custom validation rules
 8. ✅ Test edge cases (empty, max length, special chars)
-
-## Update History
-
-- **2024-01-30**: Initial validation reference guide
