@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { RecipeRepository } from './recipe-repository';
+import { RecipeRepository } from '../recipe-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,

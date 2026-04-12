@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { VendorRepository } from './vendor-repository';
+import { VendorRepository } from '../vendor-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,

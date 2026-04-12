@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { constructMetadata } from '@/lib/utils';
-import { getProducts } from '@/actions/inventory/products';
+import { getProducts } from '@/actions/inventory/products/queries';
 import { ProductsView } from '@/features/inventory/products/components/product-view';
 
 export const metadata = constructMetadata({

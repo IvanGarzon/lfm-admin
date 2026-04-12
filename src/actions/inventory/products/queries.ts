@@ -3,12 +3,12 @@
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import { ProductFiltersSchema } from '@/schemas/products';
-import {
-  productRepo,
-  type ProductPagination,
-  type ProductWithDetails,
-  type ProductStatistics,
-} from '@/repositories/product-repository';
+import { productRepo } from '@/repositories/product-repository';
+import type {
+  ProductPagination,
+  ProductWithDetails,
+  ProductStatistics,
+} from '@/features/inventory/products/types';
 import type { SearchParams } from 'nuqs/server';
 
 /**
@@ -33,7 +33,7 @@ export const getProducts = withTenantPermission<SearchParams, ProductPagination>
         sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
       });
 
-      const result = await productRepo.searchAndPaginate(filters, ctx.tenantId);
+      const result = await productRepo.searchProducts(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch products');
@@ -52,7 +52,7 @@ export const getProductById = withTenantPermission<string, ProductWithDetails>(
   'canReadProducts',
   async (ctx, id) => {
     try {
-      const product = await productRepo.findByIdWithDetails(id, ctx.tenantId);
+      const product = await productRepo.findProductById(id, ctx.tenantId);
 
       if (!product) {
         return { success: false, error: 'Product not found' };
@@ -72,9 +72,9 @@ export const getProductById = withTenantPermission<string, ProductWithDetails>(
  */
 export const getProductStatistics = withTenantPermission<void, ProductStatistics>(
   'canReadProducts',
-  async (session) => {
+  async (ctx) => {
     try {
-      const stats = await productRepo.getStatistics(ctx.tenantId);
+      const stats = await productRepo.getProductStatistics(ctx.tenantId);
       return { success: true, data: stats };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch product statistics');
@@ -90,7 +90,7 @@ export const getProductStatistics = withTenantPermission<void, ProductStatistics
 export const getActiveProducts = withTenantPermission<
   void,
   Array<{ id: string; name: string; price: number }>
->('canReadProducts', async (session) => {
+>('canReadProducts', async (ctx) => {
   try {
     const products = await productRepo.getActiveProducts(ctx.tenantId);
     return { success: true, data: products };

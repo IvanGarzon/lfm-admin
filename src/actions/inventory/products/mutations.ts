@@ -7,21 +7,27 @@ import { ProductStatus } from '@/prisma/client';
 import {
   CreateProductSchema,
   UpdateProductSchema,
+  DeleteProductSchema,
   type CreateProductInput,
   type UpdateProductInput,
+  type DeleteProductInput,
 } from '@/schemas/products';
+import type {
+  UpdateProductStatusInput,
+  UpdateProductStockInput,
+  BulkUpdateProductStatusInput,
+} from '@/features/inventory/products/types';
 import { productRepo } from '@/repositories/product-repository';
 
 const PRODUCTS_PATH = '/inventory/products';
 
-// -- Input Types -----------------------------------------------------------
-
-type UpdateProductStatusInput = { id: string; status: ProductStatus };
-type UpdateProductStockInput = { id: string; quantity: number };
-type BulkUpdateProductStatusInput = { ids: string[]; status: ProductStatus };
-
 // -- Actions ---------------------------------------------------------------
 
+/**
+ * Creates a new product for the current tenant.
+ * @param data - The product creation input including name, price, stock, and status.
+ * @returns An `ActionResult` containing the new product ID, or an error.
+ */
 export const createProduct = withTenantPermission<CreateProductInput, { id: string }>(
   'canManageProducts',
   async (ctx, data) => {
@@ -38,12 +44,17 @@ export const createProduct = withTenantPermission<CreateProductInput, { id: stri
   },
 );
 
+/**
+ * Updates an existing product by ID.
+ * @param data - The update input including the product ID and fields to update.
+ * @returns An `ActionResult` containing the updated product ID, or an error.
+ */
 export const updateProduct = withTenantPermission<UpdateProductInput, { id: string }>(
   'canManageProducts',
-  async (_ctx, data) => {
+  async (ctx, data) => {
     try {
       const validatedData = UpdateProductSchema.parse(data);
-      const result = await productRepo.updateProduct(validatedData.id, validatedData);
+      const result = await productRepo.updateProduct(validatedData.id, ctx.tenantId, validatedData);
 
       if (!result) {
         return { success: false, error: 'Product not found' };
@@ -58,11 +69,18 @@ export const updateProduct = withTenantPermission<UpdateProductInput, { id: stri
   },
 );
 
-export const deleteProduct = withTenantPermission<string, { success: boolean }>(
+/**
+ * Permanently deletes a product by ID.
+ * Deletion is blocked if the product is referenced in any invoices or quotes.
+ * @param data - Object containing the product ID to delete.
+ * @returns An `ActionResult` indicating success, or an error.
+ */
+export const deleteProduct = withTenantPermission<DeleteProductInput, { success: boolean }>(
   'canManageProducts',
-  async (_ctx, id) => {
+  async (ctx, data) => {
     try {
-      const deleted = await productRepo.deleteProduct(id);
+      const { id } = DeleteProductSchema.parse(data);
+      const deleted = await productRepo.deleteProduct(id, ctx.tenantId);
 
       if (!deleted) {
         return { success: false, error: 'Product not found' };
@@ -76,11 +94,20 @@ export const deleteProduct = withTenantPermission<string, { success: boolean }>(
   },
 );
 
+/**
+ * Updates the status of a single product.
+ * @param data - Object containing the product ID and the new status.
+ * @returns An `ActionResult` containing the product ID, or an error.
+ */
 export const updateProductStatus = withTenantPermission<UpdateProductStatusInput, { id: string }>(
   'canManageProducts',
-  async (_ctx, { id, status }) => {
+  async (ctx, { id, status }) => {
     try {
-      const result = await productRepo.updateStatus(id, status);
+      const result = await productRepo.updateProductStatus(
+        id,
+        ctx.tenantId,
+        status as ProductStatus,
+      );
 
       if (!result) {
         return { success: false, error: 'Product not found' };
@@ -95,12 +122,19 @@ export const updateProductStatus = withTenantPermission<UpdateProductStatusInput
   },
 );
 
+/**
+ * Updates the stock level of a product by a given quantity delta.
+ * Passing a negative quantity decrements stock; a positive value increments it.
+ * Automatically transitions status to OUT_OF_STOCK or ACTIVE based on the result.
+ * @param data - Object containing the product ID and the quantity adjustment.
+ * @returns An `ActionResult` containing the product ID and new stock level, or an error.
+ */
 export const updateProductStock = withTenantPermission<
   UpdateProductStockInput,
   { id: string; stock: number }
->('canManageProducts', async (_ctx, { id, quantity }) => {
+>('canManageProducts', async (ctx, { id, quantity }) => {
   try {
-    const result = await productRepo.updateStock(id, quantity);
+    const result = await productRepo.updateProductStock(id, ctx.tenantId, quantity);
 
     if (!result) {
       return { success: false, error: 'Product not found' };
@@ -114,12 +148,21 @@ export const updateProductStock = withTenantPermission<
   }
 });
 
+/**
+ * Updates the status for multiple products in a single operation.
+ * @param data - Object containing an array of product IDs and the new status.
+ * @returns An `ActionResult` containing the count of updated products, or an error.
+ */
 export const bulkUpdateProductStatus = withTenantPermission<
   BulkUpdateProductStatusInput,
   { count: number }
->('canManageProducts', async (_ctx, { ids, status }) => {
+>('canManageProducts', async (ctx, { ids, status }) => {
   try {
-    const count = await productRepo.bulkUpdateStatus(ids, status);
+    const count = await productRepo.bulkUpdateProductStatus(
+      ids,
+      ctx.tenantId,
+      status as ProductStatus,
+    );
     revalidatePath(PRODUCTS_PATH);
     return { success: true, data: { count } };
   } catch (error) {
@@ -127,11 +170,18 @@ export const bulkUpdateProductStatus = withTenantPermission<
   }
 });
 
+/**
+ * Permanently deletes multiple products.
+ * Products referenced in invoices or quotes are skipped automatically.
+ * Throws if all selected products are in use.
+ * @param ids - Array of product IDs to delete.
+ * @returns An `ActionResult` containing the count of deleted products, or an error.
+ */
 export const bulkDeleteProducts = withTenantPermission<string[], { count: number }>(
   'canManageProducts',
-  async (_ctx, ids) => {
+  async (ctx, ids) => {
     try {
-      const count = await productRepo.bulkDelete(ids);
+      const count = await productRepo.bulkDeleteProducts(ids, ctx.tenantId);
       revalidatePath(PRODUCTS_PATH);
       return { success: true, data: { count } };
     } catch (error) {

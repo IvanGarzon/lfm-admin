@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { OrganizationRepository } from './organization-repository';
+import { OrganizationRepository } from '../organization-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,

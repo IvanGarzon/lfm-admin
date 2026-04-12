@@ -14,6 +14,8 @@ import {
   getProductById,
   getProductStatistics,
   getActiveProducts,
+} from '@/actions/inventory/products/queries';
+import {
   createProduct,
   updateProduct,
   deleteProduct,
@@ -21,7 +23,7 @@ import {
   updateProductStock,
   bulkUpdateProductStatus,
   bulkDeleteProducts,
-} from '@/actions/inventory/products';
+} from '@/actions/inventory/products/mutations';
 import type {
   ProductFilters,
   ProductPagination,
@@ -221,7 +223,7 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const result = await deleteProduct(id);
+      const result = await deleteProduct({ id });
       if (!result.success) {
         throw new Error(result.error);
       }

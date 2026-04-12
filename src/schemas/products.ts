@@ -43,7 +43,10 @@ export const ProductFiltersSchema = baseFiltersSchema.extend({
   status: createEnumArrayFilter(ProductStatusSchema),
 });
 
+export const DeleteProductSchema = z.object({ id: z.cuid({ error: 'Invalid product ID' }) });
+
 // Inferred types
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 export type UpdateProductInput = z.infer<typeof UpdateProductSchema>;
+export type DeleteProductInput = z.infer<typeof DeleteProductSchema>;
 export type ProductFiltersInput = z.infer<typeof ProductFiltersSchema>;
