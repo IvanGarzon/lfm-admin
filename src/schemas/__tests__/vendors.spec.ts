@@ -4,7 +4,7 @@ import {
   UpdateVendorSchema,
   UpdateVendorStatusSchema,
   DeleteVendorSchema,
-} from './vendors';
+} from '../vendors';
 import { testIds } from '@/lib/testing';
 
 const TEST_VENDOR_ID = testIds.vendor();

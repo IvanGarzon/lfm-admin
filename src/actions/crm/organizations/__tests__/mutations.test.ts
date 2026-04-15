@@ -30,7 +30,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 const TEST_ORG_ID = testIds.organization();
 
-const createInput = createOrganizationInput;
+const createInput = createOrganizationInput();
 const mockOrg = createOrganizationResponse({ id: TEST_ORG_ID });
 
 describe('Organisation Mutations', () => {

@@ -3,7 +3,7 @@ import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
   DeleteTransactionSchema,
-} from './transactions';
+} from '../transactions';
 import { testIds } from '@/lib/testing';
 
 const TEST_TRANSACTION_ID = testIds.transaction();
@@ -125,7 +125,7 @@ describe('Transaction Schemas', () => {
     });
 
     it('fails when id is not a valid CUID', () => {
-      const result = DeleteTransactionSchema.safeParse({ id: 'bad-id' });
+      const result = DeleteTransactionSchema.safeParse({ id: 'not-valid' });
       expect(result.success).toBe(false);
     });
   });

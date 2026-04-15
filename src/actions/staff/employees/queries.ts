@@ -5,7 +5,7 @@ import { SearchParams } from 'nuqs/server';
 
 import { EmployeeRepository } from '@/repositories/employee-repository';
 import { handleActionError } from '@/lib/error-handler';
-import { withTenant } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import type { EmployeePagination, EmployeeListItem } from '@/features/staff/employees/types';
 import { searchParamsCache } from '@/filters/employees/employee-filters';
 
@@ -17,11 +17,12 @@ const employeeRepo = new EmployeeRepository(prisma);
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated employee data.
  */
-export const getEmployees = withTenant<SearchParams, EmployeePagination>(
+export const getEmployees = withTenantPermission<SearchParams, EmployeePagination>(
+  'canReadEmployees',
   async ({ tenantId }, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await employeeRepo.searchAndPaginate(filters, tenantId);
+      const result = await employeeRepo.searchEmployees(filters, tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -37,7 +38,8 @@ export const getEmployees = withTenant<SearchParams, EmployeePagination>(
  * @returns A promise that resolves to an `ActionResult` containing the employee details,
  * or an error if the employee is not found.
  */
-export const getEmployeeById = withTenant<string, EmployeeListItem | null>(
+export const getEmployeeById = withTenantPermission<string, EmployeeListItem | null>(
+  'canReadEmployees',
   async ({ tenantId }, id) => {
     try {
       const employee = await employeeRepo.findEmployeeById(id, tenantId);

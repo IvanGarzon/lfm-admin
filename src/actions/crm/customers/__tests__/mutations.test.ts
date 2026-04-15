@@ -36,7 +36,7 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const TEST_CUSTOMER_ID = testIds.customer();
 const TEST_ORG_ID = testIds.organization();
 
-const baseInput = createCustomerInput;
+const baseInput = createCustomerInput();
 
 describe('Customer Mutations', () => {
   const mockSession = mockSessions.manager();

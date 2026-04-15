@@ -6,7 +6,7 @@ import type {
   EmployeeListItem,
   EmployeeFilters,
 } from '@/features/staff/employees/types';
-import type { CreateEmployeeInput } from '@/schemas/employees';
+import type { CreateEmployeeInput, UpdateEmployeeInput } from '@/schemas/employees';
 
 /**
  * Employee Repository
@@ -31,13 +31,13 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    * @returns A structured EmployeeListItem object
    * @private
    */
-  private mapToListItem(employee: any): EmployeeListItem {
+  private mapToListItem(employee: Prisma.EmployeeGetPayload<object>): EmployeeListItem {
     return {
       id: employee.id,
       firstName: employee.firstName,
       lastName: employee.lastName,
       email: employee.email,
-      phone: employee?.phone ?? '',
+      phone: employee.phone ?? '',
       gender: employee.gender,
       dob: employee.dob,
       rate: Number(employee.rate),
@@ -53,16 +53,10 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    * Search and paginate employees with filtering.
    * Supports name/email search, alphabetical filtering, gender, and status.
    * @param params - Filter parameters for the search
-   * @param params.search - Text search for name or email
-   * @param params.alphabet - Optional starting letter for first name
-   * @param params.gender - Array of genders to filter by
-   * @param params.status - Array of statuses to filter by
-   * @param params.page - Current page number
-   * @param params.perPage - Items per page
-   * @param params.sort - Sorting criteria
+   * @param tenantId - The tenant to scope the query to
    * @returns Paginated results with metadata
    */
-  async searchAndPaginate(params: EmployeeFilters, tenantId: string): Promise<EmployeePagination> {
+  async searchEmployees(params: EmployeeFilters, tenantId: string): Promise<EmployeePagination> {
     const { search, alphabet, gender, status, page, perPage, sort } = params;
     const whereClause: Prisma.EmployeeWhereInput = { tenantId };
 
@@ -108,46 +102,32 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
           })
         : [{ createdAt: 'desc' }];
 
-    const countOperation = this.prisma.employee.count({ where: whereClause });
-    const findManyOperation = this.prisma.employee.findMany({
-      where: whereClause,
-      orderBy,
-      skip,
-      take: perPage,
-    });
-
-    const [totalItems, employees] = await Promise.all([countOperation, findManyOperation]);
-
-    const items: EmployeeListItem[] = employees.map((employee) => ({
-      id: employee.id,
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email,
-      phone: employee?.phone,
-      gender: employee.gender,
-      dob: employee.dob,
-      rate: Number(employee.rate),
-      status: employee.status,
-      avatarUrl: employee.avatarUrl,
-      createdAt: employee.createdAt,
-      updatedAt: employee.updatedAt,
-      deletedAt: employee.deletedAt ?? null,
-    }));
+    const [totalItems, employees] = await Promise.all([
+      this.prisma.employee.count({ where: whereClause }),
+      this.prisma.employee.findMany({
+        where: whereClause,
+        orderBy,
+        skip,
+        take: perPage,
+      }),
+    ]);
 
     return {
-      items,
+      items: employees.map((employee) => this.mapToListItem(employee)),
       pagination: getPaginationMetadata(totalItems, perPage, page),
     };
   }
 
   /**
-   * Retrieves a list of active employees, typically for selection components.
+   * Retrieves a list of active employees for a given tenant, typically for selection components.
+   * @param tenantId - The tenant to scope the query to
    * @param limit - Maximum number of employees to return
    * @returns A promise that resolves to an array of active employees
    */
-  async getActiveEmployees(limit: number = 20): Promise<EmployeeListItem[]> {
-    const employees = await this.findMany({
+  async getActiveEmployees(tenantId: string, limit: number = 20): Promise<EmployeeListItem[]> {
+    const employees = await this.prisma.employee.findMany({
       where: {
+        tenantId,
         status: EmployeeStatus.ACTIVE,
       },
       take: limit,
@@ -157,25 +137,26 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
   }
 
   /**
-   * Locates an employee by their unique email address.
+   * Locates an employee by their email address within a tenant.
    * @param email - The email address to look up
+   * @param tenantId - The tenant to scope the query to
    * @returns The employee details or null if not found
    */
-  async findByEmail(email: string): Promise<EmployeeListItem | null> {
-    const employee = await this.model.findUnique({
-      where: { email },
+  async findEmployeeByEmail(email: string, tenantId: string): Promise<EmployeeListItem | null> {
+    const employee = await this.prisma.employee.findFirst({
+      where: { email, tenantId },
     });
     return employee ? this.mapToListItem(employee) : null;
   }
 
   /**
-   * Locates an employee by their ID.
+   * Locates an employee by their ID within a tenant.
    * @param id - The ID of the employee
    * @param tenantId - The tenant to scope the query to
    * @returns The employee details or null if not found
    */
   async findEmployeeById(id: string, tenantId: string): Promise<EmployeeListItem | null> {
-    const employee = await this.model.findUnique({
+    const employee = await this.prisma.employee.findFirst({
       where: { id, tenantId },
     });
 
@@ -196,15 +177,63 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
         lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        gender: data.gender ?? null,
-        dob: data.dob ?? null,
+        gender: data.gender,
+        dob: data.dob,
         rate: data.rate,
         status: data.status ?? EmployeeStatus.ACTIVE,
-        avatarUrl: data.avatarUrl || null,
+        avatarUrl: data.avatarUrl ?? null,
       },
       select: { id: true },
     });
 
     return { id: employee.id };
+  }
+
+  /**
+   * Updates an existing employee record scoped to the given tenant.
+   * @param id - The ID of the employee to update
+   * @param tenantId - The tenant to scope the operation to
+   * @param data - The fields to update
+   * @returns The updated employee or null if not found
+   */
+  async updateEmployee(
+    id: string,
+    tenantId: string,
+    data: Omit<UpdateEmployeeInput, 'id'>,
+  ): Promise<EmployeeListItem | null> {
+    const employee = await this.prisma.employee.updateMany({
+      where: { id, tenantId },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender,
+        dob: data.dob,
+        rate: data.rate,
+        status: data.status,
+        avatarUrl: data.avatarUrl || null,
+      },
+    });
+
+    if (employee.count === 0) {
+      return null;
+    }
+
+    return this.findEmployeeById(id, tenantId);
+  }
+
+  /**
+   * Deletes an employee record scoped to the given tenant.
+   * @param id - The ID of the employee to delete
+   * @param tenantId - The tenant to scope the operation to
+   * @returns True if the employee was deleted, false if not found
+   */
+  async deleteEmployee(id: string, tenantId: string): Promise<boolean> {
+    const result = await this.prisma.employee.deleteMany({
+      where: { id, tenantId },
+    });
+
+    return result.count > 0;
   }
 }

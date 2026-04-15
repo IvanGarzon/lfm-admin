@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CreateCustomerSchema, UpdateCustomerSchema, DeleteCustomerSchema } from './customers';
+import { CreateCustomerSchema, UpdateCustomerSchema, DeleteCustomerSchema } from '../customers';
 import { testIds } from '@/lib/testing';
 
 const TEST_CUSTOMER_ID = testIds.customer();
@@ -85,7 +85,7 @@ describe('Customer Schemas', () => {
     });
 
     it('fails when id is not a valid CUID', () => {
-      const result = UpdateCustomerSchema.safeParse({ ...validCustomer, id: 'not-a-cuid' });
+      const result = UpdateCustomerSchema.safeParse({ ...validCustomer, id: 'not-valid' });
       expect(result.success).toBe(false);
     });
   });
@@ -102,7 +102,7 @@ describe('Customer Schemas', () => {
     });
 
     it('fails when id is not a valid CUID', () => {
-      const result = DeleteCustomerSchema.safeParse({ id: 'bad-id' });
+      const result = DeleteCustomerSchema.safeParse({ id: 'not-valid' });
       expect(result.success).toBe(false);
     });
   });

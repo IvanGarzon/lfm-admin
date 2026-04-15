@@ -69,6 +69,14 @@ export const PERMISSIONS = {
     label: 'Can create, edit, and delete price list items',
   },
 
+  // Employee Permissions
+  canReadEmployees: {
+    label: 'Can view employees',
+  },
+  canManageEmployees: {
+    label: 'Can create, edit, and delete employees',
+  },
+
   // Developer Tools Permissions
   canAccessTools: {
     label: 'Can access developer tools',
@@ -117,6 +125,7 @@ const USER: RolePolicy = {
     'canReadProducts',
     'canReadVendors',
     'canReadPriceList',
+    'canReadEmployees',
   ],
   deny: [],
   actions: {
@@ -152,6 +161,10 @@ const USER: RolePolicy = {
       'priceList.getPriceListItems',
       'priceList.getPriceListItemById',
       'priceList.getPriceListCostHistory',
+
+      // Employee read actions
+      'employees.getEmployees',
+      'employees.getEmployeeById',
     ],
     deny: [],
   },
@@ -172,6 +185,7 @@ const MANAGER: RolePolicy = {
     'canManageVendors',
     'canManageRecipes',
     'canManagePriceList',
+    'canManageEmployees',
   ],
   deny: [],
   actions: {
@@ -216,6 +230,10 @@ const MANAGER: RolePolicy = {
       // Price List management actions
       'priceList.createPriceListItem',
       'priceList.updatePriceListItem',
+
+      // Employee management actions
+      'employees.createEmployee',
+      'employees.updateEmployee',
     ],
     deny: [],
   },
@@ -239,6 +257,7 @@ const ADMIN: RolePolicy = {
       'vendors.deleteVendor',
       'recipes.deleteRecipe',
       'priceList.deletePriceListItem',
+      'employees.deleteEmployee',
     ],
     deny: [],
   },

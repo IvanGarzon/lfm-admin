@@ -8,19 +8,24 @@ import { testIds } from '../id-generator';
 import type { CreateOrganizationInput } from '@/schemas/organizations';
 import type { OrganizationListItem } from '@/features/crm/organizations/types';
 
-export const createOrganizationInput: CreateOrganizationInput = {
-  name: 'Acme Florals',
-  phone: null,
-  email: null,
-  website: null,
-  address: null,
-  city: null,
-  state: null,
-  postcode: null,
-  country: 'Australia',
-  abn: null,
-  status: 'ACTIVE',
-};
+export function createOrganizationInput(
+  overrides: Partial<CreateOrganizationInput> = {},
+): CreateOrganizationInput {
+  return {
+    name: 'Acme Florals',
+    phone: null,
+    email: null,
+    website: null,
+    address: null,
+    city: null,
+    state: null,
+    postcode: null,
+    country: 'Australia',
+    abn: null,
+    status: 'ACTIVE',
+    ...overrides,
+  };
+}
 
 /**
  * Creates a mock OrganizationListItem as returned by the repository.

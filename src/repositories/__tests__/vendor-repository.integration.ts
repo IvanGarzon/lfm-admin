@@ -18,10 +18,6 @@ import { createVendorInput } from '@/lib/testing';
 
 setupTestDatabaseLifecycle();
 
-// -- Shared fixture ----------------------------------------------------------
-
-const vendorInput = createVendorInput();
-
 // -- Tests -------------------------------------------------------------------
 
 describe('VendorRepository (integration)', () => {
@@ -36,9 +32,11 @@ describe('VendorRepository (integration)', () => {
     ({ id: tenantId } = await createTestTenant({ name: 'Vendor Test Tenant' }));
   });
 
+  // -- createVendor ----------------------------------------------------------
+
   describe('createVendor', () => {
     it('creates a vendor and returns its ID and code', async () => {
-      const result = await repository.createVendor(vendorInput, tenantId);
+      const result = await repository.createVendor(createVendorInput(), tenantId);
 
       expect(result.id).toBeDefined();
       expect(result.vendorCode).toMatch(/^VEN-\d{4}-\d{4}$/);
@@ -46,22 +44,24 @@ describe('VendorRepository (integration)', () => {
 
     it('auto-generates unique vendor codes', async () => {
       const [a, b] = await Promise.all([
-        repository.createVendor(vendorInput, tenantId),
-        repository.createVendor(vendorInput, tenantId),
+        repository.createVendor(createVendorInput(), tenantId),
+        repository.createVendor(createVendorInput(), tenantId),
       ]);
 
       expect(a.vendorCode).not.toBe(b.vendorCode);
     });
   });
 
+  // -- findByIdWithDetails ---------------------------------------------------
+
   describe('findByIdWithDetails', () => {
     it('returns a vendor with details when found', async () => {
-      const created = await repository.createVendor(vendorInput, tenantId);
+      const created = await repository.createVendor(createVendorInput(), tenantId);
       const result = await repository.findByIdWithDetails(created.id, tenantId);
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(created.id);
-      expect(result?.name).toBe(vendorInput.name);
+      expect(result?.name).toBe(createVendorInput().name);
     });
 
     it('returns null for a non-existent ID', async () => {
@@ -71,16 +71,18 @@ describe('VendorRepository (integration)', () => {
 
     it('returns null when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      const created = await repository.createVendor(vendorInput, otherTenantId);
+      const created = await repository.createVendor(createVendorInput(), otherTenantId);
 
       const result = await repository.findByIdWithDetails(created.id, tenantId);
       expect(result).toBeNull();
     });
   });
 
+  // -- searchAndPaginate -----------------------------------------------------
+
   describe('searchAndPaginate', () => {
     it('returns paginated vendors for the tenant', async () => {
-      await repository.createVendor(vendorInput, tenantId);
+      await repository.createVendor(createVendorInput(), tenantId);
 
       const result = await repository.searchAndPaginate({ page: 1, perPage: 10 }, tenantId);
 
@@ -90,8 +92,8 @@ describe('VendorRepository (integration)', () => {
 
     it('does not return vendors from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createVendor(vendorInput, otherTenantId);
-      await repository.createVendor(vendorInput, tenantId);
+      await repository.createVendor(createVendorInput(), otherTenantId);
+      await repository.createVendor(createVendorInput(), tenantId);
 
       const result = await repository.searchAndPaginate({ page: 1, perPage: 10 }, tenantId);
 
@@ -99,9 +101,12 @@ describe('VendorRepository (integration)', () => {
     });
 
     it('filters by search term across name and email', async () => {
-      await repository.createVendor({ ...vendorInput, name: 'Unique Botanicals' }, tenantId);
       await repository.createVendor(
-        { ...vendorInput, name: 'Standard Supplies', email: 'standard@supply.com' },
+        { ...createVendorInput(), name: 'Unique Botanicals' },
+        tenantId,
+      );
+      await repository.createVendor(
+        { ...createVendorInput(), name: 'Standard Supplies', email: 'standard@supply.com' },
         tenantId,
       );
 
@@ -114,8 +119,8 @@ describe('VendorRepository (integration)', () => {
     });
 
     it('filters by status', async () => {
-      await repository.createVendor({ ...vendorInput, status: 'ACTIVE' }, tenantId);
-      await repository.createVendor({ ...vendorInput, status: 'INACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'ACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'INACTIVE' }, tenantId);
 
       const result = await repository.searchAndPaginate(
         { page: 1, perPage: 10, status: ['ACTIVE'] },
@@ -126,11 +131,13 @@ describe('VendorRepository (integration)', () => {
     });
   });
 
+  // -- updateVendor ----------------------------------------------------------
+
   describe('updateVendor', () => {
     it('updates fields and returns the updated record', async () => {
-      const created = await repository.createVendor(vendorInput, tenantId);
+      const created = await repository.createVendor(createVendorInput(), tenantId);
       const result = await repository.updateVendor(created.id, tenantId, {
-        ...vendorInput,
+        ...createVendorInput(),
         id: created.id,
         name: 'Updated Vendor Name',
       });
@@ -141,19 +148,21 @@ describe('VendorRepository (integration)', () => {
 
     it('returns null when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      const created = await repository.createVendor(vendorInput, otherTenantId);
+      const created = await repository.createVendor(createVendorInput(), otherTenantId);
 
       const result = await repository.updateVendor(created.id, tenantId, {
-        ...vendorInput,
+        ...createVendorInput(),
         id: created.id,
       });
       expect(result).toBeNull();
     });
   });
 
+  // -- updateVendorStatus ----------------------------------------------------
+
   describe('updateVendorStatus', () => {
     it('updates the vendor status', async () => {
-      const created = await repository.createVendor(vendorInput, tenantId);
+      const created = await repository.createVendor(createVendorInput(), tenantId);
       const result = await repository.updateVendorStatus(created.id, tenantId, 'INACTIVE');
 
       expect(result.status).toBe('INACTIVE');
@@ -161,7 +170,7 @@ describe('VendorRepository (integration)', () => {
 
     it('throws when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      const created = await repository.createVendor(vendorInput, otherTenantId);
+      const created = await repository.createVendor(createVendorInput(), otherTenantId);
 
       await expect(
         repository.updateVendorStatus(created.id, tenantId, 'INACTIVE'),
@@ -169,9 +178,11 @@ describe('VendorRepository (integration)', () => {
     });
   });
 
+  // -- softDeleteVendor ------------------------------------------------------
+
   describe('softDeleteVendor', () => {
     it('soft deletes the vendor', async () => {
-      const created = await repository.createVendor(vendorInput, tenantId);
+      const created = await repository.createVendor(createVendorInput(), tenantId);
       await repository.softDeleteVendor(created.id, tenantId);
 
       const gone = await repository.findByIdWithDetails(created.id, tenantId);
@@ -180,17 +191,19 @@ describe('VendorRepository (integration)', () => {
 
     it('throws when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      const created = await repository.createVendor(vendorInput, otherTenantId);
+      const created = await repository.createVendor(createVendorInput(), otherTenantId);
 
       await expect(repository.softDeleteVendor(created.id, tenantId)).rejects.toThrow();
     });
   });
 
+  // -- getStatistics ---------------------------------------------------------
+
   describe('getStatistics', () => {
     it('returns correct counts by status', async () => {
-      await repository.createVendor({ ...vendorInput, status: 'ACTIVE' }, tenantId);
-      await repository.createVendor({ ...vendorInput, status: 'ACTIVE' }, tenantId);
-      await repository.createVendor({ ...vendorInput, status: 'INACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'ACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'ACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'INACTIVE' }, tenantId);
 
       const stats = await repository.getStatistics(tenantId);
 
@@ -201,17 +214,19 @@ describe('VendorRepository (integration)', () => {
 
     it('does not count vendors from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createVendor(vendorInput, otherTenantId);
+      await repository.createVendor(createVendorInput(), otherTenantId);
 
       const stats = await repository.getStatistics(tenantId);
       expect(stats.total).toBe(0);
     });
   });
 
+  // -- getActiveVendors ------------------------------------------------------
+
   describe('getActiveVendors', () => {
     it('returns only active vendors for the tenant', async () => {
-      await repository.createVendor({ ...vendorInput, status: 'ACTIVE' }, tenantId);
-      await repository.createVendor({ ...vendorInput, status: 'INACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'ACTIVE' }, tenantId);
+      await repository.createVendor({ ...createVendorInput(), status: 'INACTIVE' }, tenantId);
 
       const result = await repository.getActiveVendors(tenantId);
 
@@ -221,7 +236,7 @@ describe('VendorRepository (integration)', () => {
 
     it('does not return vendors from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createVendor(vendorInput, otherTenantId);
+      await repository.createVendor(createVendorInput(), otherTenantId);
 
       const result = await repository.getActiveVendors(tenantId);
       expect(result).toHaveLength(0);

@@ -10,7 +10,7 @@ import {
   SendInvoiceEmailSchema,
   SendReminderEmailSchema,
   SendReceiptEmailSchema,
-} from './invoices';
+} from '../invoices';
 import { testIds } from '@/lib/testing';
 
 const TEST_INVOICE_ID = testIds.invoice();

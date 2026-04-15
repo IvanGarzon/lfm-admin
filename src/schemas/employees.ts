@@ -6,7 +6,7 @@ import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
 import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 
-const EmployeeSchema = z
+const BaseEmployeeSchema = z
   .object({
     firstName: commonValidators.name('First name'),
     lastName: commonValidators.name('Last name'),
@@ -18,13 +18,13 @@ const EmployeeSchema = z
       .refine((val) => val.length === 0 || /^[0-9\s\-\+\(\)]+$/.test(val), {
         message: 'Please enter a valid phone number',
       }),
-    gender: GenderSchema.optional(),
+    gender: GenderSchema,
     rate: z
       .number()
       .min(0, { error: 'Rate must be a positive number' })
       .max(1000000, { error: 'Rate must be less than 1,000,000' }),
     status: EmployeeStatusSchema,
-    dob: z.date().optional(),
+    dob: z.date(),
     avatarUrl: z
       .string()
       .trim()
@@ -33,16 +33,17 @@ const EmployeeSchema = z
       .nullable()
       .or(z.literal('')),
   })
-  .refine((data) => !data.dob || data.dob <= new Date(), {
+  .refine((data) => data.dob <= new Date(), {
     error: 'Date of birth cannot be in the future.',
     path: ['dob'],
   });
 
-export const CreateEmployeeSchema = EmployeeSchema;
-export const UpdateEmployeeSchema = EmployeeSchema.extend({
+export const CreateEmployeeSchema = BaseEmployeeSchema;
+export const UpdateEmployeeSchema = BaseEmployeeSchema.extend({
   id: z.string('Invalid employee ID'),
 });
+export const DeleteEmployeeSchema = z.object({ id: z.string().cuid() });
 
-// Output types (after validation/transforms) - used for API calls
 export type CreateEmployeeInput = z.infer<typeof CreateEmployeeSchema>;
 export type UpdateEmployeeInput = z.infer<typeof UpdateEmployeeSchema>;
+export type DeleteEmployeeInput = z.infer<typeof DeleteEmployeeSchema>;

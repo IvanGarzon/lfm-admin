@@ -42,7 +42,7 @@ export function EmployeesList({
     () =>
       createEmployeeColumns((id) => {
         if (confirm(`Are you sure you want to delete this employee?`)) {
-          deleteEmployee.mutate(id);
+          deleteEmployee.mutate({ id });
         }
       }),
     [deleteEmployee],

@@ -59,6 +59,8 @@ describe('RecipeRepository (integration)', () => {
     ({ id: tenantId } = await createTestTenant({ name: 'Recipe Test Tenant' }));
   });
 
+  // -- createRecipeWithItems -------------------------------------------------
+
   describe('createRecipeWithItems', () => {
     it('creates a recipe and returns it as a list item', async () => {
       const result = await repository.createRecipeWithItems(recipeInput, tenantId);
@@ -80,6 +82,8 @@ describe('RecipeRepository (integration)', () => {
       expect(results.pagination.totalItems).toBe(1);
     });
   });
+
+  // -- findRecipeById --------------------------------------------------------
 
   describe('findRecipeById', () => {
     it('returns the recipe with items', async () => {
@@ -107,6 +111,8 @@ describe('RecipeRepository (integration)', () => {
       expect(result).toBeNull();
     });
   });
+
+  // -- searchRecipes ---------------------------------------------------------
 
   describe('searchRecipes', () => {
     it('returns paginated results matching search term', async () => {
@@ -136,6 +142,8 @@ describe('RecipeRepository (integration)', () => {
       expect(result.pagination.totalItems).toBeGreaterThanOrEqual(3);
     });
   });
+
+  // -- updateRecipeWithItems -------------------------------------------------
 
   describe('updateRecipeWithItems', () => {
     it('updates fields and replaces items', async () => {
@@ -170,6 +178,8 @@ describe('RecipeRepository (integration)', () => {
     });
   });
 
+  // -- softDeleteRecipe ------------------------------------------------------
+
   describe('softDeleteRecipe', () => {
     it('sets deletedAt and excludes from search results', async () => {
       const created = await repository.createRecipeWithItems(
@@ -194,7 +204,6 @@ describe('RecipeRepository (integration)', () => {
       const result = await repository.softDeleteRecipe(created.id, tenantId);
       expect(result).toBe(false);
 
-      // Original still exists for the correct tenant
       const stillExists = await repository.findRecipeById(created.id, otherTenantId);
       expect(stillExists).not.toBeNull();
     });

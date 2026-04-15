@@ -18,10 +18,6 @@ import { createOrganizationInput } from '@/lib/testing';
 
 setupTestDatabaseLifecycle();
 
-// -- Shared fixture ----------------------------------------------------------
-
-const orgInput = createOrganizationInput;
-
 // -- Tests -------------------------------------------------------------------
 
 describe('OrganizationRepository (integration)', () => {
@@ -36,21 +32,25 @@ describe('OrganizationRepository (integration)', () => {
     ({ id: tenantId } = await createTestTenant({ name: 'Organisation Test Tenant' }));
   });
 
+  // -- createOrganization ----------------------------------------------------
+
   describe('createOrganization', () => {
     it('creates an organisation and returns the record', async () => {
-      const result = await repository.createOrganization(orgInput, tenantId);
+      const result = await repository.createOrganization(createOrganizationInput(), tenantId);
 
       expect(result.id).toBeDefined();
       expect(result.name).toBe('Acme Florals');
     });
   });
 
+  // -- updateOrganization ----------------------------------------------------
+
   describe('updateOrganization', () => {
     it('updates fields and returns the updated organisation', async () => {
-      const created = await repository.createOrganization(orgInput, tenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), tenantId);
 
       const result = await repository.updateOrganization(created.id, tenantId, {
-        ...orgInput,
+        ...createOrganizationInput(),
         id: created.id,
         name: 'Updated Florals',
       });
@@ -60,11 +60,11 @@ describe('OrganizationRepository (integration)', () => {
 
     it('does not update an organisation belonging to another tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Update Isolation Tenant' });
-      const created = await repository.createOrganization(orgInput, otherTenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), otherTenantId);
 
       await expect(
         repository.updateOrganization(created.id, tenantId, {
-          ...orgInput,
+          ...createOrganizationInput(),
           id: created.id,
           name: 'Should Not Update',
         }),
@@ -72,9 +72,11 @@ describe('OrganizationRepository (integration)', () => {
     });
   });
 
+  // -- findOrganizationById --------------------------------------------------
+
   describe('findOrganizationById', () => {
     it('returns the organisation with customer count', async () => {
-      const created = await repository.createOrganization(orgInput, tenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), tenantId);
 
       const result = await repository.findOrganizationById(created.id, tenantId);
 
@@ -91,16 +93,18 @@ describe('OrganizationRepository (integration)', () => {
 
     it('returns null when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Isolation Tenant' });
-      const created = await repository.createOrganization(orgInput, otherTenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), otherTenantId);
 
       const result = await repository.findOrganizationById(created.id, tenantId);
       expect(result).toBeNull();
     });
   });
 
+  // -- findOrganizationByName ------------------------------------------------
+
   describe('findOrganizationByName', () => {
     it('finds an organisation by name (case-insensitive)', async () => {
-      await repository.createOrganization(orgInput, tenantId);
+      await repository.createOrganization(createOrganizationInput(), tenantId);
 
       const result = await repository.findOrganizationByName('acme florals', tenantId);
 
@@ -110,12 +114,14 @@ describe('OrganizationRepository (integration)', () => {
 
     it('returns null for a name that belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createOrganization(orgInput, otherTenantId);
+      await repository.createOrganization(createOrganizationInput(), otherTenantId);
 
       const result = await repository.findOrganizationByName('Acme Florals', tenantId);
       expect(result).toBeNull();
     });
   });
+
+  // -- findOrCreateOrganization ----------------------------------------------
 
   describe('findOrCreateOrganization', () => {
     it('creates a new organisation when name does not exist', async () => {
@@ -125,7 +131,7 @@ describe('OrganizationRepository (integration)', () => {
     });
 
     it('returns the existing organisation when name already exists', async () => {
-      const created = await repository.createOrganization(orgInput, tenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), tenantId);
 
       const result = await repository.findOrCreateOrganization('Acme Florals', tenantId);
 
@@ -133,10 +139,15 @@ describe('OrganizationRepository (integration)', () => {
     });
   });
 
+  // -- searchOrganizations ---------------------------------------------------
+
   describe('searchOrganizations', () => {
     it('returns paginated organisations matching the search term', async () => {
-      await repository.createOrganization(orgInput, tenantId);
-      await repository.createOrganization({ ...orgInput, name: 'Rose Garden' }, tenantId);
+      await repository.createOrganization(createOrganizationInput(), tenantId);
+      await repository.createOrganization(
+        { ...createOrganizationInput(), name: 'Rose Garden' },
+        tenantId,
+      );
 
       const result = await repository.searchOrganizations(
         { name: 'Acme', page: 1, perPage: 10 },
@@ -149,8 +160,8 @@ describe('OrganizationRepository (integration)', () => {
 
     it('does not return organisations from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createOrganization(orgInput, tenantId);
-      await repository.createOrganization(orgInput, otherTenantId);
+      await repository.createOrganization(createOrganizationInput(), tenantId);
+      await repository.createOrganization(createOrganizationInput(), otherTenantId);
 
       const result = await repository.searchOrganizations({ page: 1, perPage: 10 }, tenantId);
 
@@ -158,11 +169,13 @@ describe('OrganizationRepository (integration)', () => {
     });
   });
 
+  // -- findActiveOrganizations -----------------------------------------------
+
   describe('findActiveOrganizations', () => {
     it('returns only active organisations for the tenant', async () => {
-      await repository.createOrganization(orgInput, tenantId);
+      await repository.createOrganization(createOrganizationInput(), tenantId);
       await repository.createOrganization(
-        { ...orgInput, name: 'Inactive Org', status: 'INACTIVE' },
+        { ...createOrganizationInput(), name: 'Inactive Org', status: 'INACTIVE' },
         tenantId,
       );
 
@@ -173,9 +186,11 @@ describe('OrganizationRepository (integration)', () => {
     });
   });
 
+  // -- deleteOrganization ----------------------------------------------------
+
   describe('deleteOrganization', () => {
     it('permanently removes the organisation', async () => {
-      const created = await repository.createOrganization(orgInput, tenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), tenantId);
 
       await repository.deleteOrganization(created.id, tenantId);
 
@@ -185,7 +200,7 @@ describe('OrganizationRepository (integration)', () => {
 
     it('does not delete an organisation from another tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Delete Isolation Tenant' });
-      const created = await repository.createOrganization(orgInput, otherTenantId);
+      const created = await repository.createOrganization(createOrganizationInput(), otherTenantId);
 
       await expect(repository.deleteOrganization(created.id, tenantId)).rejects.toThrow();
 

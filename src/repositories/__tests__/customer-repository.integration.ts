@@ -18,10 +18,6 @@ import { createCustomerInput } from '@/lib/testing';
 
 setupTestDatabaseLifecycle();
 
-// -- Shared fixture ----------------------------------------------------------
-
-const customerInput = createCustomerInput;
-
 // -- Tests -------------------------------------------------------------------
 
 describe('CustomerRepository (integration)', () => {
@@ -36,9 +32,11 @@ describe('CustomerRepository (integration)', () => {
     ({ id: tenantId } = await createTestTenant({ name: 'Customer Test Tenant' }));
   });
 
+  // -- createCustomer --------------------------------------------------------
+
   describe('createCustomer', () => {
     it('creates a customer and returns the record', async () => {
-      const result = await repository.createCustomer(customerInput, tenantId);
+      const result = await repository.createCustomer(createCustomerInput(), tenantId);
 
       expect(result.id).toBeDefined();
       expect(result.firstName).toBe('Jane');
@@ -47,7 +45,7 @@ describe('CustomerRepository (integration)', () => {
 
     it('stores address fields when useOrganizationAddress is false', async () => {
       const result = await repository.createCustomer(
-        { ...customerInput, useOrganizationAddress: false },
+        { ...createCustomerInput(), useOrganizationAddress: false },
         tenantId,
       );
 
@@ -57,7 +55,7 @@ describe('CustomerRepository (integration)', () => {
 
     it('omits address fields when useOrganizationAddress is true', async () => {
       const result = await repository.createCustomer(
-        { ...customerInput, useOrganizationAddress: true },
+        { ...createCustomerInput(), useOrganizationAddress: true },
         tenantId,
       );
 
@@ -71,7 +69,7 @@ describe('CustomerRepository (integration)', () => {
       });
 
       const result = await repository.createCustomer(
-        { ...customerInput, organizationId: org.id },
+        { ...createCustomerInput(), organizationId: org.id },
         tenantId,
       );
 
@@ -80,7 +78,7 @@ describe('CustomerRepository (integration)', () => {
 
     it('always creates with ACTIVE status regardless of input', async () => {
       const result = await repository.createCustomer(
-        { ...customerInput, status: 'INACTIVE' },
+        { ...createCustomerInput(), status: 'INACTIVE' },
         tenantId,
       );
 
@@ -88,11 +86,13 @@ describe('CustomerRepository (integration)', () => {
     });
   });
 
+  // -- updateCustomer --------------------------------------------------------
+
   describe('updateCustomer', () => {
     it('updates a customer and returns the record', async () => {
-      const created = await repository.createCustomer(customerInput, tenantId);
+      const created = await repository.createCustomer(createCustomerInput(), tenantId);
       const result = await repository.updateCustomer(created.id, tenantId, {
-        ...customerInput,
+        ...createCustomerInput(),
         id: created.id,
         phone: '+1234567890',
       });
@@ -102,9 +102,9 @@ describe('CustomerRepository (integration)', () => {
     });
 
     it('returns null for a non-existent ID', async () => {
-      const nonExistentId = 'cltest000000000000none0001';
+      const nonExistentId = 'non-existent';
       const result = await repository.updateCustomer(nonExistentId, tenantId, {
-        ...customerInput,
+        ...createCustomerInput(),
         id: nonExistentId,
       });
 
@@ -113,10 +113,10 @@ describe('CustomerRepository (integration)', () => {
 
     it('returns null when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      const created = await repository.createCustomer(customerInput, otherTenantId);
+      const created = await repository.createCustomer(createCustomerInput(), otherTenantId);
 
       const result = await repository.updateCustomer(created.id, tenantId, {
-        ...customerInput,
+        ...createCustomerInput(),
         id: created.id,
         phone: '+1234567890',
       });
@@ -125,9 +125,11 @@ describe('CustomerRepository (integration)', () => {
     });
   });
 
+  // -- findCustomerByEmail ---------------------------------------------------
+
   describe('findCustomerByEmail', () => {
     it('finds an existing customer by email within the tenant', async () => {
-      await repository.createCustomer(customerInput, tenantId);
+      await repository.createCustomer(createCustomerInput(), tenantId);
 
       const result = await repository.findCustomerByEmail('jane@example.com', tenantId);
 
@@ -137,7 +139,7 @@ describe('CustomerRepository (integration)', () => {
 
     it('returns null for an email that belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createCustomer(customerInput, otherTenantId);
+      await repository.createCustomer(createCustomerInput(), otherTenantId);
 
       const result = await repository.findCustomerByEmail('jane@example.com', tenantId);
 
@@ -150,9 +152,11 @@ describe('CustomerRepository (integration)', () => {
     });
   });
 
+  // -- findCustomerById ------------------------------------------------------
+
   describe('findCustomerById', () => {
     it('returns a customer with details when found', async () => {
-      const created = await repository.createCustomer(customerInput, tenantId);
+      const created = await repository.createCustomer(createCustomerInput(), tenantId);
       const result = await repository.findCustomerById(created.id, tenantId);
 
       expect(result).not.toBeNull();
@@ -169,18 +173,20 @@ describe('CustomerRepository (integration)', () => {
 
     it('returns null when ID belongs to a different tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Isolation Tenant' });
-      const created = await repository.createCustomer(customerInput, otherTenantId);
+      const created = await repository.createCustomer(createCustomerInput(), otherTenantId);
 
       const result = await repository.findCustomerById(created.id, tenantId);
       expect(result).toBeNull();
     });
   });
 
+  // -- searchCustomers -------------------------------------------------------
+
   describe('searchCustomers', () => {
     it('returns paginated customers matching the search term', async () => {
-      await repository.createCustomer(customerInput, tenantId);
+      await repository.createCustomer(createCustomerInput(), tenantId);
       await repository.createCustomer(
-        { ...customerInput, firstName: 'Bob', email: 'bob@example.com' },
+        { ...createCustomerInput(), firstName: 'Bob', email: 'bob@example.com' },
         tenantId,
       );
 
@@ -195,8 +201,8 @@ describe('CustomerRepository (integration)', () => {
 
     it('does not return customers from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
-      await repository.createCustomer(customerInput, tenantId);
-      await repository.createCustomer(customerInput, otherTenantId);
+      await repository.createCustomer(createCustomerInput(), tenantId);
+      await repository.createCustomer(createCustomerInput(), otherTenantId);
 
       const result = await repository.searchCustomers({ page: 1, perPage: 10 }, tenantId);
 
@@ -206,7 +212,7 @@ describe('CustomerRepository (integration)', () => {
     it('returns correct pagination metadata', async () => {
       for (let i = 0; i < 3; i++) {
         await repository.createCustomer(
-          { ...customerInput, email: `customer${i}@example.com` },
+          { ...createCustomerInput(), email: `customer${i}@example.com` },
           tenantId,
         );
       }
@@ -218,11 +224,16 @@ describe('CustomerRepository (integration)', () => {
     });
   });
 
+  // -- findActiveCustomers ---------------------------------------------------
+
   describe('findActiveCustomers', () => {
     it('returns only active customers for the tenant', async () => {
-      const created = await repository.createCustomer(customerInput, tenantId);
+      const created = await repository.createCustomer(createCustomerInput(), tenantId);
       await repository.softDeleteCustomer(created.id, tenantId);
-      await repository.createCustomer({ ...customerInput, email: 'active@example.com' }, tenantId);
+      await repository.createCustomer(
+        { ...createCustomerInput(), email: 'active@example.com' },
+        tenantId,
+      );
 
       const result = await repository.findActiveCustomers(tenantId);
 
@@ -231,9 +242,11 @@ describe('CustomerRepository (integration)', () => {
     });
   });
 
+  // -- softDeleteCustomer ----------------------------------------------------
+
   describe('softDeleteCustomer', () => {
     it('sets deletedAt and excludes the customer from search results', async () => {
-      const created = await repository.createCustomer(customerInput, tenantId);
+      const created = await repository.createCustomer(createCustomerInput(), tenantId);
 
       await repository.softDeleteCustomer(created.id, tenantId);
 
@@ -246,7 +259,7 @@ describe('CustomerRepository (integration)', () => {
 
     it('does not soft-delete a customer from another tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Delete Isolation Tenant' });
-      const created = await repository.createCustomer(customerInput, otherTenantId);
+      const created = await repository.createCustomer(createCustomerInput(), otherTenantId);
 
       await expect(repository.softDeleteCustomer(created.id, tenantId)).rejects.toThrow();
 

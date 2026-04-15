@@ -3,7 +3,7 @@ import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
   DeleteOrganizationSchema,
-} from './organizations';
+} from '../organizations';
 import { testIds } from '@/lib/testing';
 
 const TEST_ORG_ID = testIds.organization();

@@ -2,15 +2,19 @@
 
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { type CreateEmployeeFormValues, type UpdateEmployeeFormValues } from '@/schemas/employees';
+import type {
+  CreateEmployeeInput,
+  UpdateEmployeeInput,
+  DeleteEmployeeInput,
+} from '@/schemas/employees';
 import { getEmployeeById } from '@/actions/staff/employees/queries';
 import {
   updateEmployee,
   createEmployee,
   deleteEmployee,
 } from '@/actions/staff/employees/mutations';
+import type { EmployeeListItem } from '@/features/staff/employees/types';
 
-// Query keys as constants
 export const EMPLOYEE_KEYS = {
   all: ['employees'] as const,
   lists: () => [...EMPLOYEE_KEYS.all, 'list'] as const,
@@ -19,7 +23,6 @@ export const EMPLOYEE_KEYS = {
   detail: (id: string) => [...EMPLOYEE_KEYS.details(), id] as const,
 };
 
-// Get employee by ID hook
 export function useEmployeeById(id: string | undefined) {
   return useQuery({
     queryKey: EMPLOYEE_KEYS.detail(id ?? ''),
@@ -36,8 +39,8 @@ export function useEmployeeById(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 }
 
@@ -60,69 +63,87 @@ export function usePrefetchEmployee() {
   };
 }
 
-// Create employee hook
 export function useCreateEmployee() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateEmployeeFormValues) => {
+    mutationFn: async (data: CreateEmployeeInput) => {
       const result = await createEmployee(data);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.lists() });
-      toast.success('Employee created successfully');
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: EMPLOYEE_KEYS.lists() });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create employee');
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Employee created successfully');
+    },
   });
 }
 
-// Update employee hook
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UpdateEmployeeFormValues) => {
+    mutationFn: async (data: UpdateEmployeeInput) => {
       const result = await updateEmployee(data);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onSuccess: (data) => {
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: EMPLOYEE_KEYS.lists() });
+      await queryClient.cancelQueries({ queryKey: EMPLOYEE_KEYS.detail(data.id) });
+      const snapshot = queryClient.getQueryData<EmployeeListItem>(EMPLOYEE_KEYS.detail(data.id));
+      return { snapshot };
+    },
+    onError: (error: Error, data, context) => {
+      if (context?.snapshot) {
+        queryClient.setQueryData(EMPLOYEE_KEYS.detail(data.id), context.snapshot);
+      }
+      toast.error(error.message || 'Failed to update employee');
+    },
+    onSettled: (_data, _error, data) => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.detail(data.id) });
-      toast.success('Employee updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update employee');
+    onSuccess: () => {
+      toast.success('Employee updated successfully');
     },
   });
 }
 
-// Delete employee hook
 export function useDeleteEmployee() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const result = await deleteEmployee(id);
+    mutationFn: async (data: DeleteEmployeeInput) => {
+      const result = await deleteEmployee(data);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.lists() });
-      toast.success('Employee deleted successfully');
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: EMPLOYEE_KEYS.lists() });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete employee');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: EMPLOYEE_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Employee deleted successfully');
     },
   });
 }
