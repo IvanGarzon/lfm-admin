@@ -11,9 +11,9 @@
 
 - Don't jump to quick fixes — understand the root cause first.
 - Look at all related files, not just one.
+- When a solution fails, propose alternative approaches and ask the user how to proceed.
 - Search for existing implementations before creating new ones.
 - Always read a file before editing it.
-- When a solution fails, propose alternative approaches and ask the user how to proceed.
 
 ## Common Mistakes to Avoid
 

@@ -58,5 +58,3 @@ Provide a structured review with:
 - Specific violations found (if any)
 - Recommended refactoring (if needed)
 - Long-term implications of the changes
-
-Remember: Good architecture enables change. Flag anything that makes future changes harder.
