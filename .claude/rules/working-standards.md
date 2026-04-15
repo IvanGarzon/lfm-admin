@@ -5,7 +5,6 @@
 - Do what has been asked — nothing more, nothing less.
 - Ask when ambiguous. Don't do more than requested.
 - Verify work is complete: all instances updated, all deps added, duplicates eliminated.
-- Never create files unless absolutely necessary. Always prefer editing an existing file.
 - Never proactively create documentation files (`*.md`) or README files unless explicitly requested.
 
 ## Problem Solving

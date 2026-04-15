@@ -1,5 +1,37 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm vitest run:*)"
+    ],
+    "deny": [
+      "Bash(git stash:*)",
+      "Read(node_modules/**)",
+      "Read(dist/**)",
+      "Read(.next/**)",
+      "Read(**/*.lock)",
+      "Read(coverage/**)"
+    ],
+    "defaultMode": "default"
+  },
   "enabledPlugins": {
-    "superpowers@claude-plugins-official": true
-  }
+    "superpowers@claude-plugins-official": true,
+    "caveman@caveman": true
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "autoUpdatesChannel": "stable",
+  "minimumVersion": "2.1.108",
+  "autoDreamEnabled": true,
+  "autocompact_percentage_override": 75,
+  "BASH_MAX_OUTPUT_LENGTH": "150000"
 }

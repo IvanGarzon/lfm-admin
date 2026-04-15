@@ -39,7 +39,6 @@ Every layer has a single responsibility. Do not skip layers.
 
 - Extend `BaseRepository<Prisma.ModelGetPayload<object>>`.
 - Constructor takes `private prisma: PrismaClient` and exposes `protected get model()`.
-- No type or interface definitions in repository files. Import from `src/features/**/types.ts` or `src/schemas/`.
 - Method names must be repository-scoped and explicit:
   - `findCustomerById`, not `findById`
   - `softDeleteCustomer`, not `softDelete`
