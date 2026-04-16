@@ -45,8 +45,31 @@ export const ProductFiltersSchema = baseFiltersSchema.extend({
 
 export const DeleteProductSchema = z.object({ id: z.cuid({ error: 'Invalid product ID' }) });
 
+export const UpdateProductStatusSchema = z.object({
+  id: z.cuid({ error: 'Invalid product ID' }),
+  status: ProductStatusSchema,
+});
+
+export const UpdateProductStockSchema = z.object({
+  id: z.cuid({ error: 'Invalid product ID' }),
+  quantity: z.number({ error: 'Quantity is required' }).int('Quantity must be a whole number'),
+});
+
+export const BulkUpdateProductStatusSchema = z.object({
+  ids: z.array(z.cuid({ error: 'Invalid product ID' })),
+  status: ProductStatusSchema,
+});
+
+export const BulkDeleteProductsSchema = z.object({
+  ids: z.array(z.cuid({ error: 'Invalid product ID' })),
+});
+
 // Inferred types
 export type CreateProductInput = z.infer<typeof CreateProductSchema>;
 export type UpdateProductInput = z.infer<typeof UpdateProductSchema>;
 export type DeleteProductInput = z.infer<typeof DeleteProductSchema>;
 export type ProductFiltersInput = z.infer<typeof ProductFiltersSchema>;
+export type UpdateProductStatusInput = z.infer<typeof UpdateProductStatusSchema>;
+export type UpdateProductStockInput = z.infer<typeof UpdateProductStockSchema>;
+export type BulkUpdateProductStatusInput = z.infer<typeof BulkUpdateProductStatusSchema>;
+export type BulkDeleteProductsInput = z.infer<typeof BulkDeleteProductsSchema>;

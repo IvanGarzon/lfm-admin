@@ -81,7 +81,12 @@ export const PriceListFiltersSchema = baseFiltersSchema.extend({
   category: createEnumArrayFilter(PriceListCategorySchema),
 });
 
+export const DeletePriceListItemSchema = z.object({
+  id: z.cuid({ error: 'Invalid price list item ID' }),
+});
+
 // Inferred types
 export type CreatePriceListItemInput = z.infer<typeof CreatePriceListItemSchema>;
 export type UpdatePriceListItemInput = z.infer<typeof UpdatePriceListItemSchema>;
+export type DeletePriceListItemInput = z.infer<typeof DeletePriceListItemSchema>;
 export type PriceListFiltersInput = z.infer<typeof PriceListFiltersSchema>;

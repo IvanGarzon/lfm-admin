@@ -432,8 +432,3 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
     };
   }
 }
-
-// -- Singleton instance -------------------------------------------------------
-
-import { prisma } from '@/lib/prisma';
-export const productRepo = new ProductRepository(prisma);

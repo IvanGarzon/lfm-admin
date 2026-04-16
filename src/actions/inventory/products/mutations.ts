@@ -1,25 +1,30 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
-import { ProductStatus } from '@/prisma/client';
 import {
   CreateProductSchema,
   UpdateProductSchema,
   DeleteProductSchema,
+  UpdateProductStatusSchema,
+  UpdateProductStockSchema,
+  BulkUpdateProductStatusSchema,
+  BulkDeleteProductsSchema,
   type CreateProductInput,
   type UpdateProductInput,
   type DeleteProductInput,
+  type UpdateProductStatusInput,
+  type UpdateProductStockInput,
+  type BulkUpdateProductStatusInput,
+  type BulkDeleteProductsInput,
 } from '@/schemas/products';
-import type {
-  UpdateProductStatusInput,
-  UpdateProductStockInput,
-  BulkUpdateProductStatusInput,
-} from '@/features/inventory/products/types';
-import { productRepo } from '@/repositories/product-repository';
+import { ProductRepository } from '@/repositories/product-repository';
 
 const PRODUCTS_PATH = '/inventory/products';
+
+const productRepo = new ProductRepository(prisma);
 
 // -- Actions ---------------------------------------------------------------
 
@@ -103,10 +108,11 @@ export const updateProductStatus = withTenantPermission<UpdateProductStatusInput
   'canManageProducts',
   async (ctx, { id, status }) => {
     try {
+      const validatedData = UpdateProductStatusSchema.parse({ id, status });
       const result = await productRepo.updateProductStatus(
-        id,
+        validatedData.id,
         ctx.tenantId,
-        status as ProductStatus,
+        validatedData.status,
       );
 
       if (!result) {
@@ -134,7 +140,12 @@ export const updateProductStock = withTenantPermission<
   { id: string; stock: number }
 >('canManageProducts', async (ctx, { id, quantity }) => {
   try {
-    const result = await productRepo.updateProductStock(id, ctx.tenantId, quantity);
+    const validatedData = UpdateProductStockSchema.parse({ id, quantity });
+    const result = await productRepo.updateProductStock(
+      validatedData.id,
+      ctx.tenantId,
+      validatedData.quantity,
+    );
 
     if (!result) {
       return { success: false, error: 'Product not found' };
@@ -158,11 +169,13 @@ export const bulkUpdateProductStatus = withTenantPermission<
   { count: number }
 >('canManageProducts', async (ctx, { ids, status }) => {
   try {
+    const validatedData = BulkUpdateProductStatusSchema.parse({ ids, status });
     const count = await productRepo.bulkUpdateProductStatus(
-      ids,
+      validatedData.ids,
       ctx.tenantId,
-      status as ProductStatus,
+      validatedData.status,
     );
+
     revalidatePath(PRODUCTS_PATH);
     return { success: true, data: { count } };
   } catch (error) {
@@ -177,11 +190,13 @@ export const bulkUpdateProductStatus = withTenantPermission<
  * @param ids - Array of product IDs to delete.
  * @returns An `ActionResult` containing the count of deleted products, or an error.
  */
-export const bulkDeleteProducts = withTenantPermission<string[], { count: number }>(
+export const bulkDeleteProducts = withTenantPermission<BulkDeleteProductsInput, { count: number }>(
   'canManageProducts',
-  async (ctx, ids) => {
+  async (ctx, data) => {
     try {
+      const { ids } = BulkDeleteProductsSchema.parse(data);
       const count = await productRepo.bulkDeleteProducts(ids, ctx.tenantId);
+
       revalidatePath(PRODUCTS_PATH);
       return { success: true, data: { count } };
     } catch (error) {

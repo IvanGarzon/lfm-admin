@@ -1,15 +1,18 @@
 'use server';
 
+import type { SearchParams } from 'nuqs/server';
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
-import { ProductFiltersSchema } from '@/schemas/products';
-import { productRepo } from '@/repositories/product-repository';
+import { ProductRepository } from '@/repositories/product-repository';
 import type {
   ProductPagination,
   ProductWithDetails,
   ProductStatistics,
 } from '@/features/inventory/products/types';
-import type { SearchParams } from 'nuqs/server';
+import { searchParamsCache } from '@/filters/products/products-filters';
+
+const productRepo = new ProductRepository(prisma);
 
 /**
  * Retrieves a paginated list of products based on search and filter criteria.
@@ -21,19 +24,9 @@ export const getProducts = withTenantPermission<SearchParams, ProductPagination>
   'canReadProducts',
   async (ctx, searchParams) => {
     try {
-      const filters = ProductFiltersSchema.parse({
-        search: searchParams.search ?? '',
-        status: searchParams.status
-          ? Array.isArray(searchParams.status)
-            ? searchParams.status
-            : [searchParams.status]
-          : undefined,
-        page: searchParams.page ? Number(searchParams.page) : 1,
-        perPage: searchParams.perPage ? Number(searchParams.perPage) : 20,
-        sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
-      });
-
+      const filters = searchParamsCache.parse(searchParams);
       const result = await productRepo.searchProducts(filters, ctx.tenantId);
+
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch products');

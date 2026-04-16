@@ -4,10 +4,6 @@ import type { PaginationMeta } from '@/types/pagination';
 
 export type ProductFormInput = CreateProductInput | UpdateProductInput;
 
-export type UpdateProductStatusInput = { id: string; status: ProductStatus };
-export type UpdateProductStockInput = { id: string; quantity: number };
-export type BulkUpdateProductStatusInput = { ids: string[]; status: ProductStatus };
-
 export type ActiveProduct = {
   id: string;
   name: string;

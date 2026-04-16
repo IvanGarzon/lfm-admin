@@ -1,7 +1,7 @@
 import { SearchParams } from 'nuqs/server';
 import dynamic from 'next/dynamic';
 import { Shell } from '@/components/shared/shell';
-import { getPriceListItems } from '@/actions/inventory/price-list';
+import { getPriceListItems } from '@/actions/inventory/price-list/queries';
 import { PriceListView } from '@/features/inventory/price-list/components/price-list-view';
 
 const PriceListDrawer = dynamic(

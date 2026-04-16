@@ -60,6 +60,7 @@ export const testIds = {
   recipeItem: () => generateTestId('ritm'),
   vendor: () => generateTestId('vndr'),
   tenant: () => generateTestId('tnnt'),
+  priceListItem: () => generateTestId('plit'),
   nonExistent: () => generateTestId('none'),
 } as const;
 
@@ -90,6 +91,7 @@ export function createTestIdSet() {
     paymentId: testIds.payment(),
     recipeId: testIds.recipe(),
     recipeItemId: testIds.recipeItem(),
+    priceListItemId: testIds.priceListItem(),
     nonExistentId: testIds.nonExistent(),
   };
 }

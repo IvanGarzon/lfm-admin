@@ -1,9 +1,9 @@
 'use server';
 
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
-import { PriceListFiltersSchema } from '@/schemas/price-list';
-import { priceListRepo } from '@/repositories/price-list-repository';
+import { PriceListRepository } from '@/repositories/price-list-repository';
 import type { SearchParams } from 'nuqs/server';
 import type {
   PriceListPagination,
@@ -11,6 +11,9 @@ import type {
   PriceListCostHistoryItem,
   PriceListItemListItem,
 } from '@/features/inventory/price-list/types';
+import { searchParamsCache } from '@/filters/price-list/price-list-filters';
+
+const priceListRepo = new PriceListRepository(prisma);
 
 /**
  * Retrieves a paginated list of price list items based on search and filter criteria.
@@ -22,19 +25,9 @@ export const getPriceListItems = withTenantPermission<SearchParams, PriceListPag
   'canReadPriceList',
   async (ctx, searchParams) => {
     try {
-      const filters = PriceListFiltersSchema.parse({
-        search: searchParams.search ?? '',
-        category: searchParams.category
-          ? Array.isArray(searchParams.category)
-            ? searchParams.category
-            : [searchParams.category]
-          : undefined,
-        page: searchParams.page ? Number(searchParams.page) : 1,
-        perPage: searchParams.perPage ? Number(searchParams.perPage) : 20,
-        sort: searchParams.sort ? JSON.parse(searchParams.sort as string) : undefined,
-      });
+      const filters = searchParamsCache.parse(searchParams);
+      const result = await priceListRepo.searchPriceListItems(filters, ctx.tenantId);
 
-      const result = await priceListRepo.searchAndPaginate(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');
@@ -51,7 +44,7 @@ export const getPriceListItemById = withTenantPermission<string, PriceListItemWi
   'canReadPriceList',
   async (ctx, id) => {
     try {
-      const item = await priceListRepo.findByIdWithDetails(id, ctx.tenantId);
+      const item = await priceListRepo.findPriceListItemById(id, ctx.tenantId);
 
       if (!item) {
         return { success: false, error: 'Price list item not found' };
@@ -73,7 +66,7 @@ export const getPriceListCostHistory = withTenantPermission<string, PriceListCos
   'canReadPriceList',
   async (_session, priceListItemId) => {
     try {
-      const history = await priceListRepo.getCostHistory(priceListItemId);
+      const history = await priceListRepo.getPriceListCostHistory(priceListItemId);
       return { success: true, data: history };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch cost history');
@@ -87,9 +80,9 @@ export const getPriceListCostHistory = withTenantPermission<string, PriceListCos
  */
 export const getActivePriceListItems = withTenantPermission<void, PriceListItemListItem[]>(
   'canReadPriceList',
-  async (session) => {
+  async (ctx) => {
     try {
-      const items = await priceListRepo.findAllActive(ctx.tenantId);
+      const items = await priceListRepo.findActivePriceListItems(ctx.tenantId);
       return { success: true, data: items };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');

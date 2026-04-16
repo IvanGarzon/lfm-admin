@@ -10,7 +10,6 @@ import {
 import { toast } from 'sonner';
 
 import {
-  getProducts,
   getProductById,
   getProductStatistics,
   getActiveProducts,
@@ -24,12 +23,7 @@ import {
   bulkUpdateProductStatus,
   bulkDeleteProducts,
 } from '@/actions/inventory/products/mutations';
-import type {
-  ProductFilters,
-  ProductPagination,
-  ProductWithDetails,
-  ProductStatistics,
-} from '@/features/inventory/products/types';
+import type { ProductFilters, ProductWithDetails } from '@/features/inventory/products/types';
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
 import type { ProductStatus } from '@/prisma/client';
 
@@ -302,7 +296,7 @@ export function useBulkDeleteProducts() {
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      const result = await bulkDeleteProducts(ids);
+      const result = await bulkDeleteProducts({ ids });
       if (!result.success) {
         throw new Error(result.error);
       }

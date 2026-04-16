@@ -261,7 +261,8 @@ describe('Product Mutations', () => {
     it('bulk deletes products when authorised', async () => {
       mockProductRepo.bulkDeleteProducts.mockResolvedValue(2);
 
-      const result = await bulkDeleteProducts([TEST_PRODUCT_ID, 'p2']);
+      // mockAuth.mockResolvedValue(mockSessions.admin());
+      const result = await bulkDeleteProducts({ ids: [TEST_PRODUCT_ID, 'p2'] });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -277,7 +278,7 @@ describe('Product Mutations', () => {
       mockProductRepo.bulkDeleteProducts.mockRejectedValue(
         new Error('Selection cannot be deleted as all products are used in invoices or quotes.'),
       );
-      const result = await bulkDeleteProducts([TEST_PRODUCT_ID]);
+      const result = await bulkDeleteProducts({ ids: [TEST_PRODUCT_ID] });
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Selection cannot be deleted');
@@ -286,7 +287,7 @@ describe('Product Mutations', () => {
 
     it('returns unauthorised when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await bulkDeleteProducts([TEST_PRODUCT_ID]);
+      const result = await bulkDeleteProducts({ ids: [TEST_PRODUCT_ID] });
       expect(result.success).toBe(false);
     });
   });
