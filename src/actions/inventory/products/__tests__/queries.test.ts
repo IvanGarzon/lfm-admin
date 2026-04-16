@@ -21,7 +21,6 @@ vi.mock('@/repositories/product-repository', () => ({
   ProductRepository: vi.fn().mockImplementation(function () {
     return mockProductRepo;
   }),
-  productRepo: mockProductRepo,
 }));
 
 vi.mock('@/auth', () => ({

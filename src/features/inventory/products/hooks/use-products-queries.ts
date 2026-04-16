@@ -27,9 +27,7 @@ import type { ProductFilters, ProductWithDetails } from '@/features/inventory/pr
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
 import type { ProductStatus } from '@/prisma/client';
 
-// ============================================================================
-// QUERY KEY FACTORY
-// ============================================================================
+// -- Query key factory -------------------------------------------------------
 
 export const PRODUCT_KEYS = {
   all: ['products'] as const,
@@ -41,9 +39,7 @@ export const PRODUCT_KEYS = {
   active: () => [...PRODUCT_KEYS.all, 'active'] as const,
 };
 
-// ============================================================================
-// QUERY HOOKS
-// ============================================================================
+// -- Query hooks -------------------------------------------------------------
 
 /**
  * Hook to fetch a single product by ID
@@ -123,9 +119,7 @@ export function usePrefetchProduct() {
   };
 }
 
-// ============================================================================
-// MUTATION HOOKS
-// ============================================================================
+// -- Mutation hooks ----------------------------------------------------------
 
 /**
  * Hook to create a new product
@@ -144,13 +138,15 @@ export function useCreateProduct() {
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
-      toast.success('Product created successfully');
-    },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create product');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
+    },
+    onSuccess: () => {
+      toast.success('Product created successfully');
     },
   });
 }
@@ -223,14 +219,26 @@ export function useDeleteProduct() {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
+      const previousProduct = queryClient.getQueryData<ProductWithDetails>(PRODUCT_KEYS.detail(id));
+      return { previousProduct, id };
+    },
+    onError: (error: Error, id, context) => {
+      if (context?.previousProduct) {
+        queryClient.setQueryData(PRODUCT_KEYS.detail(id), context.previousProduct);
+      }
+      toast.error(error.message || 'Failed to delete product');
+    },
+    onSettled: (_data, _error, id) => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
-      toast.success('Product deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete product');
+    onSuccess: () => {
+      toast.success('Product deleted successfully');
     },
   });
 }
@@ -249,15 +257,26 @@ export function useUpdateProductStatus() {
       }
       return result.data;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(variables.id) });
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
+      const previousProduct = queryClient.getQueryData<ProductWithDetails>(PRODUCT_KEYS.detail(id));
+      return { previousProduct };
+    },
+    onError: (error: Error, { id }, context) => {
+      if (context?.previousProduct) {
+        queryClient.setQueryData(PRODUCT_KEYS.detail(id), context.previousProduct);
+      }
+      toast.error(error.message || 'Failed to update product status');
+    },
+    onSettled: (_data, _error, { id }) => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
-      toast.success('Product status updated');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update product status');
+    onSuccess: () => {
+      toast.success('Product status updated');
     },
   });
 }
@@ -276,14 +295,25 @@ export function useUpdateProductStock() {
       }
       return result.data;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(variables.id) });
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.detail(id) });
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
+      const previousProduct = queryClient.getQueryData<ProductWithDetails>(PRODUCT_KEYS.detail(id));
+      return { previousProduct };
+    },
+    onError: (error: Error, { id }, context) => {
+      if (context?.previousProduct) {
+        queryClient.setQueryData(PRODUCT_KEYS.detail(id), context.previousProduct);
+      }
+      toast.error(error.message || 'Failed to update product stock');
+    },
+    onSettled: (_data, _error, { id }) => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
-      toast.success('Product stock updated');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update product stock');
+    onSuccess: () => {
+      toast.success('Product stock updated');
     },
   });
 }
@@ -302,14 +332,19 @@ export function useBulkDeleteProducts() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
-      toast.success(`${data.count} products deleted successfully`);
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete products');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
+    },
+    onSuccess: (data) => {
+      toast.success(`${data.count} products deleted successfully`);
     },
   });
 }
@@ -328,14 +363,19 @@ export function useBulkUpdateProductStatus() {
       }
       return result.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
-      toast.success(`${data.count} products updated successfully`);
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: PRODUCT_KEYS.lists() });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update products');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.statistics() });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_KEYS.active() });
+    },
+    onSuccess: (data) => {
+      toast.success(`${data.count} products updated successfully`);
     },
   });
 }

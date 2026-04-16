@@ -27,7 +27,6 @@ vi.mock('@/repositories/product-repository', () => ({
   ProductRepository: vi.fn().mockImplementation(function () {
     return mockProductRepo;
   }),
-  productRepo: mockProductRepo,
 }));
 
 vi.mock('@/auth', () => ({
@@ -232,19 +231,17 @@ describe('Product Mutations', () => {
 
   describe('bulkUpdateProductStatus', () => {
     it('bulk updates product statuses when authorised', async () => {
+      const ids = [TEST_PRODUCT_ID, testIds.product(), testIds.product()];
       mockProductRepo.bulkUpdateProductStatus.mockResolvedValue(3);
 
-      const result = await bulkUpdateProductStatus({
-        ids: [TEST_PRODUCT_ID, 'p2', 'p3'],
-        status: 'INACTIVE',
-      });
+      const result = await bulkUpdateProductStatus({ ids, status: 'INACTIVE' });
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.count).toBe(3);
       }
       expect(mockProductRepo.bulkUpdateProductStatus).toHaveBeenCalledWith(
-        [TEST_PRODUCT_ID, 'p2', 'p3'],
+        ids,
         mockSession.user.tenantId,
         'INACTIVE',
       );
@@ -259,17 +256,17 @@ describe('Product Mutations', () => {
 
   describe('bulkDeleteProducts', () => {
     it('bulk deletes products when authorised', async () => {
+      const ids = [TEST_PRODUCT_ID, testIds.product()];
       mockProductRepo.bulkDeleteProducts.mockResolvedValue(2);
 
-      // mockAuth.mockResolvedValue(mockSessions.admin());
-      const result = await bulkDeleteProducts({ ids: [TEST_PRODUCT_ID, 'p2'] });
+      const result = await bulkDeleteProducts({ ids });
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.count).toBe(2);
       }
       expect(mockProductRepo.bulkDeleteProducts).toHaveBeenCalledWith(
-        [TEST_PRODUCT_ID, 'p2'],
+        ids,
         mockSession.user.tenantId,
       );
     });

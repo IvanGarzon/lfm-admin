@@ -34,7 +34,7 @@ export const deleteSessions = withAuth<DeleteSessionsInput, { deactivatedCount: 
       // Call the repository method which includes userId check in the update query
       // So we don't need explicit per-session ownership verification,
       // the query will only affect sessions belonging to this userId.
-      const deactivatedCount = await sessionRepo.deactivateMany(
+      const deactivatedCount = await sessionRepo.deactivateManySessions(
         session.user.id,
         validatedData.sessionIds,
       );
@@ -65,13 +65,16 @@ export const updateSessionName = withAuth<UpdateSessionNameInput, { id: string }
       const validatedData = UpdateSessionNameSchema.parse(data);
 
       // Verify ownership
-      const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
+      const isOwner = await sessionRepo.verifySessionOwnership(
+        validatedData.sessionId,
+        session.user.id,
+      );
 
       if (!isOwner) {
         return { success: false, error: 'You can only update your own sessions' };
       }
 
-      await sessionRepo.updateDeviceName(validatedData.sessionId, validatedData.deviceName);
+      await sessionRepo.updateSessionDeviceName(validatedData.sessionId, validatedData.deviceName);
 
       revalidatePath('/sessions');
 
@@ -99,13 +102,16 @@ export const deleteSession = withAuth<DeleteSessionInput, { id: string }>(async 
     const validatedData = DeleteSessionSchema.parse(data);
 
     // Verify ownership
-    const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
+    const isOwner = await sessionRepo.verifySessionOwnership(
+      validatedData.sessionId,
+      session.user.id,
+    );
 
     if (!isOwner) {
       return { success: false, error: 'Session not found or access denied' };
     }
 
-    await sessionRepo.deactivate(validatedData.sessionId);
+    await sessionRepo.deactivateSession(validatedData.sessionId);
 
     revalidatePath('/sessions');
 
@@ -133,7 +139,7 @@ export const deleteOtherSessions = withAuth<DeleteOtherSessionsInput, { deactiva
       const validatedData = DeleteOtherSessionsSchema.parse(data);
 
       // Verify ownership of the current session
-      const isOwner = await sessionRepo.verifyOwnership(
+      const isOwner = await sessionRepo.verifySessionOwnership(
         validatedData.currentSessionId,
         session.user.id,
       );
@@ -171,7 +177,7 @@ export const updateSessionHeartbeat = withAuth<void, { updated: boolean }>(async
   }
 
   try {
-    const updateCount = await sessionRepo.updateHeartbeat(session.sessionToken);
+    const updateCount = await sessionRepo.updateSessionHeartbeat(session.sessionToken);
 
     return { success: true, data: { updated: updateCount > 0 } };
   } catch (error) {
@@ -194,7 +200,10 @@ export const extendSession = withAuth<ExtendSessionInput, { expires: Date }>(
       const validatedData = ExtendSessionSchema.parse(data);
 
       // Verify ownership
-      const isOwner = await sessionRepo.verifyOwnership(validatedData.sessionId, session.user.id);
+      const isOwner = await sessionRepo.verifySessionOwnership(
+        validatedData.sessionId,
+        session.user.id,
+      );
 
       if (!isOwner) {
         return { success: false, error: 'Session not found or access denied' };

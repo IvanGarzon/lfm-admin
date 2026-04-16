@@ -37,7 +37,7 @@ export const cleanupSessionsFunction = inngest.createFunction(
       threshold.setDate(threshold.getDate() - INACTIVITY_THRESHOLD_DAYS);
 
       // Deactivate sessions
-      return await sessionRepo.deactivateInactive(threshold);
+      return await sessionRepo.deactivateInactiveSessions(threshold);
     });
 
     logger.info('Cleanup inactive sessions completed', {

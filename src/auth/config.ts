@@ -284,7 +284,7 @@ export const authConfig = {
 
           // Get the most recent session token for this user to identify the current session
           const sessionRepo = new SessionRepository(prisma);
-          const latestSession = await sessionRepo.findLatestActiveByUserId(dbUser.id);
+          const latestSession = await sessionRepo.findLatestActiveSessionByUserId(dbUser.id);
 
           if (latestSession) {
             token.sessionToken = latestSession.sessionToken;

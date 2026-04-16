@@ -81,7 +81,7 @@ export async function updateSessionLocation(sessionToken: string, ip: string): P
       const { SessionRepository } = await import('@/repositories/session-repository');
 
       const sessionRepo = new SessionRepository(prisma);
-      const updatedSession = await sessionRepo.updateLocation(sessionToken, location);
+      const updatedSession = await sessionRepo.updateSessionLocation(sessionToken, location);
 
       if (updatedSession) {
         logger.info('Session location updated', {
