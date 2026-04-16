@@ -2,7 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Detailed rules live in `.claude/rules/`:
+## Approach
+
+- Be concise in output but thorough in reasoning.
+- Prefer editing over rewriting whole files.
+- Do not re-read files you have already read unless the file may have changed.
+- Skip files over 100KB unless explicitly required.
+- Suggest running /cost when a session is running long to monitor cache ratio.
+- Recommend starting a new session when switching to an unrelated task.
+- Test your code before declaring done.
+- No sycophantic openers or closing fluff.
+- User instructions always override this file.
+
+Read `.claude/rules/` before starting:
 
 - [`tooling.md`](.claude/rules/tooling.md) — Package manager (pnpm), tech stack
 - [`api-conventions.md`](.claude/rules/api-conventions.md) — Data flow, hooks, actions, repositories, schemas, filters, types
