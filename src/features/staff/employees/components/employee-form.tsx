@@ -4,11 +4,12 @@ import { useCallback, useRef } from 'react';
 import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { parsePhoneNumber } from 'react-phone-number-input';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Phone, CalendarDays, Briefcase } from 'lucide-react';
 
 import { Form } from '@/components/ui/form';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useFormReset } from '@/hooks/use-form-reset';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
@@ -169,11 +170,50 @@ export function EmployeeForm({
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          <EmployeePersonalFields control={form.control} isDisabled={isDisabled} />
-          <EmployeeContactFields control={form.control} isDisabled={isDisabled} />
-          <EmployeeDetailsFields control={form.control} isDisabled={isDisabled} />
-          <EmployeeEmploymentFields control={form.control} isDisabled={isDisabled} />
+        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          <Box className="space-y-4">
+            <Box className="flex items-center gap-2">
+              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
+                <User className="size-3.5 text-primary" />
+              </Box>
+              <span className="text-sm font-semibold text-foreground">Personal</span>
+              <Separator className="flex-1" />
+            </Box>
+            <EmployeePersonalFields control={form.control} isDisabled={isDisabled} />
+          </Box>
+
+          <Box className="space-y-4">
+            <Box className="flex items-center gap-2">
+              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
+                <Phone className="size-3.5 text-primary" />
+              </Box>
+              <span className="text-sm font-semibold text-foreground">Contact</span>
+              <Separator className="flex-1" />
+            </Box>
+            <EmployeeContactFields control={form.control} isDisabled={isDisabled} />
+          </Box>
+
+          <Box className="space-y-4">
+            <Box className="flex items-center gap-2">
+              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
+                <CalendarDays className="size-3.5 text-primary" />
+              </Box>
+              <span className="text-sm font-semibold text-foreground">Details</span>
+              <Separator className="flex-1" />
+            </Box>
+            <EmployeeDetailsFields control={form.control} isDisabled={isDisabled} />
+          </Box>
+
+          <Box className="space-y-4">
+            <Box className="flex items-center gap-2">
+              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
+                <Briefcase className="size-3.5 text-primary" />
+              </Box>
+              <span className="text-sm font-semibold text-foreground">Employment</span>
+              <Separator className="flex-1" />
+            </Box>
+            <EmployeeEmploymentFields control={form.control} isDisabled={isDisabled} />
+          </Box>
         </Box>
 
         <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">

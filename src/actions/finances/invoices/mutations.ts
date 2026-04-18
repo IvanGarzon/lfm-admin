@@ -13,13 +13,14 @@ import {
   RecordPaymentSchema,
   MarkInvoiceAsPendingSchema,
   CancelInvoiceSchema,
+  BulkUpdateInvoiceStatusSchema,
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
   type RecordPaymentInput,
   type MarkInvoiceAsPendingInput,
   type CancelInvoiceInput,
+  type BulkUpdateInvoiceStatusInput,
 } from '@/schemas/invoices';
-import { InvoiceStatus } from '@/prisma/client';
 
 const invoiceRepo = new InvoiceRepository(prisma);
 const emailAuditRepo = new EmailAuditRepository(prisma);
@@ -65,12 +66,12 @@ export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: stri
   async (ctx, data) => {
     try {
       const validatedData = UpdateInvoiceSchema.parse(data);
-      const existing = await invoiceRepo.findById(validatedData.id);
-      if (!existing) {
-        return { success: false, error: 'Invoice not found' };
-      }
 
-      const invoice = await invoiceRepo.updateInvoiceWithItems(validatedData.id, validatedData);
+      const invoice = await invoiceRepo.updateInvoiceWithItems(
+        validatedData.id,
+        validatedData,
+        ctx.tenantId,
+      );
 
       if (!invoice) {
         return { success: false, error: 'Failed to update invoice' };
@@ -97,7 +98,11 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
   async (ctx, data) => {
     try {
       const validatedInvoice = MarkInvoiceAsPendingSchema.parse(data);
-      const invoice = await invoiceRepo.markAsPending(validatedInvoice.id, ctx.userId);
+      const invoice = await invoiceRepo.markInvoiceAsPending(
+        validatedInvoice.id,
+        ctx.tenantId,
+        ctx.userId,
+      );
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -164,7 +169,7 @@ export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.markAsDraft(id, ctx.userId);
+      const invoice = await invoiceRepo.markInvoiceAsDraft(id, ctx.tenantId, ctx.userId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -192,8 +197,9 @@ export const recordPayment = withTenantPermission<
   try {
     const validatedData = RecordPaymentSchema.parse(data);
 
-    const invoice = await invoiceRepo.addPayment(
+    const invoice = await invoiceRepo.addInvoicePayment(
       validatedData.id,
+      ctx.tenantId,
       validatedData.amount,
       validatedData.paymentMethod,
       validatedData.paidDate,
@@ -205,7 +211,7 @@ export const recordPayment = withTenantPermission<
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Transaction creation is now handled atomically inside invoiceRepo.addPayment
+    // Transaction creation is now handled atomically inside invoiceRepo.addInvoicePayment
     logger.info('Payment recorded and transaction created', {
       context: 'recordPayment',
       metadata: {
@@ -250,6 +256,7 @@ export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: stri
 
       const invoice = await invoiceRepo.cancelInvoice(
         validatedData.id,
+        ctx.tenantId,
         validatedData.cancelReason,
         ctx.userId,
       );
@@ -278,7 +285,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
   async (ctx, id) => {
     try {
       // Get full invoice details
-      let invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+      let invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -297,11 +304,11 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
         });
 
         // Generate receipt number if missing
-        const receiptNumber = await invoiceRepo.generateReceiptNumber();
-        await invoiceRepo.updateReceiptNumber(id, receiptNumber);
+        const receiptNumber = await invoiceRepo.generateInvoiceReceiptNumber();
+        await invoiceRepo.updateInvoiceReceiptNumber(id, ctx.tenantId, receiptNumber);
 
         // Refetch invoice with receipt number
-        const updatedInvoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+        const updatedInvoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
         if (!updatedInvoice) {
           return { success: false, error: 'Failed to update invoice' };
         }
@@ -365,13 +372,12 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
 
 /**
  * Updates the status of multiple invoices in a single operation.
- * @param ids - An array of invoice IDs to update.
- * @param status - The new status to apply to the invoices.
+ * @param data - An object containing an array of invoice IDs and the new status to apply.
  * @returns A promise that resolves to an `ActionResult` containing bulk update results,
  * including success and failure counts and individual operation results.
  */
 export const bulkUpdateInvoiceStatus = withTenantPermission<
-  { ids: string[]; status: InvoiceStatus },
+  BulkUpdateInvoiceStatusInput,
   {
     successCount: number;
     failureCount: number;
@@ -379,7 +385,13 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
   }
 >('canManageInvoices', async (ctx, data) => {
   try {
-    const results = await invoiceRepo.bulkUpdateStatus(data.ids, data.status, ctx.userId);
+    const validatedData = BulkUpdateInvoiceStatusSchema.parse(data);
+    const results = await invoiceRepo.bulkUpdateInvoiceStatus(
+      validatedData.ids,
+      ctx.tenantId,
+      validatedData.status,
+      ctx.userId,
+    );
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -409,7 +421,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
   async (ctx, id) => {
     try {
       // Get full invoice details
-      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -500,7 +512,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
         };
       }
 
-      const updatedInvoice = await invoiceRepo.incrementReminderCount(id);
+      const updatedInvoice = await invoiceRepo.incrementInvoiceReminderCount(id, ctx.tenantId);
       if (!updatedInvoice) {
         return { success: false, error: 'Failed to update reminder count' };
       }
@@ -532,11 +544,7 @@ export const deleteInvoice = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      const success = await invoiceRepo.deleteInvoice(id);
-
-      if (!success) {
-        return { success: false, error: 'Invoice not found' };
-      }
+      await invoiceRepo.deleteInvoice(id, ctx.tenantId);
 
       revalidatePath('/finances/invoices');
 
@@ -558,7 +566,7 @@ export const duplicateInvoice = withTenantPermission<string, { id: string; invoi
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      const result = await invoiceRepo.duplicate(id);
+      const result = await invoiceRepo.duplicateInvoice(id, ctx.tenantId);
 
       revalidatePath('/finances/invoices');
 

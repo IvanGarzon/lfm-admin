@@ -61,7 +61,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * });
    * ```
    */
-  async searchAndPaginate(params: QuoteFilters, tenantId: string): Promise<QuotePagination> {
+  async searchQuotes(params: QuoteFilters, tenantId: string): Promise<QuotePagination> {
     const { search, status, isFavourite, page, perPage, sort } = params;
 
     const whereClause: Prisma.QuoteWhereInput = {
@@ -825,7 +825,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedQuote.id, tenantId);
+    return await this.findQuoteById(updatedQuote.id, tenantId);
   }
 
   /**
@@ -880,7 +880,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -898,7 +898,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const updated = await this.prisma.$transaction(async (tx) => {
       // Update quote status
       const updatedQuote = await tx.quote.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.ACCEPTED,
           updatedAt: updatedAt,
@@ -924,7 +924,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id, tenantId);
+    return this.findQuoteById(updated.id, tenantId);
   }
 
   /**
@@ -938,7 +938,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid
    */
-  async markAsOnHold(
+  async markQuoteAsOnHold(
     id: string,
     tenantId: string,
     reason?: string,
@@ -946,7 +946,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -964,7 +964,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const updated = await this.prisma.$transaction(async (tx) => {
       // Update quote status
       const updatedQuote = await tx.quote.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.ON_HOLD,
           updatedAt: updatedAt,
@@ -990,7 +990,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id, tenantId);
+    return this.findQuoteById(updated.id, tenantId);
   }
 
   /**
@@ -1004,7 +1004,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid
    */
-  async markAsCancelled(
+  async markQuoteAsCancelled(
     id: string,
     tenantId: string,
     cancelReason?: string,
@@ -1012,7 +1012,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1029,7 +1029,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const updated = await this.prisma.$transaction(async (tx) => {
       // Update quote status
       const updatedQuote = await tx.quote.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.CANCELLED,
           cancelledDate: new Date(),
@@ -1055,7 +1055,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id, tenantId);
+    return this.findQuoteById(updated.id, tenantId);
   }
 
   /**
@@ -1069,7 +1069,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid
    */
-  async markAsRejected(
+  async markQuoteAsRejected(
     id: string,
     tenantId: string,
     rejectReason: string,
@@ -1077,7 +1077,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1095,7 +1095,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const updated = await this.prisma.$transaction(async (tx) => {
       // Update quote status
       const updatedQuote = await tx.quote.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.REJECTED,
           updatedAt: updatedAt,
@@ -1117,7 +1117,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return updatedQuote;
     });
 
-    return this.findByIdWithDetails(updated.id, tenantId);
+    return this.findQuoteById(updated.id, tenantId);
   }
 
   /**
@@ -1130,14 +1130,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the status transition is invalid (e.g., cannot send a cancelled quote)
    */
-  async markAsSent(
+  async markQuoteAsSent(
     id: string,
     tenantId: string,
     updatedBy?: string,
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1155,7 +1155,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const updated = await this.prisma.$transaction(async (tx) => {
       // Update quote status
       const updatedQuote = await tx.quote.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.SENT,
           updatedAt: sentDate,
@@ -1181,7 +1181,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id, tenantId);
+    return this.findQuoteById(updated.id, tenantId);
   }
 
   /**
@@ -1200,7 +1200,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    *
    * @throws {Error} If the quote is not found or the status transition is invalid
    */
-  async convertToInvoice(
+  async convertQuoteToInvoice(
     quoteId: string,
     invoiceData: {
       invoiceNumber: string;
@@ -1214,7 +1214,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     return this.prisma.$transaction(async (tx) => {
       // Get quote with details
       const quote = await tx.quote.findUnique({
-        where: { id: quoteId, deletedAt: null },
+        where: { id: quoteId, tenantId: invoiceData.tenantId, deletedAt: null },
         include: {
           items: true,
           customer: true,
@@ -1347,16 +1347,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The ID of the quote to soft delete
    * @returns A promise that resolves to true if the quote was deleted, false otherwise
    */
-  async softDelete(id: string): Promise<boolean> {
-    const result = await this.prisma.quote.update({
-      where: { id, deletedAt: null },
+  async softDeleteQuote(id: string, tenantId: string): Promise<void> {
+    await this.prisma.quote.update({
+      where: { id, tenantId, deletedAt: null },
       data: {
         deletedAt: new Date(),
-        updatedAt: new Date(),
       },
     });
-
-    return result !== null;
   }
 
   /**
@@ -1462,7 +1459,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param itemId - The ID of the quote item
    * @returns A promise that resolves to an array of quote item attachments
    */
-  async getQuoteItemAttachments(itemId: string) {
+  async findQuoteItemAttachments(itemId: string) {
     return this.prisma.quoteItemAttachment.findMany({
       where: { quoteItemId: itemId },
       orderBy: { uploadedAt: 'desc' },
@@ -1477,7 +1474,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param data - The attachment data including S3 information and file metadata
    * @returns A promise that resolves to the created item attachment record
    */
-  async createItemAttachment(data: {
+  async createQuoteItemAttachment(data: {
     quoteItemId: string;
     fileName: string;
     fileSize: number;
@@ -1536,7 +1533,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param attachmentId - The ID of the item attachment
    * @returns A promise that resolves to the attachment record, or null if not found
    */
-  async getItemAttachmentById(attachmentId: string) {
+  async findQuoteItemAttachmentById(attachmentId: string) {
     return this.prisma.quoteItemAttachment.findUnique({
       where: { id: attachmentId },
     });
@@ -1549,7 +1546,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param attachmentId - The ID of the item attachment to delete
    * @returns A promise that resolves to true if deletion was successful, false otherwise
    */
-  async deleteItemAttachment(attachmentId: string): Promise<boolean> {
+  async deleteQuoteItemAttachment(attachmentId: string): Promise<boolean> {
     try {
       await this.prisma.quoteItemAttachment.delete({
         where: { id: attachmentId },
@@ -1579,7 +1576,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param excludeId - The attachment ID to exclude from the count
    * @returns A promise that resolves to the number of other attachments referencing the same key
    */
-  async countItemAttachmentsByS3Key(s3Key: string, excludeId: string): Promise<number> {
+  async countQuoteItemAttachmentsByS3Key(s3Key: string, excludeId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
       where: { s3Key, id: { not: excludeId } },
     });
@@ -1604,7 +1601,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * // Returns: { id: 'new-id', quoteNumber: 'QUO-2025-0002', versionNumber: 2 }
    * ```
    */
-  async createVersion(
+  async createQuoteVersion(
     parentQuoteId: string,
     tenantId: string,
     createdBy?: string,
@@ -2009,10 +2006,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @returns A promise that resolves to an object containing the duplicate quote's ID and number
    * @throws {Error} If the quote is not found or duplication fails
    */
-  async duplicate(id: string, tenantId: string): Promise<{ id: string; quoteNumber: string }> {
+  async duplicateQuote(id: string, tenantId: string): Promise<{ id: string; quoteNumber: string }> {
     // Get the original quote with all details
     const original = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       include: {
         items: {
           select: {
@@ -2152,9 +2149,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to results array with success/failure for each quote
    */
-  async bulkUpdateStatus(
+  async bulkUpdateQuoteStatus(
     ids: string[],
     status: QuoteStatus,
+    tenantId: string,
     updatedBy?: string,
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
@@ -2164,7 +2162,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         try {
           // Fetch current quote status
           const quote = await tx.quote.findUnique({
-            where: { id, deletedAt: null },
+            where: { id, tenantId, deletedAt: null },
             select: { status: true },
           });
 
@@ -2191,7 +2189,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
           // Update quote status
           await tx.quote.update({
-            where: { id },
+            where: { id, tenantId },
             data: {
               status,
               updatedAt: new Date(),
@@ -2228,14 +2226,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param ids - Array of quote IDs to delete
    * @returns A promise that resolves to results array with success/failure for each quote
    */
-  async bulkSoftDelete(ids: string[]): Promise<{ id: string; success: boolean; error?: string }[]> {
+  async bulkSoftDeleteQuotes(
+    ids: string[],
+    tenantId: string,
+  ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
 
       for (const id of ids) {
         try {
           const quote = await tx.quote.findUnique({
-            where: { id, deletedAt: null },
+            where: { id, tenantId, deletedAt: null },
             select: { status: true },
           });
 
@@ -2254,7 +2255,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           }
 
           await tx.quote.update({
-            where: { id },
+            where: { id, tenantId },
             data: {
               deletedAt: new Date(),
               updatedAt: new Date(),
@@ -2277,9 +2278,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    * @param id - The ID of the quote to toggle favourite status
    * @returns A promise that resolves to the updated quote with new favourite status, or null if quote not found
    */
-  async toggleFavourite(id: string): Promise<{ id: string; isFavourite: boolean } | null> {
+  async toggleQuoteFavourite(
+    id: string,
+    tenantId: string,
+  ): Promise<{ id: string; isFavourite: boolean } | null> {
     const quote = await this.prisma.quote.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { isFavourite: true },
     });
 
@@ -2288,7 +2292,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     }
 
     const updated = await this.prisma.quote.update({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       data: {
         isFavourite: !quote.isFavourite,
         updatedAt: new Date(),

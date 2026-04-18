@@ -14,11 +14,11 @@ export type InvoiceEmailType = 'sent' | 'reminder';
  * Uses the email preview factory to eliminate duplication with quote previews
  */
 export const previewInvoiceEmail = createEmailPreviewFunction<
-  Awaited<ReturnType<typeof invoiceRepository.findByIdMetadata>>,
+  Awaited<ReturnType<typeof invoiceRepository.findInvoiceMetadataById>>,
   InvoiceEmailType
 >({
   entityName: 'Invoice',
-  fetchEntity: (id, tenantId) => invoiceRepository.findByIdMetadata(id, tenantId),
+  fetchEntity: (id, tenantId) => invoiceRepository.findInvoiceMetadataById(id, tenantId),
   getCustomerEmail: (invoice) => invoice!.customer.email,
   buildEmailConfig: (invoice, type, tenantName) => {
     if (!invoice) {

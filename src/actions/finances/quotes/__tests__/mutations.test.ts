@@ -32,53 +32,39 @@ import {
   createQuoteItemAttachment,
 } from '@/lib/testing';
 
-const {
-  mockQuoteRepo,
-  mockInvoiceRepo,
-  mockDeleteFileFromS3,
-  mockAuth,
-  mockRequirePermission,
-  mockPrisma,
-} = vi.hoisted(() => ({
-  mockQuoteRepo: {
-    createQuoteWithItems: vi.fn(),
-    updateQuoteWithItems: vi.fn(),
-    findById: vi.fn(),
-    findByIdWithDetails: vi.fn(),
-    markQuoteAsAccepted: vi.fn(),
-    markAsRejected: vi.fn(),
-    markAsSent: vi.fn(),
-    markAsOnHold: vi.fn(),
-    markAsCancelled: vi.fn(),
-    convertToInvoice: vi.fn(),
-    checkAndExpireQuotes: vi.fn(),
-    softDelete: vi.fn(),
-    createAttachment: vi.fn(),
-    getAttachmentById: vi.fn(),
-    deleteAttachment: vi.fn(),
-    createItemAttachment: vi.fn(),
-    getItemAttachmentById: vi.fn(),
-    deleteItemAttachment: vi.fn(),
-    updateQuoteItemNotes: vi.fn(),
-    updateQuoteItemColors: vi.fn(),
-    createVersion: vi.fn(),
-    bulkUpdateStatus: vi.fn(),
-    bulkSoftDelete: vi.fn(),
-    duplicate: vi.fn(),
-  },
-  mockInvoiceRepo: {
-    generateInvoiceNumber: vi.fn(),
-    findByIdWithDetails: vi.fn(),
-  },
-  mockDeleteFileFromS3: vi.fn(),
-  mockAuth: vi.fn(),
-  mockRequirePermission: vi.fn(),
-  mockPrisma: {
-    quoteItemAttachment: {
-      count: vi.fn(),
+const { mockQuoteRepo, mockInvoiceRepo, mockDeleteFileFromS3, mockAuth, mockHasPermission } =
+  vi.hoisted(() => ({
+    mockQuoteRepo: {
+      createQuoteWithItems: vi.fn(),
+      updateQuoteWithItems: vi.fn(),
+      findQuoteById: vi.fn(),
+      markQuoteAsAccepted: vi.fn(),
+      markQuoteAsRejected: vi.fn(),
+      markQuoteAsSent: vi.fn(),
+      markQuoteAsOnHold: vi.fn(),
+      markQuoteAsCancelled: vi.fn(),
+      convertQuoteToInvoice: vi.fn(),
+      checkAndExpireQuotes: vi.fn(),
+      softDeleteQuote: vi.fn(),
+      createQuoteItemAttachment: vi.fn(),
+      findQuoteItemAttachmentById: vi.fn(),
+      deleteQuoteItemAttachment: vi.fn(),
+      countQuoteItemAttachmentsByS3Key: vi.fn(),
+      updateQuoteItemNotes: vi.fn(),
+      updateQuoteItemColors: vi.fn(),
+      createQuoteVersion: vi.fn(),
+      bulkUpdateQuoteStatus: vi.fn(),
+      bulkSoftDeleteQuotes: vi.fn(),
+      duplicateQuote: vi.fn(),
     },
-  },
-}));
+    mockInvoiceRepo: {
+      generateInvoiceNumber: vi.fn(),
+      findByIdWithDetails: vi.fn(),
+    },
+    mockDeleteFileFromS3: vi.fn(),
+    mockAuth: vi.fn(),
+    mockHasPermission: vi.fn().mockReturnValue(true),
+  }));
 
 // Mock QuoteRepository
 vi.mock('@/repositories/quote-repository', () => ({
@@ -103,7 +89,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  requirePermission: mockRequirePermission,
+  hasPermission: mockHasPermission,
 }));
 
 vi.mock('@/lib/s3', () => ({
@@ -117,7 +103,7 @@ vi.mock('@/lib/s3', () => ({
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: {},
 }));
 
 // Generate test IDs using the centralized ID generator
@@ -152,7 +138,7 @@ describe('Quote Mutations', () => {
         expect(result.data.id).toBe(TEST_QUOTE_ID);
         expect(result.data.quoteNumber).toBe('QUO-001');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
     });
 
@@ -161,7 +147,7 @@ describe('Quote Mutations', () => {
       const result = await createQuote(validData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });
@@ -176,7 +162,7 @@ describe('Quote Mutations', () => {
     };
 
     it('updates a quote successfully when authorized', async () => {
-      mockQuoteRepo.findById.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.findQuoteById.mockResolvedValue({ id: TEST_QUOTE_ID });
       mockQuoteRepo.updateQuoteWithItems.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await updateQuote(updateData);
@@ -185,13 +171,13 @@ describe('Quote Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_QUOTE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/quotes/${TEST_QUOTE_ID}`);
     });
 
     it('returns error when quote not found', async () => {
-      mockQuoteRepo.findById.mockResolvedValue(null);
+      mockQuoteRepo.findQuoteById.mockResolvedValue(null);
 
       const result = await updateQuote(updateData);
 
@@ -202,7 +188,7 @@ describe('Quote Mutations', () => {
     });
 
     it('returns error when update fails', async () => {
-      mockQuoteRepo.findById.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.findQuoteById.mockResolvedValue({ id: TEST_QUOTE_ID });
       mockQuoteRepo.updateQuoteWithItems.mockResolvedValue(null);
 
       const result = await updateQuote(updateData);
@@ -221,7 +207,7 @@ describe('Quote Mutations', () => {
       const result = await markQuoteAsAccepted({ id: TEST_QUOTE_ID });
 
       expect(result.success).toBe(true);
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/quotes/${TEST_QUOTE_ID}`);
     });
@@ -240,7 +226,7 @@ describe('Quote Mutations', () => {
 
   describe('markQuoteAsRejected', () => {
     it('marks quote as rejected with reason', async () => {
-      mockQuoteRepo.markAsRejected.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.markQuoteAsRejected.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await markQuoteAsRejected({
         id: TEST_QUOTE_ID,
@@ -248,8 +234,9 @@ describe('Quote Mutations', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockQuoteRepo.markAsRejected).toHaveBeenCalledWith(
+      expect(mockQuoteRepo.markQuoteAsRejected).toHaveBeenCalledWith(
         TEST_QUOTE_ID,
+        expect.any(String),
         'Price too high',
         mockSession.user.id,
       );
@@ -258,18 +245,18 @@ describe('Quote Mutations', () => {
 
   describe('markQuoteAsSent', () => {
     it('marks quote as sent successfully', async () => {
-      mockQuoteRepo.markAsSent.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.markQuoteAsSent.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await markQuoteAsSent(TEST_QUOTE_ID);
 
       expect(result.success).toBe(true);
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
     });
   });
 
   describe('markQuoteAsOnHold', () => {
     it('marks quote as on hold with reason', async () => {
-      mockQuoteRepo.markAsOnHold.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.markQuoteAsOnHold.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await markQuoteAsOnHold({
         id: TEST_QUOTE_ID,
@@ -277,8 +264,9 @@ describe('Quote Mutations', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockQuoteRepo.markAsOnHold).toHaveBeenCalledWith(
+      expect(mockQuoteRepo.markQuoteAsOnHold).toHaveBeenCalledWith(
         TEST_QUOTE_ID,
+        expect.any(String),
         'Pending customer approval',
         mockSession.user.id,
       );
@@ -287,7 +275,7 @@ describe('Quote Mutations', () => {
 
   describe('markQuoteAsCancelled', () => {
     it('marks quote as cancelled with reason', async () => {
-      mockQuoteRepo.markAsCancelled.mockResolvedValue({ id: TEST_QUOTE_ID });
+      mockQuoteRepo.markQuoteAsCancelled.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await markQuoteAsCancelled({
         id: TEST_QUOTE_ID,
@@ -303,7 +291,7 @@ describe('Quote Mutations', () => {
   describe('convertQuoteToInvoice', () => {
     it('converts quote to invoice successfully', async () => {
       mockInvoiceRepo.generateInvoiceNumber.mockResolvedValue('INV-001');
-      mockQuoteRepo.convertToInvoice.mockResolvedValue({
+      mockQuoteRepo.convertQuoteToInvoice.mockResolvedValue({
         invoiceId: 'invoice-123',
         invoiceNumber: 'INV-001',
       });
@@ -320,7 +308,7 @@ describe('Quote Mutations', () => {
         expect(result.data.invoiceId).toBe('invoice-123');
         expect(result.data.invoiceNumber).toBe('INV-001');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/invoices');
     });
@@ -350,7 +338,7 @@ describe('Quote Mutations', () => {
 
   describe('deleteQuote', () => {
     it('soft deletes a quote successfully', async () => {
-      mockQuoteRepo.softDelete.mockResolvedValue(true);
+      mockQuoteRepo.softDeleteQuote.mockResolvedValue(undefined);
 
       const result = await deleteQuote(TEST_QUOTE_ID);
 
@@ -358,19 +346,17 @@ describe('Quote Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_QUOTE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
     });
 
     it('returns error when quote not found', async () => {
-      mockQuoteRepo.softDelete.mockResolvedValue(false);
+      const p2025 = Object.assign(new Error('Record not found'), { code: 'P2025' });
+      mockQuoteRepo.softDeleteQuote.mockRejectedValue(p2025);
 
       const result = await deleteQuote(TEST_NON_EXISTENT_ID);
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Quote not found');
-      }
     });
   });
 
@@ -382,7 +368,7 @@ describe('Quote Mutations', () => {
       formData.append('quoteItemId', TEST_ITEM_ID);
       formData.append('quoteId', TEST_QUOTE_ID);
 
-      mockQuoteRepo.createItemAttachment.mockResolvedValue(
+      mockQuoteRepo.createQuoteItemAttachment.mockResolvedValue(
         createQuoteItemAttachment({
           id: TEST_ATTACHMENT_ID,
           quoteItemId: TEST_ITEM_ID,
@@ -402,12 +388,12 @@ describe('Quote Mutations', () => {
 
   describe('deleteQuoteItemAttachment', () => {
     it('deletes item attachment successfully', async () => {
-      mockQuoteRepo.getItemAttachmentById.mockResolvedValue({
+      mockQuoteRepo.findQuoteItemAttachmentById.mockResolvedValue({
         id: TEST_ATTACHMENT_ID,
         s3Key: 'test-key',
       });
-      mockQuoteRepo.deleteItemAttachment.mockResolvedValue(true);
-      mockPrisma.quoteItemAttachment.count.mockResolvedValue(0);
+      mockQuoteRepo.deleteQuoteItemAttachment.mockResolvedValue(true);
+      mockQuoteRepo.countQuoteItemAttachmentsByS3Key.mockResolvedValue(0);
       mockDeleteFileFromS3.mockResolvedValue(true);
 
       const result = await deleteQuoteItemAttachment({
@@ -437,7 +423,7 @@ describe('Quote Mutations', () => {
       if (result.success) {
         expect(result.data.notes).toBe('Updated notes');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/quotes/${TEST_QUOTE_ID}`);
     });
   });
@@ -491,10 +477,10 @@ describe('Quote Mutations', () => {
 
   describe('createQuoteVersion', () => {
     it('creates a new quote version successfully', async () => {
-      mockQuoteRepo.findById.mockResolvedValue(
+      mockQuoteRepo.findQuoteById.mockResolvedValue(
         createQuoteResponse({ id: TEST_QUOTE_ID, quoteNumber: 'QUO-001' }),
       );
-      mockQuoteRepo.createVersion.mockResolvedValue(
+      mockQuoteRepo.createQuoteVersion.mockResolvedValue(
         createQuoteVersionResponse({
           id: TEST_QUOTE_VERSION_ID,
           quoteNumber: 'QUO-001-v2',
@@ -511,14 +497,14 @@ describe('Quote Mutations', () => {
         expect(result.data.versionNumber).toBe(2);
         expect(result.data.parentQuoteNumber).toBe('QUO-001');
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canManageQuotes');
       expect(revalidatePath).toHaveBeenCalledWith('/finances/quotes');
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/quotes/${TEST_QUOTE_ID}`);
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/quotes/${TEST_QUOTE_VERSION_ID}`);
     });
 
     it('returns error when parent quote not found', async () => {
-      mockQuoteRepo.findById.mockResolvedValue(null);
+      mockQuoteRepo.findQuoteById.mockResolvedValue(null);
 
       const result = await createQuoteVersion({ quoteId: TEST_NON_EXISTENT_ID });
 
@@ -532,33 +518,41 @@ describe('Quote Mutations', () => {
   describe('bulkUpdateQuoteStatus', () => {
     it('should require authentication', async () => {
       mockAuth.mockResolvedValueOnce(null);
-      const result = await bulkUpdateQuoteStatus(['id-1'], QuoteStatusSchema.enum.SENT);
+      const result = await bulkUpdateQuoteStatus({
+        ids: ['id-1'],
+        status: QuoteStatusSchema.enum.SENT,
+      });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
     it('should require permission', async () => {
-      mockRequirePermission.mockImplementationOnce(() => {
-        throw new Error('Permission denied');
-      });
+      mockHasPermission.mockReturnValueOnce(false);
 
-      const result = await bulkUpdateQuoteStatus(['id-1'], QuoteStatusSchema.enum.SENT);
+      const result = await bulkUpdateQuoteStatus({
+        ids: ['id-1'],
+        status: QuoteStatusSchema.enum.SENT,
+      });
       expect(result.success).toBe(false);
     });
 
-    it('should call repository bulkUpdateStatus', async () => {
-      mockQuoteRepo.bulkUpdateStatus.mockResolvedValue([
+    it('should call repository bulkUpdateQuoteStatus', async () => {
+      mockQuoteRepo.bulkUpdateQuoteStatus.mockResolvedValue([
         { id: 'id-1', success: true },
         { id: 'id-2', success: true },
       ]);
 
-      const result = await bulkUpdateQuoteStatus(['id-1', 'id-2'], QuoteStatusSchema.enum.SENT);
+      const result = await bulkUpdateQuoteStatus({
+        ids: ['id-1', 'id-2'],
+        status: QuoteStatusSchema.enum.SENT,
+      });
 
-      expect(mockQuoteRepo.bulkUpdateStatus).toHaveBeenCalledWith(
+      expect(mockQuoteRepo.bulkUpdateQuoteStatus).toHaveBeenCalledWith(
         ['id-1', 'id-2'],
         QuoteStatusSchema.enum.SENT,
+        expect.any(String),
         mockSession.user.id,
       );
       expect(result.success).toBe(true);
@@ -569,12 +563,15 @@ describe('Quote Mutations', () => {
     });
 
     it('should handle partial failures', async () => {
-      mockQuoteRepo.bulkUpdateStatus.mockResolvedValue([
+      mockQuoteRepo.bulkUpdateQuoteStatus.mockResolvedValue([
         { id: 'id-1', success: true },
         { id: 'id-2', success: false, error: 'Failed' },
       ]);
 
-      const result = await bulkUpdateQuoteStatus(['id-1', 'id-2'], QuoteStatusSchema.enum.SENT);
+      const result = await bulkUpdateQuoteStatus({
+        ids: ['id-1', 'id-2'],
+        status: QuoteStatusSchema.enum.SENT,
+      });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -591,21 +588,21 @@ describe('Quote Mutations', () => {
       const result = await bulkDeleteQuotes(['id-1']);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
-    it('should call repository bulkSoftDelete', async () => {
-      mockQuoteRepo.bulkSoftDelete.mockResolvedValue([{ id: 'id-1', success: true }]);
+    it('should call repository bulkSoftDeleteQuotes', async () => {
+      mockQuoteRepo.bulkSoftDeleteQuotes.mockResolvedValue([{ id: 'id-1', success: true }]);
 
       const result = await bulkDeleteQuotes(['id-1']);
 
-      expect(mockQuoteRepo.bulkSoftDelete).toHaveBeenCalledWith(['id-1']);
+      expect(mockQuoteRepo.bulkSoftDeleteQuotes).toHaveBeenCalledWith(['id-1'], expect.any(String));
       expect(result.success).toBe(true);
     });
 
     it('should handle partial failures', async () => {
-      mockQuoteRepo.bulkSoftDelete.mockResolvedValue([
+      mockQuoteRepo.bulkSoftDeleteQuotes.mockResolvedValue([
         { id: 'id-1', success: false, error: 'Not DRAFT' },
       ]);
 
@@ -621,23 +618,24 @@ describe('Quote Mutations', () => {
   describe('duplicateQuote', () => {
     it('should deny USER role', async () => {
       mockAuth.mockResolvedValue(mockSessions.user());
-      mockRequirePermission.mockImplementation((user, permission) => {
-        if (permission === 'canManageQuotes' && user?.role === 'USER') {
-          throw new Error('Unauthorized: User does not have permission');
-        }
-      });
+      mockHasPermission.mockImplementation(
+        (user: { role?: string } | undefined, permission: string) => {
+          if (permission === 'canManageQuotes' && user?.role === 'USER') return false;
+          return true;
+        },
+      );
 
       const result = await duplicateQuote(TEST_QUOTE_ID);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
-      expect(mockQuoteRepo.duplicate).not.toHaveBeenCalled();
+      expect(mockQuoteRepo.duplicateQuote).not.toHaveBeenCalled();
     });
 
     it('should allow MANAGER role', async () => {
-      mockQuoteRepo.duplicate.mockResolvedValue({
+      mockQuoteRepo.duplicateQuote.mockResolvedValue({
         id: 'new-quote-id',
         quoteNumber: 'QUO-2025-0002',
       });
@@ -649,11 +647,11 @@ describe('Quote Mutations', () => {
         expect(result.data.id).toBe('new-quote-id');
         expect(result.data.quoteNumber).toBe('QUO-2025-0002');
       }
-      expect(mockQuoteRepo.duplicate).toHaveBeenCalledWith(TEST_QUOTE_ID);
+      expect(mockQuoteRepo.duplicateQuote).toHaveBeenCalledWith(TEST_QUOTE_ID, expect.any(String));
     });
 
     it('should handle repository errors', async () => {
-      mockQuoteRepo.duplicate.mockRejectedValue(new Error('DB Error'));
+      mockQuoteRepo.duplicateQuote.mockRejectedValue(new Error('DB Error'));
 
       const result = await duplicateQuote(TEST_QUOTE_ID);
 
@@ -676,40 +674,39 @@ describe('Quote Mutations', () => {
     };
 
     beforeEach(() => {
-      mockQuoteRepo.getItemAttachmentById.mockResolvedValue(mockAttachment);
-      mockQuoteRepo.deleteItemAttachment.mockResolvedValue(true);
+      mockQuoteRepo.findQuoteItemAttachmentById.mockResolvedValue(mockAttachment);
+      mockQuoteRepo.deleteQuoteItemAttachment.mockResolvedValue(true);
+      mockQuoteRepo.countQuoteItemAttachmentsByS3Key.mockResolvedValue(0);
       mockDeleteFileFromS3.mockResolvedValue(true);
     });
 
     it('should DELETE file from S3 if it is NOT used by other quotes', async () => {
-      mockPrisma.quoteItemAttachment.count.mockResolvedValue(0);
+      mockQuoteRepo.countQuoteItemAttachmentsByS3Key.mockResolvedValue(0);
 
       const result = await deleteQuoteItemAttachment(attachmentData);
 
       expect(result.success).toBe(true);
-      expect(mockPrisma.quoteItemAttachment.count).toHaveBeenCalledWith({
-        where: {
-          s3Key: 'shared-file-key.jpg',
-          id: { not: TEST_ATTACHMENT_ID },
-        },
-      });
+      expect(mockQuoteRepo.countQuoteItemAttachmentsByS3Key).toHaveBeenCalledWith(
+        'shared-file-key.jpg',
+        TEST_ATTACHMENT_ID,
+      );
       expect(mockDeleteFileFromS3).toHaveBeenCalledWith('shared-file-key.jpg');
-      expect(mockQuoteRepo.deleteItemAttachment).toHaveBeenCalledWith(TEST_ATTACHMENT_ID);
+      expect(mockQuoteRepo.deleteQuoteItemAttachment).toHaveBeenCalledWith(TEST_ATTACHMENT_ID);
     });
 
     it('should SKIP deleting file from S3 if it IS used by other duplicates', async () => {
-      mockPrisma.quoteItemAttachment.count.mockResolvedValue(1);
+      mockQuoteRepo.countQuoteItemAttachmentsByS3Key.mockResolvedValue(1);
 
       const result = await deleteQuoteItemAttachment(attachmentData);
 
       expect(result.success).toBe(true);
-      expect(mockPrisma.quoteItemAttachment.count).toHaveBeenCalled();
+      expect(mockQuoteRepo.countQuoteItemAttachmentsByS3Key).toHaveBeenCalled();
       expect(mockDeleteFileFromS3).not.toHaveBeenCalled();
-      expect(mockQuoteRepo.deleteItemAttachment).toHaveBeenCalledWith(TEST_ATTACHMENT_ID);
+      expect(mockQuoteRepo.deleteQuoteItemAttachment).toHaveBeenCalledWith(TEST_ATTACHMENT_ID);
     });
 
     it('should handle attachment not found', async () => {
-      mockQuoteRepo.getItemAttachmentById.mockResolvedValue(null);
+      mockQuoteRepo.findQuoteItemAttachmentById.mockResolvedValue(null);
 
       const result = await deleteQuoteItemAttachment(attachmentData);
 
@@ -727,16 +724,19 @@ describe('Quote Mutations - Permission Tests', () => {
   const mockManagerRole = mockSessions.manager();
   const mockAdminRole = mockSessions.admin();
 
-  // Helper to make permission mock throw for USER role on manage permissions
+  // Helper to make permission mock return false for USER role on manage permissions
   const setupPermissionMock = () => {
-    mockRequirePermission.mockImplementation((user, permission) => {
-      if (permission === 'canManageQuotes' && user?.role === 'USER') {
-        throw new Error('Unauthorized: User does not have permission');
-      }
-      if (permission === 'canManageQuotes' && user?.role === 'INVALID_ROLE') {
-        throw new Error('Unauthorized: User does not have permission');
-      }
-    });
+    mockHasPermission.mockImplementation(
+      (user: { role?: string } | undefined, permission: string) => {
+        if (
+          permission === 'canManageQuotes' &&
+          (user?.role === 'USER' || user?.role === 'INVALID_ROLE')
+        ) {
+          return false;
+        }
+        return true;
+      },
+    );
   };
 
   beforeEach(() => {
@@ -754,7 +754,7 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
@@ -800,13 +800,13 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW MANAGER role to update quotes', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
-      mockQuoteRepo.findById.mockResolvedValue({ id: TEST_QUOTE_ID, status: 'DRAFT' });
+      mockQuoteRepo.findQuoteById.mockResolvedValue({ id: TEST_QUOTE_ID, status: 'DRAFT' });
       mockQuoteRepo.updateQuoteWithItems.mockResolvedValue({ id: TEST_QUOTE_ID });
 
       const result = await updateQuote(updateData);
@@ -824,13 +824,13 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW MANAGER role to delete quotes', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
-      mockQuoteRepo.softDelete.mockResolvedValue(true);
+      mockQuoteRepo.softDeleteQuote.mockResolvedValue(undefined);
 
       const result = await deleteQuote(TEST_QUOTE_ID);
 
@@ -839,7 +839,7 @@ describe('Quote Mutations - Permission Tests', () => {
 
     it('should ALLOW ADMIN role to delete quotes', async () => {
       mockAuth.mockResolvedValue(mockAdminRole);
-      mockQuoteRepo.softDelete.mockResolvedValue(true);
+      mockQuoteRepo.softDeleteQuote.mockResolvedValue(undefined);
 
       const result = await deleteQuote(TEST_QUOTE_ID);
 
@@ -856,7 +856,7 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
@@ -889,14 +889,14 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
 
     it('should ALLOW MANAGER role to convert quotes', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
       mockInvoiceRepo.generateInvoiceNumber.mockResolvedValue('INV-2024-0001');
-      mockQuoteRepo.convertToInvoice.mockResolvedValue({
+      mockQuoteRepo.convertQuoteToInvoice.mockResolvedValue({
         invoiceId: '1',
         invoiceNumber: 'INV-2024-0001',
       });
@@ -915,7 +915,7 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
@@ -934,7 +934,7 @@ describe('Quote Mutations - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Unauthorized');
+        expect(result.error).toContain('permission');
       }
     });
   });

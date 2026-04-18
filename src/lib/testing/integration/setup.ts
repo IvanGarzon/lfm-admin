@@ -38,6 +38,27 @@ vi.mock('@/services/email-queue.service', () => ({
   queueQuoteEmail: vi.fn().mockResolvedValue({}),
 }));
 
+// next-auth cannot resolve `next/server` in Node/Vitest — mock the auth
+// module and its entry point so repositories that transitively import auth
+// modules can still load without runtime errors.
+vi.mock('next-auth', () => ({
+  default: vi.fn(() => ({
+    auth: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    handlers: { GET: vi.fn(), POST: vi.fn() },
+  })),
+  getServerSession: vi.fn(),
+}));
+
+vi.mock('@/auth', () => ({
+  auth: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  GET: vi.fn(),
+  POST: vi.fn(),
+}));
+
 vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'test',

@@ -56,20 +56,21 @@ import {
   createInvoiceDetails,
 } from '@/lib/testing';
 
-const { mockRepoInstance, mockAuth, mockRequirePermission } = vi.hoisted(() => ({
+const { mockRepoInstance, mockAuth, mockRequirePermission, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {
-    searchAndPaginate: vi.fn(),
-    findByIdWithDetails: vi.fn(),
-    findByIdMetadata: vi.fn(),
+    searchInvoices: vi.fn(),
+    findInvoiceByIdWithDetails: vi.fn(),
+    findInvoiceMetadataById: vi.fn(),
     findInvoiceItems: vi.fn(),
     findInvoicePayments: vi.fn(),
     findInvoiceStatusHistory: vi.fn(),
-    getStatistics: vi.fn(),
-    getMonthlyRevenueTrend: vi.fn(),
-    getTopDebtors: vi.fn(),
+    getInvoiceStatistics: vi.fn(),
+    getInvoiceMonthlyRevenueTrend: vi.fn(),
+    getInvoiceTopDebtors: vi.fn(),
   },
   mockAuth: vi.fn(),
   mockRequirePermission: vi.fn(),
+  mockHasPermission: vi.fn().mockReturnValue(true),
 }));
 
 // Mock InvoiceRepository
@@ -87,6 +88,7 @@ vi.mock('@/auth', () => ({
 
 vi.mock('@/lib/permissions', () => ({
   requirePermission: mockRequirePermission,
+  hasPermission: mockHasPermission,
 }));
 
 // Generate test IDs
@@ -98,6 +100,7 @@ describe('Invoice Queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue(mockSession);
+    mockHasPermission.mockReturnValue(true);
   });
 
   describe('getInvoices', () => {
@@ -110,7 +113,7 @@ describe('Invoice Queries', () => {
         pagination: { page: 1, perPage: 10, total: 2 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchInvoices.mockResolvedValue(mockResult);
 
       const result = await getInvoices({});
 
@@ -118,8 +121,8 @@ describe('Invoice Queries', () => {
       if (result.success) {
         expect(result.data).toEqual(mockResult);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadInvoices');
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalled();
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadInvoices');
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalled();
     });
 
     it('returns unauthorized when no session', async () => {
@@ -127,7 +130,7 @@ describe('Invoice Queries', () => {
       const result = await getInvoices({});
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
@@ -137,11 +140,11 @@ describe('Invoice Queries', () => {
         pagination: { page: 1, perPage: 10, total: 1 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchInvoices.mockResolvedValue(mockResult);
 
       await getInvoices({ status: 'DRAFT', search: 'test' });
 
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalled();
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalled();
     });
   });
 
@@ -149,7 +152,7 @@ describe('Invoice Queries', () => {
     it('returns invoice details successfully when authorized', async () => {
       const mockInvoice = createInvoiceDetails({ id: TEST_INVOICE_ID });
 
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(mockInvoice);
+      mockRepoInstance.findInvoiceByIdWithDetails.mockResolvedValue(mockInvoice);
 
       const result = await getInvoiceById(TEST_INVOICE_ID);
 
@@ -157,11 +160,11 @@ describe('Invoice Queries', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_INVOICE_ID);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadInvoices');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadInvoices');
     });
 
     it('returns error when invoice not found', async () => {
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(null);
+      mockRepoInstance.findInvoiceByIdWithDetails.mockResolvedValue(null);
 
       const result = await getInvoiceById('non-existent');
 
@@ -176,7 +179,7 @@ describe('Invoice Queries', () => {
       const result = await getInvoiceById(TEST_INVOICE_ID);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });
@@ -190,7 +193,7 @@ describe('Invoice Queries', () => {
         _count: { items: 3, payments: 1 },
       };
 
-      mockRepoInstance.findByIdMetadata.mockResolvedValue(mockInvoice);
+      mockRepoInstance.findInvoiceMetadataById.mockResolvedValue(mockInvoice);
 
       const result = await getInvoiceMetadata(TEST_INVOICE_ID);
 
@@ -201,7 +204,7 @@ describe('Invoice Queries', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockRepoInstance.findByIdMetadata.mockResolvedValue(null);
+      mockRepoInstance.findInvoiceMetadataById.mockResolvedValue(null);
 
       const result = await getInvoiceMetadata('non-existent');
 
@@ -274,7 +277,7 @@ describe('Invoice Queries', () => {
     it('returns statistics successfully when authorized', async () => {
       const mockStats = createInvoiceStatistics();
 
-      mockRepoInstance.getStatistics.mockResolvedValue(mockStats);
+      mockRepoInstance.getInvoiceStatistics.mockResolvedValue(mockStats);
 
       const result = await getInvoiceStatistics();
 
@@ -286,7 +289,7 @@ describe('Invoice Queries', () => {
 
     it('returns statistics with date filter', async () => {
       const mockStats = createInvoiceStatistics({ total: 50 });
-      mockRepoInstance.getStatistics.mockResolvedValue(mockStats);
+      mockRepoInstance.getInvoiceStatistics.mockResolvedValue(mockStats);
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
@@ -296,7 +299,10 @@ describe('Invoice Queries', () => {
       const result = await getInvoiceStatistics(dateFilter);
 
       expect(result.success).toBe(true);
-      expect(mockRepoInstance.getStatistics).toHaveBeenCalledWith(dateFilter);
+      expect(mockRepoInstance.getInvoiceStatistics).toHaveBeenCalledWith(
+        mockSession.user.tenantId,
+        dateFilter,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
@@ -313,7 +319,7 @@ describe('Invoice Queries', () => {
         { month: '2024-02', revenue: 12000, invoiceCount: 18 },
       ];
 
-      mockRepoInstance.getMonthlyRevenueTrend.mockResolvedValue(mockTrend);
+      mockRepoInstance.getInvoiceMonthlyRevenueTrend.mockResolvedValue(mockTrend);
 
       const result = await getMonthlyRevenueTrend(12);
 
@@ -337,7 +343,7 @@ describe('Invoice Queries', () => {
         { customerId: 'cust-2', customerName: 'Jane Smith', outstandingAmount: 3000 },
       ];
 
-      mockRepoInstance.getTopDebtors.mockResolvedValue(mockDebtors);
+      mockRepoInstance.getInvoiceTopDebtors.mockResolvedValue(mockDebtors);
 
       const result = await getTopDebtors(5);
 
@@ -362,11 +368,12 @@ describe('Invoice Queries - Permission Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepoInstance.searchAndPaginate.mockResolvedValue({
+    mockHasPermission.mockReturnValue(true);
+    mockRepoInstance.searchInvoices.mockResolvedValue({
       items: [],
       pagination: {},
     });
-    mockRepoInstance.findByIdWithDetails.mockResolvedValue(createInvoiceDetails());
+    mockRepoInstance.findInvoiceByIdWithDetails.mockResolvedValue(createInvoiceDetails());
   });
 
   describe('getInvoices', () => {
@@ -401,7 +408,7 @@ describe('Invoice Queries - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });

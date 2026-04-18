@@ -106,6 +106,16 @@ export const CancelInvoiceSchema = z.object({
     }),
 });
 
+/**
+ * Bulk Update Invoice Status Schema
+ */
+export const BulkUpdateInvoiceStatusSchema = z.object({
+  ids: z
+    .array(z.cuid({ error: 'Invalid invoice ID' }))
+    .min(1, { error: 'At least one invoice ID is required' }),
+  status: InvoiceStatusSchema,
+});
+
 export const InvoiceFiltersSchema = baseFiltersSchema.extend({
   status: createEnumArrayFilter(InvoiceStatusSchema),
 });
@@ -160,6 +170,7 @@ export type UpdateInvoiceInput = z.infer<typeof UpdateInvoiceSchema>;
 export type RecordPaymentInput = z.infer<typeof RecordPaymentSchema>;
 export type MarkInvoiceAsPendingInput = z.infer<typeof MarkInvoiceAsPendingSchema>;
 export type CancelInvoiceInput = z.infer<typeof CancelInvoiceSchema>;
+export type BulkUpdateInvoiceStatusInput = z.infer<typeof BulkUpdateInvoiceStatusSchema>;
 export type SendInvoiceEmailInput = z.infer<typeof SendInvoiceEmailSchema>;
 export type SendReminderEmailInput = z.infer<typeof SendReminderEmailSchema>;
 export type SendReceiptEmailInput = z.infer<typeof SendReceiptEmailSchema>;

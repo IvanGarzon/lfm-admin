@@ -28,6 +28,10 @@ vi.mock('@/lib/pdf', () => ({
   generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test')),
 }));
 
+vi.mock('@/actions/tenant/queries', () => ({
+  getTenantBranding: vi.fn().mockResolvedValue(null),
+}));
+
 import {
   generateInvoiceFilename,
   generateReceiptFilename,

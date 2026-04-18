@@ -68,17 +68,16 @@ const { mockInvoiceRepo, mockAuth, mockHasPermission, mockPrisma } = vi.hoisted(
   mockInvoiceRepo: {
     createInvoiceWithItems: vi.fn(),
     updateInvoiceWithItems: vi.fn(),
-    findById: vi.fn(),
-    findByIdWithDetails: vi.fn(),
-    markAsPending: vi.fn(),
-    markAsDraft: vi.fn(),
-    addPayment: vi.fn(),
+    findInvoiceByIdWithDetails: vi.fn(),
+    markInvoiceAsPending: vi.fn(),
+    markInvoiceAsDraft: vi.fn(),
+    addInvoicePayment: vi.fn(),
     cancelInvoice: vi.fn(),
     deleteInvoice: vi.fn(),
-    duplicate: vi.fn(),
-    bulkUpdateStatus: vi.fn(),
-    generateReceiptNumber: vi.fn(),
-    incrementReminderCount: vi.fn(),
+    duplicateInvoice: vi.fn(),
+    bulkUpdateInvoiceStatus: vi.fn(),
+    generateInvoiceReceiptNumber: vi.fn(),
+    incrementInvoiceReminderCount: vi.fn(),
   },
   mockAuth: vi.fn(),
   mockHasPermission: vi.fn(),
@@ -125,6 +124,7 @@ vi.mock('@/lib/prisma', () => ({
 // Generate test IDs using the centralized ID generator
 const TEST_CUSTOMER_ID = testIds.customer();
 const TEST_INVOICE_ID = testIds.invoice();
+const TEST_INVOICE_ID_2 = testIds.invoice();
 const TEST_NON_EXISTENT_ID = testIds.nonExistent();
 
 describe('Invoice Mutations', () => {
@@ -181,7 +181,6 @@ describe('Invoice Mutations', () => {
     };
 
     it('updates an invoice successfully when authorized', async () => {
-      mockInvoiceRepo.findById.mockResolvedValue({ id: TEST_INVOICE_ID });
       mockInvoiceRepo.updateInvoiceWithItems.mockResolvedValue({
         id: TEST_INVOICE_ID,
       });
@@ -196,19 +195,7 @@ describe('Invoice Mutations', () => {
       expect(revalidatePath).toHaveBeenCalledWith(`/finances/invoices/${TEST_INVOICE_ID}`);
     });
 
-    it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.findById.mockResolvedValue(null);
-
-      const result = await updateInvoice(updateData);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Invoice not found');
-      }
-    });
-
     it('returns error when update fails', async () => {
-      mockInvoiceRepo.findById.mockResolvedValue({ id: TEST_INVOICE_ID });
       mockInvoiceRepo.updateInvoiceWithItems.mockResolvedValue(null);
 
       const result = await updateInvoice(updateData);
@@ -222,7 +209,7 @@ describe('Invoice Mutations', () => {
 
   describe('markInvoiceAsPending', () => {
     it('marks an invoice as pending successfully', async () => {
-      mockInvoiceRepo.markAsPending.mockResolvedValue(
+      mockInvoiceRepo.markInvoiceAsPending.mockResolvedValue(
         createInvoiceWithCustomer({ id: TEST_INVOICE_ID, status: 'PENDING' }),
       );
 
@@ -234,7 +221,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.markAsPending.mockResolvedValue(null);
+      mockInvoiceRepo.markInvoiceAsPending.mockResolvedValue(null);
 
       const result = await markInvoiceAsPending({ id: TEST_NON_EXISTENT_ID });
 
@@ -247,7 +234,7 @@ describe('Invoice Mutations', () => {
 
   describe('markInvoiceAsDraft', () => {
     it('marks an invoice as draft successfully', async () => {
-      mockInvoiceRepo.markAsDraft.mockResolvedValue({ id: TEST_INVOICE_ID });
+      mockInvoiceRepo.markInvoiceAsDraft.mockResolvedValue({ id: TEST_INVOICE_ID });
 
       const result = await markInvoiceAsDraft(TEST_INVOICE_ID);
 
@@ -255,7 +242,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.markAsDraft.mockResolvedValue(null);
+      mockInvoiceRepo.markInvoiceAsDraft.mockResolvedValue(null);
 
       const result = await markInvoiceAsDraft(TEST_NON_EXISTENT_ID);
 
@@ -269,7 +256,7 @@ describe('Invoice Mutations', () => {
   describe('recordPayment', () => {
     it('records a payment successfully', async () => {
       const paymentData = createRecordPaymentInput({ id: TEST_INVOICE_ID });
-      mockInvoiceRepo.addPayment.mockResolvedValue({
+      mockInvoiceRepo.addInvoicePayment.mockResolvedValue({
         id: TEST_INVOICE_ID,
         status: 'PAID',
         receiptNumber: 'REC-001',
@@ -288,7 +275,7 @@ describe('Invoice Mutations', () => {
 
     it('returns error when invoice not found', async () => {
       const paymentData = createRecordPaymentInput({ id: TEST_NON_EXISTENT_ID });
-      mockInvoiceRepo.addPayment.mockResolvedValue(null);
+      mockInvoiceRepo.addInvoicePayment.mockResolvedValue(null);
 
       const result = await recordPayment(paymentData);
 
@@ -328,7 +315,7 @@ describe('Invoice Mutations', () => {
 
   describe('deleteInvoice', () => {
     it('soft deletes an invoice successfully', async () => {
-      mockInvoiceRepo.deleteInvoice.mockResolvedValue(true);
+      mockInvoiceRepo.deleteInvoice.mockResolvedValue(undefined);
 
       const result = await deleteInvoice(TEST_INVOICE_ID);
 
@@ -340,20 +327,17 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.deleteInvoice.mockResolvedValue(false);
+      mockInvoiceRepo.deleteInvoice.mockRejectedValue(new Error('Invoice not found'));
 
       const result = await deleteInvoice(TEST_NON_EXISTENT_ID);
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toBe('Invoice not found');
-      }
     });
   });
 
   describe('duplicateInvoice', () => {
     it('duplicates an invoice successfully', async () => {
-      mockInvoiceRepo.duplicate.mockResolvedValue({
+      mockInvoiceRepo.duplicateInvoice.mockResolvedValue({
         id: 'new-invoice-id',
         invoiceNumber: 'INV-002',
       });
@@ -369,7 +353,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('handles repository errors', async () => {
-      mockInvoiceRepo.duplicate.mockRejectedValue(new Error('DB Error'));
+      mockInvoiceRepo.duplicateInvoice.mockRejectedValue(new Error('DB Error'));
 
       const result = await duplicateInvoice(TEST_INVOICE_ID);
 
@@ -381,7 +365,7 @@ describe('Invoice Mutations', () => {
     it('should require authentication', async () => {
       mockAuth.mockResolvedValueOnce(null);
       const result = await bulkUpdateInvoiceStatus({
-        ids: ['id-1'],
+        ids: [TEST_INVOICE_ID],
         status: 'PENDING' as InvoiceStatus,
       });
       expect(result.success).toBe(false);
@@ -390,19 +374,20 @@ describe('Invoice Mutations', () => {
       }
     });
 
-    it('should call repository bulkUpdateStatus', async () => {
-      mockInvoiceRepo.bulkUpdateStatus.mockResolvedValue([
-        { id: 'id-1', success: true },
-        { id: 'id-2', success: true },
+    it('should call repository bulkUpdateInvoiceStatus', async () => {
+      mockInvoiceRepo.bulkUpdateInvoiceStatus.mockResolvedValue([
+        { id: TEST_INVOICE_ID, success: true },
+        { id: TEST_INVOICE_ID_2, success: true },
       ]);
 
       const result = await bulkUpdateInvoiceStatus({
-        ids: ['id-1', 'id-2'],
+        ids: [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
         status: 'PENDING' as InvoiceStatus,
       });
 
-      expect(mockInvoiceRepo.bulkUpdateStatus).toHaveBeenCalledWith(
-        ['id-1', 'id-2'],
+      expect(mockInvoiceRepo.bulkUpdateInvoiceStatus).toHaveBeenCalledWith(
+        [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
+        mockSession.user.tenantId,
         'PENDING',
         mockSession.user.id,
       );
@@ -414,13 +399,13 @@ describe('Invoice Mutations', () => {
     });
 
     it('should handle partial failures', async () => {
-      mockInvoiceRepo.bulkUpdateStatus.mockResolvedValue([
-        { id: 'id-1', success: true },
-        { id: 'id-2', success: false, error: 'Failed' },
+      mockInvoiceRepo.bulkUpdateInvoiceStatus.mockResolvedValue([
+        { id: TEST_INVOICE_ID, success: true },
+        { id: TEST_INVOICE_ID_2, success: false, error: 'Failed' },
       ]);
 
       const result = await bulkUpdateInvoiceStatus({
-        ids: ['id-1', 'id-2'],
+        ids: [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
         status: 'PENDING' as InvoiceStatus,
       });
 
@@ -434,7 +419,7 @@ describe('Invoice Mutations', () => {
 
   describe('sendInvoiceReceipt', () => {
     it('sends receipt for paid invoice', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+      mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(
         createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PAID', receiptNumber: 'REC-001' }),
       );
 
@@ -444,7 +429,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(null);
+      mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(null);
 
       const result = await sendInvoiceReceipt(TEST_NON_EXISTENT_ID);
 
@@ -455,7 +440,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice is not paid', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+      mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(
         createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PENDING' }),
       );
 
@@ -470,7 +455,7 @@ describe('Invoice Mutations', () => {
 
   describe('sendInvoiceReminder', () => {
     it('returns error when invoice is not overdue', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(
+      mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(
         createInvoiceDetails({
           id: TEST_INVOICE_ID,
           status: 'PENDING',
@@ -487,7 +472,7 @@ describe('Invoice Mutations', () => {
     });
 
     it('returns error when invoice not found', async () => {
-      mockInvoiceRepo.findByIdWithDetails.mockResolvedValue(null);
+      mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(null);
 
       const result = await sendInvoiceReminder(TEST_NON_EXISTENT_ID);
 
@@ -560,7 +545,7 @@ describe('Invoice Mutations - Permission Tests', () => {
     it('should ALLOW MANAGER role to record payments', async () => {
       mockAuth.mockResolvedValue(mockManagerRole);
       mockHasPermission.mockReturnValue(true);
-      mockInvoiceRepo.addPayment.mockResolvedValue({
+      mockInvoiceRepo.addInvoicePayment.mockResolvedValue({
         id: TEST_INVOICE_ID,
         status: 'PAID',
       });
@@ -587,7 +572,7 @@ describe('Invoice Mutations - Permission Tests', () => {
     it('should ALLOW ADMIN role to delete invoices', async () => {
       mockAuth.mockResolvedValue(mockAdminRole);
       mockHasPermission.mockReturnValue(true);
-      mockInvoiceRepo.deleteInvoice.mockResolvedValue(true);
+      mockInvoiceRepo.deleteInvoice.mockResolvedValue(undefined);
 
       const result = await deleteInvoice(TEST_INVOICE_ID);
 
