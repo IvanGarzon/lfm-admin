@@ -4,7 +4,6 @@ import { formatPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { ColumnDef } from '@tanstack/react-table';
 import { Text, Mars, Venus } from 'lucide-react';
 import Link from 'next/link';
-
 import type { EmployeeListItem } from '@/features/staff/employees/types';
 import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { Box } from '@/components/ui/box';
@@ -14,14 +13,13 @@ import { UserAvatar } from '@/components/shared/user-avatar';
 import { formatCurrency, enumToOptions } from '@/lib/utils';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import { Checkbox } from '@/components/ui/checkbox';
-import { EmployeeAction } from './employee-action';
 import { searchParams, employeeSearchParamsDefaults } from '@/filters/employees/employee-filters';
-import { useQueryStates } from 'nuqs';
+import { useQueryString } from '@/hooks/use-query-string';
+import { EmployeeActions } from '@/features/staff/employees/components/employee-actions';
 
 const GENDER_OPTIONS = enumToOptions(GenderSchema.enum);
 const EMPLOYEE_STATUS_OPTIONS = enumToOptions(EmployeeStatusSchema.enum);
 
-// Helper function to format phone numbers consistently
 const formatPhoneDisplay = (phone: string): string => {
   if (!phone) return '';
 
@@ -45,24 +43,8 @@ const formatPhoneDisplay = (phone: string): string => {
   }
 };
 
-function EmployeeLinkCell({ employeeId, name }: { employeeId: string; name: string }) {
-  const [currentParams] = useQueryStates(searchParams);
-
-  const queryParts: string[] = [];
-  for (const [key, parser] of Object.entries(searchParams)) {
-    const value = currentParams[key as keyof typeof searchParams];
-    const defaultValue = (employeeSearchParamsDefaults as any)[key];
-
-    if (
-      value !== null &&
-      value !== undefined &&
-      JSON.stringify(value) !== JSON.stringify(defaultValue)
-    ) {
-      queryParts.push(`${key}=${(parser as any).serialize(value)}`);
-    }
-  }
-
-  const queryString = queryParts.join('&');
+function EmployeeLink({ employeeId, name }: { employeeId: string; name: string }) {
+  const queryString = useQueryString(searchParams, employeeSearchParamsDefaults);
   const basePath = `/staff/employees/${employeeId}`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
@@ -70,32 +52,6 @@ function EmployeeLinkCell({ employeeId, name }: { employeeId: string; name: stri
     <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
       {name}
     </Link>
-  );
-}
-
-function EmployeeActionsCell({
-  employee,
-  onDelete,
-}: {
-  employee: EmployeeListItem;
-  onDelete: (id: string) => void;
-}) {
-  const [currentParams] = useQueryStates(searchParams);
-
-  // Convert currentParams to SearchParams (Record<string, string | string[] | undefined>)
-  const stringifiedParams: Record<string, string | string[] | undefined> = {};
-  for (const [key, value] of Object.entries(currentParams)) {
-    if (value === null) {
-      stringifiedParams[key] = undefined;
-    } else if (Array.isArray(value)) {
-      stringifiedParams[key] = value.map(String);
-    } else {
-      stringifiedParams[key] = String(value);
-    }
-  }
-
-  return (
-    <EmployeeAction employee={employee} onDelete={onDelete} searchParams={stringifiedParams} />
   );
 }
 
@@ -137,8 +93,8 @@ export const createEmployeeColumns = (
             className="h-10 w-10 rounded-full"
             user={{ name: fullName, image: avatarUrl ?? null }}
           />
-          <Box>
-            <EmployeeLinkCell employeeId={id} name={fullName} />
+          <Box className="flex flex-col">
+            <EmployeeLink employeeId={id} name={fullName} />
             <div className="text-[0.8rem] text-gray-400">{email}</div>
           </Box>
         </Box>
@@ -179,7 +135,6 @@ export const createEmployeeColumns = (
     enableSorting: true,
     enableColumnFilter: true,
     meta: {
-      className: 'text-right',
       displayName: 'Rate',
     },
   },
@@ -230,6 +185,10 @@ export const createEmployeeColumns = (
   },
   {
     id: 'actions',
-    cell: ({ row }) => <EmployeeActionsCell employee={row.original} onDelete={onDelete} />,
+    cell: ({ row }) => <EmployeeActions employee={row.original} onDelete={onDelete} />,
+    enableHiding: false,
+    meta: {
+      className: 'text-right',
+    },
   },
 ];

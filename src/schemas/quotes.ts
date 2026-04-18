@@ -205,6 +205,28 @@ export const DeleteItemAttachmentSchema = z.object({
 });
 
 /**
+ * Delete Quote Schema
+ */
+export const DeleteQuoteSchema = z.object({
+  id: z.cuid({ error: 'Quote ID is required' }),
+});
+
+/**
+ * Bulk Update Quote Status Schema
+ */
+export const BulkUpdateQuoteStatusSchema = z.object({
+  ids: z.array(z.cuid({ error: 'Invalid quote ID' })).min(1, { error: 'At least one ID required' }),
+  status: QuoteStatusSchema,
+});
+
+/**
+ * Bulk Delete Quotes Schema
+ */
+export const BulkDeleteQuotesSchema = z.object({
+  ids: z.array(z.cuid({ error: 'Invalid quote ID' })).min(1, { error: 'At least one ID required' }),
+});
+
+/**
  * Create Version Schema
  */
 export const CreateVersionSchema = z.object({
@@ -242,5 +264,8 @@ export type ConvertQuoteToInvoiceInput = z.infer<typeof ConvertQuoteToInvoiceSch
 export type QuoteItemAttachmentInput = z.infer<typeof QuoteItemAttachmentSchema>;
 export type UploadItemAttachmentInput = z.infer<typeof UploadItemAttachmentSchema>;
 export type DeleteItemAttachmentInput = z.infer<typeof DeleteItemAttachmentSchema>;
+export type DeleteQuoteInput = z.infer<typeof DeleteQuoteSchema>;
+export type BulkUpdateQuoteStatusInput = z.infer<typeof BulkUpdateQuoteStatusSchema>;
+export type BulkDeleteQuotesInput = z.infer<typeof BulkDeleteQuotesSchema>;
 export type CreateVersionInput = z.infer<typeof CreateVersionSchema>;
 export type SendQuoteEmailInput = z.infer<typeof SendQuoteEmailSchema>;

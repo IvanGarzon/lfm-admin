@@ -64,7 +64,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param params.sort - Optional array of sort criteria with id and desc properties
    * @returns A promise that resolves to paginated invoice results with metadata
    * @example
-   * const result = await repo.searchAndPaginate({
+   * const result = await repo.searchInvoices({
    *   search: "John",
    *   status: ["PENDING", "OVERDUE"],
    *   page: 1,
@@ -72,7 +72,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    *   sort: [{ id: "dueDate", desc: true }]
    * });
    */
-  async searchAndPaginate(params: InvoiceFilters, tenantId: string): Promise<InvoicePagination> {
+  async searchInvoices(params: InvoiceFilters, tenantId: string): Promise<InvoicePagination> {
     const { search, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.InvoiceWhereInput = {
@@ -174,7 +174,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param id - The unique identifier of the invoice
    * @returns A promise that resolves to the invoice with all details, or null if not found
    */
-  async findByIdWithDetails(id: string, tenantId: string): Promise<InvoiceWithDetails | null> {
+  async findInvoiceByIdWithDetails(
+    id: string,
+    tenantId: string,
+  ): Promise<InvoiceWithDetails | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
       select: {
@@ -290,7 +293,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param id - The ID of the invoice
    * @returns A promise that resolves to the invoice metadata, or null if not found
    */
-  async findByIdMetadata(id: string, tenantId: string): Promise<InvoiceMetadata | null> {
+  async findInvoiceMetadataById(id: string, tenantId: string): Promise<InvoiceMetadata | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
       select: {
@@ -439,7 +442,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @param dateFilter.endDate - End date for filtering invoices
    * @returns A promise that resolves to invoice statistics object
    */
-  async getStatistics(
+  async getInvoiceStatistics(
     tenantId: string,
     dateFilter?: {
       startDate?: Date;
@@ -517,8 +520,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           }),
           this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
           previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
-          this.getMonthlyRevenueTrend(12, tenantId),
-          this.getTopDebtors(5, tenantId),
+          this.getInvoiceMonthlyRevenueTrend(12, tenantId),
+          this.getInvoiceTopDebtors(5, tenantId),
         ]),
       );
 
@@ -671,7 +674,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @returns A promise that resolves to the generated receipt number
    * @example "RCP-A1B2C3D4"
    */
-  async generateReceiptNumber(): Promise<string> {
+  async generateInvoiceReceiptNumber(): Promise<string> {
     const crypto = await import('crypto');
     const uuid = crypto.randomUUID();
     // Take first 8 characters of UUID (without hyphens) and uppercase
@@ -683,12 +686,17 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Update the receipt number on an invoice.
    * Used when a receipt number needs to be assigned after the invoice was marked as paid.
    * @param id - The invoice ID
+   * @param tenantId - The tenant ID to scope the update
    * @param receiptNumber - The receipt number to set
    * @returns A promise that resolves to the updated invoice
    */
-  async updateReceiptNumber(id: string, receiptNumber: string): Promise<Invoice> {
+  async updateInvoiceReceiptNumber(
+    id: string,
+    tenantId: string,
+    receiptNumber: string,
+  ): Promise<Invoice> {
     return this.prisma.invoice.update({
-      where: { id },
+      where: { id, tenantId },
       data: { receiptNumber },
     });
   }
@@ -799,6 +807,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async updateInvoiceWithItems(
     id: string,
     data: UpdateInvoiceInput,
+    tenantId: string,
   ): Promise<InvoiceWithDetails | null> {
     // Calculate total amount
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -958,7 +967,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       return null;
     }
 
-    return await this.findByIdWithDetails(updatedInvoice.id);
+    return await this.findInvoiceByIdWithDetails(updatedInvoice.id, tenantId);
   }
 
   /**
@@ -966,14 +975,19 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Validates status transition before updating.
    * Typically used when extending due dates or correcting status.
    * @param id - The unique identifier of the invoice
+   * @param tenantId - The tenant ID to scope the query
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    * @throws {Error} If the status transition is invalid (e.g., cannot revert from PAID)
    */
-  async markAsPending(id: string, updatedBy?: string): Promise<InvoiceWithDetails | null> {
+  async markInvoiceAsPending(
+    id: string,
+    tenantId: string,
+    updatedBy?: string,
+  ): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -986,7 +1000,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: InvoiceStatus.PENDING,
           updatedAt: new Date(),
@@ -1011,19 +1025,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findInvoiceByIdWithDetails(updated.id, tenantId);
   }
 
   /**
    * Revert an invoice to draft status.
    * Only possible from PENDING or OVERDUE status.
    * @param id - The unique identifier of the invoice
+   * @param tenantId - The tenant ID to scope the query
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
    */
-  async markAsDraft(id: string, updatedBy?: string): Promise<InvoiceWithDetails | null> {
+  async markInvoiceAsDraft(
+    id: string,
+    tenantId: string,
+    updatedBy?: string,
+  ): Promise<InvoiceWithDetails | null> {
     const currentInvoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1035,7 +1054,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status: InvoiceStatus.DRAFT,
           updatedAt: new Date(),
@@ -1060,7 +1079,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       return null;
     }
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findInvoiceByIdWithDetails(updated.id, tenantId);
   }
 
   /**
@@ -1068,6 +1087,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Validates status transition before updating (PAID invoices cannot be cancelled).
    * Cancelled invoices are in a terminal state and cannot be changed.
    * @param id - The unique identifier of the invoice
+   * @param tenantId - The tenant ID to scope the query
    * @param cancelReason - The reason for cancellation (required for audit purposes)
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to the updated invoice with details, or null if not found
@@ -1075,12 +1095,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    */
   async cancelInvoice(
     id: string,
+    tenantId: string,
     cancelReason: string,
     updatedBy?: string,
   ): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1096,7 +1117,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const invoice = await tx.invoice.update({
-        where: { id, deletedAt: null },
+        where: { id, tenantId, deletedAt: null },
         data: {
           status,
           cancelReason,
@@ -1118,23 +1139,27 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       return invoice;
     });
 
-    return this.findByIdWithDetails(updated.id);
+    return this.findInvoiceByIdWithDetails(updated.id, tenantId);
   }
 
   /**
    * Increment the remindersSent counter for an invoice.
    * @param id - The unique identifier of the invoice
+   * @param tenantId - The tenant ID to scope the query
    * @returns A promise that resolves to the updated invoice, or null if not found
    */
-  async incrementReminderCount(id: string): Promise<Invoice | null> {
-    const invoice = await this.findById(id);
+  async incrementInvoiceReminderCount(id: string, tenantId: string): Promise<Invoice | null> {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id, tenantId, deletedAt: null },
+      select: { remindersSent: true },
+    });
 
     if (!invoice) {
       return null;
     }
 
     return this.prisma.invoice.update({
-      where: { id },
+      where: { id, tenantId },
       data: {
         remindersSent: (invoice.remindersSent ?? 0) + 1,
         updatedAt: new Date(),
@@ -1147,13 +1172,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Only DRAFT invoices can be deleted. For other statuses, use the cancel method instead.
    * Soft deleted invoices are excluded from normal queries but retained for audit purposes.
    * @param id - The unique identifier of the invoice to soft delete
+   * @param tenantId - The tenant ID to scope the query
    * @returns A promise that resolves to true if deletion was successful, false otherwise
    * @throws {Error} If invoice is not found or is not in DRAFT status
    */
-  async deleteInvoice(id: string): Promise<boolean> {
+  async deleteInvoice(id: string, tenantId: string): Promise<void> {
     // First check if the invoice exists and is in DRAFT status
     const invoice = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       select: { status: true },
     });
 
@@ -1165,15 +1191,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       throw new Error('Only DRAFT invoices can be deleted. Use cancel for other statuses.');
     }
 
-    const result = await this.prisma.invoice.update({
-      where: { id, deletedAt: null },
+    await this.prisma.invoice.update({
+      where: { id, tenantId, deletedAt: null },
       data: {
         deletedAt: new Date(),
-        updatedAt: new Date(),
       },
     });
-
-    return result !== null;
   }
 
   /**
@@ -1189,8 +1212,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @returns A promise that resolves to the updated invoice with full details
    * @throws {Error} If the invoice is not found or status transition is invalid
    */
-  async addPayment(
+  async addInvoicePayment(
     invoiceId: string,
+    tenantId: string,
     amount: number,
     method: string,
     date: Date,
@@ -1199,7 +1223,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     idempotencyKey?: string,
   ): Promise<InvoiceWithDetails> {
     const invoice = await this.prisma.invoice.findUnique({
-      where: { id: invoiceId, deletedAt: null },
+      where: { id: invoiceId, tenantId, deletedAt: null },
       select: {
         id: true,
         invoiceNumber: true,
@@ -1252,7 +1276,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Generate receipt number if invoice will be fully paid and doesn't have one yet
     let receiptNumber = invoice.receiptNumber;
     if (newStatus === InvoiceStatus.PAID && !receiptNumber) {
-      receiptNumber = await this.generateReceiptNumber();
+      receiptNumber = await this.generateInvoiceReceiptNumber();
     }
 
     // Store the transaction ID for later document attachment
@@ -1323,11 +1347,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
       // Find or create the transaction category
       const category = await tx.transactionCategory.upsert({
-        where: { name: categoryName },
+        where: { tenantId_name: { tenantId, name: categoryName } },
         update: {},
         create: {
           name: categoryName,
           description: `Automatically created for ${categoryName.toLowerCase()}`,
+          tenantId,
         },
       });
 
@@ -1340,6 +1365,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
       const createdTransaction = await tx.transaction.create({
         data: {
+          tenantId,
           type: TransactionType.INCOME,
           date: date,
           amount: new Prisma.Decimal(amount),
@@ -1365,7 +1391,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     });
 
     // Fetch the updated invoice with full details
-    const updated = await this.findByIdWithDetails(invoiceId);
+    const updated = await this.findInvoiceByIdWithDetails(invoiceId, tenantId);
     if (!updated) {
       throw new Error('Failed to retrieve updated invoice');
     }
@@ -1436,12 +1462,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Validates each status transition and creates history entries for successful updates.
    * Skips invoices with invalid transitions instead of failing the entire operation.
    * @param ids - Array of invoice IDs to update
+   * @param tenantId - The tenant ID to scope all queries (prevents cross-tenant access)
    * @param status - The new status to set for all invoices
    * @param updatedBy - Optional user ID who triggered this change
    * @returns A promise that resolves to results array with success/failure for each invoice
    */
-  async bulkUpdateStatus(
+  async bulkUpdateInvoiceStatus(
     ids: string[],
+    tenantId: string,
     status: InvoiceStatus,
     updatedBy?: string,
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
@@ -1450,9 +1478,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
       for (const id of ids) {
         try {
-          // Fetch current invoice status
+          // Fetch current invoice status scoped to tenant
           const invoice = await tx.invoice.findUnique({
-            where: { id, deletedAt: null },
+            where: { id, tenantId, deletedAt: null },
             select: { status: true },
           });
 
@@ -1477,9 +1505,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             continue;
           }
 
-          // Update invoice status
+          // Update invoice status scoped to tenant
           await tx.invoice.update({
-            where: { id },
+            where: { id, tenantId },
             data: {
               status,
               updatedAt: new Date(),
@@ -1517,10 +1545,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @returns A promise that resolves to an object with the new invoice ID and number
    * @throws {Error} If the source invoice is not found
    */
-  async duplicate(id: string): Promise<{ id: string; invoiceNumber: string }> {
+  async duplicateInvoice(
+    id: string,
+    tenantId: string,
+  ): Promise<{ id: string; invoiceNumber: string }> {
     // Get the original invoice with all details
     const original = await this.prisma.invoice.findUnique({
-      where: { id, deletedAt: null },
+      where: { id, tenantId, deletedAt: null },
       include: {
         items: {
           select: {
@@ -1539,7 +1570,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     }
 
     // Generate new invoice number
-    const invoiceNumber = await this.generateInvoiceNumber();
+    const invoiceNumber = await this.generateInvoiceNumber(tenantId);
 
     // Calculate total amount from items
     const totalAmount = Number(original.amount);
@@ -1552,6 +1583,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // Create the duplicate invoice with DRAFT status
     const duplicate = await this.prisma.invoice.create({
       data: {
+        tenantId,
         invoiceNumber,
         customerId: original.customerId,
         status: InvoiceStatus.DRAFT,
@@ -1595,7 +1627,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Get monthly revenue trend for the last N months.
    * @param limit - Number of months to retrieve. Defaults to 12.
    */
-  async getMonthlyRevenueTrend(limit: number = 12, tenantId: string): Promise<RevenueTrend[]> {
+  async getInvoiceMonthlyRevenueTrend(
+    limit: number = 12,
+    tenantId: string,
+  ): Promise<RevenueTrend[]> {
     const data = await withDatabaseRetry(() =>
       this.prisma.$queryRaw<any[]>(Prisma.sql`
         SELECT
@@ -1626,7 +1661,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * Get top customers by outstanding balance.
    * @param limit - Number of debtors to retrieve. Defaults to 5.
    */
-  async getTopDebtors(limit: number = 5, tenantId: string): Promise<TopCustomerDebtor[]> {
+  async getInvoiceTopDebtors(limit: number = 5, tenantId: string): Promise<TopCustomerDebtor[]> {
     const data = await withDatabaseRetry(() =>
       this.prisma.$queryRaw<any[]>(Prisma.sql`
         SELECT

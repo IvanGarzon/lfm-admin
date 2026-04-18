@@ -35,7 +35,7 @@ export const getQuotes = withTenantPermission<SearchParams, QuotePagination>(
   async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await quoteRepo.searchAndPaginate(filters, ctx.tenantId);
+      const result = await quoteRepo.searchQuotes(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -155,7 +155,7 @@ export const getQuoteItemAttachments = withTenantPermission<string, QuoteItemAtt
   'canReadQuotes',
   async (ctx, quoteItemId) => {
     try {
-      const attachments = await quoteRepo.getQuoteItemAttachments(quoteItemId);
+      const attachments = await quoteRepo.findQuoteItemAttachments(quoteItemId);
 
       return {
         success: true,
@@ -189,7 +189,7 @@ export const getItemAttachmentDownloadUrl = withTenantPermission<
 >('canReadQuotes', async (ctx, attachmentId) => {
   try {
     // Get attachment details
-    const attachment = await quoteRepo.getItemAttachmentById(attachmentId);
+    const attachment = await quoteRepo.findQuoteItemAttachmentById(attachmentId);
     if (!attachment) {
       return { success: false, error: 'Attachment not found' };
     }
@@ -330,7 +330,7 @@ export const getTopCustomersByQuotedValue = withTenantPermission<
  */
 export const getAverageTimeToDecision = withTenantPermission<void, AverageTimeToDecision>(
   'canReadQuotes',
-  async (session) => {
+  async (ctx) => {
     try {
       const avgTime = await quoteRepo.getAverageTimeToDecision(ctx.tenantId);
       return { success: true, data: avgTime };

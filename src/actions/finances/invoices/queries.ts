@@ -32,7 +32,7 @@ export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>
   async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await invoiceRepo.searchAndPaginate(filters, ctx.tenantId);
+      const result = await invoiceRepo.searchInvoices(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -52,7 +52,7 @@ export const getInvoiceById = withTenantPermission<string, InvoiceWithDetails>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -75,7 +75,7 @@ export const getInvoiceMetadata = withTenantPermission<string, InvoiceMetadata>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdMetadata(id, ctx.tenantId);
+      const invoice = await invoiceRepo.findInvoiceMetadataById(id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -151,7 +151,7 @@ export const getInvoiceStatistics = withTenantPermission<
   InvoiceStatistics
 >('canReadInvoices', async (ctx, dateFilter) => {
   try {
-    const stats = await invoiceRepo.getStatistics(ctx.tenantId, dateFilter);
+    const stats = await invoiceRepo.getInvoiceStatistics(ctx.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
@@ -167,7 +167,7 @@ export const getMonthlyRevenueTrend = withTenantPermission<number | undefined, R
   'canReadInvoices',
   async (ctx, limit = 12) => {
     try {
-      const trend = await invoiceRepo.getMonthlyRevenueTrend(limit, ctx.tenantId);
+      const trend = await invoiceRepo.getInvoiceMonthlyRevenueTrend(limit, ctx.tenantId);
       return { success: true, data: trend };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch revenue trend');
@@ -184,7 +184,7 @@ export const getTopDebtors = withTenantPermission<number | undefined, TopCustome
   'canReadInvoices',
   async (ctx, limit = 5) => {
     try {
-      const debtors = await invoiceRepo.getTopDebtors(limit, ctx.tenantId);
+      const debtors = await invoiceRepo.getInvoiceTopDebtors(limit, ctx.tenantId);
       return { success: true, data: debtors };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch top debtors');
@@ -203,7 +203,7 @@ export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }
@@ -237,7 +237,7 @@ export const getReceiptPdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(id, ctx.tenantId);
+      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }

@@ -212,7 +212,6 @@ export function createCancelInvoiceInput(
 ): CancelInvoiceInput {
   return {
     id: overrides.id ?? testIds.invoice(),
-    cancelledDate: new Date(),
     cancelReason: 'Customer request',
     ...overrides,
   };

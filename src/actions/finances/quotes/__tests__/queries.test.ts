@@ -10,17 +10,17 @@ import {
 import { QuoteStatus } from '@/prisma/client';
 import { mockSessions } from '@/lib/testing';
 
-const { mockRepoInstance, mockAuth, mockRequirePermission } = vi.hoisted(() => ({
+const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {
-    searchAndPaginate: vi.fn(),
-    findByIdWithDetails: vi.fn(),
-    getStatistics: vi.fn(),
-    getQuoteItemAttachments: vi.fn(),
-    getItemAttachmentById: vi.fn(),
+    searchQuotes: vi.fn(),
+    findQuoteById: vi.fn(),
+    getQuoteStatistics: vi.fn(),
+    findQuoteItemAttachments: vi.fn(),
+    findQuoteItemAttachmentById: vi.fn(),
     getQuoteVersions: vi.fn(),
   },
   mockAuth: vi.fn(),
-  mockRequirePermission: vi.fn(),
+  mockHasPermission: vi.fn().mockReturnValue(true),
 }));
 
 // Mock QuoteRepository
@@ -37,7 +37,7 @@ vi.mock('@/auth', () => ({
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  requirePermission: mockRequirePermission,
+  hasPermission: mockHasPermission,
 }));
 
 vi.mock('@/lib/s3', () => ({
@@ -62,7 +62,7 @@ describe('Quote Queries', () => {
         pagination: { page: 1, perPage: 10, total: 2 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
 
       const result = await getQuotes({});
 
@@ -70,8 +70,8 @@ describe('Quote Queries', () => {
       if (result.success) {
         expect(result.data).toEqual(mockResult);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalled();
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
+      expect(mockRepoInstance.searchQuotes).toHaveBeenCalled();
     });
 
     it('returns unauthorized when no session', async () => {
@@ -79,7 +79,7 @@ describe('Quote Queries', () => {
       const result = await getQuotes({});
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
 
@@ -89,13 +89,13 @@ describe('Quote Queries', () => {
         pagination: { page: 1, perPage: 20, total: 0 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
 
       // nuqs parsers are lenient - invalid values get coerced to defaults
       const result = await getQuotes({ page: 'invalid' } as any);
 
       expect(result.success).toBe(true);
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalled();
+      expect(mockRepoInstance.searchQuotes).toHaveBeenCalled();
     });
 
     it('applies filters correctly', async () => {
@@ -104,14 +104,15 @@ describe('Quote Queries', () => {
         pagination: { page: 1, perPage: 10, total: 1 },
       };
 
-      mockRepoInstance.searchAndPaginate.mockResolvedValue(mockResult);
+      mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
 
       await getQuotes({ status: 'DRAFT', search: 'test' });
 
-      expect(mockRepoInstance.searchAndPaginate).toHaveBeenCalledWith(
+      expect(mockRepoInstance.searchQuotes).toHaveBeenCalledWith(
         expect.objectContaining({
           search: 'test',
         }),
+        expect.any(String),
       );
     });
   });
@@ -126,7 +127,7 @@ describe('Quote Queries', () => {
         items: [{ id: 'item-1', description: 'Test Item', quantity: 1, unitPrice: 100 }],
       };
 
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(mockQuote);
+      mockRepoInstance.findQuoteById.mockResolvedValue(mockQuote);
 
       const result = await getQuoteById('1');
 
@@ -134,11 +135,11 @@ describe('Quote Queries', () => {
       if (result.success) {
         expect(result.data).toEqual(mockQuote);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
     });
 
     it('returns error when quote not found', async () => {
-      mockRepoInstance.findByIdWithDetails.mockResolvedValue(null);
+      mockRepoInstance.findQuoteById.mockResolvedValue(null);
 
       const result = await getQuoteById('non-existent');
 
@@ -153,7 +154,7 @@ describe('Quote Queries', () => {
       const result = await getQuoteById('1');
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });
@@ -169,7 +170,7 @@ describe('Quote Queries', () => {
         expired: 15,
       };
 
-      mockRepoInstance.getStatistics.mockResolvedValue(mockStats);
+      mockRepoInstance.getQuoteStatistics.mockResolvedValue(mockStats);
 
       const result = await getQuoteStatistics();
 
@@ -177,12 +178,12 @@ describe('Quote Queries', () => {
       if (result.success) {
         expect(result.data).toEqual(mockStats);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
     });
 
     it('returns statistics with date filter', async () => {
       const mockStats = { total: 50, draft: 10, sent: 15 };
-      mockRepoInstance.getStatistics.mockResolvedValue(mockStats);
+      mockRepoInstance.getQuoteStatistics.mockResolvedValue(mockStats);
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
@@ -192,7 +193,10 @@ describe('Quote Queries', () => {
       const result = await getQuoteStatistics(dateFilter);
 
       expect(result.success).toBe(true);
-      expect(mockRepoInstance.getStatistics).toHaveBeenCalledWith(dateFilter);
+      expect(mockRepoInstance.getQuoteStatistics).toHaveBeenCalledWith(
+        expect.any(String),
+        dateFilter,
+      );
     });
 
     it('returns unauthorized when no session', async () => {
@@ -218,7 +222,7 @@ describe('Quote Queries', () => {
         },
       ];
 
-      mockRepoInstance.getQuoteItemAttachments.mockResolvedValue(mockAttachments);
+      mockRepoInstance.findQuoteItemAttachments.mockResolvedValue(mockAttachments);
 
       const result = await getQuoteItemAttachments('item-1');
 
@@ -238,7 +242,7 @@ describe('Quote Queries', () => {
         fileName: 'image.jpg',
       };
 
-      mockRepoInstance.getItemAttachmentById.mockResolvedValue(mockAttachment);
+      mockRepoInstance.findQuoteItemAttachmentById.mockResolvedValue(mockAttachment);
 
       const result = await getItemAttachmentDownloadUrl('item-att-1');
 
@@ -250,7 +254,7 @@ describe('Quote Queries', () => {
     });
 
     it('returns error when item attachment not found', async () => {
-      mockRepoInstance.getItemAttachmentById.mockResolvedValue(null);
+      mockRepoInstance.findQuoteItemAttachmentById.mockResolvedValue(null);
 
       const result = await getItemAttachmentDownloadUrl('non-existent');
 
@@ -296,7 +300,7 @@ describe('Quote Queries', () => {
         expect(result.data[0].amount).toBe(1000);
         expect(result.data[1].amount).toBe(1200);
       }
-      expect(mockRequirePermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
+      expect(mockHasPermission).toHaveBeenCalledWith(mockSession.user, 'canReadQuotes');
     });
 
     it('returns empty array when no versions', async () => {
@@ -343,8 +347,8 @@ describe('Quote Queries - Permission Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRepoInstance.searchAndPaginate.mockResolvedValue({ items: [], pagination: {} });
-    mockRepoInstance.findByIdWithDetails.mockResolvedValue({ id: '1', status: 'DRAFT' });
+    mockRepoInstance.searchQuotes.mockResolvedValue({ items: [], pagination: {} });
+    mockRepoInstance.findQuoteById.mockResolvedValue({ id: '1', status: 'DRAFT' });
   });
 
   describe('getQuotes', () => {
@@ -379,7 +383,7 @@ describe('Quote Queries - Permission Tests', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toBe('Unauthorized');
+        expect(result.error).toContain('signed in');
       }
     });
   });

@@ -37,6 +37,8 @@ export default defineConfig({
       '@/zod': path.resolve(__dirname, 'prisma/zod'),
       '@/repo': path.resolve(__dirname, 'prisma/prisma-vault'),
       '@': path.resolve(__dirname, 'src'),
+      // audit.service.ts imports env as a bare specifier (not @/env)
+      env: path.resolve(__dirname, 'env.ts'),
     },
   },
 });
