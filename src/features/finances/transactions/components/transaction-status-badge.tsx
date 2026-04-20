@@ -1,31 +1,42 @@
-import { Badge } from '@/components/ui/badge';
-import { TransactionStatus } from '../types';
+import { Hourglass, CircleCheckBig, Ban } from 'lucide-react';
+import type { TransactionStatus } from '@/zod/schemas/enums/TransactionStatus.schema';
+import { StatusBadge, type StatusBadgeConfig } from '@/components/shared/status-badge';
 
 interface TransactionStatusBadgeProps {
   status: TransactionStatus;
+  className?: string;
 }
 
-export function TransactionStatusBadge({ status }: TransactionStatusBadgeProps) {
-  switch (status) {
-    case 'COMPLETED':
-      return (
-        <Badge variant="success" className="capitalize">
-          Completed
-        </Badge>
-      );
-    case 'PENDING':
-      return (
-        <Badge variant="warning" className="capitalize">
-          Pending
-        </Badge>
-      );
-    case 'CANCELLED':
-      return (
-        <Badge variant="destructive" className="capitalize">
-          Cancelled
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
+/**
+ * Configuration for transaction status badges
+ * Maps each transaction status to its visual representation
+ */
+const TRANSACTION_STATUS_CONFIG: Record<TransactionStatus, StatusBadgeConfig> = {
+  PENDING: {
+    label: 'Pending',
+    variant: 'outline',
+    className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    icon: <Hourglass className="h-4 w-4" />,
+  },
+  COMPLETED: {
+    label: 'Completed',
+    variant: 'outline',
+    className: 'bg-green-50 text-green-700 border-green-200',
+    icon: <CircleCheckBig className="h-4 w-4" />,
+  },
+  CANCELLED: {
+    label: 'Cancelled',
+    variant: 'outline',
+    className: 'bg-red-50 text-red-700 border-red-200',
+    icon: <Ban className="h-4 w-4" />,
+  },
+};
+
+/**
+ * Transaction status badge component
+ *
+ * Displays a visual badge for transaction statuses with appropriate colours and icons.
+ */
+export function TransactionStatusBadge({ status, className }: TransactionStatusBadgeProps) {
+  return <StatusBadge status={status} config={TRANSACTION_STATUS_CONFIG} className={className} />;
 }

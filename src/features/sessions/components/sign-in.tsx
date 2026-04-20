@@ -18,7 +18,7 @@ export function SignIn({ callbackUrl = '/' }: SignInProps) {
           <CardDescription>Sign in to access your dashboard</CardDescription>
         </CardHeader>
         <CardFooter className="flex flex-col gap-4">
-          <GoogleSignInButton />
+          <SignInForm callbackUrl={callbackUrl} />
 
           <Box className="relative w-full">
             <Box className="absolute inset-0 flex items-center">
@@ -29,7 +29,7 @@ export function SignIn({ callbackUrl = '/' }: SignInProps) {
             </Box>
           </Box>
 
-          <SignInForm callbackUrl={callbackUrl} />
+          <GoogleSignInButton />
         </CardFooter>
       </Card>
     </Box>

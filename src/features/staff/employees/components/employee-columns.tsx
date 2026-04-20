@@ -2,13 +2,13 @@
 
 import { formatPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { ColumnDef } from '@tanstack/react-table';
-import { Text, Mars, Venus } from 'lucide-react';
+import { Text } from 'lucide-react';
 import Link from 'next/link';
 import type { EmployeeListItem } from '@/features/staff/employees/types';
 import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
-import { StatusBadge } from '@/components/shared/status-badge';
+import { EmployeeStatusBadge, GenderBadge } from './employee-status-badge';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { formatCurrency, enumToOptions } from '@/lib/utils';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
@@ -144,17 +144,7 @@ export const createEmployeeColumns = (
     header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
     cell: ({ cell }) => {
       const genderValue = cell.getValue<EmployeeListItem['gender']>();
-      return genderValue ? (
-        <StatusBadge
-          status={genderValue as any}
-          className={
-            genderValue === GenderSchema.enum.MALE
-              ? 'bg-blue-50 text-blue-900 ring-blue-500/30'
-              : 'bg-pink-50 text-pink-900 ring-pink-500/30'
-          }
-          icon={genderValue === GenderSchema.enum.MALE ? Mars : Venus}
-        />
-      ) : null;
+      return genderValue ? <GenderBadge gender={genderValue} /> : null;
     },
     enableColumnFilter: true,
     enableSorting: true,
@@ -169,10 +159,9 @@ export const createEmployeeColumns = (
     id: 'status',
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ cell }) => {
-      const status = cell.getValue<EmployeeListItem['status']>();
-      return <StatusBadge status={status as any} />;
-    },
+    cell: ({ cell }) => (
+      <EmployeeStatusBadge status={cell.getValue<EmployeeListItem['status']>()} />
+    ),
     enableSorting: false,
     enableHiding: false,
     enableColumnFilter: true,

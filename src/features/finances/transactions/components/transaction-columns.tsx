@@ -3,8 +3,8 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
-  ArrowDownCircle,
-  ArrowUpCircle,
+  TrendingUp,
+  TrendingDown,
   Text,
   CircleDashed,
   CheckCircle,
@@ -20,6 +20,7 @@ import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-co
 import { Checkbox } from '@/components/ui/checkbox';
 import type { TransactionListItem } from '@/features/finances/transactions/types';
 import { TransactionStatusBadge } from '@/features/finances/transactions/components/transaction-status-badge';
+import { TransactionTypeBadge } from '@/features/finances/transactions/components/transaction-type-badge';
 import { TransactionTypeSchema } from '@/zod/schemas/enums/TransactionType.schema';
 import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.schema';
 
@@ -34,12 +35,12 @@ const TypeOptions = [
   {
     label: 'Income',
     value: TransactionTypeSchema.enum.INCOME,
-    icon: ArrowUpCircle,
+    icon: TrendingUp,
   },
   {
     label: 'Expense',
     value: TransactionTypeSchema.enum.EXPENSE,
-    icon: ArrowDownCircle,
+    icon: TrendingDown,
   },
 ];
 
@@ -155,20 +156,9 @@ export const createTransactionColumns = (
     header: 'Type',
     cell: ({ row }) => {
       const type = row.getValue('type') as string;
-      const isIncome = type === TransactionTypeSchema.enum.INCOME;
-
-      return (
-        <Box className="flex items-center gap-2">
-          {isIncome ? (
-            <ArrowUpCircle className="h-4 w-4 text-green-600" />
-          ) : (
-            <ArrowDownCircle className="h-4 w-4 text-red-600" />
-          )}
-          <Badge variant={isIncome ? 'success' : 'destructive'}>
-            {isIncome ? 'Income' : 'Expense'}
-          </Badge>
-        </Box>
-      );
+      const parsedType = TransactionTypeSchema.safeParse(type);
+      if (!parsedType.success) return null;
+      return <TransactionTypeBadge type={parsedType.data} />;
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));

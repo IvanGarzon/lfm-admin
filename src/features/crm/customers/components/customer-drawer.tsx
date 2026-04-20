@@ -36,7 +36,7 @@ import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, customerSearchParamsDefaults } from '@/filters/customers/customers-filters';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import { StatusBadge } from '@/components/shared/status-badge';
+import { CustomerStatusBadge } from './customer-status-badge';
 import { CopyButton } from '@/components/shared/copy-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -177,7 +177,7 @@ export function CustomerDrawer({
                     ) : null}
                   </Box>
                   <Box className="flex items-center gap-2 mt-1">
-                    {status && <StatusBadge status={status as any} />}
+                    {status && <CustomerStatusBadge status={status} />}
                     {customer && (
                       <Box className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         <span className="font-mono">{customer.id}</span>
@@ -333,7 +333,7 @@ export function CustomerDrawer({
                       </Box>
                       <Box className="flex items-center justify-between py-2 border-b border-border/50">
                         <span className="text-sm text-muted-foreground">Status</span>
-                        <StatusBadge status={customer?.status as any} />
+                        {customer?.status && <CustomerStatusBadge status={customer.status} />}
                       </Box>
                       <Box className="flex items-center justify-between py-2">
                         <span className="text-sm text-muted-foreground">Customer since</span>

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { ChevronLeft, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,15 +26,8 @@ import {
 } from '@/features/admin/tenants/hooks/use-tenant-queries';
 import type { TenantWithSettings } from '@/features/admin/tenants/types';
 import type { UserListItem } from '@/features/admin/users/types';
-import type { TenantStatus } from '@/prisma/client';
-
-function statusVariant(status: TenantStatus) {
-  return status === 'ACTIVE' ? 'success' : 'destructive';
-}
-
-function roleLabel(role: string) {
-  return role.charAt(0) + role.slice(1).toLowerCase().replace('_', ' ');
-}
+import { TenantStatusBadge } from './tenant-status-badge';
+import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 
 export function TenantDetail({
   tenant,
@@ -80,9 +72,7 @@ export function TenantDetail({
           <Box>
             <Box className="flex items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight">{tenant.name}</h1>
-              <Badge variant={statusVariant(tenant.status)}>
-                {tenant.status.charAt(0) + tenant.status.slice(1).toLowerCase()}
-              </Badge>
+              <TenantStatusBadge status={tenant.status} />
             </Box>
             <p className="text-muted-foreground text-sm font-mono">{tenant.slug}</p>
           </Box>
@@ -159,7 +149,7 @@ export function TenantDetail({
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{roleLabel(user.role)}</Badge>
+                      <UserRoleBadge role={user.role} />
                     </TableCell>
                   </TableRow>
                 ))

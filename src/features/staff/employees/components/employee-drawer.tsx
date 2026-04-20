@@ -23,7 +23,7 @@ import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, employeeSearchParamsDefaults } from '@/filters/employees/employee-filters';
 import type { CreateEmployeeInput, UpdateEmployeeInput } from '@/schemas/employees';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import { StatusBadge } from '@/components/shared/status-badge';
+import { EmployeeStatusBadge } from './employee-status-badge';
 import { CopyButton } from '@/components/shared/copy-button';
 
 type DrawerMode = 'edit' | 'create';
@@ -162,7 +162,7 @@ export function EmployeeDrawer({
                     ) : null}
                   </Box>
                   <Box className="flex items-center gap-2 mt-1">
-                    {status ? <StatusBadge status={status} /> : null}
+                    {status ? <EmployeeStatusBadge status={status} /> : null}
                     {employee ? (
                       <Box className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         <span className="font-mono">{employee.id}</span>

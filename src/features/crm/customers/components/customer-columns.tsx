@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { CustomerListItem } from '@/features/crm/customers/types';
 import { useQueryString } from '@/hooks/use-query-string';
 import { customerSearchParamsDefaults, searchParams } from '@/filters/customers/customers-filters';
-import { Badge } from '@/components/ui/badge';
+import { CustomerStatusBadge } from './customer-status-badge';
 import { CustomerActions } from './customer-actions';
 
 function CustomerLink({ customerId, name }: { customerId: string; name: string }) {
@@ -82,18 +82,7 @@ export const createCustomerColumns = (
     id: 'status',
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return (
-        <Badge
-          variant={
-            status === 'ACTIVE' ? 'success' : status === 'INACTIVE' ? 'secondary' : 'destructive'
-          }
-        >
-          {status}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => <CustomerStatusBadge status={row.original.status} />,
     enableColumnFilter: true,
     enableSorting: true,
   },

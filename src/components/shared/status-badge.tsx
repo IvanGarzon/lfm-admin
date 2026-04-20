@@ -1,80 +1,61 @@
-import React from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import type { LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-type StatusBadgeLabel = 'ACTIVE' | 'INACTIVE' | 'FEMALE' | 'MALE' | 'ON_LEAVE';
-
-const statusLabels: {
-  value: StatusBadgeLabel;
+/**
+ * Configuration for a single status badge
+ */
+export interface StatusBadgeConfig {
   label: string;
-  variant: React.ComponentProps<typeof Badge>['variant'];
-  weight: number;
-}[] = [
-  {
-    value: 'ACTIVE',
-    label: 'Active',
-    variant: 'success',
-    weight: 0.9,
-  },
-  {
-    value: 'INACTIVE',
-    label: 'Inactive',
-    variant: 'warning',
-    weight: 0.05,
-  },
-  {
-    value: 'FEMALE',
-    label: 'Female',
-    variant: 'outline',
-    weight: 0.9,
-  },
-  {
-    value: 'MALE',
-    label: 'Male',
-    variant: 'outline',
-    weight: 0.9,
-  },
-  {
-    value: 'ON_LEAVE',
-    label: 'On Leave',
-    variant: 'warning',
-    weight: 0.5,
-  },
-];
-
-type StatusBadgeProps = {
-  status: StatusBadgeLabel;
-  icon?: LucideIcon;
-  tooltip?: string;
+  variant: 'default' | 'secondary' | 'destructive' | 'outline';
   className?: string;
-  variant?: React.ComponentProps<typeof Badge>['variant'];
-};
+  icon?: React.ReactNode;
+}
 
-export function StatusBadge({ status, icon: Icon, tooltip, className, variant }: StatusBadgeProps) {
-  const matchedStatus = statusLabels.find((s) => s.value === status);
+/**
+ * Props for the generic StatusBadge component
+ */
+interface StatusBadgeProps<TStatus extends string> {
+  status: TStatus;
+  config: Record<TStatus, StatusBadgeConfig>;
+  className?: string;
+}
 
-  const content = (
-    <Badge
-      variant={variant ?? matchedStatus?.variant ?? 'default'}
-      className={cn('items-center', className)}
-    >
-      {Icon && <Icon className="size-4" />}
-      <span>{matchedStatus?.label ?? status}</span>
-    </Badge>
-  );
+/**
+ * Generic status badge component
+ *
+ * Renders a status badge with customisable colours, icons, and labels.
+ * Each feature defines its own config record mapping status → visual representation.
+ *
+ * @example
+ * ```tsx
+ * const config: Record<CustomerStatus, StatusBadgeConfig> = {
+ *   ACTIVE: { label: 'Active', variant: 'outline', className: 'bg-green-50 text-green-700 border-green-200', icon: <CheckCircle2 className="h-4 w-4" /> },
+ * };
+ *
+ * <StatusBadge status="ACTIVE" config={config} />
+ * ```
+ */
+export function StatusBadge<TStatus extends string>({
+  status,
+  config,
+  className,
+}: StatusBadgeProps<TStatus>) {
+  const badgeConfig = config[status];
 
-  if (tooltip) {
+  if (!badgeConfig) {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{content}</TooltipTrigger>
-          <TooltipContent>{tooltip}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Badge variant="outline" className={className}>
+        {status}
+      </Badge>
     );
   }
 
-  return content;
+  return (
+    <Badge
+      variant={badgeConfig.variant}
+      className={`${badgeConfig.className || ''} ${className || ''}`.trim()}
+    >
+      {badgeConfig.icon}
+      {badgeConfig.label}
+    </Badge>
+  );
 }

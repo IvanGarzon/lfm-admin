@@ -3,96 +3,26 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
-import {
-  Play,
-  Eye,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  AlertCircle,
-  Zap,
-  Repeat,
-} from 'lucide-react';
+import { Play, Eye, Clock, Zap, Repeat, Loader2 } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { TaskCategorySchema, type TaskCategory } from '@/zod/schemas/enums/TaskCategory.schema';
+import { ScheduleTypeSchema, type ScheduleType } from '@/zod/schemas/enums/ScheduleType.schema';
 import {
   ExecutionStatusSchema,
   type ExecutionStatus,
 } from '@/zod/schemas/enums/ExecutionStatus.schema';
-import { ScheduleTypeSchema, type ScheduleType } from '@/zod/schemas/enums/ScheduleType.schema';
 import type { TaskWithStats } from '@/features/tasks/types';
-
-const getCategoryColor = (category: TaskCategory) => {
-  const colors: Record<TaskCategory, string> = {
-    [TaskCategorySchema.enum.SYSTEM]: 'bg-gray-100 text-gray-800',
-    [TaskCategorySchema.enum.EMAIL]: 'bg-blue-100 text-blue-800',
-    [TaskCategorySchema.enum.CLEANUP]: 'bg-orange-100 text-orange-800',
-    [TaskCategorySchema.enum.FINANCE]: 'bg-green-100 text-green-800',
-    [TaskCategorySchema.enum.CUSTOM]: 'bg-purple-100 text-purple-800',
-  };
-
-  return colors[category] || 'bg-gray-100 text-gray-800';
-};
+import { TaskExecutionStatusBadge } from './task-execution-status-badge';
+import { TaskCategoryBadge } from './task-category-badge';
 
 const getStatusBadge = (status?: string) => {
-  if (!status) {
-    return (
-      <Badge variant="outline" className="text-gray-500">
-        Never run
-      </Badge>
-    );
-  }
-
-  const statusConfig: Record<
-    ExecutionStatus,
-    { color: string; icon: React.ReactNode; label: string }
-  > = {
-    [ExecutionStatusSchema.enum.RUNNING]: {
-      color: 'bg-blue-100 text-blue-800',
-      icon: <Loader2 className="h-3 w-3 animate-spin mr-1" />,
-      label: 'Running',
-    },
-    [ExecutionStatusSchema.enum.COMPLETED]: {
-      color: 'bg-green-100 text-green-800',
-      icon: <CheckCircle2 className="h-3 w-3 mr-1" />,
-      label: 'Completed',
-    },
-    [ExecutionStatusSchema.enum.FAILED]: {
-      color: 'bg-red-100 text-red-800',
-      icon: <XCircle className="h-3 w-3 mr-1" />,
-      label: 'Failed',
-    },
-    [ExecutionStatusSchema.enum.CANCELLED]: {
-      color: 'bg-gray-100 text-gray-800',
-      icon: <AlertCircle className="h-3 w-3 mr-1" />,
-      label: 'Cancelled',
-    },
-    [ExecutionStatusSchema.enum.TIMEOUT]: {
-      color: 'bg-orange-100 text-orange-800',
-      icon: <Clock className="h-3 w-3 mr-1" />,
-      label: 'Timeout',
-    },
-  };
+  if (!status) return null;
 
   const parsedStatus = ExecutionStatusSchema.safeParse(status);
-  const config = parsedStatus.success
-    ? statusConfig[parsedStatus.data]
-    : {
-        color: 'bg-gray-100 text-gray-800',
-        icon: null,
-        label: status,
-      };
+  if (!parsedStatus.success) return null;
 
-  return (
-    <Badge className={`${config.color} flex items-center w-fit`} variant="secondary">
-      {config.icon}
-      {config.label}
-    </Badge>
-  );
+  return <TaskExecutionStatusBadge status={parsedStatus.data} />;
 };
 
 const getScheduleTypeIcon = (scheduleType: ScheduleType) => {
@@ -144,11 +74,7 @@ export function createTaskColumns(
     {
       accessorKey: 'category',
       header: 'Category',
-      cell: ({ row }) => (
-        <Badge className={getCategoryColor(row.original.category)} variant="secondary">
-          {row.original.category}
-        </Badge>
-      ),
+      cell: ({ row }) => <TaskCategoryBadge category={row.original.category} />,
     },
     {
       accessorKey: 'lastExecution.status',

@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { CheckCircle2, XCircle, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { Box } from '@/components/ui/box';
-import { Badge } from '@/components/ui/badge';
+import { TaskExecutionStatusBadge } from './task-execution-status-badge';
 import {
   Accordion,
   AccordionContent,
@@ -64,9 +64,7 @@ export function TaskExecutionList({ executions }: TaskExecutionListProps) {
                     </p>
                   </Box>
                 </Box>
-                <Badge variant={execution.status === 'COMPLETED' ? 'default' : 'destructive'}>
-                  {execution.status}
-                </Badge>
+                <TaskExecutionStatusBadge status={execution.status} />
               </Box>
             </AccordionTrigger>
             <AccordionContent>

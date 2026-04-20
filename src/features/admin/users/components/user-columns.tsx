@@ -3,22 +3,8 @@
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
-import { Badge } from '@/components/ui/badge';
 import type { UserListItem } from '@/features/admin/users/types';
-import type { UserRole } from '@/prisma/client';
-
-function roleVariant(role: UserRole) {
-  if (role === 'SUPER_ADMIN') return 'default' as const;
-  if (role === 'ADMIN') return 'secondary' as const;
-  return 'outline' as const;
-}
-
-function roleLabel(role: UserRole) {
-  return role
-    .split('_')
-    .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
-    .join(' ');
-}
+import { UserRoleBadge } from './user-role-badge';
 
 export const userColumns: ColumnDef<UserListItem>[] = [
   {
@@ -39,9 +25,7 @@ export const userColumns: ColumnDef<UserListItem>[] = [
   {
     accessorKey: 'role',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
-    cell: ({ row }) => (
-      <Badge variant={roleVariant(row.original.role)}>{roleLabel(row.original.role)}</Badge>
-    ),
+    cell: ({ row }) => <UserRoleBadge role={row.original.role} />,
   },
   {
     id: 'tenant',

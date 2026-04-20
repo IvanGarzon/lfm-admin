@@ -3,6 +3,7 @@
 import { useTaskExecutions } from '../hooks/use-tasks';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
+import { TaskExecutionStatusBadge } from './task-execution-status-badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -41,32 +42,19 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
     }
   };
 
-  const getStatusBadge = (status: ExecutionStatus) => {
-    const variants: Record<ExecutionStatus, string> = {
-      COMPLETED: 'bg-green-100 text-green-800',
-      FAILED: 'bg-red-100 text-red-800',
-      RUNNING: 'bg-blue-100 text-blue-800',
-      CANCELLED: 'bg-orange-100 text-orange-800',
-      TIMEOUT: 'bg-orange-100 text-orange-800',
-    };
-
-    return (
-      <Badge className={variants[status]} variant="secondary">
-        {status}
-      </Badge>
-    );
-  };
-
   const getTriggerBadge = (triggeredBy: string) => {
     const colors: Record<string, string> = {
-      SCHEDULE: 'bg-gray-100 text-gray-800',
-      MANUAL: 'bg-purple-100 text-purple-800',
-      EVENT: 'bg-blue-100 text-blue-800',
-      RETRY: 'bg-yellow-100 text-yellow-800',
+      SCHEDULE: 'bg-gray-50 text-gray-700 border-gray-200',
+      MANUAL: 'bg-purple-50 text-purple-700 border-purple-200',
+      EVENT: 'bg-blue-50 text-blue-700 border-blue-200',
+      RETRY: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     };
 
     return (
-      <Badge className={colors[triggeredBy] || 'bg-gray-100 text-gray-800'} variant="secondary">
+      <Badge
+        variant="outline"
+        className={colors[triggeredBy] || 'bg-gray-50 text-gray-700 border-gray-200'}
+      >
         {triggeredBy}
       </Badge>
     );
@@ -147,7 +135,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
                   <TableCell>
                     <Box className="flex items-center gap-2">
                       {getStatusIcon(execution.status)}
-                      {getStatusBadge(execution.status)}
+                      <TaskExecutionStatusBadge status={execution.status} />
                     </Box>
                   </TableCell>
                   <TableCell>

@@ -4,13 +4,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
-import { Badge } from '@/components/ui/badge';
 import type { TenantListItem } from '@/features/admin/tenants/types';
-import type { TenantStatus } from '@/prisma/client';
-
-function statusVariant(status: TenantStatus) {
-  return status === 'ACTIVE' ? 'success' : 'destructive';
-}
+import { TenantStatusBadge } from './tenant-status-badge';
 
 export const tenantColumns: ColumnDef<TenantListItem>[] = [
   {
@@ -35,11 +30,7 @@ export const tenantColumns: ColumnDef<TenantListItem>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => (
-      <Badge variant={statusVariant(row.original.status)}>
-        {row.original.status.charAt(0) + row.original.status.slice(1).toLowerCase()}
-      </Badge>
-    ),
+    cell: ({ row }) => <TenantStatusBadge status={row.original.status} />,
   },
   {
     accessorKey: 'userCount',

@@ -4,7 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { Building2, Text } from 'lucide-react';
 import { Box } from '@/components/ui/box';
-import { Badge } from '@/components/ui/badge';
+import { OrganizationStatusBadge } from './organization-status-badge';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { OrganizationListItem } from '@/features/crm/organizations/types';
@@ -103,18 +103,7 @@ export const createOrganizationColumns = (
     id: 'status',
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return (
-        <Badge
-          variant={
-            status === 'ACTIVE' ? 'default' : status === 'INACTIVE' ? 'secondary' : 'destructive'
-          }
-        >
-          {status.charAt(0) + status.slice(1).toLowerCase()}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => <OrganizationStatusBadge status={row.original.status} />,
   },
   {
     id: 'customersCount',
