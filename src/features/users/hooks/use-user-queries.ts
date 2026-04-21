@@ -101,10 +101,22 @@ export function useUpdateUserRole() {
       }
       return result.data;
     },
-    onMutate: async () => {
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: USER_KEYS.detail(data.id) });
       await queryClient.cancelQueries({ queryKey: USER_KEYS.lists() });
+      const previousUser = queryClient.getQueryData(USER_KEYS.detail(data.id));
+      const previousLists = queryClient.getQueriesData({ queryKey: USER_KEYS.lists() });
+      return { previousUser, previousLists };
     },
-    onError: (err: Error) => {
+    onError: (err: Error, data, context) => {
+      if (context?.previousUser) {
+        queryClient.setQueryData(USER_KEYS.detail(data.id), context.previousUser);
+      }
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, queryData]) => {
+          queryClient.setQueryData(queryKey, queryData);
+        });
+      }
       toast.error(err.message || 'Failed to update role');
     },
     onSettled: (_data, _error, variables) => {
