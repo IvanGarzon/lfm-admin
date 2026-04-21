@@ -29,7 +29,7 @@ export function UserPermissionsForm({
   onUpdate: (data: UpdateUserRoleInput) => void;
   isUpdating?: boolean;
 }) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role as UserRole);
+  const [selectedRole, setSelectedRole] = useState(user.role);
 
   const isDirty = selectedRole !== user.role;
 
@@ -44,7 +44,15 @@ export function UserPermissionsForm({
       <Box className="flex-1 overflow-y-auto p-6 space-y-6">
         <Box>
           <p className="text-sm font-medium mb-2">Role</p>
-          <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)}>
+          <Select
+            value={selectedRole}
+            onValueChange={(v) => {
+              const role = SELECTABLE_ROLES.find((role) => role === v);
+              if (role !== undefined) {
+                setSelectedRole(role);
+              }
+            }}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

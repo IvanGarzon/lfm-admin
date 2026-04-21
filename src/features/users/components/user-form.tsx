@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
@@ -59,16 +59,11 @@ export function UserForm({
 
   useUnsavedChanges(form.formState.isDirty);
 
-  // Track and notify parent of dirty state changes
-  const previousDirtyRef = useRef(form.formState.isDirty);
-  const currentDirty = form.formState.isDirty;
+  const isDirty = form.formState.isDirty;
 
-  if (currentDirty !== previousDirtyRef.current) {
-    previousDirtyRef.current = currentDirty;
-    queueMicrotask(() => {
-      onDirtyStateChange?.(currentDirty);
-    });
-  }
+  useEffect(() => {
+    onDirtyStateChange?.(isDirty);
+  }, [isDirty, onDirtyStateChange]);
 
   const handleSubmit = useCallback(
     (data: UpdateUserInput) => {

@@ -64,7 +64,7 @@ export const userColumns: ColumnDef<UserListItem>[] = [
   {
     id: 'status',
     accessorKey: 'status',
-    header: 'Status',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
     enableSorting: true,
   },
