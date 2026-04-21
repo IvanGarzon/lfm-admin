@@ -216,7 +216,6 @@ export class UserRepository extends BaseRepository<User> {
           role: true,
           status: true,
           lastLoginAt: true,
-          createdAt: true,
           addedBy: { select: { firstName: true, lastName: true } },
         },
       }),
@@ -245,7 +244,6 @@ export class UserRepository extends BaseRepository<User> {
         status: true,
         isTwoFactorEnabled: true,
         lastLoginAt: true,
-        createdAt: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -281,7 +279,6 @@ export class UserRepository extends BaseRepository<User> {
         status: true,
         isTwoFactorEnabled: true,
         lastLoginAt: true,
-        createdAt: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });

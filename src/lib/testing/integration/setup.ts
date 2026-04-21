@@ -59,6 +59,12 @@ vi.mock('@/auth', () => ({
   POST: vi.fn(),
 }));
 
+// Prevent module-level singleton instantiation in repositories that import
+// prisma directly. Integration tests pass getTestPrisma() via the constructor.
+vi.mock('@/lib/prisma', () => ({
+  prisma: {},
+}));
+
 vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'test',

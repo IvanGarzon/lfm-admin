@@ -11,7 +11,6 @@ export type UserListItem = {
   role: UserRole;
   status: UserStatus;
   lastLoginAt: Date | null;
-  createdAt: Date;
   addedBy: { firstName: string; lastName: string } | null;
 };
 
