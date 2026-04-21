@@ -32,7 +32,7 @@ export function QuotePreviewPanel({ quote, items, onDownloadPdf }: QuotePreviewP
       className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
       style={{ width: '50%' }}
     >
-      <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-925 flex items-center justify-between">
+      <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between">
         <p className="text-lg font-semibold">Preview</p>
         <Button type="button" variant="ghost" size="icon" onClick={onDownloadPdf}>
           <Download className="h-4 w-4" />

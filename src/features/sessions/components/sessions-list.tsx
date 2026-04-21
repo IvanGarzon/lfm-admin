@@ -160,7 +160,7 @@ export function SessionsList() {
                 />
               ) : null}
               <h2 className="text-xl font-bold">Your Active Sessions</h2>
-              <span className="text-sm font-normal text-muted-foreground bg-white px-2 py-0.5 rounded border">
+              <span className="text-sm font-normal text-muted-foreground bg-white dark:bg-muted px-2 py-0.5 rounded border dark:border-border">
                 {totalSessionsCount} / {sessionLimit}
               </span>
             </Box>

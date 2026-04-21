@@ -72,7 +72,7 @@ export function createVendorColumns({
         return (
           <Link
             href={`/inventory/vendors/${vendor.id}`}
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-primary dark:text-foreground hover:underline"
           >
             {vendor.name}
           </Link>

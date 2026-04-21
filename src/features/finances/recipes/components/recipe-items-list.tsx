@@ -101,7 +101,7 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
           <p className="text-sm text-muted-foreground">Add items to your recipe</p>
         </Box>
         <Box className="text-right">
-          <p className="text-lg font-bold text-teal-600">
+          <p className="text-lg font-bold text-primary">
             {formatCurrency({ number: sectionTotals.totalSelling })}
           </p>
           <p className="text-xs text-muted-foreground">

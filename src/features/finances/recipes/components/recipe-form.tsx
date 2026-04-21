@@ -422,8 +422,8 @@ export function RecipeForm({
             <Box className="w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4">
               <Box className="sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Selling Price Header */}
-                <Box className="bg-teal-500 text-white p-6 text-center">
-                  <p className="text-xs uppercase tracking-wider mb-1 text-teal-100">
+                <Box className="bg-primary text-primary-foreground p-6 text-center dark:bg-primary/10 dark:text-primary-foreground/70">
+                  <p className="text-xs uppercase tracking-wider mb-1 text-primary-foreground/70">
                     Selling Price
                   </p>
                   <p className="text-4xl font-bold">

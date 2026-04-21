@@ -182,12 +182,22 @@ Always respect `prefers-reduced-motion`.
 
 ### Badges
 
-| Variant     | Colour                           | Use                |
-| ----------- | -------------------------------- | ------------------ |
-| Default     | `muted` bg + `primary` text      | Status, categories |
-| Pink        | `pink-50` bg + `pink-500` text   | New, featured      |
-| Success     | `green-50` bg + `green-700` text | Paid, complete     |
-| Destructive | `red-50` bg + `red-600` text     | Overdue, error     |
+Status badges use `variant="outline"` with className overrides following the `{color}-50/700/200` light + `{color}-950/400/800` dark pattern.
+
+| Colour | Light                                            | Dark                                                             | Use                        |
+| ------ | ------------------------------------------------ | ---------------------------------------------------------------- | -------------------------- |
+| Green  | `bg-green-50 text-green-700 border-green-200`    | `dark:bg-green-950 dark:text-green-400 dark:border-green-800`    | Active, paid, complete     |
+| Gray   | `bg-gray-50 text-gray-700 border-gray-200`       | `dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700`       | Draft, inactive, neutral   |
+| Yellow | `bg-yellow-50 text-yellow-700 border-yellow-200` | `dark:bg-yellow-950 dark:text-yellow-400 dark:border-yellow-800` | Pending, warning           |
+| Blue   | `bg-blue-50 text-blue-700 border-blue-200`       | `dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800`       | Sent, running, info        |
+| Purple | `bg-purple-50 text-purple-700 border-purple-200` | `dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800` | Overdue, converted, custom |
+| Red    | `bg-red-50 text-red-700 border-red-200`          | `dark:bg-red-950 dark:text-red-400 dark:border-red-800`          | Cancelled, error, deleted  |
+| Amber  | `bg-amber-50 text-amber-700 border-amber-200`    | `dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800`    | On hold, on leave          |
+| Orange | `bg-orange-50 text-orange-700 border-orange-200` | `dark:bg-orange-950 dark:text-orange-400 dark:border-orange-800` | Expired, timeout, cleanup  |
+| Pink   | `bg-pink-50 text-pink-700 border-pink-200`       | `dark:bg-pink-950 dark:text-pink-400 dark:border-pink-800`       | Rejected, floral, featured |
+| Indigo | `bg-indigo-50 text-indigo-700 border-indigo-200` | `dark:bg-indigo-950 dark:text-indigo-400 dark:border-indigo-800` | Manager role               |
+
+Badge component variants (`success`, `warning`) use solid bg and work in both modes.
 
 ---
 

@@ -107,13 +107,14 @@ model User {
   emailVerified DateTime? @map(name: "email_verified") @db.Timestamptz()
   avatarUrl     String?   @map(name: "avatar_url")
   password      String?
+  role     UserRole @default(USER)
   accounts      Account[]
   sessions      Session[]
-  taskExecutions TaskExecution[]
-  QuoteStatusHistory QuoteStatusHistory[] @relation("user")
-  InvoiceStatusHistory InvoiceStatusHistory[] @relation("user")
 
-  role     UserRole @default(USER)
+  taskExecutions        TaskExecution[]
+  QuoteStatusHistory    QuoteStatusHistory[] @relation("user")
+  InvoiceStatusHistory  InvoiceStatusHistory[] @relation("user")
+  
   tenantId String?  @map("tenant_id")
   tenant   Tenant?  @relation(fields: [tenantId], references: [id])
 

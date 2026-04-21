@@ -40,7 +40,10 @@ export function DevToolsSection() {
             <div className="flex items-center gap-2">
               <Wrench className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               <CardTitle>Developer Tools</CardTitle>
-              <Badge variant="outline" className="ml-2 text-orange-600 border-orange-300">
+              <Badge
+                variant="outline"
+                className="ml-2 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700"
+              >
                 Local Only
               </Badge>
             </div>

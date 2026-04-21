@@ -152,8 +152,8 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: MdMonitor,
       label: 'Unknown OS',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-100',
+      color: 'text-gray-600 dark:text-gray-400',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
     };
   }
 
@@ -163,8 +163,8 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: FaWindows,
       label: 'Windows',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
     };
   }
 
@@ -172,8 +172,8 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: FaApple,
       label: 'macOS',
-      color: 'text-gray-700',
-      bgColor: 'bg-gray-100',
+      color: 'text-gray-700 dark:text-gray-300',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
     };
   }
 
@@ -181,8 +181,8 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: FaLinux,
       label: 'Linux',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      color: 'text-yellow-600 dark:text-yellow-400',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-950',
     };
   }
 
@@ -190,8 +190,8 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: FaApple,
       label: 'iOS',
-      color: 'text-gray-700',
-      bgColor: 'bg-gray-100',
+      color: 'text-gray-700 dark:text-gray-300',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
     };
   }
 
@@ -199,16 +199,16 @@ export function getOSDisplay(osName?: string | null): {
     return {
       Icon: FaAndroid,
       label: 'Android',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'bg-green-50 dark:bg-green-950',
     };
   }
 
   return {
     Icon: MdMonitor,
     label: osName,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-800',
   };
 }
 
@@ -239,8 +239,8 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaGlobe,
       label: 'Unknown',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-100',
+      color: 'text-gray-600 dark:text-gray-400',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
     };
   }
 
@@ -250,8 +250,8 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaChrome,
       label: 'Chrome',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
+      color: 'text-yellow-600 dark:text-yellow-400',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-950',
     };
   }
 
@@ -259,8 +259,8 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaFirefoxBrowser,
       label: 'Firefox',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-50 dark:bg-orange-950',
     };
   }
 
@@ -268,8 +268,8 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaSafari,
       label: 'Safari',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
     };
   }
 
@@ -277,8 +277,8 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaEdge,
       label: 'Edge',
-      color: 'text-blue-700',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-700 dark:text-blue-400',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
     };
   }
 
@@ -286,16 +286,16 @@ export function getBrowserDisplay(browserName?: string | null): {
     return {
       Icon: FaShieldAlt,
       label: 'Brave',
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      color: 'text-orange-600 dark:text-orange-400',
+      bgColor: 'bg-orange-50 dark:bg-orange-950',
     };
   }
 
   return {
     Icon: FaGlobe,
     label: browserName,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-800',
   };
 }
 
@@ -325,8 +325,8 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
     return {
       Icon: MdMonitor,
       label: 'Unknown',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-100',
+      color: 'text-gray-600 dark:text-gray-400',
+      bgColor: 'bg-gray-100 dark:bg-gray-800',
     };
   }
 
@@ -336,8 +336,8 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
     return {
       Icon: HiOutlineDevicePhoneMobile,
       label: 'Mobile',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
     };
   }
 
@@ -345,8 +345,8 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
     return {
       Icon: HiOutlineDeviceTablet,
       label: 'Tablet',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-purple-600 dark:text-purple-400',
+      bgColor: 'bg-purple-50 dark:bg-purple-950',
     };
   }
 
@@ -354,16 +354,16 @@ export function getDeviceTypeDisplay(deviceType?: string | null): {
     return {
       Icon: MdMonitor,
       label: 'Desktop',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'bg-green-50 dark:bg-green-950',
     };
   }
 
   return {
     Icon: MdLaptop,
     label: deviceType,
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-800',
   };
 }
 

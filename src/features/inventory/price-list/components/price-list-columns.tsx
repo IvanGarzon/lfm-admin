@@ -95,7 +95,7 @@ export function createPriceListColumns({
             ) : null}
             <Link
               href={`/inventory/price-list/${item.id}`}
-              className="font-medium text-primary hover:underline"
+              className="font-medium text-primary dark:text-foreground hover:underline"
             >
               {item.name}
             </Link>

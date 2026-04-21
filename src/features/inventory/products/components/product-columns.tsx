@@ -71,7 +71,7 @@ export function createProductColumns({
         return (
           <Link
             href={`/inventory/products/${product.id}`}
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-primary dark:text-foreground hover:underline"
           >
             {product.name}
           </Link>

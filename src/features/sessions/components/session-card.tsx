@@ -70,23 +70,23 @@ export function SessionCard({
     <Box
       className={`flex flex-col border rounded p-4 transition-all ${
         selected
-          ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100'
+          ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 ring-2 ring-blue-100 dark:ring-blue-900'
           : isCurrent
             ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/20'
-            : 'bg-white border-gray-200 hover:border-gray-300'
+            : 'bg-white dark:bg-card border-gray-200 dark:border-border hover:border-gray-300 dark:hover:border-border/70'
       }`}
     >
       {/* Card Header - Session Name and Badge/Action */}
       <Box className="flex items-center justify-between gap-2 mb-4 pb-3 border-b">
         <Box className="flex items-center gap-3 flex-1 min-w-0">
-          {selectable && onSelect && (
+          {selectable && onSelect ? (
             <Checkbox
               checked={selected}
               onCheckedChange={(checked) => onSelect(session.id, checked as boolean)}
               className="shrink-0"
             />
-          )}
-          <h6 className="text-sm font-semibold text-gray-800 truncate">
+          ) : null}
+          <h6 className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
             {session.deviceName || session.deviceModel || deviceTypeDisplay.label}
           </h6>
         </Box>
@@ -103,7 +103,7 @@ export function SessionCard({
             <Button
               onClick={() => onDelete(session)}
               variant="ghost"
-              className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-7 px-2 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950"
             >
               Sign Out
             </Button>
@@ -120,7 +120,7 @@ export function SessionCard({
               <Box className={`p-2 rounded-lg ${deviceTypeDisplay.bgColor}`}>
                 <DeviceIcon className={`w-6 h-6 ${deviceTypeDisplay.color}`} />
               </Box>
-              <CheckCircle2 className="w-4 h-4 text-primary absolute -top-1 -right-1 bg-white rounded-full border border-white" />
+              <CheckCircle2 className="w-4 h-4 text-primary absolute -top-1 -right-1 bg-white dark:bg-card rounded-full border border-white dark:border-card" />
             </Box>
           ) : (
             <Box className={`p-2 rounded-lg ${deviceTypeDisplay.bgColor}`}>
@@ -150,20 +150,26 @@ export function SessionCard({
 
           <Box className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
             {/* Session Details */}
-            <p className="text-xs text-gray-500 truncate font-medium" suppressHydrationWarning>
+            <p
+              className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium"
+              suppressHydrationWarning
+            >
               {formatLastActive(session.lastActiveAt, isCurrent)}
             </p>
 
-            <p className="text-xs text-gray-500 truncate" title="Location">
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title="Location">
               {[session.city, session.region, session.country].filter(Boolean).join(', ') ||
                 'Location unknown'}
             </p>
 
-            <p className="text-xs text-gray-400 truncate" suppressHydrationWarning>
+            <p
+              className="text-xs text-gray-400 dark:text-gray-500 truncate"
+              suppressHydrationWarning
+            >
               Created {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
             </p>
 
-            <Box className="flex gap-2 text-xs text-gray-400 truncate">
+            <Box className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 truncate">
               {session.ipAddress ? <span>IP: {session.ipAddress}</span> : null}
               {session.timezone ? <span>• {session.timezone}</span> : null}
             </Box>
@@ -178,7 +184,7 @@ export function SessionCard({
                 <Clock className="w-3.5 h-3.5 text-gray-400" />
               )}
               <span
-                className={`text-xs ${isExpiringSoon ? 'text-amber-600 font-medium' : 'text-gray-500'}`}
+                className={`text-xs ${isExpiringSoon ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}
                 suppressHydrationWarning
               >
                 Expires {formatDistanceToNow(expiresAt, { addSuffix: true })}

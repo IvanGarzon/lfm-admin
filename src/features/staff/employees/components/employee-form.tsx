@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { useFormReset } from '@/hooks/use-form-reset';
+import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import {
   CreateEmployeeSchema,
@@ -28,10 +29,10 @@ import { EmployeeEmploymentFields } from './form-fields/employee-employment-fiel
 const defaultFormState: CreateEmployeeInput = {
   firstName: '',
   lastName: '',
-  dob: undefined,
+  dob: new Date(),
   phone: '',
   email: '',
-  gender: undefined,
+  gender: GenderSchema.enum.MALE,
   status: EmployeeStatusSchema.enum.ACTIVE,
   rate: 0,
   avatarUrl: null,
