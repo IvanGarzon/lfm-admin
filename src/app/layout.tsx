@@ -6,13 +6,13 @@ import { Providers } from '@/providers';
 import { Analytics } from '@vercel/analytics/react';
 import { constructMetadata } from '@/lib/utils';
 
-import { Manrope } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 
-const manrope = Manrope({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'], // Choose weights you need
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-plus-jakarta-sans',
 });
 
 interface RootLayoutProps {
@@ -23,7 +23,7 @@ export const metadata = constructMetadata();
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang={site.locale} className={manrope.variable} suppressHydrationWarning>
+    <html lang={site.locale} className={plusJakartaSans.variable} suppressHydrationWarning>
       <body className={`flex flex-col min-h-screen w-full font-sans antialiased`}>
         <Providers>{children}</Providers>
         <Analytics />

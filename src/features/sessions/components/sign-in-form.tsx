@@ -57,8 +57,8 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
-        <FieldGroup>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-2 w-full">
+        <FieldGroup className="gap-1.5 mb-0">
           <Controller
             name="email"
             control={form.control}
@@ -82,7 +82,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           />
         </FieldGroup>
 
-        <FieldGroup>
+        <FieldGroup className="gap-1.5 mb-0">
           <Controller
             name="password"
             control={form.control}
@@ -100,14 +100,14 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
                   autoComplete="current-password"
                   aria-invalid={fieldState.invalid}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
               </Field>
             )}
           />
         </FieldGroup>
 
         <Button type="submit" disabled={isLoading} className="w-full mt-2">
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Sign In
         </Button>
       </form>
