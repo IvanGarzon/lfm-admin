@@ -224,7 +224,7 @@ export class UserRepository extends BaseRepository<User> {
     ]);
 
     return {
-      items: items as TenantUserListItem[],
+      items: items,
       pagination: getPaginationMetadata(totalItems, perPage, page),
     };
   }
@@ -250,7 +250,7 @@ export class UserRepository extends BaseRepository<User> {
       },
     });
 
-    return user as UserDetail | null;
+    return user;
   }
 
   /**
@@ -269,7 +269,7 @@ export class UserRepository extends BaseRepository<User> {
     },
   ): Promise<UserDetail> {
     const user = await this.prismaClient.user.update({
-      where: { id, tenantId },
+      where: { id, tenantId, deletedAt: null },
       data,
       select: {
         id: true,
@@ -286,7 +286,7 @@ export class UserRepository extends BaseRepository<User> {
       },
     });
 
-    return user as UserDetail;
+    return user;
   }
 
   /**
