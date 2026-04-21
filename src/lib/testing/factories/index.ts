@@ -18,3 +18,4 @@ export * from './vendor.factory';
 export * from './product.factory';
 export * from './employee.factory';
 export * from './price-list.factory';
+export * from './user.factory';
