@@ -108,20 +108,31 @@ model User {
   avatarUrl     String?   @map(name: "avatar_url")
   password      String?
   role     UserRole @default(USER)
+  status                UserStatus              @default(ACTIVE)
+  phone                 String?
+  lastLoginAt           DateTime?               @map("last_login_at") @db.Timestamptz()
+  deletedAt             DateTime?               @map("deleted_at") @db.Timestamptz()
+  addedById             String?                 @map("added_by_id")
+  addedBy               User?                   @relation("AddedByUser", fields: [addedById], references: [id])
+  addedUsers            User[]                  @relation("AddedByUser")
+  isTwoFactorEnabled    Boolean                 @default(false) @map("is_two_factor_enabled")
+  twoFactorConfirmation TwoFactorConfirmation?
+  permissions           String[]                @default([])
+  policies              String[]                @default([])
+
   accounts      Account[]
   sessions      Session[]
 
   taskExecutions        TaskExecution[]
   QuoteStatusHistory    QuoteStatusHistory[] @relation("user")
   InvoiceStatusHistory  InvoiceStatusHistory[] @relation("user")
-  
+
+  employee Employee?
+
   tenantId String?  @map("tenant_id")
   tenant   Tenant?  @relation(fields: [tenantId], references: [id])
 
   sentInvitations Invitation[] @relation("SentInvitations")
-
-  // isTwoFactorEnabled    Boolean                @default(false)
-  // twoFactorConfirmation TwoFactorConfirmation?
 
   @@index([tenantId])
   @@map(name: "users")
@@ -272,6 +283,9 @@ model Employee {
   rate      Decimal        @default(0) @db.Decimal(15, 2)
   status    EmployeeStatus @default(ACTIVE)
   avatarUrl String?        @map(name: "avatar_url")
+  userId  String?  @unique @map("user_id")
+  user    User?    @relation(fields: [userId], references: [id])
+
   tenantId  String         @map("tenant_id")
   tenant    Tenant         @relation(fields: [tenantId], references: [id])
 
@@ -283,6 +297,14 @@ model Employee {
   @@index([tenantId])
   @@index([status, deletedAt])
   @@map(name: "employees")
+}
+
+model TwoFactorConfirmation {
+  id     String @id @default(cuid())
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("two_factor_confirmations")
 }
 
 model Audit {
@@ -1082,6 +1104,12 @@ enum UserRole {
   ADMIN
   MANAGER
   USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
 }
 
 enum TenantStatus {
