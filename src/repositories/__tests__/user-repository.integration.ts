@@ -195,6 +195,31 @@ describe('UserRepository (integration)', () => {
       expect(result.status).toBe('SUSPENDED');
       expect(result.isTwoFactorEnabled).toBe(true);
     });
+
+    it('does not update user from another tenant', async () => {
+      const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
+      const otherUser = await getTestPrisma().user.create({
+        data: {
+          firstName: 'Other',
+          lastName: 'User',
+          email: 'other@tenant.com',
+          tenantId: otherTenantId,
+        },
+      });
+
+      await expect(
+        repository.updateTenantUser(otherUser.id, tenantId, {
+          firstName: 'Hacked',
+          lastName: 'Name',
+          email: 'hacked@test.com',
+          status: 'ACTIVE',
+          isTwoFactorEnabled: false,
+        }),
+      ).rejects.toThrow();
+
+      const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
+      expect(unchanged?.firstName).toBe('Other');
+    });
   });
 
   // -- updateTenantUserRole --------------------------------------------------
@@ -207,6 +232,26 @@ describe('UserRepository (integration)', () => {
 
       const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
       expect(updated?.role).toBe('ADMIN');
+    });
+
+    it('does not update role for user from another tenant', async () => {
+      const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
+      const otherUser = await getTestPrisma().user.create({
+        data: {
+          firstName: 'Other',
+          lastName: 'User',
+          email: 'other@tenant.com',
+          role: 'USER',
+          tenantId: otherTenantId,
+        },
+      });
+
+      await expect(
+        repository.updateTenantUserRole(otherUser.id, tenantId, 'ADMIN'),
+      ).rejects.toThrow();
+
+      const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
+      expect(unchanged?.role).toBe('USER');
     });
   });
 
