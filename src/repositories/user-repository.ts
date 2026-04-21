@@ -1,8 +1,15 @@
-import { Prisma, User, UserRole, PrismaClient } from '@/prisma/client';
+import { Prisma, User, UserRole, UserStatus, PrismaClient } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { getPaginationMetadata } from '@/lib/utils';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import type { CreateAccountData } from './account-repository';
 import type { UserListItem, CreateUserForTenantInput } from '@/features/admin/users/types';
+import type {
+  UserListItem as TenantUserListItem,
+  UserDetail,
+  UserFilters,
+  UserPagination,
+} from '@/features/users/types';
 
 export type { UserListItem, CreateUserForTenantInput };
 
@@ -147,6 +154,161 @@ export class UserRepository extends BaseRepository<User> {
 
   async reassignTenant(id: string, tenantId: string): Promise<User> {
     return this.prismaClient.user.update({ where: { id }, data: { tenantId } });
+  }
+
+  // -- Tenant-scoped user methods ------------------------------------------
+
+  /**
+   * Finds paginated tenant users with optional search and filters.
+   * Excludes soft-deleted users.
+   */
+  async findTenantUsers(params: UserFilters, tenantId: string): Promise<UserPagination> {
+    const { search, role, status, page, perPage, sort } = params;
+
+    const where: Prisma.UserWhereInput = {
+      tenantId,
+      deletedAt: null,
+    };
+
+    if (search) {
+      const filter: Prisma.StringFilter = {
+        contains: search,
+        mode: Prisma.QueryMode.insensitive,
+      };
+      where.OR = [
+        { firstName: filter },
+        { lastName: filter },
+        { email: filter },
+        { phone: filter },
+      ];
+    }
+
+    if (role && role.length > 0) {
+      where.role = { in: role };
+    }
+
+    if (status && status.length > 0) {
+      where.status = { in: status };
+    }
+
+    const skip = page > 0 ? perPage * (page - 1) : 0;
+
+    const orderBy: Prisma.UserOrderByWithRelationInput[] =
+      sort && sort.length > 0
+        ? sort.map(
+            ({ id, desc }) =>
+              ({ [id]: desc ? 'desc' : 'asc' }) as Prisma.UserOrderByWithRelationInput,
+          )
+        : [{ lastName: 'asc' }, { firstName: 'asc' }];
+
+    const [items, totalItems] = await Promise.all([
+      this.prismaClient.user.findMany({
+        where,
+        orderBy,
+        skip,
+        take: perPage,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          role: true,
+          status: true,
+          lastLoginAt: true,
+          createdAt: true,
+          addedBy: { select: { firstName: true, lastName: true } },
+        },
+      }),
+      this.prismaClient.user.count({ where }),
+    ]);
+
+    return {
+      items: items as TenantUserListItem[],
+      pagination: getPaginationMetadata(totalItems, perPage, page),
+    };
+  }
+
+  /**
+   * Finds a single user scoped to a tenant. Returns null if not found or deleted.
+   */
+  async findTenantUserById(id: string, tenantId: string): Promise<UserDetail | null> {
+    const user = await this.prismaClient.user.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        isTwoFactorEnabled: true,
+        lastLoginAt: true,
+        createdAt: true,
+        addedBy: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    return user as UserDetail | null;
+  }
+
+  /**
+   * Updates editable fields on a tenant-scoped user.
+   */
+  async updateTenantUser(
+    id: string,
+    tenantId: string,
+    data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string | null;
+      status: UserStatus;
+      isTwoFactorEnabled: boolean;
+    },
+  ): Promise<UserDetail> {
+    const user = await this.prismaClient.user.update({
+      where: { id, tenantId },
+      data,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        isTwoFactorEnabled: true,
+        lastLoginAt: true,
+        createdAt: true,
+        addedBy: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    return user as UserDetail;
+  }
+
+  /**
+   * Updates only the role of a tenant-scoped user.
+   */
+  async updateTenantUserRole(id: string, tenantId: string, role: UserRole): Promise<User> {
+    return this.prismaClient.user.update({
+      where: { id, tenantId },
+      data: { role },
+    });
+  }
+
+  /**
+   * Soft-deletes a tenant-scoped user by setting deletedAt.
+   */
+  async softDeleteTenantUser(id: string, tenantId: string): Promise<boolean> {
+    const result = await this.prismaClient.user.updateMany({
+      where: { id, tenantId, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+
+    return result.count > 0;
   }
 }
 
