@@ -3,8 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getTenantUserById } from '@/actions/users/queries';
-import { updateUser, updateUserRole, softDeleteUser } from '@/actions/users/mutations';
-import type { UpdateUserInput, UpdateUserRoleInput, SoftDeleteUserInput } from '@/schemas/users';
+import { updateUser, updateUserRole, softDeleteUser, inviteUser } from '@/actions/users/mutations';
+import type {
+  UpdateUserInput,
+  UpdateUserRoleInput,
+  SoftDeleteUserInput,
+  InviteUserInput,
+} from '@/schemas/users';
 import type { UserDetail } from '@/features/users/types';
 
 export const USER_KEYS = {
@@ -125,6 +130,38 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       toast.success('Role updated successfully');
+    },
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: InviteUserInput) => {
+      const result = await inviteUser(data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: USER_KEYS.lists() });
+      const previousLists = queryClient.getQueriesData({ queryKey: USER_KEYS.lists() });
+      return { previousLists };
+    },
+    onError: (err: Error, _data, context) => {
+      if (context?.previousLists) {
+        context.previousLists.forEach(([queryKey, queryData]) => {
+          queryClient.setQueryData(queryKey, queryData);
+        });
+      }
+      toast.error(err.message || 'Failed to send invitation');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
+    },
+    onSuccess: () => {
+      toast.success('Invitation sent');
     },
   });
 }
