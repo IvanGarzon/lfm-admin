@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { updateUser, updateUserRole, softDeleteUser, inviteUser } from '../mutations';
 import { testIds, mockSessions, createUpdateUserInput } from '@/lib/testing';
 import { revalidatePath } from 'next/cache';
+import { sendEmailNotification } from '@/lib/email-service';
 import type { UserDetail } from '@/features/users/types';
 
 const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoisted(() => ({
@@ -16,6 +17,7 @@ const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoiste
   mockInvitationRepo: {
     findPendingByEmail: vi.fn(),
     create: vi.fn(),
+    revoke: vi.fn(),
   },
   mockTenantRepo: {
     findTenantById: vi.fn(),
@@ -208,6 +210,16 @@ describe('User Mutations', () => {
       if (!result.success) {
         expect(result.error).toMatch(/already exists/i);
       }
+    });
+
+    it('revokes invitation and returns error when email send fails', async () => {
+      vi.mocked(sendEmailNotification).mockRejectedValueOnce(new Error('SMTP error'));
+
+      const result = await inviteUser({ email: 'new@example.com', role: 'USER' });
+
+      expect(result.success).toBe(false);
+      expect(mockInvitationRepo.create).toHaveBeenCalled();
+      expect(mockInvitationRepo.revoke).toHaveBeenCalledWith(mockInvitation.id);
     });
 
     it('returns error when unauthenticated', async () => {

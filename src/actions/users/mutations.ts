@@ -117,16 +117,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
         return { success: false, error: 'An invitation is already pending for this email' };
       }
 
-      const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
-
-      const [invitation, tenant, inviter] = await Promise.all([
-        invitationRepo.create({
-          email,
-          role,
-          tenantId: ctx.tenantId,
-          invitedBy: ctx.userId,
-          expiresAt,
-        }),
+      const [tenant, inviter] = await Promise.all([
         tenantRepo.findTenantById(ctx.tenantId),
         userRepo.findById(ctx.userId),
       ]);
@@ -135,18 +126,33 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
         return { success: false, error: 'Failed to load invitation context' };
       }
 
-      await sendEmailNotification({
-        to: email,
-        subject: `You've been invited to join ${tenant.name}`,
-        template: 'invitation',
-        props: {
-          inviterName: `${inviter.firstName} ${inviter.lastName}`,
-          tenantName: tenant.name,
-          role: invitation.role,
-          acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
-          expiresAt: invitation.expiresAt,
-        },
+      const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+
+      const invitation = await invitationRepo.create({
+        email,
+        role,
+        tenantId: ctx.tenantId,
+        invitedBy: ctx.userId,
+        expiresAt,
       });
+
+      try {
+        await sendEmailNotification({
+          to: email,
+          subject: `You've been invited to join ${tenant.name}`,
+          template: 'invitation',
+          props: {
+            inviterName: `${inviter.firstName} ${inviter.lastName}`,
+            tenantName: tenant.name,
+            role: invitation.role,
+            acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
+            expiresAt: invitation.expiresAt,
+          },
+        });
+      } catch (emailError) {
+        await invitationRepo.revoke(invitation.id);
+        return handleActionError(emailError, 'Failed to send invitation');
+      }
 
       revalidatePath('/users');
       return { success: true, data: undefined };
