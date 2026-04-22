@@ -37,6 +37,9 @@ export const VALIDATION_LIMITS = {
   NOTES_MAX: 1000,
   REASON_MAX: 500,
   TERMS_MAX: 2000,
+
+  // Invitation limits
+  INVITATION_EXPIRY_MS: 72 * 60 * 60 * 1000,
 } as const;
 
 /**

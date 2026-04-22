@@ -9,6 +9,7 @@ import { InvitationRepository } from '@/repositories/invitation-repository';
 import { TenantRepository } from '@/repositories/tenant-repository';
 import { sendEmailNotification } from '@/lib/email-service';
 import { absoluteUrl } from '@/lib/utils';
+import { VALIDATION_LIMITS } from '@/lib/validation';
 import {
   UpdateUserSchema,
   UpdateUserRoleSchema,
@@ -100,6 +101,8 @@ export const softDeleteUser = withTenantPermission<SoftDeleteUserInput, { id: st
 
 /**
  * Sends an invitation email to a new user to join the tenant.
+ * @param data - Invitation input containing the recipient email and assigned role
+ * @returns ActionResult with no data on success, or an error message on failure
  */
 export const inviteUser = withTenantPermission<InviteUserInput, void>(
   'canManageUsers',
@@ -126,7 +129,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
         return { success: false, error: 'Failed to load invitation context' };
       }
 
-      const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + VALIDATION_LIMITS.INVITATION_EXPIRY_MS);
 
       const invitation = await invitationRepo.create({
         email,

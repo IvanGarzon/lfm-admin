@@ -183,6 +183,9 @@ describe('User Mutations', () => {
 
       expect(result.success).toBe(true);
       expect(mockInvitationRepo.create).toHaveBeenCalled();
+      expect(vi.mocked(sendEmailNotification)).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'new@example.com' }),
+      );
       expect(revalidatePath).toHaveBeenCalledWith('/users');
     });
 
