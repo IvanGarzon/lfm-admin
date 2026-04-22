@@ -3,7 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { handleActionError } from '@/lib/error-handler';
 import { withSuperAdmin } from '@/lib/action-auth';
-import { userRepo } from '@/repositories/user-repository';
+import { prisma } from '@/lib/prisma';
+import { UserRepository } from '@/repositories/user-repository';
+
+const userRepo = new UserRepository(prisma);
 import type { User, UserRole } from '@/prisma/client';
 
 export const updateUserRole = withSuperAdmin<{ id: string; role: UserRole }, User>(

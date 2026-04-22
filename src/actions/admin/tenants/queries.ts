@@ -4,7 +4,9 @@ import { handleActionError } from '@/lib/error-handler';
 import { withSuperAdmin } from '@/lib/action-auth';
 import { prisma } from '@/lib/prisma';
 import { TenantRepository } from '@/repositories/tenant-repository';
-import { userRepo } from '@/repositories/user-repository';
+import { UserRepository } from '@/repositories/user-repository';
+
+const userRepo = new UserRepository(prisma);
 import type { TenantListItem, TenantWithSettings } from '@/features/admin/tenants/types';
 import type { UserListItem } from '@/features/admin/users/types';
 

@@ -49,7 +49,15 @@ Every layer has a single responsibility. Do not skip layers.
 - Unique lookups must be scoped to `tenantId` — use `findFirst({ where: { email, tenantId } })` not `findUnique({ where: { email } })`.
 - Use `getPaginationMetadata(total, perPage, page)` from `@/lib/utils` — never build pagination manually.
 - Private helper methods belong inside the class, not at module level.
-- Every repository method (public and private) must have a JSDoc comment.
+- Never export a singleton instance from a repository file. Instantiate with `new XRepository(prisma)` at the top of each action file that needs it.
+- Every repository method (public and private) must have a multi-line JSDoc comment with `@param` tags for each parameter and a `@returns` tag. Single-line `/** ... */` comments are not acceptable. Follow this format:
+  ```ts
+  /**
+   * Short description of what the method does.
+   * @param paramName - What this parameter controls
+   * @returns What the promise resolves to, including the null/false case where applicable
+   */
+  ```
 
 ## Schemas (`src/schemas/`)
 

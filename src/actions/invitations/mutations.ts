@@ -5,7 +5,9 @@ import { handleActionError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { withTenantPermission, withSuperAdmin } from '@/lib/action-auth';
 import { invitationRepo } from '@/repositories/invitation-repository';
-import { userRepo } from '@/repositories/user-repository';
+import { UserRepository } from '@/repositories/user-repository';
+
+const userRepo = new UserRepository(prisma);
 import { TenantRepository } from '@/repositories/tenant-repository';
 import { sendEmailNotification } from '@/lib/email-service';
 import { absoluteUrl } from '@/lib/utils';

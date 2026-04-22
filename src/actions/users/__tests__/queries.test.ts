@@ -5,7 +5,7 @@ import type { UserPagination, UserDetail } from '@/features/users/types';
 
 const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
-    findTenantUsers: vi.fn(),
+    searchAndPaginateTenantUsers: vi.fn(),
     findTenantUserById: vi.fn(),
   },
   mockAuth: vi.fn(),
@@ -75,7 +75,7 @@ describe('User Queries', () => {
 
   describe('getTenantUsers', () => {
     it('returns paginated users', async () => {
-      mockUserRepo.findTenantUsers.mockResolvedValue(mockPagination);
+      mockUserRepo.searchAndPaginateTenantUsers.mockResolvedValue(mockPagination);
 
       const result = await getTenantUsers({});
 

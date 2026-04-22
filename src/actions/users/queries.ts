@@ -18,7 +18,7 @@ export const getTenantUsers = withTenantPermission<SearchParams, UserPagination>
   async (ctx, searchParams) => {
     try {
       const filters = searchParamsCache.parse(searchParams);
-      const result = await userRepo.findTenantUsers(filters, ctx.tenantId);
+      const result = await userRepo.searchAndPaginateTenantUsers(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch users');

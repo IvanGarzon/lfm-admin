@@ -1,8 +1,11 @@
 'use server';
 
 import { handleActionError } from '@/lib/error-handler';
+import { prisma } from '@/lib/prisma';
 import { invitationRepo } from '@/repositories/invitation-repository';
-import { userRepo } from '@/repositories/user-repository';
+import { UserRepository } from '@/repositories/user-repository';
+
+const userRepo = new UserRepository(prisma);
 import { hashPassword } from '@/lib/password';
 import { InvitationStatus } from '@/prisma/client';
 import type { InvitationWithTenant } from '@/features/admin/invitations/types';

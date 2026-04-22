@@ -14,6 +14,7 @@ import {
   getTestPrisma,
   createTestTenant,
 } from '@/lib/testing/integration/database';
+import { createUserData } from '@/lib/testing';
 
 setupTestDatabaseLifecycle();
 
@@ -29,35 +30,23 @@ describe('UserRepository (integration)', () => {
     ({ id: tenantId } = await createTestTenant({ name: 'User Test Tenant' }));
   });
 
-  async function createUser(
-    overrides: {
-      email?: string;
-      role?: 'USER' | 'MANAGER' | 'ADMIN';
-      status?: 'ACTIVE' | 'INVITED' | 'SUSPENDED';
-      firstName?: string;
-      lastName?: string;
-    } = {},
-  ) {
+  async function createUser(overrides: Parameters<typeof createUserData>[0] = {}) {
     return getTestPrisma().user.create({
-      data: {
-        firstName: overrides.firstName ?? 'Alex',
-        lastName: overrides.lastName ?? 'Taylor',
-        email: overrides.email ?? `alex-${Date.now()}@example.com`,
-        role: overrides.role ?? 'USER',
-        status: overrides.status ?? 'ACTIVE',
-        tenantId,
-      },
+      data: { ...createUserData(overrides), tenantId },
     });
   }
 
-  // -- findTenantUsers -------------------------------------------------------
+  // -- searchAndPaginateTenantUsers -------------------------------------------------------
 
-  describe('findTenantUsers', () => {
+  describe('searchAndPaginateTenantUsers', () => {
     it('returns paginated users for a tenant', async () => {
       await createUser({ email: 'a@test.com' });
       await createUser({ email: 'b@test.com' });
 
-      const result = await repository.findTenantUsers({ page: 1, perPage: 10 }, tenantId);
+      const result = await repository.searchAndPaginateTenantUsers(
+        { page: 1, perPage: 10 },
+        tenantId,
+      );
 
       expect(result.items.length).toBe(2);
       expect(result.pagination.totalItems).toBe(2);
@@ -70,16 +59,19 @@ describe('UserRepository (integration)', () => {
         data: { deletedAt: new Date() },
       });
 
-      const result = await repository.findTenantUsers({ page: 1, perPage: 10 }, tenantId);
+      const result = await repository.searchAndPaginateTenantUsers(
+        { page: 1, perPage: 10 },
+        tenantId,
+      );
 
-      expect(result.items.find((u) => u.id === user.id)).toBeUndefined();
+      expect(result.items.find((tenantUser) => tenantUser.id === user.id)).toBeUndefined();
     });
 
     it('filters by search across firstName, lastName, email, phone', async () => {
       await createUser({ firstName: 'Unique', lastName: 'Person', email: 'unique@test.com' });
       await createUser({ email: 'other@test.com' });
 
-      const result = await repository.findTenantUsers(
+      const result = await repository.searchAndPaginateTenantUsers(
         { search: 'Unique', page: 1, perPage: 10 },
         tenantId,
       );
@@ -92,7 +84,7 @@ describe('UserRepository (integration)', () => {
       await createUser({ role: 'MANAGER', email: 'mgr@test.com' });
       await createUser({ role: 'USER', email: 'usr@test.com' });
 
-      const result = await repository.findTenantUsers(
+      const result = await repository.searchAndPaginateTenantUsers(
         { role: ['MANAGER'], page: 1, perPage: 10 },
         tenantId,
       );
@@ -104,12 +96,12 @@ describe('UserRepository (integration)', () => {
       await createUser({ status: 'SUSPENDED', email: 'sus@test.com' });
       await createUser({ status: 'ACTIVE', email: 'act@test.com' });
 
-      const result = await repository.findTenantUsers(
+      const result = await repository.searchAndPaginateTenantUsers(
         { status: ['SUSPENDED'], page: 1, perPage: 10 },
         tenantId,
       );
 
-      expect(result.items.every((u) => u.status === 'SUSPENDED')).toBe(true);
+      expect(result.items.every((tenantUser) => tenantUser.status === 'SUSPENDED')).toBe(true);
     });
 
     it('does not return users from other tenants', async () => {
@@ -123,9 +115,14 @@ describe('UserRepository (integration)', () => {
         },
       });
 
-      const result = await repository.findTenantUsers({ page: 1, perPage: 10 }, tenantId);
+      const result = await repository.searchAndPaginateTenantUsers(
+        { page: 1, perPage: 10 },
+        tenantId,
+      );
 
-      expect(result.items.find((u) => u.email === 'other@tenant.com')).toBeUndefined();
+      expect(
+        result.items.find((tenantUser) => tenantUser.email === 'other@tenant.com'),
+      ).toBeUndefined();
     });
   });
 

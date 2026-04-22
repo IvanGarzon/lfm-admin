@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
@@ -59,11 +59,15 @@ export function UserForm({
 
   useUnsavedChanges(form.formState.isDirty);
 
-  const isDirty = form.formState.isDirty;
+  const previousDirtyRef = useRef(form.formState.isDirty);
+  const currentDirty = form.formState.isDirty;
 
-  useEffect(() => {
-    onDirtyStateChange?.(isDirty);
-  }, [isDirty, onDirtyStateChange]);
+  if (currentDirty !== previousDirtyRef.current) {
+    previousDirtyRef.current = currentDirty;
+    queueMicrotask(() => {
+      onDirtyStateChange?.(currentDirty);
+    });
+  }
 
   const handleSubmit = useCallback(
     (data: UpdateUserInput) => {
@@ -74,7 +78,11 @@ export function UserForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col h-full">
+      <form
+        id="form-rhf-user"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="flex flex-col h-full"
+      >
         <Box className="flex-1 overflow-y-auto p-6 space-y-4">
           <Box className="grid grid-cols-2 gap-4">
             <FieldGroup>

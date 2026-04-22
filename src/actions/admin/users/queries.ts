@@ -2,7 +2,10 @@
 
 import { handleActionError } from '@/lib/error-handler';
 import { withSuperAdmin } from '@/lib/action-auth';
-import { userRepo } from '@/repositories/user-repository';
+import { prisma } from '@/lib/prisma';
+import { UserRepository } from '@/repositories/user-repository';
+
+const userRepo = new UserRepository(prisma);
 import type { UserListItem } from '@/features/admin/users/types';
 
 export const getAdminAllUsers = withSuperAdmin<void, UserListItem[]>(async (_session) => {

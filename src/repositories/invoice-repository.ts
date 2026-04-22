@@ -80,12 +80,6 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       deletedAt: null,
     };
 
-    if (status && status.length > 0) {
-      whereClause.status = {
-        in: status,
-      };
-    }
-
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
@@ -100,6 +94,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           },
         },
       ];
+    }
+
+    if (status && status.length > 0) {
+      whereClause.status = {
+        in: status,
+      };
     }
 
     const skip = page > 0 ? perPage * (page - 1) : 0;

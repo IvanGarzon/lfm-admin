@@ -1,24 +1,9 @@
 import { Prisma, User, UserRole, UserStatus, PrismaClient } from '@/prisma/client';
-import { prisma } from '@/lib/prisma';
 import { getPaginationMetadata } from '@/lib/utils';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import type { CreateAccountData } from './account-repository';
 import type { UserListItem, CreateUserForTenantInput } from '@/features/admin/users/types';
-import type {
-  UserListItem as TenantUserListItem,
-  UserDetail,
-  UserFilters,
-  UserPagination,
-} from '@/features/users/types';
-
-export type { UserListItem, CreateUserForTenantInput };
-
-export interface CreateUserData {
-  firstName: string;
-  lastName: string;
-  email?: string | null;
-  avatarUrl?: string | null;
-}
+import type { UserDetail, UserFilters, UserPagination } from '@/features/users/types';
 
 /**
  * User Repository
@@ -26,25 +11,41 @@ export interface CreateUserData {
  * Extends BaseRepository for common CRUD operations
  */
 export class UserRepository extends BaseRepository<User> {
-  constructor(private prismaClient: PrismaClient = prisma) {
+  constructor(private prisma: PrismaClient) {
     super();
   }
 
   protected get model(): ModelDelegateOperations<User> {
-    return this.prismaClient.user as unknown as ModelDelegateOperations<User>;
+    return this.prisma.user as unknown as ModelDelegateOperations<Prisma.UserGetPayload<object>>;
   }
 
+  /**
+   * Finds a user by email address.
+   * @param email - The email address to look up
+   * @returns The matching user, or null if not found
+   */
   async getUserByEmail(email: string): Promise<User | null> {
-    return await this.prismaClient.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: { email },
     });
   }
 
+  /**
+   * Creates a user and linked OAuth account in a single transaction.
+   * @param userData - Core user fields
+   * @param accountData - OAuth account details to associate with the user
+   * @returns The newly created user record
+   */
   async createUserWithAccount(
-    userData: CreateUserData,
+    userData: {
+      firstName: string;
+      lastName: string;
+      email?: string | null;
+      avatarUrl?: string | null;
+    },
     accountData: CreateAccountData,
   ): Promise<User> {
-    return await this.prismaClient.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({
         data: {
           firstName: userData.firstName,
@@ -73,6 +74,13 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
+  /**
+   * Upserts a user by email — updates avatar/emailVerified if found, creates the record otherwise.
+   * @param email - The email address used as the unique key
+   * @param updateData - Fields to update when the user already exists
+   * @param createData - Full user data to use when creating a new record
+   * @returns The upserted user record
+   */
   async upsertByEmail(
     email: string,
     updateData: {
@@ -87,25 +95,36 @@ export class UserRepository extends BaseRepository<User> {
       emailVerified?: Date | null;
     },
   ): Promise<User> {
-    return this.prismaClient.user.upsert({
+    return this.prisma.user.upsert({
       where: { email },
       update: updateData,
       create: createData,
     });
   }
 
+  /**
+   * Finds a user by email with a caller-specified field selection.
+   * @param email - The email address to look up
+   * @param select - Prisma select object controlling which fields are returned
+   * @returns The user with only the requested fields, or null if not found
+   */
   async getUserByEmailWithSelect<T extends { id?: boolean; role?: boolean }>(
     email: string,
     select: T,
   ): Promise<Pick<User, keyof T extends keyof User ? keyof T : never> | null> {
-    return this.prismaClient.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { email },
       select,
     }) as Promise<Pick<User, keyof T extends keyof User ? keyof T : never> | null>;
   }
 
+  /**
+   * Returns all users belonging to a tenant, ordered by last name then first name.
+   * @param tenantId - The tenant to scope the query to
+   * @returns An array of user list items for the tenant
+   */
   async findByTenant(tenantId: string): Promise<UserListItem[]> {
-    return this.prismaClient.user.findMany({
+    return this.prisma.user.findMany({
       where: { tenantId },
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
       select: {
@@ -120,8 +139,13 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
+  /**
+   * Returns all users across all tenants, ordered by last name then first name.
+   * Super-admin operation — not scoped to a single tenant.
+   * @returns An array of all user list items with their tenant details
+   */
   async findAllWithTenant(): Promise<UserListItem[]> {
-    return this.prismaClient.user.findMany({
+    return this.prisma.user.findMany({
       orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
       select: {
         id: true,
@@ -135,8 +159,13 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
+  /**
+   * Creates a new user assigned to a specific tenant.
+   * @param data - User creation input including tenant assignment and role
+   * @returns The newly created user record
+   */
   async createForTenant(data: CreateUserForTenantInput): Promise<User> {
-    return this.prismaClient.user.create({
+    return this.prisma.user.create({
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -148,21 +177,40 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
+  /**
+   * Updates the role of a user by ID.
+   * Not tenant-scoped — use updateTenantUserRole for tenant-context operations.
+   * @param id - The user ID to update
+   * @param role - The new role to assign
+   * @returns The updated user record
+   */
   async updateRole(id: string, role: UserRole): Promise<User> {
-    return this.prismaClient.user.update({ where: { id }, data: { role } });
+    return this.prisma.user.update({ where: { id }, data: { role } });
   }
 
+  /**
+   * Reassigns a user to a different tenant. Super-admin operation only.
+   * @param id - The user ID to reassign
+   * @param tenantId - The target tenant ID
+   * @returns The updated user record
+   */
   async reassignTenant(id: string, tenantId: string): Promise<User> {
-    return this.prismaClient.user.update({ where: { id }, data: { tenantId } });
+    return this.prisma.user.update({ where: { id }, data: { tenantId } });
   }
 
   // -- Tenant-scoped user methods ------------------------------------------
 
   /**
    * Finds paginated tenant users with optional search and filters.
-   * Excludes soft-deleted users.
+   * Excludes soft-deleted users. Supports full-text search across name, email, and phone.
+   * @param params - Filter, sort, and pagination parameters
+   * @param tenantId - The tenant to scope the query to
+   * @returns A paginated result with user list items and pagination metadata
    */
-  async findTenantUsers(params: UserFilters, tenantId: string): Promise<UserPagination> {
+  async searchAndPaginateTenantUsers(
+    params: UserFilters,
+    tenantId: string,
+  ): Promise<UserPagination> {
     const { search, role, status, page, perPage, sort } = params;
 
     const where: Prisma.UserWhereInput = {
@@ -195,14 +243,11 @@ export class UserRepository extends BaseRepository<User> {
 
     const orderBy: Prisma.UserOrderByWithRelationInput[] =
       sort && sort.length > 0
-        ? sort.map(
-            ({ id, desc }) =>
-              ({ [id]: desc ? 'desc' : 'asc' }) as Prisma.UserOrderByWithRelationInput,
-          )
+        ? sort.map((sortItem) => ({ [sortItem.id]: sortItem.desc ? 'desc' : 'asc' }))
         : [{ lastName: 'asc' }, { firstName: 'asc' }];
 
     const [items, totalItems] = await Promise.all([
-      this.prismaClient.user.findMany({
+      this.prisma.user.findMany({
         where,
         orderBy,
         skip,
@@ -219,7 +264,7 @@ export class UserRepository extends BaseRepository<User> {
           addedBy: { select: { firstName: true, lastName: true } },
         },
       }),
-      this.prismaClient.user.count({ where }),
+      this.prisma.user.count({ where }),
     ]);
 
     return {
@@ -229,10 +274,13 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   /**
-   * Finds a single user scoped to a tenant. Returns null if not found or deleted.
+   * Finds a single user scoped to a tenant. Excludes soft-deleted records.
+   * @param id - The user ID to look up
+   * @param tenantId - The tenant to scope the query to
+   * @returns The user detail, or null if not found or soft-deleted
    */
   async findTenantUserById(id: string, tenantId: string): Promise<UserDetail | null> {
-    const user = await this.prismaClient.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: { id, tenantId, deletedAt: null },
       select: {
         id: true,
@@ -252,7 +300,11 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   /**
-   * Updates editable fields on a tenant-scoped user.
+   * Updates editable fields on a tenant-scoped user. Only operates on non-deleted records.
+   * @param id - The user ID to update
+   * @param tenantId - The tenant to scope the update to
+   * @param data - The fields to update
+   * @returns The updated user detail
    */
   async updateTenantUser(
     id: string,
@@ -266,7 +318,7 @@ export class UserRepository extends BaseRepository<User> {
       isTwoFactorEnabled: boolean;
     },
   ): Promise<UserDetail> {
-    const user = await this.prismaClient.user.update({
+    const user = await this.prisma.user.update({
       where: { id, tenantId, deletedAt: null },
       data,
       select: {
@@ -288,19 +340,26 @@ export class UserRepository extends BaseRepository<User> {
 
   /**
    * Updates only the role of a tenant-scoped user.
+   * @param id - The user ID to update
+   * @param tenantId - The tenant to scope the update to
+   * @param role - The new role to assign
+   * @returns The updated user record
    */
   async updateTenantUserRole(id: string, tenantId: string, role: UserRole): Promise<User> {
-    return this.prismaClient.user.update({
+    return this.prisma.user.update({
       where: { id, tenantId },
       data: { role },
     });
   }
 
   /**
-   * Soft-deletes a tenant-scoped user by setting deletedAt.
+   * Soft-deletes a tenant-scoped user by setting deletedAt to the current timestamp.
+   * @param id - The user ID to soft-delete
+   * @param tenantId - The tenant to scope the operation to
+   * @returns True if the user was deleted, false if not found or already deleted
    */
   async softDeleteTenantUser(id: string, tenantId: string): Promise<boolean> {
-    const result = await this.prismaClient.user.updateMany({
+    const result = await this.prisma.user.updateMany({
       where: { id, tenantId, deletedAt: null },
       data: { deletedAt: new Date() },
     });
@@ -308,6 +367,3 @@ export class UserRepository extends BaseRepository<User> {
     return result.count > 0;
   }
 }
-
-// Singleton instance
-export const userRepo = new UserRepository(prisma);
