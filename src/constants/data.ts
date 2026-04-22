@@ -115,6 +115,13 @@ export const tenantNavItems: NavItem[] = [
     ],
   },
   {
+    title: 'Users',
+    href: '/users',
+    icon: 'users',
+    shortcut: ['u', 'u'],
+    authorizeOnly: ['canManageUsers'],
+  },
+  {
     title: 'Sessions',
     href: '/sessions',
     icon: 'keyRound',
