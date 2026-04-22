@@ -80,7 +80,9 @@ export function UserInviteModal({
                       <FieldLabel>Email</FieldLabel>
                     </FieldContent>
                     <Input type="email" {...field} aria-invalid={fieldState.invalid} />
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    {fieldState.invalid ? (
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    ) : null}
                   </Field>
                 )}
               />
@@ -107,7 +109,9 @@ export function UserInviteModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    {fieldState.invalid ? (
+                      <FieldError errors={fieldState.error ? [fieldState.error] : []} />
+                    ) : null}
                   </Field>
                 )}
               />

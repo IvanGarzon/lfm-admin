@@ -13,6 +13,8 @@ import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar
 import { userColumns } from '@/features/users/components/user-columns';
 import type { UserPagination } from '@/features/users/types';
 
+const DEFAULT_PAGE_SIZE = 20;
+
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
   { ssr: false, loading: () => null },
@@ -34,7 +36,7 @@ export function UsersList({
 }) {
   const [showInviteModal, setShowInviteModal] = useState(false);
 
-  const perPage = Number(serverSearchParams.perPage) || 20;
+  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
 
   const columns = useMemo(() => userColumns, []);
