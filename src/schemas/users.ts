@@ -25,3 +25,10 @@ export const SoftDeleteUserSchema = z.object({
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 export type UpdateUserRoleInput = z.infer<typeof UpdateUserRoleSchema>;
 export type SoftDeleteUserInput = z.infer<typeof SoftDeleteUserSchema>;
+
+export const InviteUserSchema = z.object({
+  email: commonValidators.email(),
+  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER'),
+});
+
+export type InviteUserInput = z.infer<typeof InviteUserSchema>;
