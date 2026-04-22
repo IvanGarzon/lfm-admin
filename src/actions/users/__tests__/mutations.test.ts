@@ -1,15 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateUser, updateUserRole, softDeleteUser } from '../mutations';
+import { updateUser, updateUserRole, softDeleteUser, inviteUser } from '../mutations';
 import { testIds, mockSessions, createUpdateUserInput } from '@/lib/testing';
 import { revalidatePath } from 'next/cache';
 import type { UserDetail } from '@/features/users/types';
 
-const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
+const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
     findTenantUserById: vi.fn(),
     updateTenantUser: vi.fn(),
     updateTenantUserRole: vi.fn(),
     softDeleteTenantUser: vi.fn(),
+    getUserByEmail: vi.fn(),
+    findById: vi.fn(),
+  },
+  mockInvitationRepo: {
+    findPendingByEmail: vi.fn(),
+    create: vi.fn(),
+  },
+  mockTenantRepo: {
+    findTenantById: vi.fn(),
   },
   mockAuth: vi.fn(),
 }));
@@ -18,6 +27,27 @@ vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
   }),
+}));
+
+vi.mock('@/repositories/invitation-repository', () => ({
+  InvitationRepository: vi.fn().mockImplementation(function () {
+    return mockInvitationRepo;
+  }),
+}));
+
+vi.mock('@/repositories/tenant-repository', () => ({
+  TenantRepository: vi.fn().mockImplementation(function () {
+    return mockTenantRepo;
+  }),
+}));
+
+vi.mock('@/lib/email-service', () => ({
+  sendEmailNotification: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/utils', () => ({
+  absoluteUrl: vi.fn((path: string) => `https://example.com${path}`),
+  getPaginationMetadata: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -122,6 +152,68 @@ describe('User Mutations', () => {
       mockUserRepo.softDeleteTenantUser.mockResolvedValue(false);
 
       const result = await softDeleteUser({ id: TEST_USER_ID });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('inviteUser', () => {
+    const mockInvitation = {
+      id: 'inv-1',
+      token: 'test-token-abc',
+      role: 'USER' as const,
+      expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+    };
+
+    const mockTenant = { id: 'tenant-1', name: 'Test Tenant' };
+    const mockInviter = { id: 'user-1', firstName: 'Jane', lastName: 'Admin' };
+
+    beforeEach(() => {
+      mockInvitationRepo.findPendingByEmail.mockResolvedValue(null);
+      mockInvitationRepo.create.mockResolvedValue(mockInvitation);
+      mockTenantRepo.findTenantById.mockResolvedValue(mockTenant);
+      mockUserRepo.findById.mockResolvedValue(mockInviter);
+      mockUserRepo.getUserByEmail.mockResolvedValue(null);
+    });
+
+    it('sends invitation and returns success', async () => {
+      const result = await inviteUser({ email: 'new@example.com', role: 'USER' });
+
+      expect(result.success).toBe(true);
+      expect(mockInvitationRepo.create).toHaveBeenCalled();
+      expect(revalidatePath).toHaveBeenCalledWith('/users');
+    });
+
+    it('returns error when pending invitation already exists', async () => {
+      mockInvitationRepo.findPendingByEmail.mockResolvedValue(mockInvitation);
+
+      const result = await inviteUser({ email: 'existing@example.com', role: 'USER' });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/already pending/i);
+      }
+      expect(mockInvitationRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('returns error when user with email already exists in tenant', async () => {
+      mockUserRepo.getUserByEmail.mockResolvedValue({
+        id: 'u-1',
+        tenantId: mockSession.user.tenantId,
+      });
+
+      const result = await inviteUser({ email: 'existing@example.com', role: 'USER' });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/already exists/i);
+      }
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await inviteUser({ email: 'new@example.com', role: 'USER' });
 
       expect(result.success).toBe(false);
     });
