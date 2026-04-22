@@ -3,7 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Text } from 'lucide-react';
+import { Ban, CheckCircle2, CircleDashed, Text } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { UserAvatar } from '@/components/shared/user-avatar';
@@ -12,6 +12,18 @@ import { USER_ROLE_LABELS } from '@/features/users/types';
 import { UserStatusBadge } from './user-status-badge';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
+
+const RoleOptions = [
+  { label: USER_ROLE_LABELS.USER, value: 'USER' },
+  { label: USER_ROLE_LABELS.MANAGER, value: 'MANAGER' },
+  { label: USER_ROLE_LABELS.ADMIN, value: 'ADMIN' },
+];
+
+const StatusOptions = [
+  { label: 'Active', value: 'ACTIVE', icon: CheckCircle2 },
+  { label: 'Invited', value: 'INVITED', icon: CircleDashed },
+  { label: 'Suspended', value: 'SUSPENDED', icon: Ban },
+];
 
 function UserLink({ userId, name }: { userId: string; name: string }) {
   const queryString = useQueryString(searchParams, userSearchParamsDefaults);
@@ -60,6 +72,13 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
     cell: ({ row }) => <span className="text-sm">{USER_ROLE_LABELS[row.original.role]}</span>,
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    meta: {
+      label: 'Role',
+      variant: 'multiSelect',
+      options: RoleOptions,
+    },
   },
   {
     id: 'status',
@@ -67,6 +86,13 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
     enableSorting: true,
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    meta: {
+      label: 'Status',
+      variant: 'multiSelect',
+      options: StatusOptions,
+    },
   },
   {
     id: 'phone',
