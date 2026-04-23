@@ -1,30 +1,27 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
-import Link from 'next/link';
-import { useVendorActions } from '@/features/inventory/vendors/context/vendor-action-context';
-import { useVendorHref } from '@/features/inventory/vendors/hooks/use-vendor-href';
+import { Button } from '@/components/ui/button';
+import { ProductListItem } from '@/features/inventory/products/types';
+import { useProductHref } from '@/features/inventory/products/hooks/use-product-href';
 
-interface VendorActionsProps {
-  vendor: {
-    id: string;
-    vendorCode: string;
-    name: string;
-  };
-  onDelete: (id: string, vendorCode: string, name: string) => void;
-}
-
-export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
-  const href = useVendorHref(vendor.id);
+export function ProductActions({
+  product,
+  onDelete,
+}: {
+  product: ProductListItem;
+  onDelete: (id: string, name: string) => void;
+}) {
+  const href = useProductHref(product.id);
 
   return (
     <DropdownMenu>
@@ -38,18 +35,18 @@ export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={href}>
+          <Link href={href} className="flex items-center">
             <Pencil className="h-4 w-4" />
-            Edit vendor
+            Edit product
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive"
-          onClick={() => onDelete(vendor.id, vendor.vendorCode, vendor.name)}
+          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+          onClick={() => onDelete(product.id, product.name)}
         >
           <Trash className="h-4 w-4" />
-          Delete vendor
+          Delete product
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

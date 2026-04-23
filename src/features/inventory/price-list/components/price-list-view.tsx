@@ -34,7 +34,7 @@ export function PriceListView({ initialData, searchParams }: PriceListViewProps)
   };
 
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className="flex flex-col gap-6 min-w-0 w-full overflow-hidden">
       {/* Header */}
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Box>
@@ -43,7 +43,7 @@ export function PriceListView({ initialData, searchParams }: PriceListViewProps)
             Manage your pricing catalog for florals, sundries, and supplies
           </p>
         </Box>
-        <Button onClick={() => setShowCreateDrawer(true)}>
+        <Button onClick={handleShowCreateDrawer}>
           <Plus className="mr-2 h-4 w-4" />
           Add Item
         </Button>

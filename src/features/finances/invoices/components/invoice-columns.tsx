@@ -134,7 +134,7 @@ export const createInvoiceColumns = (
   {
     id: 'status',
     accessorKey: 'status',
-    header: 'Status',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => <InvoiceStatusBadge status={row.getValue('status')} />,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));

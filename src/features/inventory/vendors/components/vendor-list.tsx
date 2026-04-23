@@ -2,13 +2,12 @@
 
 import { useMemo } from 'react';
 import { SearchParams } from 'nuqs/server';
-
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
-import { VendorTable } from './vendor-table';
-import { createVendorColumns } from './vendor-columns';
+import { VendorTable } from '@/features/inventory/vendors/components/vendor-table';
+import { createVendorColumns } from '@/features/inventory/vendors/components/vendor-columns';
+import type { VendorPagination } from '@/features/inventory/vendors/types';
 import { useVendorActions } from '@/features/inventory/vendors/context/vendor-action-context';
-import type { VendorPagination, VendorListItem } from '@/features/inventory/vendors/types';
 
 interface VendorListProps {
   initialData: VendorPagination;
@@ -18,14 +17,12 @@ interface VendorListProps {
 export function VendorList({ initialData, searchParams }: VendorListProps) {
   const { openDelete } = useVendorActions();
 
-  // Create columns with action handlers
   const columns = useMemo(
     () =>
       createVendorColumns({
-        onDelete: (id: string, vendorCode: string, name: string) =>
-          openDelete(id, vendorCode, name),
+        onDelete: (id: string, name: string) => openDelete(id, name),
       }),
-    [openDelete],
+    [],
   );
 
   const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;

@@ -1,53 +1,40 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { format } from 'date-fns';
 import Link from 'next/link';
-import {
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-  Eye,
-  History,
-  ImageIcon,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Flower2,
-  Leaf,
-  Package,
-  Wrench,
-  CircleDot,
-} from 'lucide-react';
-
+import { ImageIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { PriceListCategoryBadge } from '@/features/inventory/price-list/components/price-list-category-badge';
 import type { PriceListItemListItem } from '@/features/inventory/price-list/types';
+import { PriceListActions } from '@/features/inventory/price-list/components/price-list-actions';
+import { usePriceListHref } from '@/features/inventory/price-list/hooks/use-price-list-href';
+import {
+  PRICE_LIST_CATEGORY_LABELS,
+  PRICE_LIST_CATEGORY_ICONS,
+  PRICE_LIST_CATEGORIES,
+} from '@/features/inventory/price-list/constants/categories';
 
-// Category options for filtering
-const categoryOptions = [
-  { label: 'Floral', value: 'FLORAL', icon: Flower2 },
-  { label: 'Foliage', value: 'FOLIAGE', icon: Leaf },
-  { label: 'Sundry', value: 'SUNDRY', icon: Package },
-  { label: 'Supply', value: 'SUPPLY', icon: Wrench },
-  { label: 'Other', value: 'OTHER', icon: CircleDot },
-];
+const categoryOptions = PRICE_LIST_CATEGORIES.map((value) => ({
+  label: PRICE_LIST_CATEGORY_LABELS[value],
+  value,
+  icon: PRICE_LIST_CATEGORY_ICONS[value],
+}));
 
 interface CreatePriceListColumnsOptions {
   onDelete: (id: string, name: string) => void;
   onViewCostHistory: (id: string, name: string) => void;
+}
+
+function PriceListLink({ id, name }: { id: string; name: string }) {
+  const href = usePriceListHref(id);
+
+  return (
+    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+      {name}
+    </Link>
+  );
 }
 
 export function createPriceListColumns({
@@ -55,31 +42,6 @@ export function createPriceListColumns({
   onViewCostHistory,
 }: CreatePriceListColumnsOptions): ColumnDef<PriceListItemListItem>[] {
   return [
-    // Selection column
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-
-    // Name column (searchable)
     {
       id: 'search',
       accessorKey: 'name',
@@ -93,12 +55,7 @@ export function createPriceListColumns({
                 <ImageIcon className="h-4 w-4" />
               </Box>
             ) : null}
-            <Link
-              href={`/inventory/price-list/${item.id}`}
-              className="font-medium text-primary dark:text-foreground hover:underline"
-            >
-              {item.name}
-            </Link>
+            <PriceListLink id={item.id} name={item.name} />
           </Box>
         );
       },
@@ -110,8 +67,6 @@ export function createPriceListColumns({
         variant: 'text',
       },
     },
-
-    // Category column (filterable)
     {
       id: 'category',
       accessorKey: 'category',
@@ -125,8 +80,6 @@ export function createPriceListColumns({
         options: categoryOptions,
       },
     },
-
-    // Cost per unit column
     {
       id: 'costPerUnit',
       accessorKey: 'costPerUnit',
@@ -137,8 +90,6 @@ export function createPriceListColumns({
       },
       enableSorting: true,
     },
-
-    // Cost change column
     {
       id: 'costChange',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Cost Change" />,
@@ -149,7 +100,6 @@ export function createPriceListColumns({
           return (
             <Box className="flex items-center gap-1.5 text-muted-foreground">
               <Minus className="h-4 w-4" />
-              <span className="text-sm">No change</span>
             </Box>
           );
         }
@@ -171,8 +121,6 @@ export function createPriceListColumns({
       },
       enableSorting: false,
     },
-
-    // Unit type column
     {
       id: 'unitType',
       accessorKey: 'unitType',
@@ -187,8 +135,6 @@ export function createPriceListColumns({
       },
       enableSorting: true,
     },
-
-    // Season column
     {
       id: 'season',
       accessorKey: 'season',
@@ -203,8 +149,6 @@ export function createPriceListColumns({
       },
       enableSorting: true,
     },
-
-    // Multiplier column
     {
       id: 'multiplier',
       accessorKey: 'multiplier',
@@ -215,8 +159,6 @@ export function createPriceListColumns({
       },
       enableSorting: true,
     },
-
-    // Retail Price (Selling Price) column
     {
       id: 'retailPrice',
       accessorKey: 'retailPrice',
@@ -232,52 +174,19 @@ export function createPriceListColumns({
       },
       enableSorting: true,
     },
-
-    // Actions column
     {
       id: 'actions',
-      cell: ({ row }) => {
-        const item = row.original;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/inventory/price-list/${item.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  View
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/inventory/price-list/${item.id}`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onViewCostHistory(item.id, item.name)}>
-                <History className="mr-2 h-4 w-4" />
-                Cost History
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(item.id, item.name)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) => (
+        <PriceListActions
+          item={row.original}
+          onDelete={onDelete}
+          onViewCostHistory={onViewCostHistory}
+        />
+      ),
       enableHiding: false,
+      meta: {
+        className: 'text-right',
+      },
     },
   ];
 }

@@ -37,7 +37,7 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
   };
 
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className="flex flex-col gap-6 min-w-0 w-full overflow-hidden">
       {/* Header */}
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Box>

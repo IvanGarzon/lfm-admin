@@ -2,55 +2,30 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { VendorStatusBadge } from './vendor-status-badge';
+import { VendorActions } from '@/features/inventory/vendors/components/vendor-actions';
+import { useVendorHref } from '@/features/inventory/vendors/hooks/use-vendor-href';
 import type { VendorListItem } from '@/features/inventory/vendors/types';
 
 interface CreateVendorColumnsOptions {
   onDelete: (id: string, vendorCode: string, name: string) => void;
 }
 
+function VendorLink({ id, name }: { id: string; name: string }) {
+  const href = useVendorHref(id);
+  return (
+    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+      {name}
+    </Link>
+  );
+}
+
 export function createVendorColumns({
   onDelete,
 }: CreateVendorColumnsOptions): ColumnDef<VendorListItem>[] {
   return [
-    // Selection column
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-
-    // Vendor Code column
     {
       accessorKey: 'vendorCode',
       id: 'vendorCode',
@@ -61,27 +36,13 @@ export function createVendorColumns({
       },
       enableSorting: true,
     },
-
-    // Name column (searchable)
     {
       id: 'search',
       accessorKey: 'name',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Vendor Name" />,
-      cell: ({ row }) => {
-        const vendor = row.original;
-        return (
-          <Link
-            href={`/inventory/vendors/${vendor.id}`}
-            className="font-medium text-primary dark:text-foreground hover:underline"
-          >
-            {vendor.name}
-          </Link>
-        );
-      },
+      cell: ({ row }) => <VendorLink id={row.original.id} name={row.original.name} />,
       enableSorting: true,
     },
-
-    // Email column
     {
       accessorKey: 'email',
       id: 'email',
@@ -92,8 +53,6 @@ export function createVendorColumns({
       },
       enableSorting: true,
     },
-
-    // Phone column
     {
       accessorKey: 'phone',
       id: 'phone',
@@ -104,8 +63,6 @@ export function createVendorColumns({
       },
       enableSorting: false,
     },
-
-    // Status column
     {
       accessorKey: 'status',
       id: 'status',
@@ -119,8 +76,6 @@ export function createVendorColumns({
         return value.includes(row.getValue(id));
       },
     },
-
-    // Payment Terms column
     {
       accessorKey: 'paymentTerms',
       id: 'paymentTerms',
@@ -131,8 +86,6 @@ export function createVendorColumns({
       },
       enableSorting: true,
     },
-
-    // Transaction count column
     {
       accessorKey: 'transactionCount',
       id: 'transactionCount',
@@ -145,37 +98,12 @@ export function createVendorColumns({
       },
       enableSorting: true,
     },
-
-    // Actions column
     {
       id: 'actions',
-      cell: ({ row }) => {
-        const vendor = row.original;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/inventory/vendors/${vendor.id}`}>View Details</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete(vendor.id, vendor.vendorCode, vendor.name)}
-                className="text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
+      cell: ({ row }) => <VendorActions vendor={row.original} onDelete={onDelete} />,
+      enableHiding: false,
+      meta: {
+        className: 'text-right',
       },
     },
   ];

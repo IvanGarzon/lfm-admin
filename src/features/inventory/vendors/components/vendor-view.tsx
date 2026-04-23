@@ -7,14 +7,18 @@ import { SearchParams } from 'nuqs/server';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
-import { VendorList } from './vendor-list';
+import { VendorList } from '@/features/inventory/vendors/components/vendor-list';
 import { useVendorStatistics } from '@/features/inventory/vendors/hooks/use-vendor-queries';
 import type { VendorPagination } from '@/features/inventory/vendors/types';
 
-const VendorDrawer = dynamic(() => import('./vendor-drawer').then((mod) => mod.VendorDrawer), {
-  ssr: false,
-  loading: () => null,
-});
+const VendorDrawer = dynamic(
+  () =>
+    import('@/features/inventory/vendors/components/vendor-drawer').then((mod) => mod.VendorDrawer),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 interface VendorsViewProps {
   initialData: VendorPagination;
@@ -26,15 +30,19 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
 
   const { data: stats, isLoading: statsLoading } = useVendorStatistics();
 
+  const handleShowCreateDrawer = () => {
+    setShowCreateDrawer((prev) => !prev);
+  };
+
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className="flex flex-col gap-6 min-w-0 w-full overflow-hidden">
       {/* Header */}
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Box>
           <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
           <p className="text-muted-foreground">Manage your suppliers and vendors</p>
         </Box>
-        <Button onClick={() => setShowCreateDrawer(true)}>
+        <Button onClick={handleShowCreateDrawer}>
           <Plus className="mr-2 h-4 w-4" />
           Add Vendor
         </Button>
@@ -65,7 +73,7 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
       <VendorList initialData={initialData} searchParams={searchParams} />
 
       {showCreateDrawer ? (
-        <VendorDrawer open={showCreateDrawer} onClose={() => setShowCreateDrawer(false)} />
+        <VendorDrawer open={showCreateDrawer} onClose={handleShowCreateDrawer} />
       ) : null}
     </Box>
   );

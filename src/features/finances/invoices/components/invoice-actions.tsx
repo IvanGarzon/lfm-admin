@@ -9,7 +9,7 @@ import {
   Hourglass,
   FileDown,
   BellRing,
-  AlertCircle,
+  Trash,
   MoreHorizontal,
   Copy,
   RotateCcw,
@@ -143,7 +143,7 @@ export function InvoiceActions({
                 onClick={() => onDelete(invoice.id, invoice.invoiceNumber)}
                 className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
               >
-                <AlertCircle className="h-4 w-4" />
+                <Trash className="h-4 w-4" />
                 Delete invoice
               </DropdownMenuItem>
             </>

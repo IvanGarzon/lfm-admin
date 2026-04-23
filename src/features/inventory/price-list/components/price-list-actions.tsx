@@ -1,6 +1,7 @@
 'use client';
 
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import Link from 'next/link';
+import { MoreHorizontal, Pencil, Trash, History } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,21 +11,19 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { CustomerListItem } from '@/features/crm/customers/types';
-import Link from 'next/link';
-import { useQueryString } from '@/hooks/use-query-string';
-import { customerSearchParamsDefaults, searchParams } from '@/filters/customers/customers-filters';
+import type { PriceListItemListItem } from '@/features/inventory/price-list/types';
+import { usePriceListHref } from '@/features/inventory/price-list/hooks/use-price-list-href';
 
-export function CustomerActions({
-  customer,
+export function PriceListActions({
+  item,
   onDelete,
+  onViewCostHistory,
 }: {
-  customer: CustomerListItem;
+  item: PriceListItemListItem;
   onDelete: (id: string, name: string) => void;
+  onViewCostHistory: (id: string, name: string) => void;
 }) {
-  const queryString = useQueryString(searchParams, customerSearchParamsDefaults);
-  const basePath = `/crm/customers/${customer.id}`;
-  const href = queryString ? `${basePath}?${queryString}` : basePath;
+  const href = usePriceListHref(item.id);
 
   return (
     <DropdownMenu>
@@ -38,18 +37,22 @@ export function CustomerActions({
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={href} className="flex items-center">
+          <Link href={href}>
             <Pencil className="h-4 w-4" />
-            View customer
+            Edit item
           </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onViewCostHistory(item.id, item.name)}>
+          <History className="h-4 w-4" />
+          Cost history
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
-          onClick={() => onDelete(customer.id, `${customer.firstName} ${customer.lastName}`)}
+          className="text-destructive focus:text-destructive"
+          onClick={() => onDelete(item.id, item.name)}
         >
           <Trash className="h-4 w-4" />
-          Delete customer
+          Delete item
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

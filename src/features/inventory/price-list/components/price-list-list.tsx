@@ -7,11 +7,8 @@ import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import { PriceListTable } from '@/features/inventory/price-list/components/price-list-table';
 import { createPriceListColumns } from '@/features/inventory/price-list/components/price-list-columns';
+import type { PriceListPagination } from '@/features/inventory/price-list/types';
 import { usePriceListActions } from '@/features/inventory/price-list/context/price-list-action-context';
-import type {
-  PriceListPagination,
-  PriceListItemListItem,
-} from '@/features/inventory/price-list/types';
 
 interface PriceListListProps {
   initialData: PriceListPagination;
