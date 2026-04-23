@@ -3,10 +3,11 @@
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { SearchParams } from 'nuqs/server';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
+import { EmptyState } from '@/components/shared/empty-state';
 import { CustomersTable } from '@/features/crm/customers/components/customers-table';
 import { createCustomerColumns } from '@/features/crm/customers/components/customer-columns';
 import { useDeleteCustomer } from '@/features/crm/customers/hooks/use-customer-queries';
@@ -58,6 +59,9 @@ export function CustomersList({
     debounceMs: 500,
   });
 
+  const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
+  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+
   return (
     <Box className="space-y-4 min-w-0 w-full">
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -73,11 +77,25 @@ export function CustomersList({
         </Box>
       </Box>
 
-      <CustomersTable
-        table={table}
-        items={initialData.items}
-        totalItems={initialData.pagination.totalItems}
-      />
+      {isZeroState ? (
+        <EmptyState
+          icon={Users}
+          title="No customers yet"
+          description="Add your first customer to start managing your relationships."
+          action={
+            <Button onClick={handleShowCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
+          }
+        />
+      ) : (
+        <CustomersTable
+          table={table}
+          items={initialData.items}
+          totalItems={initialData.pagination.totalItems}
+        />
+      )}
 
       {showCreateModal ? (
         <CustomerDrawer open={showCreateModal} onClose={handleShowCreateModal} />
