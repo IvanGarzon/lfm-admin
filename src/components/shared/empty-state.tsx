@@ -1,12 +1,18 @@
 import type { LucideIcon } from 'lucide-react';
 
-interface EmptyStateProps {
+/**
+ * Props for the EmptyState component.
+ */
+export interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
   description: string;
   action?: React.ReactNode;
 }
 
+/**
+ * Displays an empty state UI with an icon, title, description, and optional action.
+ */
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
