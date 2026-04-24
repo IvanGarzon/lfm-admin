@@ -42,6 +42,7 @@ export function CustomersList({
   const columns = useMemo(
     () =>
       createCustomerColumns((id, name) => {
+        // TODO: add modal dialog instead
         if (confirm(`Are you sure you want to delete ${name}?`)) {
           deleteCustomer.mutate({ id });
         }
