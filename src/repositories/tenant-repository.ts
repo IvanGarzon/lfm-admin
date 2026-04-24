@@ -1,10 +1,10 @@
 import { Prisma, PrismaClient, Tenant, TenantStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
+import type { CreateTenantInput } from '@/schemas/tenants';
 import type {
   TenantListItem,
   TenantWithSettings,
   TenantBranding,
-  CreateTenantInput,
   CreateTenantWithDetailsInput,
   UpdateTenantInput,
   UpdateTenantSettingsInput,

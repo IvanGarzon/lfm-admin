@@ -1,7 +1,15 @@
+import dynamic from 'next/dynamic';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { UsersList } from '@/features/users/components/users-list';
 import { getTenantUsers } from '@/actions/users/queries';
+
+const UserDrawer = dynamic(
+  () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
+  {
+    loading: () => null,
+  },
+);
 
 export default async function UserPage({
   params,
@@ -20,7 +28,8 @@ export default async function UserPage({
 
   return (
     <Shell scrollable>
-      <UsersList initialData={result.data} searchParams={searchParamsResolved} openUserId={id} />
+      <UsersList initialData={result.data} searchParams={searchParamsResolved} />
+      {id ? <UserDrawer id={id} open={true} /> : null}
     </Shell>
   );
 }

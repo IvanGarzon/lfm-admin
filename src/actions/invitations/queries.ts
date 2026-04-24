@@ -4,12 +4,14 @@ import { handleActionError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { invitationRepo } from '@/repositories/invitation-repository';
 import { UserRepository } from '@/repositories/user-repository';
-
-const userRepo = new UserRepository(prisma);
+import { TenantRepository } from '@/repositories/tenant-repository';
 import { hashPassword } from '@/lib/password';
-import { InvitationStatus } from '@/prisma/client';
+import { InvitationStatus, TenantStatus } from '@/prisma/client';
 import type { InvitationWithTenant } from '@/features/admin/invitations/types';
 import type { ActionResult } from '@/types/actions';
+
+const userRepo = new UserRepository(prisma);
+const tenantRepo = new TenantRepository(prisma);
 
 export async function getInvitationByToken(
   token: string,
@@ -60,6 +62,8 @@ export async function acceptInvitation(
 
     const hashedPassword = await hashPassword(data.password);
 
+    const tenant = await tenantRepo.findTenantById(invitation.tenantId);
+
     await userRepo.createForTenant({
       firstName: data.firstName,
       lastName: data.lastName,
@@ -70,6 +74,10 @@ export async function acceptInvitation(
     });
 
     await invitationRepo.accept(token);
+
+    if (tenant?.status === TenantStatus.PENDING) {
+      await tenantRepo.activateTenant(invitation.tenantId);
+    }
 
     return { success: true, data: { tenantSlug: invitation.tenant.slug } };
   } catch (error) {

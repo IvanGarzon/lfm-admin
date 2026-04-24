@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Landmark } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
 
 import { useDataTable } from '@/hooks/use-data-table';
@@ -28,6 +28,7 @@ import type {
   OrganizationListItem,
   OrganizationPagination,
 } from '@/features/crm/organizations/types';
+import { EmptyState } from '@/components/shared/empty-state';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -114,6 +115,9 @@ export function OrganizationsList({
     debounceMs: 500,
   });
 
+  const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
+  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+
   return (
     <Box className="space-y-4 min-w-0 w-full">
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -121,19 +125,35 @@ export function OrganizationsList({
           <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
           <p className="text-muted-foreground text-sm">Manage and track all your organizations</p>
         </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Organization
-          </Button>
-        </Box>
+        {!isZeroState ? (
+          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Organization
+            </Button>
+          </Box>
+        ) : null}
       </Box>
 
-      <OrganizationsTable
-        table={table}
-        items={initialData.items}
-        totalItems={initialData.pagination.totalItems}
-      />
+      {isZeroState ? (
+        <EmptyState
+          icon={Landmark}
+          title="No organizations yet"
+          description="Add your first organization to start managing your relationships."
+          action={
+            <Button onClick={handleShowCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Organization
+            </Button>
+          }
+        />
+      ) : (
+        <OrganizationsTable
+          table={table}
+          items={initialData.items}
+          totalItems={initialData.pagination.totalItems}
+        />
+      )}
 
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] p-0">

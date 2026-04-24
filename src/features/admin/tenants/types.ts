@@ -79,11 +79,6 @@ export type TenantWithSettings = {
   settings: TenantSettings | null;
 };
 
-export type CreateTenantInput = {
-  name: string;
-  slug: string;
-};
-
 export type UpdateTenantInput = {
   name?: string;
   slug?: string;

@@ -1,5 +1,6 @@
 import { AcceptInviteForm } from '@/features/admin/invitations/components/accept-invite-form';
 import { getInvitationByToken } from '@/actions/invitations/queries';
+import { Box } from '@/components/ui/box';
 
 export default async function AcceptInvitePage({
   searchParams,
@@ -10,12 +11,12 @@ export default async function AcceptInvitePage({
 
   if (!token) {
     return (
-      <div className="flex min-h-dvh items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-2">
+      <Box className="flex min-h-dvh items-center justify-center p-4">
+        <Box className="max-w-md w-full text-center space-y-2">
           <h1 className="text-2xl font-bold">Invalid Link</h1>
           <p className="text-muted-foreground">This invitation link is missing a token.</p>
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
@@ -23,18 +24,18 @@ export default async function AcceptInvitePage({
 
   if (!result.success) {
     return (
-      <div className="flex min-h-dvh items-center justify-center p-4">
-        <div className="max-w-md w-full text-center space-y-2">
+      <Box className="flex min-h-dvh items-center justify-center p-4">
+        <Box className="max-w-md w-full text-center space-y-2">
           <h1 className="text-2xl font-bold">Invitation Unavailable</h1>
           <p className="text-muted-foreground">{result.error}</p>
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
+    <Box className="flex min-h-dvh items-center justify-center p-4">
       <AcceptInviteForm invitation={result.data} token={token} />
-    </div>
+    </Box>
   );
 }

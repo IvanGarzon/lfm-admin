@@ -1,10 +1,9 @@
+import dynamic from 'next/dynamic';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { CustomersList } from '@/features/crm/customers/components/customers-list';
 import { getCustomers } from '@/actions/crm/customers/queries';
-import dynamic from 'next/dynamic';
 
-// Lazy load QuoteDrawer to reduce initial bundle size
 const CustomerDrawer = dynamic(
   () =>
     import('@/features/crm/customers/components/customer-drawer').then((mod) => mod.CustomerDrawer),

@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { SearchParams } from 'nuqs/server';
 import { Plus, Users } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
@@ -47,9 +47,9 @@ export function CustomersList({
     [deleteCustomer],
   );
 
-  const handleShowCreateModal = () => {
+  const handleShowCreateModal = useCallback(() => {
     setShowCreateModal((prev) => !prev);
-  };
+  }, []);
 
   const { table } = useDataTable({
     data: initialData.items,
@@ -69,12 +69,14 @@ export function CustomersList({
           <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
           <p className="text-muted-foreground text-sm">Manage and track all your customers</p>
         </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Customer
-          </Button>
-        </Box>
+        {!isZeroState ? (
+          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Customer
+            </Button>
+          </Box>
+        ) : null}
       </Box>
 
       {isZeroState ? (

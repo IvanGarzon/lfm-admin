@@ -1,0 +1,331 @@
+<h2>Customers — Empty State Options</h2>
+<p class="subtitle">Which approach feels right for when a tenant has no customers yet?</p>
+
+<style>
+  .page-mockup {
+    background: hsl(240 10% 3.9%);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  }
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin: 4px 0 0;
+  }
+  .add-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .card {
+    background: hsl(240 10% 6%);
+    border: 1px solid hsl(240 5% 15%);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  /* Option A: Centered, icon + title + desc + button */
+  .empty-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    text-align: center;
+    gap: 12px;
+  }
+  .empty-icon-wrap {
+    width: 64px;
+    height: 64px;
+    background: hsl(240 5% 12%);
+    border: 1px solid hsl(240 5% 20%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  .empty-icon {
+    font-size: 28px;
+  }
+  .empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+  }
+  .empty-desc {
+    font-size: 13px;
+    color: #888;
+    margin: 0;
+    max-width: 280px;
+  }
+  .empty-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .empty-btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid hsl(240 5% 25%);
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Option B: Inline within card, lighter feel */
+  .empty-inline {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 16px;
+  }
+  .empty-inline-icon {
+    width: 48px;
+    height: 48px;
+    background: hsl(240 5% 12%);
+    border: 1px solid hsl(240 5% 20%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .empty-inline-text h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 4px;
+  }
+  .empty-inline-text p {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 10px;
+  }
+  .empty-inline-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .empty-sm-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Option C: Full-page (no card), large centred */
+  .empty-fullpage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    text-align: center;
+    gap: 16px;
+  }
+  .empty-fp-icon {
+    width: 80px;
+    height: 80px;
+    background: hsl(240 5% 10%);
+    border: 1px solid hsl(240 5% 18%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin-bottom: 8px;
+  }
+  .empty-fp-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+  }
+  .empty-fp-desc {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+  .empty-fp-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .empty-fp-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid hsl(240 5% 15%);
+    margin-bottom: 12px;
+  }
+  .search-mock {
+    background: hsl(240 5% 10%);
+    border: 1px solid hsl(240 5% 18%);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: #555;
+    width: 180px;
+  }
+  .filter-mock {
+    background: transparent;
+    border: 1px solid hsl(240 5% 18%);
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: #888;
+  }
+</style>
+
+<div class="cards">
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="page-mockup">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Customers</div>
+            <div class="page-subtitle">Manage and track all your customers</div>
+          </div>
+          <button class="add-btn">＋ Add Customer</button>
+        </div>
+        <div class="card">
+          <div class="toolbar-row">
+            <div class="search-mock">🔍 Search customers…</div>
+            <div class="filter-mock">Filters ▾</div>
+          </div>
+          <div class="empty-centered">
+            <div class="empty-icon-wrap"><div class="empty-icon">👥</div></div>
+            <div class="empty-title">No customers yet</div>
+            <div class="empty-desc">
+              Add your first customer to start managing your relationships.
+            </div>
+            <button class="empty-btn">＋ Add Customer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Centred inside table card</h3>
+      <p>Icon + title + description + action button. Toolbar still visible. Familiar pattern.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="page-mockup">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Customers</div>
+            <div class="page-subtitle">Manage and track all your customers</div>
+          </div>
+          <button class="add-btn">＋ Add Customer</button>
+        </div>
+        <div class="card">
+          <div class="toolbar-row">
+            <div class="search-mock">🔍 Search customers…</div>
+            <div class="filter-mock">Filters ▾</div>
+          </div>
+          <div class="empty-inline">
+            <div class="empty-inline-icon">👥</div>
+            <div class="empty-inline-text">
+              <h4>No customers yet</h4>
+              <p>Add your first customer to start managing your relationships.</p>
+              <div class="empty-inline-actions">
+                <button class="empty-sm-btn">＋ Add Customer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Inline row inside card</h3>
+      <p>Compact, horizontal layout. Less visual weight, fits the data table context better.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="page-mockup">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Customers</div>
+            <div class="page-subtitle">Manage and track all your customers</div>
+          </div>
+        </div>
+        <div class="empty-fullpage">
+          <div class="empty-fp-icon">👥</div>
+          <div class="empty-fp-title">No customers yet</div>
+          <div class="empty-fp-desc">
+            You haven't added any customers yet. Get started by adding your first customer.
+          </div>
+          <div class="empty-fp-actions">
+            <button class="empty-fp-btn">＋ Add Customer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Full-page, no card</h3>
+      <p>
+        Hides the table card entirely. Most prominent zero-state. Matches the screenshot you shared.
+      </p>
+    </div>
+  </div>
+</div>

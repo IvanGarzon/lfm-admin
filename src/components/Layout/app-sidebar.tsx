@@ -62,14 +62,14 @@ export function AppSidebar({ activeTenantId }: { activeTenantId?: string }) {
       <SidebarContent className="overflow-x-hidden">
         {isSuperAdmin && !activeTenantId ? (
           <SidebarGroup>
-            <Box className="px-3 py-2 text-xs text-muted-foreground">
+            <Box className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
               Select a tenant above to browse its data.
             </Box>
           </SidebarGroup>
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          {isSuperAdmin && !activeTenantId ? null : <SidebarGroupLabel>Overview</SidebarGroupLabel>}
           <NavMenuItems items={visibleTenantItems} pathname={pathname} />
         </SidebarGroup>
 

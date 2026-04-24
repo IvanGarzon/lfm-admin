@@ -1,43 +1,55 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useMemo, useState, useCallback } from 'react';
+import { Plus, Users } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/shared/tableV3/data-table';
-import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { userColumns } from '@/features/users/components/user-columns';
 import type { UserPagination } from '@/features/users/types';
+import { EmptyState } from '@/components/shared/empty-state';
+import { UsersTable } from '@/features/users/components/users-table';
 
 const DEFAULT_PAGE_SIZE = 20;
 
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    loading: () => null,
+  },
 );
 
 const UserInviteModal = dynamic(
   () => import('@/features/users/components/user-invite-modal').then((mod) => mod.UserInviteModal),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    loading: () => null,
+  },
 );
 
 export function UsersList({
   initialData,
   searchParams: serverSearchParams,
-  openUserId,
 }: {
   initialData: UserPagination;
   searchParams: SearchParams;
-  openUserId?: string;
 }) {
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+
+  const handleShowCreateModal = useCallback(() => {
+    setShowCreateModal((prev) => !prev);
+  }, []);
+
+  const handleShowInviteModal = useCallback(() => {
+    setShowInviteModal((prev) => !prev);
+  }, []);
 
   const columns = useMemo(() => userColumns, []);
 
@@ -49,6 +61,9 @@ export function UsersList({
     debounceMs: 500,
   });
 
+  const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
+  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+
   return (
     <Box className="space-y-4 min-w-0 w-full">
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -56,26 +71,43 @@ export function UsersList({
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
           <p className="text-muted-foreground text-sm">Manage users and their access</p>
         </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Button onClick={() => setShowInviteModal(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Invite User
-          </Button>
-        </Box>
+        {!isZeroState ? (
+          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+            <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Invite User
+            </Button>
+          </Box>
+        ) : null}
       </Box>
 
-      <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
-        <DataTableToolbar table={table} />
-        {initialData.items.length ? (
-          <DataTable table={table} totalItems={initialData.pagination.totalItems} />
-        ) : (
-          <Box className="text-center py-12 text-muted-foreground">No users found.</Box>
-        )}
-      </Card>
+      {isZeroState ? (
+        <EmptyState
+          icon={Users}
+          title="No customers yet"
+          description="Add your first customer to start managing your relationships."
+          action={
+            <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Invite User
+            </Button>
+          }
+        />
+      ) : (
+        <UsersTable
+          table={table}
+          items={initialData.items}
+          totalItems={initialData.pagination.totalItems}
+        />
+      )}
 
-      {openUserId ? <UserDrawer id={openUserId} /> : null}
+      {showCreateModal ? (
+        <UserDrawer open={showCreateModal} onClose={handleShowCreateModal} />
+      ) : null}
 
-      <UserInviteModal open={showInviteModal} onOpenChange={setShowInviteModal} />
+      {showInviteModal ? (
+        <UserInviteModal open={showInviteModal} onOpenChange={handleShowInviteModal} />
+      ) : null}
     </Box>
   );
 }

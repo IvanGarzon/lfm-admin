@@ -23,7 +23,15 @@ import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
 import type { UpdateUserInput, UpdateUserRoleInput } from '@/schemas/users';
 
-export function UserDrawer({ id }: { id: string }) {
+export function UserDrawer({
+  id,
+  open,
+  onClose,
+}: {
+  id?: string;
+  open?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -33,18 +41,25 @@ export function UserDrawer({ id }: { id: string }) {
   const updateUserRole = useUpdateUserRole();
 
   const queryString = useQueryString(searchParams, userSearchParamsDefaults);
-  const isOpen = pathname?.includes(`/users/${id}`) ?? false;
+  const isOpen = id ? (pathname?.includes(`/users/${id}`) ?? false) : (open ?? false);
 
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
+        // Reset to view mode when closing
         setHasUnsavedChanges(false);
-        const basePath = '/users';
-        const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
-        router.push(targetPath);
+
+        if (id) {
+          // Navigate back to list preserving filters
+          const basePath = '/users';
+          const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
+          router.push(targetPath);
+        } else {
+          onClose?.();
+        }
       }
     },
-    [router, queryString],
+    [id, onClose, router, queryString],
   );
 
   const handleUpdate = useCallback(
@@ -58,9 +73,13 @@ export function UserDrawer({ id }: { id: string }) {
 
   const handleUpdateRole = useCallback(
     (data: UpdateUserRoleInput) => {
-      updateUserRole.mutate(data);
+      updateUserRole.mutate(data, {
+        onSuccess: () => {
+          onClose?.();
+        },
+      });
     },
-    [updateUserRole],
+    [updateUserRole, onClose],
   );
 
   return (

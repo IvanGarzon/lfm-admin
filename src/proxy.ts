@@ -8,6 +8,7 @@ import {
   apiAuthPrefix,
   authRoutes,
   publicRoutes,
+  publicRoutePrefixes,
 } from '@/routes';
 
 // -- Types ------------------------------------------------------------------
@@ -51,7 +52,9 @@ export default auth(async (req: AuthenticatedRequest) => {
   // -- 3. Route Classification -----------------------------------------------
 
   const isAuthRoute = authRoutes.includes(pathname);
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute =
+    publicRoutes.includes(pathname) ||
+    publicRoutePrefixes.some((prefix) => pathname.startsWith(prefix));
 
   // -- 4. Auth Route Logic ---------------------------------------------------
 

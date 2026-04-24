@@ -17,6 +17,13 @@ export const tenantNavItems: NavItem[] = [
     authorizeOnly: ['*'],
   },
   {
+    title: 'Users',
+    href: '/users',
+    icon: 'users',
+    shortcut: ['u', 'u'],
+    authorizeOnly: ['canManageUsers'],
+  },
+  {
     title: 'CRM',
     href: '#',
     icon: 'userPen',
@@ -115,13 +122,6 @@ export const tenantNavItems: NavItem[] = [
     ],
   },
   {
-    title: 'Users',
-    href: '/users',
-    icon: 'users',
-    shortcut: ['u', 'u'],
-    authorizeOnly: ['canManageUsers'],
-  },
-  {
     title: 'Sessions',
     href: '/sessions',
     icon: 'keyRound',
@@ -130,7 +130,7 @@ export const tenantNavItems: NavItem[] = [
   },
   {
     title: 'Settings',
-    href: '/settings/tenant',
+    href: '/settings/profile',
     icon: 'settings',
     authorizeOnly: ['canManageSettings'],
   },

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Plus, FileText } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { SearchParams } from 'nuqs/server';
 import dynamic from 'next/dynamic';
-
+import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -73,56 +73,73 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
 
   const comparisonLabel = getComparisonLabel();
 
-  const handleShowCreateModal = () => {
+  const handleShowCreateModal = useCallback(() => {
     setShowCreateModal((prev) => !prev);
-  };
+  }, []);
+
+  const hasActiveFilters = Boolean(searchParams.search) || Boolean(searchParams.status);
+  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-        <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Box className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-tight">Quotes</h1>
-            <p className="text-muted-foreground text-sm">Manage and track all your quotes</p>
-          </Box>
-          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-            <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-              <TabsTrigger value="list">List</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
-            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              New Quote
+      {isZeroState ? (
+        <EmptyState
+          icon={FileText}
+          title="No quotes yet"
+          description="Add your first quote to start managing your quotes."
+          action={
+            <Button onClick={handleShowCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Quote
             </Button>
-          </Box>
-        </Box>
-
-        <QuoteOverview
-          stats={overviewStats}
-          isLoading={overviewLoading}
-          comparisonLabel="vs. last month"
+          }
         />
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <Box className="min-w-0">
+              <h1 className="text-3xl font-bold tracking-tight">Quotes</h1>
+              <p className="text-muted-foreground text-sm">Manage and track all your quotes</p>
+            </Box>
+            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+              <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
+                <TabsTrigger value="list">List</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                New Quote
+              </Button>
+            </Box>
+          </Box>
 
-        <TabsContent
-          value="list"
-          className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
-        >
-          <QuoteList data={initialData} searchParams={searchParams} />
-        </TabsContent>
-
-        <TabsContent
-          value="analytics"
-          className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
-        >
-          <QuoteAnalytics
-            stats={analyticsStats}
-            isLoading={analyticsLoading}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            comparisonLabel={comparisonLabel}
+          <QuoteOverview
+            stats={overviewStats}
+            isLoading={overviewLoading}
+            comparisonLabel="vs. last month"
           />
-        </TabsContent>
-      </Tabs>
+
+          <TabsContent
+            value="list"
+            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+          >
+            <QuoteList data={initialData} searchParams={searchParams} />
+          </TabsContent>
+
+          <TabsContent
+            value="analytics"
+            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+          >
+            <QuoteAnalytics
+              stats={analyticsStats}
+              isLoading={analyticsLoading}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              comparisonLabel={comparisonLabel}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
 
       {showCreateModal ? (
         <QuoteDrawer open={showCreateModal} onClose={handleShowCreateModal} />

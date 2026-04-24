@@ -9,7 +9,8 @@ import {
   activateTenant,
 } from '@/actions/admin/tenants/mutations';
 import { switchActiveTenant } from '@/actions/admin/switch-tenant';
-import type { CreateTenantInput, UpdateTenantInput } from '@/features/admin/tenants/types';
+import type { CreateTenantInput } from '@/schemas/tenants';
+import type { UpdateTenantInput } from '@/features/admin/tenants/types';
 
 export const TENANT_KEYS = {
   all: ['admin-tenants'] as const,

@@ -5,14 +5,56 @@ import { handleActionError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { withSuperAdmin } from '@/lib/action-auth';
 import { TenantRepository } from '@/repositories/tenant-repository';
-import type { Tenant } from '@/prisma/client';
-import type { CreateTenantInput, UpdateTenantInput } from '@/features/admin/tenants/types';
+import { InvitationRepository } from '@/repositories/invitation-repository';
+import { UserRepository } from '@/repositories/user-repository';
+import { sendEmailNotification } from '@/lib/email-service';
+import { absoluteUrl } from '@/lib/utils';
+import { VALIDATION_LIMITS } from '@/lib/validation';
+import { UserRole, type Tenant } from '@/prisma/client';
+import { CreateTenantSchema, type CreateTenantInput } from '@/schemas/tenants';
+import type { UpdateTenantInput } from '@/features/admin/tenants/types';
 
 const tenantRepo = new TenantRepository(prisma);
+const invitationRepo = new InvitationRepository(prisma);
+const userRepo = new UserRepository(prisma);
 
-export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (_session, data) => {
+/**
+ * Creates a new tenant and dispatches an invitation to the specified admin user.
+ */
+export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (session, data) => {
   try {
-    const tenant = await tenantRepo.createTenant(data);
+    const { name, slug, adminEmail } = CreateTenantSchema.parse(data);
+
+    const tenant = await tenantRepo.createTenant({ name, slug });
+
+    const expiresAt = new Date(Date.now() + VALIDATION_LIMITS.INVITATION_EXPIRY_MS);
+
+    const [invitation, inviter] = await Promise.all([
+      invitationRepo.create({
+        email: adminEmail,
+        role: UserRole.ADMIN,
+        tenantId: tenant.id,
+        invitedBy: session.user.id,
+        expiresAt,
+      }),
+      userRepo.findById(session.user.id),
+    ]);
+
+    if (inviter) {
+      await sendEmailNotification({
+        to: adminEmail,
+        subject: `You've been invited to join ${tenant.name}`,
+        template: 'invitation',
+        props: {
+          inviterName: `${inviter.firstName} ${inviter.lastName}`,
+          tenantName: tenant.name,
+          role: invitation.role,
+          acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
+          expiresAt: invitation.expiresAt,
+        },
+      });
+    }
+
     revalidatePath('/admin/tenants');
     return { success: true, data: tenant };
   } catch (error) {
@@ -20,6 +62,9 @@ export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (_se
   }
 });
 
+/**
+ * Updates top-level tenant fields (name, slug).
+ */
 export const updateTenant = withSuperAdmin<{ id: string } & UpdateTenantInput, Tenant>(
   async (_session, { id, ...data }) => {
     try {
@@ -33,6 +78,9 @@ export const updateTenant = withSuperAdmin<{ id: string } & UpdateTenantInput, T
   },
 );
 
+/**
+ * Suspends a tenant, preventing its users from accessing the system.
+ */
 export const suspendTenant = withSuperAdmin<string, Tenant>(async (_session, id) => {
   try {
     const tenant = await tenantRepo.suspendTenant(id);
@@ -44,6 +92,9 @@ export const suspendTenant = withSuperAdmin<string, Tenant>(async (_session, id)
   }
 });
 
+/**
+ * Re-activates a previously suspended tenant.
+ */
 export const activateTenant = withSuperAdmin<string, Tenant>(async (_session, id) => {
   try {
     const tenant = await tenantRepo.activateTenant(id);

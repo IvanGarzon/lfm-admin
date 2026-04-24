@@ -207,3 +207,21 @@ export function useSoftDeleteUser() {
     },
   });
 }
+
+export function usePrefetchTenantUser() {
+  const queryClient = useQueryClient();
+
+  return (userId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: USER_KEYS.detail(userId),
+      queryFn: async () => {
+        const result = await getTenantUserById(userId);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
+      },
+    });
+  };
+}

@@ -3,11 +3,17 @@
 import { useMemo } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFiles, useUploadFile, useDownloadFile, useDeleteFile } from '../hooks/use-files';
-import { FileStatsCards } from './file-stats-cards';
-import { FileUploadZone } from './file-upload-zone';
-import { FileBrowser } from './file-browser';
-import { DevToolsSection } from './dev-tools-section';
+import {
+  useFiles,
+  useUploadFile,
+  useDownloadFile,
+  useDeleteFile,
+} from '@/features/files/hooks/use-files';
+import { FileStatsCards } from '@/features/files/components/file-stats-cards';
+import { FileUploadZone } from '@/features/files/components/file-upload-zone';
+import { FileBrowser } from '@/features/files/components/file-browser';
+import { DevToolsSection } from '@/features/files/components/dev-tools-section';
+import { Box } from '@/components/ui/box';
 
 export function FilesList() {
   const { data, isLoading, refetch } = useFiles();
@@ -45,13 +51,13 @@ export function FilesList() {
   };
 
   return (
-    <div className="space-y-6">
+    <Box className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <Box className="flex items-center justify-between">
+        <Box>
           <h1 className="text-3xl font-bold tracking-tight">File Storage</h1>
           <p className="text-muted-foreground mt-1">Manage and organise files stored in S3</p>
-        </div>
+        </Box>
         <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
           {isLoading ? (
             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -60,7 +66,7 @@ export function FilesList() {
           )}
           Refresh
         </Button>
-      </div>
+      </Box>
 
       {/* Stats Cards */}
       <FileStatsCards
@@ -83,6 +89,6 @@ export function FilesList() {
 
       {/* Developer Tools (Local Development Only) */}
       <DevToolsSection />
-    </div>
+    </Box>
   );
 }

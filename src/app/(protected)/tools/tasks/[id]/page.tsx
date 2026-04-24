@@ -1,6 +1,10 @@
 'use client';
 
 import { use } from 'react';
+import { ArrowLeft, Play, Loader2, Clock, Hash, Calendar } from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import Link from 'next/link';
+import type { TaskCategory } from '@/prisma/client';
 import { useTask, useSetTaskEnabled, useExecuteTask } from '@/features/tasks/hooks/use-tasks';
 import { ExecutionHistoryTable } from '@/features/tasks/components/execution-history-table';
 import { Box } from '@/components/ui/box';
@@ -9,10 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Play, Loader2, Clock, Hash, Calendar } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
-import Link from 'next/link';
-import type { TaskCategory } from '@/prisma/client';
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -33,25 +33,25 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center py-12">
+      <Box className="container mx-auto py-8">
+        <Box className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
   if (error || !task) {
     return (
-      <div className="container mx-auto py-8">
+      <Box className="container mx-auto py-8">
         <Card>
           <CardContent className="py-12">
-            <div className="text-center text-destructive">
+            <Box className="text-center text-destructive">
               <p>{error?.message || 'Task not found'}</p>
-            </div>
+            </Box>
           </CardContent>
         </Card>
-      </div>
+      </Box>
     );
   }
 
@@ -178,7 +178,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </>
           )}
 
-          {task.lastExecution && (
+          {task.lastExecution ? (
             <>
               <Separator />
               <Box>
@@ -199,7 +199,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 </Box>
               </Box>
             </>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

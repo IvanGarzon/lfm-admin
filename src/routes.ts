@@ -2,10 +2,13 @@
  * These routes are public and don't need authentication
  * @type {string[]}
  * */
-export const publicRoutes: string[] = [
-  '/verify',
-  '/test-s3', // S3 test page
-];
+export const publicRoutes: string[] = ['/verify', '/test-s3'];
+
+/**
+ * Route prefixes that are public regardless of query params or sub-paths
+ * @type {string[]}
+ * */
+export const publicRoutePrefixes: string[] = ['/invite/accept'];
 
 /**
  * Named authentication route constants with type safety
