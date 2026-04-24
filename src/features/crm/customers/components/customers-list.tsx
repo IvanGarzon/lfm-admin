@@ -11,6 +11,8 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { CustomersTable } from '@/features/crm/customers/components/customers-table';
 import { createCustomerColumns } from '@/features/crm/customers/components/customer-columns';
 import { useDeleteCustomer } from '@/features/crm/customers/hooks/use-customer-queries';
+import { searchParams as customerSearchParams } from '@/filters/customers/customers-filters';
+import { hasActiveSearchFilters } from '@/lib/utils';
 import type { CustomerPagination } from '@/features/crm/customers/types';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -59,8 +61,9 @@ export function CustomersList({
     debounceMs: 500,
   });
 
-  const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
-  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+  const isZeroState =
+    initialData.pagination.totalItems === 0 &&
+    !hasActiveSearchFilters(serverSearchParams, customerSearchParams);
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
