@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  output          = "./generated/client"
+  provider = "prisma-client"
+  output   = "./generated/client"
 }
 
 datasource db {
@@ -81,31 +81,31 @@ model TenantSettings {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String  @map(name: "user_id")
+  userId            String  @map("user_id")
   type              String
   provider          String
-  providerAccountId String  @map(name: "provider_account_id")
-  refreshToken      String? @map(name: "refresh_token") @db.Text
-  accessToken       String? @map(name: "access_token") @db.Text
-  expiresAt         Int?    @map(name: "expires_at")
-  tokenType         String? @map(name: "token_type")
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @map("refresh_token") @db.Text
+  accessToken       String? @map("access_token") @db.Text
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
   scope             String?
-  idToken           String? @map(name: "id_token") @db.Text
-  sessionState      String? @map(name: "session_state")
+  idToken           String? @map("id_token") @db.Text
+  sessionState      String? @map("session_state")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@map(name: "accounts")
+  @@map("accounts")
 }
 
 model User {
   id            String    @id @default(cuid())
-  firstName     String    @map(name: "first_name")
-  lastName      String    @map(name: "last_name")
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
   email         String?   @unique
-  emailVerified DateTime? @map(name: "email_verified") @db.Timestamptz()
-  avatarUrl     String?   @map(name: "avatar_url")
+  emailVerified DateTime? @map("email_verified") @db.Timestamptz()
+  avatarUrl     String?   @map("avatar_url")
   password      String?
   role     UserRole @default(USER)
   status                UserStatus              @default(ACTIVE)
@@ -139,12 +139,12 @@ model User {
   sentInvitations Invitation[] @relation("SentInvitations")
 
   @@index([tenantId])
-  @@map(name: "users")
+  @@map("users")
 }
 
 model Product {
   id          String        @id @default(cuid())
-  imageUrl    String?       @map(name: "image_url")
+  imageUrl    String?       @map("image_url")
   name        String
   description String?
   status      ProductStatus @default(ACTIVE)
@@ -152,32 +152,32 @@ model Product {
   stock       Int           @default(0)
   tenantId    String        @map("tenant_id")
   tenant      Tenant        @relation(fields: [tenantId], references: [id])
-  createdAt   DateTime      @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt   DateTime      @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  availableAt DateTime?     @map(name: "available_at") @db.Timestamptz()
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  availableAt DateTime?     @map("available_at") @db.Timestamptz()
 
   invoiceItems InvoiceItem[]
   quoteItems   QuoteItem[]
 
   @@index([tenantId])
-  @@map(name: "products")
+  @@map("products")
 }
 
 model Customer {
   id             String         @id @default(cuid())
-  firstName      String         @map(name: "first_name")
-  lastName       String         @map(name: "last_name")
+  firstName      String         @map("first_name")
+  lastName       String         @map("last_name")
   gender         Gender
   email          String
   phone          String?
   status         CustomerStatus @default(ACTIVE)
-  organizationId String?        @map(name: "organization_id")
+  organizationId String?        @map("organization_id")
   organization   Organization?  @relation(fields: [organizationId], references: [id])
   tenantId       String         @map("tenant_id")
   tenant         Tenant         @relation(fields: [tenantId], references: [id])
-  createdAt      DateTime       @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt      DateTime       @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  deletedAt      DateTime?      @map(name: "deleted_at") @db.Timestamptz()
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz()
 
   address1         String?
   address2         String?
@@ -201,7 +201,7 @@ model Customer {
   @@index([organizationId])
   @@index([createdAt])
   @@index([status, deletedAt])
-  @@map(name: "customers")
+  @@map("customers")
 }
 
 model Organization {
@@ -228,12 +228,12 @@ model Organization {
   @@index([tenantId])
   @@index([name])
   @@index([status, deletedAt])
-  @@map(name: "organizations")
+  @@map("organizations")
 }
 
 model Vendor {
   id           String       @id @default(cuid())
-  vendorCode   String       @map(name: "vendor_code")
+  vendorCode   String       @map("vendor_code")
   name         String
   email        String
   phone        String?
@@ -264,9 +264,9 @@ model Vendor {
   tenant       Tenant       @relation(fields: [tenantId], references: [id])
 
   // Audit fields
-  createdAt    DateTime     @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt    DateTime     @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  deletedAt    DateTime?    @map(name: "deleted_at") @db.Timestamptz()
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt    DateTime?    @map("deleted_at") @db.Timestamptz()
 
   @@unique([tenantId, vendorCode])
   @@index([tenantId])
@@ -274,34 +274,34 @@ model Vendor {
   @@index([email])
   @@index([status, deletedAt])
   @@index([name])
-  @@map(name: "vendors")
+  @@map("vendors")
 }
 
 model Employee {
   id        String         @id @default(cuid())
-  firstName String         @map(name: "first_name")
-  lastName  String         @map(name: "last_name")
+  firstName String         @map("first_name")
+  lastName  String         @map("last_name")
   email     String
   phone     String
   gender    Gender
   dob       DateTime       @db.Date()
   rate      Decimal        @default(0) @db.Decimal(15, 2)
   status    EmployeeStatus @default(ACTIVE)
-  avatarUrl String?        @map(name: "avatar_url")
+  avatarUrl String?        @map("avatar_url")
   userId  String?  @unique @map("user_id")
   user    User?    @relation(fields: [userId], references: [id])
 
   tenantId  String         @map("tenant_id")
   tenant    Tenant         @relation(fields: [tenantId], references: [id])
 
-  createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime  @default(now()) @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
 
   @@unique([tenantId, email])
   @@index([tenantId])
   @@index([status, deletedAt])
-  @@map(name: "employees")
+  @@map("employees")
 }
 
 model TwoFactorConfirmation {
@@ -313,38 +313,38 @@ model TwoFactorConfirmation {
 }
 
 model Audit {
-  id        String     @id @default(uuid())
-  userId    String?    @map(name: "user_id")
+  id        String     @id @default(cuid())
+  userId    String?    @map("user_id")
   tag       String
   event     String
   message   String
   data      Json?
   level     AuditLevel @default(INFO) // INFO | WARN | ERROR
-  createdAt DateTime   @default(now()) @map(name: "created_at") @db.Timestamptz()
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz()
 
-  @@map(name: "audit")
+  @@map("audit")
 }
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique @map(name: "session_token")
-  userId       String   @map(name: "user_id")
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
   expires      DateTime @db.Timestamptz()
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  ipAddress String? @map(name: "ip_address") @db.Text
-  userAgent String? @map(name: "user_agent") @db.Text
-  isActive  Boolean @default(true) @map(name: "is_active")
+  ipAddress String? @map("ip_address") @db.Text
+  userAgent String? @map("user_agent") @db.Text
+  isActive  Boolean @default(true) @map("is_active")
 
-  deviceName     String? @map(name: "device_name")
-  deviceType     String? @map(name: "device_type")
-  deviceVendor   String? @map(name: "device_vendor")
-  deviceModel    String? @map(name: "device_model")
-  osName         String? @map(name: "os_name")
-  osVersion      String? @map(name: "os_version")
-  browserName    String? @map(name: "browser_name")
-  browserVersion String? @map(name: "browser_version")
+  deviceName     String? @map("device_name")
+  deviceType     String? @map("device_type")
+  deviceVendor   String? @map("device_vendor")
+  deviceModel    String? @map("device_model")
+  osName         String? @map("os_name")
+  osVersion      String? @map("os_version")
+  browserName    String? @map("browser_name")
+  browserVersion String? @map("browser_version")
   country        String?
   region         String?
   city           String?
@@ -352,23 +352,23 @@ model Session {
   longitude      Float?
   timezone       String?
 
-  createdAt    DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt    DateTime  @default(now()) @map(name: "updated_at") @db.Timestamptz()
-  lastActiveAt DateTime? @map(name: "last_active_at") @db.Timestamptz()
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz()
 
   // Indexes for optimizing common queries
   @@index([userId, isActive]) // For fetching active sessions by user
   @@index([userId, lastActiveAt]) // For cleanup and activity tracking
   @@index([expires, isActive]) // For finding expired sessions
   @@index([isActive, lastActiveAt]) // For auto-cleanup job
-  @@map(name: "sessions")
+  @@map("sessions")
 }
 
 model Invoice {
   id            String @id @default(cuid())
-  invoiceNumber String @map(name: "invoice_number")
+  invoiceNumber String @map("invoice_number")
 
-  customerId String   @map(name: "customer_id")
+  customerId String   @map("customer_id")
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
 
   tenantId   String   @map("tenant_id")
@@ -377,22 +377,22 @@ model Invoice {
   status InvoiceStatus @default(DRAFT)
 
   amount     Decimal  @db.Decimal(15, 2)
-  amountPaid Decimal  @default(0) @map(name: "amount_paid") @db.Decimal(15, 2)
-  amountDue  Decimal  @default(0) @map(name: "amount_due") @db.Decimal(15, 2)
+  amountPaid Decimal  @default(0) @map("amount_paid") @db.Decimal(15, 2)
+  amountDue  Decimal  @default(0) @map("amount_due") @db.Decimal(15, 2)
   currency   String   @default("AUD") 
   gst        Decimal  @default(10) @db.Decimal(5, 2)
   discount   Decimal  @default(0) @db.Decimal(15, 2)
-  issuedDate DateTime @map(name: "issued_date") @db.Date
-  dueDate    DateTime @map(name: "due_date") @db.Date
+  issuedDate DateTime @map("issued_date") @db.Date
+  dueDate    DateTime @map("due_date") @db.Date
 
-  remindersSent Int? @default(0) @map(name: "reminders_sent")
+  remindersSent Int? @default(0) @map("reminders_sent")
 
-  paidDate      DateTime? @map(name: "paid_date") @db.Date
-  paymentMethod String?   @map(name: "payment_method")
-  receiptNumber String?   @unique @map(name: "receipt_number")
+  paidDate      DateTime? @map("paid_date") @db.Date
+  paymentMethod String?   @map("payment_method")
+  receiptNumber String?   @unique @map("receipt_number")
 
-  cancelledDate DateTime? @map(name: "cancelled_date") @db.Date
-  cancelReason  String?   @map(name: "cancel_reason")
+  cancelledDate DateTime? @map("cancelled_date") @db.Date
+  cancelReason  String?   @map("cancel_reason")
 
   notes String? @db.Text
 
@@ -403,9 +403,9 @@ model Invoice {
   documents     Document[]
   transactions  Transaction[]
 
-  createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
@@ -416,52 +416,52 @@ model Invoice {
   @@index([receiptNumber])     // Index for receipt lookups
   @@index([customerId, status]) // Composite for customer-specific status queries
   @@index([dueDate])            // Index for overdue calculations and sorting
-  @@map(name: "invoices")
+  @@map("invoices")
 }
 
 model InvoiceItem {
   id String @id @default(cuid())
 
-  invoiceId String  @map(name: "invoice_id")
+  invoiceId String  @map("invoice_id")
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   description String
   quantity    Int
-  unitPrice   Decimal @map(name: "unit_price") @db.Decimal(15, 2)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 2)
   total       Decimal @db.Decimal(15, 2)
 
-  productId String?  @map(name: "product_id")
+  productId String?  @map("product_id")
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([invoiceId])
   @@index([productId])
-  @@map(name: "invoice_items")
+  @@map("invoice_items")
 }
 
 model InvoiceStatusHistory {
   id             String        @id @default(cuid())
-  invoiceId      String        @map(name: "invoice_id")
+  invoiceId      String        @map("invoice_id")
   invoice        Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   status         InvoiceStatus
   previousStatus InvoiceStatus?
-  updatedAt      DateTime      @default(now()) @map(name: "updated_at") @db.Timestamptz()
-  updatedBy      String?       @map(name: "updated_by")
+  updatedAt      DateTime      @default(now()) @map("updated_at") @db.Timestamptz()
+  updatedBy      String?       @map("updated_by")
   user           User?         @relation("user", fields: [updatedBy], references: [id], onDelete: SetNull)
   notes          String?       @db.Text
 
   @@index([invoiceId, updatedAt])
   @@index([updatedBy])
-  @@map(name: "invoice_status_history")
+  @@map("invoice_status_history")
 }
 
 model Payment {
   id String @id @default(cuid())
 
-  invoiceId String  @map(name: "invoice_id")
+  invoiceId String  @map("invoice_id")
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   amount    Decimal   @db.Decimal(15, 2)
@@ -470,20 +470,20 @@ model Payment {
   reference String?
   notes     String?   @db.Text
   
-  idempotencyKey String? @unique @map(name: "idempotency_key") // Prevents duplicate payments
+  idempotencyKey String? @unique @map("idempotency_key") // Prevents duplicate payments
 
-  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([invoiceId])
   @@index([invoiceId, date])  // Payment history queries
-  @@map(name: "payments")
+  @@map("payments")
 }
 
 model Quote {
   id          String   @id @default(cuid())
-  quoteNumber String   @map(name: "quote_number")
-  customerId  String   @map(name: "customer_id")
+  quoteNumber String   @map("quote_number")
+  customerId  String   @map("customer_id")
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
 
   tenantId    String   @map("tenant_id")
@@ -491,24 +491,24 @@ model Quote {
 
   status QuoteStatus @default(DRAFT)
 
-  versionNumber   Int     @default(1) @map(name: "version_number")
-  parentQuoteId   String? @map(name: "parent_quote_id")
+  versionNumber   Int     @default(1) @map("version_number")
+  parentQuoteId   String? @map("parent_quote_id")
   parentQuote     Quote?  @relation("QuoteVersions", fields: [parentQuoteId], references: [id], onDelete: Restrict)
   versions        Quote[] @relation("QuoteVersions")
-  isLatestVersion Boolean @default(true) @map(name: "is_latest_version")
-  isFavourite     Boolean @default(false) @map(name: "is_favourite")
+  isLatestVersion Boolean @default(true) @map("is_latest_version")
+  isFavourite     Boolean @default(false) @map("is_favourite")
 
   amount     Decimal  @db.Decimal(15, 2)
   currency   String   @default("AUD")
   gst        Decimal  @default(10) @db.Decimal(5, 2)
   discount   Decimal  @default(0) @db.Decimal(15, 2)
-  issuedDate DateTime @map(name: "issued_date") @db.Date
-  validUntil DateTime @map(name: "valid_until") @db.Date
+  issuedDate DateTime @map("issued_date") @db.Date
+  validUntil DateTime @map("valid_until") @db.Date
 
-  cancelledDate DateTime? @map(name: "cancelled_date") @db.Timestamptz()
-  cancelReason  String?   @map(name: "cancel_reason") @db.Text
+  cancelledDate DateTime? @map("cancelled_date") @db.Timestamptz()
+  cancelReason  String?   @map("cancel_reason") @db.Text
 
-  invoiceId String? @unique @map(name: "invoice_id")
+  invoiceId String? @unique @map("invoice_id")
   notes String? @db.Text
   terms String? @db.Text
 
@@ -517,9 +517,9 @@ model Quote {
   statusHistory QuoteStatusHistory[]
   emailAudit    EmailAudit[]
 
-  createdAt DateTime  @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @map(name: "updated_at") @db.Timestamptz()
-  deletedAt DateTime? @map(name: "deleted_at") @db.Timestamptz()
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
 
   @@unique([tenantId, quoteNumber])
   @@index([tenantId])
@@ -536,22 +536,22 @@ model Quote {
   @@index([isFavourite, deletedAt])
   @@index([status, isLatestVersion, deletedAt])
   @@index([status, cancelledDate])
-  @@map(name: "quotes")
+  @@map("quotes")
 }
 
 model QuoteItem {
   id      String @id @default(cuid())
-  quoteId String @map(name: "quote_id")
+  quoteId String @map("quote_id")
   quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
   description String
   quantity    Int
-  unitPrice   Decimal @map(name: "unit_price") @db.Decimal(15, 2)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 2)
   total       Decimal @db.Decimal(15, 2)
   order       Int     @default(0) // Display order within the quote
 
   // Optional product reference
-  productId String?  @map(name: "product_id")
+  productId String?  @map("product_id")
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   // Item-level attachments (flower arrangement photos)
@@ -563,49 +563,49 @@ model QuoteItem {
   // Notes for this quote item (describing the images/attachments)
   notes String? @db.Text
 
-  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([quoteId])
   @@index([quoteId, order])
   @@index([productId])  // Product-based queries
-  @@map(name: "quote_items")
+  @@map("quote_items")
 }
 
 model QuoteItemAttachment {
   id          String    @id @default(cuid())
-  quoteItemId String    @map(name: "quote_item_id")
+  quoteItemId String    @map("quote_item_id")
   quoteItem   QuoteItem @relation(fields: [quoteItemId], references: [id], onDelete: Cascade)
 
-  fileName String @map(name: "file_name")
-  fileSize Int    @map(name: "file_size")
-  mimeType String @map(name: "mime_type")
-  s3Key    String @map(name: "s3_key")
-  s3Url    String @map(name: "s3_url")
+  fileName String @map("file_name")
+  fileSize Int    @map("file_size")
+  mimeType String @map("mime_type")
+  s3Key    String @map("s3_key")
+  s3Url    String @map("s3_url")
 
-  uploadedBy String?  @map(name: "uploaded_by")
-  uploadedAt DateTime @default(now()) @map(name: "uploaded_at") @db.Timestamptz()
+  uploadedBy String?  @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamptz()
 
   @@index([quoteItemId])
   @@index([s3Key])
-  @@map(name: "quote_item_attachments")
+  @@map("quote_item_attachments")
 }
 
 model QuoteStatusHistory {
   id             String      @id @default(cuid())
-  quoteId        String      @map(name: "quote_id")
+  quoteId        String      @map("quote_id")
   quote          Quote       @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
   status         QuoteStatus
   previousStatus QuoteStatus?
-  updatedAt      DateTime    @default(now()) @map(name: "updated_at") @db.Timestamptz()
-  updatedBy      String?     @map(name: "updated_by")
+  updatedAt      DateTime    @default(now()) @map("updated_at") @db.Timestamptz()
+  updatedBy      String?     @map("updated_by")
   user           User?       @relation("user", fields: [updatedBy], references: [id], onDelete: SetNull)
   notes          String?     @db.Text
 
   @@index([quoteId, updatedAt])
   @@index([updatedBy])
-  @@map(name: "quote_status_history")
+  @@map("quote_status_history")
 }
 
 model Document {
@@ -774,17 +774,17 @@ model Transaction {
   type        TransactionType
   date        DateTime          @db.Date
   amount      Decimal           @db.Decimal(15, 2)
-  currency    String            @default("USD")
+  currency    String            @default("AUD")
   description String
   payee       String
   status          TransactionStatus                 @default(COMPLETED)
-  referenceNumber String                           @map(name: "reference_number")
-  referenceId     String?                           @map(name: "reference_id")
-  invoiceId   String?           @map(name: "invoice_id")
+  referenceNumber String                           @map("reference_number")
+  referenceId     String?                           @map("reference_id")
+  invoiceId   String?           @map("invoice_id")
   invoice     Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
-  vendorId    String?           @map(name: "vendor_id")
+  vendorId    String?           @map("vendor_id")
   vendor      Vendor?           @relation("VendorTransactions", fields: [vendorId], references: [id], onDelete: SetNull)
-  customerId  String?           @map(name: "customer_id")
+  customerId  String?           @map("customer_id")
   customer    Customer?         @relation("CustomerTransactions", fields: [customerId], references: [id], onDelete: SetNull)
 
   categories  TransactionCategoryOnTransaction[]
@@ -793,8 +793,8 @@ model Transaction {
   tenantId    String            @map("tenant_id")
   tenant      Tenant            @relation(fields: [tenantId], references: [id])
 
-  createdAt DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@unique([tenantId, referenceNumber])
   @@index([tenantId])
@@ -806,58 +806,58 @@ model Transaction {
   @@index([customerId])
   @@index([type, status])
   @@index([date(sort: Desc)], map: "transactions_date_desc_idx")
-  @@map(name: "transactions")
+  @@map("transactions")
 }
 
 model TransactionCategory {
   id          String   @id @default(cuid())
   name        String
   description String?
-  isActive    Boolean  @default(true) @map(name: "is_active")
+  isActive    Boolean  @default(true) @map("is_active")
   tenantId    String   @map("tenant_id")
   tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt   DateTime @default(now()) @map(name: "created_at") @db.Timestamptz()
-  updatedAt   DateTime @updatedAt @map(name: "updated_at") @db.Timestamptz()
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   transactions TransactionCategoryOnTransaction[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
-  @@map(name: "transaction_categories")
+  @@map("transaction_categories")
 }
 
 model TransactionCategoryOnTransaction {
-  transactionId String              @map(name: "transaction_id")
+  transactionId String              @map("transaction_id")
   transaction   Transaction         @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   
-  categoryId    String              @map(name: "category_id")
+  categoryId    String              @map("category_id")
   category      TransactionCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   
-  assignedAt    DateTime            @default(now()) @map(name: "assigned_at") @db.Timestamptz()
+  assignedAt    DateTime            @default(now()) @map("assigned_at") @db.Timestamptz()
 
   @@id([transactionId, categoryId])
   @@index([transactionId])
   @@index([categoryId])
-  @@map(name: "transaction_category_on_transaction")
+  @@map("transaction_category_on_transaction")
 }
 
 model TransactionAttachment {
   id            String      @id @default(cuid())
-  transactionId String      @map(name: "transaction_id")
+  transactionId String      @map("transaction_id")
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
-  fileName String @map(name: "file_name")
-  fileSize Int    @map(name: "file_size")
-  mimeType String @map(name: "mime_type")
-  s3Key    String @map(name: "s3_key")
-  s3Url    String @map(name: "s3_url")
+  fileName String @map("file_name")
+  fileSize Int    @map("file_size")
+  mimeType String @map("mime_type")
+  s3Key    String @map("s3_key")
+  s3Url    String @map("s3_url")
 
-  uploadedBy String?  @map(name: "uploaded_by")
-  uploadedAt DateTime @default(now()) @map(name: "uploaded_at") @db.Timestamptz()
+  uploadedBy String?  @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at") @db.Timestamptz()
 
   @@index([transactionId])
   @@index([s3Key])
-  @@map(name: "transaction_attachments")
+  @@map("transaction_attachments")
 }
 
 model Recipe {
