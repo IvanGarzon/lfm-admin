@@ -8,7 +8,7 @@
     "strict": true,
     "checkJs": true,
     "allowImportingTsExtensions": true,
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": ["dom", "dom.iterable", "ES2023"],
     "noEmit": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -39,7 +39,7 @@
     "**/*.tsx",
     "*.js",
     ".next/types/**/*.ts",
-    "src/components/shared/tailwind.config.Js",
+    "src/components/shared/tailwind.config.js",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

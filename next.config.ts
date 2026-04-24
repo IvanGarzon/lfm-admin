@@ -17,10 +17,6 @@ const nextConfig: NextConfig = {
         hostname: '*.public.blob.vercel-storage.com',
       },
       {
-        protocol: 'https',
-        hostname: 'randomuser.me',
-      },
-      {
         protocol: 'http',
         hostname: 'localhost',
         port: '4566',
@@ -30,25 +26,6 @@ const nextConfig: NextConfig = {
   },
   // Suppress hydration warnings for Radix UI ID mismatches
   reactStrictMode: true,
-  // async headers() {
-  //   return [
-  //     {
-  //       source: '/(.*)',
-  //       headers: [
-  //         { key: 'X-Frame-Options', value: 'DENY' },
-  //         { key: 'X-Content-Type-Options', value: 'nosniff' },
-  //         {
-  //           key: 'Strict-Transport-Security',
-  //           value: 'max-age=31536000; includeSubDomains; preload',
-  //         },
-  //         {
-  //           key: 'Content-Security-Policy',
-  //           value: "default-src 'self'; script-src 'self'; object-src 'none';",
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
   serverExternalPackages: [
     '@prisma/client',
     '@prisma/client-runtime-utils',
@@ -56,16 +33,24 @@ const nextConfig: NextConfig = {
     '@prisma/adapter-pg',
     'ws',
   ],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push(
-        '@prisma/client',
-        '@prisma/client-runtime-utils',
-        '@prisma/adapter-neon',
-        '@prisma/adapter-pg',
-      );
-    }
-    return config;
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          //         {
+          //           key: 'Content-Security-Policy',
+          //           value: "default-src 'self'; script-src 'self'; object-src 'none';",
+          //         },
+        ],
+      },
+    ];
   },
   // Already doing linting and typechecking as separate tasks in CI
   typescript: { ignoreBuildErrors: true },
