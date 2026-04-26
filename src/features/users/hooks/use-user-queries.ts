@@ -2,22 +2,33 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getTenantUserById } from '@/actions/users/queries';
-import { updateUser, updateUserRole, softDeleteUser, inviteUser } from '@/actions/users/mutations';
+import { getTenantUserById, getUserRoleChanges } from '@/actions/users/queries';
+import {
+  updateUser,
+  updateUserRole,
+  softDeleteUser,
+  inviteUser,
+  changePassword,
+  sendPasswordResetEmail,
+} from '@/actions/users/mutations';
+import { getSessionsByUserId } from '@/actions/sessions/queries';
 import type {
   UpdateUserInput,
   UpdateUserRoleInput,
   SoftDeleteUserInput,
   InviteUserInput,
+  ChangePasswordInput,
 } from '@/schemas/users';
 import type { UserDetail } from '@/features/users/types';
+import type { SessionWithUser } from '@/features/sessions/types';
 
-export const USER_KEYS = {
+const USER_KEYS = {
   all: ['users'] as const,
   lists: () => [...USER_KEYS.all, 'list'] as const,
   list: (filters: string) => [...USER_KEYS.lists(), { filters }] as const,
   details: () => [...USER_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...USER_KEYS.details(), id] as const,
+  accessChanges: (id: string) => [...USER_KEYS.detail(id), 'access-changes'] as const,
 };
 
 export function useUser(id: string | undefined) {
@@ -74,6 +85,9 @@ export function useUpdateUser() {
           phone: newData.phone ?? null,
           status: newData.status,
           isTwoFactorEnabled: newData.isTwoFactorEnabled,
+          username: newData.username ?? null,
+          title: newData.title ?? null,
+          bio: newData.bio ?? null,
         };
       });
 
@@ -127,10 +141,25 @@ export function useUpdateUserRole() {
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.accessChanges(variables.id) });
     },
     onSuccess: () => {
       toast.success('Role updated successfully');
     },
+  });
+}
+
+export function useUserRoleChanges(userId: string) {
+  return useQuery({
+    queryKey: USER_KEYS.accessChanges(userId),
+    queryFn: async () => {
+      const result = await getUserRoleChanges(userId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    staleTime: 30 * 1000,
   });
 }
 
@@ -224,4 +253,52 @@ export function usePrefetchTenantUser() {
       },
     });
   };
+}
+
+export function useUserSessions(userId: string) {
+  return useQuery({
+    queryKey: [...USER_KEYS.detail(userId), 'sessions'] as const,
+    queryFn: async () => {
+      const result = await getSessionsByUserId(userId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return (result.data ?? []) as SessionWithUser[];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (data: ChangePasswordInput) => {
+      const result = await changePassword(data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to change password');
+    },
+    onSuccess: () => {
+      toast.success('Password updated successfully');
+    },
+  });
+}
+
+export function useSendPasswordResetEmail() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const result = await sendPasswordResetEmail(userId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to send password reset email');
+    },
+    onSuccess: () => {
+      toast.success('Password reset email sent');
+    },
+  });
 }

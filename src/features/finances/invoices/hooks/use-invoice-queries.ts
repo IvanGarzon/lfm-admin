@@ -9,7 +9,8 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { InvoiceStatus } from '@/prisma/client';
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
+
 import {
   getInvoices,
   getInvoiceById,
@@ -610,9 +611,9 @@ export function useRecordPayment() {
 
         let newStatus = previousMetadata.status;
         if (newAmountDue <= 0.01) {
-          newStatus = InvoiceStatus.PAID;
+          newStatus = InvoiceStatusSchema.enum.PAID;
         } else if (newAmountDue > 0 && newAmountPaid > 0) {
-          newStatus = InvoiceStatus.PARTIALLY_PAID;
+          newStatus = InvoiceStatusSchema.enum.PARTIALLY_PAID;
         }
 
         // Optimistically update metadata
@@ -622,7 +623,7 @@ export function useRecordPayment() {
           amountPaid: newAmountPaid,
           amountDue: newAmountDue,
           // If fully paid, set these for compatibility
-          ...(newStatus === InvoiceStatus.PAID
+          ...(newStatus === InvoiceStatusSchema.enum.PAID
             ? {
                 paidDate: newData.paidDate,
                 paymentMethod: newData.paymentMethod,
@@ -717,7 +718,7 @@ export function useMarkInvoiceAsPending() {
       if (previousMetadata) {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
-          status: InvoiceStatus.PENDING,
+          status: InvoiceStatusSchema.enum.PENDING,
           paidDate: null,
           paymentMethod: null,
         });
@@ -789,7 +790,7 @@ export function useMarkInvoiceAsDraft() {
       if (previousMetadata) {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
-          status: InvoiceStatus.DRAFT,
+          status: InvoiceStatusSchema.enum.DRAFT,
         });
       }
 
@@ -864,7 +865,7 @@ export function useCancelInvoice() {
       if (previousMetadata) {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
-          status: InvoiceStatus.CANCELLED,
+          status: InvoiceStatusSchema.enum.CANCELLED,
           cancelReason: newData.cancelReason,
         });
       }

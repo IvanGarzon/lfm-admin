@@ -5,7 +5,7 @@ import { handleActionError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { withTenantPermission } from '@/lib/action-auth';
 import { TenantRepository } from '@/repositories/tenant-repository';
-import type { UpdateTenantSettingsInput } from '@/features/admin/tenants/types';
+import { UpdateTenantSettingsSchema, type UpdateTenantSettingsInput } from '@/schemas/tenants';
 
 const tenantRepo = new TenantRepository(prisma);
 
@@ -13,7 +13,8 @@ export const updateTenantSettings = withTenantPermission<UpdateTenantSettingsInp
   'canManageSettings',
   async (ctx, data) => {
     try {
-      await tenantRepo.updateTenantSettings(ctx.tenantId, data);
+      const validated = UpdateTenantSettingsSchema.parse(data);
+      await tenantRepo.updateTenantSettings(ctx.tenantId, validated);
       revalidatePath('/settings/tenant');
       return { success: true, data: undefined };
     } catch (error) {

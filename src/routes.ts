@@ -8,7 +8,7 @@ export const publicRoutes: string[] = ['/verify', '/test-s3'];
  * Route prefixes that are public regardless of query params or sub-paths
  * @type {string[]}
  * */
-export const publicRoutePrefixes: string[] = ['/invite/accept'];
+export const publicRoutePrefixes: string[] = ['/invite/accept', '/reset-password'];
 
 /**
  * Named authentication route constants with type safety
@@ -28,7 +28,11 @@ export const AUTH_ROUTES = {
  * Array of authentication routes for .includes() checks
  * Auto-derived from AUTH_ROUTES for backward compatibility
  * */
-export const authRoutes: string[] = Object.values(AUTH_ROUTES);
+export const authRoutes: string[] = [
+  ...Object.values(AUTH_ROUTES),
+  '/invite/accept',
+  '/reset-password',
+];
 
 /**
  * Primary sign-in route for unauthenticated users

@@ -1,10 +1,11 @@
 'use client';
 
+import { ProductStatusSchema, type ProductStatus } from '@/zod/schemas/enums/ProductStatus.schema';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Package, PackageX, PackageMinus } from 'lucide-react';
-import { ProductStatus } from '@/prisma/client';
+
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,9 +20,9 @@ const statusOptions: {
   value: ProductStatus;
   icon: React.FC;
 }[] = [
-  { label: 'Active', value: ProductStatus.ACTIVE, icon: Package },
-  { label: 'Inactive', value: ProductStatus.INACTIVE, icon: PackageMinus },
-  { label: 'Out of Stock', value: ProductStatus.OUT_OF_STOCK, icon: PackageX },
+  { label: 'Active', value: ProductStatusSchema.enum.ACTIVE, icon: Package },
+  { label: 'Inactive', value: ProductStatusSchema.enum.INACTIVE, icon: PackageMinus },
+  { label: 'Out of Stock', value: ProductStatusSchema.enum.OUT_OF_STOCK, icon: PackageX },
 ];
 
 function ProductLink({ productId, name }: { productId: string; name: string }) {

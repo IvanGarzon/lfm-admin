@@ -1,4 +1,17 @@
-import type { TenantStatus, States, UserRole } from '@/prisma/client';
+import type { TenantStatus } from '@/zod/schemas/enums/TenantStatus.schema';
+import type { States } from '@/zod/schemas/enums/States.schema';
+import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
+
+// -- Tenant -------------------------------------------------------------------
+
+export type Tenant = {
+  id: string;
+  slug: string;
+  name: string;
+  status: TenantStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 // -- Branding -----------------------------------------------------------------
 
@@ -51,7 +64,7 @@ export type TenantListItem = {
   userCount: number;
 };
 
-export type TenantSettings = {
+type TenantSettings = {
   id: string;
   logoUrl: string | null;
   abn: string | null;
@@ -79,39 +92,15 @@ export type TenantWithSettings = {
   settings: TenantSettings | null;
 };
 
-export type UpdateTenantInput = {
-  name?: string;
-  slug?: string;
-};
-
-export type CreateTenantUserInput = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  hashedPassword: string;
-  role: UserRole;
-};
-
-export type CreateTenantWithDetailsInput = {
+export type TenantWithDetails = {
   name: string;
   slug: string;
-  settings?: UpdateTenantSettingsInput;
-  users?: CreateTenantUserInput[];
-};
-
-export type UpdateTenantSettingsInput = {
-  logoUrl?: string | null;
-  abn?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  website?: string | null;
-  bankName?: string | null;
-  bsb?: string | null;
-  accountNumber?: string | null;
-  accountName?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: States | null;
-  postcode?: string | null;
-  country?: string | null;
+  settings?: Omit<TenantSettings, 'id'>;
+  users?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    hashedPassword: string;
+    role: UserRole;
+  }[];
 };

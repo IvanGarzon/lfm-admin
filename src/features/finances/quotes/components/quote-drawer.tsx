@@ -1,12 +1,12 @@
 'use client';
 
+import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
-import { QuoteStatus } from '@/prisma/client';
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
@@ -365,7 +365,7 @@ export function QuoteDrawer({
 
     checkUnsavedChanges(() => {
       // Determine email type based on quote status and show preview
-      const emailType = quote.status === QuoteStatus.SENT ? 'sent' : 'sent';
+      const emailType = quote.status === QuoteStatusSchema.enum.SENT ? 'sent' : 'sent';
       handleLoadEmailPreview(emailType);
     }, 'Please save your changes before sending the email to ensure it reflects the latest data.');
   }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);

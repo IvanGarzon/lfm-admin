@@ -118,3 +118,5 @@ QuoteEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/quote.pdf',
 } satisfies QuoteEmailProps;
+
+export default QuoteEmail;

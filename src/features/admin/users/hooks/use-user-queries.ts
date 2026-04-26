@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateUserRole } from '@/actions/admin/users/mutations';
-import type { UserRole } from '@/prisma/client';
+import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
 
 export const USER_KEYS = {
   all: ['admin-users'] as const,

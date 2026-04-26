@@ -25,6 +25,7 @@
     "paths": {
       "@/env": ["./env.ts"],
       "@/public/*": ["./public/*"],
+      "@/prisma/client": ["./prisma/generated/client/client.ts"],
       "@/prisma/*": ["./prisma/generated/*"],
       "@/zod/*": ["./prisma/zod/*"],
       "@/repo/*": ["./prisma/prisma-vault/*"],

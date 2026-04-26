@@ -17,7 +17,7 @@ const inputVariants = cva(
         xl: 'h-16 py-2 text-base file:h-10',
       },
       hasError: {
-        true: 'aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-red-200 aria-[invalid=true]:border-red-500',
+        true: 'aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-destructive/20 aria-[invalid=true]:border-destructive',
       },
       enableStepper: {
         false:
@@ -57,7 +57,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <div
             className={cn(
               'pointer-events-none absolute bottom-0 left-2 flex h-full items-center justify-center',
-              'text-gray-400 dark:text-gray-600',
+              'text-muted-foreground',
             )}
           >
             <Search size={16} className="shrink-0" aria-hidden="true" />
@@ -72,8 +72,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               aria-label="Change password visibility"
               className={cn(
                 'h-fit w-fit rounded-sm outline-none transition-all cursor-pointer',
-                'text-gray-400 dark:text-gray-600',
-                'hover:text-gray-500 hover:dark:text-gray-500',
+                'text-muted-foreground',
+                'hover:text-foreground',
               )}
               type="button"
               onClick={() => {

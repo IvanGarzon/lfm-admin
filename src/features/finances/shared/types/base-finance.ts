@@ -1,4 +1,5 @@
-import { QuoteStatus, InvoiceStatus } from '@/prisma/client';
+import type { QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
+import type { InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { PaginatedResult, PaginationParams } from '@/types/pagination';
 
 /**

@@ -1,11 +1,11 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { useCallback, useMemo, useRef } from 'react';
 import { useForm, useFieldArray, useWatch, type Resolver, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-import { InvoiceStatus } from '@/prisma/client';
 import { Box } from '@/components/ui/box';
 import { Form } from '@/components/ui/form';
 
@@ -35,7 +35,7 @@ const defaultFormState: CreateInvoiceInput = {
   customerId: '',
   gst: 10,
   discount: 0,
-  status: InvoiceStatus.DRAFT,
+  status: InvoiceStatusSchema.enum.DRAFT,
   issuedDate: new Date(),
   dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   currency: 'AUD',
@@ -173,11 +173,11 @@ export function InvoiceForm({
 
     // Lock if PAID, PARTIALLY_PAID, CANCELLED, PENDING, or OVERDUE
     const lockedStatuses: InvoiceStatus[] = [
-      InvoiceStatus.PAID,
-      InvoiceStatus.PARTIALLY_PAID,
-      InvoiceStatus.CANCELLED,
-      InvoiceStatus.PENDING,
-      InvoiceStatus.OVERDUE,
+      InvoiceStatusSchema.enum.PAID,
+      InvoiceStatusSchema.enum.PARTIALLY_PAID,
+      InvoiceStatusSchema.enum.CANCELLED,
+      InvoiceStatusSchema.enum.PENDING,
+      InvoiceStatusSchema.enum.OVERDUE,
     ];
 
     return lockedStatuses.includes(invoice.status);

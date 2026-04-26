@@ -69,11 +69,11 @@ const DrawerContent = React.forwardRef<
         ref={forwardedRef}
         className={clsx(
           // base
-          'fixed inset-y-0 right-0 z-50 flex flex-1 flex-col overflow-y-auto border rounded-none p-6 shadow-lg focus:outline-none',
+          'fixed inset-y-0 right-0 z-50 flex flex-1 flex-col overflow-hidden border rounded-none p-6 shadow-lg focus:outline-none',
           // border color
-          'border-gray-200 dark:border-gray-900',
+          'border-border',
           // background color
-          'bg-white dark:bg-[#090E1A]',
+          'bg-card',
           // transition
           'data-[state=closed]:animate-drawerSlideRightAndFade data-[state=open]:animate-drawerSlideLeftAndFade',
           focusRing,
@@ -94,14 +94,14 @@ const DrawerHeader = React.forwardRef<HTMLDivElement, React.ComponentPropsWithou
     return (
       <div
         ref={ref}
-        className="-mx-6 flex items-start justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900"
+        className="-mx-6 flex items-start justify-between gap-x-4 border-b border-border px-6 pb-4"
         {...props}
       >
         <div className={className ?? 'mt-1 flex flex-col gap-y-1'}>{children}</div>
         <DrawerPrimitives.Close asChild>
           <Button
             variant="ghost"
-            className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+            className="aspect-square p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <X className="size-5" aria-hidden="true" />
             <span className="sr-only">Close</span>
@@ -124,7 +124,7 @@ const DrawerTitle = React.forwardRef<
       // base
       'text-base font-semibold',
       // text color
-      'text-gray-900 dark:text-gray-50',
+      'text-foreground',
       className,
     )}
     {...props}
@@ -148,7 +148,7 @@ const DrawerDescription = React.forwardRef<
   return (
     <DrawerPrimitives.Description
       ref={forwardedRef}
-      className={clsx('text-gray-500 dark:text-gray-500', className)}
+      className={clsx('text-muted-foreground', className)}
       {...props}
     />
   );
@@ -160,7 +160,7 @@ const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   return (
     <div
       className={clsx(
-        'flex flex-col-reverse border-t border-gray-200 pt-4 sm:flex-row sm:justify-end sm:space-x-2 dark:border-gray-900',
+        'flex flex-col-reverse border-t border-border pt-4 sm:flex-row sm:justify-end sm:space-x-2',
         className,
       )}
       {...props}

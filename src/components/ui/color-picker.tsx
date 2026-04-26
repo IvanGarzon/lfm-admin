@@ -114,14 +114,14 @@ export function ColorPicker({
       {/* Selected Colors */}
       {colors.length > 0 ? (
         <Box>
-          <Box className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <Box className="text-sm font-medium text-foreground mb-2">
             Selected Colors ({colors.length}/{maxColors})
           </Box>
           <Box className="flex flex-wrap gap-1">
             {colors.map((color, index) => (
               <Box key={color} className="relative group">
                 <Box
-                  className="w-12 h-12 rounded-sm border-2 border-gray-200 dark:border-gray-700"
+                  className="w-12 h-12 rounded-sm border-2 border-border"
                   style={{ backgroundColor: color }}
                 />
                 {!disabled && (
@@ -144,15 +144,13 @@ export function ColorPicker({
       {/* Color Picker Section */}
       {colors.length < maxColors && !disabled && (
         <Box>
-          <Box className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Add Colors
-          </Box>
+          <Box className="text-sm font-medium text-foreground mb-2">Add Colors</Box>
           <Box className="space-y-4">
             {/* Top Row: Custom Color Picker and Preset Colors */}
             <Box className="flex gap-4">
               {/* Custom Color - Left Side */}
               <Box className="shrink-0">
-                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">Custom Color</Box>
+                <Box className="text-xs text-muted-foreground mb-2">Custom Color</Box>
                 <Box className="h-[100px]">
                   <Input
                     type="color"
@@ -165,7 +163,7 @@ export function ColorPicker({
 
               {/* Preset Colors - Right Side in 2 Rows */}
               <Box className="flex-1">
-                <Box className="text-xs text-gray-600 dark:text-gray-400 mb-2">Preset Colors</Box>
+                <Box className="text-xs text-muted-foreground mb-2">Preset Colors</Box>
                 <Box className="grid grid-cols-10 gap-1">
                   {PRESET_COLORS.map((color) => (
                     <button
@@ -176,9 +174,9 @@ export function ColorPicker({
                       className={cn(
                         'w-full aspect-square rounded-sm transition-all hover:scale-110',
                         colors.includes(color)
-                          ? 'border-gray-400 opacity-50 cursor-not-allowed'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 cursor-pointer',
-                        color === '#FFFFFF' && 'border-gray-300',
+                          ? 'border-muted-foreground opacity-50 cursor-not-allowed'
+                          : 'border-border hover:border-muted-foreground cursor-pointer',
+                        color === '#FFFFFF' && 'border-border',
                       )}
                       style={{ backgroundColor: color }}
                       aria-label={`Add ${color}`}
@@ -192,10 +190,7 @@ export function ColorPicker({
             <Box className="flex gap-2 items-end">
               {/* HEX Input */}
               <Box className="flex-1">
-                <label
-                  htmlFor={hexInputId}
-                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
-                >
+                <label htmlFor={hexInputId} className="text-xs text-muted-foreground mb-1 block">
                   HEX
                 </label>
                 <Input
@@ -211,10 +206,7 @@ export function ColorPicker({
 
               {/* R Input */}
               <Box className="w-20">
-                <label
-                  htmlFor={rInputId}
-                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
-                >
+                <label htmlFor={rInputId} className="text-xs text-muted-foreground mb-1 block">
                   R
                 </label>
                 <Input
@@ -230,10 +222,7 @@ export function ColorPicker({
 
               {/* G Input */}
               <Box className="w-20">
-                <label
-                  htmlFor={gInputId}
-                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
-                >
+                <label htmlFor={gInputId} className="text-xs text-muted-foreground mb-1 block">
                   G
                 </label>
                 <Input
@@ -249,10 +238,7 @@ export function ColorPicker({
 
               {/* B Input */}
               <Box className="w-20">
-                <label
-                  htmlFor={bInputId}
-                  className="text-xs text-gray-600 dark:text-gray-400 mb-1 block"
-                >
+                <label htmlFor={bInputId} className="text-xs text-muted-foreground mb-1 block">
                   B
                 </label>
                 <Input

@@ -32,7 +32,7 @@ export default defineConfig({
     alias: {
       '@/env': path.resolve(__dirname, 'env.ts'),
       // Real Prisma client — NOT the mock
-      '@/prisma/client': path.resolve(__dirname, 'prisma/generated/client'),
+      '@/prisma/client': path.resolve(__dirname, 'prisma/generated/client/client.ts'),
       '@/prisma': path.resolve(__dirname, 'prisma/generated'),
       '@/zod': path.resolve(__dirname, 'prisma/zod'),
       '@/repo': path.resolve(__dirname, 'prisma/prisma-vault'),

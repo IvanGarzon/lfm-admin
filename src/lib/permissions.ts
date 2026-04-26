@@ -10,84 +10,100 @@ import { Session } from 'next-auth';
  * Permissions follow the pattern: `can${Action}${Resource}`
  */
 export const PERMISSIONS = {
+  // Customer Permissions
+  canReadCustomers: {
+    label: 'View customers',
+  },
+  canManageCustomers: {
+    label: 'Manage customers',
+  },
+
+  // Organisation Permissions
+  canReadOrganisations: {
+    label: 'View organisations',
+  },
+  canManageOrganisations: {
+    label: 'Manage organisations',
+  },
+
   // Invoice Permissions
   canReadInvoices: {
-    label: 'Can view invoices',
+    label: 'View invoices',
   },
   canManageInvoices: {
-    label: 'Can create, edit, cancel, and delete invoices',
+    label: 'Manage invoices',
   },
   canRecordPayments: {
-    label: 'Can record payments',
+    label: 'Record payments',
   },
 
   // Quote Permissions
   canReadQuotes: {
-    label: 'Can view quotes',
+    label: 'View quotes',
   },
   canManageQuotes: {
-    label: 'Can create, edit, and delete quotes',
+    label: 'Manage quotes',
   },
 
   // Transaction Permissions
   canReadTransactions: {
-    label: 'Can view transactions',
+    label: 'View transactions',
   },
   canManageTransactions: {
-    label: 'Can create, edit, and delete transactions',
+    label: 'Manage transactions',
   },
 
   // Product Permissions
   canReadProducts: {
-    label: 'Can view products',
+    label: 'View products',
   },
   canManageProducts: {
-    label: 'Can create, edit, and delete products',
+    label: 'Manage products',
   },
 
   // Vendor Permissions
   canReadVendors: {
-    label: 'Can view vendors',
+    label: 'View vendors',
   },
   canManageVendors: {
-    label: 'Can create, edit, and delete vendors',
+    label: 'Manage vendors',
   },
 
   // Recipe Permissions
   canReadRecipes: {
-    label: 'Can view recipes',
+    label: 'View recipes',
   },
   canManageRecipes: {
-    label: 'Can create, edit, and delete recipes',
+    label: 'Manage recipes',
   },
 
   // Price List Permissions
   canReadPriceList: {
-    label: 'Can view price list',
+    label: 'View price list',
   },
   canManagePriceList: {
-    label: 'Can create, edit, and delete price list items',
+    label: 'Manage price list',
   },
 
   // Employee Permissions
   canReadEmployees: {
-    label: 'Can view employees',
+    label: 'View employees',
   },
   canManageEmployees: {
-    label: 'Can create, edit, and delete employees',
+    label: 'Manage employees',
   },
 
   // Developer Tools Permissions
   canAccessTools: {
-    label: 'Can access developer tools',
+    label: 'Access developer tools',
   },
 
   // Tenant Management Permissions
   canManageSettings: {
-    label: 'Can manage tenant settings',
+    label: 'Manage tenant settings',
   },
   canManageUsers: {
-    label: 'Can invite and manage users',
+    label: 'Invite and manage users',
   },
 } as const;
 
@@ -118,6 +134,8 @@ type RolePolicy = {
  */
 const USER: RolePolicy = {
   allow: [
+    'canReadCustomers',
+    'canReadOrganisations',
     'canReadInvoices',
     'canReadQuotes',
     'canReadTransactions',
@@ -177,6 +195,8 @@ const USER: RolePolicy = {
 const MANAGER: RolePolicy = {
   allow: [
     ...USER.allow,
+    'canManageCustomers',
+    'canManageOrganisations',
     'canManageInvoices',
     'canManageQuotes',
     'canManageTransactions',
@@ -244,7 +264,7 @@ const MANAGER: RolePolicy = {
  * Same as MANAGER plus deletion permissions
  */
 const ADMIN: RolePolicy = {
-  allow: [...MANAGER.allow, 'canAccessTools', 'canManageSettings', 'canManageUsers'],
+  allow: [...MANAGER.allow, 'canManageSettings', 'canManageUsers'],
   deny: [],
   actions: {
     allow: [
@@ -267,7 +287,7 @@ const ADMIN: RolePolicy = {
  * SUPER_ADMIN role: Full platform-wide access, no restrictions
  */
 const SUPER_ADMIN: RolePolicy = {
-  allow: [...ADMIN.allow],
+  allow: [...ADMIN.allow, 'canAccessTools'],
   deny: [],
   actions: {
     allow: [...ADMIN.actions.allow],

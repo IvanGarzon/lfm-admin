@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
-import { InvoiceStatus } from '@/prisma/client';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import {
@@ -17,6 +16,7 @@ import {
   createTestTenant,
 } from '@/lib/testing/integration/database';
 import { createInvoiceInput, createCustomerInput } from '@/lib/testing';
+import { InvoiceStatus } from '@/prisma/client';
 
 // Prevent the module-level singleton from running before the container is ready.
 vi.mock('@/lib/prisma', () => ({ prisma: {} }));

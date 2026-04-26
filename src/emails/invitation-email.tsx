@@ -74,3 +74,5 @@ InvitationEmail.PreviewProps = {
   acceptUrl: 'http://localhost:3000/invite/accept?token=example-token',
   expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
 } satisfies InvitationEmailProps;
+
+export default InvitationEmail;

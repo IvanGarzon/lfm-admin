@@ -1,5 +1,6 @@
 'use client';
 
+import { UserRoleSchema, type UserRole } from '@/zod/schemas/enums/UserRole.schema';
 import { useState } from 'react';
 import {
   Dialog,
@@ -20,9 +21,12 @@ import {
 } from '@/components/ui/select';
 import { Box } from '@/components/ui/box';
 import { useAdminSendInvitation } from '@/features/admin/invitations/hooks/use-invitation-queries';
-import { UserRole } from '@/prisma/client';
 
-const INVITABLE_ROLES = [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER] as const;
+const INVITABLE_ROLES = [
+  UserRoleSchema.enum.ADMIN,
+  UserRoleSchema.enum.MANAGER,
+  UserRoleSchema.enum.USER,
+] as const;
 
 export function InviteUserDialog({
   tenantId,
@@ -34,7 +38,7 @@ export function InviteUserDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.USER);
+  const [role, setRole] = useState<UserRole>(UserRoleSchema.enum.USER);
   const sendInvitation = useAdminSendInvitation(tenantId);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,7 +49,7 @@ export function InviteUserDialog({
         onSuccess: (result) => {
           if (result.success) {
             setEmail('');
-            setRole(UserRole.USER);
+            setRole(UserRoleSchema.enum.USER);
             onOpenChange(false);
           }
         },

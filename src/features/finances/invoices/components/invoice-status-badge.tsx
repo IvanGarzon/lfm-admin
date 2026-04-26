@@ -6,7 +6,7 @@ import {
   Timer,
   SquareDashedTopSolid,
 } from 'lucide-react';
-import { InvoiceStatus } from '@/prisma/client';
+
 import {
   StatusBadge,
   type StatusBadgeConfig,

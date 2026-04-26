@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withTenant } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
@@ -22,29 +22,29 @@ const organizationRepo = new OrganizationRepository(prisma);
  * @param data - The input data for creating the organisation, conforming to `CreateOrganizationInput`.
  * @returns A promise that resolves to an `ActionResult` with the new organisation's ID and name.
  */
-export const createOrganization = withTenant<CreateOrganizationInput, { id: string; name: string }>(
-  async ({ tenantId }, data) => {
-    try {
-      const validatedData = CreateOrganizationSchema.parse(data);
+export const createOrganization = withTenantPermission<
+  CreateOrganizationInput,
+  { id: string; name: string }
+>('canManageOrganisations', async ({ tenantId }, data) => {
+  try {
+    const validatedData = CreateOrganizationSchema.parse(data);
 
-      const organization = await organizationRepo.createOrganization(validatedData, tenantId);
+    const organization = await organizationRepo.createOrganization(validatedData, tenantId);
 
-      // Revalidate paths that use organisations
-      revalidatePath('/customers');
-      revalidatePath('/organizations');
+    revalidatePath('/customers');
+    revalidatePath('/organizations');
 
-      return {
-        success: true,
-        data: {
-          id: organization.id,
-          name: organization.name,
-        },
-      };
-    } catch (error) {
-      return handleActionError(error, 'Failed to create organisation');
-    }
-  },
-);
+    return {
+      success: true,
+      data: {
+        id: organization.id,
+        name: organization.name,
+      },
+    };
+  } catch (error) {
+    return handleActionError(error, 'Failed to create organisation');
+  }
+});
 
 /**
  * Updates an existing organisation with the provided data.
@@ -52,7 +52,8 @@ export const createOrganization = withTenant<CreateOrganizationInput, { id: stri
  * @param data - The input data for updating the organisation, conforming to `UpdateOrganizationInput`.
  * @returns A promise that resolves to an `ActionResult` with the updated organisation's ID.
  */
-export const updateOrganization = withTenant<UpdateOrganizationInput, { id: string }>(
+export const updateOrganization = withTenantPermission<UpdateOrganizationInput, { id: string }>(
+  'canManageOrganisations',
   async (ctx, data) => {
     try {
       const validatedData = UpdateOrganizationSchema.parse(data);
@@ -88,7 +89,8 @@ export const updateOrganization = withTenant<UpdateOrganizationInput, { id: stri
  * @param data - An object containing the organisation ID to delete.
  * @returns A promise that resolves to an `ActionResult` with the deleted organisation's ID.
  */
-export const deleteOrganization = withTenant<DeleteOrganizationInput, { id: string }>(
+export const deleteOrganization = withTenantPermission<DeleteOrganizationInput, { id: string }>(
+  'canManageOrganisations',
   async (ctx, data) => {
     try {
       const validatedData = DeleteOrganizationSchema.parse(data);

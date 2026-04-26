@@ -101,3 +101,5 @@ ReceiptEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/receipt.pdf',
 } satisfies ReceiptEmailProps;
+
+export default ReceiptEmail;

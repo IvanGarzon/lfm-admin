@@ -10,6 +10,7 @@ import { UserAvatar } from '@/components/shared/user-avatar';
 import type { UserListItem } from '@/features/users/types';
 import { USER_ROLE_LABELS } from '@/features/users/types';
 import { UserStatusBadge } from './user-status-badge';
+import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
 
@@ -70,7 +71,7 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     id: 'role',
     accessorKey: 'role',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
-    cell: ({ row }) => <span className="text-sm">{USER_ROLE_LABELS[row.original.role]}</span>,
+    cell: ({ row }) => <UserRoleBadge role={row.original.role} />,
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: (row, id, value) => value.includes(row.getValue(id)),

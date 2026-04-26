@@ -1,5 +1,6 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import Link from 'next/link';
 import {
   Ban,
@@ -14,7 +15,7 @@ import {
   Copy,
   RotateCcw,
 } from 'lucide-react';
-import { InvoiceStatus } from '@/prisma/client';
+
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import {
@@ -90,15 +91,15 @@ export function InvoiceActions({
             <Copy className="h-4 w-4" />
             Duplicate invoice
           </DropdownMenuItem>
-          {invoice.status === InvoiceStatus.DRAFT && (
+          {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
             <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id, invoice.invoiceNumber)}>
               <Hourglass className="h-4 w-4" />
               Mark as pending
             </DropdownMenuItem>
           )}
-          {(invoice.status === InvoiceStatus.PENDING ||
-            invoice.status === InvoiceStatus.OVERDUE ||
-            invoice.status === InvoiceStatus.PARTIALLY_PAID) && (
+          {(invoice.status === InvoiceStatusSchema.enum.PENDING ||
+            invoice.status === InvoiceStatusSchema.enum.OVERDUE ||
+            invoice.status === InvoiceStatusSchema.enum.PARTIALLY_PAID) && (
             <>
               <DropdownMenuItem onClick={() => onRecordPayment(invoice.id, invoice.invoiceNumber)}>
                 <CreditCard className="h-4 w-4" />
@@ -111,7 +112,7 @@ export function InvoiceActions({
               <>
                 <DropdownMenuSeparator />
 
-                {invoice.status === InvoiceStatus.PENDING ? (
+                {invoice.status === InvoiceStatusSchema.enum.PENDING ? (
                   <DropdownMenuItem onClick={() => onMarkAsDraft(invoice.id)}>
                     <RotateCcw className="h-4 w-4" />
                     Revert to draft
@@ -129,14 +130,14 @@ export function InvoiceActions({
             </>
           )}
 
-          {invoice.status === InvoiceStatus.PAID && onSendReceipt ? (
+          {invoice.status === InvoiceStatusSchema.enum.PAID && onSendReceipt ? (
             <DropdownMenuItem onClick={() => onSendReceipt(invoice.id)}>
               <Receipt className="h-4 w-4" />
               Send receipt
             </DropdownMenuItem>
           ) : null}
 
-          {invoice.status === InvoiceStatus.DRAFT ? (
+          {invoice.status === InvoiceStatusSchema.enum.DRAFT ? (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem

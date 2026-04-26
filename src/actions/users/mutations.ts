@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { UserRepository } from '@/repositories/user-repository';
 import { handleActionError } from '@/lib/error-handler';
-import { withTenantPermission } from '@/lib/action-auth';
+import { withTenantPermission, withAuth } from '@/lib/action-auth';
+import { AuditService } from '@/services/audit.service';
 import { InvitationRepository } from '@/repositories/invitation-repository';
 import { TenantRepository } from '@/repositories/tenant-repository';
 import { sendEmailNotification } from '@/lib/email-service';
@@ -15,17 +16,23 @@ import {
   UpdateUserRoleSchema,
   SoftDeleteUserSchema,
   InviteUserSchema,
+  ChangePasswordSchema,
   type UpdateUserInput,
   type UpdateUserRoleInput,
   type SoftDeleteUserInput,
   type InviteUserInput,
+  type ChangePasswordInput,
 } from '@/schemas/users';
+import bcrypt from 'bcryptjs';
+import { PasswordResetTokenRepository } from '@/repositories/password-reset-token-repository';
 import type { UserDetail } from '@/features/users/types';
 import type { User } from '@/prisma/client';
 
 const userRepo = new UserRepository(prisma);
 const invitationRepo = new InvitationRepository(prisma);
 const tenantRepo = new TenantRepository(prisma);
+const auditService = new AuditService();
+const passwordResetTokenRepo = new PasswordResetTokenRepository(prisma);
 
 /**
  * Updates editable fields (name, email, phone, status, 2FA) for a tenant user.
@@ -34,7 +41,8 @@ export const updateUser = withTenantPermission<UpdateUserInput, UserDetail>(
   'canManageUsers',
   async (ctx, data) => {
     try {
-      const { id, ...fields } = UpdateUserSchema.parse(data);
+      const { id, ...rest } = UpdateUserSchema.parse(data);
+      const fields = { ...rest };
       const existing = await userRepo.findTenantUserById(id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'User not found' };
@@ -66,6 +74,19 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
       }
 
       const user = await userRepo.updateTenantUserRole(id, ctx.tenantId, role);
+
+      const changedByName =
+        [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(' ') || 'Admin';
+      auditService.UserRoleChanged({
+        message: `Role changed to ${role}`,
+        data: {
+          userId: ctx.userId,
+          targetUserId: id,
+          fromRole: existing.role,
+          toRole: role,
+          changedByName,
+        },
+      });
 
       revalidatePath('/users');
       revalidatePath(`/users/${id}`);
@@ -164,3 +185,115 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
     }
   },
 );
+
+/**
+ * Allows the current user to change their own password.
+ * Requires the current password for verification.
+ */
+export const changePassword = withAuth<ChangePasswordInput, void>(async (session, data) => {
+  try {
+    const { userId, currentPassword, newPassword } = ChangePasswordSchema.parse(data);
+
+    if (session.user.id !== userId) {
+      return { success: false, error: 'Unauthorised' };
+    }
+
+    const user = await userRepo.getUserByIdWithSelect(userId, { id: true, password: true });
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+
+    if (!user.password) {
+      return { success: false, error: 'No password set on this account' };
+    }
+
+    if (!currentPassword) {
+      return { success: false, error: 'Current password is required' };
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return { success: false, error: 'Current password is incorrect' };
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await userRepo.updatePassword(userId, hashed);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    return handleActionError(error, 'Failed to change password');
+  }
+});
+
+/**
+ * Sends a password reset email to a user. Admin-triggered.
+ * Creates a single-use token and emails the user a link to set their own password.
+ */
+export const sendPasswordResetEmail = withTenantPermission<string, void>(
+  'canManageUsers',
+  async (ctx, userId) => {
+    try {
+      const [targetUser, requester] = await Promise.all([
+        userRepo.findTenantUserById(userId, ctx.tenantId),
+        userRepo.findById(ctx.userId),
+      ]);
+
+      if (!targetUser || !targetUser.email) {
+        return { success: false, error: 'User not found or has no email address' };
+      }
+
+      if (!requester) {
+        return { success: false, error: 'Requester not found' };
+      }
+
+      const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+      const resetToken = await passwordResetTokenRepo.create(userId, ctx.userId, expiresAt);
+
+      const requesterName =
+        [requester.firstName, requester.lastName].filter(Boolean).join(' ') || 'Admin';
+
+      await sendEmailNotification({
+        to: targetUser.email,
+        subject: 'Reset your password',
+        template: 'password-reset',
+        props: {
+          userName: [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' '),
+          requestedByName: requesterName,
+          resetUrl: absoluteUrl(`/reset-password?token=${resetToken.token}`),
+          expiresAt,
+        },
+      });
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return handleActionError(error, 'Failed to send password reset email');
+    }
+  },
+);
+
+/**
+ * Completes a password reset using a valid token. Public — no auth required.
+ * Validates the token, updates the password, and invalidates all other reset tokens.
+ */
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const record = await passwordResetTokenRepo.findValid(token);
+    if (!record) {
+      return { success: false, error: 'This reset link is invalid or has expired.' };
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+
+    await Promise.all([
+      userRepo.updatePassword(record.userId, hashed),
+      passwordResetTokenRepo.invalidateAllForUser(record.userId),
+    ]);
+
+    return { success: true };
+  } catch (error) {
+    return handleActionError(error, 'Failed to reset password');
+  }
+}

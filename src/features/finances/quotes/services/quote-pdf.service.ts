@@ -1,7 +1,8 @@
+import { DocumentKindSchema, type DocumentKind } from '@/zod/schemas/enums/DocumentKind.schema';
 import { logger } from '@/lib/logger';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
 import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document.service';
-import { DocumentKind } from '@/prisma/client';
+
 import {
   generateQuoteFilename,
   calculateContentHash,
@@ -57,7 +58,7 @@ export async function getOrGenerateQuotePdf(
   const contentHash = calculateContentHash(quote);
 
   // Step 2: Check for existing document with same hash
-  const existingDoc = await getLatestDocument(quote.id, DocumentKind.QUOTE);
+  const existingDoc = await getLatestDocument(quote.id, DocumentKindSchema.enum.QUOTE);
 
   // Step 3: Determine if regeneration is needed
   // Only regenerate if content hash changed
@@ -132,7 +133,7 @@ export async function getOrGenerateQuotePdf(
 
     // Save via DocumentService (handles S3 upload + DB record)
     const newDoc = await createDocument({
-      kind: DocumentKind.QUOTE,
+      kind: DocumentKindSchema.enum.QUOTE,
       quoteId: quote.id,
       buffer: generatedPdfBuffer,
       fileName: pdfFilename,

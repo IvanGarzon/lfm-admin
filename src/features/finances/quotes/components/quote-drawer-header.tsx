@@ -1,6 +1,6 @@
+import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { X, Eye, EyeOff, Save, AlertCircle } from 'lucide-react';
 
-import { QuoteStatus } from '@/prisma/client';
 import { Box } from '@/components/ui/box';
 import { DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -119,9 +119,9 @@ export function QuoteDrawerHeader({
 
         {mode === 'edit' && quote ? (
           <>
-            {quote.status !== QuoteStatus.ACCEPTED &&
-            quote.status !== QuoteStatus.CONVERTED &&
-            quote.status !== QuoteStatus.ON_HOLD ? (
+            {quote.status !== QuoteStatusSchema.enum.ACCEPTED &&
+            quote.status !== QuoteStatusSchema.enum.CONVERTED &&
+            quote.status !== QuoteStatusSchema.enum.ON_HOLD ? (
               <Button
                 type="submit"
                 form="form-rhf-quote"

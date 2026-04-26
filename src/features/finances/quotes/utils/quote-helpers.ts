@@ -11,9 +11,10 @@
  * @module quote-helpers
  */
 
+import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 import crypto from 'crypto';
 import { isAfter, differenceInDays, startOfToday } from 'date-fns';
-import { QuoteStatus } from '@/prisma/client';
+
 import { generatePdfBuffer } from '@/lib/pdf';
 import type { QuoteListItem, QuoteWithDetails } from '@/features/finances/quotes/types';
 import { getTenantBranding } from '@/actions/tenant/queries';
@@ -28,8 +29,8 @@ import { getTenantBranding } from '@/actions/tenant/queries';
  *
  * @example
  * ```ts
- * getQuoteStatusLabel(QuoteStatus.ON_HOLD); // Returns: "on hold"
- * getQuoteStatusLabel(QuoteStatus.ACCEPTED); // Returns: "accepted"
+ * getQuoteStatusLabel(QuoteStatusSchema.enum.ON_HOLD); // Returns: "on hold"
+ * getQuoteStatusLabel(QuoteStatusSchema.enum.ACCEPTED); // Returns: "accepted"
  * ```
  */
 export function getQuoteStatusLabel(status: QuoteStatus): string {
@@ -69,30 +70,36 @@ export function getQuoteStatusLabel(status: QuoteStatus): string {
  *
  * @example
  * ```ts
- * const allowedStatuses = VALID_QUOTE_STATUS_TRANSITIONS[QuoteStatus.SENT];
+ * const allowedStatuses = VALID_QUOTE_STATUS_TRANSITIONS[QuoteStatusSchema.enum.SENT];
  * // Returns: [ON_HOLD, ACCEPTED, REJECTED, EXPIRED, CANCELLED]
  * ```
  */
 export const VALID_QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
-  [QuoteStatus.DRAFT]: [
-    QuoteStatus.SENT,
-    QuoteStatus.REJECTED,
-    QuoteStatus.EXPIRED,
-    QuoteStatus.CANCELLED,
+  [QuoteStatusSchema.enum.DRAFT]: [
+    QuoteStatusSchema.enum.SENT,
+    QuoteStatusSchema.enum.REJECTED,
+    QuoteStatusSchema.enum.EXPIRED,
+    QuoteStatusSchema.enum.CANCELLED,
   ],
-  [QuoteStatus.SENT]: [
-    QuoteStatus.ON_HOLD,
-    QuoteStatus.ACCEPTED,
-    QuoteStatus.REJECTED,
-    QuoteStatus.EXPIRED,
-    QuoteStatus.CANCELLED,
+  [QuoteStatusSchema.enum.SENT]: [
+    QuoteStatusSchema.enum.ON_HOLD,
+    QuoteStatusSchema.enum.ACCEPTED,
+    QuoteStatusSchema.enum.REJECTED,
+    QuoteStatusSchema.enum.EXPIRED,
+    QuoteStatusSchema.enum.CANCELLED,
   ],
-  [QuoteStatus.ON_HOLD]: [QuoteStatus.ACCEPTED, QuoteStatus.CANCELLED],
-  [QuoteStatus.ACCEPTED]: [QuoteStatus.CONVERTED, QuoteStatus.CANCELLED],
-  [QuoteStatus.REJECTED]: [QuoteStatus.CANCELLED], // Can create version from rejected
-  [QuoteStatus.EXPIRED]: [QuoteStatus.CANCELLED], // Can create version from expired
-  [QuoteStatus.CANCELLED]: [], // Terminal state
-  [QuoteStatus.CONVERTED]: [], // Terminal state
+  [QuoteStatusSchema.enum.ON_HOLD]: [
+    QuoteStatusSchema.enum.ACCEPTED,
+    QuoteStatusSchema.enum.CANCELLED,
+  ],
+  [QuoteStatusSchema.enum.ACCEPTED]: [
+    QuoteStatusSchema.enum.CONVERTED,
+    QuoteStatusSchema.enum.CANCELLED,
+  ],
+  [QuoteStatusSchema.enum.REJECTED]: [QuoteStatusSchema.enum.CANCELLED], // Can create version from rejected
+  [QuoteStatusSchema.enum.EXPIRED]: [QuoteStatusSchema.enum.CANCELLED], // Can create version from expired
+  [QuoteStatusSchema.enum.CANCELLED]: [], // Terminal state
+  [QuoteStatusSchema.enum.CONVERTED]: [], // Terminal state
 };
 
 /**
@@ -104,10 +111,10 @@ export const VALID_QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> 
  *
  * @example
  * ```ts
- * canTransitionQuoteStatus(QuoteStatus.SENT, QuoteStatus.ACCEPTED);
+ * canTransitionQuoteStatus(QuoteStatusSchema.enum.SENT, QuoteStatusSchema.enum.ACCEPTED);
  * // Returns: true
  *
- * canTransitionQuoteStatus(QuoteStatus.CONVERTED, QuoteStatus.SENT);
+ * canTransitionQuoteStatus(QuoteStatusSchema.enum.CONVERTED, QuoteStatusSchema.enum.SENT);
  * // Returns: false (CONVERTED is terminal)
  * ```
  */
@@ -129,8 +136,8 @@ export function canTransitionQuoteStatus(fromStatus: QuoteStatus, toStatus: Quot
  *
  * @example
  * ```ts
- * const nextStatuses = getValidNextStatuses(QuoteStatus.SENT);
- * // Returns: [QuoteStatus.ON_HOLD, QuoteStatus.ACCEPTED, QuoteStatus.REJECTED, QuoteStatus.EXPIRED, QuoteStatus.CANCELLED]
+ * const nextStatuses = getValidNextStatuses(QuoteStatusSchema.enum.SENT);
+ * // Returns: [QuoteStatusSchema.enum.ON_HOLD, QuoteStatusSchema.enum.ACCEPTED, QuoteStatusSchema.enum.REJECTED, QuoteStatusSchema.enum.EXPIRED, QuoteStatusSchema.enum.CANCELLED]
  * ```
  */
 export function getValidNextStatuses(currentStatus: QuoteStatus): QuoteStatus[] {
@@ -147,9 +154,9 @@ export function getValidNextStatuses(currentStatus: QuoteStatus): QuoteStatus[] 
  *
  * @example
  * ```ts
- * isTerminalQuoteStatus(QuoteStatus.CONVERTED); // Returns: true
- * isTerminalQuoteStatus(QuoteStatus.CANCELLED); // Returns: true
- * isTerminalQuoteStatus(QuoteStatus.SENT);      // Returns: false
+ * isTerminalQuoteStatus(QuoteStatusSchema.enum.CONVERTED); // Returns: true
+ * isTerminalQuoteStatus(QuoteStatusSchema.enum.CANCELLED); // Returns: true
+ * isTerminalQuoteStatus(QuoteStatusSchema.enum.SENT);      // Returns: false
  * ```
  */
 export function isTerminalQuoteStatus(status: QuoteStatus): boolean {
@@ -238,10 +245,10 @@ export interface QuotePermissions {
  *
  * @example
  * ```ts
- * const permissions = getQuotePermissions(QuoteStatus.SENT);
+ * const permissions = getQuotePermissions(QuoteStatusSchema.enum.SENT);
  * // Returns: { canAccept: true, canReject: true, canSend: false, canEdit: false, ... }
  *
- * const draftPermissions = getQuotePermissions(QuoteStatus.DRAFT);
+ * const draftPermissions = getQuotePermissions(QuoteStatusSchema.enum.DRAFT);
  * // Returns: { canSend: true, canEdit: true, canCancel: true, canDelete: true, ... }
  * ```
  */
@@ -262,33 +269,33 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
   }
 
   return {
-    canAccept: status === QuoteStatus.SENT || status === QuoteStatus.ON_HOLD,
-    canReject: status === QuoteStatus.SENT,
-    canSend: status === QuoteStatus.DRAFT,
+    canAccept: status === QuoteStatusSchema.enum.SENT || status === QuoteStatusSchema.enum.ON_HOLD,
+    canReject: status === QuoteStatusSchema.enum.SENT,
+    canSend: status === QuoteStatusSchema.enum.DRAFT,
     canSendQuote:
-      status === QuoteStatus.SENT ||
-      status === QuoteStatus.ACCEPTED ||
-      status === QuoteStatus.ON_HOLD,
-    canPutOnHold: status === QuoteStatus.SENT,
-    canConvert: status === QuoteStatus.ACCEPTED,
+      status === QuoteStatusSchema.enum.SENT ||
+      status === QuoteStatusSchema.enum.ACCEPTED ||
+      status === QuoteStatusSchema.enum.ON_HOLD,
+    canPutOnHold: status === QuoteStatusSchema.enum.SENT,
+    canConvert: status === QuoteStatusSchema.enum.ACCEPTED,
     canCancel:
-      status === QuoteStatus.DRAFT ||
-      status === QuoteStatus.SENT ||
-      status === QuoteStatus.ON_HOLD ||
-      status === QuoteStatus.ACCEPTED ||
-      status === QuoteStatus.REJECTED,
+      status === QuoteStatusSchema.enum.DRAFT ||
+      status === QuoteStatusSchema.enum.SENT ||
+      status === QuoteStatusSchema.enum.ON_HOLD ||
+      status === QuoteStatusSchema.enum.ACCEPTED ||
+      status === QuoteStatusSchema.enum.REJECTED,
     canDelete:
-      status === QuoteStatus.DRAFT ||
-      status === QuoteStatus.REJECTED ||
-      status === QuoteStatus.EXPIRED ||
-      status === QuoteStatus.CANCELLED,
+      status === QuoteStatusSchema.enum.DRAFT ||
+      status === QuoteStatusSchema.enum.REJECTED ||
+      status === QuoteStatusSchema.enum.EXPIRED ||
+      status === QuoteStatusSchema.enum.CANCELLED,
     canCreateVersion:
-      status === QuoteStatus.SENT ||
-      status === QuoteStatus.ON_HOLD ||
-      status === QuoteStatus.ACCEPTED ||
-      status === QuoteStatus.REJECTED ||
-      status === QuoteStatus.EXPIRED,
-    canEdit: status === QuoteStatus.DRAFT,
+      status === QuoteStatusSchema.enum.SENT ||
+      status === QuoteStatusSchema.enum.ON_HOLD ||
+      status === QuoteStatusSchema.enum.ACCEPTED ||
+      status === QuoteStatusSchema.enum.REJECTED ||
+      status === QuoteStatusSchema.enum.EXPIRED,
+    canEdit: status === QuoteStatusSchema.enum.DRAFT,
   };
 }
 
@@ -438,19 +445,19 @@ export function daysUntilExpiry(validUntil: Date): number {
  *
  * @example
  * ```ts
- * isExpired(QuoteStatus.SENT, pastDate); // Returns: true
- * isExpired(QuoteStatus.EXPIRED, anyDate); // Returns: true
- * isExpired(QuoteStatus.ACCEPTED, pastDate); // Returns: false (accepted quotes don't expire)
- * isExpired(QuoteStatus.SENT, futureDate); // Returns: false
+ * isExpired(QuoteStatusSchema.enum.SENT, pastDate); // Returns: true
+ * isExpired(QuoteStatusSchema.enum.EXPIRED, anyDate); // Returns: true
+ * isExpired(QuoteStatusSchema.enum.ACCEPTED, pastDate); // Returns: false (accepted quotes don't expire)
+ * isExpired(QuoteStatusSchema.enum.SENT, futureDate); // Returns: false
  * ```
  */
 export function isExpired(status: QuoteStatus, validUntil: Date): boolean {
   if (
-    status === QuoteStatus.ACCEPTED ||
-    status === QuoteStatus.CONVERTED ||
-    status === QuoteStatus.EXPIRED ||
-    status === QuoteStatus.ON_HOLD ||
-    status === QuoteStatus.CANCELLED
+    status === QuoteStatusSchema.enum.ACCEPTED ||
+    status === QuoteStatusSchema.enum.CONVERTED ||
+    status === QuoteStatusSchema.enum.EXPIRED ||
+    status === QuoteStatusSchema.enum.ON_HOLD ||
+    status === QuoteStatusSchema.enum.CANCELLED
   ) {
     return false;
   }
@@ -494,8 +501,8 @@ export function getExpiredDays(validUntil: Date): number {
  *
  * @example
  * ```ts
- * needsAttention({status: QuoteStatus.SENT, validUntil: twoDaysFromNow}); // Returns: true
- * needsAttention({status: QuoteStatus.ACCEPTED, validUntil: twoDaysFromNow}); // Returns: false (not SENT status)
+ * needsAttention({status: QuoteStatusSchema.enum.SENT, validUntil: twoDaysFromNow}); // Returns: true
+ * needsAttention({status: QuoteStatusSchema.enum.ACCEPTED, validUntil: twoDaysFromNow}); // Returns: false (not SENT status)
  * ```
  */
 export function needsAttention({
@@ -505,7 +512,7 @@ export function needsAttention({
   status: QuoteStatus;
   validUntil: Date;
 }): boolean {
-  if (status !== QuoteStatus.SENT) {
+  if (status !== QuoteStatusSchema.enum.SENT) {
     return false;
   }
 
@@ -530,18 +537,21 @@ export function needsAttention({
  *
  * @example
  * ```ts
- * const expiredQuote = { status: QuoteStatus.SENT, validUntil: pastDate };
+ * const expiredQuote = { status: QuoteStatusSchema.enum.SENT, validUntil: pastDate };
  * getUrgency(expiredQuote); // Returns: 'critical'
  *
- * const soonQuote = { status: QuoteStatus.SENT, validUntil: twoDaysFromNow };
+ * const soonQuote = { status: QuoteStatusSchema.enum.SENT, validUntil: twoDaysFromNow };
  * getUrgency(soonQuote); // Returns: 'high'
  *
- * const acceptedQuote = { status: QuoteStatus.ACCEPTED, validUntil: pastDate };
+ * const acceptedQuote = { status: QuoteStatusSchema.enum.ACCEPTED, validUntil: pastDate };
  * getUrgency(acceptedQuote); // Returns: 'low' (accepted quotes have no urgency)
  * ```
  */
 export function getUrgency(quote: QuoteListItem): 'low' | 'medium' | 'high' | 'critical' {
-  if (quote.status !== QuoteStatus.SENT && quote.status !== QuoteStatus.DRAFT) {
+  if (
+    quote.status !== QuoteStatusSchema.enum.SENT &&
+    quote.status !== QuoteStatusSchema.enum.DRAFT
+  ) {
     return 'low';
   }
 

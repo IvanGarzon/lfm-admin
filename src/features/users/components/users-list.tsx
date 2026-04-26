@@ -11,6 +11,8 @@ import { userColumns } from '@/features/users/components/user-columns';
 import type { UserPagination } from '@/features/users/types';
 import { EmptyState } from '@/components/shared/empty-state';
 import { UsersTable } from '@/features/users/components/users-table';
+import { hasActiveSearchFilters } from '@/lib/utils';
+import { searchParams as userSearchParams } from '@/filters/users/users-filters';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -61,8 +63,11 @@ export function UsersList({
     debounceMs: 500,
   });
 
-  const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
-  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+  const isZeroState =
+    initialData.pagination.totalItems === 0 &&
+    !hasActiveSearchFilters(serverSearchParams, userSearchParams);
+
+  console.log('initialData', initialData);
 
   return (
     <Box className="space-y-4 min-w-0 w-full">

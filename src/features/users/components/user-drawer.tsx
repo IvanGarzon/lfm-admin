@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser, useUpdateUser, useUpdateUserRole } from '@/features/users/hooks/use-user-queries';
 import { UserForm } from './user-form';
 import { UserPermissionsForm } from './user-permissions-form';
+import { UserSecurityForm } from './user-security-form';
 import { UserStatusBadge } from './user-status-badge';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { CopyButton } from '@/components/shared/copy-button';
@@ -150,6 +151,7 @@ export function UserDrawer({
                 <TabsList className="mx-6 mt-4 w-fit">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                  <TabsTrigger value="security">Security</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="flex-1 overflow-hidden mt-0">
@@ -167,6 +169,10 @@ export function UserDrawer({
                     onUpdate={handleUpdateRole}
                     isUpdating={updateUserRole.isPending}
                   />
+                </TabsContent>
+
+                <TabsContent value="security" className="flex-1 overflow-hidden mt-0">
+                  <UserSecurityForm user={user} />
                 </TabsContent>
               </Tabs>
             </DrawerBody>

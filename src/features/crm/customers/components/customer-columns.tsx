@@ -7,12 +7,12 @@ import { Text } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import { Checkbox } from '@/components/ui/checkbox';
 import type { CustomerListItem } from '@/features/crm/customers/types';
 import { useQueryString } from '@/hooks/use-query-string';
 import { customerSearchParamsDefaults, searchParams } from '@/filters/customers/customers-filters';
-import { CustomerStatusBadge } from './customer-status-badge';
-import { CustomerActions } from './customer-actions';
+import { CustomerStatusBadge } from '@/features/crm/customers/components/customer-status-badge';
+import { CustomerActions } from '@/features/crm/customers/components/customer-actions';
+import { CUSTOMER_STATUS_OPTIONS } from '@/features/crm/customers/constants/customer-status-options';
 
 function CustomerLink({ customerId, name }: { customerId: string; name: string }) {
   const queryString = useQueryString(searchParams, customerSearchParamsDefaults);
@@ -29,27 +29,6 @@ function CustomerLink({ customerId, name }: { customerId: string; name: string }
 export const createCustomerColumns = (
   onDelete: (id: string, name: string) => void,
 ): ColumnDef<CustomerListItem>[] => [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     id: 'search',
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
@@ -81,10 +60,15 @@ export const createCustomerColumns = (
   {
     id: 'status',
     accessorKey: 'status',
-    header: 'Status',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => <CustomerStatusBadge status={row.original.status} />,
     enableColumnFilter: true,
     enableSorting: true,
+    meta: {
+      label: 'Status',
+      variant: 'multiSelect',
+      options: CUSTOMER_STATUS_OPTIONS,
+    },
   },
   {
     id: 'organization',

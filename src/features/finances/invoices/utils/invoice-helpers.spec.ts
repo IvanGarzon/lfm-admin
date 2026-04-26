@@ -1,3 +1,4 @@
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock env before any imports that might use it
@@ -46,7 +47,7 @@ import {
   getUrgency,
   calculateContentHash,
 } from './invoice-helpers';
-import { InvoiceStatus } from '@/prisma/client';
+
 import { addDays, subDays } from 'date-fns';
 import type { InvoiceListItem, InvoiceWithDetails } from '../types';
 
@@ -63,40 +64,58 @@ describe('invoice-helpers', () => {
 
   describe('Status Transitions', () => {
     it('allows same status transition', () => {
-      expect(canTransitionInvoiceStatus(InvoiceStatus.DRAFT, InvoiceStatus.DRAFT)).toBe(true);
+      expect(
+        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.DRAFT, InvoiceStatusSchema.enum.DRAFT),
+      ).toBe(true);
     });
 
     it('allows valid transition from DRAFT to PENDING', () => {
-      expect(canTransitionInvoiceStatus(InvoiceStatus.DRAFT, InvoiceStatus.PENDING)).toBe(true);
+      expect(
+        canTransitionInvoiceStatus(
+          InvoiceStatusSchema.enum.DRAFT,
+          InvoiceStatusSchema.enum.PENDING,
+        ),
+      ).toBe(true);
     });
 
     it('disallows invalid transition from PAID to DRAFT', () => {
-      expect(canTransitionInvoiceStatus(InvoiceStatus.PAID, InvoiceStatus.DRAFT)).toBe(false);
+      expect(
+        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.PAID, InvoiceStatusSchema.enum.DRAFT),
+      ).toBe(false);
     });
 
     it('identifies terminal statuses', () => {
-      expect(isTerminalInvoiceStatus(InvoiceStatus.PAID)).toBe(true);
-      expect(isTerminalInvoiceStatus(InvoiceStatus.CANCELLED)).toBe(true);
-      expect(isTerminalInvoiceStatus(InvoiceStatus.DRAFT)).toBe(false);
+      expect(isTerminalInvoiceStatus(InvoiceStatusSchema.enum.PAID)).toBe(true);
+      expect(isTerminalInvoiceStatus(InvoiceStatusSchema.enum.CANCELLED)).toBe(true);
+      expect(isTerminalInvoiceStatus(InvoiceStatusSchema.enum.DRAFT)).toBe(false);
     });
 
     it('gets valid next statuses', () => {
-      const next = getValidNextInvoiceStatuses(InvoiceStatus.DRAFT);
-      expect(next).toContain(InvoiceStatus.PENDING);
-      expect(next).toContain(InvoiceStatus.CANCELLED);
+      const next = getValidNextInvoiceStatuses(InvoiceStatusSchema.enum.DRAFT);
+      expect(next).toContain(InvoiceStatusSchema.enum.PENDING);
+      expect(next).toContain(InvoiceStatusSchema.enum.CANCELLED);
     });
 
     it('validates transition and throws if invalid', () => {
       expect(() =>
-        validateInvoiceStatusTransition(InvoiceStatus.PAID, InvoiceStatus.PENDING),
+        validateInvoiceStatusTransition(
+          InvoiceStatusSchema.enum.PAID,
+          InvoiceStatusSchema.enum.PENDING,
+        ),
       ).toThrow(/terminal state/);
 
       expect(() =>
-        validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PAID),
+        validateInvoiceStatusTransition(
+          InvoiceStatusSchema.enum.DRAFT,
+          InvoiceStatusSchema.enum.PAID,
+        ),
       ).toThrow(/Invalid status transition/);
 
       expect(() =>
-        validateInvoiceStatusTransition(InvoiceStatus.DRAFT, InvoiceStatus.PENDING),
+        validateInvoiceStatusTransition(
+          InvoiceStatusSchema.enum.DRAFT,
+          InvoiceStatusSchema.enum.PENDING,
+        ),
       ).not.toThrow();
     });
   });
@@ -116,12 +135,18 @@ describe('invoice-helpers', () => {
       const pastDue = subDays(new Date(), 1);
       const futureDue = addDays(new Date(), 1);
 
-      const overdueInvoice = { status: InvoiceStatus.PENDING, dueDate: pastDue } as InvoiceListItem;
+      const overdueInvoice = {
+        status: InvoiceStatusSchema.enum.PENDING,
+        dueDate: pastDue,
+      } as InvoiceListItem;
       const notOverdueInvoice = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: futureDue,
       } as InvoiceListItem;
-      const paidInvoice = { status: InvoiceStatus.PAID, dueDate: pastDue } as InvoiceListItem;
+      const paidInvoice = {
+        status: InvoiceStatusSchema.enum.PAID,
+        dueDate: pastDue,
+      } as InvoiceListItem;
 
       expect(isOverdue(overdueInvoice)).toBe(true);
       expect(isOverdue(notOverdueInvoice)).toBe(false);
@@ -138,15 +163,15 @@ describe('invoice-helpers', () => {
 
     it('determines if reminder is needed', () => {
       const overdueInvoice = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: subDays(new Date(), 1),
       } as InvoiceListItem;
       const soonDueInvoice = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: addDays(new Date(), 2),
       } as InvoiceListItem;
       const farDueInvoice = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: addDays(new Date(), 10),
       } as InvoiceListItem;
 
@@ -157,19 +182,19 @@ describe('invoice-helpers', () => {
 
     it('gets urgency levels', () => {
       const farDue = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: addDays(new Date(), 30),
       } as InvoiceListItem;
       const mediumDue = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: addDays(new Date(), 7),
       } as InvoiceListItem;
       const highDue = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: addDays(new Date(), 2),
       } as InvoiceListItem;
       const overdue = {
-        status: InvoiceStatus.PENDING,
+        status: InvoiceStatusSchema.enum.PENDING,
         dueDate: subDays(new Date(), 1),
       } as InvoiceListItem;
 

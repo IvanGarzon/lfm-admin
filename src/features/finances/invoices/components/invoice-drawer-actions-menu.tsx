@@ -1,5 +1,6 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import {
   Ban,
   Receipt,
@@ -13,7 +14,6 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-import { InvoiceStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -67,23 +67,23 @@ export function InvoiceDrawerActionsMenu({
           Duplicate invoice
         </DropdownMenuItem>
 
-        {invoice.status === InvoiceStatus.DRAFT && (
+        {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
           <DropdownMenuItem onClick={handlers.onMarkAsPending}>
             <Hourglass className="h-4 w-4" />
             Mark as pending
           </DropdownMenuItem>
         )}
 
-        {invoice.status === InvoiceStatus.PENDING && (
+        {invoice.status === InvoiceStatusSchema.enum.PENDING && (
           <DropdownMenuItem onClick={handlers.onMarkAsDraft}>
             <RotateCcw className="h-4 w-4" />
             Revert to draft
           </DropdownMenuItem>
         )}
 
-        {(invoice.status === InvoiceStatus.PENDING ||
-          invoice.status === InvoiceStatus.OVERDUE ||
-          invoice.status === InvoiceStatus.PARTIALLY_PAID) && (
+        {(invoice.status === InvoiceStatusSchema.enum.PENDING ||
+          invoice.status === InvoiceStatusSchema.enum.OVERDUE ||
+          invoice.status === InvoiceStatusSchema.enum.PARTIALLY_PAID) && (
           <>
             <DropdownMenuItem onClick={handlers.onRecordPayment}>
               <CreditCard className="h-4 w-4" />
@@ -103,7 +103,7 @@ export function InvoiceDrawerActionsMenu({
           </>
         )}
 
-        {invoice.status === InvoiceStatus.PAID && (
+        {invoice.status === InvoiceStatusSchema.enum.PAID && (
           <>
             <DropdownMenuItem onClick={handlers.onDownloadPdf}>
               <Download className="h-4 w-4" />
@@ -116,7 +116,7 @@ export function InvoiceDrawerActionsMenu({
           </>
         )}
 
-        {invoice.status === InvoiceStatus.DRAFT && (
+        {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
           <DropdownMenuItem
             onClick={handlers.onDelete}
             className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"

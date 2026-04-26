@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleDashed, Pause, Mars, Venus } from 'lucide-react';
+import { CheckCircle2, CircleDashed, Pause, Mars, Venus, User } from 'lucide-react';
 import type { EmployeeStatus } from '@/prisma/client';
 import type { Gender } from '@/zod/schemas/enums/Gender.schema';
 import { StatusBadge, type StatusBadgeConfig } from '@/components/shared/status-badge';
@@ -71,6 +71,13 @@ const GENDER_CONFIG: Record<Gender, StatusBadgeConfig> = {
     className:
       'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-400 dark:border-pink-800',
     icon: <Venus className="h-4 w-4" />,
+  },
+  OTHER: {
+    label: 'Other',
+    variant: 'outline',
+    className:
+      'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800',
+    icon: <User className="h-4 w-4" />,
   },
 };
 

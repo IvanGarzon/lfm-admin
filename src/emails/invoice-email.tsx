@@ -108,3 +108,5 @@ InvoiceEmail.PreviewProps = {
   },
   pdfUrl: 'https://example.com/invoice.pdf',
 } satisfies InvoiceEmailProps;
+
+export default InvoiceEmail;

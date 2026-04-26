@@ -118,7 +118,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
             return { [sortItem.id]: order };
           })
-        : [{ invoiceNumber: 'desc' }];
+        : [{ createdAt: 'desc' }];
 
     const countOperation = this.prisma.invoice.count({ where: whereClause });
     const findManyOperation = this.prisma.invoice.findMany({
@@ -642,26 +642,23 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     const year = new Date().getFullYear();
     const prefix = `INV-${year}-`;
 
-    const lastInvoice = await this.model.findFirst({
-      where: {
-        tenantId,
-        invoiceNumber: {
-          startsWith: prefix,
-        },
-      },
-      orderBy: {
-        invoiceNumber: 'desc',
-      },
-      select: {
-        invoiceNumber: true,
-      },
-    });
+    // Use raw query to match only numeric suffixes (INV-YYYY-####).
+    // findFirst with string DESC ordering picks up Q-prefixed converted-quote
+    // numbers (e.g. INV-2026-Q0001) since 'Q' > '9', causing parseInt to
+    // return NaN and breaking the sequence.
+    const rows = await this.prisma.$queryRaw<{ invoice_number: string }[]>`
+      SELECT invoice_number
+      FROM invoices
+      WHERE tenant_id = ${tenantId}
+        AND invoice_number ~ ${`^INV-${year}-\\d{4}$`}
+      ORDER BY invoice_number DESC
+      LIMIT 1`;
 
-    if (!lastInvoice) {
+    if (rows.length === 0) {
       return `${prefix}0001`;
     }
 
-    const lastNumber = parseInt(lastInvoice.invoiceNumber.split('-')[2], 10);
+    const lastNumber = parseInt(rows[0].invoice_number.split('-')[2], 10);
     const nextNumber = lastNumber + 1;
 
     return `${prefix}${String(nextNumber).padStart(4, '0')}`;

@@ -1,13 +1,15 @@
 import { Prisma, PrismaClient, Tenant, TenantStatus } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
-import type { CreateTenantInput } from '@/schemas/tenants';
+import type {
+  CreateTenantInput,
+  UpdateTenantInput,
+  UpdateTenantSettingsInput,
+} from '@/schemas/tenants';
 import type {
   TenantListItem,
   TenantWithSettings,
   TenantBranding,
-  CreateTenantWithDetailsInput,
-  UpdateTenantInput,
-  UpdateTenantSettingsInput,
+  TenantWithDetails,
 } from '@/features/admin/tenants/types';
 
 export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<object>> {
@@ -133,7 +135,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
    * @param data - The tenant details, optional settings, and optional user records.
    * @returns The created tenant with its settings.
    */
-  async createTenantWithDetails(data: CreateTenantWithDetailsInput): Promise<TenantWithSettings> {
+  async createTenantWithDetails(data: TenantWithDetails): Promise<TenantWithSettings> {
     const tenant = await this.prisma.tenant.create({
       data: {
         name: data.name,

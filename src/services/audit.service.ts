@@ -9,12 +9,8 @@ const logger = pino(
   env.NODE_ENV !== 'production'
     ? {
         level: 'info',
-        // transport: {
-        //   target: 'pino-pretty',
-        //   options: { colorize: true, translateTime: 'SYS:standard', ignore: 'pid,hostname' }
-        // }
       }
-    : { level: 'info' }, // Use default logger in production
+    : { level: 'info' },
 );
 
 // Initialize Sentry
@@ -24,28 +20,36 @@ enum LogEventMessage {
   UserLoginSuccessful = 'User logged in successfully',
   UserLogoutSuccessful = 'User logged out successfully',
   EmployeeUpdated = 'Updated employee details',
+  UserRoleChanged = 'User role changed',
 }
 
 enum LogEventTag {
   LOGIN = 'login',
   EMPLOYEES = 'employees',
+  USERS = 'users',
 }
 
 const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
   UserLoginSuccessful: LogEventTag.LOGIN,
   UserLogoutSuccessful: LogEventTag.LOGIN,
   EmployeeUpdated: LogEventTag.EMPLOYEES,
+  UserRoleChanged: LogEventTag.USERS,
 };
 
 const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
   UserLoginSuccessful: 'User logged in successfully',
   UserLogoutSuccessful: 'User logged out successfully',
   EmployeeUpdated: 'Updated employee details',
+  UserRoleChanged: 'User role changed',
 };
 
 interface LogEventData {
   userId: string;
   employeeId?: string;
+  targetUserId?: string;
+  fromRole?: string;
+  toRole?: string;
+  changedByName?: string;
 }
 
 interface LogEventProp {
@@ -63,6 +67,16 @@ interface LoggedOut extends LogEventProp {
 
 interface EmployeeUpdated extends LogEventProp {
   data: LogEventProp['data'] & Required<Pick<LogEventData, 'employeeId'>>;
+}
+
+interface UserRoleChangedEvent extends LogEventProp {
+  data: LogEventProp['data'] & {
+    targetUserId: string;
+    fromRole: string;
+    toRole: string;
+    changedByName: string;
+  };
+  message: string;
 }
 
 interface CreateAuditLogProps {
@@ -94,6 +108,13 @@ async function createAuditLog({
   });
 }
 
+type AccessChange = {
+  id: string;
+  message: string;
+  changedByName: string;
+  createdAt: Date;
+};
+
 export class AuditService {
   level;
 
@@ -101,17 +122,14 @@ export class AuditService {
     this.level = level;
   }
 
-  // Private method for logging events
-  #logEvent(props: LogEventProp) {
-    const { event, data } = props;
+  #logEvent(props: LogEventProp & { message?: string }) {
+    const { event, data, message: customMessage } = props;
     const level = this.level;
-    const message = LogEventMessages[event];
+    const message = customMessage ?? LogEventMessages[event];
     const tag = LogEventMapping[event];
 
-    // 1. Log to console (existing behavior)
     logger[level]({ tag, data }, `[Audit] ${message}`);
 
-    // 2. Save to DB
     createAuditLog({
       userId: data.userId,
       tag,
@@ -121,11 +139,9 @@ export class AuditService {
       level: level.toUpperCase() as AuditLevel,
     }).catch((err) => {
       console.error('Failed to write audit log:', err);
-      // Optionally send to Sentry here
     });
   }
 
-  // Specific event loggers for each type of event
   LoggedIn(props: Omit<LoggedIn, 'event'>) {
     this.#logEvent({ ...props, event: 'UserLoginSuccessful' });
   }
@@ -138,7 +154,38 @@ export class AuditService {
     this.#logEvent({ ...props, event: 'EmployeeUpdated' });
   }
 
-  // Auto-delete logs older than 6 months
+  UserRoleChanged(props: Omit<UserRoleChangedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'UserRoleChanged' });
+  }
+
+  /**
+   * Returns the 10 most recent role change audit entries for a given user.
+   * @param targetUserId - The ID of the user whose role change history is requested
+   * @returns Array of access change records ordered newest first
+   */
+  async findRoleChangesForUser(targetUserId: string): Promise<AccessChange[]> {
+    const records = await prisma.$queryRaw<
+      Array<{ id: string; message: string; data: unknown; created_at: Date }>
+    >`
+      SELECT id, message, data, created_at
+      FROM audit
+      WHERE tag = 'users'
+        AND data->>'targetUserId' = ${targetUserId}
+      ORDER BY created_at DESC
+      LIMIT 10
+    `;
+
+    return records.map((r) => {
+      const data = r.data as { changedByName?: string };
+      return {
+        id: r.id,
+        message: r.message,
+        changedByName: data?.changedByName ?? 'System',
+        createdAt: r.created_at,
+      };
+    });
+  }
+
   async cleanupOldLogs() {
     await prisma.audit.deleteMany({
       where: {

@@ -3,7 +3,6 @@
 import { Table } from '@tanstack/react-table';
 import { XCircle, CheckCircle, Send, PauseCircle, FileX, Trash2, RefreshCw } from 'lucide-react';
 
-import { QuoteStatus } from '@/prisma/client';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

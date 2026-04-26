@@ -381,4 +381,25 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     if (!session) return false;
     return session.isActive && session.expires > new Date();
   }
+
+  /**
+   * Deactivates all active sessions for a user.
+   * Used when a user's role changes so the next request forces a fresh sign-in.
+   * @param userId - The ID of the user whose sessions should be revoked
+   * @returns A promise that resolves to the count of deactivated sessions
+   */
+  async revokeAllSessionsForUser(userId: string): Promise<number> {
+    const result = await this.prisma.session.updateMany({
+      where: {
+        userId,
+        isActive: true,
+      },
+      data: {
+        isActive: false,
+        expires: new Date(),
+      },
+    });
+
+    return result.count;
+  }
 }

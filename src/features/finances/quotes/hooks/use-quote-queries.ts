@@ -1,4 +1,3 @@
-import { QuoteStatus } from '@/prisma/client';
 import {
   useQuery,
   useMutation,

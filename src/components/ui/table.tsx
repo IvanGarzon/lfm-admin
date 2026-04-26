@@ -14,7 +14,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
           // base
           'w-full caption-bottom text-sm',
           // border color
-          'border-gray-200 dark:border-gray-800',
+          'border-border',
           className,
         )}
         {...props}
@@ -48,7 +48,7 @@ const TableBody = React.forwardRef<
       // base
       'divide-y',
       // divide color
-      'divide-gray-200 dark:divide-gray-800',
+      'divide-border',
       '[&_tr:last-child]:border-0',
       className,
     )}

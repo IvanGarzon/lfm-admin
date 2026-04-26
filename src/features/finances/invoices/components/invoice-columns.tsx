@@ -1,5 +1,6 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import {
   Bell,
   SquareDashedTopSolid,
 } from 'lucide-react';
-import { InvoiceStatus } from '@/prisma/client';
+
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
@@ -39,32 +40,32 @@ const StatusOptions: {
 }[] = [
   {
     label: 'Draft',
-    value: InvoiceStatus.DRAFT,
+    value: InvoiceStatusSchema.enum.DRAFT,
     icon: CircleDashed,
   },
   {
     label: 'Pending',
-    value: InvoiceStatus.PENDING,
+    value: InvoiceStatusSchema.enum.PENDING,
     icon: Hourglass,
   },
   {
     label: 'Paid',
-    value: InvoiceStatus.PAID,
+    value: InvoiceStatusSchema.enum.PAID,
     icon: CircleCheckBig,
   },
   {
     label: 'Partially Paid',
-    value: InvoiceStatus.PARTIALLY_PAID,
+    value: InvoiceStatusSchema.enum.PARTIALLY_PAID,
     icon: SquareDashedTopSolid,
   },
   {
     label: 'Overdue',
-    value: InvoiceStatus.OVERDUE,
+    value: InvoiceStatusSchema.enum.OVERDUE,
     icon: Timer,
   },
   {
     label: 'Cancelled',
-    value: InvoiceStatus.CANCELLED,
+    value: InvoiceStatusSchema.enum.CANCELLED,
     icon: Ban,
   },
 ];
@@ -239,7 +240,10 @@ export const createInvoiceColumns = (
       }
 
       // Don't show overdue/due status for paid/cancelled invoices
-      if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
+      if (
+        invoice.status === InvoiceStatusSchema.enum.PAID ||
+        invoice.status === InvoiceStatusSchema.enum.CANCELLED
+      ) {
         return (
           <Box className="flex flex-col">
             <span className="text-muted-foreground">{format(dueDate, 'MMM dd, yyyy')}</span>
@@ -249,7 +253,7 @@ export const createInvoiceColumns = (
 
       // Determine the date color based on urgency and status
       const dateColorClass =
-        invoice.status === InvoiceStatus.PENDING && urgency !== 'critical'
+        invoice.status === InvoiceStatusSchema.enum.PENDING && urgency !== 'critical'
           ? 'text-gray-600'
           : colorClass;
 

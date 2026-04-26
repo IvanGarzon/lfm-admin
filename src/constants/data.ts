@@ -122,13 +122,6 @@ export const tenantNavItems: NavItem[] = [
     ],
   },
   {
-    title: 'Sessions',
-    href: '/sessions',
-    icon: 'keyRound',
-    shortcut: ['s', 's'],
-    authorizeOnly: ['*'],
-  },
-  {
     title: 'Settings',
     href: '/settings/profile',
     icon: 'settings',

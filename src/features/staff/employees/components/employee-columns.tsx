@@ -12,7 +12,6 @@ import { EmployeeStatusBadge, GenderBadge } from './employee-status-badge';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { formatCurrency, enumToOptions } from '@/lib/utils';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
-import { Checkbox } from '@/components/ui/checkbox';
 import { searchParams, employeeSearchParamsDefaults } from '@/filters/employees/employee-filters';
 import { useQueryString } from '@/hooks/use-query-string';
 import { EmployeeActions } from '@/features/staff/employees/components/employee-actions';
@@ -58,27 +57,6 @@ function EmployeeLink({ employeeId, name }: { employeeId: string; name: string }
 export const createEmployeeColumns = (
   onDelete: (id: string) => void,
 ): ColumnDef<EmployeeListItem>[] => [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     id: 'search',
     accessorKey: 'name',

@@ -1,7 +1,7 @@
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 
-import { InvoiceStatus } from '@/prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 import type { TenantBranding } from '@/actions/tenant/queries';
@@ -481,7 +481,7 @@ export function InvoiceDocument({ invoice, settings, logoUrl }: InvoicePreviewPr
           <View style={styles.footerContent}>
             <Text style={styles.footerLeft}>
               {invoice.invoiceNumber} · {formatCurrency({ number: total })}{' '}
-              {invoice.status === InvoiceStatus.PAID && invoice.paidDate
+              {invoice.status === InvoiceStatusSchema.enum.PAID && invoice.paidDate
                 ? `paid on ${format(invoice.paidDate, 'MMM d, yyyy')}`
                 : `· Due on ${format(invoice.dueDate, 'MMM d, yyyy')}`}
             </Text>

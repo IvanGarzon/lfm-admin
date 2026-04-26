@@ -64,17 +64,12 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
 
     const year = new Date().getFullYear();
 
-    const lastInvoice = await prisma.invoice.findFirst({
-      where: {
-        tenantId: tenant.id,
-        invoiceNumber: { startsWith: `INV-${year}-`, not: { contains: 'Q' } },
-      },
-      orderBy: { invoiceNumber: 'desc' },
-      select: { invoiceNumber: true },
-    });
-    const startCounter = lastInvoice
-      ? parseInt(lastInvoice.invoiceNumber.split('-')[2], 10) + 1
-      : 1;
+    const rows = await prisma.$queryRaw<{ invoice_number: string }[]>`
+      SELECT invoice_number FROM invoices
+      WHERE tenant_id = ${tenant.id}
+        AND invoice_number ~ ${`^INV-${year}-\\d{4}$`}
+      ORDER BY invoice_number DESC LIMIT 1`;
+    const startCounter = rows.length ? parseInt(rows[0].invoice_number.split('-')[2], 10) + 1 : 1;
 
     // 1. Create DRAFT invoices in parallel
     const draftFns = Array.from({ length: countPerTenant }, (_, i) => async () => {

@@ -14,7 +14,8 @@
 import { isAfter, differenceInDays } from 'date-fns';
 import crypto from 'crypto';
 import { generatePdfBuffer } from '@/lib/pdf';
-import { InvoiceStatus } from '@/prisma/client';
+
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import type { InvoiceListItem, InvoiceWithDetails } from '@/features/finances/invoices/types';
 import { INVOICE_CONFIG } from '../config/invoice-config';
 import { getTenantBranding } from '@/actions/tenant/queries';
@@ -205,33 +206,36 @@ export function calculateContentHash(
  *
  * @example
  * ```ts
- * const allowedStatuses = VALID_INVOICE_STATUS_TRANSITIONS[InvoiceStatus.PENDING];
+ * const allowedStatuses = VALID_INVOICE_STATUS_TRANSITIONS[InvoiceStatusSchema.enum.PENDING];
  * // Returns: [PARTIALLY_PAID, PAID, OVERDUE, CANCELLED, DRAFT]
  * ```
  */
 export const VALID_INVOICE_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
-  [InvoiceStatus.DRAFT]: [InvoiceStatus.PENDING, InvoiceStatus.CANCELLED],
-  [InvoiceStatus.PENDING]: [
-    InvoiceStatus.PARTIALLY_PAID,
-    InvoiceStatus.PAID,
-    InvoiceStatus.OVERDUE,
-    InvoiceStatus.CANCELLED,
-    InvoiceStatus.DRAFT,
+  [InvoiceStatusSchema.enum.DRAFT]: [
+    InvoiceStatusSchema.enum.PENDING,
+    InvoiceStatusSchema.enum.CANCELLED,
   ],
-  [InvoiceStatus.PARTIALLY_PAID]: [
-    InvoiceStatus.PARTIALLY_PAID,
-    InvoiceStatus.PAID,
-    InvoiceStatus.OVERDUE,
-    InvoiceStatus.CANCELLED,
+  [InvoiceStatusSchema.enum.PENDING]: [
+    InvoiceStatusSchema.enum.PARTIALLY_PAID,
+    InvoiceStatusSchema.enum.PAID,
+    InvoiceStatusSchema.enum.OVERDUE,
+    InvoiceStatusSchema.enum.CANCELLED,
+    InvoiceStatusSchema.enum.DRAFT,
   ],
-  [InvoiceStatus.OVERDUE]: [
-    InvoiceStatus.PAID,
-    InvoiceStatus.PARTIALLY_PAID,
-    InvoiceStatus.CANCELLED,
-    InvoiceStatus.PENDING,
+  [InvoiceStatusSchema.enum.PARTIALLY_PAID]: [
+    InvoiceStatusSchema.enum.PARTIALLY_PAID,
+    InvoiceStatusSchema.enum.PAID,
+    InvoiceStatusSchema.enum.OVERDUE,
+    InvoiceStatusSchema.enum.CANCELLED,
   ],
-  [InvoiceStatus.PAID]: [],
-  [InvoiceStatus.CANCELLED]: [],
+  [InvoiceStatusSchema.enum.OVERDUE]: [
+    InvoiceStatusSchema.enum.PAID,
+    InvoiceStatusSchema.enum.PARTIALLY_PAID,
+    InvoiceStatusSchema.enum.CANCELLED,
+    InvoiceStatusSchema.enum.PENDING,
+  ],
+  [InvoiceStatusSchema.enum.PAID]: [],
+  [InvoiceStatusSchema.enum.CANCELLED]: [],
 };
 
 /**
@@ -243,10 +247,10 @@ export const VALID_INVOICE_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStat
  *
  * @example
  * ```ts
- * canTransitionInvoiceStatus(InvoiceStatus.PENDING, InvoiceStatus.PAID);
+ * canTransitionInvoiceStatus(InvoiceStatusSchema.enum.PENDING, InvoiceStatusSchema.enum.PAID);
  * // Returns: true
  *
- * canTransitionInvoiceStatus(InvoiceStatus.PAID, InvoiceStatus.PENDING);
+ * canTransitionInvoiceStatus(InvoiceStatusSchema.enum.PAID, InvoiceStatusSchema.enum.PENDING);
  * // Returns: false (PAID is terminal)
  * ```
  */
@@ -271,8 +275,8 @@ export function canTransitionInvoiceStatus(
  *
  * @example
  * ```ts
- * const nextStatuses = getValidNextInvoiceStatuses(InvoiceStatus.PARTIALLY_PAID);
- * // Returns: [InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.PAID, InvoiceStatus.OVERDUE, InvoiceStatus.CANCELLED]
+ * const nextStatuses = getValidNextInvoiceStatuses(InvoiceStatusSchema.enum.PARTIALLY_PAID);
+ * // Returns: [InvoiceStatusSchema.enum.PARTIALLY_PAID, InvoiceStatusSchema.enum.PAID, InvoiceStatusSchema.enum.OVERDUE, InvoiceStatusSchema.enum.CANCELLED]
  * ```
  */
 export function getValidNextInvoiceStatuses(currentStatus: InvoiceStatus): InvoiceStatus[] {
@@ -289,9 +293,9 @@ export function getValidNextInvoiceStatuses(currentStatus: InvoiceStatus): Invoi
  *
  * @example
  * ```ts
- * isTerminalInvoiceStatus(InvoiceStatus.PAID);      // Returns: true
- * isTerminalInvoiceStatus(InvoiceStatus.CANCELLED); // Returns: true
- * isTerminalInvoiceStatus(InvoiceStatus.PENDING);   // Returns: false
+ * isTerminalInvoiceStatus(InvoiceStatusSchema.enum.PAID);      // Returns: true
+ * isTerminalInvoiceStatus(InvoiceStatusSchema.enum.CANCELLED); // Returns: true
+ * isTerminalInvoiceStatus(InvoiceStatusSchema.enum.PENDING);   // Returns: false
  * ```
  */
 export function isTerminalInvoiceStatus(status: InvoiceStatus): boolean {
@@ -372,21 +376,24 @@ export function daysUntilDue(dueDate: Date): number {
  *
  * @example
  * ```ts
- * const invoice = { status: InvoiceStatus.PENDING, dueDate: pastDate };
+ * const invoice = { status: InvoiceStatusSchema.enum.PENDING, dueDate: pastDate };
  * isOverdue(invoice); // Returns: true
  *
- * const paidInvoice = { status: InvoiceStatus.PAID, dueDate: pastDate };
+ * const paidInvoice = { status: InvoiceStatusSchema.enum.PAID, dueDate: pastDate };
  * isOverdue(paidInvoice); // Returns: false (paid invoices are never overdue)
  * ```
  */
 export function isOverdue(invoice: InvoiceListItem): boolean {
   // If status is explicitly OVERDUE, it is overdue
-  if (invoice.status === InvoiceStatus.OVERDUE) {
+  if (invoice.status === InvoiceStatusSchema.enum.OVERDUE) {
     return true;
   }
 
   // Paid or Cancelled are never overdue
-  if (invoice.status === InvoiceStatus.PAID || invoice.status === InvoiceStatus.CANCELLED) {
+  if (
+    invoice.status === InvoiceStatusSchema.enum.PAID ||
+    invoice.status === InvoiceStatusSchema.enum.CANCELLED
+  ) {
     return false;
   }
 
@@ -431,7 +438,7 @@ export function getOverdueDays(dueDate: Date): number {
  * @example
  * ```ts
  * const invoice = {
- *   status: InvoiceStatus.PENDING,
+ *   status: InvoiceStatusSchema.enum.PENDING,
  *   dueDate: threeDaysFromNow
  * };
  * needsReminder(invoice); // Returns: true (within threshold)
@@ -440,15 +447,15 @@ export function getOverdueDays(dueDate: Date): number {
 export function needsReminder(invoice: InvoiceListItem): boolean {
   // Don't send reminders for paid or cancelled
   if (
-    invoice.status === InvoiceStatus.PAID ||
-    invoice.status === InvoiceStatus.CANCELLED ||
-    invoice.status === InvoiceStatus.DRAFT
+    invoice.status === InvoiceStatusSchema.enum.PAID ||
+    invoice.status === InvoiceStatusSchema.enum.CANCELLED ||
+    invoice.status === InvoiceStatusSchema.enum.DRAFT
   ) {
     return false;
   }
 
   // Always remind if overdue
-  if (invoice.status === InvoiceStatus.OVERDUE || isOverdue(invoice)) {
+  if (invoice.status === InvoiceStatusSchema.enum.OVERDUE || isOverdue(invoice)) {
     return true;
   }
 
@@ -470,28 +477,28 @@ export function needsReminder(invoice: InvoiceListItem): boolean {
  *
  * @example
  * ```ts
- * const overdueInvoice = { status: InvoiceStatus.OVERDUE, dueDate: pastDate };
+ * const overdueInvoice = { status: InvoiceStatusSchema.enum.OVERDUE, dueDate: pastDate };
  * getUrgency(overdueInvoice); // Returns: 'critical'
  *
- * const upcomingInvoice = { status: InvoiceStatus.PENDING, dueDate: twoDaysFromNow };
+ * const upcomingInvoice = { status: InvoiceStatusSchema.enum.PENDING, dueDate: twoDaysFromNow };
  * getUrgency(upcomingInvoice); // Returns: 'high' (if threshold is 3 days)
  *
- * const paidInvoice = { status: InvoiceStatus.PAID, dueDate: anyDate };
+ * const paidInvoice = { status: InvoiceStatusSchema.enum.PAID, dueDate: anyDate };
  * getUrgency(paidInvoice); // Returns: 'low'
  * ```
  */
 export function getUrgency(invoice: InvoiceListItem): 'low' | 'medium' | 'high' | 'critical' {
   // Paid or cancelled has no urgency
   if (
-    invoice.status === InvoiceStatus.PAID ||
-    invoice.status === InvoiceStatus.CANCELLED ||
-    invoice.status === InvoiceStatus.DRAFT
+    invoice.status === InvoiceStatusSchema.enum.PAID ||
+    invoice.status === InvoiceStatusSchema.enum.CANCELLED ||
+    invoice.status === InvoiceStatusSchema.enum.DRAFT
   ) {
     return 'low';
   }
 
   // Explicit overdue status or past due date is critical
-  if (invoice.status === InvoiceStatus.OVERDUE || isOverdue(invoice)) {
+  if (invoice.status === InvoiceStatusSchema.enum.OVERDUE || isOverdue(invoice)) {
     return 'critical';
   }
 

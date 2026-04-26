@@ -4,15 +4,20 @@ import { revalidatePath } from 'next/cache';
 import { handleActionError } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
 import { withSuperAdmin } from '@/lib/action-auth';
-import { TenantRepository } from '@/repositories/tenant-repository';
-import { InvitationRepository } from '@/repositories/invitation-repository';
-import { UserRepository } from '@/repositories/user-repository';
 import { sendEmailNotification } from '@/lib/email-service';
 import { absoluteUrl } from '@/lib/utils';
 import { VALIDATION_LIMITS } from '@/lib/validation';
-import { UserRole, type Tenant } from '@/prisma/client';
-import { CreateTenantSchema, type CreateTenantInput } from '@/schemas/tenants';
-import type { UpdateTenantInput } from '@/features/admin/tenants/types';
+import { TenantRepository } from '@/repositories/tenant-repository';
+import { InvitationRepository } from '@/repositories/invitation-repository';
+import { UserRepository } from '@/repositories/user-repository';
+import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
+import {
+  CreateTenantSchema,
+  UpdateTenantSchema,
+  type CreateTenantInput,
+  type UpdateTenantInput,
+} from '@/schemas/tenants';
+import type { Tenant } from '@/features/admin/tenants/types';
 
 const tenantRepo = new TenantRepository(prisma);
 const invitationRepo = new InvitationRepository(prisma);
@@ -21,23 +26,22 @@ const userRepo = new UserRepository(prisma);
 /**
  * Creates a new tenant and dispatches an invitation to the specified admin user.
  */
-export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (session, data) => {
+export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (ctx, data) => {
   try {
     const { name, slug, adminEmail } = CreateTenantSchema.parse(data);
 
-    const tenant = await tenantRepo.createTenant({ name, slug });
-
+    const tenant = await tenantRepo.createTenant({ name, slug, adminEmail });
     const expiresAt = new Date(Date.now() + VALIDATION_LIMITS.INVITATION_EXPIRY_MS);
 
     const [invitation, inviter] = await Promise.all([
       invitationRepo.create({
         email: adminEmail,
-        role: UserRole.ADMIN,
+        role: UserRoleSchema.enum.ADMIN,
         tenantId: tenant.id,
-        invitedBy: session.user.id,
+        invitedBy: ctx.user.id,
         expiresAt,
       }),
-      userRepo.findById(session.user.id),
+      userRepo.findById(ctx.user.id),
     ]);
 
     if (inviter) {
@@ -66,9 +70,10 @@ export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (ses
  * Updates top-level tenant fields (name, slug).
  */
 export const updateTenant = withSuperAdmin<{ id: string } & UpdateTenantInput, Tenant>(
-  async (_session, { id, ...data }) => {
+  async (_ctx, { id, ...data }) => {
     try {
-      const tenant = await tenantRepo.updateTenant(id, data);
+      const validated = UpdateTenantSchema.parse(data);
+      const tenant = await tenantRepo.updateTenant(id, validated);
       revalidatePath('/admin/tenants');
       revalidatePath(`/admin/tenants/${id}`);
       return { success: true, data: tenant };
@@ -81,7 +86,7 @@ export const updateTenant = withSuperAdmin<{ id: string } & UpdateTenantInput, T
 /**
  * Suspends a tenant, preventing its users from accessing the system.
  */
-export const suspendTenant = withSuperAdmin<string, Tenant>(async (_session, id) => {
+export const suspendTenant = withSuperAdmin<string, Tenant>(async (_ctx, id) => {
   try {
     const tenant = await tenantRepo.suspendTenant(id);
     revalidatePath('/admin/tenants');
@@ -95,7 +100,7 @@ export const suspendTenant = withSuperAdmin<string, Tenant>(async (_session, id)
 /**
  * Re-activates a previously suspended tenant.
  */
-export const activateTenant = withSuperAdmin<string, Tenant>(async (_session, id) => {
+export const activateTenant = withSuperAdmin<string, Tenant>(async (_ctx, id) => {
   try {
     const tenant = await tenantRepo.activateTenant(id);
     revalidatePath('/admin/tenants');

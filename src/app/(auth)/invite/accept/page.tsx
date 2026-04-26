@@ -11,7 +11,7 @@ export default async function AcceptInvitePage({
 
   if (!token) {
     return (
-      <Box className="flex min-h-dvh items-center justify-center p-4">
+      <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
         <Box className="max-w-md w-full text-center space-y-2">
           <h1 className="text-2xl font-bold">Invalid Link</h1>
           <p className="text-muted-foreground">This invitation link is missing a token.</p>
@@ -24,7 +24,7 @@ export default async function AcceptInvitePage({
 
   if (!result.success) {
     return (
-      <Box className="flex min-h-dvh items-center justify-center p-4">
+      <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
         <Box className="max-w-md w-full text-center space-y-2">
           <h1 className="text-2xl font-bold">Invitation Unavailable</h1>
           <p className="text-muted-foreground">{result.error}</p>
@@ -34,7 +34,7 @@ export default async function AcceptInvitePage({
   }
 
   return (
-    <Box className="flex min-h-dvh items-center justify-center p-4">
+    <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
       <AcceptInviteForm invitation={result.data} token={token} />
     </Box>
   );

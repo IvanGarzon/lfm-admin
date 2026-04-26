@@ -1,5 +1,6 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { Box } from '@/components/ui/box';
@@ -7,7 +8,6 @@ import { InvoiceStatusBadge } from '@/features/finances/invoices/components/invo
 import type { InvoicePaymentItem } from '@/features/finances/invoices/types';
 import { formatCurrency } from '@/lib/utils';
 import type { InvoiceStatus as InvoiceStatusType } from '@/zod/schemas/enums/InvoiceStatus.schema';
-import { InvoiceStatus } from '@/prisma/client';
 
 interface InvoicePaymentsProps {
   payments: InvoicePaymentItem[];
@@ -36,9 +36,9 @@ export function InvoicePayments({ payments, invoiceAmount }: InvoicePaymentsProp
       let statusAfterPayment: InvoiceStatusType;
       if (amountDue <= 0.01) {
         // Floating point tolerance
-        statusAfterPayment = InvoiceStatus.PAID;
+        statusAfterPayment = InvoiceStatusSchema.enum.PAID;
       } else {
-        statusAfterPayment = InvoiceStatus.PARTIALLY_PAID;
+        statusAfterPayment = InvoiceStatusSchema.enum.PARTIALLY_PAID;
       }
 
       return {

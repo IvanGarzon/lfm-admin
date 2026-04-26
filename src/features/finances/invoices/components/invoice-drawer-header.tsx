@@ -1,8 +1,8 @@
 'use client';
 
+import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { X, AlertCircle, Eye, EyeOff, Save } from 'lucide-react';
 
-import { InvoiceStatus } from '@/prisma/client';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
@@ -94,7 +94,7 @@ export function InvoiceDrawerHeader({
 
         {mode === 'edit' && invoice ? (
           <>
-            {invoice.status !== InvoiceStatus.PAID ? (
+            {invoice.status !== InvoiceStatusSchema.enum.PAID ? (
               <Button
                 type="submit"
                 form="form-rhf-invoice"

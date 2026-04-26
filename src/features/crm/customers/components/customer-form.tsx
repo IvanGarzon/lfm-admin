@@ -31,17 +31,13 @@ import type { CustomerListItem, CustomerFormInput } from '@/features/crm/custome
 import { AddressSourceSelector } from '@/features/crm/customers/components/address-source-selector';
 import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
 import { CustomerStatusSchema } from '@/zod/schemas/enums/CustomerStatus.schema';
+import { CUSTOMER_STATUS_OPTIONS } from '@/features/crm/customers/constants/customer-status-options';
 
 import { emptyAddress, type AddressInput } from '@/schemas/address';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({
   value: gender,
   label: gender.charAt(0) + gender.slice(1).toLowerCase(),
-}));
-
-const StatusOptions = CustomerStatusSchema.options.map((status) => ({
-  value: status,
-  label: status.charAt(0) + status.slice(1).toLowerCase(),
 }));
 
 const defaultFormState: CreateCustomerInput = {
@@ -349,7 +345,7 @@ export function CustomerForm({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {StatusOptions.map(({ value, label }) => (
+                        {CUSTOMER_STATUS_OPTIONS.map(({ value, label }) => (
                           <SelectItem key={value} value={value}>
                             {label}
                           </SelectItem>

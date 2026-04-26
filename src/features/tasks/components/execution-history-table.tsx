@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  ExecutionStatusSchema,
+  type ExecutionStatus,
+} from '@/zod/schemas/enums/ExecutionStatus.schema';
 import { useTaskExecutions } from '../hooks/use-tasks';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +19,6 @@ import {
 } from '@/components/ui/table';
 import { CheckCircle2, XCircle, Loader2, Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ExecutionStatus } from '@/prisma/client';
 
 interface ExecutionHistoryTableProps {
   taskId: string;
@@ -27,15 +30,15 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
 
   const getStatusIcon = (status: ExecutionStatus) => {
     switch (status) {
-      case ExecutionStatus.COMPLETED:
+      case ExecutionStatusSchema.enum.COMPLETED:
         return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-      case ExecutionStatus.FAILED:
+      case ExecutionStatusSchema.enum.FAILED:
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case ExecutionStatus.RUNNING:
+      case ExecutionStatusSchema.enum.RUNNING:
         return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
-      case ExecutionStatus.CANCELLED:
+      case ExecutionStatusSchema.enum.CANCELLED:
         return <AlertCircle className="h-4 w-4 text-orange-600" />;
-      case ExecutionStatus.TIMEOUT:
+      case ExecutionStatusSchema.enum.TIMEOUT:
         return <Clock className="h-4 w-4 text-orange-600" />;
       default:
         return null;

@@ -119,6 +119,21 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   /**
+   * Finds a user by ID returning only the fields specified in `select`.
+   * @param id - The user's ID
+   * @param select - Prisma select object controlling which fields are returned
+   * @returns The selected user fields or null if not found
+   */
+  async getUserByIdWithSelect<T extends Prisma.UserSelect>(
+    id: string,
+    select: T,
+  ): Promise<Prisma.UserGetPayload<{ select: T }> | null> {
+    return this.prisma.user.findUnique({ where: { id }, select }) as Promise<Prisma.UserGetPayload<{
+      select: T;
+    }> | null>;
+  }
+
+  /**
    * Returns all users belonging to a tenant, ordered by last name then first name.
    * @param tenantId - The tenant to scope the query to
    * @returns An array of user list items for the tenant
@@ -292,6 +307,9 @@ export class UserRepository extends BaseRepository<User> {
         status: true,
         isTwoFactorEnabled: true,
         lastLoginAt: true,
+        username: true,
+        title: true,
+        bio: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -316,6 +334,9 @@ export class UserRepository extends BaseRepository<User> {
       phone?: string | null;
       status: UserStatus;
       isTwoFactorEnabled: boolean;
+      username?: string | null;
+      title?: string | null;
+      bio?: string | null;
     },
   ): Promise<UserDetail> {
     const user = await this.prisma.user.update({
@@ -331,6 +352,9 @@ export class UserRepository extends BaseRepository<User> {
         status: true,
         isTwoFactorEnabled: true,
         lastLoginAt: true,
+        username: true,
+        title: true,
+        bio: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -365,5 +389,30 @@ export class UserRepository extends BaseRepository<User> {
     });
 
     return result.count > 0;
+  }
+
+  /**
+   * Updates the lastLoginAt timestamp for a user to the current time.
+   * @param id - The user ID to update
+   * @returns Promise that resolves when the update is complete
+   */
+  /**
+   * Updates the hashed password for a user.
+   * @param id - The user ID to update
+   * @param hashedPassword - The new bcrypt-hashed password
+   * @returns Promise that resolves when the update is complete
+   */
+  async updatePassword(id: string, hashedPassword: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+  }
+
+  async updateLastLoginAt(id: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
   }
 }

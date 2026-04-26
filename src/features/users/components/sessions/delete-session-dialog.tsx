@@ -36,9 +36,7 @@ export function DeleteSessionDialog({
           <AlertDialogDescription>
             This will sign out{' '}
             {deviceName ? (
-              <>
-                <span className="font-semibold text-foreground">{deviceName}</span>
-              </>
+              <span className="font-semibold text-foreground">{deviceName}</span>
             ) : (
               'this session'
             )}

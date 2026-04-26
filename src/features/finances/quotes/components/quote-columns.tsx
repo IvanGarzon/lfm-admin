@@ -1,12 +1,12 @@
 'use client';
 
+import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { Text, X, Check, CircleDashed, Send, Clock, FileCheck, Pause } from 'lucide-react';
 
-import { QuoteStatus } from '@/prisma/client';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
@@ -36,42 +36,42 @@ const StatusOptions: {
 }[] = [
   {
     label: 'Draft',
-    value: QuoteStatus.DRAFT,
+    value: QuoteStatusSchema.enum.DRAFT,
     icon: CircleDashed,
   },
   {
     label: 'Sent',
-    value: QuoteStatus.SENT,
+    value: QuoteStatusSchema.enum.SENT,
     icon: Send,
   },
   {
     label: 'On Hold',
-    value: QuoteStatus.ON_HOLD,
+    value: QuoteStatusSchema.enum.ON_HOLD,
     icon: Pause,
   },
   {
     label: 'Accepted',
-    value: QuoteStatus.ACCEPTED,
+    value: QuoteStatusSchema.enum.ACCEPTED,
     icon: Check,
   },
   {
     label: 'Rejected',
-    value: QuoteStatus.REJECTED,
+    value: QuoteStatusSchema.enum.REJECTED,
     icon: X,
   },
   {
     label: 'Expired',
-    value: QuoteStatus.EXPIRED,
+    value: QuoteStatusSchema.enum.EXPIRED,
     icon: Clock,
   },
   {
     label: 'Cancelled',
-    value: QuoteStatus.CANCELLED,
+    value: QuoteStatusSchema.enum.CANCELLED,
     icon: X,
   },
   {
     label: 'Converted',
-    value: QuoteStatus.CONVERTED,
+    value: QuoteStatusSchema.enum.CONVERTED,
     icon: FileCheck,
   },
 ];

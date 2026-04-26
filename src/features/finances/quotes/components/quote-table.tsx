@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/shared/tableV3/data-table';
 import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { BulkActionsBar } from './bulk-actions-bar';
-import { QuoteStatus } from '@/prisma/client';
+
 import { QuoteListItem } from '../types';
 import { usePrefetchQuote } from '../hooks/use-quote-queries';
 import { useQueryState, parseAsBoolean, parseAsInteger } from 'nuqs';

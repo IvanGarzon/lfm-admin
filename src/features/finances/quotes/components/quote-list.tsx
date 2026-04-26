@@ -22,7 +22,7 @@ import { QuoteTable } from '@/features/finances/quotes/components/quote-table';
 import type { QuotePagination } from '@/features/finances/quotes/types';
 import { createQuoteColumns } from '@/features/finances/quotes/components/quote-columns';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
-import { QuoteStatus } from '@/prisma/client';
+
 import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 

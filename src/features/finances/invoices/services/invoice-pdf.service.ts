@@ -1,7 +1,8 @@
+import { DocumentKindSchema, type DocumentKind } from '@/zod/schemas/enums/DocumentKind.schema';
 import { logger } from '@/lib/logger';
 import type { InvoiceWithDetails } from '@/features/finances/invoices/types';
 import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/document.service';
-import { DocumentKind } from '@/prisma/client';
+
 import {
   generateInvoiceFilename,
   generateReceiptFilename,
@@ -59,7 +60,7 @@ export async function getOrGenerateInvoicePdf(
   const contentHash = calculateContentHash(invoice, 'invoice');
 
   // Step 2: Check for existing document with same hash
-  const existingDoc = await getLatestDocument(invoice.id, DocumentKind.INVOICE);
+  const existingDoc = await getLatestDocument(invoice.id, DocumentKindSchema.enum.INVOICE);
 
   // Step 3: Determine if regeneration is needed
   // Only regenerate if content hash changed
@@ -134,7 +135,7 @@ export async function getOrGenerateInvoicePdf(
 
     // Save via DocumentService (handles S3 upload + DB record)
     const newDoc = await createDocument({
-      kind: DocumentKind.INVOICE,
+      kind: DocumentKindSchema.enum.INVOICE,
       invoiceId: invoice.id,
       buffer: generatedPdfBuffer,
       fileName: pdfFilename,
@@ -189,7 +190,7 @@ export async function getOrGenerateReceiptPdf(
   const contentHash = calculateContentHash(invoice, 'receipt');
 
   // Step 2: Check for existing document
-  const existingDoc = await getLatestDocument(invoice.id, DocumentKind.RECEIPT);
+  const existingDoc = await getLatestDocument(invoice.id, DocumentKindSchema.enum.RECEIPT);
 
   // Step 3: Determine if regeneration is needed
   let needsRegeneration = !existingDoc || existingDoc.fileHash !== contentHash;
@@ -256,7 +257,7 @@ export async function getOrGenerateReceiptPdf(
 
     // Save via DocumentService (handles S3 upload + DB record)
     const newDoc = await createDocument({
-      kind: DocumentKind.RECEIPT,
+      kind: DocumentKindSchema.enum.RECEIPT,
       invoiceId: invoice.id,
       buffer: generatedPdfBuffer,
       fileName: pdfFilename,

@@ -3,7 +3,7 @@
 import { SearchParams } from 'nuqs/server';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withTenant } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 import type {
   OrganizationListItem,
@@ -21,14 +21,17 @@ const organizationRepo = new OrganizationRepository(prisma);
  * Returns a list of all organisations sorted alphabetically by name.
  * @returns A promise that resolves to an `ActionResult` containing an array of organisation items.
  */
-export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(async (ctx) => {
-  try {
-    const organizations = await organizationRepo.findActiveOrganizations(ctx.tenantId);
-    return { success: true, data: organizations };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch organisations');
-  }
-});
+export const getActiveOrganizations = withTenantPermission<void, OrganizationListItem[]>(
+  'canReadOrganisations',
+  async (ctx) => {
+    try {
+      const organizations = await organizationRepo.findActiveOrganizations(ctx.tenantId);
+      return { success: true, data: organizations };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch organisations');
+    }
+  },
+);
 
 /**
  * Retrieves a paginated list of organisations based on search and filter criteria.
@@ -36,7 +39,8 @@ export const getActiveOrganizations = withTenant<void, OrganizationListItem[]>(a
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated organisation data.
  */
-export const getOrganizations = withTenant<SearchParams, OrganizationPagination>(
+export const getOrganizations = withTenantPermission<SearchParams, OrganizationPagination>(
+  'canReadOrganisations',
   async (ctx, searchParams) => {
     try {
       const parsedParams = searchParamsCache.parse(searchParams);
@@ -57,16 +61,19 @@ export const getOrganizations = withTenant<SearchParams, OrganizationPagination>
  * @returns A promise that resolves to an `ActionResult` containing the organisation details,
  * or an error if the organisation is not found.
  */
-export const getOrganizationById = withTenant<string, OrganizationListItem>(async (ctx, id) => {
-  try {
-    const organization = await organizationRepo.findOrganizationById(id, ctx.tenantId);
+export const getOrganizationById = withTenantPermission<string, OrganizationListItem>(
+  'canReadOrganisations',
+  async (ctx, id) => {
+    try {
+      const organization = await organizationRepo.findOrganizationById(id, ctx.tenantId);
 
-    if (!organization) {
-      return { success: false, error: 'Organisation not found' };
+      if (!organization) {
+        return { success: false, error: 'Organisation not found' };
+      }
+
+      return { success: true, data: organization };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch organisation');
     }
-
-    return { success: true, data: organization };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch organisation');
-  }
-});
+  },
+);

@@ -139,7 +139,10 @@ export const authConfig = {
               lastActiveAt: new Date(),
             });
 
-            await sessionRepo.createSession(sessionData);
+            await Promise.all([
+              sessionRepo.createSession(sessionData),
+              userRepo.updateLastLoginAt(dbUser.id),
+            ]);
           }
         } catch (error) {
           logger.error('Failed to create session for credentials sign-in', error, {
@@ -230,7 +233,10 @@ export const authConfig = {
               lastActiveAt: new Date(), // Initialize last active timestamp
             });
 
-            await sessionRepo.createSession(sessionData);
+            await Promise.all([
+              sessionRepo.createSession(sessionData),
+              userRepo.updateLastLoginAt(dbUser.id),
+            ]);
 
             // 🚀 PERFORMANCE: Update location in background (non-blocking)
             // This happens AFTER sign-in completes, so no delay for user
@@ -314,23 +320,43 @@ export const authConfig = {
         }
       }
 
-      // For JWT strategy, we can use token data directly without database lookups
-      // This makes auth much faster for API routes
+      // Re-read role and tenant from DB so role changes take effect immediately
+      // without requiring the user to sign out and back in.
+      let role = (token.role as string) || 'USER';
+      let tenantId = token.tenantId as string | null;
+      let tenantSlug = token.tenantSlug as string | null;
+
+      if (token.sub) {
+        try {
+          const userRepo = new UserRepository(prisma);
+          const fresh = await userRepo.getUserByIdWithSelect(token.sub, {
+            role: true,
+            tenantId: true,
+            tenant: { select: { slug: true } },
+          });
+          if (fresh) {
+            role = fresh.role;
+            tenantId = fresh.tenantId ?? null;
+            tenantSlug = fresh.tenant?.slug ?? null;
+          }
+        } catch (error) {
+          logger.error('Failed to refresh role from DB', error, { context: 'auth:session' });
+        }
+      }
+
       if (session.user && token?.sub) {
         return {
           ...session,
           user: {
             ...session.user,
             id: token.sub,
-            // Use token data directly - much faster than DB lookup
             name: token.name || session.user.name,
             email: token.email || session.user.email,
             image: token.picture || session.user.image,
-            role: token.role || 'USER',
-            tenantId: token.tenantId,
-            tenantSlug: token.tenantSlug,
+            role,
+            tenantId,
+            tenantSlug,
           },
-          // Include session token for identifying current session in database
           sessionToken: token.sessionToken as string | undefined,
         };
       }

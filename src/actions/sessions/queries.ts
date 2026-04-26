@@ -4,7 +4,7 @@ import { SessionRepository } from '@/repositories/session-repository';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withAuth } from '@/lib/action-auth';
+import { withAuth, withTenantPermission } from '@/lib/action-auth';
 
 const sessionRepo = new SessionRepository(prisma);
 
@@ -29,3 +29,20 @@ export const getSessions = withAuth<void, SessionWithUser[]>(async (session) => 
     });
   }
 });
+
+/**
+ * Retrieves all active sessions for a specific user. Admin-only.
+ * @param userId - The ID of the user whose sessions to fetch
+ * @returns A promise that resolves to an `ActionResult` containing the list of active sessions.
+ */
+export const getSessionsByUserId = withTenantPermission<string, SessionWithUser[]>(
+  'canManageUsers',
+  async (_ctx, userId) => {
+    try {
+      const sessions = await sessionRepo.findActiveSessionsByUserId(userId);
+      return { success: true, data: sessions };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch sessions');
+    }
+  },
+);

@@ -3,7 +3,7 @@
 import { Table } from '@tanstack/react-table';
 import { XCircle, CheckCircle } from 'lucide-react';
 
-import { InvoiceStatus } from '@/prisma/client';
+import { InvoiceStatusSchema } from '@/zod/schemas/enums/InvoiceStatus.schema';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ export function BulkActionsBar<TData>({
             onClick={() =>
               onUpdateStatus(
                 selectedRows.map((r) => r.original),
-                InvoiceStatus.PENDING,
+                InvoiceStatusSchema.enum.PENDING,
               )
             }
           >
@@ -54,7 +54,7 @@ export function BulkActionsBar<TData>({
             onClick={() =>
               onUpdateStatus(
                 selectedRows.map((r) => r.original),
-                InvoiceStatus.CANCELLED,
+                InvoiceStatusSchema.enum.CANCELLED,
               )
             }
           >

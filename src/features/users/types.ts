@@ -16,6 +16,9 @@ export type UserListItem = {
 
 export type UserDetail = UserListItem & {
   isTwoFactorEnabled: boolean;
+  username: string | null;
+  title: string | null;
+  bio: string | null;
 };
 
 export type UserPagination = {
@@ -30,6 +33,13 @@ export type UserFilters = {
   page: number;
   perPage: number;
   sort?: { id: string; desc: boolean }[];
+};
+
+export type AccessChange = {
+  id: string;
+  message: string;
+  changedByName: string;
+  createdAt: Date;
 };
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
