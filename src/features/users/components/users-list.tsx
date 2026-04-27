@@ -67,8 +67,6 @@ export function UsersList({
     initialData.pagination.totalItems === 0 &&
     !hasActiveSearchFilters(serverSearchParams, userSearchParams);
 
-  console.log('initialData', initialData);
-
   return (
     <Box className="space-y-4 min-w-0 w-full">
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">

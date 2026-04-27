@@ -3,27 +3,28 @@
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { Ban, CheckCircle2, CircleDashed, Text } from 'lucide-react';
+import { Ban, CheckCircle2, CircleDashed, Shield, Text, User, UserCog } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import { DataTableColumnHeader } from '@/components/shared/tableV3/data-table-column-header';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import type { UserListItem } from '@/features/users/types';
-import { USER_ROLE_LABELS } from '@/features/users/types';
-import { UserStatusBadge } from './user-status-badge';
+import { USER_ROLE_LABELS, type UserListItem } from '@/features/users/types';
+import { UserStatusBadge } from '@/features/users/components/user-status-badge';
 import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
+import { UserStatusSchema } from '@/zod/schemas/enums/UserStatus.schema';
+import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
 
 const RoleOptions = [
-  { label: USER_ROLE_LABELS.USER, value: 'USER' },
-  { label: USER_ROLE_LABELS.MANAGER, value: 'MANAGER' },
-  { label: USER_ROLE_LABELS.ADMIN, value: 'ADMIN' },
+  { label: USER_ROLE_LABELS.USER, value: UserRoleSchema.enum.USER, icon: User },
+  { label: USER_ROLE_LABELS.MANAGER, value: UserRoleSchema.enum.MANAGER, icon: UserCog },
+  { label: USER_ROLE_LABELS.ADMIN, value: UserRoleSchema.enum.ADMIN, icon: Shield },
 ];
 
 const StatusOptions = [
-  { label: 'Active', value: 'ACTIVE', icon: CheckCircle2 },
-  { label: 'Invited', value: 'INVITED', icon: CircleDashed },
-  { label: 'Suspended', value: 'SUSPENDED', icon: Ban },
+  { label: 'Active', value: UserStatusSchema.enum.ACTIVE, icon: CheckCircle2 },
+  { label: 'Invited', value: UserStatusSchema.enum.INVITED, icon: CircleDashed },
+  { label: 'Suspended', value: UserStatusSchema.enum.SUSPENDED, icon: Ban },
 ];
 
 function UserLink({ userId, name }: { userId: string; name: string }) {

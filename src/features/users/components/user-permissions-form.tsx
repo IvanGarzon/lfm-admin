@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -111,23 +110,31 @@ function RecentAccessChanges({ userId }: { userId: string }) {
 export function UserPermissionsForm({
   user,
   onUpdate,
-  isUpdating = false,
+  onDirtyChange,
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserRoleInput) => void;
-  isUpdating?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [selectedRole, setSelectedRole] = useState(user.role);
 
-  const isDirty = selectedRole !== user.role;
   const allowedPermissions = new Set(RolePolicies[selectedRole]?.allow ?? []);
 
-  const handleSave = () => {
+  const handleRoleChange = (role: string) => {
+    const validRole = SELECTABLE_ROLES.find((r) => r === role);
+    if (validRole !== undefined) {
+      setSelectedRole(validRole);
+      onDirtyChange?.(validRole !== user.role);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     onUpdate({ id: user.id, role: selectedRole });
   };
 
   return (
-    <Box className="flex flex-col h-full">
+    <form id="form-permissions" className="flex flex-col h-full" onSubmit={handleSubmit}>
       <Box className="flex-1 overflow-y-auto p-6 space-y-6">
         <Card>
           <CardHeader className="px-6 pt-4 pb-4">
@@ -137,15 +144,7 @@ export function UserPermissionsForm({
             </p>
           </CardHeader>
           <CardContent className="px-6 pt-0 pb-4">
-            <Select
-              value={selectedRole}
-              onValueChange={(v) => {
-                const role = SELECTABLE_ROLES.find((r) => r === v);
-                if (role !== undefined) {
-                  setSelectedRole(role);
-                }
-              }}
-            >
+            <Select value={selectedRole} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -196,13 +195,6 @@ export function UserPermissionsForm({
         {/* -- Recent access changes ------------------------------------------ */}
         <RecentAccessChanges userId={user.id} />
       </Box>
-
-      <Box className="border-t p-4 flex justify-end">
-        <Button onClick={handleSave} disabled={isUpdating || !isDirty}>
-          {isUpdating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-          Update Permissions
-        </Button>
-      </Box>
-    </Box>
+    </form>
   );
 }

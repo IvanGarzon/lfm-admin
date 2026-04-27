@@ -3,7 +3,6 @@
 import { useCallback, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { UpdateUserSchema, type UpdateUserInput } from '@/schemas/users';
 import { UserStatusSchema } from '@/zod/schemas/enums/UserStatus.schema';
@@ -11,7 +10,6 @@ import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -47,15 +45,11 @@ function mapUserToFormValues(user: UserDetail): UpdateUserInput {
 export function UserForm({
   user,
   onUpdate,
-  isUpdating = false,
   onDirtyStateChange,
-  onClose,
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserInput) => void;
-  isUpdating?: boolean;
   onDirtyStateChange?: (isDirty: boolean) => void;
-  onClose?: () => void;
 }) {
   const { data: session } = useSession();
   const canManageUsers = hasPermission(session?.user, 'canManageUsers');
@@ -280,18 +274,6 @@ export function UserForm({
               </FieldGroup>
             </CardContent>
           </Card>
-        </Box>
-
-        <Box className="border-t p-4 flex items-center justify-end gap-3">
-          {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isUpdating}>
-              Cancel
-            </Button>
-          ) : null}
-          <Button type="submit" disabled={isUpdating || !form.formState.isDirty}>
-            {isUpdating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-            Save changes
-          </Button>
         </Box>
       </form>
     </Form>

@@ -50,9 +50,7 @@ export const updateUser = withTenantPermission<UpdateUserInput, UserDetail>(
 
       const user = await userRepo.updateTenantUser(id, ctx.tenantId, fields);
 
-      revalidatePath('/users');
-      revalidatePath(`/users/${id}`);
-
+      // revalidatePath('/users');
       return { success: true, data: user };
     } catch (error) {
       return handleActionError(error, 'Failed to update user');
@@ -75,6 +73,8 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
 
       const user = await userRepo.updateTenantUserRole(id, ctx.tenantId, role);
 
+      // revalidatePath('/users');
+
       const changedByName =
         [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(' ') || 'Admin';
       auditService.UserRoleChanged({
@@ -87,9 +87,6 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
           changedByName,
         },
       });
-
-      revalidatePath('/users');
-      revalidatePath(`/users/${id}`);
 
       return { success: true, data: user };
     } catch (error) {

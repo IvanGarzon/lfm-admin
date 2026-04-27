@@ -10,7 +10,7 @@ export const UpdateUserSchema = z.object({
   email: commonValidators.email(),
   phone: commonValidators.phoneOptional(),
   status: UserStatusSchema,
-  isTwoFactorEnabled: z.boolean(),
+  isTwoFactorEnabled: z.boolean().optional(),
   username: z
     .string()
     .max(VALIDATION_LIMITS.USERNAME_MAX, 'Username is too long')

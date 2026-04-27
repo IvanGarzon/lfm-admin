@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getTenantUserById, getUserRoleChanges } from '@/actions/users/queries';
+import type { SearchParams } from 'nuqs/server';
+import { getTenantUserById, getUserRoleChanges, getTenantUsers } from '@/actions/users/queries';
 import {
   updateUser,
   updateUserRole,
@@ -19,7 +20,7 @@ import type {
   InviteUserInput,
   ChangePasswordInput,
 } from '@/schemas/users';
-import type { UserDetail } from '@/features/users/types';
+import type { UserDetail, UserPagination } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
 
 const USER_KEYS = {
@@ -84,7 +85,7 @@ export function useUpdateUser() {
           email: newData.email,
           phone: newData.phone ?? null,
           status: newData.status,
-          isTwoFactorEnabled: newData.isTwoFactorEnabled,
+          isTwoFactorEnabled: newData.isTwoFactorEnabled ?? old.isTwoFactorEnabled,
           username: newData.username ?? null,
           title: newData.title ?? null,
           bio: newData.bio ?? null,

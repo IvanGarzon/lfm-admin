@@ -2,12 +2,13 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
@@ -41,6 +42,7 @@ export function UserDrawer({
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isPermissionsDirty, setIsPermissionsDirty] = useState(false);
   const [activeTab, setActiveTab] = useState(tab);
 
   useEffect(() => {
@@ -73,11 +75,9 @@ export function UserDrawer({
   const handleOpenChange = useCallback(
     (openState: boolean) => {
       if (!openState) {
-        // Reset to view mode when closing
         setHasUnsavedChanges(false);
 
         if (id) {
-          // Navigate back to list preserving filters
           const basePath = '/users';
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
@@ -102,6 +102,7 @@ export function UserDrawer({
     (data: UpdateUserRoleInput) => {
       updateUserRole.mutate(data, {
         onSuccess: () => {
+          setIsPermissionsDirty(false);
           onClose?.();
         },
       });
@@ -188,7 +189,6 @@ export function UserDrawer({
                   <UserForm
                     user={user}
                     onUpdate={handleUpdate}
-                    isUpdating={updateUser.isPending}
                     onDirtyStateChange={setHasUnsavedChanges}
                   />
                 </TabsContent>
@@ -197,7 +197,7 @@ export function UserDrawer({
                   <UserPermissionsForm
                     user={user}
                     onUpdate={handleUpdateRole}
-                    isUpdating={updateUserRole.isPending}
+                    onDirtyChange={setIsPermissionsDirty}
                   />
                 </TabsContent>
 
@@ -206,6 +206,42 @@ export function UserDrawer({
                 </TabsContent>
               </Tabs>
             </DrawerBody>
+
+            <DrawerFooter className="border-t px-6 py-4">
+              <Button
+                type="submit"
+                form={activeTab === 'details' ? 'form-rhf-user' : 'form-permissions'}
+                disabled={
+                  activeTab === 'details'
+                    ? updateUser.isPending || !hasUnsavedChanges
+                    : updateUserRole.isPending || !isPermissionsDirty
+                }
+              >
+                {updateUser.isPending || updateUserRole.isPending ? (
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                ) : null}
+                Update user
+              </Button>
+            </DrawerFooter>
+
+            {/* {activeTab !== 'security' ? (
+              <DrawerFooter className="border-t px-6 py-4">
+                <Button
+                  type="submit"
+                  form={activeTab === 'details' ? 'form-rhf-user' : 'form-permissions'}
+                  disabled={
+                    activeTab === 'details'
+                      ? updateUser.isPending || !hasUnsavedChanges
+                      : updateUserRole.isPending || !isPermissionsDirty
+                  }
+                >
+                  {updateUser.isPending || updateUserRole.isPending ? (
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                  ) : null}
+                  Update user
+                </Button>
+              </DrawerFooter>
+            ) : null} */}
           </>
         ) : null}
       </DrawerContent>

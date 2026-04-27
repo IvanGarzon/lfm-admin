@@ -333,7 +333,7 @@ export class UserRepository extends BaseRepository<User> {
       email: string;
       phone?: string | null;
       status: UserStatus;
-      isTwoFactorEnabled: boolean;
+      isTwoFactorEnabled?: boolean;
       username?: string | null;
       title?: string | null;
       bio?: string | null;
