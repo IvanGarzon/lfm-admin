@@ -34,7 +34,7 @@ const USER_ROLE_CONFIG: Record<UserRole, StatusBadgeConfig> = {
     icon: <UserCog className="h-4 w-4" />,
   },
   USER: {
-    label: 'User',
+    label: 'Staff',
     variant: 'outline',
     className:
       'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700',

@@ -17,6 +17,7 @@ import { PERMISSIONS, RolePolicies, type PermissionKey } from '@/lib/permissions
 
 import type { UserDetail, AccessChange } from '@/features/users/types';
 import { USER_ROLE_LABELS } from '@/features/users/types';
+import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 import type { UpdateUserRoleInput } from '@/schemas/users';
 import { useUserRoleChanges } from '@/features/users/hooks/use-user-queries';
 
@@ -88,11 +89,16 @@ function RecentAccessChanges({ userId }: { userId: string }) {
         ) : changes.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">No access changes recorded yet.</p>
         ) : (
-          <Box className="divide-y">
+          <Box className="divide-y max-h-48 overflow-y-auto">
             {changes.map((change: AccessChange) => (
               <Box key={change.id} className="flex items-start justify-between py-3 gap-4">
                 <Box>
-                  <p className="text-sm font-medium">{change.message}</p>
+                  <Box className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{change.message}</p>
+                    {change.toRole ? (
+                      <UserRoleBadge role={change.toRole} className="text-xs" />
+                    ) : null}
+                  </Box>
                   <p className="text-xs text-muted-foreground mt-0.5">By {change.changedByName}</p>
                 </Box>
                 <span className="text-xs text-muted-foreground shrink-0 mt-0.5">

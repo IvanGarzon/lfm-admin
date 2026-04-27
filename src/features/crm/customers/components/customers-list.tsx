@@ -10,10 +10,12 @@ import { Box } from '@/components/ui/box';
 import { EmptyState } from '@/components/shared/empty-state';
 import { CustomersTable } from '@/features/crm/customers/components/customers-table';
 import { createCustomerColumns } from '@/features/crm/customers/components/customer-columns';
-import { useDeleteCustomer } from '@/features/crm/customers/hooks/use-customer-queries';
+import {
+  useDeleteCustomer,
+  useCustomers,
+} from '@/features/crm/customers/hooks/use-customer-queries';
 import { searchParams as customerSearchParams } from '@/filters/customers/customers-filters';
 import { hasActiveSearchFilters } from '@/lib/utils';
-import type { CustomerPagination } from '@/features/crm/customers/types';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -27,17 +29,17 @@ const CustomerDrawer = dynamic(
 );
 
 export function CustomersList({
-  initialData,
   searchParams: serverSearchParams,
 }: {
-  initialData: CustomerPagination;
   searchParams: SearchParams;
 }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const deleteCustomer = useDeleteCustomer();
 
+  const { data } = useCustomers(serverSearchParams);
+
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+  const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
 
   const columns = useMemo(
     () =>
@@ -55,15 +57,15 @@ export function CustomersList({
   }, []);
 
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: pageCount,
+    pageCount,
     shallow: false,
     debounceMs: 500,
   });
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
+    (data?.pagination.totalItems ?? 0) === 0 &&
     !hasActiveSearchFilters(serverSearchParams, customerSearchParams);
 
   return (
@@ -98,8 +100,8 @@ export function CustomersList({
       ) : (
         <CustomersTable
           table={table}
-          items={initialData.items}
-          totalItems={initialData.pagination.totalItems}
+          items={data?.items ?? []}
+          totalItems={data?.pagination.totalItems ?? 0}
         />
       )}
 

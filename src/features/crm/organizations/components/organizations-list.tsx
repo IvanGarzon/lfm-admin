@@ -20,29 +20,25 @@ import {
   useDeleteOrganization,
   useCreateOrganization,
   useUpdateOrganization,
+  useOrganizationsList,
 } from '@/features/crm/organizations/hooks/use-organization-queries';
 import { OrganizationForm } from '@/features/crm/organizations/components/organization-form';
 import { DeleteOrganizationDialog } from '@/features/crm/organizations/components/delete-organization-dialog';
 import type { CreateOrganizationInput, UpdateOrganizationInput } from '@/schemas/organizations';
-import type {
-  OrganizationListItem,
-  OrganizationPagination,
-} from '@/features/crm/organizations/types';
+import type { OrganizationListItem } from '@/features/crm/organizations/types';
 import { EmptyState } from '@/components/shared/empty-state';
 
 const DEFAULT_PAGE_SIZE = 20;
 
-interface OrganizationsListProps {
-  initialData: OrganizationPagination;
-  searchParams: SearchParams;
-}
-
 export function OrganizationsList({
-  initialData,
   searchParams: serverSearchParams,
-}: OrganizationsListProps) {
+}: {
+  searchParams: SearchParams;
+}) {
+  const { data } = useOrganizationsList(serverSearchParams);
+
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+  const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
 
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [editingOrganization, setEditingOrganization] = useState<OrganizationListItem | null>(null);
@@ -108,15 +104,15 @@ export function OrganizationsList({
   );
 
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: pageCount,
+    pageCount,
     shallow: false,
     debounceMs: 500,
   });
 
   const hasActiveFilters = Boolean(serverSearchParams.search) || Boolean(serverSearchParams.status);
-  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+  const isZeroState = (data?.pagination.totalItems ?? 0) === 0 && !hasActiveFilters;
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
@@ -150,8 +146,8 @@ export function OrganizationsList({
       ) : (
         <OrganizationsTable
           table={table}
-          items={initialData.items}
-          totalItems={initialData.pagination.totalItems}
+          items={data?.items ?? []}
+          totalItems={data?.pagination.totalItems ?? 0}
         />
       )}
 

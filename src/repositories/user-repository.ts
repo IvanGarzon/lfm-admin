@@ -306,6 +306,7 @@ export class UserRepository extends BaseRepository<User> {
         role: true,
         status: true,
         isTwoFactorEnabled: true,
+        loginNotificationsEnabled: true,
         lastLoginAt: true,
         username: true,
         title: true,
@@ -351,6 +352,43 @@ export class UserRepository extends BaseRepository<User> {
         role: true,
         status: true,
         isTwoFactorEnabled: true,
+        loginNotificationsEnabled: true,
+        lastLoginAt: true,
+        username: true,
+        title: true,
+        bio: true,
+        addedBy: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    return user;
+  }
+
+  /**
+   * Updates only the security settings (2FA and login notifications) for a tenant-scoped user.
+   * @param id - The user ID to update
+   * @param tenantId - The tenant to scope the update to
+   * @param data - The security fields to update
+   * @returns The updated user detail
+   */
+  async updateUserSecurity(
+    id: string,
+    tenantId: string,
+    data: { isTwoFactorEnabled?: boolean; loginNotificationsEnabled?: boolean },
+  ): Promise<UserDetail> {
+    const user = await this.prisma.user.update({
+      where: { id, tenantId, deletedAt: null },
+      data,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        isTwoFactorEnabled: true,
+        loginNotificationsEnabled: true,
         lastLoginAt: true,
         username: true,
         title: true,

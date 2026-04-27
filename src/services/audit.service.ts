@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { Prisma } from '@/prisma/client';
 import pino from 'pino';
 import type { AuditLevel } from '@/zod/schemas/enums/AuditLevel.schema';
+import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
+import type { AccessChange } from '@/features/users/types';
 import { env } from 'env';
 // import * as Sentry from '@sentry/node';
 
@@ -108,13 +110,6 @@ async function createAuditLog({
   });
 }
 
-type AccessChange = {
-  id: string;
-  message: string;
-  changedByName: string;
-  createdAt: Date;
-};
-
 export class AuditService {
   level;
 
@@ -176,10 +171,12 @@ export class AuditService {
     `;
 
     return records.map((r) => {
-      const data = r.data as { changedByName?: string };
+      const data = r.data as { changedByName?: string; toRole?: unknown };
+      const parsedRole = UserRoleSchema.safeParse(data?.toRole);
       return {
         id: r.id,
         message: r.message,
+        toRole: parsedRole.success ? parsedRole.data : undefined,
         changedByName: data?.changedByName ?? 'System',
         createdAt: r.created_at,
       };

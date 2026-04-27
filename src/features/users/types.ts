@@ -16,6 +16,7 @@ export type UserListItem = {
 
 export type UserDetail = UserListItem & {
   isTwoFactorEnabled: boolean;
+  loginNotificationsEnabled: boolean;
   username: string | null;
   title: string | null;
   bio: string | null;
@@ -38,6 +39,7 @@ export type UserFilters = {
 export type AccessChange = {
   id: string;
   message: string;
+  toRole?: UserRole;
   changedByName: string;
   createdAt: Date;
 };

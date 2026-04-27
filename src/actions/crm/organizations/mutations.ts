@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
@@ -30,9 +29,6 @@ export const createOrganization = withTenantPermission<
     const validatedData = CreateOrganizationSchema.parse(data);
 
     const organization = await organizationRepo.createOrganization(validatedData, tenantId);
-
-    revalidatePath('/customers');
-    revalidatePath('/organizations');
 
     return {
       success: true,
@@ -73,9 +69,6 @@ export const updateOrganization = withTenantPermission<UpdateOrganizationInput, 
         return { success: false, error: 'Failed to update organisation' };
       }
 
-      revalidatePath('/customers');
-      revalidatePath('/organizations');
-
       return { success: true, data: { id: organization.id } };
     } catch (error) {
       return handleActionError(error, 'Failed to update organisation');
@@ -102,9 +95,6 @@ export const deleteOrganization = withTenantPermission<DeleteOrganizationInput, 
       }
 
       await organizationRepo.deleteOrganization(id, ctx.tenantId);
-
-      revalidatePath('/customers');
-      revalidatePath('/organizations');
 
       return { success: true, data: { id } };
     } catch (error) {

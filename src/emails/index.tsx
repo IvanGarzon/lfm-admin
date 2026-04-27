@@ -15,6 +15,7 @@ import { QuoteEmail } from './quote-email';
 import { QuoteFollowUpEmail } from './quote-followup-email';
 import { InvitationEmail } from './invitation-email';
 import { PasswordResetEmail } from './password-reset-email';
+import { LoginNotificationEmail } from './login-notification-email';
 
 // Export types for template props
 export type { InvoiceEmail as InvoiceEmailComponent } from './invoice-email';
@@ -35,6 +36,7 @@ const emailTemplates = {
   'quote-followup': QuoteFollowUpEmail,
   invitation: InvitationEmail,
   'password-reset': PasswordResetEmail,
+  'login-notification': LoginNotificationEmail,
 } as const;
 
 /**

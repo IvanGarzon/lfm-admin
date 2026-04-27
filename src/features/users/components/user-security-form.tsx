@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Bell, ShieldCheck } from 'lucide-react';
+import { Loader2, Bell, ShieldCheck, ShieldOff, Check, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -11,8 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { SessionCard } from '@/features/users/components/sessions/session-card';
 import { SessionCardSkeleton } from '@/features/users/components/sessions/session-card-skeleton';
 import { DeleteSessionDialog } from '@/features/users/components/sessions/delete-session-dialog';
@@ -21,13 +19,12 @@ import { ChangePasswordSchema, type ChangePasswordInput } from '@/schemas/users'
 import {
   useChangePassword,
   useSendPasswordResetEmail,
+  useUpdateUserSecurity,
   useUserSessions,
 } from '@/features/users/hooks/use-user-queries';
 import { useDeleteSession } from '@/features/users/hooks/use-sessions';
 import type { UserDetail } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
-
-// -- Change Password Block --------------------------------------------------
 
 function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail: string | null }) {
   const { data: session } = useSession();
@@ -142,11 +139,12 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
   );
 }
 
-// -- Security Settings Block ------------------------------------------------
+function SecuritySettingsBlock({ user }: { user: UserDetail }) {
+  const { mutate: updateSecurity, isPending } = useUpdateUserSecurity();
 
-function SecuritySettingsBlock() {
-  const [twoFactor, setTwoFactor] = useState(false);
-  const [loginNotifications, setLoginNotifications] = useState(false);
+  const handleToggle = (field: 'isTwoFactorEnabled' | 'loginNotificationsEnabled') => {
+    updateSecurity({ id: user.id, [field]: !user[field] });
+  };
 
   return (
     <Card>
@@ -169,12 +167,19 @@ function SecuritySettingsBlock() {
               </p>
             </Box>
           </Box>
-          <Box className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              Coming soon
-            </Badge>
-            <Switch checked={twoFactor} onCheckedChange={setTwoFactor} disabled />
-          </Box>
+          <Button
+            variant={user.isTwoFactorEnabled ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={() => handleToggle('isTwoFactorEnabled')}
+            disabled={isPending}
+          >
+            {user.isTwoFactorEnabled ? (
+              <ShieldOff className="size-4" />
+            ) : (
+              <ShieldCheck className="size-4" />
+            )}
+            {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}
+          </Button>
         </Box>
 
         <Box className="border-t" />
@@ -191,19 +196,24 @@ function SecuritySettingsBlock() {
               </p>
             </Box>
           </Box>
-          <Box className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              Coming soon
-            </Badge>
-            <Switch checked={loginNotifications} onCheckedChange={setLoginNotifications} disabled />
-          </Box>
+          <Button
+            variant={user.loginNotificationsEnabled ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={() => handleToggle('loginNotificationsEnabled')}
+            disabled={isPending}
+          >
+            {user.loginNotificationsEnabled ? (
+              <X className="size-4" />
+            ) : (
+              <Check className="size-4" />
+            )}
+            {user.loginNotificationsEnabled ? 'Disable' : 'Enable'}
+          </Button>
         </Box>
       </CardContent>
     </Card>
   );
 }
-
-// -- Active Sessions Block --------------------------------------------------
 
 function ActiveSessionsBlock({ userId }: { userId: string }) {
   const { data: sessions = [], isLoading } = useUserSessions(userId);
@@ -258,13 +268,11 @@ function ActiveSessionsBlock({ userId }: { userId: string }) {
   );
 }
 
-// -- Main Component ---------------------------------------------------------
-
 export function UserSecurityForm({ user }: { user: UserDetail }) {
   return (
     <Box className="h-full overflow-y-auto p-6 space-y-4">
       <ChangePasswordBlock userId={user.id} userEmail={user.email} />
-      <SecuritySettingsBlock />
+      <SecuritySettingsBlock user={user} />
       <ActiveSessionsBlock userId={user.id} />
     </Box>
   );
