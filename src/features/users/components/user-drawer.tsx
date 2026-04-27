@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { X, AlertCircle } from 'lucide-react';
 import { Box } from '@/components/ui/box';
@@ -24,18 +24,28 @@ import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
 import type { UpdateUserInput, UpdateUserRoleInput } from '@/schemas/users';
 
+type Tab = 'details' | 'permissions' | 'security';
+const TABS: Tab[] = ['details', 'permissions', 'security'];
+
 export function UserDrawer({
   id,
   open,
   onClose,
+  tab = 'details',
 }: {
   id?: string;
   open?: boolean;
   onClose?: () => void;
+  tab?: Tab;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState(tab);
+
+  useEffect(() => {
+    setActiveTab(tab);
+  }, [tab]);
 
   const { data: user, isLoading, error, isError } = useUser(id);
   const updateUser = useUpdateUser();
@@ -43,6 +53,22 @@ export function UserDrawer({
 
   const queryString = useQueryString(searchParams, userSearchParamsDefaults);
   const isOpen = id ? (pathname?.includes(`/users/${id}`) ?? false) : (open ?? false);
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const tab = TABS.find((tab) => tab === value);
+      if (!tab) {
+        return;
+      }
+
+      setActiveTab(tab);
+      if (id) {
+        const target = `/users/${id}/${tab}`;
+        window.history.replaceState(null, '', queryString ? `${target}?${queryString}` : target);
+      }
+    },
+    [id, queryString],
+  );
 
   const handleOpenChange = useCallback(
     (openState: boolean) => {
@@ -147,7 +173,11 @@ export function UserDrawer({
             </Box>
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
-              <Tabs defaultValue="details" className="flex flex-col h-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={handleTabChange}
+                className="flex flex-col h-full"
+              >
                 <TabsList className="mx-6 mt-4 w-fit">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="permissions">Permissions</TabsTrigger>

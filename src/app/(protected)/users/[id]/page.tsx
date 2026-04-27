@@ -1,35 +1,6 @@
-import dynamic from 'next/dynamic';
-import { SearchParams } from 'nuqs/server';
-import { Shell } from '@/components/shared/shell';
-import { UsersList } from '@/features/users/components/users-list';
-import { getTenantUsers } from '@/actions/users/queries';
+import { redirect } from 'next/navigation';
 
-const UserDrawer = dynamic(
-  () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
-  {
-    loading: () => null,
-  },
-);
-
-export default async function UserPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<SearchParams>;
-}) {
+export default async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const searchParamsResolved = await searchParams;
-  const result = await getTenantUsers(searchParamsResolved);
-
-  if (!result.success) {
-    throw new Error(result.error);
-  }
-
-  return (
-    <Shell scrollable>
-      <UsersList initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <UserDrawer id={id} open={true} /> : null}
-    </Shell>
-  );
+  redirect(`/users/${id}/details`);
 }

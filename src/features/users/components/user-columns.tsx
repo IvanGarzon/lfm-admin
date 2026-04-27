@@ -28,7 +28,7 @@ const StatusOptions = [
 
 function UserLink({ userId, name }: { userId: string; name: string }) {
   const queryString = useQueryString(searchParams, userSearchParamsDefaults);
-  const basePath = `/users/${userId}`;
+  const basePath = `/users/${userId}/details`;
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
@@ -102,13 +102,19 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">{row.original.phone ?? '—'}</span>
     ),
+    meta: {
+      label: 'Phone',
+    },
   },
   {
     id: 'lastLoginAt',
     accessorKey: 'lastLoginAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Login" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Seen" />,
     cell: ({ row }) =>
       row.original.lastLoginAt ? format(new Date(row.original.lastLoginAt), 'MMM dd, yyyy') : '—',
     enableSorting: true,
+    meta: {
+      label: 'Last Seen',
+    },
   },
 ];
