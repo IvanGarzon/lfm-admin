@@ -179,7 +179,7 @@ export function UserDrawer({
                 onValueChange={handleTabChange}
                 className="flex flex-col h-full"
               >
-                <TabsList className="mx-6 mt-4 w-fit">
+                <TabsList className="mx-6 mt-4 mb-2 w-fit">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="permissions">Permissions</TabsTrigger>
                   <TabsTrigger value="security">Security</TabsTrigger>
@@ -207,7 +207,7 @@ export function UserDrawer({
               </Tabs>
             </DrawerBody>
 
-            <DrawerFooter className="border-t px-6 py-4">
+            <DrawerFooter className="-mx-6 border-t px-6 py-4">
               <Button
                 type="submit"
                 form={activeTab === 'details' ? 'form-rhf-user' : 'form-permissions'}
@@ -223,25 +223,6 @@ export function UserDrawer({
                 Update user
               </Button>
             </DrawerFooter>
-
-            {/* {activeTab !== 'security' ? (
-              <DrawerFooter className="border-t px-6 py-4">
-                <Button
-                  type="submit"
-                  form={activeTab === 'details' ? 'form-rhf-user' : 'form-permissions'}
-                  disabled={
-                    activeTab === 'details'
-                      ? updateUser.isPending || !hasUnsavedChanges
-                      : updateUserRole.isPending || !isPermissionsDirty
-                  }
-                >
-                  {updateUser.isPending || updateUserRole.isPending ? (
-                    <Loader2 className="size-4 animate-spin mr-2" />
-                  ) : null}
-                  Update user
-                </Button>
-              </DrawerFooter>
-            ) : null} */}
           </>
         ) : null}
       </DrawerContent>

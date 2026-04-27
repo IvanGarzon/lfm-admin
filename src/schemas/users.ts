@@ -28,6 +28,14 @@ export const UpdateUserSchema = z.object({
     .optional(),
 });
 
+export const UpdateUserSecuritySchema = z.object({
+  id: z.cuid({ error: 'Invalid user ID' }),
+  isTwoFactorEnabled: z.boolean().optional(),
+  loginNotificationsEnabled: z.boolean().optional(),
+});
+
+export type UpdateUserSecurityInput = z.infer<typeof UpdateUserSecuritySchema>;
+
 export const UpdateUserRoleSchema = z.object({
   id: z.cuid({ error: 'Invalid user ID' }),
   role: UserRoleSchema,

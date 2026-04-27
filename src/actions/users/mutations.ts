@@ -13,11 +13,13 @@ import { absoluteUrl } from '@/lib/utils';
 import { VALIDATION_LIMITS } from '@/lib/validation';
 import {
   UpdateUserSchema,
+  UpdateUserSecuritySchema,
   UpdateUserRoleSchema,
   SoftDeleteUserSchema,
   InviteUserSchema,
   ChangePasswordSchema,
   type UpdateUserInput,
+  type UpdateUserSecurityInput,
   type UpdateUserRoleInput,
   type SoftDeleteUserInput,
   type InviteUserInput,
@@ -50,10 +52,30 @@ export const updateUser = withTenantPermission<UpdateUserInput, UserDetail>(
 
       const user = await userRepo.updateTenantUser(id, ctx.tenantId, fields);
 
-      // revalidatePath('/users');
       return { success: true, data: user };
     } catch (error) {
       return handleActionError(error, 'Failed to update user');
+    }
+  },
+);
+
+/**
+ * Updates security settings (2FA, login notifications) for a tenant user.
+ */
+export const updateUserSecurity = withTenantPermission<UpdateUserSecurityInput, UserDetail>(
+  'canManageUsers',
+  async (ctx, data) => {
+    try {
+      const { id, ...fields } = UpdateUserSecuritySchema.parse(data);
+      const existing = await userRepo.findTenantUserById(id, ctx.tenantId);
+      if (!existing) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const user = await userRepo.updateUserSecurity(id, ctx.tenantId, fields);
+      return { success: true, data: user };
+    } catch (error) {
+      return handleActionError(error, 'Failed to update security settings');
     }
   },
 );
@@ -72,8 +94,6 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
       }
 
       const user = await userRepo.updateTenantUserRole(id, ctx.tenantId, role);
-
-      // revalidatePath('/users');
 
       const changedByName =
         [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(' ') || 'Admin';

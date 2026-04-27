@@ -16,6 +16,7 @@ export type UserListItem = {
 
 export type UserDetail = UserListItem & {
   isTwoFactorEnabled: boolean;
+  loginNotificationsEnabled: boolean;
   username: string | null;
   title: string | null;
   bio: string | null;

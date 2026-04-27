@@ -8,6 +8,7 @@ import { getSessionLimit } from '@/config/session';
 import { SessionRepository } from '@/repositories/session-repository';
 import { UserRepository } from '@/repositories/user-repository';
 import { logger } from '@/lib/logger';
+import { sendEmailNotification } from '@/lib/email-service';
 import { GoogleProvider } from '@/auth/providers';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
@@ -143,6 +144,31 @@ export const authConfig = {
               sessionRepo.createSession(sessionData),
               userRepo.updateLastLoginAt(dbUser.id),
             ]);
+
+            if (dbUser.loginNotificationsEnabled && dbUser.email) {
+              const userName =
+                [dbUser.firstName, dbUser.lastName].filter(Boolean).join(' ') || 'there';
+              const location = [details.city, details.region, details.country]
+                .filter(Boolean)
+                .join(', ');
+              sendEmailNotification({
+                to: dbUser.email,
+                subject: 'New sign-in to your account',
+                template: 'login-notification',
+                props: {
+                  userName,
+                  loginAt: new Date(),
+                  deviceName: sessionData.deviceName ?? null,
+                  browserName: details.browser?.name ?? null,
+                  location: location || null,
+                  ipAddress: details.ipAddress ?? null,
+                },
+              }).catch((err) =>
+                logger.error('Failed to send login notification email', err, {
+                  context: 'auth:signIn:credentials',
+                }),
+              );
+            }
           }
         } catch (error) {
           logger.error('Failed to create session for credentials sign-in', error, {
@@ -188,6 +214,10 @@ export const authConfig = {
           const dbUser = await userRepo.getUserByEmailWithSelect(user.email, {
             id: true,
             role: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            loginNotificationsEnabled: true,
           });
 
           if (dbUser) {
@@ -237,6 +267,31 @@ export const authConfig = {
               sessionRepo.createSession(sessionData),
               userRepo.updateLastLoginAt(dbUser.id),
             ]);
+
+            if (dbUser.loginNotificationsEnabled && dbUser.email) {
+              const userName =
+                [dbUser.firstName, dbUser.lastName].filter(Boolean).join(' ') || 'there';
+              const location = [details.city, details.region, details.country]
+                .filter(Boolean)
+                .join(', ');
+              sendEmailNotification({
+                to: dbUser.email,
+                subject: 'New sign-in to your account',
+                template: 'login-notification',
+                props: {
+                  userName,
+                  loginAt: new Date(),
+                  deviceName: sessionData.deviceName ?? null,
+                  browserName: details.browser?.name ?? null,
+                  location: location || null,
+                  ipAddress: details.ipAddress ?? null,
+                },
+              }).catch((err) =>
+                logger.error('Failed to send login notification email', err, {
+                  context: 'auth:signIn',
+                }),
+              );
+            }
 
             // 🚀 PERFORMANCE: Update location in background (non-blocking)
             // This happens AFTER sign-in completes, so no delay for user

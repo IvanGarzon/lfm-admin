@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getCustomerById, getActiveCustomers } from '@/actions/crm/customers/queries';
+import type { SearchParams } from 'nuqs/server';
+import { getCustomerById, getActiveCustomers, getCustomers } from '@/actions/crm/customers/queries';
 import { updateCustomer, deleteCustomer, createCustomer } from '@/actions/crm/customers/mutations';
 import type {
   UpdateCustomerInput,
@@ -10,14 +11,23 @@ import type {
   DeleteCustomerInput,
 } from '@/schemas/customers';
 import type { CustomerListItem } from '@/features/crm/customers/types';
+import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
 
-export const CUSTOMER_KEYS = {
-  all: ['customers'] as const,
-  lists: () => [...CUSTOMER_KEYS.all, 'list'] as const,
-  list: (filters: string) => [...CUSTOMER_KEYS.lists(), { filters }] as const,
-  details: () => [...CUSTOMER_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...CUSTOMER_KEYS.details(), id] as const,
-};
+export { CUSTOMER_KEYS };
+
+export function useCustomers(searchParams: SearchParams) {
+  const filtersKey = JSON.stringify(searchParams);
+  return useQuery({
+    queryKey: CUSTOMER_KEYS.list(filtersKey),
+    queryFn: async () => {
+      const result = await getCustomers(searchParams);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
+}
 
 export function useActiveCustomers() {
   return useQuery({

@@ -2,7 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getActiveOrganizations, getOrganizationById } from '@/actions/crm/organizations/queries';
+import type { SearchParams } from 'nuqs/server';
+import {
+  getActiveOrganizations,
+  getOrganizationById,
+  getOrganizations,
+} from '@/actions/crm/organizations/queries';
 import {
   createOrganization,
   updateOrganization,
@@ -14,13 +19,23 @@ import type {
   DeleteOrganizationInput,
 } from '@/schemas/organizations';
 import type { OrganizationListItem } from '@/features/crm/organizations/types';
+import { ORGANIZATION_KEYS } from '@/features/crm/organizations/constants/query-keys';
 
-export const ORGANIZATION_KEYS = {
-  all: ['organizations'] as const,
-  lists: () => [...ORGANIZATION_KEYS.all, 'list'] as const,
-  details: () => [...ORGANIZATION_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...ORGANIZATION_KEYS.details(), id] as const,
-};
+export { ORGANIZATION_KEYS };
+
+export function useOrganizationsList(searchParams: SearchParams) {
+  const filtersKey = JSON.stringify(searchParams);
+  return useQuery({
+    queryKey: ORGANIZATION_KEYS.list(filtersKey),
+    queryFn: async () => {
+      const result = await getOrganizations(searchParams);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
+}
 
 export function useOrganizations() {
   return useQuery({

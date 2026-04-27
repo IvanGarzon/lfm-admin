@@ -8,11 +8,11 @@ import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { userColumns } from '@/features/users/components/user-columns';
-import type { UserPagination } from '@/features/users/types';
 import { EmptyState } from '@/components/shared/empty-state';
 import { UsersTable } from '@/features/users/components/users-table';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as userSearchParams } from '@/filters/users/users-filters';
+import { useUsers } from '@/features/users/hooks/use-user-queries';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -32,18 +32,14 @@ const UserInviteModal = dynamic(
   },
 );
 
-export function UsersList({
-  initialData,
-  searchParams: serverSearchParams,
-}: {
-  initialData: UserPagination;
-  searchParams: SearchParams;
-}) {
+export function UsersList({ searchParams: serverSearchParams }: { searchParams: SearchParams }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
 
+  const { data } = useUsers(serverSearchParams);
+
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+  const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
 
   const handleShowCreateModal = useCallback(() => {
     setShowCreateModal((prev) => !prev);
@@ -56,7 +52,7 @@ export function UsersList({
   const columns = useMemo(() => userColumns, []);
 
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
     pageCount,
     shallow: false,
@@ -64,7 +60,7 @@ export function UsersList({
   });
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
+    (data?.pagination.totalItems ?? 0) === 0 &&
     !hasActiveSearchFilters(serverSearchParams, userSearchParams);
 
   return (
@@ -99,8 +95,8 @@ export function UsersList({
       ) : (
         <UsersTable
           table={table}
-          items={initialData.items}
-          totalItems={initialData.pagination.totalItems}
+          items={data?.items ?? []}
+          totalItems={data?.pagination.totalItems ?? 0}
         />
       )}
 

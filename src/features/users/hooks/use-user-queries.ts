@@ -6,6 +6,7 @@ import type { SearchParams } from 'nuqs/server';
 import { getTenantUserById, getUserRoleChanges, getTenantUsers } from '@/actions/users/queries';
 import {
   updateUser,
+  updateUserSecurity,
   updateUserRole,
   softDeleteUser,
   inviteUser,
@@ -15,22 +16,29 @@ import {
 import { getSessionsByUserId } from '@/actions/sessions/queries';
 import type {
   UpdateUserInput,
+  UpdateUserSecurityInput,
   UpdateUserRoleInput,
   SoftDeleteUserInput,
   InviteUserInput,
   ChangePasswordInput,
 } from '@/schemas/users';
-import type { UserDetail, UserPagination } from '@/features/users/types';
+import type { UserDetail } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
+import { USER_KEYS } from '@/features/users/constants/query-keys';
 
-const USER_KEYS = {
-  all: ['users'] as const,
-  lists: () => [...USER_KEYS.all, 'list'] as const,
-  list: (filters: string) => [...USER_KEYS.lists(), { filters }] as const,
-  details: () => [...USER_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...USER_KEYS.details(), id] as const,
-  accessChanges: (id: string) => [...USER_KEYS.detail(id), 'access-changes'] as const,
-};
+export function useUsers(searchParams: SearchParams) {
+  const filtersKey = JSON.stringify(searchParams);
+  return useQuery({
+    queryKey: USER_KEYS.list(filtersKey),
+    queryFn: async () => {
+      const result = await getTenantUsers(searchParams);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+  });
+}
 
 export function useUser(id: string | undefined) {
   return useQuery({
@@ -106,6 +114,49 @@ export function useUpdateUser() {
     },
     onSuccess: () => {
       toast.success('User updated successfully');
+    },
+  });
+}
+
+export function useUpdateUserSecurity() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: UpdateUserSecurityInput) => {
+      const result = await updateUserSecurity(data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: USER_KEYS.detail(data.id) });
+      const previousUser = queryClient.getQueryData(USER_KEYS.detail(data.id));
+      queryClient.setQueryData(USER_KEYS.detail(data.id), (old: UserDetail | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          ...(data.isTwoFactorEnabled !== undefined && {
+            isTwoFactorEnabled: data.isTwoFactorEnabled,
+          }),
+          ...(data.loginNotificationsEnabled !== undefined && {
+            loginNotificationsEnabled: data.loginNotificationsEnabled,
+          }),
+        };
+      });
+      return { previousUser };
+    },
+    onError: (err: Error, data, context) => {
+      if (context?.previousUser) {
+        queryClient.setQueryData(USER_KEYS.detail(data.id), context.previousUser);
+      }
+      toast.error(err.message || 'Failed to update security settings');
+    },
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id) });
+    },
+    onSuccess: () => {
+      toast.success('Security settings updated');
     },
   });
 }
