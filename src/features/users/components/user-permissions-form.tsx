@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useForm, useWatch, Controller, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Box } from '@/components/ui/box';
@@ -13,63 +15,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PERMISSIONS, RolePolicies, type PermissionKey } from '@/lib/permissions';
-
+import { PERMISSIONS, PERMISSION_GROUPS, RolePolicies } from '@/lib/permissions';
+import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
 import type { UserDetail, AccessChange } from '@/features/users/types';
 import { USER_ROLE_LABELS } from '@/features/users/types';
 import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
-import type { UpdateUserRoleInput } from '@/schemas/users';
+import { UpdateUserRoleSchema, type UpdateUserRoleInput } from '@/schemas/users';
 import { useUserRoleChanges } from '@/features/users/hooks/use-user-queries';
-
-type PermissionGroup = {
-  title: string;
-  keys: PermissionKey[];
-};
-
-const PERMISSION_GROUPS: PermissionGroup[] = [
-  {
-    title: 'CRM',
-    keys: [
-      'canReadCustomers',
-      'canManageCustomers',
-      'canReadOrganisations',
-      'canManageOrganisations',
-    ],
-  },
-  {
-    title: 'Finances',
-    keys: [
-      'canReadInvoices',
-      'canManageInvoices',
-      'canRecordPayments',
-      'canReadQuotes',
-      'canManageQuotes',
-      'canReadTransactions',
-      'canManageTransactions',
-    ],
-  },
-  {
-    title: 'Inventory',
-    keys: [
-      'canReadProducts',
-      'canManageProducts',
-      'canReadVendors',
-      'canManageVendors',
-      'canReadRecipes',
-      'canManageRecipes',
-      'canReadPriceList',
-      'canManagePriceList',
-    ],
-  },
-  {
-    title: 'Staff',
-    keys: ['canReadEmployees', 'canManageEmployees'],
-  },
-  {
-    title: 'Administration',
-    keys: ['canManageUsers', 'canManageSettings', 'canAccessTools'],
-  },
-];
 
 const SELECTABLE_ROLES: UserRole[] = ['USER', 'MANAGER', 'ADMIN'];
 
@@ -122,25 +74,23 @@ export function UserPermissionsForm({
   onUpdate: (data: UpdateUserRoleInput) => void;
   onDirtyChange?: (isDirty: boolean) => void;
 }) {
-  const [selectedRole, setSelectedRole] = useState(user.role);
+  const { control, handleSubmit } = useForm<UpdateUserRoleInput>({
+    resolver: zodResolver(UpdateUserRoleSchema),
+    defaultValues: { id: user.id, role: user.role },
+  });
 
+  const selectedRole = useWatch({ control, name: 'role' });
   const allowedPermissions = new Set(RolePolicies[selectedRole]?.allow ?? []);
 
-  const handleRoleChange = (role: string) => {
-    const validRole = SELECTABLE_ROLES.find((r) => r === role);
-    if (validRole !== undefined) {
-      setSelectedRole(validRole);
-      onDirtyChange?.(validRole !== user.role);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdate({ id: user.id, role: selectedRole });
-  };
+  const onSubmit: SubmitHandler<UpdateUserRoleInput> = useCallback(
+    (data) => {
+      onUpdate({ ...data, id: user.id });
+    },
+    [onUpdate, user.id],
+  );
 
   return (
-    <form id="form-permissions" className="flex flex-col h-full" onSubmit={handleSubmit}>
+    <form id="form-permissions" className="flex flex-col h-full" onSubmit={handleSubmit(onSubmit)}>
       <Box className="flex-1 overflow-y-auto p-6 space-y-6">
         <Card>
           <CardHeader className="px-6 pt-4 pb-4">
@@ -150,22 +100,33 @@ export function UserPermissionsForm({
             </p>
           </CardHeader>
           <CardContent className="px-6 pt-0 pb-4">
-            <Select value={selectedRole} onValueChange={handleRoleChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SELECTABLE_ROLES.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {USER_ROLE_LABELS[role]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="role"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    onDirtyChange?.(value !== user.role);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SELECTABLE_ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {USER_ROLE_LABELS[role]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </CardContent>
         </Card>
 
-        {/* -- Permission groups ---------------------------------------------- */}
         {PERMISSION_GROUPS.map((group) => (
           <Card key={group.title}>
             <CardHeader className="px-6 pt-4 pb-2">
@@ -198,7 +159,6 @@ export function UserPermissionsForm({
           </Card>
         ))}
 
-        {/* -- Recent access changes ------------------------------------------ */}
         <RecentAccessChanges userId={user.id} />
       </Box>
     </form>

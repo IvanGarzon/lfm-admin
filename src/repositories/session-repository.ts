@@ -353,6 +353,19 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   }
 
   /**
+   * Deactivates all active sessions for a user.
+   * @param userId - The ID of the user whose sessions to deactivate
+   * @returns A promise that resolves to the count of deactivated sessions
+   */
+  async deactivateAllSessionsByUserId(userId: string): Promise<number> {
+    const result = await this.prisma.session.updateMany({
+      where: { userId, isActive: true },
+      data: { isActive: false, expires: new Date() },
+    });
+    return result.count;
+  }
+
+  /**
    * Verifies that a specific session belongs to a given user.
    * @param sessionId - The ID of the session to check
    * @param userId - The ID of the user to verify against
@@ -365,6 +378,21 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     });
 
     return session?.userId === userId;
+  }
+
+  /**
+   * Verifies that a specific session belongs to a user within the given tenant.
+   * @param sessionId - The ID of the session to check
+   * @param tenantId - The tenant ID to verify against
+   * @returns A promise that resolves to true if the session's user belongs to the tenant
+   */
+  async verifySessionBelongsToTenant(sessionId: string, tenantId: string): Promise<boolean> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { user: { select: { tenantId: true } } },
+    });
+
+    return session?.user?.tenantId === tenantId;
   }
 
   /**

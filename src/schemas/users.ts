@@ -60,9 +60,9 @@ const passwordField = z
 export const ChangePasswordSchema = z
   .object({
     userId: z.cuid({ error: 'Invalid user ID' }),
-    currentPassword: z.string().optional(),
+    currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: passwordField,
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, 'Please confirm your new password'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',

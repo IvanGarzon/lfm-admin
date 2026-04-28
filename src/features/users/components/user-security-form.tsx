@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Bell, ShieldCheck, ShieldOff, Check, X } from 'lucide-react';
@@ -13,7 +13,10 @@ import { Box } from '@/components/ui/box';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SessionCard } from '@/features/users/components/sessions/session-card';
 import { SessionCardSkeleton } from '@/features/users/components/sessions/session-card-skeleton';
-import { DeleteSessionDialog } from '@/features/users/components/sessions/delete-session-dialog';
+import {
+  DeleteSessionDialog,
+  RevokeAllSessionsDialog,
+} from '@/features/users/components/sessions/delete-session-dialog';
 import { hasPermission } from '@/lib/permissions';
 import { ChangePasswordSchema, type ChangePasswordInput } from '@/schemas/users';
 import {
@@ -21,8 +24,16 @@ import {
   useSendPasswordResetEmail,
   useUpdateUserSecurity,
   useUserSessions,
+  useAdminRevokeUserSession,
+  useAdminExtendUserSession,
+  useAdminRevokeAllUserSessions,
 } from '@/features/users/hooks/use-user-queries';
-import { useDeleteSession } from '@/features/users/hooks/use-sessions';
+import {
+  useDeleteSession,
+  useDeleteOtherSessions,
+  useExtendSession,
+  useSessions,
+} from '@/features/users/hooks/use-sessions';
 import type { UserDetail } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
 
@@ -216,54 +227,112 @@ function SecuritySettingsBlock({ user }: { user: UserDetail }) {
 }
 
 function ActiveSessionsBlock({ userId }: { userId: string }) {
-  const { data: sessions = [], isLoading } = useUserSessions(userId);
-  const { mutate: deleteSession, isPending: isDeleting } = useDeleteSession();
+  const { data: session } = useSession();
+  const isOwnProfile = session?.user?.id === userId;
+
+  const selfSessions = useSessions();
+  const adminSessions = useUserSessions(userId);
+  const { data: sessions = [], isLoading } = isOwnProfile ? selfSessions : adminSessions;
+
+  const { mutate: deleteSelfSession, isPending: isDeletingSelf } = useDeleteSession();
+  const { mutate: deleteOtherSessions, isPending: isDeletingOthers } = useDeleteOtherSessions();
+  const { mutate: extendSelfSession } = useExtendSession();
+  const { mutate: adminRevokeSession, isPending: isRevokingAdmin } =
+    useAdminRevokeUserSession(userId);
+  const { mutate: adminExtendSession } = useAdminExtendUserSession(userId);
+  const { mutate: adminRevokeAll, isPending: isRevokingAll } =
+    useAdminRevokeAllUserSessions(userId);
+
   const [sessionToDelete, setSessionToDelete] = useState<SessionWithUser | null>(null);
+  const [confirmRevokeAll, setConfirmRevokeAll] = useState(false);
 
-  const handleConfirmDelete = () => {
-    if (!sessionToDelete) {
-      return;
+  const handleExtend = isOwnProfile ? extendSelfSession : adminExtendSession;
+  const handleDelete = isOwnProfile ? deleteSelfSession : adminRevokeSession;
+  const isDeleting = isOwnProfile ? isDeletingSelf : isRevokingAdmin;
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!sessionToDelete) return;
+    handleDelete(sessionToDelete.id, { onSettled: () => setSessionToDelete(null) });
+  }, [handleDelete, sessionToDelete]);
+
+  const handleConfirmRevokeAll = useCallback(() => {
+    if (isOwnProfile) {
+      const currentSession = sessions.find((s) => s.isCurrent);
+      if (currentSession) {
+        deleteOtherSessions(currentSession.id, { onSettled: () => setConfirmRevokeAll(false) });
+      }
+    } else {
+      adminRevokeAll(undefined, { onSettled: () => setConfirmRevokeAll(false) });
     }
+  }, [isOwnProfile, sessions, deleteOtherSessions, adminRevokeAll]);
 
-    deleteSession(sessionToDelete.id, {
-      onSettled: () => setSessionToDelete(null),
-    });
-  };
+  const hasOtherSessions = isOwnProfile ? sessions.length > 1 : sessions.length > 0;
 
   return (
     <>
       <Card>
         <CardHeader className="px-6 pt-4 pb-2">
-          <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+          <Box className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+            {hasOtherSessions ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmRevokeAll(true)}
+                disabled={isRevokingAll || isDeletingOthers}
+                className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                {isRevokingAll || isDeletingOthers ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : null}
+                Revoke all
+              </Button>
+            ) : null}
+          </Box>
           <p className="text-xs text-muted-foreground">
-            Manage devices that are logged into your account.
+            Manage devices that are logged into this account.
           </p>
         </CardHeader>
         <CardContent className="px-6 pt-0 pb-4 space-y-3">
           {isLoading ? (
-            <>
-              <SessionCardSkeleton />
-              <SessionCardSkeleton />
-            </>
+            <SessionCardSkeleton />
           ) : sessions.length === 0 ? (
             <p className="text-sm text-muted-foreground py-2">No active sessions.</p>
           ) : (
-            sessions.map((session) => (
-              <SessionCard key={session.id} session={session} onDelete={setSessionToDelete} />
+            sessions.map((s) => (
+              <SessionCard
+                key={s.id}
+                session={s}
+                onDelete={setSessionToDelete}
+                onExtend={handleExtend}
+              />
             ))
           )}
         </CardContent>
       </Card>
 
-      <DeleteSessionDialog
-        open={Boolean(sessionToDelete)}
-        onOpenChange={(open) => {
-          if (!open) setSessionToDelete(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        deviceName={sessionToDelete?.deviceName ?? sessionToDelete?.deviceModel}
-        isPending={isDeleting}
-      />
+      {sessionToDelete ? (
+        <DeleteSessionDialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setSessionToDelete(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          deviceName={sessionToDelete.deviceName ?? sessionToDelete.deviceModel}
+          isAdminAction={!isOwnProfile}
+          isPending={isDeleting}
+        />
+      ) : null}
+
+      {confirmRevokeAll ? (
+        <RevokeAllSessionsDialog
+          open={true}
+          onOpenChange={setConfirmRevokeAll}
+          onConfirm={handleConfirmRevokeAll}
+          isAdminAction={!isOwnProfile}
+          isPending={isRevokingAll || isDeletingOthers}
+        />
+      ) : null}
     </>
   );
 }

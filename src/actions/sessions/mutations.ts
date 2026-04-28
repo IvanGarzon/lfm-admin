@@ -5,7 +5,7 @@ import { SessionRepository } from '@/repositories/session-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { z } from 'zod';
-import { withAuth } from '@/lib/action-auth';
+import { withAuth, withTenantPermission } from '@/lib/action-auth';
 import {
   DeleteSessionSchema,
   DeleteSessionsSchema,
@@ -215,13 +215,109 @@ export const extendSession = withAuth<ExtendSessionInput, { expires: Date }>(
 
       const updatedSession = await sessionRepo.extendSession(validatedData.sessionId, newExpiry);
 
-      revalidatePath('/sessions');
+      // revalidatePath('/sessions');
 
       return { success: true, data: { expires: updatedSession.expires } };
     } catch (error) {
       return handleActionError(error, 'Unable to extend session. Please try again.', {
         action: 'extendSession',
         userId: session.user.id,
+        sessionId: data.sessionId,
+      });
+    }
+  },
+);
+
+/**
+ * Revokes all sessions for a user within the admin's tenant.
+ * @param data - An object containing the target user ID.
+ * @returns A promise that resolves to an `ActionResult` with the count of revoked sessions.
+ */
+export const adminRevokeAllUserSessions = withTenantPermission<
+  { userId: string },
+  { revokedCount: number }
+>('canManageUsers', async (ctx, data) => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: { id: data.userId, tenantId: ctx.tenantId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return { success: false, error: 'User not found or access denied' };
+    }
+
+    const revokedCount = await sessionRepo.deactivateAllSessionsByUserId(data.userId);
+    return { success: true, data: { revokedCount } };
+  } catch (error) {
+    return handleActionError(error, 'Unable to revoke sessions. Please try again.', {
+      action: 'adminRevokeAllUserSessions',
+      userId: data.userId,
+    });
+  }
+});
+
+/**
+ * Revokes a session belonging to any user within the admin's tenant.
+ * @param data - An object containing the session ID to revoke.
+ * @returns A promise that resolves to an `ActionResult` with the session ID upon success.
+ */
+export const adminRevokeSession = withTenantPermission<DeleteSessionInput, { id: string }>(
+  'canManageUsers',
+  async (ctx, data) => {
+    try {
+      const validatedData = DeleteSessionSchema.parse(data);
+
+      const belongsToTenant = await sessionRepo.verifySessionBelongsToTenant(
+        validatedData.sessionId,
+        ctx.tenantId,
+      );
+
+      if (!belongsToTenant) {
+        return { success: false, error: 'Session not found or access denied' };
+      }
+
+      await sessionRepo.deactivateSession(validatedData.sessionId);
+
+      return { success: true, data: { id: validatedData.sessionId } };
+    } catch (error) {
+      return handleActionError(error, 'Unable to revoke session. Please try again.', {
+        action: 'adminRevokeSession',
+        sessionId: data.sessionId,
+      });
+    }
+  },
+);
+
+/**
+ * Extends a session belonging to any user within the admin's tenant by 30 days.
+ * @param data - An object containing the session ID to extend.
+ * @returns A promise that resolves to an `ActionResult` with the new expiration date.
+ */
+export const adminExtendSession = withTenantPermission<ExtendSessionInput, { expires: Date }>(
+  'canManageUsers',
+  async (ctx, data) => {
+    try {
+      const validatedData = ExtendSessionSchema.parse(data);
+
+      const belongsToTenant = await sessionRepo.verifySessionBelongsToTenant(
+        validatedData.sessionId,
+        ctx.tenantId,
+      );
+
+      if (!belongsToTenant) {
+        return { success: false, error: 'Session not found or access denied' };
+      }
+
+      const newExpiry = new Date();
+      newExpiry.setDate(newExpiry.getDate() + 30);
+
+      const updatedSession = await sessionRepo.extendSession(validatedData.sessionId, newExpiry);
+
+      return { success: true, data: { expires: updatedSession.expires } };
+    } catch (error) {
+      return handleActionError(error, 'Unable to extend session. Please try again.', {
+        action: 'adminExtendSession',
         sessionId: data.sessionId,
       });
     }

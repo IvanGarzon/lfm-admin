@@ -1,5 +1,5 @@
-import { UserRole } from '@/prisma/client';
 import { Session } from 'next-auth';
+import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
 
 // ============================================================================
 // PERMISSION DEFINITIONS
@@ -11,106 +11,73 @@ import { Session } from 'next-auth';
  */
 export const PERMISSIONS = {
   // Customer Permissions
-  canReadCustomers: {
-    label: 'View customers',
-  },
-  canManageCustomers: {
-    label: 'Manage customers',
-  },
+  canReadCustomers: { label: 'View customers', group: 'CRM' },
+  canManageCustomers: { label: 'Manage customers', group: 'CRM' },
 
   // Organisation Permissions
-  canReadOrganisations: {
-    label: 'View organisations',
-  },
-  canManageOrganisations: {
-    label: 'Manage organisations',
-  },
+  canReadOrganisations: { label: 'View organisations', group: 'CRM' },
+  canManageOrganisations: { label: 'Manage organisations', group: 'CRM' },
 
   // Invoice Permissions
-  canReadInvoices: {
-    label: 'View invoices',
-  },
-  canManageInvoices: {
-    label: 'Manage invoices',
-  },
-  canRecordPayments: {
-    label: 'Record payments',
-  },
+  canReadInvoices: { label: 'View invoices', group: 'Finances' },
+  canManageInvoices: { label: 'Manage invoices', group: 'Finances' },
+  canRecordPayments: { label: 'Record payments', group: 'Finances' },
 
   // Quote Permissions
-  canReadQuotes: {
-    label: 'View quotes',
-  },
-  canManageQuotes: {
-    label: 'Manage quotes',
-  },
+  canReadQuotes: { label: 'View quotes', group: 'Finances' },
+  canManageQuotes: { label: 'Manage quotes', group: 'Finances' },
 
   // Transaction Permissions
-  canReadTransactions: {
-    label: 'View transactions',
-  },
-  canManageTransactions: {
-    label: 'Manage transactions',
-  },
+  canReadTransactions: { label: 'View transactions', group: 'Finances' },
+  canManageTransactions: { label: 'Manage transactions', group: 'Finances' },
 
   // Product Permissions
-  canReadProducts: {
-    label: 'View products',
-  },
-  canManageProducts: {
-    label: 'Manage products',
-  },
+  canReadProducts: { label: 'View products', group: 'Inventory' },
+  canManageProducts: { label: 'Manage products', group: 'Inventory' },
 
   // Vendor Permissions
-  canReadVendors: {
-    label: 'View vendors',
-  },
-  canManageVendors: {
-    label: 'Manage vendors',
-  },
+  canReadVendors: { label: 'View vendors', group: 'Inventory' },
+  canManageVendors: { label: 'Manage vendors', group: 'Inventory' },
 
   // Recipe Permissions
-  canReadRecipes: {
-    label: 'View recipes',
-  },
-  canManageRecipes: {
-    label: 'Manage recipes',
-  },
+  canReadRecipes: { label: 'View recipes', group: 'Inventory' },
+  canManageRecipes: { label: 'Manage recipes', group: 'Inventory' },
 
   // Price List Permissions
-  canReadPriceList: {
-    label: 'View price list',
-  },
-  canManagePriceList: {
-    label: 'Manage price list',
-  },
+  canReadPriceList: { label: 'View price list', group: 'Inventory' },
+  canManagePriceList: { label: 'Manage price list', group: 'Inventory' },
 
   // Employee Permissions
-  canReadEmployees: {
-    label: 'View employees',
-  },
-  canManageEmployees: {
-    label: 'Manage employees',
-  },
+  canReadEmployees: { label: 'View employees', group: 'Staff' },
+  canManageEmployees: { label: 'Manage employees', group: 'Staff' },
 
   // Developer Tools Permissions
-  canAccessTools: {
-    label: 'Access developer tools',
-  },
+  canAccessTools: { label: 'Access developer tools', group: 'Administration' },
 
   // Tenant Management Permissions
-  canManageSettings: {
-    label: 'Manage tenant settings',
-  },
-  canManageUsers: {
-    label: 'Invite and manage users',
-  },
+  canManageSettings: { label: 'Manage tenant settings', group: 'Administration' },
+  canManageUsers: { label: 'Invite and manage users', group: 'Administration' },
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
 
 // Type-safe list of all permission keys
 export const PERMISSION_KEYS: PermissionKey[] = Object.keys(PERMISSIONS) as PermissionKey[];
+
+export type PermissionGroup = { title: string; keys: PermissionKey[] };
+
+export const PERMISSION_GROUPS: PermissionGroup[] = Object.entries(PERMISSIONS).reduce<
+  PermissionGroup[]
+>((groups, [key, def]) => {
+  const existing = groups.find((g) => g.title === def.group);
+  if (existing) {
+    existing.keys.push(key as PermissionKey);
+  } else {
+    groups.push({ title: def.group, keys: [key as PermissionKey] });
+  }
+
+  return groups;
+}, []);
 
 // ============================================================================
 // ROLE POLICIES

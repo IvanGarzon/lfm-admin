@@ -1,18 +1,16 @@
-import { memo } from 'react';
-import { Loader2, AlertTriangle, Clock, CheckCircle2, MapPin, Calendar } from 'lucide-react';
+import { useCallback } from 'react';
+import { AlertTriangle, Clock, CheckCircle2, MapPin, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   getDeviceIcon,
   getOSDisplay,
   getBrowserDisplay,
   getDeviceTypeDisplay,
 } from '@/features/sessions/utils/session-icons';
-import { useExtendSession } from '@/features/users/hooks/use-sessions';
 
 function formatLastActive(
   lastActiveAt: Date | string | null | undefined,
@@ -28,18 +26,16 @@ function formatLastActive(
 export function SessionCard({
   session,
   onDelete,
-  selectable = false,
-  selected = false,
-  onSelect,
+  onExtend,
 }: {
   session: SessionWithUser;
   onDelete: (session: SessionWithUser) => void;
-  selectable?: boolean;
-  selected?: boolean;
-  onSelect?: (sessionId: string, checked: boolean) => void;
+  onExtend: (sessionId: string) => void;
 }) {
   const isCurrent = session.isCurrent || false;
-  const { mutate: extendSession, isPending: isExtending } = useExtendSession();
+
+  const handleExtend = useCallback(() => onExtend(session.id), [onExtend, session.id]);
+  const handleDelete = useCallback(() => onDelete(session), [onDelete, session]);
 
   const expiresAt = new Date(session.expires);
   const daysUntilExpiry = (expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -57,22 +53,11 @@ export function SessionCard({
   return (
     <Box
       className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all ${
-        selected
-          ? 'border-blue-200 bg-blue-50 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:ring-blue-900'
-          : isCurrent
-            ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/20'
-            : 'border-border bg-card hover:border-border/70'
+        isCurrent
+          ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/20'
+          : 'border-border bg-card hover:border-border/70'
       }`}
     >
-      {/* Checkbox */}
-      {selectable && onSelect ? (
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(checked) => onSelect(session.id, checked as boolean)}
-          className="shrink-0"
-        />
-      ) : null}
-
       {/* Device icon */}
       <Box className="relative shrink-0">
         <Box className={`rounded-lg p-2 ${deviceTypeDisplay.bgColor}`}>
@@ -141,18 +126,16 @@ export function SessionCard({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => extendSession(session.id)}
-          disabled={isExtending}
+          onClick={handleExtend}
           className="h-7 px-2 text-xs text-primary hover:bg-primary/5"
         >
-          {isExtending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
           Extend
         </Button>
         {!isCurrent ? (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(session)}
+            onClick={handleDelete}
             className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             Revoke
@@ -162,14 +145,3 @@ export function SessionCard({
     </Box>
   );
 }
-
-export const MemoizedSessionCard = memo(SessionCard, (prev, next) => {
-  return (
-    prev.session.id === next.session.id &&
-    prev.session.lastActiveAt === next.session.lastActiveAt &&
-    prev.session.expires === next.session.expires &&
-    prev.session.deviceName === next.session.deviceName &&
-    prev.selectable === next.selectable &&
-    prev.selected === next.selected
-  );
-});
