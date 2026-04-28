@@ -127,6 +127,7 @@
     "http-status-codes": "^2.3.0",
     "inngest": "^4.1.1",
     "input": "^1.0.1",
+    "input-otp": "^1.4.2",
     "kbar": "^0.1.0-beta.45",
     "lucide-react": "^1.7.0",
     "motion": "^12.38.0",
