@@ -27,6 +27,8 @@ import {
 } from '@/schemas/users';
 import bcrypt from 'bcryptjs';
 import { PasswordResetTokenRepository } from '@/repositories/password-reset-token-repository';
+import { uploadFileToS3 } from '@/lib/s3';
+import { ALLOWED_IMAGE_MIME_TYPES } from '@/lib/file-constants';
 import type { UserDetail } from '@/features/users/types';
 import type { User } from '@/prisma/client';
 
@@ -314,3 +316,57 @@ export async function resetPassword(
     return handleActionError(error, 'Failed to reset password');
   }
 }
+
+/**
+ * Uploads a new avatar image for a tenant user and saves the S3 URL.
+ * Expects FormData with fields: `userId` (string) and `file` (File, image only).
+ */
+export const uploadUserAvatar = withTenantPermission<FormData, { avatarUrl: string }>(
+  'canManageUsers',
+  async (ctx, formData) => {
+    try {
+      const userId = formData.get('userId');
+      const fileEntry = formData.get('file');
+
+      if (typeof userId !== 'string' || !userId) {
+        return { success: false, error: 'No userId provided' };
+      }
+
+      if (!(fileEntry instanceof File)) {
+        return { success: false, error: 'No file provided' };
+      }
+
+      if (
+        !ALLOWED_IMAGE_MIME_TYPES.includes(
+          fileEntry.type as (typeof ALLOWED_IMAGE_MIME_TYPES)[number],
+        )
+      ) {
+        return { success: false, error: 'Only image files are allowed' };
+      }
+
+      const existing = await userRepo.findTenantUserById(userId, ctx.tenantId);
+      if (!existing) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const bytes = await fileEntry.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const { s3Url } = await uploadFileToS3({
+        file: buffer,
+        fileName: fileEntry.name,
+        mimeType: fileEntry.type,
+        resourceType: 'users',
+        resourceId: userId,
+        subPath: 'avatar',
+        allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+      });
+
+      await userRepo.updateUserAvatar(userId, ctx.tenantId, s3Url);
+
+      return { success: true, data: { avatarUrl: s3Url } };
+    } catch (error) {
+      return handleActionError(error, 'Failed to upload avatar');
+    }
+  },
+);

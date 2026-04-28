@@ -219,6 +219,73 @@ describe('UserRepository (integration)', () => {
     });
   });
 
+  // -- updateUserSecurity ----------------------------------------------------
+
+  describe('updateUserSecurity', () => {
+    it('enables two-factor authentication', async () => {
+      const user = await createUser();
+
+      const result = await repository.updateUserSecurity(user.id, tenantId, {
+        isTwoFactorEnabled: true,
+      });
+
+      expect(result.isTwoFactorEnabled).toBe(true);
+    });
+
+    it('disables two-factor authentication', async () => {
+      const user = await getTestPrisma().user.create({
+        data: { ...createUserData(), tenantId, isTwoFactorEnabled: true },
+      });
+
+      const result = await repository.updateUserSecurity(user.id, tenantId, {
+        isTwoFactorEnabled: false,
+      });
+
+      expect(result.isTwoFactorEnabled).toBe(false);
+    });
+
+    it('enables login notifications', async () => {
+      const user = await createUser();
+
+      const result = await repository.updateUserSecurity(user.id, tenantId, {
+        loginNotificationsEnabled: true,
+      });
+
+      expect(result.loginNotificationsEnabled).toBe(true);
+    });
+
+    it('disables login notifications', async () => {
+      const user = await getTestPrisma().user.create({
+        data: { ...createUserData(), tenantId, loginNotificationsEnabled: true },
+      });
+
+      const result = await repository.updateUserSecurity(user.id, tenantId, {
+        loginNotificationsEnabled: false,
+      });
+
+      expect(result.loginNotificationsEnabled).toBe(false);
+    });
+
+    it('does not update security for user from another tenant', async () => {
+      const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
+      const otherUser = await getTestPrisma().user.create({
+        data: {
+          firstName: 'Other',
+          lastName: 'User',
+          email: 'other@tenant.com',
+          tenantId: otherTenantId,
+        },
+      });
+
+      await expect(
+        repository.updateUserSecurity(otherUser.id, tenantId, { isTwoFactorEnabled: true }),
+      ).rejects.toThrow();
+
+      const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
+      expect(unchanged?.isTwoFactorEnabled).toBe(false);
+    });
+  });
+
   // -- updateTenantUserRole --------------------------------------------------
 
   describe('updateTenantUserRole', () => {
@@ -229,6 +296,12 @@ describe('UserRepository (integration)', () => {
 
       const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
       expect(updated?.role).toBe('ADMIN');
+    });
+
+    it('throws when user not found', async () => {
+      await expect(
+        repository.updateTenantUserRole('nonexistent-id', tenantId, 'ADMIN'),
+      ).rejects.toThrow();
     });
 
     it('does not update role for user from another tenant', async () => {
@@ -249,6 +322,39 @@ describe('UserRepository (integration)', () => {
 
       const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
       expect(unchanged?.role).toBe('USER');
+    });
+  });
+
+  // -- updateUserAvatar ------------------------------------------------------
+
+  describe('updateUserAvatar', () => {
+    it('updates avatarUrl for the user', async () => {
+      const user = await createUser();
+      const avatarUrl = 'https://bucket.s3.region.amazonaws.com/users/avatar.jpg';
+
+      await repository.updateUserAvatar(user.id, tenantId, avatarUrl);
+
+      const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
+      expect(updated?.avatarUrl).toBe(avatarUrl);
+    });
+
+    it('does not update user from another tenant', async () => {
+      const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
+      const otherUser = await getTestPrisma().user.create({
+        data: {
+          firstName: 'Other',
+          lastName: 'User',
+          email: 'other@tenant.com',
+          tenantId: otherTenantId,
+        },
+      });
+
+      await expect(
+        repository.updateUserAvatar(otherUser.id, tenantId, 'https://fake.com/avatar.jpg'),
+      ).rejects.toThrow();
+
+      const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
+      expect(unchanged?.avatarUrl).toBeNull();
     });
   });
 

@@ -11,6 +11,7 @@ export type UserListItem = {
   role: UserRole;
   status: UserStatus;
   lastLoginAt: Date | null;
+  avatarUrl: string | null;
   addedBy: { firstName: string; lastName: string } | null;
 };
 
@@ -20,6 +21,7 @@ export type UserDetail = UserListItem & {
   username: string | null;
   title: string | null;
   bio: string | null;
+  avatarUrl: string | null;
 };
 
 export type UserPagination = {

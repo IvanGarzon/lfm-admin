@@ -276,6 +276,7 @@ export class UserRepository extends BaseRepository<User> {
           role: true,
           status: true,
           lastLoginAt: true,
+          avatarUrl: true,
           addedBy: { select: { firstName: true, lastName: true } },
         },
       }),
@@ -311,6 +312,7 @@ export class UserRepository extends BaseRepository<User> {
         username: true,
         title: true,
         bio: true,
+        avatarUrl: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -357,6 +359,7 @@ export class UserRepository extends BaseRepository<User> {
         username: true,
         title: true,
         bio: true,
+        avatarUrl: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -393,6 +396,7 @@ export class UserRepository extends BaseRepository<User> {
         username: true,
         title: true,
         bio: true,
+        avatarUrl: true,
         addedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -451,6 +455,20 @@ export class UserRepository extends BaseRepository<User> {
     await this.prisma.user.update({
       where: { id },
       data: { lastLoginAt: new Date() },
+    });
+  }
+
+  /**
+   * Updates the avatarUrl for a tenant-scoped user.
+   * @param id - The user ID to update
+   * @param tenantId - The tenant to scope the update to
+   * @param avatarUrl - The new S3 URL for the avatar image
+   * @returns Promise that resolves when the update is complete
+   */
+  async updateUserAvatar(id: string, tenantId: string, avatarUrl: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id, tenantId, deletedAt: null },
+      data: { avatarUrl },
     });
   }
 }

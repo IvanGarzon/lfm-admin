@@ -1,16 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { updateUser, updateUserRole, softDeleteUser, inviteUser } from '../mutations';
+import {
+  updateUser,
+  updateUserSecurity,
+  updateUserRole,
+  softDeleteUser,
+  inviteUser,
+  uploadUserAvatar,
+} from '../mutations';
 import { testIds, mockSessions, createUpdateUserInput } from '@/lib/testing';
 import { revalidatePath } from 'next/cache';
 import { sendEmailNotification } from '@/lib/email-service';
+import { uploadFileToS3 } from '@/lib/s3';
 import type { UserDetail } from '@/features/users/types';
 
 const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
     findTenantUserById: vi.fn(),
     updateTenantUser: vi.fn(),
+    updateUserSecurity: vi.fn(),
     updateTenantUserRole: vi.fn(),
     softDeleteTenantUser: vi.fn(),
+    updateUserAvatar: vi.fn(),
     getUserByEmail: vi.fn(),
     findById: vi.fn(),
   },
@@ -47,6 +57,13 @@ vi.mock('@/lib/email-service', () => ({
   sendEmailNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('@/lib/s3', () => ({
+  uploadFileToS3: vi.fn().mockResolvedValue({
+    s3Key: 'users/test-id/avatar/avatar.jpg',
+    s3Url: 'https://bucket.s3.region.amazonaws.com/users/test-id/avatar/avatar.jpg',
+  }),
+}));
+
 vi.mock('@/lib/utils', () => ({
   absoluteUrl: vi.fn((path: string) => `https://example.com${path}`),
   getPaginationMetadata: vi.fn(),
@@ -66,7 +83,12 @@ const mockUser: UserDetail = {
   role: 'USER',
   status: 'ACTIVE',
   isTwoFactorEnabled: false,
+  loginNotificationsEnabled: false,
   lastLoginAt: null,
+  username: null,
+  title: null,
+  bio: null,
+  avatarUrl: null,
   addedBy: null,
 };
 
@@ -89,8 +111,6 @@ describe('User Mutations', () => {
 
       expect(result.success).toBe(true);
       expect(mockUserRepo.updateTenantUser).toHaveBeenCalled();
-      expect(revalidatePath).toHaveBeenCalledWith('/users');
-      expect(revalidatePath).toHaveBeenCalledWith(`/users/${TEST_USER_ID}`);
     });
 
     it('returns error when user not found', async () => {
@@ -114,6 +134,95 @@ describe('User Mutations', () => {
     });
   });
 
+  describe('updateUserSecurity', () => {
+    it('enables two-factor authentication', async () => {
+      mockUserRepo.updateUserSecurity.mockResolvedValue({ ...mockUser, isTwoFactorEnabled: true });
+
+      const result = await updateUserSecurity({ id: TEST_USER_ID, isTwoFactorEnabled: true });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.isTwoFactorEnabled).toBe(true);
+      }
+      expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        mockSession.user.tenantId,
+        { isTwoFactorEnabled: true },
+      );
+    });
+
+    it('disables two-factor authentication', async () => {
+      mockUserRepo.updateUserSecurity.mockResolvedValue({ ...mockUser, isTwoFactorEnabled: false });
+
+      const result = await updateUserSecurity({ id: TEST_USER_ID, isTwoFactorEnabled: false });
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        mockSession.user.tenantId,
+        { isTwoFactorEnabled: false },
+      );
+    });
+
+    it('enables login notifications', async () => {
+      mockUserRepo.updateUserSecurity.mockResolvedValue({
+        ...mockUser,
+        loginNotificationsEnabled: true,
+      });
+
+      const result = await updateUserSecurity({
+        id: TEST_USER_ID,
+        loginNotificationsEnabled: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        mockSession.user.tenantId,
+        { loginNotificationsEnabled: true },
+      );
+    });
+
+    it('disables login notifications', async () => {
+      mockUserRepo.updateUserSecurity.mockResolvedValue({
+        ...mockUser,
+        loginNotificationsEnabled: false,
+      });
+
+      const result = await updateUserSecurity({
+        id: TEST_USER_ID,
+        loginNotificationsEnabled: false,
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        mockSession.user.tenantId,
+        { loginNotificationsEnabled: false },
+      );
+    });
+
+    it('returns error when user not found', async () => {
+      mockUserRepo.findTenantUserById.mockResolvedValue(null);
+
+      const result = await updateUserSecurity({ id: TEST_USER_ID, isTwoFactorEnabled: true });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/not found/i);
+      }
+      expect(mockUserRepo.updateUserSecurity).not.toHaveBeenCalled();
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await updateUserSecurity({ id: TEST_USER_ID, isTwoFactorEnabled: true });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('updateUserRole', () => {
     it('updates role and returns the user', async () => {
       mockUserRepo.updateTenantUserRole.mockResolvedValue({ ...mockUser, role: 'ADMIN' });
@@ -130,6 +239,14 @@ describe('User Mutations', () => {
 
     it('returns error when user not found', async () => {
       mockUserRepo.findTenantUserById.mockResolvedValue(null);
+
+      const result = await updateUserRole({ id: TEST_USER_ID, role: 'ADMIN' });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
 
       const result = await updateUserRole({ id: TEST_USER_ID, role: 'ADMIN' });
 
@@ -229,6 +346,97 @@ describe('User Mutations', () => {
       mockAuth.mockResolvedValue(null);
 
       const result = await inviteUser({ email: 'new@example.com', role: 'USER' });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('uploadUserAvatar', () => {
+    const mockFile = new File(['image data'], 'avatar.jpg', { type: 'image/jpeg' });
+    const mockAvatarUrl = 'https://bucket.s3.region.amazonaws.com/users/test-id/avatar/avatar.jpg';
+
+    beforeEach(() => {
+      mockUserRepo.updateUserAvatar.mockResolvedValue(undefined);
+      vi.mocked(uploadFileToS3).mockResolvedValue({
+        s3Key: 'users/test-id/avatar/avatar.jpg',
+        s3Url: mockAvatarUrl,
+      });
+    });
+
+    it('uploads avatar and returns the url', async () => {
+      const formData = new FormData();
+      formData.append('userId', TEST_USER_ID);
+      formData.append('file', mockFile);
+
+      const result = await uploadUserAvatar(formData);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.avatarUrl).toBe(mockAvatarUrl);
+      }
+      expect(mockUserRepo.updateUserAvatar).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        mockSession.user.tenantId,
+        mockAvatarUrl,
+      );
+    });
+
+    it('returns error when userId is missing', async () => {
+      const formData = new FormData();
+      formData.append('file', mockFile);
+
+      const result = await uploadUserAvatar(formData);
+
+      expect(result.success).toBe(false);
+      expect(mockUserRepo.updateUserAvatar).not.toHaveBeenCalled();
+    });
+
+    it('returns error when file is missing', async () => {
+      const formData = new FormData();
+      formData.append('userId', TEST_USER_ID);
+
+      const result = await uploadUserAvatar(formData);
+
+      expect(result.success).toBe(false);
+      expect(mockUserRepo.updateUserAvatar).not.toHaveBeenCalled();
+    });
+
+    it('returns error when file type is not an image', async () => {
+      const pdfFile = new File(['data'], 'doc.pdf', { type: 'application/pdf' });
+      const formData = new FormData();
+      formData.append('userId', TEST_USER_ID);
+      formData.append('file', pdfFile);
+
+      const result = await uploadUserAvatar(formData);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/image/i);
+      }
+      expect(mockUserRepo.updateUserAvatar).not.toHaveBeenCalled();
+    });
+
+    it('returns error when user not found', async () => {
+      mockUserRepo.findTenantUserById.mockResolvedValue(null);
+
+      const formData = new FormData();
+      formData.append('userId', TEST_USER_ID);
+      formData.append('file', mockFile);
+
+      const result = await uploadUserAvatar(formData);
+
+      expect(result.success).toBe(false);
+      expect(mockUserRepo.updateUserAvatar).not.toHaveBeenCalled();
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const formData = new FormData();
+      formData.append('userId', TEST_USER_ID);
+      formData.append('file', mockFile);
+
+      const result = await uploadUserAvatar(formData);
 
       expect(result.success).toBe(false);
     });

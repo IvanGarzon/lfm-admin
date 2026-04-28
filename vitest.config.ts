@@ -21,6 +21,7 @@ export default defineConfig({
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.cjs'],
     alias: {
+      env: path.resolve(__dirname, 'env.ts'),
       '@/env': path.resolve(__dirname, 'env.ts'),
       '@/prisma/client': path.resolve(__dirname, 'src/lib/testing/mocks/prisma.mock.ts'),
       '@/prisma': path.resolve(__dirname, 'prisma/generated'),

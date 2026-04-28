@@ -47,7 +47,10 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     cell: ({ row }) => (
       <Box className="flex items-center gap-3">
         <UserAvatar
-          user={{ name: `${row.original.firstName} ${row.original.lastName}`, image: null }}
+          user={{
+            name: `${row.original.firstName} ${row.original.lastName}`,
+            image: row.original.avatarUrl,
+          }}
           className="h-8 w-8"
         />
         <Box className="flex flex-col">

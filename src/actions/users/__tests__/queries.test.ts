@@ -38,6 +38,7 @@ const mockPagination: UserPagination = {
       role: 'USER',
       status: 'ACTIVE',
       lastLoginAt: null,
+      avatarUrl: null,
       addedBy: null,
     },
   ],
@@ -61,7 +62,12 @@ const mockUser: UserDetail = {
   role: 'USER',
   status: 'ACTIVE',
   isTwoFactorEnabled: false,
+  loginNotificationsEnabled: false,
   lastLoginAt: null,
+  username: null,
+  title: null,
+  bio: null,
+  avatarUrl: null,
   addedBy: null,
 };
 

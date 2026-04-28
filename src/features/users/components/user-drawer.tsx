@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { X, AlertCircle, Loader2 } from 'lucide-react';
+import { X, AlertCircle, Loader2, Mail, Camera } from 'lucide-react';
 import { Box } from '@/components/ui/box';
 import {
   Drawer,
@@ -14,13 +14,18 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUser, useUpdateUser, useUpdateUserRole } from '@/features/users/hooks/use-user-queries';
+import {
+  useUser,
+  useUpdateUser,
+  useUpdateUserRole,
+  useUploadUserAvatar,
+} from '@/features/users/hooks/use-user-queries';
 import { UserForm } from './user-form';
 import { UserPermissionsForm } from './user-permissions-form';
 import { UserSecurityForm } from './user-security-form';
 import { UserStatusBadge } from './user-status-badge';
+import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 import { UserAvatar } from '@/components/shared/user-avatar';
-import { CopyButton } from '@/components/shared/copy-button';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
 import type { UpdateUserInput, UpdateUserRoleInput } from '@/schemas/users';
@@ -52,6 +57,7 @@ export function UserDrawer({
   const { data: user, isLoading, error, isError } = useUser(id);
   const updateUser = useUpdateUser();
   const updateUserRole = useUpdateUserRole();
+  const uploadAvatar = useUploadUserAvatar(id ?? '');
 
   const queryString = useQueryString(searchParams, userSearchParamsDefaults);
   const isOpen = id ? (pathname?.includes(`/users/${id}`) ?? false) : (open ?? false);
@@ -135,42 +141,75 @@ export function UserDrawer({
 
         {user && !isLoading && !isError ? (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-              <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
-                <UserAvatar
-                  user={{ name: `${user.firstName} ${user.lastName}`, image: null }}
-                  className="size-12"
-                />
-                <Box className="flex flex-col">
-                  <Box className="flex items-center gap-2">
-                    <DrawerTitle className="text-xl font-semibold tracking-tight">
-                      {user.firstName} {user.lastName}
-                    </DrawerTitle>
-                    {hasUnsavedChanges ? (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle className="h-3 w-3" />
-                        Unsaved changes
-                      </span>
-                    ) : null}
+            <Box className="-mx-6 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+              <Box className="flex items-start justify-between gap-x-4">
+                <Box className="mt-1 flex flex-row items-start gap-4 flex-1">
+                  <Box className="relative shrink-0">
+                    <UserAvatar
+                      user={{ name: `${user.firstName} ${user.lastName}`, image: user.avatarUrl }}
+                      className="size-16 text-lg"
+                    />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                    >
+                      {uploadAvatar.isPending ? (
+                        <Loader2 className="size-3 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Camera className="size-3 text-muted-foreground" />
+                      )}
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          uploadAvatar.mutate(file);
+                          e.target.value = '';
+                        }
+                      }}
+                    />
                   </Box>
-                  <Box className="flex items-center gap-2 mt-1">
-                    <UserStatusBadge status={user.status} />
-                    <Box className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                      <span className="font-mono">{user.id}</span>
-                      <CopyButton value={user.id} className="size-4 p-0 border-none" />
+                  <Box className="flex flex-col gap-1 min-w-0">
+                    <Box className="flex items-center gap-2 flex-wrap">
+                      <DrawerTitle className="text-xl font-semibold tracking-tight">
+                        {user.firstName} {user.lastName}
+                      </DrawerTitle>
+                      <UserRoleBadge role={user.role} />
+                      {hasUnsavedChanges ? (
+                        <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
+                          <AlertCircle className="h-3 w-3" />
+                          Unsaved changes
+                        </span>
+                      ) : null}
+                    </Box>
+                    {user.title ? (
+                      <p className="text-sm text-muted-foreground">{user.title}</p>
+                    ) : null}
+                    <Box className="flex items-center gap-3 flex-wrap mt-0.5">
+                      <UserStatusBadge status={user.status} />
+                      {user.email ? (
+                        <Box className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Mail className="size-3 shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </Box>
+                      ) : null}
                     </Box>
                   </Box>
                 </Box>
-              </Box>
 
-              <Button
-                variant="ghost"
-                className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
-                onClick={() => handleOpenChange(false)}
-              >
-                <X className="size-5" aria-hidden="true" />
-                <span className="sr-only">Close</span>
-              </Button>
+                <Button
+                  variant="ghost"
+                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 shrink-0"
+                  onClick={() => handleOpenChange(false)}
+                >
+                  <X className="size-5" aria-hidden="true" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </Box>
             </Box>
 
             <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">

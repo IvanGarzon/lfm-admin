@@ -12,6 +12,7 @@ import {
   inviteUser,
   changePassword,
   sendPasswordResetEmail,
+  uploadUserAvatar,
 } from '@/actions/users/mutations';
 import { getSessionsByUserId } from '@/actions/sessions/queries';
 import type {
@@ -22,7 +23,7 @@ import type {
   InviteUserInput,
   ChangePasswordInput,
 } from '@/schemas/users';
-import type { UserDetail } from '@/features/users/types';
+import type { UserDetail, UserPagination } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
 
@@ -109,7 +110,7 @@ export function useUpdateUser() {
       toast.error(err.message || 'Failed to update user');
     },
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id), exact: true });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
     },
     onSuccess: () => {
@@ -153,7 +154,7 @@ export function useUpdateUserSecurity() {
       toast.error(err.message || 'Failed to update security settings');
     },
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id), exact: true });
     },
     onSuccess: () => {
       toast.success('Security settings updated');
@@ -191,7 +192,7 @@ export function useUpdateUserRole() {
       toast.error(err.message || 'Failed to update role');
     },
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(variables.id), exact: true });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.accessChanges(variables.id) });
     },
@@ -351,6 +352,51 @@ export function useSendPasswordResetEmail() {
     },
     onSuccess: () => {
       toast.success('Password reset email sent');
+    },
+  });
+}
+
+export function useUploadUserAvatar(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('userId', userId);
+      formData.append('file', file);
+      const result = await uploadUserAvatar(formData);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to upload avatar');
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(USER_KEYS.detail(userId), (old: UserDetail | undefined) => {
+        if (!old) return old;
+        return { ...old, avatarUrl: data.avatarUrl };
+      });
+
+      queryClient.setQueriesData(
+        { queryKey: USER_KEYS.lists() },
+        (old: UserPagination | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((item) =>
+              item.id === userId ? { ...item, avatarUrl: data.avatarUrl } : item,
+            ),
+          };
+        },
+      );
+
+      toast.success('Avatar updated');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(userId), exact: true });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
     },
   });
 }
