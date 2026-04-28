@@ -121,6 +121,7 @@ model User {
   isTwoFactorEnabled        Boolean @default(false) @map("is_two_factor_enabled")
   loginNotificationsEnabled Boolean @default(false) @map("login_notifications_enabled")
   twoFactorConfirmation     TwoFactorConfirmation?
+  twoFactorToken            TwoFactorToken?
   permissions           String[]                @default([])
   policies              String[]                @default([])
 
@@ -315,6 +316,25 @@ model TwoFactorConfirmation {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("two_factor_confirmations")
+}
+
+model TwoFactorToken {
+  id                   String    @id @default(cuid())
+  userId               String    @map("user_id")
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpCode              String    @map("otp_code")
+  challengeToken       String    @default(cuid()) @map("challenge_token")
+  userAgent            String?   @map("user_agent")
+  requestedIpAddress   String?   @map("requested_ip_address") @db.Inet
+  loggedInIpAddress    String?   @map("logged_in_ip_address") @db.Inet
+  numberOfAttempts     Int       @default(0) @map("number_of_attempts")
+  expires              DateTime  @db.Timestamptz()
+  usedAt               DateTime? @map("used_at") @db.Timestamptz()
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@unique([userId])
+  @@unique([challengeToken])
+  @@map("two_factor_tokens")
 }
 
 model Audit {
