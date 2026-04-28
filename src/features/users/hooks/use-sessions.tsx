@@ -8,14 +8,18 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getSessions as getSessionsAction } from '@/actions/sessions/queries';
+import { getSessions as getSessionsAction, getSessionsByUserId } from '@/actions/sessions/queries';
 import {
   deleteSession,
   deleteOtherSessions,
   deleteSessions,
   extendSession,
+  adminRevokeSession,
+  adminExtendSession,
+  adminRevokeAllUserSessions,
 } from '@/actions/sessions/mutations';
 import type { SessionWithUser } from '@/features/sessions/types';
+import { USER_KEYS } from '@/features/users/constants/query-keys';
 
 const SESSION_KEYS = {
   all: ['sessions'] as const,
@@ -239,6 +243,149 @@ export function useDeleteSessions() {
     onSuccess: (data: { deactivatedCount: number }) => {
       invalidateSessionQueries(queryClient);
       toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
+    },
+  });
+}
+
+// -- Admin session hooks -------------------------------------------------------
+
+const userSessionsKey = (userId: string) => [...USER_KEYS.detail(userId), 'sessions'] as const;
+
+/**
+ * Fetches all active sessions for a specific user (admin view).
+ * @param userId - The ID of the user whose sessions to fetch
+ * @returns Query result containing all active sessions for the user
+ */
+export function useUserSessions(userId: string) {
+  return useQuery({
+    queryKey: userSessionsKey(userId),
+    queryFn: async () => {
+      const result = await getSessionsByUserId(userId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return (result.data ?? []) as SessionWithUser[];
+    },
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * Revokes a specific session belonging to any user within the admin's tenant.
+ * @param userId - The ID of the user whose session to revoke
+ * @returns Mutation hook for revoking a user session
+ */
+export function useAdminRevokeUserSession(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const result = await adminRevokeSession({ sessionId });
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to revoke session');
+      }
+      return result.data;
+    },
+    onMutate: async (sessionId) => {
+      const key = userSessionsKey(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData(key);
+      queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
+        old ? old.filter((s) => s.id !== sessionId) : old,
+      );
+      return { previous };
+    },
+    onError: (err: Error, _sessionId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(userSessionsKey(userId), context.previous);
+      }
+      toast.error(err.message || 'Failed to revoke session');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
+    },
+    onSuccess: () => {
+      toast.success('Session revoked');
+    },
+  });
+}
+
+/**
+ * Extends a session belonging to any user within the admin's tenant by 30 days.
+ * @param userId - The ID of the user whose session to extend
+ * @returns Mutation hook for extending a user session
+ */
+export function useAdminExtendUserSession(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const result = await adminExtendSession({ sessionId });
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to extend session');
+      }
+      return result.data;
+    },
+    onMutate: async (sessionId) => {
+      const key = userSessionsKey(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData(key);
+      const newExpiry = new Date();
+      newExpiry.setDate(newExpiry.getDate() + 30);
+      queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
+        old ? old.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)) : old,
+      );
+      return { previous };
+    },
+    onError: (err: Error, _sessionId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(userSessionsKey(userId), context.previous);
+      }
+      toast.error(err.message || 'Failed to extend session');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
+    },
+    onSuccess: () => {
+      toast.success('Session extended');
+    },
+  });
+}
+
+/**
+ * Revokes all sessions for a user within the admin's tenant.
+ * @param userId - The ID of the user whose sessions to revoke
+ * @returns Mutation hook for revoking all sessions for a user
+ */
+export function useAdminRevokeAllUserSessions(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await adminRevokeAllUserSessions({ userId });
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to revoke all sessions');
+      }
+      return result.data;
+    },
+    onMutate: async () => {
+      const key = userSessionsKey(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData(key);
+      queryClient.setQueryData(key, []);
+      return { previous };
+    },
+    onError: (err: Error, _v, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(userSessionsKey(userId), context.previous);
+      }
+      toast.error(err.message || 'Failed to revoke all sessions');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
+    },
+    onSuccess: (data) => {
+      toast.success(`${data?.revokedCount ?? 'All'} session(s) revoked`);
     },
   });
 }

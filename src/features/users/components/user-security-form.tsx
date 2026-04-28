@@ -23,11 +23,13 @@ import {
   useChangePassword,
   useSendPasswordResetEmail,
   useUpdateUserSecurity,
+} from '@/features/users/hooks/use-user-queries';
+import {
   useUserSessions,
   useAdminRevokeUserSession,
   useAdminExtendUserSession,
   useAdminRevokeAllUserSessions,
-} from '@/features/users/hooks/use-user-queries';
+} from '@/features/users/hooks/use-sessions';
 import {
   useDeleteSession,
   useDeleteOtherSessions,

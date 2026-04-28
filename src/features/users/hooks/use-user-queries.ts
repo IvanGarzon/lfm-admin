@@ -14,12 +14,6 @@ import {
   sendPasswordResetEmail,
   uploadUserAvatar,
 } from '@/actions/users/mutations';
-import { getSessionsByUserId } from '@/actions/sessions/queries';
-import {
-  adminRevokeSession,
-  adminExtendSession,
-  adminRevokeAllUserSessions,
-} from '@/actions/sessions/mutations';
 import type {
   UpdateUserInput,
   UpdateUserSecurityInput,
@@ -29,7 +23,6 @@ import type {
   ChangePasswordInput,
 } from '@/schemas/users';
 import type { UserDetail, UserPagination } from '@/features/users/types';
-import type { SessionWithUser } from '@/features/sessions/types';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
 
 export function useUsers(searchParams: SearchParams) {
@@ -313,20 +306,6 @@ export function usePrefetchTenantUser() {
   };
 }
 
-export function useUserSessions(userId: string) {
-  return useQuery({
-    queryKey: [...USER_KEYS.detail(userId), 'sessions'] as const,
-    queryFn: async () => {
-      const result = await getSessionsByUserId(userId);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      return (result.data ?? []) as SessionWithUser[];
-    },
-    staleTime: 30 * 1000,
-  });
-}
-
 export function useChangePassword() {
   return useMutation({
     mutationFn: async (data: ChangePasswordInput) => {
@@ -402,113 +381,6 @@ export function useUploadUserAvatar(userId: string) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(userId), exact: true });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
-    },
-  });
-}
-
-const userSessionsKey = (userId: string) => [...USER_KEYS.detail(userId), 'sessions'] as const;
-
-export function useAdminRevokeUserSession(userId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) => {
-      const result = await adminRevokeSession({ sessionId });
-      if (!result.success) {
-        throw new Error(result.error || 'Unable to revoke session');
-      }
-      return result.data;
-    },
-    onMutate: async (sessionId) => {
-      const key = userSessionsKey(userId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData(key);
-      queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
-        old ? old.filter((s) => s.id !== sessionId) : old,
-      );
-      return { previous };
-    },
-    onError: (err: Error, _sessionId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(userSessionsKey(userId), context.previous);
-      }
-      toast.error(err.message || 'Failed to revoke session');
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
-    },
-    onSuccess: () => {
-      toast.success('Session revoked');
-    },
-  });
-}
-
-export function useAdminExtendUserSession(userId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) => {
-      const result = await adminExtendSession({ sessionId });
-      if (!result.success) {
-        throw new Error(result.error || 'Unable to extend session');
-      }
-      return result.data;
-    },
-    onMutate: async (sessionId) => {
-      const key = userSessionsKey(userId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData(key);
-      const newExpiry = new Date();
-      newExpiry.setDate(newExpiry.getDate() + 30);
-      queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
-        old ? old.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)) : old,
-      );
-      return { previous };
-    },
-    onError: (err: Error, _sessionId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(userSessionsKey(userId), context.previous);
-      }
-      toast.error(err.message || 'Failed to extend session');
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
-    },
-    onSuccess: () => {
-      toast.success('Session extended');
-    },
-  });
-}
-
-export function useAdminRevokeAllUserSessions(userId: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const result = await adminRevokeAllUserSessions({ userId });
-      if (!result.success) {
-        throw new Error(result.error || 'Unable to revoke all sessions');
-      }
-      return result.data;
-    },
-    onMutate: async () => {
-      const key = userSessionsKey(userId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData(key);
-      queryClient.setQueryData(key, []);
-      return { previous };
-    },
-    onError: (err: Error, _v, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(userSessionsKey(userId), context.previous);
-      }
-      toast.error(err.message || 'Failed to revoke all sessions');
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: userSessionsKey(userId) });
-    },
-    onSuccess: (data) => {
-      toast.success(`${data?.revokedCount ?? 'All'} session(s) revoked`);
     },
   });
 }
