@@ -26,6 +26,7 @@ import { UserSecurityForm } from './user-security-form';
 import { UserStatusBadge } from './user-status-badge';
 import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge';
 import { UserAvatar } from '@/components/shared/user-avatar';
+import { useSession } from 'next-auth/react';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, userSearchParamsDefaults } from '@/filters/users/users-filters';
 import type { UpdateUserInput, UpdateUserRoleInput } from '@/schemas/users';
@@ -53,6 +54,9 @@ export function UserDrawer({
   useEffect(() => {
     setActiveTab(tab);
   }, [tab]);
+
+  const { data: session } = useSession();
+  const isOwnProfile = session?.user?.id === id;
 
   const { data: user, isLoading, error, isError } = useUser(id);
   const updateUser = useUpdateUser();
@@ -149,29 +153,33 @@ export function UserDrawer({
                       user={{ name: `${user.firstName} ${user.lastName}`, image: user.avatarUrl }}
                       className="size-16 text-lg"
                     />
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                    >
-                      {uploadAvatar.isPending ? (
-                        <Loader2 className="size-3 animate-spin text-muted-foreground" />
-                      ) : (
-                        <Camera className="size-3 text-muted-foreground" />
-                      )}
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          uploadAvatar.mutate(file);
-                          e.target.value = '';
-                        }
-                      }}
-                    />
+                    {isOwnProfile ? (
+                      <>
+                        <label
+                          htmlFor="avatar-upload"
+                          className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                        >
+                          {uploadAvatar.isPending ? (
+                            <Loader2 className="size-3 animate-spin text-muted-foreground" />
+                          ) : (
+                            <Camera className="size-3 text-muted-foreground" />
+                          )}
+                        </label>
+                        <input
+                          id="avatar-upload"
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          className="sr-only"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              uploadAvatar.mutate(file);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                      </>
+                    ) : null}
                   </Box>
                   <Box className="flex flex-col gap-1 min-w-0">
                     <Box className="flex items-center gap-2 flex-wrap">
