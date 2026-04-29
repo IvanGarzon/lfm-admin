@@ -50,7 +50,7 @@ export async function initiateSignIn(
       return { success: true, data: { requiresOtp: false } };
     }
 
-    const code = crypto.randomInt(100000, 999999).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
     const expires = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
@@ -67,17 +67,20 @@ export async function initiateSignIn(
 
     const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'there';
 
-    sendEmailNotification({
-      to: email,
-      subject: 'Your sign-in verification code',
-      template: 'otp',
-      props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES },
-    }).catch((err) => {
+    try {
+      await sendEmailNotification({
+        to: email,
+        subject: 'Your sign-in verification code',
+        template: 'otp',
+        props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES },
+      });
+    } catch (err) {
       logger.error('Failed to send OTP email', err, {
         context: 'initiateSignIn',
         metadata: { userId: user.id },
       });
-    });
+      return { success: false, error: 'Failed to send verification code. Please try again.' };
+    }
 
     return { success: true, data: { requiresOtp: true, challengeToken: token.challengeToken } };
   } catch (error) {
@@ -113,21 +116,20 @@ export async function verifyTwoFactorCode(
       return { success: false, error: 'Your verification code has expired. Please sign in again.' };
     }
 
-    if (token.numberOfAttempts >= MAX_ATTEMPTS) {
-      return { success: false, error: 'Too many incorrect attempts. Please sign in again.' };
-    }
-
     const hashedSubmitted = crypto.createHash('sha256').update(code).digest('hex');
 
-    if (hashedSubmitted !== token.otpCode) {
-      const updated = await tokenRepo.incrementAttempts(token.id);
-      const remaining = MAX_ATTEMPTS - updated.numberOfAttempts;
+    const hashMatch = crypto.timingSafeEqual(
+      Buffer.from(hashedSubmitted, 'hex'),
+      Buffer.from(token.otpCode, 'hex'),
+    );
 
-      if (remaining <= 0) {
+    if (!hashMatch) {
+      const updated = await tokenRepo.incrementAttempts(token.id);
+      if (updated.numberOfAttempts >= MAX_ATTEMPTS) {
         await tokenRepo.markUsed(token.id);
         return { success: false, error: 'Too many incorrect attempts. Please sign in again.' };
       }
-
+      const remaining = MAX_ATTEMPTS - updated.numberOfAttempts;
       return {
         success: false,
         error: `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
@@ -136,6 +138,12 @@ export async function verifyTwoFactorCode(
 
     const clientDetails = await getClientDetails();
     await tokenRepo.markUsed(token.id, clientDetails.ipAddress);
+
+    await prisma.twoFactorConfirmation.upsert({
+      where: { userId: token.userId },
+      update: {},
+      create: { userId: token.userId },
+    });
 
     return { success: true, data: { verified: true } };
   } catch (error) {

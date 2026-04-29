@@ -444,7 +444,17 @@ export const authConfig = {
                 user.password,
               );
 
-              return passwordValid ? user : null;
+              if (!passwordValid) return null;
+
+              if (user.isTwoFactorEnabled) {
+                const confirmation = await prisma.twoFactorConfirmation.findUnique({
+                  where: { userId: user.id },
+                });
+                if (!confirmation) return null;
+                await prisma.twoFactorConfirmation.delete({ where: { id: confirmation.id } });
+              }
+
+              return user;
             },
           }),
         ]
