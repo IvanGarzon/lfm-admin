@@ -23,6 +23,11 @@ const {
   },
   mockAuditService: {
     LoggedIn: vi.fn(),
+    OtpRequested: vi.fn(),
+    OtpVerified: vi.fn(),
+    OtpFailed: vi.fn(),
+    OtpLocked: vi.fn(),
+    OtpExpired: vi.fn(),
   },
   mockLogger: {
     error: vi.fn(),
@@ -355,6 +360,9 @@ describe('Auth Actions', () => {
       expect(sendEmailNotification).toHaveBeenCalledWith(
         expect.objectContaining({ template: 'otp' }),
       );
+      expect(mockAuditService.OtpRequested).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+      );
     });
 
     it('returns error when OTP email fails to send', async () => {
@@ -426,6 +434,9 @@ describe('Auth Actions', () => {
         expect(result.error).toContain('4 attempts remaining');
       }
       expect(mockTokenRepo.incrementAttempts).toHaveBeenCalledWith('token-id');
+      expect(mockAuditService.OtpFailed).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ attemptsRemaining: 4 }) }),
+      );
     });
 
     it('locks the token after max attempts', async () => {
@@ -442,6 +453,21 @@ describe('Auth Actions', () => {
         expect(result.error).toContain('Too many incorrect attempts');
       }
       expect(mockTokenRepo.markUsed).toHaveBeenCalledWith('token-id');
+      expect(mockAuditService.OtpLocked).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+      );
+    });
+
+    it('audits expiry when token is expired', async () => {
+      mockTokenRepo.findByChallengeToken.mockResolvedValue(
+        createMockToken({ expires: new Date(Date.now() - 1000) }),
+      );
+
+      await verifyTwoFactorCode(validInput);
+
+      expect(mockAuditService.OtpExpired).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+      );
     });
 
     it('returns verified true and writes confirmation on correct code', async () => {
@@ -457,6 +483,9 @@ describe('Auth Actions', () => {
       }
       expect(mockTokenRepo.markUsed).toHaveBeenCalledWith('token-id', '127.0.0.1');
       expect(mockConfirmationRepo.upsertByUserId).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(mockAuditService.OtpVerified).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+      );
     });
   });
 });

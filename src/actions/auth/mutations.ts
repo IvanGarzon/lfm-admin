@@ -229,6 +229,14 @@ export async function initiateSignIn(
       return { success: false, error: 'Failed to send verification code. Please try again.' };
     }
 
+    auditService.OtpRequested({
+      data: {
+        userId: user.id,
+        ipAddress: clientDetails.ipAddress ?? undefined,
+        userAgent: clientDetails.userAgent ?? undefined,
+      },
+    });
+
     return { success: true, data: { requiresOtp: true, challengeToken: token.challengeToken } };
   } catch (error) {
     return handleActionError(error, 'Sign-in failed', { context: 'initiateSignIn' });
@@ -260,6 +268,7 @@ export async function verifyTwoFactorCode(
     }
 
     if (token.expires < new Date()) {
+      auditService.OtpExpired({ data: { userId: token.userId } });
       return { success: false, error: 'Your verification code has expired. Please sign in again.' };
     }
 
@@ -274,9 +283,11 @@ export async function verifyTwoFactorCode(
       const updated = await tokenRepo.incrementAttempts(token.id);
       if (updated.numberOfAttempts >= MAX_ATTEMPTS) {
         await tokenRepo.markUsed(token.id);
+        auditService.OtpLocked({ data: { userId: token.userId } });
         return { success: false, error: 'Too many incorrect attempts. Please sign in again.' };
       }
       const remaining = MAX_ATTEMPTS - updated.numberOfAttempts;
+      auditService.OtpFailed({ data: { userId: token.userId, attemptsRemaining: remaining } });
       return {
         success: false,
         error: `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
@@ -288,6 +299,10 @@ export async function verifyTwoFactorCode(
 
     const confirmationRepo = new TwoFactorConfirmationRepository(prisma);
     await confirmationRepo.upsertByUserId(token.userId);
+
+    auditService.OtpVerified({
+      data: { userId: token.userId, ipAddress: clientDetails.ipAddress ?? undefined },
+    });
 
     return { success: true, data: { verified: true } };
   } catch (error) {

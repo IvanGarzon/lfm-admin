@@ -1,34 +1,29 @@
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import { Prisma } from '@/prisma/client';
-import pino from 'pino';
 import type { AuditLevel } from '@/zod/schemas/enums/AuditLevel.schema';
 import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
 import type { AccessChange } from '@/features/users/types';
-import { env } from 'env';
-// import * as Sentry from '@sentry/node';
 
-const logger = pino(
-  env.NODE_ENV !== 'production'
-    ? {
-        level: 'info',
-      }
-    : { level: 'info' },
-);
-
-// Initialize Sentry
-// Sentry.init({ dsn: env.SENTRY_DSN });
+// -- Event registry -----------------------------------------------------------
 
 enum LogEventMessage {
   UserLoginSuccessful = 'User logged in successfully',
   UserLogoutSuccessful = 'User logged out successfully',
   EmployeeUpdated = 'Updated employee details',
   UserRoleChanged = 'User role changed',
+  OtpRequested = 'OTP verification code requested',
+  OtpVerified = 'OTP verification code verified',
+  OtpFailed = 'OTP verification attempt failed',
+  OtpLocked = 'OTP verification locked after max attempts',
+  OtpExpired = 'OTP verification code expired',
 }
 
 enum LogEventTag {
   LOGIN = 'login',
   EMPLOYEES = 'employees',
   USERS = 'users',
+  AUTH = 'auth',
 }
 
 const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
@@ -36,6 +31,11 @@ const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
   UserLogoutSuccessful: LogEventTag.LOGIN,
   EmployeeUpdated: LogEventTag.EMPLOYEES,
   UserRoleChanged: LogEventTag.USERS,
+  OtpRequested: LogEventTag.AUTH,
+  OtpVerified: LogEventTag.AUTH,
+  OtpFailed: LogEventTag.AUTH,
+  OtpLocked: LogEventTag.AUTH,
+  OtpExpired: LogEventTag.AUTH,
 };
 
 const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
@@ -43,7 +43,14 @@ const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
   UserLogoutSuccessful: 'User logged out successfully',
   EmployeeUpdated: 'Updated employee details',
   UserRoleChanged: 'User role changed',
+  OtpRequested: 'OTP verification code requested',
+  OtpVerified: 'OTP verification code verified',
+  OtpFailed: 'OTP verification attempt failed',
+  OtpLocked: 'OTP verification locked after max attempts',
+  OtpExpired: 'OTP verification code expired',
 };
+
+// -- Event data shapes --------------------------------------------------------
 
 interface LogEventData {
   userId: string;
@@ -52,6 +59,9 @@ interface LogEventData {
   fromRole?: string;
   toRole?: string;
   changedByName?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  attemptsRemaining?: number;
 }
 
 interface LogEventProp {
@@ -80,6 +90,28 @@ interface UserRoleChangedEvent extends LogEventProp {
   };
   message: string;
 }
+
+interface OtpRequestedEvent extends LogEventProp {
+  data: LogEventProp['data'] & { ipAddress?: string; userAgent?: string };
+}
+
+interface OtpVerifiedEvent extends LogEventProp {
+  data: LogEventProp['data'] & { ipAddress?: string };
+}
+
+interface OtpFailedEvent extends LogEventProp {
+  data: LogEventProp['data'] & { attemptsRemaining: number };
+}
+
+interface OtpLockedEvent extends LogEventProp {
+  data: LogEventProp['data'];
+}
+
+interface OtpExpiredEvent extends LogEventProp {
+  data: LogEventProp['data'];
+}
+
+// -- Internal helpers ---------------------------------------------------------
 
 interface CreateAuditLogProps {
   userId: string;
@@ -110,20 +142,15 @@ async function createAuditLog({
   });
 }
 
+// -- Service ------------------------------------------------------------------
+
 export class AuditService {
-  level;
-
-  constructor(level: pino.Level = 'info') {
-    this.level = level;
-  }
-
-  #logEvent(props: LogEventProp & { message?: string }) {
-    const { event, data, message: customMessage } = props;
-    const level = this.level;
+  #logEvent(props: LogEventProp & { message?: string; level?: 'info' | 'warn' | 'error' }) {
+    const { event, data, message: customMessage, level = 'info' } = props;
     const message = customMessage ?? LogEventMessages[event];
     const tag = LogEventMapping[event];
 
-    logger[level]({ tag, data }, `[Audit] ${message}`);
+    logger[level](`[Audit] ${message}`, { context: 'AuditService', metadata: { tag, data } });
 
     createAuditLog({
       userId: data.userId,
@@ -133,7 +160,7 @@ export class AuditService {
       data,
       level: level.toUpperCase() as AuditLevel,
     }).catch((err) => {
-      console.error('Failed to write audit log:', err);
+      logger.error('Failed to write audit log', err, { context: 'AuditService' });
     });
   }
 
@@ -151,6 +178,26 @@ export class AuditService {
 
   UserRoleChanged(props: Omit<UserRoleChangedEvent, 'event'>) {
     this.#logEvent({ ...props, event: 'UserRoleChanged' });
+  }
+
+  OtpRequested(props: Omit<OtpRequestedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpRequested' });
+  }
+
+  OtpVerified(props: Omit<OtpVerifiedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpVerified' });
+  }
+
+  OtpFailed(props: Omit<OtpFailedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpFailed', level: 'warn' });
+  }
+
+  OtpLocked(props: Omit<OtpLockedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpLocked', level: 'warn' });
+  }
+
+  OtpExpired(props: Omit<OtpExpiredEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpExpired', level: 'warn' });
   }
 
   /**
