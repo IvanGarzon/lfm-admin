@@ -7,6 +7,7 @@ import { generateSessionName } from '@/features/sessions/utils/session-icons';
 import { getSessionLimit } from '@/config/session';
 import { SessionRepository } from '@/repositories/session-repository';
 import { UserRepository } from '@/repositories/user-repository';
+import { TwoFactorConfirmationRepository } from '@/repositories/two-factor-confirmation-repository';
 import { logger } from '@/lib/logger';
 import { sendEmailNotification } from '@/lib/email-service';
 import { GoogleProvider } from '@/auth/providers';
@@ -98,7 +99,9 @@ export const authConfig = {
       // Credentials provider: skip OAuth-specific handleSignIn, user is already verified.
       // Still create a session record so the session validation callback can find it.
       if (account?.provider === 'credentials') {
-        if (!user?.email) return false;
+        if (!user?.email) {
+          return false;
+        }
 
         try {
           const userRepo = new UserRepository(prisma);
@@ -148,9 +151,11 @@ export const authConfig = {
             if (dbUser.loginNotificationsEnabled && dbUser.email) {
               const userName =
                 [dbUser.firstName, dbUser.lastName].filter(Boolean).join(' ') || 'there';
+
               const location = [details.city, details.region, details.country]
                 .filter(Boolean)
                 .join(', ');
+
               sendEmailNotification({
                 to: dbUser.email,
                 subject: 'New sign-in to your account',
@@ -327,10 +332,14 @@ export const authConfig = {
 
     async jwt({ token, user }) {
       if (user) {
+        if (!user.email) {
+          return token;
+        }
+
         // On sign-in, `user` is the user object from the provider
         // We need to fetch our internal user to get the correct ID
         const userRepo = new UserRepository(prisma);
-        const dbUser = await userRepo.getUserByEmailWithSelect(user.email!, {
+        const dbUser = await userRepo.getUserByEmailWithSelect(user.email, {
           id: true,
           role: true,
           tenantId: true,
@@ -338,7 +347,7 @@ export const authConfig = {
         });
 
         if (dbUser) {
-          token.sub = dbUser.id; // Set the token's subject to our internal user ID
+          token.sub = dbUser.id;
           token.role = dbUser.role;
           token.tenantId = dbUser.tenantId ?? null;
           token.tenantSlug = dbUser.tenant?.slug ?? null;
@@ -437,21 +446,28 @@ export const authConfig = {
               const userRepo = new UserRepository(prisma);
               const user = await userRepo.getUserByEmail(credentials.email as string);
 
-              if (!user?.password) return null;
+              if (!user?.password) {
+                return null;
+              }
 
               const passwordValid = await bcrypt.compare(
                 credentials.password as string,
                 user.password,
               );
 
-              if (!passwordValid) return null;
+              if (!passwordValid) {
+                return null;
+              }
 
               if (user.isTwoFactorEnabled) {
-                const confirmation = await prisma.twoFactorConfirmation.findUnique({
-                  where: { userId: user.id },
-                });
-                if (!confirmation) return null;
-                await prisma.twoFactorConfirmation.delete({ where: { id: confirmation.id } });
+                const confirmationRepo = new TwoFactorConfirmationRepository(prisma);
+                const confirmation = await confirmationRepo.findByUserId(user.id);
+
+                if (!confirmation) {
+                  return null;
+                }
+
+                await confirmationRepo.deleteById(confirmation.id);
               }
 
               return user;

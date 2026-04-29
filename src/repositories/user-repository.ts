@@ -108,14 +108,14 @@ export class UserRepository extends BaseRepository<User> {
    * @param select - Prisma select object controlling which fields are returned
    * @returns The user with only the requested fields, or null if not found
    */
-  async getUserByEmailWithSelect<T extends { id?: boolean; role?: boolean }>(
+  async getUserByEmailWithSelect<T extends Prisma.UserSelect>(
     email: string,
     select: T,
-  ): Promise<Pick<User, keyof T extends keyof User ? keyof T : never> | null> {
+  ): Promise<Prisma.UserGetPayload<{ select: T }> | null> {
     return this.prisma.user.findUnique({
       where: { email },
       select,
-    }) as Promise<Pick<User, keyof T extends keyof User ? keyof T : never> | null>;
+    }) as Promise<Prisma.UserGetPayload<{ select: T }> | null>;
   }
 
   /**

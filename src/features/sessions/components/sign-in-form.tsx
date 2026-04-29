@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { SignInSchema, type SignInInput } from '@/schemas/auth';
-import { initiateSignIn, verifyTwoFactorCode } from '@/actions/auth/two-factor';
+import { initiateSignIn, verifyTwoFactorCode } from '@/actions/auth/mutations';
 import { toast } from 'sonner';
 import type { SubmitHandler } from 'react-hook-form';
 
