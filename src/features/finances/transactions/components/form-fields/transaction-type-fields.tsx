@@ -89,7 +89,7 @@ export function TransactionTypeFields({
               <InputGroup>
                 <InputGroupAddon align="inline-start">
                   <InputGroupText>
-                    <DollarSign className="h-4 w-4" />
+                    <DollarSign className="h-4 w-4" aria-hidden="true" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput

@@ -22,9 +22,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import {
   useCustomer,
@@ -130,11 +132,14 @@ export function CustomerDrawer({
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
+      <DrawerContent className="overflow-x-hidden pb-0!">
         {isLoading ? (
           <>
             <DrawerHeader>
               <DrawerTitle>Customer Details</DrawerTitle>
+              <VisuallyHidden>
+                <DrawerDescription>Loading customer details</DrawerDescription>
+              </VisuallyHidden>
             </DrawerHeader>
             <Box className="p-6">Loading...</Box>
           </>
@@ -144,6 +149,9 @@ export function CustomerDrawer({
           <Box className="p-6 text-destructive">
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
+              <VisuallyHidden>
+                <DrawerDescription>An error occurred whilst loading the customer</DrawerDescription>
+              </VisuallyHidden>
             </DrawerHeader>
             <Box className="p-6 text-destructive">
               <p className="mt-4">Could not load customer details: {error?.message}</p>
@@ -153,7 +161,7 @@ export function CustomerDrawer({
 
         {(customer && !isLoading && !isError) || mode === 'create' ? (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
               <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
                 {customer ? (
                   <UserAvatar
@@ -165,13 +173,20 @@ export function CustomerDrawer({
                   />
                 ) : null}
                 <Box className="flex flex-col">
+                  <VisuallyHidden>
+                    <DrawerDescription>
+                      {mode === 'create'
+                        ? 'Create a new customer'
+                        : 'View or edit customer details'}
+                    </DrawerDescription>
+                  </VisuallyHidden>
                   <Box className="flex items-center gap-2">
                     <DrawerTitle className="text-xl font-semibold tracking-tight">
                       {title}
                     </DrawerTitle>
                     {mode === 'edit' && hasUnsavedChanges ? (
                       <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle className="h-3 w-3" />
+                        <AlertCircle className="h-3 w-3" aria-hidden="true" />
                         Unsaved changes
                       </span>
                     ) : null}
@@ -196,17 +211,17 @@ export function CustomerDrawer({
                     className="gap-2"
                     onClick={() => setIsEditingView(true)}
                   >
-                    <Edit2 className="size-4" />
+                    <Edit2 className="size-4" aria-hidden="true" />
                     Edit
                   </Button>
                 ) : null}
                 <Button
                   variant="ghost"
-                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+                  className="aspect-square p-1 text-muted-foreground hover:bg-muted"
                   onClick={() => handleOpenChange(false)}
+                  aria-label="Close"
                 >
                   <X className="size-5" aria-hidden="true" />
-                  <span className="sr-only">Close</span>
                 </Button>
               </Box>
             </Box>
@@ -235,7 +250,10 @@ export function CustomerDrawer({
                               <p className="text-sm text-muted-foreground">Invoices</p>
                             </Box>
                             <Box className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                              <FileText className="size-5 text-blue-600 dark:text-blue-400" />
+                              <FileText
+                                className="size-5 text-blue-600 dark:text-blue-400"
+                                aria-hidden="true"
+                              />
                             </Box>
                           </Box>
                         </CardContent>
@@ -250,7 +268,10 @@ export function CustomerDrawer({
                               <p className="text-sm text-muted-foreground">Quotes</p>
                             </Box>
                             <Box className="p-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/50 transition-colors">
-                              <Receipt className="size-5 text-emerald-600 dark:text-emerald-400" />
+                              <Receipt
+                                className="size-5 text-emerald-600 dark:text-emerald-400"
+                                aria-hidden="true"
+                              />
                             </Box>
                           </Box>
                         </CardContent>
@@ -262,7 +283,7 @@ export function CustomerDrawer({
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <Mail className="size-4" />
+                        <Mail className="size-4" aria-hidden="true" />
                         Contact Information
                       </CardTitle>
                     </CardHeader>
@@ -270,7 +291,7 @@ export function CustomerDrawer({
                       <Box className="flex items-center justify-between py-2 border-b border-border/50">
                         <Box className="flex items-center gap-3">
                           <Box className="p-2 rounded-lg bg-muted">
-                            <Mail className="size-4 text-muted-foreground" />
+                            <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
                           </Box>
                           <Box>
                             <p className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -284,9 +305,15 @@ export function CustomerDrawer({
                             </a>
                           </Box>
                         </Box>
-                        <Button variant="ghost" size="icon" asChild className="size-8">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          asChild
+                          className="size-8"
+                          aria-label={`Send email to ${customer?.email}`}
+                        >
                           <a href={`mailto:${customer?.email}`}>
-                            <ExternalLink className="size-4" />
+                            <ExternalLink className="size-4" aria-hidden="true" />
                           </a>
                         </Button>
                       </Box>
@@ -295,7 +322,7 @@ export function CustomerDrawer({
                         <Box className="flex items-center justify-between py-2">
                           <Box className="flex items-center gap-3">
                             <Box className="p-2 rounded-lg bg-muted">
-                              <Phone className="size-4 text-muted-foreground" />
+                              <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
                             </Box>
                             <Box>
                               <p className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -309,9 +336,15 @@ export function CustomerDrawer({
                               </a>
                             </Box>
                           </Box>
-                          <Button variant="ghost" size="icon" asChild className="size-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            className="size-8"
+                            aria-label={`Call ${customer.phone}`}
+                          >
                             <a href={`tel:${customer.phone}`}>
-                              <ExternalLink className="size-4" />
+                              <ExternalLink className="size-4" aria-hidden="true" />
                             </a>
                           </Button>
                         </Box>
@@ -338,7 +371,7 @@ export function CustomerDrawer({
                       <Box className="flex items-center justify-between py-2">
                         <span className="text-sm text-muted-foreground">Customer since</span>
                         <Box className="flex items-center gap-2 text-sm font-medium">
-                          <Calendar className="size-3.5 text-muted-foreground" />
+                          <Calendar className="size-3.5 text-muted-foreground" aria-hidden="true" />
                           {customer?.createdAt
                             ? format(new Date(customer.createdAt), 'MMM d, yyyy')
                             : 'N/A'}
@@ -352,14 +385,17 @@ export function CustomerDrawer({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-medium flex items-center gap-2">
-                          <Building2 className="size-4" />
+                          <Building2 className="size-4" aria-hidden="true" />
                           Organization
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <Box className="flex items-center gap-3">
                           <Box className="p-3 rounded-lg bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30">
-                            <Building2 className="size-5 text-violet-600 dark:text-violet-400" />
+                            <Building2
+                              className="size-5 text-violet-600 dark:text-violet-400"
+                              aria-hidden="true"
+                            />
                           </Box>
                           <Box className="flex-1">
                             <p className="font-medium">{customer.organizationName}</p>
@@ -387,14 +423,17 @@ export function CustomerDrawer({
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base font-medium flex items-center gap-2">
-                          <MapPin className="size-4" />
+                          <MapPin className="size-4" aria-hidden="true" />
                           Address
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <Box className="flex items-start gap-3">
                           <Box className="p-3 rounded-lg bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30">
-                            <MapPin className="size-5 text-orange-600 dark:text-orange-400" />
+                            <MapPin
+                              className="size-5 text-orange-600 dark:text-orange-400"
+                              aria-hidden="true"
+                            />
                           </Box>
                           <Box className="flex-1">
                             <p className="text-sm leading-relaxed">

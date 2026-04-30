@@ -61,10 +61,13 @@ export function SessionCard({
       {/* Device icon */}
       <Box className="relative shrink-0">
         <Box className={`rounded-lg p-2 ${deviceTypeDisplay.bgColor}`}>
-          <DeviceIcon className={`h-5 w-5 ${deviceTypeDisplay.color}`} />
+          <DeviceIcon className={`h-5 w-5 ${deviceTypeDisplay.color}`} aria-hidden="true" />
         </Box>
         {isCurrent ? (
-          <CheckCircle2 className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border border-card bg-card text-primary" />
+          <CheckCircle2
+            className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border border-card bg-card text-primary"
+            aria-hidden="true"
+          />
         ) : null}
       </Box>
 
@@ -79,14 +82,14 @@ export function SessionCard({
             variant="outline"
             className={`flex items-center gap-1 border-0 ${osDisplay.bgColor}`}
           >
-            <osDisplay.Icon className={`h-3 w-3 ${osDisplay.color}`} />
+            <osDisplay.Icon className={`h-3 w-3 ${osDisplay.color}`} aria-hidden="true" />
             <span className={`text-xs ${osDisplay.color}`}>{osDisplay.label}</span>
           </Badge>
           <Badge
             variant="outline"
             className={`flex items-center gap-1 border-0 ${browserDisplay.bgColor}`}
           >
-            <browserDisplay.Icon className={`h-3 w-3 ${browserDisplay.color}`} />
+            <browserDisplay.Icon className={`h-3 w-3 ${browserDisplay.color}`} aria-hidden="true" />
             <span className={`text-xs ${browserDisplay.color}`}>{browserDisplay.label}</span>
           </Badge>
           {isCurrent ? (
@@ -100,22 +103,26 @@ export function SessionCard({
             className="flex items-center gap-1 text-xs text-muted-foreground"
             suppressHydrationWarning
           >
-            <Calendar className="h-3 w-3" />
+            <Calendar className="h-3 w-3" aria-hidden="true" />
             {formatLastActive(session.lastActiveAt, isCurrent)}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" />
+            <MapPin className="h-3 w-3" aria-hidden="true" />
             {location}
           </span>
           <span
             className={`flex items-center gap-1 text-xs ${
               isExpiringSoon
-                ? 'font-medium text-amber-600 dark:text-amber-400'
+                ? 'font-medium text-warning dark:text-warning'
                 : 'text-muted-foreground'
             }`}
             suppressHydrationWarning
           >
-            {isExpiringSoon ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+            {isExpiringSoon ? (
+              <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <Clock className="h-3 w-3" aria-hidden="true" />
+            )}
             Expires {formatDistanceToNow(expiresAt, { addSuffix: true })}
           </span>
         </Box>

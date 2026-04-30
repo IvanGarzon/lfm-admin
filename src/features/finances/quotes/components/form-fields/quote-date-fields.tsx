@@ -38,7 +38,7 @@ export function QuoteDateFields({ control, isLocked }: QuoteDateFieldsProps) {
                     type="button"
                     disabled={isLocked}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="h-4 w-4" />
                     {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
@@ -72,7 +72,7 @@ export function QuoteDateFields({ control, isLocked }: QuoteDateFieldsProps) {
                     type="button"
                     disabled={isLocked}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="h-4 w-4" />
                     {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>

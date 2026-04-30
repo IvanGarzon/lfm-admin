@@ -164,7 +164,7 @@ export function EmployeeForm({
       >
         {isDisabled ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating employee...' : 'Updating employee...'}
             </span>
@@ -175,7 +175,7 @@ export function EmployeeForm({
           <Box className="space-y-4">
             <Box className="flex items-center gap-2">
               <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <User className="size-3.5 text-primary" />
+                <User className="size-3.5 text-primary" aria-hidden="true" />
               </Box>
               <span className="text-sm font-semibold text-foreground">Personal</span>
               <Separator className="flex-1" />
@@ -186,7 +186,7 @@ export function EmployeeForm({
           <Box className="space-y-4">
             <Box className="flex items-center gap-2">
               <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <Phone className="size-3.5 text-primary" />
+                <Phone className="size-3.5 text-primary" aria-hidden="true" />
               </Box>
               <span className="text-sm font-semibold text-foreground">Contact</span>
               <Separator className="flex-1" />
@@ -197,7 +197,7 @@ export function EmployeeForm({
           <Box className="space-y-4">
             <Box className="flex items-center gap-2">
               <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <CalendarDays className="size-3.5 text-primary" />
+                <CalendarDays className="size-3.5 text-primary" aria-hidden="true" />
               </Box>
               <span className="text-sm font-semibold text-foreground">Details</span>
               <Separator className="flex-1" />
@@ -208,7 +208,7 @@ export function EmployeeForm({
           <Box className="space-y-4">
             <Box className="flex items-center gap-2">
               <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <Briefcase className="size-3.5 text-primary" />
+                <Briefcase className="size-3.5 text-primary" aria-hidden="true" />
               </Box>
               <span className="text-sm font-semibold text-foreground">Employment</span>
               <Separator className="flex-1" />
@@ -217,7 +217,7 @@ export function EmployeeForm({
           </Box>
         </Box>
 
-        <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
+        <Box className="border-t p-6 flex gap-3 justify-end bg-muted">
           {onClose ? (
             <Button type="button" variant="outline" onClick={onClose} disabled={isDisabled}>
               Cancel
@@ -226,7 +226,7 @@ export function EmployeeForm({
           <Button type="submit" disabled={isDisabled || (employee && !isDirty)}>
             {isDisabled ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

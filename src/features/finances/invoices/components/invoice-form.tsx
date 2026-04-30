@@ -221,7 +221,7 @@ export function InvoiceForm({
       >
         {isCreating || isUpdating ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating invoice...' : 'Updating invoice...'}
             </span>
@@ -230,7 +230,10 @@ export function InvoiceForm({
 
         {isLocked ? (
           <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertCircle
+              aria-hidden="true"
+              className="h-4 w-4 text-amber-600 dark:text-amber-400"
+            />
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
               This invoice is {invoice?.status.toLowerCase().replace(/_/g, ' ')} and cannot be
               edited.
@@ -251,7 +254,7 @@ export function InvoiceForm({
           {/* Items details */}
           {isLoadingItems ? (
             <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Loading invoice items...</p>
             </Box>
           ) : (

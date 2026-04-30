@@ -1,12 +1,16 @@
 import { Box } from '@/components/ui/box';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 
 export function ProductDrawerSkeleton() {
   return (
     <>
       <DrawerHeader>
         <DrawerTitle>Product Details</DrawerTitle>
+        <VisuallyHidden>
+          <DrawerDescription>Loading product details.</DrawerDescription>
+        </VisuallyHidden>
       </DrawerHeader>
       <Box className="p-6 space-y-6">
         {/* Name field */}

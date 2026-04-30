@@ -14,9 +14,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
@@ -449,6 +451,11 @@ export function QuoteDrawer({
             maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
           }}
         >
+          <VisuallyHidden>
+            <DrawerDescription>
+              {mode === 'create' ? 'Create a new quote' : 'Edit quote details'}
+            </DrawerDescription>
+          </VisuallyHidden>
           {isLoading ? <QuoteDrawerSkeleton /> : null}
 
           {isError ? (

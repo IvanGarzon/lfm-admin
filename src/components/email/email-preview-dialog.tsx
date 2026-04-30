@@ -172,7 +172,7 @@ export function EmailPreviewDialog({
             onClick={handleCancel}
             disabled={isAnyActionPending}
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="h-4 w-4" />
             Cancel
           </Button>
           {showMarkAsSentOption ? (
@@ -189,7 +189,7 @@ export function EmailPreviewDialog({
                 </>
               ) : (
                 <>
-                  <FileCheck className="h-4 w-4 mr-2" />
+                  <FileCheck className="h-4 w-4" />
                   Mark as {statusLabel} (No Email)
                 </>
               )}
@@ -207,7 +207,7 @@ export function EmailPreviewDialog({
               </>
             ) : (
               <>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="h-4 w-4" />
                 Send Email
               </>
             )}

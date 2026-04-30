@@ -256,7 +256,7 @@ export function QuoteForm({
       >
         {isCreating || isUpdating ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating quote...' : 'Updating quote...'}
             </span>
@@ -265,7 +265,10 @@ export function QuoteForm({
 
         {isLocked ? (
           <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertCircle
+              className="h-4 w-4 text-amber-600 dark:text-amber-400"
+              aria-hidden="true"
+            />
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
               This quote is {quote?.status ? getQuoteStatusLabel(quote.status) : 'locked'} and
               cannot be edited.
@@ -287,7 +290,7 @@ export function QuoteForm({
 
           {isLoadingItems ? (
             <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
               <p className="text-sm text-muted-foreground">Loading invoice items...</p>
             </Box>
           ) : (

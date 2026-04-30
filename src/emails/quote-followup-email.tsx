@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -16,7 +16,7 @@ type QuoteFollowUpEmailProps = {
   pdfUrl?: string;
 };
 
-export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailProps) => {
+function QuoteFollowUpContent({ quoteData, pdfUrl }: QuoteFollowUpEmailProps): React.ReactElement {
   const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } =
     quoteData;
 
@@ -109,9 +109,9 @@ export const QuoteFollowUpContent = ({ quoteData, pdfUrl }: QuoteFollowUpEmailPr
       </Text>
     </>
   );
-};
+}
 
-export function QuoteFollowUpEmail(props: QuoteFollowUpEmailProps): React.ReactElement {
+function QuoteFollowUpEmail(props: QuoteFollowUpEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail previewText={`Following up on Quote ${props.quoteData.quoteNumber}`}>
       <QuoteFollowUpContent {...props} />

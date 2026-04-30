@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -24,7 +24,7 @@ const overdueCell = {
   color: '#ef4444',
 };
 
-export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) => {
+function ReminderContent({ reminderData, pdfUrl }: ReminderEmailProps): React.ReactElement {
   const {
     invoiceNumber,
     customerName,
@@ -142,9 +142,9 @@ export const ReminderContent = ({ reminderData, pdfUrl }: ReminderEmailProps) =>
       <Text style={styles.footer}>Thank you for your prompt attention to this matter.</Text>
     </>
   );
-};
+}
 
-export function ReminderEmail(props: ReminderEmailProps): React.ReactElement {
+function ReminderEmail(props: ReminderEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail
       previewText={`Payment Reminder: Invoice ${props.reminderData.invoiceNumber} is ${props.reminderData.daysOverdue} days overdue`}

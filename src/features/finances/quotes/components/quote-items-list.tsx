@@ -153,7 +153,7 @@ export function QuoteItemsList({
             disabled={isLocked}
             className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
             Add Item
           </Button>
           <AddRecipesDialog

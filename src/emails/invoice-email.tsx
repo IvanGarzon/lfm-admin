@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -15,7 +15,7 @@ interface InvoiceEmailProps {
   pdfUrl?: string;
 }
 
-export const InvoiceContent = ({ invoiceData, pdfUrl }: InvoiceEmailProps) => {
+function InvoiceContent({ invoiceData, pdfUrl }: InvoiceEmailProps): React.ReactElement {
   const { invoiceNumber, customerName, amount, currency, dueDate, issuedDate } = invoiceData;
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -85,9 +85,9 @@ export const InvoiceContent = ({ invoiceData, pdfUrl }: InvoiceEmailProps) => {
       <Text style={styles.footer}>Thank you for your business!</Text>
     </>
   );
-};
+}
 
-export function InvoiceEmail(props: InvoiceEmailProps): React.ReactElement {
+function InvoiceEmail(props: InvoiceEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail
       previewText={`Invoice ${props.invoiceData.invoiceNumber} - Amount Due: ${props.invoiceData.amount}`}

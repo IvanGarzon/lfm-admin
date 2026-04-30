@@ -150,7 +150,10 @@ export const QuoteItemRow = memo(function QuoteItemRow({
           className="w-4 shrink-0 flex items-center justify-center"
           onPointerDown={(e) => dragControls.start(e)}
         >
-          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
+          <GripVertical
+            className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing"
+            aria-hidden="true"
+          />
         </Box>
 
         {/* Item Description with Product Selector */}
@@ -278,13 +281,15 @@ export const QuoteItemRow = memo(function QuoteItemRow({
             className={cn(
               'h-8 w-8 p-0',
               quoteId && itemId
-                ? 'text-gray-400 hover:text-purple-500 hover:bg-transparent cursor-pointer'
-                : 'text-gray-300 dark:text-gray-700 cursor-not-allowed',
+                ? 'text-muted-foreground hover:text-purple-500 hover:bg-transparent cursor-pointer'
+                : 'text-muted-foreground/40 cursor-not-allowed',
             )}
-            title={quoteId && itemId ? 'Edit color palette' : 'Save the quote first to add colors'}
+            aria-label={
+              quoteId && itemId ? 'Edit colour palette' : 'Save the quote first to add colours'
+            }
             disabled={isLocked || !quoteId || !itemId}
           >
-            <Palette className="h-4 w-4" />
+            <Palette className="h-4 w-4" aria-hidden="true" />
           </Button>
         </Box>
 
@@ -297,13 +302,15 @@ export const QuoteItemRow = memo(function QuoteItemRow({
             className={cn(
               'h-8 w-8 p-0',
               quoteId && itemId
-                ? 'text-gray-400 hover:text-blue-500 hover:bg-transparent cursor-pointer'
-                : 'text-gray-300 dark:text-gray-700 cursor-not-allowed',
+                ? 'text-muted-foreground hover:text-blue-500 hover:bg-transparent cursor-pointer'
+                : 'text-muted-foreground/40 cursor-not-allowed',
             )}
-            title={quoteId && itemId ? 'Attach images' : 'Save the quote first to attach images'}
+            aria-label={
+              quoteId && itemId ? 'Attach images' : 'Save the quote first to attach images'
+            }
             disabled={isLocked || !quoteId || !itemId}
           >
-            <ImagePlus className="h-4 w-4" />
+            <ImagePlus className="h-4 w-4" aria-hidden="true" />
           </Button>
         </Box>
 
@@ -314,10 +321,11 @@ export const QuoteItemRow = memo(function QuoteItemRow({
               type="button"
               variant="ghost"
               onClick={onRemove}
-              className="h-8 w-8 p-0 text-gray-400 hover:text-destructive hover:bg-transparent cursor-pointer"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer"
+              aria-label="Remove item"
               disabled={isLocked}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </Button>
           ) : null}
         </Box>

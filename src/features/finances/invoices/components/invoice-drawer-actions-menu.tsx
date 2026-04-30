@@ -54,29 +54,29 @@ export function InvoiceDrawerActionsMenu({
           size="icon"
           aria-label="More Options"
           disabled={isDisabled}
-          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 cursor-pointer"
+          className="aspect-square p-1 text-muted-foreground hover:bg-accent cursor-pointer"
         >
-          <MoreHorizontalIcon className="h-4 w-4" />
+          <MoreHorizontalIcon aria-hidden="true" className="h-4 w-4" />
           <span className="sr-only">More options</span>
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuItem onClick={handlers.onDuplicate}>
-          <Copy className="h-4 w-4" />
+          <Copy aria-hidden="true" className="h-4 w-4" />
           Duplicate invoice
         </DropdownMenuItem>
 
         {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
           <DropdownMenuItem onClick={handlers.onMarkAsPending}>
-            <Hourglass className="h-4 w-4" />
+            <Hourglass aria-hidden="true" className="h-4 w-4" />
             Mark as pending
           </DropdownMenuItem>
         )}
 
         {invoice.status === InvoiceStatusSchema.enum.PENDING && (
           <DropdownMenuItem onClick={handlers.onMarkAsDraft}>
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw aria-hidden="true" className="h-4 w-4" />
             Revert to draft
           </DropdownMenuItem>
         )}
@@ -86,18 +86,18 @@ export function InvoiceDrawerActionsMenu({
           invoice.status === InvoiceStatusSchema.enum.PARTIALLY_PAID) && (
           <>
             <DropdownMenuItem onClick={handlers.onRecordPayment}>
-              <CreditCard className="h-4 w-4" />
+              <CreditCard aria-hidden="true" className="h-4 w-4" />
               Record payment
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handlers.onSendReminder}>
-              <BellRing className="h-4 w-4" />
+              <BellRing aria-hidden="true" className="h-4 w-4" />
               Send reminder
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handlers.onCancel}
               className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
             >
-              <Ban className="h-4 w-4" />
+              <Ban aria-hidden="true" className="h-4 w-4" />
               Cancel invoice
             </DropdownMenuItem>
           </>
@@ -106,11 +106,11 @@ export function InvoiceDrawerActionsMenu({
         {invoice.status === InvoiceStatusSchema.enum.PAID && (
           <>
             <DropdownMenuItem onClick={handlers.onDownloadPdf}>
-              <Download className="h-4 w-4" />
+              <Download aria-hidden="true" className="h-4 w-4" />
               Download invoice
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handlers.onSendReceipt}>
-              <Receipt className="h-4 w-4" />
+              <Receipt aria-hidden="true" className="h-4 w-4" />
               Send receipt
             </DropdownMenuItem>
           </>
@@ -121,7 +121,7 @@ export function InvoiceDrawerActionsMenu({
             onClick={handlers.onDelete}
             className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
           >
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle aria-hidden="true" className="h-4 w-4" />
             Delete invoice
           </DropdownMenuItem>
         )}

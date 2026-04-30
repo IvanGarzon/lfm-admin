@@ -51,7 +51,7 @@ export function QuoteVersions({
                   <span className="font-medium text-sm">v{version.versionNumber}</span>
                   {isCurrent ? (
                     <span className="flex items-center gap-1 text-xs text-primary font-medium">
-                      <Check className="h-3 w-3" />
+                      <Check className="h-3 w-3" aria-hidden="true" />
                       Current
                     </span>
                   ) : null}

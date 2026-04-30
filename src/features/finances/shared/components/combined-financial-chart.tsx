@@ -22,15 +22,15 @@ import { useTransactionTrend } from '@/features/finances/transactions/hooks/use-
 const chartConfig = {
   revenue: {
     label: 'Revenue',
-    color: '#10b981',
+    color: 'var(--color-emerald-500)',
   },
   quotes: {
     label: 'Quoted Value',
-    color: '#3b82f6',
+    color: 'var(--color-blue-500)',
   },
   income: {
     label: 'Income',
-    color: '#8b5cf6',
+    color: 'var(--color-violet-500)',
   },
 } satisfies ChartConfig;
 

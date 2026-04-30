@@ -43,7 +43,7 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
           variant="outline"
           className="ml-auto hidden py-0 px-2 lg:flex"
         >
-          <Settings2 className="mr-2 h-4 w-4" />
+          <Settings2 className="h-4 w-4" />
           View
           <CaretSortIcon className="ml-auto opacity-50" />
         </Button>

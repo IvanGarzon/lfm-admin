@@ -60,9 +60,9 @@ export function FilesList() {
         </Box>
         <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
           {isLoading ? (
-            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            <RefreshCw className="h-4 w-4 animate-spin" />
           ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4" />
           )}
           Refresh
         </Button>

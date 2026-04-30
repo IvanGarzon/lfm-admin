@@ -10,9 +10,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { ProductForm } from '@/features/inventory/products/components/product-form';
 import { ProductDrawerSkeleton } from '@/features/inventory/products/components/product-drawer-skeleton';
 import { useQueryString } from '@/hooks/use-query-string';
@@ -105,6 +107,13 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+        <VisuallyHidden>
+          <DrawerDescription>
+            {mode === 'create'
+              ? 'Add a new product to your inventory.'
+              : 'Edit the selected product.'}
+          </DrawerDescription>
+        </VisuallyHidden>
         {mode === 'update' && isLoading ? (
           <ProductDrawerSkeleton />
         ) : isError ? (

@@ -34,7 +34,7 @@ export default function StatsError({ error, reset }: StatsErrorProps) {
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <Alert variant="destructive" className="border-none">
-            <CircleAlert className="h-4 w-4" />
+            <CircleAlert className="mr-2 h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription className="mt-2">
               Failed to load statistics: {error.message}

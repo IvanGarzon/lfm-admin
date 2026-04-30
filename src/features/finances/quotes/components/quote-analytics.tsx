@@ -96,7 +96,7 @@ export function QuoteAnalytics({
         <Box className="flex flex-wrap items-center gap-2">
           <CalendarDateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
           <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4" aria-hidden="true" />
             Export
           </Button>
         </Box>

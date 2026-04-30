@@ -50,7 +50,7 @@ export function AddressSourceSelector({
           <RadioGroupItem value="organization" id="address-org" disabled={!orgHasAddress} />
           <Box className="flex-1">
             <Label htmlFor="address-org" className="flex items-center gap-2 cursor-pointer">
-              <Building2 className="h-4 w-4" />
+              <Building2 className="h-4 w-4" aria-hidden="true" />
               Use organization address
             </Label>
             {orgHasAddress ? (
@@ -70,7 +70,7 @@ export function AddressSourceSelector({
           <RadioGroupItem value="custom" id="address-custom" />
           <Box className="flex-1">
             <Label htmlFor="address-custom" className="flex items-center gap-2 cursor-pointer">
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4" aria-hidden="true" />
               Use custom address
             </Label>
             <p className="text-sm text-muted-foreground mt-1">

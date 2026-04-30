@@ -71,9 +71,9 @@ export function QuoteDrawerActionsMenu({
           size="icon"
           aria-label="More Options"
           disabled={isDisabled}
-          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 cursor-pointer"
+          className="aspect-square p-1 text-muted-foreground hover:bg-muted cursor-pointer"
         >
-          <MoreHorizontalIcon className="h-4 w-4" />
+          <MoreHorizontalIcon className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">More options</span>
         </Button>
       </DropdownMenuTrigger>
@@ -81,73 +81,73 @@ export function QuoteDrawerActionsMenu({
       <DropdownMenuContent align="end" className="w-52">
         {canSend ? (
           <DropdownMenuItem onClick={handlers.onSend}>
-            <Send className="h-4 w-4" />
+            <Send className="h-4 w-4" aria-hidden="true" />
             Send quote
           </DropdownMenuItem>
         ) : null}
 
         {canPutOnHold ? (
           <DropdownMenuItem onClick={handlers.onOnHold}>
-            <Pause className="h-4 w-4" />
+            <Pause className="h-4 w-4" aria-hidden="true" />
             Put on hold
           </DropdownMenuItem>
         ) : null}
 
         {canAccept ? (
           <DropdownMenuItem onClick={handlers.onAccept}>
-            <Check className="h-4 w-4" />
+            <Check className="h-4 w-4" aria-hidden="true" />
             Accept quote
           </DropdownMenuItem>
         ) : null}
 
         {canReject ? (
           <DropdownMenuItem onClick={handlers.onReject}>
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
             Reject quote
           </DropdownMenuItem>
         ) : null}
 
         {canCancel ? (
           <DropdownMenuItem onClick={handlers.onCancel}>
-            <Ban className="h-4 w-4" />
+            <Ban className="h-4 w-4" aria-hidden="true" />
             Cancel quote
           </DropdownMenuItem>
         ) : null}
 
         {canConvert ? (
           <DropdownMenuItem onClick={handlers.onConvert}>
-            <FileCheck className="h-4 w-4" />
+            <FileCheck className="h-4 w-4" aria-hidden="true" />
             Convert to invoice
           </DropdownMenuItem>
         ) : null}
 
         {canCreateVersion ? (
           <DropdownMenuItem onClick={handlers.onCreateVersion}>
-            <Copy className="h-4 w-4" />
+            <Copy className="h-4 w-4" aria-hidden="true" />
             Create new version
           </DropdownMenuItem>
         ) : null}
 
         <DropdownMenuItem onClick={handlers.onDuplicate}>
-          <Files className="h-4 w-4" />
+          <Files className="h-4 w-4" aria-hidden="true" />
           Duplicate quote
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={handlers.onDownloadPdf}>
-          <Download className="h-4 w-4" />
+          <Download className="h-4 w-4" aria-hidden="true" />
           Download quote
         </DropdownMenuItem>
 
         {canSendQuote ? (
           <DropdownMenuItem onClick={handlers.onSendEmail}>
-            <Mail className="h-4 w-4" />
+            <Mail className="h-4 w-4" aria-hidden="true" />
             Resend quote
           </DropdownMenuItem>
         ) : null}
 
         {showFollowUp ? (
           <DropdownMenuItem onClick={handlers.onSendFollowUp}>
-            <Send className="h-4 w-4" />
+            <Send className="h-4 w-4" aria-hidden="true" />
             Send follow-up
           </DropdownMenuItem>
         ) : null}
@@ -157,7 +157,7 @@ export function QuoteDrawerActionsMenu({
             onClick={handlers.onDelete}
             className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
           >
-            <Trash className="h-4 w-4" />
+            <Trash className="h-4 w-4" aria-hidden="true" />
             Delete quote
           </DropdownMenuItem>
         ) : null}

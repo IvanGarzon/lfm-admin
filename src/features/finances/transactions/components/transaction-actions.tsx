@@ -31,29 +31,28 @@ export function TransactionActions({ transaction, onDelete }: TransactionActions
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="h-8 w-8 p-0" variant="secondary">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
+        <Button className="h-8 w-8 p-0" variant="secondary" aria-label="Open actions menu">
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-          <Copy className="h-4 w-4" />
+          <Copy className="h-4 w-4" aria-hidden="true" />
           Copy transaction ID
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={transactionUrl}>
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4" aria-hidden="true" />
             Edit transaction
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => onDelete(transaction.id)}
-          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+          className="text-destructive focus:text-destructive hover:text-destructive bg-destructive/5 hover:bg-destructive/10 dark:bg-destructive/10 hover:dark:bg-destructive/20"
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" aria-hidden="true" />
           Delete transaction
         </DropdownMenuItem>
       </DropdownMenuContent>

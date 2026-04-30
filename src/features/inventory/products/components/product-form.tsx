@@ -144,7 +144,7 @@ export function ProductForm({
       >
         {isCreating || isUpdating ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating product...' : 'Updating product...'}
             </span>
@@ -315,7 +315,7 @@ export function ProductForm({
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

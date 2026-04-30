@@ -118,7 +118,8 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
               className="w-full sm:w-auto"
             >
               <RefreshCw
-                className={`h-4 w-4 mr-2 ${syncTasksMutation.isPending ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+                className={`h-4 w-4 ${syncTasksMutation.isPending ? 'animate-spin' : ''}`}
               />
               Sync Tasks
             </Button>

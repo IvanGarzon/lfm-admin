@@ -31,7 +31,7 @@ export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" className="h-8 w-8 p-0">
           <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -39,7 +39,7 @@ export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href}>
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden="true" />
             Edit vendor
           </Link>
         </DropdownMenuItem>
@@ -48,7 +48,7 @@ export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
           className="text-destructive"
           onClick={() => onDelete(vendor.id, vendor.vendorCode, vendor.name)}
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" aria-hidden="true" />
           Delete vendor
         </DropdownMenuItem>
       </DropdownMenuContent>

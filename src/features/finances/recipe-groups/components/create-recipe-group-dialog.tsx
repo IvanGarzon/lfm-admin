@@ -204,7 +204,7 @@ export function CreateRecipeGroupDialog({
                   onClick={handleAddRecipe}
                   className="h-8"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
                   Add Recipe
                 </Button>
               </Box>
@@ -215,7 +215,7 @@ export function CreateRecipeGroupDialog({
 
               {fieldArray.fields.length === 0 ? (
                 <Box className="border border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                  <Layers className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <Layers aria-hidden="true" className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No recipes added yet</p>
                   <p className="text-xs mt-1">Click "Add Recipe" to get started</p>
                 </Box>
@@ -262,10 +262,11 @@ export function CreateRecipeGroupDialog({
                             type="button"
                             variant="ghost"
                             size="icon"
+                            aria-label="Remove recipe"
                             className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={() => fieldArray.remove(index)}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 aria-hidden="true" className="h-4 w-4" />
                           </Button>
                         </Box>
                       </Box>

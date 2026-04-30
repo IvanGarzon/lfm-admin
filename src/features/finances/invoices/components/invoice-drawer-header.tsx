@@ -50,13 +50,13 @@ export function InvoiceDrawerHeader({
   actionsMenuHandlers,
 }: InvoiceDrawerHeaderProps) {
   return (
-    <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+    <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
       <Box className="mt-1 flex flex-col flex-1">
         <Box className="flex items-center gap-2">
           <DrawerTitle>{title}</DrawerTitle>
           {mode === 'edit' && hasUnsavedChanges ? (
             <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-              <AlertCircle className="h-3 w-3" />
+              <AlertCircle aria-hidden="true" className="h-3 w-3" />
               Unsaved changes
             </span>
           ) : null}
@@ -73,12 +73,12 @@ export function InvoiceDrawerHeader({
           <Button type="button" variant="outline" size="sm" onClick={onTogglePreview}>
             {showPreview ? (
               <>
-                <EyeOff className="h-4 w-4 mr-1" />
+                <EyeOff aria-hidden="true" className="h-4 w-4 mr-1" />
                 Hide Preview
               </>
             ) : (
               <>
-                <Eye className="h-4 w-4 mr-1" />
+                <Eye aria-hidden="true" className="h-4 w-4 mr-1" />
                 Show Preview
               </>
             )}
@@ -87,7 +87,7 @@ export function InvoiceDrawerHeader({
 
         {mode === 'create' ? (
           <Button type="submit" form="form-rhf-invoice" size="sm" disabled={isCreating}>
-            <Save className="h-4 w-4 mr-1" />
+            <Save aria-hidden="true" className="h-4 w-4 mr-1" />
             Save as Draft
           </Button>
         ) : null}
@@ -101,7 +101,7 @@ export function InvoiceDrawerHeader({
                 size="sm"
                 disabled={isUpdating || !hasUnsavedChanges}
               >
-                <Save className="h-4 w-4 mr-1" />
+                <Save aria-hidden="true" className="h-4 w-4 mr-1" />
                 {mode === 'edit' ? 'Update' : 'Save'}
               </Button>
             ) : null}
@@ -118,11 +118,11 @@ export function InvoiceDrawerHeader({
 
         <Button
           variant="ghost"
-          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+          aria-label="Close"
+          className="aspect-square p-1 text-muted-foreground hover:bg-accent"
           onClick={onClose}
         >
           <X className="size-5" aria-hidden="true" />
-          <span className="sr-only">Close</span>
         </Button>
       </Box>
     </Box>

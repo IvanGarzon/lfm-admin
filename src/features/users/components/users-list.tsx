@@ -73,7 +73,7 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
         {!isZeroState ? (
           <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
             <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Invite User
             </Button>
           </Box>
@@ -87,7 +87,7 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
           description="Add your first customer to start managing your relationships."
           action={
             <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Invite User
             </Button>
           }

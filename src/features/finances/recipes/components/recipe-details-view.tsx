@@ -89,7 +89,7 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
         <Card className="bg-muted/30 border-dashed">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Calculator className="size-3" />
+              <Calculator aria-hidden="true" className="size-3" />
               Labour Configuration
             </CardTitle>
           </CardHeader>
@@ -138,7 +138,7 @@ export function RecipeDetailsView({ recipe }: RecipeDetailsViewProps) {
       <Box className="space-y-4">
         <Box className="flex items-center justify-between">
           <h3 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Inbox className="size-5 text-primary" />
+            <Inbox aria-hidden="true" className="size-5 text-primary" />
             Items List
           </h3>
           <Badge variant="outline" className="font-mono">

@@ -94,7 +94,7 @@ export function SendReceiptDialog({
           </Box>
         </DialogHeader>
 
-        <Box className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-hidden">
+        <Box className="flex-1 bg-muted overflow-hidden">
           <ReceiptPreview
             invoice={invoice}
             items={items}
@@ -104,9 +104,9 @@ export function SendReceiptDialog({
           />
         </Box>
 
-        <DialogFooter className="px-6 py-4 border-t bg-gray-50 dark:bg-gray-900/50">
+        <DialogFooter className="px-6 py-4 border-t bg-muted/50">
           <Box className="flex items-center justify-between w-full">
-            <Box className="text-sm text-gray-600 dark:text-gray-400">
+            <Box className="text-sm text-muted-foreground">
               Send receipt to <strong>{invoice.customer.email}</strong>
             </Box>
             <Box className="flex gap-2">
@@ -117,17 +117,17 @@ export function SendReceiptDialog({
                 disabled={isDownloading}
               >
                 {isDownloading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4" aria-hidden="true" />
                 )}
                 {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
               <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail}>
                 {isSendingEmail ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Receipt className="h-4 w-4 mr-2" />
+                  <Receipt className="h-4 w-4" aria-hidden="true" />
                 )}
                 {isSendingEmail ? 'Sending...' : 'Send Receipt'}
               </Button>

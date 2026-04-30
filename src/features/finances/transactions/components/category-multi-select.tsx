@@ -109,16 +109,20 @@ export function CategoryMultiSelect({
                     <span
                       role="button"
                       tabIndex={0}
+                      aria-label={`Remove ${category.name}`}
                       className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          handleRemove(category.id, e as any);
+                          handleRemove(category.id, e as React.MouseEvent);
                         }
                       }}
                       onMouseDown={(e) => handleRemove(category.id, e)}
                       onClick={(e) => handleRemove(category.id, e)}
                     >
-                      <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                      <X
+                        className="h-3 w-3 text-muted-foreground hover:text-foreground"
+                        aria-hidden="true"
+                      />
                     </span>
                   </Badge>
                 ))}
@@ -126,7 +130,7 @@ export function CategoryMultiSelect({
             ) : (
               <span className="text-muted-foreground">Select categories...</span>
             )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown aria-hidden="true" className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
@@ -140,7 +144,7 @@ export function CategoryMultiSelect({
               <CommandEmpty>
                 {isPending ? (
                   <Box className="flex items-center justify-center py-6">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                     <span className="ml-2 text-sm text-muted-foreground">Creating category...</span>
                   </Box>
                 ) : (
@@ -160,7 +164,8 @@ export function CategoryMultiSelect({
                       className="cursor-pointer"
                     >
                       <Check
-                        className={cn('mr-2 h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')}
+                        aria-hidden="true"
+                        className={cn('h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')}
                       />
                       <Box className="flex-1">
                         <Box className="font-medium">{category.name}</Box>
@@ -179,7 +184,7 @@ export function CategoryMultiSelect({
                   <CommandSeparator />
                   <CommandGroup>
                     <CommandItem onSelect={handleCreateCategory} className="cursor-pointer">
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus aria-hidden="true" className="h-4 w-4" />
                       Create &quot;{search}&quot;
                     </CommandItem>
                   </CommandGroup>

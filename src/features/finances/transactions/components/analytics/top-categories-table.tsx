@@ -61,7 +61,7 @@ export function TopCategoriesTable({ categories, isLoading }: TopCategoriesTable
                 <div className="text-sm font-bold">
                   {formatCurrency({ number: category.totalAmount })}
                 </div>
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-green-600" aria-hidden="true" />
               </div>
             </div>
           ))}

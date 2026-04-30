@@ -124,7 +124,7 @@ export function OrganizationsList({
         {!isZeroState ? (
           <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
             <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Add Organization
             </Button>
           </Box>
@@ -138,7 +138,7 @@ export function OrganizationsList({
           description="Add your first organization to start managing your relationships."
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               Add Organization
             </Button>
           }

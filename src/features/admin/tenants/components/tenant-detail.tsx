@@ -65,9 +65,10 @@ export function TenantDetail({
         <Box className="flex items-center gap-3 min-w-0">
           <Link
             href="/admin/tenants"
+            aria-label="Back to tenants"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
           </Link>
           <Box>
             <Box className="flex items-center gap-2">
@@ -120,7 +121,7 @@ export function TenantDetail({
         <Box className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Users ({users.length})</h2>
           <Button size="sm" onClick={() => setShowInvite(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus aria-hidden="true" className="h-4 w-4" />
             Invite User
           </Button>
         </Box>

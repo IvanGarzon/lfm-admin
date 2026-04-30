@@ -208,7 +208,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           disabled={isVerifying || otpCode.length !== 6}
           className="w-full"
         >
-          {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isVerifying ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
           Verify
         </Button>
 
@@ -297,7 +297,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
         </FieldGroup>
 
         <Button type="submit" disabled={isLoading} className="w-full mt-2">
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isLoading ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
           Sign In
         </Button>
       </form>

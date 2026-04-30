@@ -63,7 +63,7 @@ export function QuoteTable<TData extends QuoteListItem>({
           onClick={toggleFavouritesFilter}
           className={cn(isFavourite && 'bg-amber-500 hover:bg-amber-600')}
         >
-          <Star className={cn('h-4 w-4 mr-2', isFavourite && 'fill-current')} />
+          <Star aria-hidden="true" className={cn('h-4 w-4', isFavourite && 'fill-current')} />
           {isFavourite ? 'Showing Favourites' : 'Show Favourites'}
         </Button>
       </DataTableToolbar>

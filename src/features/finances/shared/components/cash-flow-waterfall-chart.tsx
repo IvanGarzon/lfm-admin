@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils';
 const chartConfig = {
   value: {
     label: 'Amount',
-    color: 'hsl(var(--primary))',
+    color: 'var(--color-primary)',
   },
 } satisfies ChartConfig;
 
@@ -118,15 +118,15 @@ function CashFlowWaterfallChart() {
   const getBarColor = (type: string) => {
     switch (type) {
       case 'income':
-        return '#10b981';
+        return 'var(--color-emerald-500)';
       case 'expense':
-        return '#ef4444';
+        return 'var(--color-red-500)';
       case 'pending':
-        return '#f59e0b';
+        return 'var(--color-amber-500)';
       case 'end':
-        return '#3b82f6';
+        return 'var(--color-blue-500)';
       default:
-        return '#6b7280';
+        return 'var(--color-gray-500)';
     }
   };
 
@@ -162,8 +162,9 @@ function CashFlowWaterfallChart() {
               size="icon"
               className="h-8 w-8"
               onClick={() => setMonthOffset((prev) => prev + 1)}
+              aria-label="Previous month"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             <div className="min-w-[160px] text-center">
               <div className="text-sm font-medium">{dateRangeLabel}</div>
@@ -174,8 +175,9 @@ function CashFlowWaterfallChart() {
               className="h-8 w-8"
               onClick={() => setMonthOffset((prev) => Math.max(0, prev - 1))}
               disabled={monthOffset === 0}
+              aria-label="Next month"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
 
@@ -191,11 +193,11 @@ function CashFlowWaterfallChart() {
                 )}
               >
                 {netCashFlowGrowth > 0 ? (
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                 ) : netCashFlowGrowth < 0 ? (
-                  <TrendingDown className="h-4 w-4" />
+                  <TrendingDown className="h-4 w-4" aria-hidden="true" />
                 ) : (
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-4 w-4" aria-hidden="true" />
                 )}
                 <span>
                   {netCashFlowGrowth >= 0 ? '+' : ''}
@@ -265,7 +267,7 @@ function CashFlowWaterfallChart() {
                 fontSize={12}
                 tickFormatter={(value) => formatCurrency({ number: value, maxFractionDigits: 0 })}
               />
-              <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
+              <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="3 3" />
               <ChartTooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.[0]) return null;

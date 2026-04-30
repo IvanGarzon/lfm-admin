@@ -42,7 +42,7 @@ export function DeleteQuoteDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
+            <AlertCircle aria-hidden="true" className="h-5 w-5" />
             Delete Quote
           </DialogTitle>
           <DialogDescription>

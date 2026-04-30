@@ -89,7 +89,7 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
           description="Add your first quote to start managing your quotes."
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Add Quote
             </Button>
           }
@@ -107,7 +107,7 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
               <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4" />
                 New Quote
               </Button>
             </Box>

@@ -33,7 +33,7 @@ export function TenantsList({ initialData }: { initialData: TenantListItem[] }) 
           <p className="text-muted-foreground text-sm">Manage all tenants on the platform</p>
         </Box>
         <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus aria-hidden="true" className="h-4 w-4" />
           New Tenant
         </Button>
       </Box>

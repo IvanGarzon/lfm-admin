@@ -4,7 +4,14 @@ import Image from 'next/image';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
-import { Dialog, DialogHeader, DialogTitle, DialogContent } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 
 interface ImagePreviewDialogProps {
   open: boolean;
@@ -28,33 +35,33 @@ export function ImagePreviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-full p-0" showClose={false}>
+        <VisuallyHidden>
+          <DialogDescription>Image preview for {itemDescription ?? fileName}</DialogDescription>
+        </VisuallyHidden>
         <Box className="relative">
           <DialogHeader>
-            <Box className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <Box className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
               <Box className="flex-1 min-w-0 pr-4">
-                <DialogTitle className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
+                <DialogTitle className="text-sm font-medium truncate">
                   {itemDescription}
                 </DialogTitle>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{fileName}</p>
+                <p className="text-xs text-muted-foreground truncate">{fileName}</p>
               </Box>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => onOpenChange(false)}
+                aria-label="Close preview"
                 className="h-8 w-8 p-0 shrink-0"
               >
-                <X className="size-4" />
-                <span className="sr-only">Close</span>
+                <X aria-hidden="true" className="size-4" />
               </Button>
             </Box>
           </DialogHeader>
 
           {/* Image */}
-          <Box
-            className="relative w-full bg-gray-100 dark:bg-gray-900"
-            style={{ minHeight: '400px' }}
-          >
+          <Box className="relative w-full bg-muted" style={{ minHeight: '400px' }}>
             <Image
               src={imageUrl}
               alt={fileName}

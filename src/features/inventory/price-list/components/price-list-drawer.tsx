@@ -10,9 +10,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { PriceListForm } from '@/features/inventory/price-list/components/price-list-form';
 import { PriceListDrawerSkeleton } from '@/features/inventory/price-list/components/price-list-drawer-skeleton';
 import { useQueryString } from '@/hooks/use-query-string';
@@ -99,6 +101,13 @@ export function PriceListDrawer({ id, open: openProp, onClose }: PriceListDrawer
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+        <VisuallyHidden>
+          <DrawerDescription>
+            {mode === 'create'
+              ? 'Add a new item to your price list.'
+              : 'Edit an existing price list item.'}
+          </DrawerDescription>
+        </VisuallyHidden>
         {mode === 'update' && isLoading ? (
           <PriceListDrawerSkeleton />
         ) : isError ? (

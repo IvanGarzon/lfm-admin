@@ -117,6 +117,8 @@ export const createProductColumns = ({
           }`}
         >
           {stock}
+          {isOutOfStock && <span className="sr-only">(out of stock)</span>}
+          {isLowStock && <span className="sr-only">(low stock)</span>}
         </Box>
       );
     },

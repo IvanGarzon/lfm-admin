@@ -71,7 +71,7 @@ export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: str
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">Tenants</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => handleSelect(null)}>
-              <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-muted-foreground" />
               <span>All Tenants</span>
               {activeTenantId === undefined && <Check className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>

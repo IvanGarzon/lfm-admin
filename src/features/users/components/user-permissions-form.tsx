@@ -36,7 +36,7 @@ function RecentAccessChanges({ userId }: { userId: string }) {
       <CardContent className="px-6 pt-0 pb-4">
         {isLoading ? (
           <Box className="flex justify-center py-4">
-            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            <Loader2 aria-hidden="true" className="size-4 animate-spin text-muted-foreground" />
           </Box>
         ) : changes.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">No access changes recorded yet.</p>

@@ -9,7 +9,7 @@ export function InvoiceDrawerSkeleton() {
         <DrawerTitle className="flex w-full items-center justify-between px-6">
           <Skeleton className="h-8 w-1/3" />
         </DrawerTitle>
-        <DrawerDescription />
+        <DrawerDescription className="sr-only">Loading invoice details</DrawerDescription>
       </DrawerHeader>
 
       <DrawerBody className="p-6 space-y-4">

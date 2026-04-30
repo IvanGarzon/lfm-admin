@@ -173,9 +173,10 @@ export function QuoteItemDetails({
                     {item.colors.map((color, colorIndex) => (
                       <Box
                         key={`${item.id}-color-${colorIndex}`}
-                        className="w-16 h-16 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-sm"
+                        className="w-16 h-16 rounded-lg border-2 border-border shadow-sm"
                         style={{ backgroundColor: color }}
                         title={color}
+                        aria-hidden="true"
                       />
                     ))}
                     {!readOnly ? (
@@ -191,8 +192,9 @@ export function QuoteItemDetails({
                           })
                         }
                         className="w-16 h-16 px-4"
+                        aria-label={`Edit colour palette for ${item.description}`}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     ) : null}
                   </Box>
@@ -211,7 +213,10 @@ export function QuoteItemDetails({
                           {/* Loading Spinner */}
                           {loadingImages.has(attachment.id) ? (
                             <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
-                              <Loader2 className="size-8 animate-spin text-gray-400" />
+                              <Loader2
+                                className="size-8 animate-spin text-muted-foreground"
+                                aria-hidden="true"
+                              />
                             </Box>
                           ) : null}
                           <Image
@@ -239,9 +244,9 @@ export function QuoteItemDetails({
                                 })
                               }
                               className="h-8 w-8 p-0"
+                              aria-label={`View ${attachment.fileName}`}
                             >
-                              <Eye className="size-4" />
-                              <span className="sr-only">View</span>
+                              <Eye className="size-4" aria-hidden="true" />
                             </Button>
 
                             <Button
@@ -250,9 +255,9 @@ export function QuoteItemDetails({
                               size="sm"
                               onClick={() => onDownloadImage(attachment.id)}
                               className="h-8 w-8 p-0"
+                              aria-label={`Download ${attachment.fileName}`}
                             >
-                              <Download className="size-4" />
-                              <span className="sr-only">Download</span>
+                              <Download className="size-4" aria-hidden="true" />
                             </Button>
 
                             {!readOnly ? (
@@ -268,9 +273,9 @@ export function QuoteItemDetails({
                                 }
                                 disabled={isDeleting}
                                 className="h-8 w-8 p-0"
+                                aria-label={`Delete ${attachment.fileName}`}
                               >
-                                <Trash2 className="size-4" />
-                                <span className="sr-only">Delete</span>
+                                <Trash2 className="size-4" aria-hidden="true" />
                               </Button>
                             ) : null}
                           </Box>

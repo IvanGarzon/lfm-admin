@@ -21,7 +21,7 @@ export function FileStatsCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Files</CardTitle>
-          <Files className="h-4 w-4 text-muted-foreground" />
+          <Files aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{totalFiles}</div>
@@ -34,7 +34,7 @@ export function FileStatsCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
-          <HardDrive className="h-4 w-4 text-muted-foreground" />
+          <HardDrive aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatFileSize(totalSize)}</div>
@@ -45,12 +45,12 @@ export function FileStatsCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-          <CloudUpload className="h-4 w-4 text-muted-foreground" />
+          <CloudUpload aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <Button size="sm" onClick={onUploadClick} className="flex-1">
-              <Upload className="h-3 w-3 mr-1" />
+              <Upload aria-hidden="true" className="h-3 w-3 mr-1" />
               Upload
             </Button>
           </div>

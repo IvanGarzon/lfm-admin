@@ -169,7 +169,7 @@ export function PriceListForm({
       >
         {isCreating || isUpdating ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating item...' : 'Updating item...'}
             </span>
@@ -349,9 +349,9 @@ export function PriceListForm({
                   className="w-full justify-start gap-2 px-4 py-3 h-auto rounded-b-none hover:bg-muted/80"
                 >
                   {advancedOpen ? (
-                    <ChevronUp className="h-4 w-4" />
+                    <ChevronUp aria-hidden="true" className="h-4 w-4" />
                   ) : (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown aria-hidden="true" className="h-4 w-4" />
                   )}
                   <span className="text-sm font-medium">Advanced Settings</span>
                 </Button>
@@ -516,7 +516,7 @@ export function PriceListForm({
         </Box>
 
         {/* Action Buttons */}
-        <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
+        <Box className="border-t p-6 flex gap-3 justify-end bg-muted">
           {onClose ? (
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
@@ -525,7 +525,7 @@ export function PriceListForm({
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

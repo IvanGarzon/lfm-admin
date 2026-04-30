@@ -73,7 +73,7 @@ export const createEmployeeColumns = (
           />
           <Box className="flex flex-col">
             <EmployeeLink employeeId={id} name={fullName} />
-            <div className="text-[0.8rem] text-gray-400">{email}</div>
+            <div className="text-[0.8rem] text-muted-foreground">{email}</div>
           </Box>
         </Box>
       );

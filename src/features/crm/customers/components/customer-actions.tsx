@@ -39,16 +39,16 @@ export function CustomerActions({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href} className="flex items-center">
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden="true" />
             View customer
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+          className="text-destructive focus:text-destructive hover:text-destructive"
           onClick={() => onDelete(customer.id, `${customer.firstName} ${customer.lastName}`)}
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" aria-hidden="true" />
           Delete customer
         </DropdownMenuItem>
       </DropdownMenuContent>

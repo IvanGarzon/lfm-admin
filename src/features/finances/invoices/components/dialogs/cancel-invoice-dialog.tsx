@@ -89,6 +89,7 @@ export function CancelInvoiceDialog({
                     </FieldContent>
 
                     <Textarea
+                      id="cancel-invoice-form-cancelled-reason"
                       placeholder="Please provide a reason for cancelling this invoice"
                       className="resize-none"
                       rows={4}

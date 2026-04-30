@@ -34,9 +34,14 @@ export function QuotePreviewPanel({ quote, items, onDownloadPdf }: QuotePreviewP
     >
       <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between">
         <p className="text-lg font-semibold">Preview</p>
-        <Button type="button" variant="ghost" size="icon" onClick={onDownloadPdf}>
-          <Download className="h-4 w-4" />
-          <span className="sr-only">Download PDF</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onDownloadPdf}
+          aria-label="Download PDF"
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
         </Button>
       </Box>
 

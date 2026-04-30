@@ -279,7 +279,7 @@ export function RecipeForm({
       >
         {isPending ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating recipe...' : 'Updating recipe...'}
             </span>

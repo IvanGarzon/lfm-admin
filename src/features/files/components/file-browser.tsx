@@ -56,7 +56,10 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
           <div className="flex items-center gap-2">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search
+                aria-hidden="true"
+                className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+              />
               <Input
                 placeholder="Search files..."
                 className="pl-8 w-64"
@@ -69,8 +72,9 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
                   size="sm"
                   className="absolute right-0 top-0 h-full px-2 hover:bg-transparent"
                   onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
                 >
-                  <X className="h-4 w-4" />
+                  <X aria-hidden="true" className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -82,16 +86,18 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
                 size="sm"
                 onClick={() => setViewMode('list')}
                 className="h-8 px-2"
+                aria-label="List view"
               >
-                <LayoutList className="h-4 w-4" />
+                <LayoutList aria-hidden="true" className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'folders' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('folders')}
                 className="h-8 px-2"
+                aria-label="Folder view"
               >
-                <FolderTree className="h-4 w-4" />
+                <FolderTree aria-hidden="true" className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -101,14 +107,14 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin mb-2" />
+              <Loader2 aria-hidden="true" className="h-8 w-8 animate-spin mb-2" />
               <p>Loading files...</p>
             </div>
           ) : filteredFiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               {searchQuery ? (
                 <>
-                  <Search className="h-8 w-8 mb-2" />
+                  <Search aria-hidden="true" className="h-8 w-8 mb-2" />
                   <p>No files match your search</p>
                   <Button
                     variant="link"
@@ -121,7 +127,7 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
                 </>
               ) : (
                 <>
-                  <FileIcon className="h-8 w-8 mb-2" />
+                  <FileIcon aria-hidden="true" className="h-8 w-8 mb-2" />
                   <p>No files yet</p>
                   <p className="text-sm">Upload a file to get started</p>
                 </>

@@ -81,7 +81,7 @@ export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivit
         <Button variant="ghost" size="sm" asChild>
           <Link href="/finances/invoices">
             View All
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
       </CardHeader>
@@ -100,7 +100,7 @@ export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivit
                   className="flex items-center gap-4 py-3 border-b last:border-0 hover:bg-accent/50 px-2 -mx-2 rounded-sm transition-colors"
                 >
                   <div className={`rounded-full p-2 ${iconColor}`}>
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.title}</p>

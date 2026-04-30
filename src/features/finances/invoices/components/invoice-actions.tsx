@@ -66,16 +66,15 @@ export function InvoiceActions({
         size="icon"
         className="h-8 w-8 p-0"
         onClick={() => onDownloadPdf(invoice.id)}
+        aria-label="Download invoice"
         title="Download invoice"
       >
-        <span className="sr-only">Download invoice</span>
-        <FileDown className="h-4 w-4" />
+        <FileDown aria-hidden="true" className="h-4 w-4" />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="h-8 w-8 p-0" variant="secondary">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
+          <Button className="h-8 w-8 p-0" variant="secondary" aria-label="Open actions menu">
+            <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -83,17 +82,17 @@ export function InvoiceActions({
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href={invoiceUrl}>
-              <Eye className="h-4 w-4" />
+              <Eye aria-hidden="true" className="h-4 w-4" />
               View invoice
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onDuplicate(invoice.id)}>
-            <Copy className="h-4 w-4" />
+            <Copy aria-hidden="true" className="h-4 w-4" />
             Duplicate invoice
           </DropdownMenuItem>
           {invoice.status === InvoiceStatusSchema.enum.DRAFT && (
             <DropdownMenuItem onClick={() => onMarkAsPending(invoice.id, invoice.invoiceNumber)}>
-              <Hourglass className="h-4 w-4" />
+              <Hourglass aria-hidden="true" className="h-4 w-4" />
               Mark as pending
             </DropdownMenuItem>
           )}
@@ -102,11 +101,11 @@ export function InvoiceActions({
             invoice.status === InvoiceStatusSchema.enum.PARTIALLY_PAID) && (
             <>
               <DropdownMenuItem onClick={() => onRecordPayment(invoice.id, invoice.invoiceNumber)}>
-                <CreditCard className="h-4 w-4" />
+                <CreditCard aria-hidden="true" className="h-4 w-4" />
                 Record payment
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onSendReminder(invoice.id)}>
-                <BellRing className="h-4 w-4" />
+                <BellRing aria-hidden="true" className="h-4 w-4" />
                 Send reminder
               </DropdownMenuItem>
               <>
@@ -114,7 +113,7 @@ export function InvoiceActions({
 
                 {invoice.status === InvoiceStatusSchema.enum.PENDING ? (
                   <DropdownMenuItem onClick={() => onMarkAsDraft(invoice.id)}>
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw aria-hidden="true" className="h-4 w-4" />
                     Revert to draft
                   </DropdownMenuItem>
                 ) : null}
@@ -123,7 +122,7 @@ export function InvoiceActions({
                   onClick={() => onCancel(invoice.id, invoice.invoiceNumber)}
                   className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
                 >
-                  <Ban className="h-4 w-4" />
+                  <Ban aria-hidden="true" className="h-4 w-4" />
                   Cancel invoice
                 </DropdownMenuItem>
               </>
@@ -132,7 +131,7 @@ export function InvoiceActions({
 
           {invoice.status === InvoiceStatusSchema.enum.PAID && onSendReceipt ? (
             <DropdownMenuItem onClick={() => onSendReceipt(invoice.id)}>
-              <Receipt className="h-4 w-4" />
+              <Receipt aria-hidden="true" className="h-4 w-4" />
               Send receipt
             </DropdownMenuItem>
           ) : null}
@@ -144,7 +143,7 @@ export function InvoiceActions({
                 onClick={() => onDelete(invoice.id, invoice.invoiceNumber)}
                 className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
               >
-                <Trash className="h-4 w-4" />
+                <Trash aria-hidden="true" className="h-4 w-4" />
                 Delete invoice
               </DropdownMenuItem>
             </>

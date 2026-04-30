@@ -1,5 +1,5 @@
-import { Heading, Hr, Section, Text, Row, Column } from '@react-email/components';
 import * as React from 'react';
+import { Heading, Hr, Section, Text, Row, Column } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -12,14 +12,14 @@ type LoginNotificationEmailProps = {
   ipAddress: string | null;
 };
 
-export const LoginNotificationEmailContent = ({
+function LoginNotificationEmailContent({
   userName,
   loginAt,
   deviceName,
   browserName,
   location,
   ipAddress,
-}: LoginNotificationEmailProps) => {
+}: LoginNotificationEmailProps): React.ReactElement {
   const formattedDate = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
     month: 'long',
@@ -46,24 +46,28 @@ export const LoginNotificationEmailContent = ({
           <Column style={{ width: '140px', color: '#6b7280', fontSize: '14px' }}>Time</Column>
           <Column style={{ fontSize: '14px' }}>{formattedDate}</Column>
         </Row>
+
         {deviceName ? (
           <Row style={{ marginBottom: '8px' }}>
             <Column style={{ width: '140px', color: '#6b7280', fontSize: '14px' }}>Device</Column>
             <Column style={{ fontSize: '14px' }}>{deviceName}</Column>
           </Row>
         ) : null}
+
         {browserName ? (
           <Row style={{ marginBottom: '8px' }}>
             <Column style={{ width: '140px', color: '#6b7280', fontSize: '14px' }}>Browser</Column>
             <Column style={{ fontSize: '14px' }}>{browserName}</Column>
           </Row>
         ) : null}
+
         {location ? (
           <Row style={{ marginBottom: '8px' }}>
             <Column style={{ width: '140px', color: '#6b7280', fontSize: '14px' }}>Location</Column>
             <Column style={{ fontSize: '14px' }}>{location}</Column>
           </Row>
         ) : null}
+
         {ipAddress ? (
           <Row style={{ marginBottom: '8px' }}>
             <Column style={{ width: '140px', color: '#6b7280', fontSize: '14px' }}>
@@ -84,9 +88,9 @@ export const LoginNotificationEmailContent = ({
       <Text style={styles.footer}>The Team</Text>
     </>
   );
-};
+}
 
-export function LoginNotificationEmail(props: LoginNotificationEmailProps): React.ReactElement {
+function LoginNotificationEmail(props: LoginNotificationEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail previewText="New sign-in to your account">
       <LoginNotificationEmailContent {...props} />

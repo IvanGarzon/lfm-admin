@@ -57,11 +57,11 @@ export function RecipesView({ initialData, searchParams }: RecipesViewProps) {
             onClick={() => setShowGroupDialog(true)}
             className="w-full sm:w-auto"
           >
-            <Layers className="h-4 w-4 mr-2" />
+            <Layers aria-hidden="true" className="h-4 w-4" />
             Create Group
           </Button>
           <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus aria-hidden="true" className="h-4 w-4" />
             New Recipe
           </Button>
         </Box>

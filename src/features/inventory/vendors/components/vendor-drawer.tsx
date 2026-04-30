@@ -10,9 +10,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { VendorForm } from '@/features/inventory/vendors/components/vendor-form';
 import { VendorDrawerSkeleton } from '@/features/inventory/vendors/components/vendor-drawer-skeleton';
 import { useQueryString } from '@/hooks/use-query-string';
@@ -105,6 +107,11 @@ export function VendorDrawer({ id, open: openProp, onClose }: VendorDrawerProps)
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+        <VisuallyHidden>
+          <DrawerDescription>
+            {mode === 'create' ? 'Add a new vendor to your system.' : 'Edit an existing vendor.'}
+          </DrawerDescription>
+        </VisuallyHidden>
         {mode === 'update' && isLoading ? (
           <VendorDrawerSkeleton />
         ) : isError ? (

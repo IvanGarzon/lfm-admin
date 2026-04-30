@@ -79,10 +79,10 @@ export function DataTableFacetedFilter<TData, TValue>({
               onClick={onReset}
               className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <XCircle className="mr-2 h-4 w-4" />
+              <XCircle className="h-4 w-4" />
             </Box>
           ) : (
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="h-4 w-4" />
           )}
           {title}
           {selectedValues?.size > 0 ? (
@@ -136,10 +136,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <CheckIcon className="h-4 w-4" aria-hidden="true" />
                     </Box>
                     {option.icon ? (
-                      <option.icon
-                        className="mr-2 h-4 w-4 text-muted-foreground"
-                        aria-hidden="true"
-                      />
+                      <option.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     ) : null}
                     <span className="truncate">{option.label}</span>
                     {option.count ? (

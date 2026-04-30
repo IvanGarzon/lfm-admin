@@ -34,7 +34,7 @@ export function InvoiceTaxDiscountFields({ control, isLocked }: InvoiceTaxDiscou
               <InputGroup>
                 <InputGroupAddon align="inline-start">
                   <InputGroupText>
-                    <Percent className="h-4 w-4" />
+                    <Percent className="h-4 w-4" aria-hidden="true" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
@@ -69,7 +69,7 @@ export function InvoiceTaxDiscountFields({ control, isLocked }: InvoiceTaxDiscou
               <InputGroup>
                 <InputGroupAddon align="inline-start">
                   <InputGroupText>
-                    <DollarSign className="h-4 w-4" />
+                    <DollarSign className="h-4 w-4" aria-hidden="true" />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput

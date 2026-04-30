@@ -195,7 +195,7 @@ export function RecordPaymentDialog({
                             !field.value && 'text-muted-foreground',
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                           {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>

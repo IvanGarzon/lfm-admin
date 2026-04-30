@@ -73,14 +73,14 @@ export function FileFolderView({
             >
               <div className="flex items-center gap-2">
                 {isResourceTypeExpanded ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                 )}
                 {isResourceTypeExpanded ? (
-                  <FolderOpen className="h-5 w-5 text-primary" />
+                  <FolderOpen aria-hidden="true" className="h-5 w-5 text-primary" />
                 ) : (
-                  <Folder className="h-5 w-5 text-primary" />
+                  <Folder aria-hidden="true" className="h-5 w-5 text-primary" />
                 )}
                 <span className="font-semibold capitalize">{resourceType}</span>
                 <span className="text-sm text-muted-foreground">
@@ -115,14 +115,20 @@ export function FileFolderView({
                       >
                         <div className="flex items-center gap-2">
                           {isResourceIdExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            <ChevronDown
+                              aria-hidden="true"
+                              className="h-4 w-4 text-muted-foreground"
+                            />
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            <ChevronRight
+                              aria-hidden="true"
+                              className="h-4 w-4 text-muted-foreground"
+                            />
                           )}
                           {isResourceIdExpanded ? (
-                            <FolderOpen className="h-4 w-4 text-primary" />
+                            <FolderOpen aria-hidden="true" className="h-4 w-4 text-primary" />
                           ) : (
-                            <Folder className="h-4 w-4 text-primary" />
+                            <Folder aria-hidden="true" className="h-4 w-4 text-primary" />
                           )}
                           <span className="font-medium">{resourceId}</span>
                           <span className="text-sm text-muted-foreground">
@@ -154,14 +160,23 @@ export function FileFolderView({
                                 >
                                   <div className="flex items-center gap-2">
                                     {isSubPathExpanded ? (
-                                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                      <ChevronDown
+                                        aria-hidden="true"
+                                        className="h-3 w-3 text-muted-foreground"
+                                      />
                                     ) : (
-                                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                                      <ChevronRight
+                                        aria-hidden="true"
+                                        className="h-3 w-3 text-muted-foreground"
+                                      />
                                     )}
                                     {isSubPathExpanded ? (
-                                      <FolderOpen className="h-4 w-4 text-primary" />
+                                      <FolderOpen
+                                        aria-hidden="true"
+                                        className="h-4 w-4 text-primary"
+                                      />
                                     ) : (
-                                      <Folder className="h-4 w-4 text-primary" />
+                                      <Folder aria-hidden="true" className="h-4 w-4 text-primary" />
                                     )}
                                     <span className="text-sm font-medium">
                                       {subPath === '_root' ? '(root)' : subPath}
@@ -184,7 +199,10 @@ export function FileFolderView({
                                         className="flex items-center justify-between p-3 pl-24 border-t hover:bg-accent transition-colors"
                                       >
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                                          <FileIcon className="h-4 w-4 text-primary shrink-0" />
+                                          <FileIcon
+                                            aria-hidden="true"
+                                            className="h-4 w-4 text-primary shrink-0"
+                                          />
                                           <div className="min-w-0 flex-1">
                                             <p className="font-medium truncate text-sm">
                                               {file.fileName}
@@ -207,15 +225,17 @@ export function FileFolderView({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => onDownload(file.key, file.fileName)}
+                                            aria-label={`Download ${file.fileName}`}
                                           >
-                                            <Download className="h-4 w-4" />
+                                            <Download aria-hidden="true" className="h-4 w-4" />
                                           </Button>
                                           <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => onDelete(file.key, file.fileName)}
+                                            aria-label={`Delete ${file.fileName}`}
                                           >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 aria-hidden="true" className="h-4 w-4" />
                                           </Button>
                                         </div>
                                       </div>

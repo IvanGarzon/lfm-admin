@@ -143,7 +143,7 @@ export function TransactionDrawer({
                 </DrawerTitle>
                 {mode === 'edit' && hasUnsavedChanges ? (
                   <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
-                    <AlertCircle className="h-3 w-3" />
+                    <AlertCircle className="h-3 w-3" aria-hidden="true" />
                     Unsaved changes
                   </span>
                 ) : null}
@@ -169,7 +169,7 @@ export function TransactionDrawer({
               <Box className="overflow-y-auto w-full">
                 {isLoading && mode === 'edit' ? (
                   <Box className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
                     <span className="ml-2 text-sm text-muted-foreground">
                       Loading transaction...
                     </span>

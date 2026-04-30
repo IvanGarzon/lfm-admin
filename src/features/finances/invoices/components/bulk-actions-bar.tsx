@@ -47,7 +47,7 @@ export function BulkActionsBar<TData>({
               )
             }
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
+            <CheckCircle aria-hidden="true" className="h-4 w-4" />
             Mark as Pending
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -58,7 +58,7 @@ export function BulkActionsBar<TData>({
               )
             }
           >
-            <XCircle className="mr-2 h-4 w-4" />
+            <XCircle aria-hidden="true" className="h-4 w-4" />
             Mark as Cancelled
           </DropdownMenuItem>
         </DropdownMenuContent>

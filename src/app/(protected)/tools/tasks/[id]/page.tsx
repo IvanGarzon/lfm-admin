@@ -80,7 +80,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             />
           </Box>
           <Button onClick={() => executeMutate(task.id)} disabled={!task.isEnabled || isExecuting}>
-            <Play className="h-4 w-4 mr-2" />
+            <Play className="h-4 w-4" />
             Run Now
           </Button>
         </Box>

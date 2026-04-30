@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { BaseTemplateEmail } from './base-template';
@@ -18,7 +18,7 @@ interface ReceiptEmailProps {
   pdfUrl?: string;
 }
 
-export function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
+function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): React.ReactElement {
   const { invoiceNumber, receiptNumber, customerName, amount, currency, paidDate, paymentMethod } =
     receiptData;
 
@@ -79,7 +79,7 @@ export function ReceiptContent({ receiptData, pdfUrl }: ReceiptEmailProps): Reac
   );
 }
 
-export function ReceiptEmail(props: ReceiptEmailProps): React.ReactElement {
+function ReceiptEmail(props: ReceiptEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail
       previewText={`Payment Receipt ${props.receiptData.receiptNumber || props.receiptData.invoiceNumber}`}

@@ -61,7 +61,7 @@ export function QuoteItemColorPaletteDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
+            <Palette aria-hidden="true" className="h-5 w-5" />
             Color Palette
           </DialogTitle>
           <DialogDescription>
@@ -90,7 +90,7 @@ export function QuoteItemColorPaletteDialog({
           <Button type="button" onClick={handleSaveColors} disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
                 Saving...
               </>
             ) : (

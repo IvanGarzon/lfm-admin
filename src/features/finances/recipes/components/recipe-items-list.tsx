@@ -94,7 +94,7 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
       {/* Section Header */}
       <Box className="flex items-center gap-3 mb-4">
         <Box className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-          <Flower2 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          <Flower2 aria-hidden="true" className="h-5 w-5 text-amber-600 dark:text-amber-400" />
         </Box>
         <Box className="flex-1">
           <h3 className="text-base font-semibold">Items</h3>
@@ -171,7 +171,7 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
             disabled={isLocked}
             className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
             Add Item
           </Button>
         </Box>

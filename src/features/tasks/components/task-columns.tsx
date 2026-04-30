@@ -27,14 +27,14 @@ const getStatusBadge = (status?: string) => {
 
 const getScheduleTypeIcon = (scheduleType: ScheduleType) => {
   if (scheduleType === ScheduleTypeSchema.enum.CRON) {
-    return <Clock className="h-4 w-4" />;
+    return <Clock className="h-4 w-4" aria-hidden="true" />;
   }
 
   if (scheduleType === ScheduleTypeSchema.enum.EVENT) {
-    return <Zap className="h-4 w-4" />;
+    return <Zap className="h-4 w-4" aria-hidden="true" />;
   }
 
-  return <Repeat className="h-4 w-4" />;
+  return <Repeat className="h-4 w-4" aria-hidden="true" />;
 };
 
 export function createTaskColumns(
@@ -132,12 +132,12 @@ export function createTaskColumns(
             disabled={
               !row.original.isEnabled || (isExecuting && executingTaskId === row.original.id)
             }
-            title="Run task"
+            aria-label="Run task"
           >
             {isExecuting && executingTaskId === row.original.id ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
-              <Play className="h-4 w-4" />
+              <Play className="h-4 w-4" aria-hidden="true" />
             )}
           </Button>
           <Button
@@ -145,9 +145,9 @@ export function createTaskColumns(
             size="icon"
             className="h-8 w-8 p-0"
             onClick={() => onViewExecutions(row.original.id, row.original.functionName)}
-            title="View executions"
+            aria-label="View executions"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       ),

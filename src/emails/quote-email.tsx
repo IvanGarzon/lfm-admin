@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -16,7 +16,7 @@ interface QuoteEmailProps {
   pdfUrl?: string;
 }
 
-export const QuoteContent = ({ quoteData, pdfUrl }: QuoteEmailProps) => {
+function QuoteContent({ quoteData, pdfUrl }: QuoteEmailProps): React.ReactElement {
   const { quoteNumber, customerName, amount, currency, issuedDate, validUntil, itemCount } =
     quoteData;
 
@@ -94,9 +94,9 @@ export const QuoteContent = ({ quoteData, pdfUrl }: QuoteEmailProps) => {
       <Text style={styles.footer}>We look forward to working with you!</Text>
     </>
   );
-};
+}
 
-export function QuoteEmail(props: QuoteEmailProps): React.ReactElement {
+function QuoteEmail(props: QuoteEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail
       previewText={`Quote ${props.quoteData.quoteNumber} - Total: ${props.quoteData.amount}`}

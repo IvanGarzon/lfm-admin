@@ -110,7 +110,7 @@ export function ConvertToInvoiceDialog({
                             !field.value && 'text-muted-foreground',
                           )}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          <CalendarIcon aria-hidden="true" className="h-4 w-4" />
                           {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
@@ -137,7 +137,7 @@ export function ConvertToInvoiceDialog({
                     <InputGroup>
                       <InputGroupAddon align="inline-start">
                         <InputGroupText>
-                          <Percent className="h-4 w-4" />
+                          <Percent aria-hidden="true" className="h-4 w-4" />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
@@ -173,7 +173,7 @@ export function ConvertToInvoiceDialog({
                     <InputGroup>
                       <InputGroupAddon align="inline-start">
                         <InputGroupText>
-                          <DollarSign className="h-4 w-4" />
+                          <DollarSign aria-hidden="true" className="h-4 w-4" />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput

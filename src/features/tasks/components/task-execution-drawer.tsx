@@ -52,13 +52,14 @@ export function TaskExecutionDrawer({
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
+      <DrawerContent className="overflow-x-hidden pb-0!">
         {isLoading ? <TaskDrawerSkeleton /> : null}
 
         {isError ? (
           <Box className="p-6 text-destructive">
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
+              <DrawerDescription>Could not load task execution history.</DrawerDescription>
             </DrawerHeader>
             <p className="mt-4">Could not load execution history: {error?.message}</p>
           </Box>
@@ -75,7 +76,7 @@ export function TaskExecutionDrawer({
               </Box>
             </DrawerHeader>
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent">
+            <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-muted/30">
               <Box className="p-6">
                 {!task.executions || task.executions.length === 0 ? (
                   <Box className="py-8 text-center text-muted-foreground">

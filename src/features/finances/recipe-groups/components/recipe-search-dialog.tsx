@@ -90,7 +90,10 @@ export function RecipeSearchDialog({
         </DialogHeader>
 
         <Box className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          />
           <Input
             placeholder="Search recipes..."
             value={search}
@@ -106,7 +109,10 @@ export function RecipeSearchDialog({
             </Box>
           ) : filteredRecipes.length === 0 ? (
             <Box className="flex flex-col items-center justify-center h-full text-center p-8">
-              <ChefHat className="h-12 w-12 text-muted-foreground opacity-50 mb-2" />
+              <ChefHat
+                aria-hidden="true"
+                className="h-12 w-12 text-muted-foreground opacity-50 mb-2"
+              />
               <p className="text-sm text-muted-foreground">
                 {search.trim() ? 'No recipes found matching your search' : 'No recipes available'}
               </p>

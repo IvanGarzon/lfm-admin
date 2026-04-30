@@ -95,7 +95,7 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
           description="Add your first invoice to start managing your invoices."
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus aria-hidden="true" className="h-4 w-4" />
               Add Invoice
             </Button>
           }
@@ -113,7 +113,7 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
               </TabsList>
               <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus aria-hidden="true" className="h-4 w-4" />
                 New Invoice
               </Button>
             </Box>

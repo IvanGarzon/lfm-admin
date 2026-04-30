@@ -42,7 +42,7 @@ export const createOrganizationColumns = (
     cell: ({ row }) => (
       <Box className="flex items-center gap-3">
         <Box className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-          <Building2 className="h-4 w-4" />
+          <Building2 className="h-4 w-4" aria-hidden="true" />
         </Box>
         <Box className="flex flex-col">
           <Box className="font-medium">{row.original.name}</Box>

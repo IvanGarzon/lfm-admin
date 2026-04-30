@@ -21,15 +21,15 @@ interface TaskExecutionListProps {
 const getStatusIcon = (status: ExecutionStatus) => {
   switch (status) {
     case 'COMPLETED':
-      return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      return <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />;
     case 'FAILED':
-      return <XCircle className="h-4 w-4 text-red-600" />;
+      return <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />;
     case 'RUNNING':
-      return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
+      return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" aria-hidden="true" />;
     case 'TIMEOUT':
-      return <Clock className="h-4 w-4 text-orange-600" />;
+      return <Clock className="h-4 w-4 text-orange-600" aria-hidden="true" />;
     default:
-      return <AlertCircle className="h-4 w-4 text-gray-600" />;
+      return <AlertCircle className="h-4 w-4 text-gray-600" aria-hidden="true" />;
   }
 };
 

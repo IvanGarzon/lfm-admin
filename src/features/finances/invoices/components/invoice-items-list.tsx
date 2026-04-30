@@ -44,10 +44,10 @@ export function InvoiceItemsList({
         <h3 className="text-base font-semibold">Items details</h3>
       </Box>
 
-      <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <Box className="border border-border rounded-lg overflow-hidden">
         {/* Table Header */}
-        <Box className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Box className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        <Box className="bg-muted/50 px-4 py-3 border-b border-border">
+          <Box className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             <Box className="w-4 shrink-0"></Box>
             <Box className="flex-1 min-w-0">Item</Box>
             <Box className="w-18 shrink-0">QTY</Box>
@@ -97,16 +97,16 @@ export function InvoiceItemsList({
         </Reorder.Group>
 
         {/* Add Item Button */}
-        <Box className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        <Box className="px-4 py-3 bg-card border-t border-border">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleAddItem}
             disabled={isLocked}
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer"
+            className="text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
             Add Item
           </Button>
         </Box>

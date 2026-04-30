@@ -30,7 +30,7 @@ export function PriceListActions({
       <DropdownMenuTrigger asChild>
         <Button variant="secondary" className="h-8 w-8 p-0">
           <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
+          <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -38,12 +38,12 @@ export function PriceListActions({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href}>
-            <Pencil className="h-4 w-4" />
+            <Pencil aria-hidden="true" className="h-4 w-4" />
             Edit item
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onViewCostHistory(item.id, item.name)}>
-          <History className="h-4 w-4" />
+          <History aria-hidden="true" className="h-4 w-4" />
           Cost history
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -51,7 +51,7 @@ export function PriceListActions({
           className="text-destructive focus:text-destructive"
           onClick={() => onDelete(item.id, item.name)}
         >
-          <Trash className="h-4 w-4" />
+          <Trash aria-hidden="true" className="h-4 w-4" />
           Delete item
         </DropdownMenuItem>
       </DropdownMenuContent>

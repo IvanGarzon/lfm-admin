@@ -8,23 +8,26 @@ import React from 'react';
 import { render } from '@react-email/render';
 
 // Import all email templates
-import { InvoiceEmail } from './invoice-email';
-import { ReceiptEmail } from './receipt-email';
-import { ReminderEmail } from './reminder-email';
-import { QuoteEmail } from './quote-email';
-import { QuoteFollowUpEmail } from './quote-followup-email';
-import { InvitationEmail } from './invitation-email';
-import { PasswordResetEmail } from './password-reset-email';
-import { LoginNotificationEmail } from './login-notification-email';
-import { OtpEmail } from './otp-email';
+import InvoiceEmail from './invoice-email';
+import ReceiptEmail from './receipt-email';
+import ReminderEmail from './reminder-email';
+import QuoteEmail from './quote-email';
+import QuoteFollowUpEmail from './quote-followup-email';
+import InvitationEmail from './invitation-email';
+import PasswordResetEmail from './password-reset-email';
+import LoginNotificationEmail from './login-notification-email';
+import OtpEmail from './otp-email';
 
 // Export types for template props
-export type { InvoiceEmail as InvoiceEmailComponent } from './invoice-email';
-export type { ReceiptEmail as ReceiptEmailComponent } from './receipt-email';
-export type { ReminderEmail as ReminderEmailComponent } from './reminder-email';
-export type { QuoteEmail as QuoteEmailComponent } from './quote-email';
-export type { QuoteFollowUpEmail as QuoteFollowUpEmailComponent } from './quote-followup-email';
-export type { InvitationEmail as InvitationEmailComponent } from './invitation-email';
+export type InvoiceEmailComponent = typeof InvoiceEmail;
+export type ReceiptEmailComponent = typeof ReceiptEmail;
+export type ReminderEmailComponent = typeof ReminderEmail;
+export type QuoteEmailComponent = typeof QuoteEmail;
+export type QuoteFollowUpEmailComponent = typeof QuoteFollowUpEmail;
+export type InvitationEmailComponent = typeof InvitationEmail;
+export type PasswordResetEmailComponent = typeof PasswordResetEmail;
+export type LoginNotificationEmailComponent = typeof LoginNotificationEmail;
+export type OtpEmailComponent = typeof OtpEmail;
 
 /**
  * Registry of all available email templates

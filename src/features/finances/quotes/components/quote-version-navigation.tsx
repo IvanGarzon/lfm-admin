@@ -37,9 +37,9 @@ export function QuoteVersionNavigation({
         className="h-6 w-6"
         onClick={() => previousVersionId && onNavigateToVersion(previousVersionId)}
         disabled={!hasPreviousVersion || hasUnsavedChanges}
-        title="Previous version"
+        aria-label="Previous version"
       >
-        <ChevronLeft className="h-3 w-3" />
+        <ChevronLeft className="h-3 w-3" aria-hidden="true" />
       </Button>
       <span className="text-xs text-muted-foreground px-1">
         {currentVersionIndex + 1} / {versions.length}
@@ -50,9 +50,9 @@ export function QuoteVersionNavigation({
         className="h-6 w-6"
         onClick={() => nextVersionId && onNavigateToVersion(nextVersionId)}
         disabled={!hasNextVersion || hasUnsavedChanges}
-        title="Next version"
+        aria-label="Next version"
       >
-        <ChevronRight className="h-3 w-3" />
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
       </Button>
     </Box>
   );

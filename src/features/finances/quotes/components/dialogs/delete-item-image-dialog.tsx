@@ -42,11 +42,11 @@ export function DeleteItemImageDialog({
               onConfirm();
             }}
             disabled={isPending}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-destructive hover:bg-destructive/90"
           >
             {isPending ? (
               <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
+                <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
                 Deleting...
               </>
             ) : (

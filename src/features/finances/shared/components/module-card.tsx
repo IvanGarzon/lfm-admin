@@ -69,7 +69,7 @@ function ModuleCard({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div className="flex items-center gap-2">
           <div className={cn('rounded-lg bg-primary/10 p-2', iconColor)}>
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
           </div>
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
@@ -87,9 +87,9 @@ function ModuleCard({
                 )}
               >
                 {isPositiveGrowth ? (
-                  <TrendingUp className="h-3 w-3" />
+                  <TrendingUp className="h-3 w-3" aria-hidden="true" />
                 ) : (
-                  <TrendingDown className="h-3 w-3" />
+                  <TrendingDown className="h-3 w-3" aria-hidden="true" />
                 )}
                 <span>{Math.abs(primaryMetric.growth ?? 0).toFixed(1)}%</span>
               </div>
@@ -132,7 +132,10 @@ function ModuleCard({
         <Link href={href} className="block">
           <Button variant="outline" className="w-full group">
             View Analytics
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight
+              className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1"
+              aria-hidden="true"
+            />
           </Button>
         </Link>
       </CardContent>

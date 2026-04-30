@@ -73,7 +73,7 @@ export function TransactionAttachments({
     <Box className="space-y-3">
       <Box className="flex items-center justify-between">
         <Box className="flex items-center gap-2">
-          <Paperclip className="h-4 w-4 text-muted-foreground" />
+          <Paperclip className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <span className="text-sm font-medium">Attachments</span>
           {attachments.length > 0 ? (
             <Badge variant="secondary" className="text-xs">
@@ -92,12 +92,12 @@ export function TransactionAttachments({
           >
             {uploadMutation.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 Uploading...
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4" aria-hidden="true" />
                 Upload
               </>
             )}
@@ -126,9 +126,9 @@ export function TransactionAttachments({
             const isDeleting =
               deleteMutation.isPending && deleteMutation.variables?.attachmentId === attachment.id;
             const icon = isImageFile(attachment.mimeType) ? (
-              <Image className="h-4 w-4" />
+              <Image className="h-4 w-4" aria-hidden="true" />
             ) : (
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4 w-4" aria-hidden="true" />
             );
 
             return (
@@ -166,11 +166,12 @@ export function TransactionAttachments({
                       onClick={() => handleDelete(attachment.id)}
                       disabled={disabled || isDeleting}
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      aria-label="Delete attachment"
                     >
                       {isDeleting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                       ) : (
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       )}
                     </Button>
                   )}

@@ -9,9 +9,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -127,6 +129,11 @@ export function RecipeDrawer({
         className="overflow-x-hidden dark:bg-gray-925 pb-0!"
         style={{ maxWidth: '1100px' }}
       >
+        <VisuallyHidden>
+          <DrawerDescription>
+            {mode === 'create' ? 'Create a new recipe' : 'Edit recipe details'}
+          </DrawerDescription>
+        </VisuallyHidden>
         {isLoading ? <RecipeDrawerSkeleton /> : null}
 
         {isError ? (
@@ -145,7 +152,7 @@ export function RecipeDrawer({
             <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900 shadow-sm">
               <Box className="mt-1 flex flex-row items-center gap-4 flex-1 text-wrap break-all min-w-0">
                 <Box className="size-12 flex items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 shadow-inner">
-                  <Calculator className="size-6" />
+                  <Calculator aria-hidden="true" className="size-6" />
                 </Box>
                 <Box className="flex flex-col min-w-0">
                   <Box className="flex items-center gap-2 flex-wrap">
@@ -154,7 +161,7 @@ export function RecipeDrawer({
                     </DrawerTitle>
                     {isEditing && hasUnsavedChanges ? (
                       <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
-                        <AlertCircle className="h-3 w-3" />
+                        <AlertCircle aria-hidden="true" className="h-3 w-3" />
                         Unsaved changes
                       </span>
                     ) : null}
@@ -180,7 +187,7 @@ export function RecipeDrawer({
                   size="sm"
                   disabled={createRecipe.isPending || updateRecipe.isPending || !hasUnsavedChanges}
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save aria-hidden="true" className="h-4 w-4 mr-1" />
                   {mode === 'create' ? 'Save' : 'Update'}
                 </Button>
 
@@ -190,9 +197,10 @@ export function RecipeDrawer({
                       <Button
                         variant="outline"
                         size="icon"
+                        aria-label="More actions"
                         className="h-9 w-9 shadow-sm border-gray-200 dark:border-gray-800"
                       >
-                        <MoreHorizontal className="size-4" />
+                        <MoreHorizontal aria-hidden="true" className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
@@ -200,7 +208,7 @@ export function RecipeDrawer({
                         onClick={handleDelete}
                         className="text-destructive focus:text-destructive cursor-pointer"
                       >
-                        <Trash className="h-4 w-4" />
+                        <Trash aria-hidden="true" className="h-4 w-4" />
                         Delete recipe
                       </DropdownMenuItem>
                     </DropdownMenuContent>

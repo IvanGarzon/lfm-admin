@@ -44,7 +44,7 @@ export function PriceListView({ initialData, searchParams }: PriceListViewProps)
           </p>
         </Box>
         <Button onClick={handleShowCreateDrawer}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Item
         </Button>
       </Box>

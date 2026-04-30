@@ -43,7 +43,7 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
           <p className="text-muted-foreground">Manage your suppliers and vendors</p>
         </Box>
         <Button onClick={handleShowCreateDrawer}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           Add Vendor
         </Button>
       </Box>
@@ -61,11 +61,11 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
           </Box>
           <Box className="rounded-lg border bg-card p-4">
             <Box className="text-sm font-medium text-muted-foreground">Inactive</Box>
-            <Box className="text-2xl font-bold text-gray-600">{stats.inactive}</Box>
+            <Box className="text-2xl font-bold text-muted-foreground">{stats.inactive}</Box>
           </Box>
           <Box className="rounded-lg border bg-card p-4">
             <Box className="text-sm font-medium text-muted-foreground">Suspended</Box>
-            <Box className="text-2xl font-bold text-red-600">{stats.suspended}</Box>
+            <Box className="text-2xl font-bold text-destructive">{stats.suspended}</Box>
           </Box>
         </Box>
       ) : null}

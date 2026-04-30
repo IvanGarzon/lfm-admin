@@ -254,7 +254,7 @@ export const createInvoiceColumns = (
       // Determine the date color based on urgency and status
       const dateColorClass =
         invoice.status === InvoiceStatusSchema.enum.PENDING && urgency !== 'critical'
-          ? 'text-gray-600'
+          ? 'text-muted-foreground'
           : colorClass;
 
       return (
@@ -263,11 +263,13 @@ export const createInvoiceColumns = (
             <span className={`${dateColorClass} ${statusText ? 'font-semibold' : ''}`}>
               {format(dueDate, 'MMM dd, yyyy')}
             </span>
-            {showReminder ? <Bell className="h-3 w-3 text-blue-500 animate-pulse" /> : null}
+            {showReminder ? (
+              <Bell aria-hidden="true" className="h-3 w-3 text-primary animate-pulse" />
+            ) : null}
           </Box>
           {statusText ? (
             <div className={`flex items-center text-xs ${colorClass}`}>
-              {Icon ? <Icon className="mr-1 h-3 w-3" /> : null}
+              {Icon ? <Icon aria-hidden="true" className="mr-1 h-3 w-3" /> : null}
               <span>{statusText}</span>
             </div>
           ) : null}

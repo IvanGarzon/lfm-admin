@@ -139,9 +139,7 @@ export function QuoteItemAttachmentsDialog({
             {/* Upload Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                  Upload Images
-                </h3>
+                <h3 className="text-sm font-medium text-foreground">Upload Images</h3>
                 <label htmlFor="item-file-upload">
                   <Button
                     type="button"
@@ -152,12 +150,12 @@ export function QuoteItemAttachmentsDialog({
                   >
                     {uploadMutation.isPending ? (
                       <>
-                        <Loader2 className="mr-2 size-4 animate-spin" />
+                        <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
                         Uploading...
                       </>
                     ) : (
                       <>
-                        <Upload className="mr-2 size-4" />
+                        <Upload aria-hidden="true" className="mr-2 size-4" />
                         Upload Image
                       </>
                     )}
@@ -176,11 +174,7 @@ export function QuoteItemAttachmentsDialog({
               <div
                 className={`
                   rounded-lg border-2 border-dashed p-8 text-center transition-colors
-                  ${
-                    isDragging
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
-                      : 'border-gray-300 dark:border-gray-700'
-                  }
+                  ${isDragging ? 'border-primary bg-primary/5' : 'border-border'}
                   ${uploadMutation.isPending ? 'pointer-events-none opacity-50' : ''}
                 `}
                 onDragOver={handleDragOver}
@@ -188,14 +182,15 @@ export function QuoteItemAttachmentsDialog({
                 onDrop={handleDrop}
               >
                 <Upload
+                  aria-hidden="true"
                   className={`mx-auto size-8 ${
-                    isDragging ? 'text-blue-500' : 'text-gray-400 dark:text-gray-600'
+                    isDragging ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 />
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-2 text-sm text-muted-foreground">
                   Drag and drop an image here, or click Upload Image
                 </p>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Supported: {acceptedFileTypesLabel} (Max 5MB)
                 </p>
               </div>
@@ -204,29 +199,29 @@ export function QuoteItemAttachmentsDialog({
             {/* Images List */}
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="size-6 animate-spin text-gray-400" />
+                <Loader2 aria-hidden="true" className="size-6 animate-spin text-muted-foreground" />
               </div>
             ) : attachments && attachments.length > 0 ? (
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                <h3 className="text-sm font-medium text-foreground">
                   Uploaded Images ({attachments.length})
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {attachments.map((attachment) => (
                     <div
                       key={attachment.id}
-                      className="relative group rounded-lg border border-gray-200 p-3 dark:border-gray-800"
+                      className="relative group rounded-lg border border-border p-3"
                     >
                       <div className="flex items-start gap-3">
                         <div className="shrink-0">
-                          <ImageIcon className="size-5 text-blue-500" />
+                          <ImageIcon aria-hidden="true" className="size-5 text-primary" />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
+                          <p className="text-sm font-medium text-foreground truncate">
                             {attachment.fileName}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {formatFileSize(attachment.fileSize)} •{' '}
                             {format(new Date(attachment.uploadedAt), 'MMM d, yyyy')}
                           </p>
@@ -242,7 +237,7 @@ export function QuoteItemAttachmentsDialog({
                           disabled={downloadMutation.isPending}
                           className="flex-1"
                         >
-                          <Download className="mr-1 size-3" />
+                          <Download aria-hidden="true" className="mr-1 size-3" />
                           <span className="text-xs">Download</span>
                         </Button>
 
@@ -252,9 +247,9 @@ export function QuoteItemAttachmentsDialog({
                           size="sm"
                           onClick={() => setDeleteAttachmentId(attachment.id)}
                           disabled={deleteMutation.isPending}
-                          className="text-red-500 hover:text-red-600"
+                          className="text-destructive hover:text-destructive/80"
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 aria-hidden="true" className="size-3" />
                           <span className="sr-only">Delete</span>
                         </Button>
                       </div>
@@ -263,7 +258,7 @@ export function QuoteItemAttachmentsDialog({
                 </div>
               </div>
             ) : (
-              <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-500">
+              <div className="py-8 text-center text-sm text-muted-foreground">
                 No images uploaded yet
               </div>
             )}
@@ -288,11 +283,11 @@ export function QuoteItemAttachmentsDialog({
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive/90"
             >
               {deleteMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
                   Deleting...
                 </>
               ) : (

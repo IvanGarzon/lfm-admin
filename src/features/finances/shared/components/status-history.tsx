@@ -96,7 +96,10 @@ export function StatusHistory<TStatus extends FinanceStatus>({
                             status={item.previousStatus}
                             renderBadge={renderStatusBadge}
                           />
-                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                          <ArrowRight
+                            className="h-3.5 w-3.5 text-muted-foreground"
+                            aria-hidden="true"
+                          />
                         </>
                       ) : null}
                       <StatusBadge status={item.status} renderBadge={renderStatusBadge} />
@@ -105,7 +108,7 @@ export function StatusHistory<TStatus extends FinanceStatus>({
                     {/* Date and Time */}
                     <Box className="text-right shrink-0">
                       <Box className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                        <Clock className="h-3.5 w-3.5" />
+                        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                         <time dateTime={item.updatedAt.toISOString()}>
                           {format(new Date(item.updatedAt), 'MMM d, yyyy')}
                         </time>

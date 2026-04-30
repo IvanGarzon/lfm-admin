@@ -49,19 +49,19 @@ export function BulkActionsBar<TData extends QuoteListItem>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => onUpdateStatus(selectedIds, 'SENT')}>
-            <Send className="mr-2 h-4 w-4" />
+            <Send aria-hidden="true" className="h-4 w-4" />
             Mark as Sent
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onUpdateStatus(selectedIds, 'ACCEPTED')}>
-            <CheckCircle className="mr-2 h-4 w-4" />
+            <CheckCircle aria-hidden="true" className="h-4 w-4" />
             Mark as Accepted
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onUpdateStatus(selectedIds, 'REJECTED')}>
-            <XCircle className="mr-2 h-4 w-4" />
+            <XCircle aria-hidden="true" className="h-4 w-4" />
             Mark as Rejected
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onUpdateStatus(selectedIds, 'ON_HOLD')}>
-            <PauseCircle className="mr-2 h-4 w-4" />
+            <PauseCircle aria-hidden="true" className="h-4 w-4" />
             Mark as On Hold
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -69,12 +69,12 @@ export function BulkActionsBar<TData extends QuoteListItem>({
             onClick={() => onUpdateStatus(selectedIds, 'CANCELLED')}
             className="text-destructive focus:text-destructive"
           >
-            <FileX className="mr-2 h-4 w-4" />
+            <FileX aria-hidden="true" className="h-4 w-4" />
             Mark as Cancelled
           </DropdownMenuItem>
           {/* DRAFT is usually for reverting, maybe less common in bulk but possible */}
           <DropdownMenuItem onClick={() => onUpdateStatus(selectedIds, 'DRAFT')}>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw aria-hidden="true" className="h-4 w-4" />
             Revert to Draft
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -87,7 +87,7 @@ export function BulkActionsBar<TData extends QuoteListItem>({
           disabled={isPending}
           onClick={() => onDelete(selectedIds)}
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 aria-hidden="true" className="h-4 w-4" />
           Delete
         </Button>
       )}

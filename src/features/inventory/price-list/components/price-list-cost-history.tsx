@@ -4,7 +4,14 @@ import { format } from 'date-fns';
 import { TrendingUp, TrendingDown, History } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Box } from '@/components/ui/box';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { usePriceListCostHistory } from '@/features/inventory/price-list/hooks/use-price-list-queries';
 
 interface PriceListCostHistoryProps {
@@ -27,9 +34,14 @@ export function PriceListCostHistory({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
+            <History className="h-5 w-5" aria-hidden="true" />
             Cost History {itemName ? `— ${itemName}` : ''}
           </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              Cost change history for {itemName ?? 'this item'}.
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <Box className="max-h-80 overflow-y-auto">
@@ -50,9 +62,9 @@ export function PriceListCostHistory({
                   >
                     <Box className="flex items-center gap-3">
                       {isIncrease ? (
-                        <TrendingUp className="h-4 w-4 text-red-500" />
+                        <TrendingUp className="h-4 w-4 text-red-500" aria-hidden="true" />
                       ) : (
-                        <TrendingDown className="h-4 w-4 text-green-500" />
+                        <TrendingDown className="h-4 w-4 text-green-500" aria-hidden="true" />
                       )}
                       <Box>
                         <Box className="text-sm font-medium">

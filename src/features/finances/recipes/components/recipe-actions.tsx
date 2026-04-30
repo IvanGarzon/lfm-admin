@@ -31,7 +31,7 @@ export function RecipeActions({ recipe, onDelete, onEdit }: RecipeActionsProps) 
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => onEdit(recipe.id)}>
-          <Edit className="h-4 w-4" />
+          <Edit aria-hidden="true" className="h-4 w-4" />
           Edit recipe
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -39,7 +39,7 @@ export function RecipeActions({ recipe, onDelete, onEdit }: RecipeActionsProps) 
           className="text-destructive focus:text-destructive"
           onClick={() => onDelete(recipe.id, recipe.name)}
         >
-          <Trash className="h-4 w-4" />
+          <Trash aria-hidden="true" className="h-4 w-4" />
           Delete recipe
         </DropdownMenuItem>
       </DropdownMenuContent>

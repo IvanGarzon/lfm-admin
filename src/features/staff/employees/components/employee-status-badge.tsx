@@ -20,21 +20,21 @@ const EMPLOYEE_STATUS_CONFIG: Record<EmployeeStatus, StatusBadgeConfig> = {
     variant: 'outline',
     className:
       'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800',
-    icon: <CheckCircle2 className="h-4 w-4" />,
+    icon: <CheckCircle2 aria-hidden="true" className="h-4 w-4" />,
   },
   INACTIVE: {
     label: 'Inactive',
     variant: 'outline',
     className:
       'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900 dark:text-gray-400 dark:border-gray-700',
-    icon: <CircleDashed className="h-4 w-4" />,
+    icon: <CircleDashed aria-hidden="true" className="h-4 w-4" />,
   },
   ON_LEAVE: {
     label: 'On Leave',
     variant: 'outline',
     className:
       'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800',
-    icon: <Pause className="h-4 w-4" />,
+    icon: <Pause aria-hidden="true" className="h-4 w-4" />,
   },
 };
 
@@ -63,21 +63,21 @@ const GENDER_CONFIG: Record<Gender, StatusBadgeConfig> = {
     variant: 'outline',
     className:
       'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800',
-    icon: <Mars className="h-4 w-4" />,
+    icon: <Mars aria-hidden="true" className="h-4 w-4" />,
   },
   FEMALE: {
     label: 'Female',
     variant: 'outline',
     className:
       'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950 dark:text-pink-400 dark:border-pink-800',
-    icon: <Venus className="h-4 w-4" />,
+    icon: <Venus aria-hidden="true" className="h-4 w-4" />,
   },
   OTHER: {
     label: 'Other',
     variant: 'outline',
     className:
       'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800',
-    icon: <User className="h-4 w-4" />,
+    icon: <User aria-hidden="true" className="h-4 w-4" />,
   },
 };
 

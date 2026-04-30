@@ -8,10 +8,12 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -122,7 +124,12 @@ export function UserDrawer({
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
+      <DrawerContent className="overflow-x-hidden pb-0!">
+        <VisuallyHidden>
+          <DrawerDescription>
+            User profile details, permissions and security settings.
+          </DrawerDescription>
+        </VisuallyHidden>
         {isLoading ? (
           <>
             <DrawerHeader>
@@ -145,7 +152,7 @@ export function UserDrawer({
 
         {user && !isLoading && !isError ? (
           <>
-            <Box className="-mx-6 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+            <Box className="-mx-6 border-b border-border px-6 pb-4">
               <Box className="flex items-start justify-between gap-x-4">
                 <Box className="mt-1 flex flex-row items-start gap-4 flex-1">
                   <Box className="relative shrink-0">
@@ -157,12 +164,15 @@ export function UserDrawer({
                       <>
                         <label
                           htmlFor="avatar-upload"
-                          className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                          className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-card border border-border shadow-sm hover:bg-muted"
                         >
                           {uploadAvatar.isPending ? (
-                            <Loader2 className="size-3 animate-spin text-muted-foreground" />
+                            <Loader2
+                              className="size-3 animate-spin text-muted-foreground"
+                              aria-hidden="true"
+                            />
                           ) : (
-                            <Camera className="size-3 text-muted-foreground" />
+                            <Camera className="size-3 text-muted-foreground" aria-hidden="true" />
                           )}
                         </label>
                         <input
@@ -189,7 +199,7 @@ export function UserDrawer({
                       <UserRoleBadge role={user.role} />
                       {hasUnsavedChanges ? (
                         <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                          <AlertCircle className="h-3 w-3" />
+                          <AlertCircle className="h-3 w-3" aria-hidden="true" />
                           Unsaved changes
                         </span>
                       ) : null}
@@ -201,7 +211,7 @@ export function UserDrawer({
                       <UserStatusBadge status={user.status} />
                       {user.email ? (
                         <Box className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Mail className="size-3 shrink-0" />
+                          <Mail className="size-3 shrink-0" aria-hidden="true" />
                           <span className="truncate">{user.email}</span>
                         </Box>
                       ) : null}
@@ -211,7 +221,7 @@ export function UserDrawer({
 
                 <Button
                   variant="ghost"
-                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10 shrink-0"
+                  className="aspect-square p-1 text-muted-foreground hover:bg-muted shrink-0"
                   onClick={() => handleOpenChange(false)}
                 >
                   <X className="size-5" aria-hidden="true" />
@@ -265,7 +275,7 @@ export function UserDrawer({
                 }
               >
                 {updateUser.isPending || updateUserRole.isPending ? (
-                  <Loader2 className="size-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 animate-spin mr-2" aria-hidden="true" />
                 ) : null}
                 Update user
               </Button>

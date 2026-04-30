@@ -37,7 +37,7 @@ export function ResetPasswordForm({ token, email }: { token: string; email: stri
     return (
       <Card className="w-full max-w-md p-8 space-y-6">
         <Box className="flex flex-col items-center gap-4 text-center">
-          <CheckCircle2 className="size-12 text-green-500" />
+          <CheckCircle2 className="size-12 text-green-500" aria-hidden="true" />
           <Box>
             <h1 className="text-2xl font-bold">Password updated</h1>
             <p className="text-muted-foreground text-sm mt-1">

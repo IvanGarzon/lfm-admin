@@ -17,9 +17,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
 import {
@@ -380,6 +382,11 @@ export function InvoiceDrawer({
             maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
           }}
         >
+          <VisuallyHidden>
+            <DrawerDescription>
+              {mode === 'create' ? 'Create a new invoice' : 'View and edit invoice details'}
+            </DrawerDescription>
+          </VisuallyHidden>
           {isLoading ? <InvoiceDrawerSkeleton /> : null}
 
           {isError ? (

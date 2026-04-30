@@ -102,6 +102,7 @@ export function FinancialHealth({ metrics = EMPTY_METRICS, isLoading }: Financia
                       metric.percentage < 40 && 'bg-red-100 text-red-700',
                     )}
                   >
+                    <span className="sr-only">{metric.label} status: </span>
                     {getHealthStatus(metric.percentage)}
                   </span>
                 </div>

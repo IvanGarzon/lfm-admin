@@ -38,7 +38,7 @@ export function DevToolsSection() {
         <CardHeader>
           <CollapsibleTrigger className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              <Wrench aria-hidden="true" className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               <CardTitle>Developer Tools</CardTitle>
               <Badge
                 variant="outline"
@@ -47,7 +47,10 @@ export function DevToolsSection() {
                 Local Only
               </Badge>
             </div>
-            <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            />
           </CollapsibleTrigger>
           <CardDescription>LocalStack testing and debugging utilities</CardDescription>
         </CardHeader>
@@ -58,9 +61,15 @@ export function DevToolsSection() {
               <div className="rounded-lg border bg-muted/50 p-4">
                 <div className="flex items-start gap-3">
                   {healthStatus.healthy ? (
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <CheckCircle
+                      aria-hidden="true"
+                      className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5"
+                    />
                   ) : (
-                    <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                    <XCircle
+                      aria-hidden="true"
+                      className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5"
+                    />
                   )}
                   <div className="flex-1 space-y-1">
                     <p className="font-medium">Storage Health</p>
@@ -90,7 +99,7 @@ export function DevToolsSection() {
                 disabled={isCheckingHealth}
                 className="h-20 flex-col gap-2"
               >
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle aria-hidden="true" className="h-5 w-5" />
                 <span>Test Connectivity</span>
               </Button>
 
@@ -100,7 +109,7 @@ export function DevToolsSection() {
                 disabled={isUploadingTest}
                 className="h-20 flex-col gap-2"
               >
-                <Upload className="h-5 w-5" />
+                <Upload aria-hidden="true" className="h-5 w-5" />
                 <span>Upload Test File</span>
               </Button>
             </div>

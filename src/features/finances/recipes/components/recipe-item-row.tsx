@@ -107,6 +107,7 @@ export function RecipeItemRow({
           onPointerDown={(e) => !isLocked && dragControls.start(e)}
         >
           <GripVertical
+            aria-hidden="true"
             className={cn(
               'h-4 w-4',
               isLocked ? 'text-gray-300' : 'text-gray-400 cursor-grab active:cursor-grabbing',
@@ -138,7 +139,7 @@ export function RecipeItemRow({
                         className="cursor-pointer hover:text-primary"
                         disabled={isLocked}
                       >
-                        <Package />
+                        <Package aria-hidden="true" />
                       </InputGroupButton>
                     </InputGroupAddon>
                   </InputGroup>
@@ -244,11 +245,12 @@ export function RecipeItemRow({
           <Button
             type="button"
             variant="ghost"
+            aria-label="Remove item"
             onClick={onRemove}
             className="h-8 w-8 p-0 text-gray-400 hover:text-destructive hover:bg-transparent cursor-pointer"
             disabled={isLocked || !canRemove}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 aria-hidden="true" className="h-4 w-4" />
           </Button>
         </Box>
       </Box>

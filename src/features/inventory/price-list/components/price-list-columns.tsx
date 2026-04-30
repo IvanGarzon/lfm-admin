@@ -52,7 +52,7 @@ export function createPriceListColumns({
           <Box className="flex items-center gap-2">
             {item.imageUrl ? (
               <Box className="h-5 w-5 text-green-500 flex-shrink-0">
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon aria-hidden="true" className="h-4 w-4" />
               </Box>
             ) : null}
             <PriceListLink id={item.id} name={item.name} />
@@ -99,7 +99,7 @@ export function createPriceListColumns({
         if (!lastCostChange) {
           return (
             <Box className="flex items-center gap-1.5 text-muted-foreground">
-              <Minus className="h-4 w-4" />
+              <Minus aria-hidden="true" className="h-4 w-4" />
             </Box>
           );
         }
@@ -112,9 +112,13 @@ export function createPriceListColumns({
 
         return (
           <Box
-            className={`flex items-center gap-1.5 ${isIncrease ? 'text-red-600' : 'text-green-600'}`}
+            className={`flex items-center gap-1.5 ${isIncrease ? 'text-destructive' : 'text-green-600'}`}
           >
-            {isIncrease ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+            {isIncrease ? (
+              <TrendingUp aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <TrendingDown aria-hidden="true" className="h-4 w-4" />
+            )}
             <span className="text-sm font-medium">{percentChange}%</span>
           </Box>
         );

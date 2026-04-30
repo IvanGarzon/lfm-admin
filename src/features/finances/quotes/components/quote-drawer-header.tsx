@@ -64,13 +64,13 @@ export function QuoteDrawerHeader({
   onClose,
 }: QuoteDrawerHeaderProps) {
   return (
-    <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+    <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
       <Box className="mt-1 flex flex-col flex-1">
         <Box className="flex items-center gap-2">
           <DrawerTitle>{title}</DrawerTitle>
           {mode === 'edit' && hasUnsavedChanges ? (
             <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-              <AlertCircle className="h-3 w-3" />
+              <AlertCircle className="h-3 w-3" aria-hidden="true" />
               Unsaved changes
             </span>
           ) : null}
@@ -98,12 +98,12 @@ export function QuoteDrawerHeader({
           <Button type="button" variant="outline" size="sm" onClick={onPreviewToggle}>
             {showPreview ? (
               <>
-                <EyeOff className="h-4 w-4 mr-1" />
+                <EyeOff className="h-4 w-4 mr-1" aria-hidden="true" />
                 Hide Preview
               </>
             ) : (
               <>
-                <Eye className="h-4 w-4 mr-1" />
+                <Eye className="h-4 w-4 mr-1" aria-hidden="true" />
                 Show Preview
               </>
             )}
@@ -112,7 +112,7 @@ export function QuoteDrawerHeader({
 
         {mode === 'create' ? (
           <Button type="submit" form="form-rhf-quote" size="sm" disabled={isCreating}>
-            <Save className="h-4 w-4 mr-1" />
+            <Save className="h-4 w-4 mr-1" aria-hidden="true" />
             Save as Draft
           </Button>
         ) : null}
@@ -128,7 +128,7 @@ export function QuoteDrawerHeader({
                 size="sm"
                 disabled={isUpdating || !hasUnsavedChanges}
               >
-                <Save className="h-4 w-4 mr-1" />
+                <Save className="h-4 w-4 mr-1" aria-hidden="true" />
                 {mode === 'edit' ? 'Update' : 'Save'}
               </Button>
             ) : null}
@@ -144,7 +144,7 @@ export function QuoteDrawerHeader({
 
         <Button
           variant="ghost"
-          className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+          className="aspect-square p-1 text-muted-foreground hover:bg-muted"
           onClick={onClose}
         >
           <X className="size-5" aria-hidden="true" />

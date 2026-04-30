@@ -64,19 +64,17 @@ function RecipeItemCard({
     <Box
       className={cn(
         'flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
       )}
       onClick={onToggle}
     >
       <Box
         className={cn(
           'w-5 h-5 rounded border flex items-center justify-center shrink-0',
-          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-gray-300',
+          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-input',
         )}
       >
-        {isSelected ? <Check className="h-3 w-3" /> : null}
+        {isSelected ? <Check aria-hidden="true" className="h-3 w-3" /> : null}
       </Box>
 
       <Box className="flex-1 min-w-0">
@@ -104,8 +102,9 @@ function RecipeItemCard({
             className="h-7 w-7"
             onClick={() => onUpdateQuantity(-1)}
             disabled={quantity <= 1}
+            aria-label="Decrease quantity"
           >
-            <Minus className="h-3 w-3" />
+            <Minus aria-hidden="true" className="h-3 w-3" />
           </Button>
           <span className="w-8 text-center text-sm font-medium">{quantity}</span>
           <Button
@@ -114,8 +113,9 @@ function RecipeItemCard({
             size="icon"
             className="h-7 w-7"
             onClick={() => onUpdateQuantity(1)}
+            aria-label="Increase quantity"
           >
-            <Plus className="h-3 w-3" />
+            <Plus aria-hidden="true" className="h-3 w-3" />
           </Button>
         </Box>
       ) : null}
@@ -284,9 +284,9 @@ export function AddRecipesDialog({
           variant="ghost"
           size="sm"
           disabled={disabled}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer"
+          className="text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
         >
-          <ChefHat className="h-4 w-4 mr-1" />
+          <ChefHat aria-hidden="true" className="h-4 w-4 mr-1" />
           Add from Recipes
         </Button>
       </DialogTrigger>
@@ -300,7 +300,10 @@ export function AddRecipesDialog({
         </DialogHeader>
 
         <Box className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          />
           <Input
             placeholder="Search recipes..."
             value={search}
@@ -312,7 +315,7 @@ export function AddRecipesDialog({
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'recipes' | 'groups')}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="recipes" className="flex items-center gap-2">
-              <ChefHat className="h-4 w-4" />
+              <ChefHat aria-hidden="true" className="h-4 w-4" />
               Recipes
               {filteredRecipes.length > 0 ? (
                 <Badge variant="secondary" className="ml-1">
@@ -321,7 +324,7 @@ export function AddRecipesDialog({
               ) : null}
             </TabsTrigger>
             <TabsTrigger value="groups" className="flex items-center gap-2">
-              <Layers className="h-4 w-4" />
+              <Layers aria-hidden="true" className="h-4 w-4" />
               Groups
               {filteredGroups.length > 0 ? (
                 <Badge variant="secondary" className="ml-1">

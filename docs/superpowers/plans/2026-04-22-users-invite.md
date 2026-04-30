@@ -588,7 +588,7 @@ export function UsersList({
         </Box>
         <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
           <Button onClick={() => setShowInviteModal(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Invite User
           </Button>
         </Box>

@@ -51,7 +51,7 @@ export function InvoicePayments({ payments, invoiceAmount }: InvoicePaymentsProp
   return (
     <Box className="space-y-4">
       {paymentsWithStatus.map((payment) => (
-        <Box key={payment.id} className="w-full p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+        <Box key={payment.id} className="w-full p-4 border border-border rounded-lg bg-muted/50">
           {/* First row: Payment method and date */}
           <Box className="flex justify-between items-center mb-2">
             <p className="font-medium">{payment.method}</p>

@@ -67,7 +67,7 @@ export function VendorSelect({
             {selectedVendor ? (
               <Box className="flex items-center gap-3 flex-1 min-w-0 text-left">
                 <Box className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Store className="h-4 w-4 text-primary" />
+                  <Store className="h-4 w-4 text-primary" aria-hidden="true" />
                 </Box>
                 <Box className="flex flex-col items-start min-w-0 flex-1">
                   <span className="font-medium text-sm truncate w-full text-left">
@@ -83,7 +83,7 @@ export function VendorSelect({
                 {isLoading ? 'Loading vendors...' : placeholder}
               </span>
             )}
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -108,7 +108,7 @@ export function VendorSelect({
                     className="flex items-center gap-3 py-3"
                   >
                     <Box className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Store className="h-4 w-4 text-primary" />
+                      <Store className="h-4 w-4 text-primary" aria-hidden="true" />
                     </Box>
                     <Box className="flex flex-col items-start min-w-0 flex-1">
                       <span className="font-medium text-sm truncate w-full">{vendor.name}</span>
@@ -121,6 +121,7 @@ export function VendorSelect({
                         'ml-auto h-4 w-4 shrink-0',
                         value === vendor.id ? 'opacity-100' : 'opacity-0',
                       )}
+                      aria-hidden="true"
                     />
                   </CommandItem>
                 ))}

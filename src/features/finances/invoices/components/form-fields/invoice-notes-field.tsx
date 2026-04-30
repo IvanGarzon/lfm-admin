@@ -20,7 +20,7 @@ export function InvoiceNotesField({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldContent>
-              <FieldLabel htmlFor="form-rhf-notes">Notes</FieldLabel>
+              <FieldLabel htmlFor="form-rhf-textarea-notes">Notes</FieldLabel>
             </FieldContent>
             <Textarea
               {...field}

@@ -82,7 +82,7 @@ export function InvoiceAnalytics({
         <Box className="flex flex-wrap items-center gap-2">
           <CalendarDateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
           <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
+            <Download aria-hidden="true" className="h-4 w-4" />
             Export
           </Button>
         </Box>

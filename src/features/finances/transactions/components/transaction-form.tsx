@@ -203,7 +203,7 @@ export function TransactionForm({
       >
         {isDisabled ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating transaction...' : 'Updating transaction...'}
             </span>
@@ -260,7 +260,7 @@ export function TransactionForm({
           <Button type="submit" disabled={isDisabled || (Boolean(transaction) && !isDirty)}>
             {isDisabled ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

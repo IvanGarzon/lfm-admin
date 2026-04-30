@@ -16,7 +16,10 @@ export function FileItem({ file, onDownload, onDelete, compact = false }: FileIt
       className={`flex items-center justify-between ${compact ? 'p-3' : 'p-4'} rounded-lg border bg-card hover:bg-accent transition-colors`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <FileIcon className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} text-primary shrink-0`} />
+        <FileIcon
+          aria-hidden="true"
+          className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} text-primary shrink-0`}
+        />
         <div className="min-w-0 flex-1">
           <p className={`font-medium truncate ${compact ? 'text-sm' : ''}`}>{file.fileName}</p>
           <p className="text-xs text-muted-foreground">
@@ -31,11 +34,21 @@ export function FileItem({ file, onDownload, onDelete, compact = false }: FileIt
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Button variant="ghost" size="sm" onClick={() => onDownload(file.key, file.fileName)}>
-          <Download className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDownload(file.key, file.fileName)}
+          aria-label={`Download ${file.fileName}`}
+        >
+          <Download aria-hidden="true" className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => onDelete(file.key, file.fileName)}>
-          <Trash2 className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(file.key, file.fileName)}
+          aria-label={`Delete ${file.fileName}`}
+        >
+          <Trash2 aria-hidden="true" className="h-4 w-4" />
         </Button>
       </div>
     </div>

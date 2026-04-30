@@ -26,9 +26,8 @@ export function ProductActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
+        <Button variant="secondary" className="h-8 w-8 p-0" aria-label="Open menu">
+          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -36,7 +35,7 @@ export function ProductActions({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href} className="flex items-center">
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden="true" />
             Edit product
           </Link>
         </DropdownMenuItem>
@@ -45,7 +44,7 @@ export function ProductActions({
           className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
           onClick={() => onDelete(product.id, product.name)}
         >
-          <Trash className="h-4 w-4" />
+          <Trash className="h-4 w-4" aria-hidden="true" />
           Delete product
         </DropdownMenuItem>
       </DropdownMenuContent>

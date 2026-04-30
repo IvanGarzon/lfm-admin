@@ -138,15 +138,15 @@ export function FinancesOverview() {
         </Box>
         <Box className="flex flex-wrap gap-2">
           <Button onClick={() => router.push('/finances/invoices/new')}>
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="h-4 w-4" aria-hidden="true" />
             New Invoice
           </Button>
           <Button variant="outline" onClick={() => router.push('/finances/quotes/new')}>
-            <FileCheck className="h-4 w-4 mr-2" />
+            <FileCheck className="h-4 w-4" aria-hidden="true" />
             New Quote
           </Button>
           <Button variant="outline" onClick={() => router.push('/finances/transactions/new')}>
-            <Receipt className="h-4 w-4 mr-2" />
+            <Receipt className="h-4 w-4" aria-hidden="true" />
             New Transaction
           </Button>
         </Box>

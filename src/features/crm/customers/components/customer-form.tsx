@@ -206,7 +206,7 @@ export function CustomerForm({
       >
         {isCreating || isUpdating ? (
           <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="text-sm font-medium">
               {isCreating ? 'Creating customer...' : 'Updating customer...'}
             </span>
@@ -421,7 +421,7 @@ export function CustomerForm({
         </Box>
 
         {/* Action Buttons */}
-        <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
+        <Box className="border-t p-6 flex gap-3 justify-end bg-muted/50">
           {onClose ? (
             <Button
               type="button"
@@ -435,7 +435,7 @@ export function CustomerForm({
           <Button type="submit" disabled={isCreating || isUpdating || (customer && !isDirty)}>
             {isCreating || isUpdating ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {customer ? 'Updating...' : 'Creating...'}
               </>
             ) : customer ? (

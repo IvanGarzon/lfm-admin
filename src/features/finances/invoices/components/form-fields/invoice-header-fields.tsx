@@ -78,7 +78,7 @@ export function InvoiceHeaderFields({
                 value={invoice.invoiceNumber}
                 disabled
                 readOnly
-                className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                className="bg-muted cursor-not-allowed"
               />
             </Field>
           </FieldGroup>
@@ -133,7 +133,7 @@ export function InvoiceHeaderFields({
                       type="button"
                       disabled={isLocked}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                       {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
@@ -167,7 +167,7 @@ export function InvoiceHeaderFields({
                       type="button"
                       disabled={isLocked}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                       {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>

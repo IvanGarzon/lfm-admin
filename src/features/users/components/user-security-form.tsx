@@ -73,7 +73,9 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
             onClick={() => sendReset.mutate(userId)}
             disabled={sendReset.isPending || !userEmail}
           >
-            {sendReset.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+            {sendReset.isPending ? (
+              <Loader2 aria-hidden="true" className="size-4 animate-spin mr-2" />
+            ) : null}
             Send reset email
           </Button>
         </CardContent>
@@ -141,7 +143,9 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
             </FieldGroup>
             <Box className="flex justify-end">
               <Button type="submit" disabled={changePassword.isPending}>
-                {changePassword.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                {changePassword.isPending ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin mr-2" />
+                ) : null}
                 Update password
               </Button>
             </Box>
@@ -171,7 +175,7 @@ function SecuritySettingsBlock({ user }: { user: UserDetail }) {
         <Box className="flex items-center justify-between">
           <Box className="flex items-center gap-3">
             <Box className="p-2 rounded-lg bg-primary/10">
-              <ShieldCheck className="size-4 text-primary" />
+              <ShieldCheck aria-hidden="true" className="size-4 text-primary" />
             </Box>
             <Box>
               <p className="text-sm font-medium">Two-Factor Authentication</p>
@@ -187,9 +191,9 @@ function SecuritySettingsBlock({ user }: { user: UserDetail }) {
             disabled={isPending}
           >
             {user.isTwoFactorEnabled ? (
-              <ShieldOff className="size-4" />
+              <ShieldOff aria-hidden="true" className="size-4" />
             ) : (
-              <ShieldCheck className="size-4" />
+              <ShieldCheck aria-hidden="true" className="size-4" />
             )}
             {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}
           </Button>
@@ -200,7 +204,7 @@ function SecuritySettingsBlock({ user }: { user: UserDetail }) {
         <Box className="flex items-center justify-between">
           <Box className="flex items-center gap-3">
             <Box className="p-2 rounded-lg bg-primary/10">
-              <Bell className="size-4 text-primary" />
+              <Bell aria-hidden="true" className="size-4 text-primary" />
             </Box>
             <Box>
               <p className="text-sm font-medium">Login Notifications</p>
@@ -285,7 +289,7 @@ function ActiveSessionsBlock({ userId }: { userId: string }) {
                 className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
                 {isRevokingAll || isDeletingOthers ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  <Loader2 aria-hidden="true" className="mr-1 h-3 w-3 animate-spin" />
                 ) : null}
                 Revoke all
               </Button>

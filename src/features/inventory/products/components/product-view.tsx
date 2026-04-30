@@ -45,7 +45,7 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
           <p className="text-muted-foreground">Manage your product catalog and inventory</p>
         </Box>
         <Button onClick={() => setShowCreateDrawer(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           Add Product
         </Button>
       </Box>
@@ -59,15 +59,24 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
           </Box>
           <Box className="rounded-lg border bg-card p-4">
             <Box className="text-sm font-medium text-muted-foreground">Active</Box>
-            <Box className="text-2xl font-bold text-green-600">{stats.activeProducts}</Box>
+            <Box className="text-2xl font-bold text-green-600">
+              {stats.activeProducts}
+              <span className="sr-only"> active products</span>
+            </Box>
           </Box>
           <Box className="rounded-lg border bg-card p-4">
             <Box className="text-sm font-medium text-muted-foreground">Out of Stock</Box>
-            <Box className="text-2xl font-bold text-red-600">{stats.outOfStockProducts}</Box>
+            <Box className="text-2xl font-bold text-red-600">
+              {stats.outOfStockProducts}
+              <span className="sr-only"> out of stock products</span>
+            </Box>
           </Box>
           <Box className="rounded-lg border bg-card p-4">
             <Box className="text-sm font-medium text-muted-foreground">Low Stock</Box>
-            <Box className="text-2xl font-bold text-amber-600">{stats.lowStockProducts}</Box>
+            <Box className="text-2xl font-bold text-amber-600">
+              {stats.lowStockProducts}
+              <span className="sr-only"> low stock products</span>
+            </Box>
           </Box>
         </Box>
       ) : null}

@@ -8,9 +8,11 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import {
   useEmployeeById,
@@ -115,7 +117,12 @@ export function EmployeeDrawer({
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
+      <DrawerContent className="overflow-x-hidden pb-0!">
+        <VisuallyHidden>
+          <DrawerDescription>
+            {mode === 'create' ? 'Create a new employee' : 'View and edit employee details'}
+          </DrawerDescription>
+        </VisuallyHidden>
         {isLoading ? (
           <>
             <DrawerHeader>
@@ -138,7 +145,7 @@ export function EmployeeDrawer({
 
         {(employee && !isLoading && !isError) || mode === 'create' ? (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
+            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
               <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
                 {employee ? (
                   <UserAvatar
@@ -156,7 +163,7 @@ export function EmployeeDrawer({
                     </DrawerTitle>
                     {mode === 'edit' && hasUnsavedChanges ? (
                       <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle className="h-3 w-3" />
+                        <AlertCircle aria-hidden="true" className="h-3 w-3" />
                         Unsaved changes
                       </span>
                     ) : null}
@@ -187,7 +194,7 @@ export function EmployeeDrawer({
                 ) : null}
                 <Button
                   variant="ghost"
-                  className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+                  className="aspect-square p-1 text-muted-foreground hover:bg-muted"
                   onClick={() => handleOpenChange(false)}
                 >
                   <X className="size-5" aria-hidden="true" />

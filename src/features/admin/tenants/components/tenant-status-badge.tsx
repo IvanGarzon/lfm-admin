@@ -17,14 +17,14 @@ const TENANT_STATUS_CONFIG: Record<TenantStatus, StatusBadgeConfig> = {
     variant: 'outline',
     className:
       'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800',
-    icon: <CheckCircle2 className="h-4 w-4" />,
+    icon: <CheckCircle2 aria-hidden="true" className="h-4 w-4" />,
   },
   SUSPENDED: {
     label: 'Suspended',
     variant: 'outline',
     className:
       'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800',
-    icon: <Ban className="h-4 w-4" />,
+    icon: <Ban aria-hidden="true" className="h-4 w-4" />,
   },
 };
 

@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -10,12 +10,12 @@ type PasswordResetEmailProps = {
   expiresAt: Date;
 };
 
-export const PasswordResetEmailContent = ({
+function PasswordResetEmailContent({
   userName,
   requestedByName,
   resetUrl,
   expiresAt,
-}: PasswordResetEmailProps) => {
+}: PasswordResetEmailProps): React.ReactElement {
   const formattedExpiry = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
     month: 'long',
@@ -53,9 +53,9 @@ export const PasswordResetEmailContent = ({
       <Text style={styles.footer}>The Team</Text>
     </>
   );
-};
+}
 
-export function PasswordResetEmail(props: PasswordResetEmailProps): React.ReactElement {
+function PasswordResetEmail(props: PasswordResetEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail previewText="Reset your password">
       <PasswordResetEmailContent {...props} />

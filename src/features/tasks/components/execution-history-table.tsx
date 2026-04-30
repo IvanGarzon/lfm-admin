@@ -31,15 +31,15 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
   const getStatusIcon = (status: ExecutionStatus) => {
     switch (status) {
       case ExecutionStatusSchema.enum.COMPLETED:
-        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+        return <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />;
       case ExecutionStatusSchema.enum.FAILED:
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />;
       case ExecutionStatusSchema.enum.RUNNING:
-        return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" aria-hidden="true" />;
       case ExecutionStatusSchema.enum.CANCELLED:
-        return <AlertCircle className="h-4 w-4 text-orange-600" />;
+        return <AlertCircle className="h-4 w-4 text-orange-600" aria-hidden="true" />;
       case ExecutionStatusSchema.enum.TIMEOUT:
-        return <Clock className="h-4 w-4 text-orange-600" />;
+        return <Clock className="h-4 w-4 text-orange-600" aria-hidden="true" />;
       default:
         return null;
     }
@@ -47,7 +47,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
 
   const getTriggerBadge = (triggeredBy: string) => {
     const colors: Record<string, string> = {
-      SCHEDULE: 'bg-gray-50 text-gray-700 border-gray-200',
+      SCHEDULE: 'bg-muted text-muted-foreground border-border',
       MANUAL: 'bg-purple-50 text-purple-700 border-purple-200',
       EVENT: 'bg-blue-50 text-blue-700 border-blue-200',
       RETRY: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -56,7 +56,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
     return (
       <Badge
         variant="outline"
-        className={colors[triggeredBy] || 'bg-gray-50 text-gray-700 border-gray-200'}
+        className={colors[triggeredBy] || 'bg-muted text-muted-foreground border-border'}
       >
         {triggeredBy}
       </Badge>
@@ -74,7 +74,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
         </CardContent>
       </Card>
     );
@@ -85,7 +85,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
       <Card>
         <CardContent className="py-12">
           <Box className="text-center text-destructive">
-            <XCircle className="mx-auto h-12 w-12 mb-4" />
+            <XCircle className="mx-auto h-12 w-12 mb-4" aria-hidden="true" />
             <p>{error.message || 'Failed to load execution history'}</p>
           </Box>
         </CardContent>
@@ -108,7 +108,7 @@ export function ExecutionHistoryTable({ taskId, limit = 50 }: ExecutionHistoryTa
             <Box className="flex gap-4 mt-2">
               <span>Total: {stats.total}</span>
               <span className="text-green-600">Completed: {stats.completed}</span>
-              <span className="text-red-600">Failed: {stats.failed}</span>
+              <span className="text-destructive">Failed: {stats.failed}</span>
               <span className="text-blue-600">Running: {stats.running}</span>
               {stats.avgDuration && <span>Avg Duration: {formatDuration(stats.avgDuration)}</span>}
             </Box>

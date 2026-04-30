@@ -31,7 +31,7 @@ export function TransactionCategoryField({
             </FieldContent>
             {isLoadingCategories ? (
               <Box className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 <span className="ml-2 text-sm text-muted-foreground">Loading categories...</span>
               </Box>
             ) : (

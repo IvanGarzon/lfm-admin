@@ -28,7 +28,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
       <Box className="grid grid-cols-3 gap-3">
         <Box className="rounded-xl border bg-card p-3 flex flex-col gap-1">
           <Box className="flex items-center gap-1.5 text-muted-foreground">
-            <DollarSign className="size-3.5" />
+            <DollarSign className="size-3.5" aria-hidden="true" />
             <span className="text-xs">Hourly Rate</span>
           </Box>
           <span className="text-sm font-bold text-foreground tabular-nums">
@@ -37,7 +37,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
         </Box>
         <Box className="rounded-xl border bg-card p-3 flex flex-col gap-1">
           <Box className="flex items-center gap-1.5 text-muted-foreground">
-            <Clock className="size-3.5" />
+            <Clock className="size-3.5" aria-hidden="true" />
             <span className="text-xs">Tenure</span>
           </Box>
           <span className="text-sm font-bold text-foreground">
@@ -46,7 +46,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
         </Box>
         <Box className="rounded-xl border bg-card p-3 flex flex-col gap-1">
           <Box className="flex items-center gap-1.5 text-muted-foreground">
-            <Briefcase className="size-3.5" />
+            <Briefcase className="size-3.5" aria-hidden="true" />
             <span className="text-xs">Type</span>
           </Box>
           {/* TODO: wire up to employment type field */}
@@ -58,7 +58,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Mail className="size-3.5" />
+            <Mail className="size-3.5" aria-hidden="true" />
             Contact
           </CardTitle>
         </CardHeader>
@@ -66,7 +66,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
           <Box className="flex items-center justify-between py-2 border-b border-border/50">
             <Box className="flex items-center gap-3">
               <Box className="p-2 rounded-lg bg-muted">
-                <Mail className="size-4 text-muted-foreground" />
+                <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
               </Box>
               <Box>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Email</p>
@@ -78,9 +78,9 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
                 </a>
               </Box>
             </Box>
-            <Button variant="ghost" size="icon" asChild className="size-8">
+            <Button variant="ghost" size="icon" asChild className="size-8" aria-label="Send email">
               <a href={`mailto:${employee.email}`}>
-                <ExternalLink className="size-4" />
+                <ExternalLink className="size-4" aria-hidden="true" />
               </a>
             </Button>
           </Box>
@@ -88,7 +88,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
           <Box className="flex items-center justify-between py-2">
             <Box className="flex items-center gap-3">
               <Box className="p-2 rounded-lg bg-muted">
-                <Phone className="size-4 text-muted-foreground" />
+                <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
               </Box>
               <Box>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">Phone</p>
@@ -105,9 +105,15 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
               </Box>
             </Box>
             {employee.phone ? (
-              <Button variant="ghost" size="icon" asChild className="size-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="size-8"
+                aria-label="Call phone number"
+              >
                 <a href={`tel:${employee.phone}`}>
-                  <ExternalLink className="size-4" />
+                  <ExternalLink className="size-4" aria-hidden="true" />
                 </a>
               </Button>
             ) : null}
@@ -119,21 +125,21 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Briefcase className="size-3.5" />
+            <Briefcase className="size-3.5" aria-hidden="true" />
             Role
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 pb-2">
           <Box className="flex items-center justify-between py-2 border-b border-border/50">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="size-3.5" />
+              <User className="size-3.5" aria-hidden="true" />
               Position
             </Box>
             <span className="text-sm font-medium">Nail Technician</span>
           </Box>
           <Box className="flex items-center justify-between py-2">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Building2 className="size-3.5" />
+              <Building2 className="size-3.5" aria-hidden="true" />
               Department
             </Box>
             <span className="text-sm font-medium">Beauty Services</span>
@@ -145,14 +151,14 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <User className="size-3.5" />
+            <User className="size-3.5" aria-hidden="true" />
             Personal
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 pb-2">
           <Box className="flex items-center justify-between py-2 border-b border-border/50">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Venus className="size-3.5" />
+              <Venus className="size-3.5" aria-hidden="true" />
               Gender
             </Box>
             <span className="text-sm font-medium capitalize">
@@ -161,7 +167,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
           </Box>
           <Box className="flex items-center justify-between py-2 border-b border-border/50">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Cake className="size-3.5" />
+              <Cake className="size-3.5" aria-hidden="true" />
               Date of Birth
             </Box>
             <Box className="flex items-center gap-1.5">
@@ -177,7 +183,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
           </Box>
           <Box className="flex items-center justify-between py-2">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="size-3.5" />
+              <Calendar className="size-3.5" aria-hidden="true" />
               Member since
             </Box>
             <span className="text-sm font-medium">
@@ -191,14 +197,14 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Users className="size-3.5" />
+            <Users className="size-3.5" aria-hidden="true" />
             Emergency Contact
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1 pb-2">
           <Box className="flex items-center justify-between py-2 border-b border-border/50">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="size-3.5" />
+              <User className="size-3.5" aria-hidden="true" />
               Name
             </Box>
             <span className="text-sm font-medium">Jane Smith</span>
@@ -209,7 +215,7 @@ export function EmployeeView({ employee }: { employee: EmployeeListItem }) {
           </Box>
           <Box className="flex items-center justify-between py-2">
             <Box className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone className="size-3.5" />
+              <Phone className="size-3.5" aria-hidden="true" />
               Phone
             </Box>
             <a

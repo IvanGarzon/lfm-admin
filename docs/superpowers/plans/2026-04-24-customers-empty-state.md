@@ -107,7 +107,7 @@ Replace the `<CustomersTable ... />` JSX with:
       description="Add your first customer to start managing your relationships."
       action={
         <Button onClick={handleShowCreateModal}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="h-4 w-4" />
           Add Customer
         </Button>
       }

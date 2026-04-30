@@ -52,22 +52,22 @@ export function BulkActionsBar<TData>({
             <DropdownMenuLabel>Change Status to:</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onUpdateStatus(rows, 'ACTIVE')}>
-              <Package className="mr-2 h-4 w-4 text-green-600" />
+              <Package className="h-4 w-4 text-green-600" aria-hidden="true" />
               Active
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onUpdateStatus(rows, 'INACTIVE')}>
-              <PackageMinus className="mr-2 h-4 w-4 text-muted-foreground" />
+              <PackageMinus className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               Inactive
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onUpdateStatus(rows, 'OUT_OF_STOCK')}>
-              <PackageX className="mr-2 h-4 w-4 text-red-600" />
+              <PackageX className="h-4 w-4 text-red-600" aria-hidden="true" />
               Out of Stock
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Button variant="destructive" size="sm" disabled={isPending} onClick={() => onDelete(rows)}>
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
           Delete
         </Button>
 

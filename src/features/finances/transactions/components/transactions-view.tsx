@@ -94,7 +94,7 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
             <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" aria-hidden="true" />
               New Transaction
             </Button>
           </Box>

@@ -248,7 +248,7 @@ export const createTransactionColumns = (
 
       return (
         <Box className="flex items-center justify-center gap-1 text-muted-foreground">
-          <Paperclip className="h-4 w-4" />
+          <Paperclip className="h-4 w-4" aria-hidden="true" />
           <span className="text-xs font-medium">{count}</span>
         </Box>
       );

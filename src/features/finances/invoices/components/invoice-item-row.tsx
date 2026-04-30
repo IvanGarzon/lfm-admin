@@ -119,23 +119,24 @@ export function InvoiceItemRow({
           ? { duration: 0 }
           : { type: 'spring', stiffness: 500, damping: 50, mass: 1 }
       }
-      className="border-b border-gray-100 dark:border-gray-800 last:border-b-0 relative"
+      className="border-b border-border last:border-b-0 relative"
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}
     >
       <Box
         className={cn(
           'flex items-center gap-2 px-4 py-3 transition-colors',
-          isDragging
-            ? 'bg-gray-100 dark:bg-gray-800 shadow-lg cursor-grabbing'
-            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+          isDragging ? 'bg-muted shadow-lg cursor-grabbing' : 'hover:bg-muted/50',
         )}
       >
         <Box
           className="w-4 shrink-0 flex items-center justify-center"
           onPointerDown={(e) => dragControls.start(e)}
         >
-          <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
+          <GripVertical
+            aria-hidden="true"
+            className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing"
+          />
         </Box>
 
         {/* Item Description with Product Selector */}
@@ -205,7 +206,7 @@ export function InvoiceItemRow({
                     min="1"
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     className={cn(
-                      'text-left border-gray-200 dark:border-gray-700 h-9 py-0',
+                      'text-left border-border h-9 py-0',
                       quantityError && 'border-destructive focus:ring-destructive/20',
                     )}
                     disabled={isLocked}
@@ -262,7 +263,7 @@ export function InvoiceItemRow({
 
         {/* Total */}
         <Box className="w-30 shrink-0">
-          <Box className="h-9 px-3 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 font-semibold text-sm text-gray-700 dark:text-gray-300 w-full flex items-center">
+          <Box className="h-9 px-3 bg-muted rounded border border-border font-semibold text-sm text-muted-foreground w-full flex items-center">
             {formatCurrency({
               number: total,
               maxFractionDigits: 0,
@@ -276,11 +277,12 @@ export function InvoiceItemRow({
             <Button
               type="button"
               variant="ghost"
+              aria-label="Remove item"
               onClick={onRemove}
-              className="h-9 w-9 p-0 text-gray-400 hover:text-destructive hover:bg-transparent cursor-pointer"
+              className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer"
               disabled={isLocked}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
             </Button>
           ) : null}
         </Box>

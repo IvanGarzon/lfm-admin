@@ -138,12 +138,17 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
       <CardHeader>
         <Box className="flex items-center justify-between">
           <Box className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             <CardTitle>Cash Flow</CardTitle>
           </Box>
           <Box className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleNavigateBack}>
-              <ChevronLeft className="h-4 w-4" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNavigateBack}
+              aria-label="Go back in time"
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             <span className="text-sm font-medium min-w-[120px] text-center">{dateRangeLabel}</span>
             <Button
@@ -151,8 +156,9 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
               size="sm"
               onClick={handleNavigateForward}
               disabled={monthOffset >= 0}
+              aria-label="Go forward in time"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </Box>
         </Box>
@@ -204,14 +210,14 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
               <Bar
                 dataKey="income"
                 name="Income"
-                fill="hsl(160, 84%, 39%)"
+                fill="var(--color-income)"
                 radius={[4, 4, 0, 0]}
                 barSize={28}
               />
               <Bar
                 dataKey="expense"
                 name="Expense"
-                fill="hsl(0, 84%, 60%)"
+                fill="var(--color-expense)"
                 radius={[4, 4, 0, 0]}
                 barSize={28}
               />

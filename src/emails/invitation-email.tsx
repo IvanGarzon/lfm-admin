@@ -1,5 +1,5 @@
-import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import * as React from 'react';
+import { Button, Heading, Hr, Section, Text } from '@react-email/components';
 import { BaseTemplateEmail } from './base-template';
 import { styles } from './styles';
 
@@ -11,13 +11,13 @@ type InvitationEmailProps = {
   expiresAt: Date;
 };
 
-export const InvitationEmailContent = ({
+function InvitationEmailContent({
   inviterName,
   tenantName,
   role,
   acceptUrl,
   expiresAt,
-}: InvitationEmailProps) => {
+}: InvitationEmailProps): React.ReactElement {
   const formattedExpiry = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
     month: 'long',
@@ -57,9 +57,9 @@ export const InvitationEmailContent = ({
       <Text style={styles.footer}>The Team</Text>
     </>
   );
-};
+}
 
-export function InvitationEmail(props: InvitationEmailProps): React.ReactElement {
+function InvitationEmail(props: InvitationEmailProps): React.ReactElement {
   return (
     <BaseTemplateEmail previewText={`You've been invited to join ${props.tenantName}`}>
       <InvitationEmailContent {...props} />
