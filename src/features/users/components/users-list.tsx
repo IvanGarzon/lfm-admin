@@ -65,20 +65,20 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <Box className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground text-sm">Manage users and their access</p>
-        </Box>
-        {!isZeroState ? (
+      {!isZeroState ? (
+        <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <Box className="min-w-0">
+            <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+            <p className="text-muted-foreground text-sm">Manage users and their access</p>
+          </Box>
           <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
             <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Invite User
             </Button>
           </Box>
-        ) : null}
-      </Box>
+        </Box>
+      ) : null}
 
       {isZeroState ? (
         <EmptyState
