@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, Receipt } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { SearchParams } from 'nuqs/server';
@@ -90,7 +90,7 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
     <Box className="space-y-4 min-w-0 w-full">
       {isZeroState ? (
         <EmptyState
-          icon={FileText}
+          icon={Receipt}
           title="No invoices yet"
           description="Add your first invoice to start managing your invoices."
           action={

@@ -83,8 +83,8 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
       {isZeroState ? (
         <EmptyState
           icon={Users}
-          title="No customers yet"
-          description="Add your first customer to start managing your relationships."
+          title="No users yet"
+          description="Invite your first user to start managing team access."
           action={
             <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
               <Plus className="h-4 w-4" aria-hidden="true" />

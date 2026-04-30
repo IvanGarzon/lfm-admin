@@ -1,11 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Building2 } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/tableV3/data-table';
 import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { tenantColumns } from '@/features/admin/tenants/components/tenant-columns';
@@ -38,14 +39,24 @@ export function TenantsList({ initialData }: { initialData: TenantListItem[] }) 
         </Button>
       </Box>
 
-      <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
-        <DataTableToolbar table={table} />
-        {initialData.length ? (
+      {initialData.length ? (
+        <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+          <DataTableToolbar table={table} />
           <DataTable table={table} totalItems={initialData.length} />
-        ) : (
-          <Box className="text-center py-12 text-muted-foreground">No tenants found.</Box>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <EmptyState
+          icon={Building2}
+          title="No tenants yet"
+          description="Create your first tenant to start onboarding customers to the platform."
+          action={
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              New Tenant
+            </Button>
+          }
+        />
+      )}
 
       <CreateTenantDialog open={showCreate} onOpenChange={setShowCreate} />
     </Box>

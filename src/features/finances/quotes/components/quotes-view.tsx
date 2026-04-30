@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, ScrollText } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { SearchParams } from 'nuqs/server';
@@ -84,7 +84,7 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
     <Box className="space-y-4 min-w-0 w-full">
       {isZeroState ? (
         <EmptyState
-          icon={FileText}
+          icon={ScrollText}
           title="No quotes yet"
           description="Add your first quote to start managing your quotes."
           action={
