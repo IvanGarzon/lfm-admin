@@ -40,7 +40,9 @@ export function DataTableFacetedFilter<TData, TValue>({
 
   const onItemSelect = useCallback(
     (option: Option, isSelected: boolean) => {
-      if (!column) return;
+      if (!column) {
+        return;
+      }
 
       if (multiple) {
         const newSelectedValues = new Set(selectedValues);
@@ -136,7 +138,10 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <CheckIcon className="h-4 w-4" aria-hidden="true" />
                     </Box>
                     {option.icon ? (
-                      <option.icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                      <option.icon
+                        className="mr-2 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                      />
                     ) : null}
                     <span className="truncate">{option.label}</span>
                     {option.count ? (
