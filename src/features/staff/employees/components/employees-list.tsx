@@ -69,21 +69,6 @@ export function EmployeesList({
 
   return (
     <Box className="space-y-4 min-w-0 w-full">
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <Box className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
-          <p className="text-muted-foreground text-sm">Manage and track all your employees</p>
-        </Box>
-        {!isZeroState ? (
-          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-              <Plus aria-hidden="true" className="h-4 w-4" />
-              Add Employee
-            </Button>
-          </Box>
-        ) : null}
-      </Box>
-
       {isZeroState ? (
         <EmptyState
           icon={UserX2Icon}
@@ -97,11 +82,26 @@ export function EmployeesList({
           }
         />
       ) : (
-        <EmployeesTable
-          table={table}
-          items={initialData.items}
-          totalItems={initialData.pagination.totalItems}
-        />
+        <>
+          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <Box className="min-w-0">
+              <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
+              <p className="text-muted-foreground text-sm">Manage and track all your employees</p>
+            </Box>
+            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+                <Plus aria-hidden="true" className="h-4 w-4" />
+                Add Employee
+              </Button>
+            </Box>
+          </Box>
+
+          <EmployeesTable
+            table={table}
+            items={initialData.items}
+            totalItems={initialData.pagination.totalItems}
+          />
+        </>
       )}
 
       {showCreateModal ? (
