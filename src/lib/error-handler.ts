@@ -20,7 +20,8 @@ import { ZodError } from 'zod';
 import { Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 import type { ActionResult } from '@/types/actions';
-import { ErrorCode, isAppError } from '@/lib/errors';
+import { AppError } from '@/services/error';
+import { StatusCodes } from 'http-status-codes';
 
 /**
  * Handles errors in server actions and returns a standardized ActionResult
@@ -35,17 +36,17 @@ export function handleActionError<T = never>(
   context?: Record<string, unknown>,
 ): ActionResult<T> {
   // Handle custom AppError instances first
-  if (isAppError(error)) {
+  if (error instanceof AppError) {
     logger.error('Application error', error, {
       context: 'handleActionError',
-      metadata: { code: error.code, ...context, ...error.context },
+      metadata: { statusCode: error.statusCode, ...context, ...error.context },
     });
 
     return {
       success: false,
       error: error.message,
-      code: error.code,
-      context: error.context,
+      statusCode: error.statusCode,
+      context: { ...context, ...error.context },
     };
   }
 
@@ -73,7 +74,7 @@ export function handleActionError<T = never>(
     return {
       success: false,
       error: `Invalid ${fieldName}: ${message}`,
-      code: ErrorCode.VALIDATION_ERROR,
+      statusCode: StatusCodes.BAD_REQUEST,
       errors,
       context,
     };
@@ -87,6 +88,7 @@ export function handleActionError<T = never>(
         metadata: context,
       });
     }
+
     return handlePrismaError(error);
   }
 
@@ -95,10 +97,11 @@ export function handleActionError<T = never>(
       context: 'handleActionError',
       metadata: context,
     });
+
     return {
       success: false,
       error: 'Database validation error. Please check your input.',
-      code: ErrorCode.VALIDATION_ERROR,
+      statusCode: StatusCodes.BAD_REQUEST,
       context,
     };
   }
@@ -113,7 +116,7 @@ export function handleActionError<T = never>(
     return {
       success: false,
       error: error.message || fallbackMessage,
-      code: ErrorCode.INTERNAL_ERROR,
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       context,
     };
   }
@@ -127,7 +130,7 @@ export function handleActionError<T = never>(
   return {
     success: false,
     error: fallbackMessage,
-    code: ErrorCode.UNKNOWN_ERROR,
+    statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
     context,
   };
 }
@@ -153,10 +156,11 @@ function handlePrismaError<T = never>(
         ? rawTarget.filter((item): item is string => typeof item === 'string')
         : [];
       const field = target.join(', ') || 'field';
+
       return {
         success: false,
         error: `A record with this ${field} already exists`,
-        code: ErrorCode.DUPLICATE_RECORD,
+        statusCode: StatusCodes.CONFLICT,
         context: { prismaCode: error.code, field },
       };
     }
@@ -168,10 +172,11 @@ function handlePrismaError<T = never>(
         ? rawFieldName.filter((item): item is string => typeof item === 'string').join(', ') ||
           'field'
         : 'field';
+
       return {
         success: false,
         error: field ? `Related ${field} not found` : 'Related record not found',
-        code: ErrorCode.FOREIGN_KEY_VIOLATION,
+        statusCode: StatusCodes.CONFLICT,
         context: { prismaCode: error.code, field },
       };
     }
@@ -181,7 +186,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Record not found or already deleted',
-        code: ErrorCode.RECORD_NOT_FOUND,
+        statusCode: StatusCodes.NOT_FOUND,
         context: { prismaCode: error.code },
       };
 
@@ -190,7 +195,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Record not found',
-        code: ErrorCode.RECORD_NOT_FOUND,
+        statusCode: StatusCodes.NOT_FOUND,
         context: { prismaCode: error.code },
       };
 
@@ -199,7 +204,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Required field is missing',
-        code: ErrorCode.REQUIRED_FIELD_MISSING,
+        statusCode: StatusCodes.BAD_REQUEST,
         context: { prismaCode: error.code },
       };
 
@@ -208,7 +213,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Invalid data type provided',
-        code: ErrorCode.INVALID_DATA_TYPE,
+        statusCode: StatusCodes.BAD_REQUEST,
         context: { prismaCode: error.code },
       };
 
@@ -217,7 +222,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Database operation timed out. Please try again.',
-        code: ErrorCode.DATABASE_TIMEOUT,
+        statusCode: StatusCodes.REQUEST_TIMEOUT,
         context: { prismaCode: error.code },
       };
 
@@ -228,7 +233,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'Database connection error. Please try again later.',
-        code: ErrorCode.DATABASE_CONNECTION_ERROR,
+        statusCode: StatusCodes.SERVICE_UNAVAILABLE,
         context: { prismaCode: error.code },
       };
 
@@ -237,7 +242,7 @@ function handlePrismaError<T = never>(
       return {
         success: false,
         error: 'A database error occurred. Please try again.',
-        code: ErrorCode.DATABASE_ERROR,
+        statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
         context: { prismaCode: error.code },
       };
   }

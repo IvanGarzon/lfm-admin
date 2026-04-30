@@ -35,7 +35,7 @@ import type { User } from '@/prisma/client';
 const userRepo = new UserRepository(prisma);
 const invitationRepo = new InvitationRepository(prisma);
 const tenantRepo = new TenantRepository(prisma);
-const auditService = new AuditService();
+const auditService = new AuditService(prisma);
 const passwordResetTokenRepo = new PasswordResetTokenRepository(prisma);
 
 /**

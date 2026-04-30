@@ -28,6 +28,7 @@ const {
     OtpFailed: vi.fn(),
     OtpLocked: vi.fn(),
     OtpExpired: vi.fn(),
+    OtpAlreadyUsed: vi.fn(),
   },
   mockLogger: {
     error: vi.fn(),
@@ -405,6 +406,9 @@ describe('Auth Actions', () => {
       if (!result.success) {
         expect(result.error).toContain('already been used');
       }
+      expect(mockAuditService.OtpAlreadyUsed).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+      );
     });
 
     it('returns error when token is expired', async () => {

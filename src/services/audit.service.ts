@@ -1,9 +1,8 @@
-import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { Prisma } from '@/prisma/client';
-import type { AuditLevel } from '@/zod/schemas/enums/AuditLevel.schema';
-import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
 import type { AccessChange } from '@/features/users/types';
+import { AuditRepository } from '@/repositories/audit-repository';
+import type { PrismaClient } from '@/prisma/client';
+import type { AuditLevel } from '@/zod/schemas/enums/AuditLevel.schema';
 
 // -- Event registry -----------------------------------------------------------
 
@@ -17,6 +16,7 @@ enum LogEventMessage {
   OtpFailed = 'OTP verification attempt failed',
   OtpLocked = 'OTP verification locked after max attempts',
   OtpExpired = 'OTP verification code expired',
+  OtpAlreadyUsed = 'OTP verification code already used',
 }
 
 enum LogEventTag {
@@ -36,6 +36,7 @@ const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
   OtpFailed: LogEventTag.AUTH,
   OtpLocked: LogEventTag.AUTH,
   OtpExpired: LogEventTag.AUTH,
+  OtpAlreadyUsed: LogEventTag.AUTH,
 };
 
 const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
@@ -48,6 +49,7 @@ const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
   OtpFailed: 'OTP verification attempt failed',
   OtpLocked: 'OTP verification locked after max attempts',
   OtpExpired: 'OTP verification code expired',
+  OtpAlreadyUsed: 'OTP verification code already used',
 };
 
 // -- Event data shapes --------------------------------------------------------
@@ -111,40 +113,19 @@ interface OtpExpiredEvent extends LogEventProp {
   data: LogEventProp['data'];
 }
 
-// -- Internal helpers ---------------------------------------------------------
-
-interface CreateAuditLogProps {
-  userId: string;
-  tag: string;
-  event: keyof typeof LogEventMessage;
-  message: string;
-  data?: Prisma.JsonValue;
-  level?: AuditLevel;
-}
-
-async function createAuditLog({
-  userId,
-  tag,
-  event,
-  message,
-  data,
-  level = 'INFO',
-}: CreateAuditLogProps) {
-  await prisma.audit.create({
-    data: {
-      userId,
-      tag,
-      event,
-      message,
-      data: data as Prisma.InputJsonValue,
-      level,
-    },
-  });
+interface OtpAlreadyUsedEvent extends LogEventProp {
+  data: LogEventProp['data'];
 }
 
 // -- Service ------------------------------------------------------------------
 
 export class AuditService {
+  #repo: AuditRepository;
+
+  constructor(prisma: PrismaClient) {
+    this.#repo = new AuditRepository(prisma);
+  }
+
   #logEvent(props: LogEventProp & { message?: string; level?: 'info' | 'warn' | 'error' }) {
     const { event, data, message: customMessage, level = 'info' } = props;
     const message = customMessage ?? LogEventMessages[event];
@@ -152,16 +133,18 @@ export class AuditService {
 
     logger[level](`[Audit] ${message}`, { context: 'AuditService', metadata: { tag, data } });
 
-    createAuditLog({
-      userId: data.userId,
-      tag,
-      event,
-      message,
-      data,
-      level: level.toUpperCase() as AuditLevel,
-    }).catch((err) => {
-      logger.error('Failed to write audit log', err, { context: 'AuditService' });
-    });
+    this.#repo
+      .createLog({
+        userId: data.userId,
+        tag,
+        event,
+        message,
+        data,
+        level: level.toUpperCase() as AuditLevel,
+      })
+      .catch((err) => {
+        logger.error('Failed to write audit log', err, { context: 'AuditService' });
+      });
   }
 
   LoggedIn(props: Omit<LoggedIn, 'event'>) {
@@ -200,43 +183,20 @@ export class AuditService {
     this.#logEvent({ ...props, event: 'OtpExpired', level: 'warn' });
   }
 
+  OtpAlreadyUsed(props: Omit<OtpAlreadyUsedEvent, 'event'>) {
+    this.#logEvent({ ...props, event: 'OtpAlreadyUsed', level: 'warn' });
+  }
+
   /**
    * Returns the 10 most recent role change audit entries for a given user.
    * @param targetUserId - The ID of the user whose role change history is requested
    * @returns Array of access change records ordered newest first
    */
   async findRoleChangesForUser(targetUserId: string): Promise<AccessChange[]> {
-    const records = await prisma.$queryRaw<
-      Array<{ id: string; message: string; data: unknown; created_at: Date }>
-    >`
-      SELECT id, message, data, created_at
-      FROM audit
-      WHERE tag = 'users'
-        AND data->>'targetUserId' = ${targetUserId}
-      ORDER BY created_at DESC
-      LIMIT 10
-    `;
-
-    return records.map((r) => {
-      const data = r.data as { changedByName?: string; toRole?: unknown };
-      const parsedRole = UserRoleSchema.safeParse(data?.toRole);
-      return {
-        id: r.id,
-        message: r.message,
-        toRole: parsedRole.success ? parsedRole.data : undefined,
-        changedByName: data?.changedByName ?? 'System',
-        createdAt: r.created_at,
-      };
-    });
+    return this.#repo.findRoleChangesForUser(targetUserId);
   }
 
-  async cleanupOldLogs() {
-    await prisma.audit.deleteMany({
-      where: {
-        createdAt: {
-          lt: new Date(new Date().setMonth(new Date().getMonth() - 6)),
-        },
-      },
-    });
+  async cleanupOldLogs(): Promise<void> {
+    await this.#repo.cleanupOldLogs();
   }
 }

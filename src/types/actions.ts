@@ -1,5 +1,4 @@
 import type { Session } from 'next-auth';
-import type { ErrorCode } from '@/lib/errors';
 
 /**
  * Standard result type for server actions
@@ -10,7 +9,7 @@ export type ActionResult<T> =
   | {
       success: false;
       error: string;
-      code?: ErrorCode;
+      statusCode?: number;
       errors?: Record<string, string[]>;
       context?: Record<string, unknown>;
     };

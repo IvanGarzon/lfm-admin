@@ -8,6 +8,7 @@ export enum ErrorCode {
   FORBIDDEN = 'AUTH_002',
   SESSION_EXPIRED = 'AUTH_003',
   INVALID_CREDENTIALS = 'AUTH_004',
+  INVALID_API_KEY = 'AUTH_005',
 
   // Validation (2xxx)
   VALIDATION_ERROR = 'VAL_001',

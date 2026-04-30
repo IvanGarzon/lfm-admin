@@ -12,7 +12,7 @@ import type { AccessChange } from '@/features/users/types';
 import { searchParamsCache } from '@/filters/users/users-filters';
 
 const userRepo = new UserRepository(prisma);
-const auditService = new AuditService();
+const auditService = new AuditService(prisma);
 const passwordResetTokenRepo = new PasswordResetTokenRepository(prisma);
 
 /**

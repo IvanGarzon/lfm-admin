@@ -14,11 +14,16 @@ import { AccountRepository } from '@/repositories/account-repository';
 import { TwoFactorTokenRepository } from '@/repositories/two-factor-token-repository';
 import { TwoFactorConfirmationRepository } from '@/repositories/two-factor-confirmation-repository';
 import { AuditService } from '@/services/audit.service';
-import { BadRequestError } from '@/services/error';
+import {
+  BadRequestError,
+  RateLimitError,
+  UnauthorizedError,
+  InternalServerError,
+} from '@/services/error';
 import { SignInSchema, OtpVerifySchema } from '@/schemas/auth';
 import type { SignInInput, OtpVerifyInput } from '@/schemas/auth';
 
-const auditService = new AuditService();
+const auditService = new AuditService(prisma);
 
 // -- Constants ----------------------------------------------------------------
 
@@ -63,7 +68,6 @@ export async function handleSignIn({
     const accountRepo = new AccountRepository(prisma);
 
     const existingUser = await userRepo.getUserByEmail(email);
-
     const existingAccount = await accountRepo.findByProviderAndAccountId(
       account.provider,
       account.providerAccountId,
@@ -184,12 +188,12 @@ export async function initiateSignIn(
     const user = await userRepo.getUserByEmail(email);
 
     if (!user || !user.password) {
-      return { success: false, error: 'Invalid email or password' };
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) {
-      return { success: false, error: 'Invalid email or password' };
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     if (!user.isTwoFactorEnabled) {
@@ -226,7 +230,7 @@ export async function initiateSignIn(
         metadata: { userId: user.id },
       });
 
-      return { success: false, error: 'Failed to send verification code. Please try again.' };
+      throw new InternalServerError('Failed to send verification code. Please try again.');
     }
 
     auditService.OtpRequested({
@@ -260,16 +264,17 @@ export async function verifyTwoFactorCode(
     const token = await tokenRepo.findByChallengeToken(challengeToken);
 
     if (!token) {
-      return { success: false, error: 'Invalid or expired verification session.' };
+      throw new UnauthorizedError('Invalid or expired verification session.');
     }
 
     if (token.usedAt) {
-      return { success: false, error: 'This code has already been used.' };
+      auditService.OtpAlreadyUsed({ data: { userId: token.userId } });
+      throw new UnauthorizedError('This code has already been used.');
     }
 
     if (token.expires < new Date()) {
       auditService.OtpExpired({ data: { userId: token.userId } });
-      return { success: false, error: 'Your verification code has expired. Please sign in again.' };
+      throw new UnauthorizedError('Your verification code has expired. Please sign in again.');
     }
 
     const hashedSubmitted = crypto.createHash('sha256').update(code).digest('hex');
@@ -284,14 +289,14 @@ export async function verifyTwoFactorCode(
       if (updated.numberOfAttempts >= MAX_ATTEMPTS) {
         await tokenRepo.markUsed(token.id);
         auditService.OtpLocked({ data: { userId: token.userId } });
-        return { success: false, error: 'Too many incorrect attempts. Please sign in again.' };
+        throw new RateLimitError('Too many incorrect attempts. Please sign in again.');
       }
+
       const remaining = MAX_ATTEMPTS - updated.numberOfAttempts;
       auditService.OtpFailed({ data: { userId: token.userId, attemptsRemaining: remaining } });
-      return {
-        success: false,
-        error: `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
-      };
+      throw new UnauthorizedError(
+        `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
+      );
     }
 
     const clientDetails = await getClientDetails();
