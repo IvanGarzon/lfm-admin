@@ -1,16 +1,19 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { SearchParams } from 'nuqs/server';
-import { Plus } from 'lucide-react';
+import { Plus, UserX2Icon } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
+import { EmptyState } from '@/components/shared/empty-state';
 import { EmployeesTable } from '@/features/staff/employees/components/employees-table';
 import { createEmployeeColumns } from '@/features/staff/employees/components/employee-columns';
 import { useDeleteEmployee } from '@/features/staff/employees/hooks/use-employees';
 import type { EmployeePagination } from '@/features/staff/employees/types';
-import dynamic from 'next/dynamic';
+import { searchParams as employeeSearchParams } from '@/filters/employees/employee-filters';
+import { hasActiveSearchFilters } from '@/lib/utils';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -60,6 +63,10 @@ export function EmployeesList({
     debounceMs: 500,
   });
 
+  const isZeroState =
+    (initialData?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(serverSearchParams, employeeSearchParams);
+
   return (
     <Box className="space-y-4 min-w-0 w-full">
       <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -67,19 +74,35 @@ export function EmployeesList({
           <h1 className="text-3xl font-bold tracking-tight">Employees</h1>
           <p className="text-muted-foreground text-sm">Manage and track all your employees</p>
         </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-            <Plus aria-hidden="true" className="h-4 w-4" />
-            Add Employee
-          </Button>
-        </Box>
+        {!isZeroState ? (
+          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+            <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              Add Employee
+            </Button>
+          </Box>
+        ) : null}
       </Box>
 
-      <EmployeesTable
-        table={table}
-        items={initialData.items}
-        totalItems={initialData.pagination.totalItems}
-      />
+      {isZeroState ? (
+        <EmptyState
+          icon={UserX2Icon}
+          title="No employees yet"
+          description="Add your first employee to start managing your staff."
+          action={
+            <Button onClick={handleShowCreateModal}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add Employee
+            </Button>
+          }
+        />
+      ) : (
+        <EmployeesTable
+          table={table}
+          items={initialData.items}
+          totalItems={initialData.pagination.totalItems}
+        />
+      )}
 
       {showCreateModal ? (
         <EmployeeDrawer open={showCreateModal} onClose={handleShowCreateModal} />
