@@ -10,7 +10,7 @@ export const SORTABLE_PRICE_LIST_COLUMNS = [
   'season',
   'multiplier',
   'createdAt',
-  'updatedAt',
+  'updatedAt'
 ] as const;
 
 export type SortablePriceListColumn = (typeof SORTABLE_PRICE_LIST_COLUMNS)[number];

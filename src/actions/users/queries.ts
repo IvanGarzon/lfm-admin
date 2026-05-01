@@ -28,7 +28,7 @@ export const getTenantUsers = withTenantPermission<SearchParams, UserPagination>
     } catch (error) {
       return handleActionError(error, 'Failed to fetch users');
     }
-  },
+  }
 );
 
 /**
@@ -46,7 +46,7 @@ export const getTenantUserById = withTenantPermission<string, UserDetail>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch user');
     }
-  },
+  }
 );
 
 /**
@@ -55,7 +55,7 @@ export const getTenantUserById = withTenantPermission<string, UserDetail>(
  * @returns ActionResult with the associated user's email if valid
  */
 export async function getPasswordResetToken(
-  token: string,
+  token: string
 ): Promise<{ success: boolean; data?: { email: string }; error?: string }> {
   try {
     const record = await passwordResetTokenRepo.findValid(token);
@@ -88,5 +88,5 @@ export const getUserRoleChanges = withTenantPermission<string, AccessChange[]>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch access changes');
     }
-  },
+  }
 );

@@ -42,7 +42,7 @@ export function getQuoteStatusLabel(status: QuoteStatus): string {
     REJECTED: 'rejected',
     EXPIRED: 'expired',
     CANCELLED: 'cancelled',
-    CONVERTED: 'converted',
+    CONVERTED: 'converted'
   };
 
   return labels[status];
@@ -79,27 +79,27 @@ export const VALID_QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> 
     QuoteStatusSchema.enum.SENT,
     QuoteStatusSchema.enum.REJECTED,
     QuoteStatusSchema.enum.EXPIRED,
-    QuoteStatusSchema.enum.CANCELLED,
+    QuoteStatusSchema.enum.CANCELLED
   ],
   [QuoteStatusSchema.enum.SENT]: [
     QuoteStatusSchema.enum.ON_HOLD,
     QuoteStatusSchema.enum.ACCEPTED,
     QuoteStatusSchema.enum.REJECTED,
     QuoteStatusSchema.enum.EXPIRED,
-    QuoteStatusSchema.enum.CANCELLED,
+    QuoteStatusSchema.enum.CANCELLED
   ],
   [QuoteStatusSchema.enum.ON_HOLD]: [
     QuoteStatusSchema.enum.ACCEPTED,
-    QuoteStatusSchema.enum.CANCELLED,
+    QuoteStatusSchema.enum.CANCELLED
   ],
   [QuoteStatusSchema.enum.ACCEPTED]: [
     QuoteStatusSchema.enum.CONVERTED,
-    QuoteStatusSchema.enum.CANCELLED,
+    QuoteStatusSchema.enum.CANCELLED
   ],
   [QuoteStatusSchema.enum.REJECTED]: [QuoteStatusSchema.enum.CANCELLED], // Can create version from rejected
   [QuoteStatusSchema.enum.EXPIRED]: [QuoteStatusSchema.enum.CANCELLED], // Can create version from expired
   [QuoteStatusSchema.enum.CANCELLED]: [], // Terminal state
-  [QuoteStatusSchema.enum.CONVERTED]: [], // Terminal state
+  [QuoteStatusSchema.enum.CONVERTED]: [] // Terminal state
 };
 
 /**
@@ -186,17 +186,17 @@ export function isTerminalQuoteStatus(status: QuoteStatus): boolean {
  */
 export function validateQuoteStatusTransition(
   fromStatus: QuoteStatus,
-  toStatus: QuoteStatus,
+  toStatus: QuoteStatus
 ): void {
   if (!canTransitionQuoteStatus(fromStatus, toStatus)) {
     if (isTerminalQuoteStatus(fromStatus)) {
       throw new Error(
-        `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`,
+        `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`
       );
     }
 
     throw new Error(
-      `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_QUOTE_STATUS_TRANSITIONS[fromStatus].join(', ')}`,
+      `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_QUOTE_STATUS_TRANSITIONS[fromStatus].join(', ')}`
     );
   }
 }
@@ -264,7 +264,7 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
       canCancel: false,
       canDelete: false,
       canCreateVersion: false,
-      canEdit: false,
+      canEdit: false
     };
   }
 
@@ -295,7 +295,7 @@ export function getQuotePermissions(status: QuoteStatus | undefined | null): Quo
       status === QuoteStatusSchema.enum.ACCEPTED ||
       status === QuoteStatusSchema.enum.REJECTED ||
       status === QuoteStatusSchema.enum.EXPIRED,
-    canEdit: status === QuoteStatusSchema.enum.DRAFT,
+    canEdit: status === QuoteStatusSchema.enum.DRAFT
   };
 }
 
@@ -382,7 +382,7 @@ export function calculateContentHash(quote: QuoteWithDetails): string {
     customer: {
       firstName: quote.customer.firstName,
       lastName: quote.customer.lastName,
-      email: quote.customer.email,
+      email: quote.customer.email
     },
     items: quote.items.map((item) => ({
       description: item.description,
@@ -395,11 +395,11 @@ export function calculateContentHash(quote: QuoteWithDetails): string {
       attachments: item.attachments.map((att) => ({
         id: att.id,
         fileName: att.fileName,
-        s3Url: att.s3Url,
-      })),
+        s3Url: att.s3Url
+      }))
     })),
     notes: quote.notes,
-    terms: quote.terms,
+    terms: quote.terms
   };
 
   return crypto.createHash('sha256').update(JSON.stringify(relevantData)).digest('hex');
@@ -507,7 +507,7 @@ export function getExpiredDays(validUntil: Date): number {
  */
 export function needsAttention({
   status,
-  validUntil,
+  validUntil
 }: {
   status: QuoteStatus;
   validUntil: Date;

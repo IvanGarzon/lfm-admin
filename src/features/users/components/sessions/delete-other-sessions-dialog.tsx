@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface DeleteOtherSessionsDialogProps {
@@ -24,7 +24,7 @@ export function DeleteOtherSessionsDialog({
   onOpenChange,
   onConfirm,
   sessionCount,
-  isPending = false,
+  isPending = false
 }: DeleteOtherSessionsDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -32,7 +32,7 @@ export function DeleteOtherSessionsDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Sign Out All Devices?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will sign out <span className="font-semibold text-foreground">{sessionCount}</span>{' '}
+            This will sign out <span className='font-semibold text-foreground'>{sessionCount}</span>{' '}
             {sessionCount === 1 ? 'session' : 'sessions'} including this device. You&apos;ll need to
             sign in again to access your account.
             <br />
@@ -48,7 +48,7 @@ export function DeleteOtherSessionsDialog({
               onConfirm();
             }}
             disabled={isPending}
-            className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
+            className='bg-destructive hover:bg-destructive/90 focus:ring-destructive'
           >
             {isPending
               ? 'Signing Out...'

@@ -15,7 +15,7 @@ import {
   CreateTenantSchema,
   UpdateTenantSchema,
   type CreateTenantInput,
-  type UpdateTenantInput,
+  type UpdateTenantInput
 } from '@/schemas/tenants';
 import type { Tenant } from '@/features/admin/tenants/types';
 
@@ -39,9 +39,9 @@ export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (ctx
         role: UserRoleSchema.enum.ADMIN,
         tenantId: tenant.id,
         invitedBy: ctx.user.id,
-        expiresAt,
+        expiresAt
       }),
-      userRepo.findById(ctx.user.id),
+      userRepo.findById(ctx.user.id)
     ]);
 
     if (inviter) {
@@ -54,8 +54,8 @@ export const createTenant = withSuperAdmin<CreateTenantInput, Tenant>(async (ctx
           tenantName: tenant.name,
           role: invitation.role,
           acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
-          expiresAt: invitation.expiresAt,
-        },
+          expiresAt: invitation.expiresAt
+        }
       });
     }
 
@@ -80,7 +80,7 @@ export const updateTenant = withSuperAdmin<{ id: string } & UpdateTenantInput, T
     } catch (error) {
       return handleActionError(error, 'Failed to update tenant');
     }
-  },
+  }
 );
 
 /**

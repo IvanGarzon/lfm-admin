@@ -5,13 +5,13 @@ import { toast } from 'sonner';
 import type {
   CreateEmployeeInput,
   UpdateEmployeeInput,
-  DeleteEmployeeInput,
+  DeleteEmployeeInput
 } from '@/schemas/employees';
 import { getEmployeeById } from '@/actions/staff/employees/queries';
 import {
   updateEmployee,
   createEmployee,
-  deleteEmployee,
+  deleteEmployee
 } from '@/actions/staff/employees/mutations';
 import type { EmployeeListItem } from '@/features/staff/employees/types';
 
@@ -20,7 +20,7 @@ export const EMPLOYEE_KEYS = {
   lists: () => [...EMPLOYEE_KEYS.all, 'list'] as const,
   list: (filters: string) => [...EMPLOYEE_KEYS.lists(), { filters }] as const,
   details: () => [...EMPLOYEE_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...EMPLOYEE_KEYS.details(), id] as const,
+  detail: (id: string) => [...EMPLOYEE_KEYS.details(), id] as const
 };
 
 export function useEmployeeById(id: string | undefined) {
@@ -40,7 +40,7 @@ export function useEmployeeById(id: string | undefined) {
     },
     enabled: Boolean(id),
     staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000
   });
 }
 
@@ -58,7 +58,7 @@ export function usePrefetchEmployee() {
 
         return result.data;
       },
-      staleTime: 2 * 60 * 1000,
+      staleTime: 2 * 60 * 1000
     });
   };
 }
@@ -85,7 +85,7 @@ export function useCreateEmployee() {
     },
     onSuccess: () => {
       toast.success('Employee created successfully');
-    },
+    }
   });
 }
 
@@ -118,7 +118,7 @@ export function useUpdateEmployee() {
     },
     onSuccess: () => {
       toast.success('Employee updated successfully');
-    },
+    }
   });
 }
 
@@ -144,6 +144,6 @@ export function useDeleteEmployee() {
     },
     onSuccess: () => {
       toast.success('Employee deleted successfully');
-    },
+    }
   });
 }

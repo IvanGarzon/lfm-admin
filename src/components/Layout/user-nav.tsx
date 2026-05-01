@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/shared/user-avatar';
 import { signOut, useSession } from 'next-auth/react';
@@ -21,21 +21,21 @@ export function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <UserAvatar
-              className="h-8 w-8"
+              className='h-8 w-8'
               user={{
                 name: session?.user?.name,
-                image: session?.user?.image || null,
+                image: session?.user?.image || null
               }}
             />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
-            <Box className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{session.user?.name}</p>
-              <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
+        <DropdownMenuContent className='w-56' align='end' forceMount>
+          <DropdownMenuLabel className='font-normal'>
+            <Box className='flex flex-col space-y-1'>
+              <p className='text-sm font-medium leading-none'>{session.user?.name}</p>
+              <p className='text-xs leading-none text-muted-foreground'>{session.user?.email}</p>
             </Box>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

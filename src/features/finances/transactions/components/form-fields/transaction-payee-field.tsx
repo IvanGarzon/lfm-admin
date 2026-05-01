@@ -17,7 +17,7 @@ export function TransactionPayeeField({
   isLoadingCustomers,
   isLoadingVendors,
   onVendorChange,
-  onCustomerChange,
+  onCustomerChange
 }: {
   control: Control<TransactionFormInput>;
   isDisabled: boolean;
@@ -32,7 +32,7 @@ export function TransactionPayeeField({
   if (transactionType === TransactionTypeSchema.enum.EXPENSE) {
     return (
       <Controller
-        name="vendorId"
+        name='vendorId'
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
@@ -40,8 +40,8 @@ export function TransactionPayeeField({
               vendors={vendors}
               value={field.value ?? undefined}
               onValueChange={onVendorChange}
-              placeholder="Select a vendor (optional)"
-              label="Vendor (Optional)"
+              placeholder='Select a vendor (optional)'
+              label='Vendor (Optional)'
               isLoading={isLoadingVendors}
               disabled={isDisabled}
             />
@@ -54,7 +54,7 @@ export function TransactionPayeeField({
 
   return (
     <Controller
-      name="customerId"
+      name='customerId'
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
@@ -62,8 +62,8 @@ export function TransactionPayeeField({
             customers={customers}
             value={field.value ?? undefined}
             onValueChange={onCustomerChange}
-            placeholder="Select a customer"
-            label="From (Customer/Client)"
+            placeholder='Select a customer'
+            label='From (Customer/Client)'
             isLoading={isLoadingCustomers}
             disabled={isDisabled}
             showAddCustomerLink={false}

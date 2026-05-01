@@ -23,7 +23,7 @@ export async function createDocument(data: {
     fileName,
     fileHash,
     mimeType = 'application/pdf',
-    metadata,
+    metadata
   } = data;
 
   // Validate that at least one ID is provided
@@ -44,8 +44,8 @@ export async function createDocument(data: {
     resourceId,
     metadata: {
       ...metadata,
-      documentKind: kind,
-    } as Record<string, string>,
+      documentKind: kind
+    } as Record<string, string>
   });
 
   // Create Database Record
@@ -62,8 +62,8 @@ export async function createDocument(data: {
       s3Url,
       metadata: metadata ?? Prisma.JsonNull,
       generatedAt: new Date(),
-      lastAccessedAt: new Date(),
-    },
+      lastAccessedAt: new Date()
+    }
   });
 
   return document;
@@ -77,18 +77,18 @@ export async function getLatestDocument(entityId: string, kind: DocumentKind) {
     return prisma.document.findFirst({
       where: {
         invoiceId: entityId,
-        kind,
+        kind
       },
-      orderBy: { generatedAt: 'desc' },
+      orderBy: { generatedAt: 'desc' }
     });
   }
 
   return prisma.document.findFirst({
     where: {
       quoteId: entityId,
-      kind,
+      kind
     },
-    orderBy: { generatedAt: 'desc' },
+    orderBy: { generatedAt: 'desc' }
   });
 }
 
@@ -97,7 +97,7 @@ export async function getLatestDocument(entityId: string, kind: DocumentKind) {
  */
 export async function getDocumentUrl(documentId: string) {
   const document = await prisma.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId }
   });
 
   if (!document) {
@@ -107,7 +107,7 @@ export async function getDocumentUrl(documentId: string) {
   // Update access time (fire and forget)
   await prisma.document.update({
     where: { id: documentId },
-    data: { lastAccessedAt: new Date() },
+    data: { lastAccessedAt: new Date() }
   });
 
   // Generate signed URL with filename to force download
@@ -120,7 +120,7 @@ export async function getDocumentUrl(documentId: string) {
  */
 export async function deleteDocument(documentId: string) {
   const document = await prisma.document.findUnique({
-    where: { id: documentId },
+    where: { id: documentId }
   });
 
   if (!document) return;
@@ -130,6 +130,6 @@ export async function deleteDocument(documentId: string) {
 
   // Delete from DB
   await prisma.document.delete({
-    where: { id: documentId },
+    where: { id: documentId }
   });
 }

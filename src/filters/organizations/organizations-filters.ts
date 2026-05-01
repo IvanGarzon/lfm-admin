@@ -1,6 +1,6 @@
 import {
   OrganizationStatusSchema,
-  type OrganizationStatus,
+  type OrganizationStatus
 } from '@/zod/schemas/enums/OrganizationStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { sanitizeSearchQuery, validatePaginationParams } from '@/lib/validation';
@@ -10,7 +10,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  parseAsArrayOf,
+  parseAsArrayOf
 } from 'nuqs/server';
 
 import { SORTABLE_ORGANIZATION_COLUMNS } from '@/features/crm/organizations/constants/sortable-columns';
@@ -22,10 +22,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -34,9 +34,9 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   status: parseAsArrayOf(
-    parseAsStringEnum<OrganizationStatus>(OrganizationStatusSchema.options),
+    parseAsStringEnum<OrganizationStatus>(OrganizationStatusSchema.options)
   ).withDefault([]),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);
@@ -49,7 +49,7 @@ export const organizationSearchParamsDefaults = getSearchParamsDefaults(searchPa
  * - Ensures status values are from allowed enum
  */
 export function validateOrganizationSearchParams(
-  params: Awaited<ReturnType<typeof searchParamsCache.parse>>,
+  params: Awaited<ReturnType<typeof searchParamsCache.parse>>
 ) {
   const { page, perPage } = validatePaginationParams(params.page, params.perPage);
 
@@ -58,6 +58,6 @@ export function validateOrganizationSearchParams(
     page,
     perPage,
     status: params.status, // Already validated by parseAsStringEnum
-    sort: params.sort, // Already validated by getSortingStateParser
+    sort: params.sort // Already validated by getSortingStateParser
   };
 }

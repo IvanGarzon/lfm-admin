@@ -143,16 +143,16 @@ export const UpdateUserSchema = z.object({
   email: commonValidators.email(),
   phone: commonValidators.phoneOptional(),
   status: UserStatusSchema,
-  isTwoFactorEnabled: z.boolean(),
+  isTwoFactorEnabled: z.boolean()
 });
 
 export const UpdateUserRoleSchema = z.object({
   id: z.cuid({ error: 'Invalid user ID' }),
-  role: UserRoleSchema,
+  role: UserRoleSchema
 });
 
 export const SoftDeleteUserSchema = z.object({
-  id: z.cuid({ error: 'Invalid user ID' }),
+  id: z.cuid({ error: 'Invalid user ID' })
 });
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -200,7 +200,7 @@ export function createUpdateUserInput(overrides: Partial<UpdateUserInput> = {}):
     phone: null,
     status: 'ACTIVE',
     isTwoFactorEnabled: false,
-    ...overrides,
+    ...overrides
   };
 }
 ```
@@ -271,7 +271,7 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   USER: 'Staff',
   MANAGER: 'Manager',
   ADMIN: 'Admin',
-  SUPER_ADMIN: 'Super Admin',
+  SUPER_ADMIN: 'Super Admin'
 };
 ```
 
@@ -287,7 +287,7 @@ export const SORTABLE_USER_COLUMNS = [
   'role',
   'status',
   'lastLoginAt',
-  'createdAt',
+  'createdAt'
 ] as const;
 
 export type SortableUserColumn = (typeof SORTABLE_USER_COLUMNS)[number];
@@ -528,7 +528,7 @@ import { UserRepository } from '../user-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 
 setupTestDatabaseLifecycle();
@@ -552,7 +552,7 @@ describe('UserRepository (integration)', () => {
       status?: 'ACTIVE' | 'INVITED' | 'SUSPENDED';
       firstName?: string;
       lastName?: string;
-    } = {},
+    } = {}
   ) {
     return getTestPrisma().user.create({
       data: {
@@ -561,8 +561,8 @@ describe('UserRepository (integration)', () => {
         email: overrides.email ?? `alex-${Date.now()}@example.com`,
         role: overrides.role ?? 'USER',
         status: overrides.status ?? 'ACTIVE',
-        tenantId,
-      },
+        tenantId
+      }
     });
   }
 
@@ -583,7 +583,7 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
       await getTestPrisma().user.update({
         where: { id: user.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: new Date() }
       });
 
       const result = await repository.findTenantUsers({ page: 1, perPage: 10 }, tenantId);
@@ -597,7 +597,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.findTenantUsers(
         { search: 'Unique', page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.length).toBe(1);
@@ -610,7 +610,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.findTenantUsers(
         { role: ['MANAGER'], page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((u) => u.role === 'MANAGER')).toBe(true);
@@ -622,7 +622,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.findTenantUsers(
         { status: ['SUSPENDED'], page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((u) => u.status === 'SUSPENDED')).toBe(true);
@@ -635,8 +635,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.findTenantUsers({ page: 1, perPage: 10 }, tenantId);
@@ -667,7 +667,7 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
       await getTestPrisma().user.update({
         where: { id: user.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: new Date() }
       });
 
       const result = await repository.findTenantUserById(user.id, tenantId);
@@ -682,8 +682,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.findTenantUserById(otherUser.id, tenantId);
@@ -704,7 +704,7 @@ describe('UserRepository (integration)', () => {
         email: 'updated@test.com',
         phone: '0400000000',
         status: 'SUSPENDED',
-        isTwoFactorEnabled: true,
+        isTwoFactorEnabled: true
       });
 
       expect(result.firstName).toBe('Updated');
@@ -752,8 +752,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.softDeleteTenantUser(otherUser.id, tenantId);
@@ -801,7 +801,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  parseAsArrayOf,
+  parseAsArrayOf
 } from 'nuqs/server';
 
 const sortableColumnIds = new Set(SORTABLE_USER_COLUMNS);
@@ -811,10 +811,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -823,12 +823,12 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   role: parseAsArrayOf(
-    parseAsStringEnum<UserRole>(UserRoleSchema.options as UserRole[]),
+    parseAsStringEnum<UserRole>(UserRoleSchema.options as UserRole[])
   ).withDefault([]),
   status: parseAsArrayOf(
-    parseAsStringEnum<UserStatus>(UserStatusSchema.options as UserStatus[]),
+    parseAsStringEnum<UserStatus>(UserStatusSchema.options as UserStatus[])
   ).withDefault([]),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);
@@ -888,7 +888,7 @@ export const getTenantUsers = withTenantPermission<SearchParams, UserPagination>
     } catch (error) {
       return handleActionError(error, 'Failed to fetch users');
     }
-  },
+  }
 );
 
 /**
@@ -906,7 +906,7 @@ export const getTenantUserById = withTenantPermission<string, UserDetail>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch user');
     }
-  },
+  }
 );
 ```
 
@@ -927,7 +927,7 @@ import {
   SoftDeleteUserSchema,
   type UpdateUserInput,
   type UpdateUserRoleInput,
-  type SoftDeleteUserInput,
+  type SoftDeleteUserInput
 } from '@/schemas/users';
 import type { UserDetail } from '@/features/users/types';
 import type { User } from '@/prisma/client';
@@ -956,7 +956,7 @@ export const updateUser = withTenantPermission<UpdateUserInput, UserDetail>(
     } catch (error) {
       return handleActionError(error, 'Failed to update user');
     }
-  },
+  }
 );
 
 /**
@@ -981,7 +981,7 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
     } catch (error) {
       return handleActionError(error, 'Failed to update user role');
     }
-  },
+  }
 );
 
 /**
@@ -1003,7 +1003,7 @@ export const softDeleteUser = withTenantPermission<SoftDeleteUserInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to delete user');
     }
-  },
+  }
 );
 ```
 
@@ -1036,23 +1036,23 @@ import type { UserPagination, UserDetail } from '@/features/users/types';
 const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
     findTenantUsers: vi.fn(),
-    findTenantUserById: vi.fn(),
+    findTenantUserById: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
 vi.mock('@/filters/users/users-filters', () => ({
   searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 }),
-  },
+    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 })
+  }
 }));
 
 const TEST_USER_ID = testIds.user();
@@ -1069,8 +1069,8 @@ const mockPagination: UserPagination = {
       status: 'ACTIVE',
       lastLoginAt: null,
       createdAt: new Date('2024-01-01'),
-      addedBy: null,
-    },
+      addedBy: null
+    }
   ],
   pagination: {
     totalItems: 1,
@@ -1079,8 +1079,8 @@ const mockPagination: UserPagination = {
     hasNextPage: false,
     hasPreviousPage: false,
     nextPage: null,
-    previousPage: null,
-  },
+    previousPage: null
+  }
 };
 
 const mockUser: UserDetail = {
@@ -1094,7 +1094,7 @@ const mockUser: UserDetail = {
   isTwoFactorEnabled: false,
   lastLoginAt: null,
   createdAt: new Date('2024-01-01'),
-  addedBy: null,
+  addedBy: null
 };
 
 describe('User Queries', () => {
@@ -1175,15 +1175,15 @@ const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
     findTenantUserById: vi.fn(),
     updateTenantUser: vi.fn(),
     updateTenantUserRole: vi.fn(),
-    softDeleteTenantUser: vi.fn(),
+    softDeleteTenantUser: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -1202,7 +1202,7 @@ const mockUser: UserDetail = {
   isTwoFactorEnabled: false,
   lastLoginAt: null,
   createdAt: new Date('2024-01-01'),
-  addedBy: null,
+  addedBy: null
 };
 
 const baseInput = createUpdateUserInput({ id: TEST_USER_ID });
@@ -1259,7 +1259,7 @@ describe('User Mutations', () => {
       expect(mockUserRepo.updateTenantUserRole).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        'ADMIN',
+        'ADMIN'
       );
     });
 
@@ -1337,7 +1337,7 @@ export const USER_KEYS = {
   lists: () => [...USER_KEYS.all, 'list'] as const,
   list: (filters: string) => [...USER_KEYS.lists(), { filters }] as const,
   details: () => [...USER_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...USER_KEYS.details(), id] as const,
+  detail: (id: string) => [...USER_KEYS.details(), id] as const
 };
 
 export function useUser(id: string | undefined) {
@@ -1350,7 +1350,7 @@ export function useUser(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -1376,7 +1376,7 @@ export function useUpdateUser() {
           email: newData.email,
           phone: newData.phone ?? null,
           status: newData.status,
-          isTwoFactorEnabled: newData.isTwoFactorEnabled,
+          isTwoFactorEnabled: newData.isTwoFactorEnabled
         };
       });
       return { previousUser };
@@ -1393,7 +1393,7 @@ export function useUpdateUser() {
     },
     onSuccess: () => {
       toast.success('User updated successfully');
-    },
+    }
   });
 }
 
@@ -1418,7 +1418,7 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       toast.success('Role updated successfully');
-    },
+    }
   });
 }
 
@@ -1451,7 +1451,7 @@ export function useSoftDeleteUser() {
     },
     onSuccess: () => {
       toast.success('User removed');
-    },
+    }
   });
 }
 ```
@@ -1498,22 +1498,22 @@ const USER_STATUS_CONFIG: Record<UserStatus, StatusBadgeConfig> = {
     variant: 'outline',
     className:
       'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800',
-    icon: <CheckCircle2 className="h-4 w-4" />,
+    icon: <CheckCircle2 className='h-4 w-4' />
   },
   INVITED: {
     label: 'Invited',
     variant: 'outline',
     className:
       'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800',
-    icon: <CircleDashed className="h-4 w-4" />,
+    icon: <CircleDashed className='h-4 w-4' />
   },
   SUSPENDED: {
     label: 'Suspended',
     variant: 'outline',
     className:
       'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800',
-    icon: <Ban className="h-4 w-4" />,
-  },
+    icon: <Ban className='h-4 w-4' />
+  }
 };
 
 export function UserStatusBadge({ status, className }: UserStatusBadgeProps) {
@@ -1561,7 +1561,7 @@ function UserLink({ userId, name }: { userId: string; name: string }) {
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {name}
     </Link>
   );
@@ -1571,19 +1571,19 @@ export const userColumns: ColumnDef<UserListItem>[] = [
   {
     id: 'search',
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
-    header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='User' />,
     cell: ({ row }) => (
-      <Box className="flex items-center gap-3">
+      <Box className='flex items-center gap-3'>
         <UserAvatar
           user={{ name: `${row.original.firstName} ${row.original.lastName}`, image: null }}
-          className="h-8 w-8"
+          className='h-8 w-8'
         />
-        <Box className="flex flex-col">
+        <Box className='flex flex-col'>
           <UserLink
             userId={row.original.id}
             name={`${row.original.firstName} ${row.original.lastName}`}
           />
-          <Box className="text-xs text-muted-foreground">{row.original.email}</Box>
+          <Box className='text-xs text-muted-foreground'>{row.original.email}</Box>
         </Box>
       </Box>
     ),
@@ -1593,46 +1593,46 @@ export const userColumns: ColumnDef<UserListItem>[] = [
       label: 'User',
       placeholder: 'Search users...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'role',
     accessorKey: 'role',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
-    cell: ({ row }) => <span className="text-sm">{USER_ROLE_LABELS[row.original.role]}</span>,
-    enableSorting: true,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Role' />,
+    cell: ({ row }) => <span className='text-sm'>{USER_ROLE_LABELS[row.original.role]}</span>,
+    enableSorting: true
   },
   {
     id: 'status',
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'phone',
     accessorKey: 'phone',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Phone' />,
     cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">{row.original.phone ?? '—'}</span>
-    ),
+      <span className='text-sm text-muted-foreground'>{row.original.phone ?? '—'}</span>
+    )
   },
   {
     id: 'lastLoginAt',
     accessorKey: 'lastLoginAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Login" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Last Login' />,
     cell: ({ row }) =>
       row.original.lastLoginAt ? format(new Date(row.original.lastLoginAt), 'MMM dd, yyyy') : '—',
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'createdAt',
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Added" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Added' />,
     cell: ({ row }) => format(new Date(row.original.createdAt), 'MMM dd, yyyy'),
-    enableSorting: true,
-  },
+    enableSorting: true
+  }
 ];
 ```
 
@@ -1673,7 +1673,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -1681,7 +1681,7 @@ import type { UserDetail } from '@/features/users/types';
 
 const StatusOptions = UserStatusSchema.options.map((s) => ({
   value: s,
-  label: s.charAt(0) + s.slice(1).toLowerCase(),
+  label: s.charAt(0) + s.slice(1).toLowerCase()
 }));
 
 function mapUserToFormValues(user: UserDetail): UpdateUserInput {
@@ -1692,7 +1692,7 @@ function mapUserToFormValues(user: UserDetail): UpdateUserInput {
     email: user.email ?? '',
     phone: user.phone ?? null,
     status: user.status,
-    isTwoFactorEnabled: user.isTwoFactorEnabled,
+    isTwoFactorEnabled: user.isTwoFactorEnabled
   };
 }
 
@@ -1701,7 +1701,7 @@ export function UserForm({
   onUpdate,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserInput) => void;
@@ -1711,7 +1711,7 @@ export function UserForm({
 }) {
   const form = useForm<UpdateUserInput>({
     resolver: zodResolver(UpdateUserSchema),
-    defaultValues: mapUserToFormValues(user),
+    defaultValues: mapUserToFormValues(user)
   });
 
   useUnsavedChanges(form.formState.isDirty, onDirtyStateChange);
@@ -1720,16 +1720,16 @@ export function UserForm({
     (data: UpdateUserInput) => {
       onUpdate(data);
     },
-    [onUpdate],
+    [onUpdate]
   );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col h-full">
-        <Box className="flex-1 overflow-y-auto p-6 space-y-4">
-          <Box className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className='flex flex-col h-full'>
+        <Box className='flex-1 overflow-y-auto p-6 space-y-4'>
+          <Box className='grid grid-cols-2 gap-4'>
             <FieldGroup>
-              <Field name="firstName">
+              <Field name='firstName'>
                 <FieldLabel>First name</FieldLabel>
                 <FieldContent>
                   <Input {...form.register('firstName')} />
@@ -1739,7 +1739,7 @@ export function UserForm({
             </FieldGroup>
 
             <FieldGroup>
-              <Field name="lastName">
+              <Field name='lastName'>
                 <FieldLabel>Last name</FieldLabel>
                 <FieldContent>
                   <Input {...form.register('lastName')} />
@@ -1750,17 +1750,17 @@ export function UserForm({
           </Box>
 
           <FieldGroup>
-            <Field name="email">
+            <Field name='email'>
               <FieldLabel>Email</FieldLabel>
               <FieldContent>
-                <Input type="email" {...form.register('email')} />
+                <Input type='email' {...form.register('email')} />
               </FieldContent>
               <FieldError />
             </Field>
           </FieldGroup>
 
           <FieldGroup>
-            <Field name="phone">
+            <Field name='phone'>
               <FieldLabel>Phone</FieldLabel>
               <FieldContent>
                 <Input {...form.register('phone', { setValueAs: (v) => v || null })} />
@@ -1770,7 +1770,7 @@ export function UserForm({
           </FieldGroup>
 
           <FieldGroup>
-            <Field name="status">
+            <Field name='status'>
               <FieldLabel>Status</FieldLabel>
               <FieldContent>
                 <Select
@@ -1780,7 +1780,7 @@ export function UserForm({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder='Select status' />
                   </SelectTrigger>
                   <SelectContent>
                     {StatusOptions.map((opt) => (
@@ -1796,8 +1796,8 @@ export function UserForm({
           </FieldGroup>
 
           <FieldGroup>
-            <Field name="isTwoFactorEnabled">
-              <Box className="flex items-center justify-between">
+            <Field name='isTwoFactorEnabled'>
+              <Box className='flex items-center justify-between'>
                 <FieldLabel>Two-factor authentication</FieldLabel>
                 <Switch
                   checked={form.watch('isTwoFactorEnabled')}
@@ -1811,14 +1811,14 @@ export function UserForm({
           </FieldGroup>
         </Box>
 
-        <Box className="border-t p-4 flex items-center justify-end gap-3">
+        <Box className='border-t p-4 flex items-center justify-end gap-3'>
           {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isUpdating}>
+            <Button type='button' variant='outline' onClick={onClose} disabled={isUpdating}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isUpdating || !form.formState.isDirty}>
-            {isUpdating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+          <Button type='submit' disabled={isUpdating || !form.formState.isDirty}>
+            {isUpdating ? <Loader2 className='size-4 animate-spin mr-2' /> : null}
             Save changes
           </Button>
         </Box>
@@ -1858,7 +1858,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PERMISSIONS, RolePolicies } from '@/lib/permissions';
@@ -1872,7 +1872,7 @@ const SELECTABLE_ROLES: UserRole[] = ['USER', 'MANAGER', 'ADMIN'];
 export function UserPermissionsForm({
   user,
   onUpdate,
-  isUpdating = false,
+  isUpdating = false
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserRoleInput) => void;
@@ -1889,10 +1889,10 @@ export function UserPermissionsForm({
   };
 
   return (
-    <Box className="flex flex-col h-full">
-      <Box className="flex-1 overflow-y-auto p-6 space-y-6">
+    <Box className='flex flex-col h-full'>
+      <Box className='flex-1 overflow-y-auto p-6 space-y-6'>
         <Box>
-          <p className="text-sm font-medium mb-2">Role</p>
+          <p className='text-sm font-medium mb-2'>Role</p>
           <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as UserRole)}>
             <SelectTrigger>
               <SelectValue />
@@ -1908,19 +1908,19 @@ export function UserPermissionsForm({
         </Box>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-sm font-medium text-muted-foreground uppercase tracking-wider'>
               Permissions for {USER_ROLE_LABELS[selectedRole]}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {allowedPermissions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No permissions assigned.</p>
+              <p className='text-sm text-muted-foreground'>No permissions assigned.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className='space-y-2'>
                 {allowedPermissions.map((key) => (
-                  <li key={key} className="flex items-start gap-2 text-sm">
-                    <span className="mt-0.5 size-1.5 rounded-full bg-green-500 shrink-0 mt-2" />
+                  <li key={key} className='flex items-start gap-2 text-sm'>
+                    <span className='mt-0.5 size-1.5 rounded-full bg-green-500 shrink-0 mt-2' />
                     <span>{PERMISSIONS[key]?.label ?? key}</span>
                   </li>
                 ))}
@@ -1930,9 +1930,9 @@ export function UserPermissionsForm({
         </Card>
       </Box>
 
-      <Box className="border-t p-4 flex justify-end">
+      <Box className='border-t p-4 flex justify-end'>
         <Button onClick={handleSave} disabled={isUpdating || !isDirty}>
-          {isUpdating ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+          {isUpdating ? <Loader2 className='size-4 animate-spin mr-2' /> : null}
           Save role
         </Button>
       </Box>
@@ -1971,7 +1971,7 @@ import {
   DrawerBody,
   DrawerContent,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -2006,34 +2006,34 @@ export function UserDrawer({ id }: { id: string }) {
         router.push(targetPath);
       }
     },
-    [router, queryString],
+    [router, queryString]
   );
 
   const handleUpdate = useCallback(
     (data: UpdateUserInput) => {
       updateUser.mutate(data, {
-        onSuccess: () => setHasUnsavedChanges(false),
+        onSuccess: () => setHasUnsavedChanges(false)
       });
     },
-    [updateUser],
+    [updateUser]
   );
 
   const handleUpdateRole = useCallback(
     (data: UpdateUserRoleInput) => {
       updateUserRole.mutate(data);
     },
-    [updateUserRole],
+    [updateUserRole]
   );
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0!">
+      <DrawerContent className='overflow-x-hidden dark:bg-gray-925 pb-0!'>
         {isLoading ? (
           <>
             <DrawerHeader>
               <DrawerTitle>User Details</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6">Loading...</Box>
+            <Box className='p-6'>Loading...</Box>
           </>
         ) : null}
 
@@ -2042,7 +2042,7 @@ export function UserDrawer({ id }: { id: string }) {
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6 text-destructive">
+            <Box className='p-6 text-destructive'>
               Could not load user details: {error?.message}
             </Box>
           </>
@@ -2050,52 +2050,52 @@ export function UserDrawer({ id }: { id: string }) {
 
         {user && !isLoading && !isError ? (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-              <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
+            <Box className='-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900'>
+              <Box className='mt-1 flex flex-row items-center gap-4 flex-1'>
                 <UserAvatar
                   user={{ name: `${user.firstName} ${user.lastName}`, image: null }}
-                  className="size-12"
+                  className='size-12'
                 />
-                <Box className="flex flex-col">
-                  <Box className="flex items-center gap-2">
-                    <DrawerTitle className="text-xl font-semibold tracking-tight">
+                <Box className='flex flex-col'>
+                  <Box className='flex items-center gap-2'>
+                    <DrawerTitle className='text-xl font-semibold tracking-tight'>
                       {user.firstName} {user.lastName}
                     </DrawerTitle>
                     {hasUnsavedChanges ? (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle className="h-3 w-3" />
+                      <span className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20'>
+                        <AlertCircle className='h-3 w-3' />
                         Unsaved changes
                       </span>
                     ) : null}
                   </Box>
-                  <Box className="flex items-center gap-2 mt-1">
+                  <Box className='flex items-center gap-2 mt-1'>
                     <UserStatusBadge status={user.status} />
-                    <Box className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                      <span className="font-mono">{user.id}</span>
-                      <CopyButton value={user.id} className="size-4 p-0 border-none" />
+                    <Box className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
+                      <span className='font-mono'>{user.id}</span>
+                      <CopyButton value={user.id} className='size-4 p-0 border-none' />
                     </Box>
                   </Box>
                 </Box>
               </Box>
 
               <Button
-                variant="ghost"
-                className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+                variant='ghost'
+                className='aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10'
                 onClick={() => handleOpenChange(false)}
               >
-                <X className="size-5" aria-hidden="true" />
-                <span className="sr-only">Close</span>
+                <X className='size-5' aria-hidden='true' />
+                <span className='sr-only'>Close</span>
               </Button>
             </Box>
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
-              <Tabs defaultValue="details" className="flex flex-col h-full">
-                <TabsList className="mx-6 mt-4 w-fit">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            <DrawerBody className='py-0! -mx-6 h-full overflow-hidden'>
+              <Tabs defaultValue='details' className='flex flex-col h-full'>
+                <TabsList className='mx-6 mt-4 w-fit'>
+                  <TabsTrigger value='details'>Details</TabsTrigger>
+                  <TabsTrigger value='permissions'>Permissions</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="details" className="flex-1 overflow-hidden mt-0">
+                <TabsContent value='details' className='flex-1 overflow-hidden mt-0'>
                   <UserForm
                     user={user}
                     onUpdate={handleUpdate}
@@ -2104,7 +2104,7 @@ export function UserDrawer({ id }: { id: string }) {
                   />
                 </TabsContent>
 
-                <TabsContent value="permissions" className="flex-1 overflow-hidden mt-0">
+                <TabsContent value='permissions' className='flex-1 overflow-hidden mt-0'>
                   <UserPermissionsForm
                     user={user}
                     onUpdate={handleUpdateRole}
@@ -2163,13 +2163,13 @@ import type { UserPagination } from '@/features/users/types';
 
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
-  { ssr: false, loading: () => null },
+  { ssr: false, loading: () => null }
 );
 
 export function UsersList({
   initialData,
   searchParams: serverSearchParams,
-  openUserId,
+  openUserId
 }: {
   initialData: UserPagination;
   searchParams: SearchParams;
@@ -2185,22 +2185,22 @@ export function UsersList({
     columns,
     pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
-      <Box className="mb-4">
-        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground text-sm">Manage users and their access</p>
+    <Box className='space-y-4 min-w-0 w-full'>
+      <Box className='mb-4'>
+        <h1 className='text-3xl font-bold tracking-tight'>Users</h1>
+        <p className='text-muted-foreground text-sm'>Manage users and their access</p>
       </Box>
 
-      <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+      <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
         <DataTableToolbar table={table} />
         {initialData.items.length ? (
           <DataTable table={table} totalItems={initialData.pagination.totalItems} />
         ) : (
-          <Box className="text-center py-12 text-muted-foreground">No users found.</Box>
+          <Box className='text-center py-12 text-muted-foreground'>No users found.</Box>
         )}
       </Card>
 
@@ -2238,7 +2238,7 @@ import { constructMetadata } from '@/lib/utils';
 
 export const metadata = constructMetadata({
   title: 'Users – lfm dashboard',
-  description: 'Manage users and their access.',
+  description: 'Manage users and their access.'
 });
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -2268,7 +2268,7 @@ import { getTenantUsers } from '@/actions/users/queries';
 
 export default async function UserPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

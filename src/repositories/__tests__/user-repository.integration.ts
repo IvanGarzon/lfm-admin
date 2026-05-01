@@ -12,7 +12,7 @@ import { UserRepository } from '../user-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createUserData } from '@/lib/testing';
 
@@ -32,7 +32,7 @@ describe('UserRepository (integration)', () => {
 
   async function createUser(overrides: Parameters<typeof createUserData>[0] = {}) {
     return getTestPrisma().user.create({
-      data: { ...createUserData(overrides), tenantId },
+      data: { ...createUserData(overrides), tenantId }
     });
   }
 
@@ -45,7 +45,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.searchAndPaginateTenantUsers(
         { page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.length).toBe(2);
@@ -56,12 +56,12 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
       await getTestPrisma().user.update({
         where: { id: user.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: new Date() }
       });
 
       const result = await repository.searchAndPaginateTenantUsers(
         { page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.find((tenantUser) => tenantUser.id === user.id)).toBeUndefined();
@@ -73,7 +73,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.searchAndPaginateTenantUsers(
         { search: 'Unique', page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.length).toBe(1);
@@ -86,7 +86,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.searchAndPaginateTenantUsers(
         { role: ['MANAGER'], page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((u) => u.role === 'MANAGER')).toBe(true);
@@ -98,7 +98,7 @@ describe('UserRepository (integration)', () => {
 
       const result = await repository.searchAndPaginateTenantUsers(
         { status: ['SUSPENDED'], page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((tenantUser) => tenantUser.status === 'SUSPENDED')).toBe(true);
@@ -111,17 +111,17 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.searchAndPaginateTenantUsers(
         { page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(
-        result.items.find((tenantUser) => tenantUser.email === 'other@tenant.com'),
+        result.items.find((tenantUser) => tenantUser.email === 'other@tenant.com')
       ).toBeUndefined();
     });
   });
@@ -148,7 +148,7 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
       await getTestPrisma().user.update({
         where: { id: user.id },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: new Date() }
       });
 
       const result = await repository.findTenantUserById(user.id, tenantId);
@@ -163,8 +163,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.findTenantUserById(otherUser.id, tenantId);
@@ -185,7 +185,7 @@ describe('UserRepository (integration)', () => {
         email: 'updated@test.com',
         phone: '0400000000',
         status: 'SUSPENDED',
-        isTwoFactorEnabled: true,
+        isTwoFactorEnabled: true
       });
 
       expect(result.firstName).toBe('Updated');
@@ -200,8 +200,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       await expect(
@@ -210,8 +210,8 @@ describe('UserRepository (integration)', () => {
           lastName: 'Name',
           email: 'hacked@test.com',
           status: 'ACTIVE',
-          isTwoFactorEnabled: false,
-        }),
+          isTwoFactorEnabled: false
+        })
       ).rejects.toThrow();
 
       const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
@@ -226,7 +226,7 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
 
       const result = await repository.updateUserSecurity(user.id, tenantId, {
-        isTwoFactorEnabled: true,
+        isTwoFactorEnabled: true
       });
 
       expect(result.isTwoFactorEnabled).toBe(true);
@@ -234,11 +234,11 @@ describe('UserRepository (integration)', () => {
 
     it('disables two-factor authentication', async () => {
       const user = await getTestPrisma().user.create({
-        data: { ...createUserData(), tenantId, isTwoFactorEnabled: true },
+        data: { ...createUserData(), tenantId, isTwoFactorEnabled: true }
       });
 
       const result = await repository.updateUserSecurity(user.id, tenantId, {
-        isTwoFactorEnabled: false,
+        isTwoFactorEnabled: false
       });
 
       expect(result.isTwoFactorEnabled).toBe(false);
@@ -248,7 +248,7 @@ describe('UserRepository (integration)', () => {
       const user = await createUser();
 
       const result = await repository.updateUserSecurity(user.id, tenantId, {
-        loginNotificationsEnabled: true,
+        loginNotificationsEnabled: true
       });
 
       expect(result.loginNotificationsEnabled).toBe(true);
@@ -256,11 +256,11 @@ describe('UserRepository (integration)', () => {
 
     it('disables login notifications', async () => {
       const user = await getTestPrisma().user.create({
-        data: { ...createUserData(), tenantId, loginNotificationsEnabled: true },
+        data: { ...createUserData(), tenantId, loginNotificationsEnabled: true }
       });
 
       const result = await repository.updateUserSecurity(user.id, tenantId, {
-        loginNotificationsEnabled: false,
+        loginNotificationsEnabled: false
       });
 
       expect(result.loginNotificationsEnabled).toBe(false);
@@ -273,12 +273,12 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       await expect(
-        repository.updateUserSecurity(otherUser.id, tenantId, { isTwoFactorEnabled: true }),
+        repository.updateUserSecurity(otherUser.id, tenantId, { isTwoFactorEnabled: true })
       ).rejects.toThrow();
 
       const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
@@ -300,7 +300,7 @@ describe('UserRepository (integration)', () => {
 
     it('throws when user not found', async () => {
       await expect(
-        repository.updateTenantUserRole('nonexistent-id', tenantId, 'ADMIN'),
+        repository.updateTenantUserRole('nonexistent-id', tenantId, 'ADMIN')
       ).rejects.toThrow();
     });
 
@@ -312,12 +312,12 @@ describe('UserRepository (integration)', () => {
           lastName: 'User',
           email: 'other@tenant.com',
           role: 'USER',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       await expect(
-        repository.updateTenantUserRole(otherUser.id, tenantId, 'ADMIN'),
+        repository.updateTenantUserRole(otherUser.id, tenantId, 'ADMIN')
       ).rejects.toThrow();
 
       const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
@@ -345,12 +345,12 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       await expect(
-        repository.updateUserAvatar(otherUser.id, tenantId, 'https://fake.com/avatar.jpg'),
+        repository.updateUserAvatar(otherUser.id, tenantId, 'https://fake.com/avatar.jpg')
       ).rejects.toThrow();
 
       const unchanged = await getTestPrisma().user.findUnique({ where: { id: otherUser.id } });
@@ -384,8 +384,8 @@ describe('UserRepository (integration)', () => {
           firstName: 'Other',
           lastName: 'User',
           email: 'other@tenant.com',
-          tenantId: otherTenantId,
-        },
+          tenantId: otherTenantId
+        }
       });
 
       const result = await repository.softDeleteTenantUser(otherUser.id, tenantId);

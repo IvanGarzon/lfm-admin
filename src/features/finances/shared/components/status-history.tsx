@@ -40,7 +40,7 @@ interface StatusHistoryProps<TStatus extends FinanceStatus> {
  */
 function StatusBadge<TStatus extends FinanceStatus>({
   status,
-  renderBadge,
+  renderBadge
 }: {
   status: TStatus;
   renderBadge: (status: TStatus) => React.ReactNode;
@@ -68,28 +68,28 @@ function StatusBadge<TStatus extends FinanceStatus>({
  */
 export function StatusHistory<TStatus extends FinanceStatus>({
   history,
-  renderStatusBadge,
+  renderStatusBadge
 }: StatusHistoryProps<TStatus>) {
   return (
-    <Box className="space-y-0">
+    <Box className='space-y-0'>
       {history.map((item, index) => {
         const isLast = index === history.length - 1;
 
         return (
-          <Box key={item.id} className="relative">
-            <Box className="flex gap-3">
+          <Box key={item.id} className='relative'>
+            <Box className='flex gap-3'>
               {/* Timeline dot */}
-              <Box className="relative flex h-6 w-6 shrink-0 items-center justify-center mt-1">
-                <Box className="h-2.5 w-2.5 rounded-full border-2 border-primary bg-primary z-10" />
+              <Box className='relative flex h-6 w-6 shrink-0 items-center justify-center mt-1'>
+                <Box className='h-2.5 w-2.5 rounded-full border-2 border-primary bg-primary z-10' />
               </Box>
 
               {/* Content */}
-              <Box className="flex-1 pb-4">
-                <Box className="rounded-lg border p-4">
+              <Box className='flex-1 pb-4'>
+                <Box className='rounded-lg border p-4'>
                   {/* Status and Date Row */}
-                  <Box className="flex items-start justify-between gap-4 mb-3">
+                  <Box className='flex items-start justify-between gap-4 mb-3'>
                     {/* Status Row */}
-                    <Box className="flex flex-wrap items-center gap-2">
+                    <Box className='flex flex-wrap items-center gap-2'>
                       {item.previousStatus ? (
                         <>
                           <StatusBadge
@@ -97,8 +97,8 @@ export function StatusHistory<TStatus extends FinanceStatus>({
                             renderBadge={renderStatusBadge}
                           />
                           <ArrowRight
-                            className="h-3.5 w-3.5 text-muted-foreground"
-                            aria-hidden="true"
+                            className='h-3.5 w-3.5 text-muted-foreground'
+                            aria-hidden='true'
                           />
                         </>
                       ) : null}
@@ -106,14 +106,14 @@ export function StatusHistory<TStatus extends FinanceStatus>({
                     </Box>
 
                     {/* Date and Time */}
-                    <Box className="text-right shrink-0">
-                      <Box className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                        <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Box className='text-right shrink-0'>
+                      <Box className='flex items-center gap-1.5 text-xs text-muted-foreground mb-1'>
+                        <Clock className='h-3.5 w-3.5' aria-hidden='true' />
                         <time dateTime={item.updatedAt.toISOString()}>
                           {format(new Date(item.updatedAt), 'MMM d, yyyy')}
                         </time>
                       </Box>
-                      <Box className="text-xs text-muted-foreground">
+                      <Box className='text-xs text-muted-foreground'>
                         {format(new Date(item.updatedAt), 'h:mm a')}
                       </Box>
                     </Box>
@@ -121,18 +121,18 @@ export function StatusHistory<TStatus extends FinanceStatus>({
 
                   {/* Updated By Section */}
                   {item.user ? (
-                    <Box className="flex items-center gap-3 p-3 rounded-md bg-muted/30 mb-3">
+                    <Box className='flex items-center gap-3 p-3 rounded-md bg-muted/30 mb-3'>
                       <UserAvatar
                         user={{
                           name: `${item.user.firstName} ${item.user.lastName}`,
-                          image: item.user.avatarUrl ?? undefined,
+                          image: item.user.avatarUrl ?? undefined
                         }}
-                        className="h-8 w-8"
-                        fontSize="0.75rem"
+                        className='h-8 w-8'
+                        fontSize='0.75rem'
                       />
-                      <Box className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-muted-foreground">Updated by</p>
-                        <p className="text-sm font-medium truncate">
+                      <Box className='flex-1 min-w-0'>
+                        <p className='text-xs font-medium text-muted-foreground'>Updated by</p>
+                        <p className='text-sm font-medium truncate'>
                           {`${item.user.firstName} ${item.user.lastName}`}
                         </p>
                       </Box>
@@ -141,9 +141,9 @@ export function StatusHistory<TStatus extends FinanceStatus>({
 
                   {/* Notes */}
                   {item.notes ? (
-                    <Box className="rounded-md bg-muted/30 p-3">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Notes</p>
-                      <p className="text-sm text-foreground">{item.notes}</p>
+                    <Box className='rounded-md bg-muted/30 p-3'>
+                      <p className='text-xs font-medium text-muted-foreground mb-1'>Notes</p>
+                      <p className='text-sm text-foreground'>{item.notes}</p>
                     </Box>
                   ) : null}
                 </Box>
@@ -152,7 +152,7 @@ export function StatusHistory<TStatus extends FinanceStatus>({
 
             {/* Vertical line - only show if not the last item */}
             {!isLast ? (
-              <Box className="absolute left-[11px] top-6 bottom-0 w-[2px] bg-border" />
+              <Box className='absolute left-[11px] top-6 bottom-0 w-[2px] bg-border' />
             ) : null}
           </Box>
         );

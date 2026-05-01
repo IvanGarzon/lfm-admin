@@ -33,14 +33,14 @@ const colorFamilies = [
   'zinc',
   'gray',
   'slate',
-  'stone',
+  'stone'
 ];
 
 const shades = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
 // Generate all Tailwind classes
 export const tailwindColors = colorFamilies.flatMap((color) =>
-  shades.map((shade) => `bg-${color}-${shade}`),
+  shades.map((shade) => `bg-${color}-${shade}`)
 );
 
 const getInitials = (fullName?: string) => {
@@ -81,8 +81,8 @@ export function UserAvatar({ user, fontSize, ...props }: UserAvatarProps) {
       <AvatarImage
         src={user.image ?? undefined}
         alt={name}
-        loading="lazy"
-        referrerPolicy="no-referrer"
+        loading='lazy'
+        referrerPolicy='no-referrer'
       />
       <AvatarFallback
         className={cn(bgColor, 'text-white font-medium')}

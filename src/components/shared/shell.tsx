@@ -10,12 +10,12 @@ const shellVariants = cva('grid items-center gap-8 pt-6 pb-8 md:px-6 md:py-8', {
       default: 'container',
       sidebar: '',
       centered: 'container flex h-dvh max-w-2xl flex-col justify-center py-16',
-      markdown: 'container max-w-3xl py-8 md:py-10 lg:py-10',
-    },
+      markdown: 'container max-w-3xl py-8 md:py-10 lg:py-10'
+    }
   },
   defaultVariants: {
-    variant: 'default',
-  },
+    variant: 'default'
+  }
 });
 
 interface ShellProps
@@ -39,15 +39,15 @@ function Shell({
   );
 
   return scrollable ? (
-    <ScrollArea className="h-[calc(100dvh-52px)]">
-      <div className="flex flex-col h-full">
+    <ScrollArea className='h-[calc(100dvh-52px)]'>
+      <div className='flex flex-col h-full'>
         <Component className={cn(shellVariants({ variant }), 'min-w-0', className)} {...props}>
           {children}
         </Component>
       </div>
     </ScrollArea>
   ) : (
-    <div className="flex flex-col h-full overflow-hidden">{content}</div>
+    <div className='flex flex-col h-full overflow-hidden'>{content}</div>
   );
 }
 

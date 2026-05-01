@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -33,14 +33,14 @@ export function RejectQuoteDialog({
   onConfirm,
   quoteId,
   quoteNumber,
-  isPending = false,
+  isPending = false
 }: RejectQuoteDialogProps) {
   const form = useForm<MarkQuoteAsRejectedInput>({
     resolver: zodResolver(MarkQuoteAsRejectedSchema),
     defaultValues: {
       id: quoteId,
-      rejectReason: '',
-    },
+      rejectReason: ''
+    }
   });
 
   const handleSubmit = useCallback(
@@ -49,7 +49,7 @@ export function RejectQuoteDialog({
       form.reset();
       onOpenChange(false);
     },
-    [onConfirm, form, onOpenChange],
+    [onConfirm, form, onOpenChange]
   );
 
   const handleCancel = useCallback(() => {
@@ -59,7 +59,7 @@ export function RejectQuoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Reject Quote</DialogTitle>
           <DialogDescription>
@@ -68,25 +68,25 @@ export function RejectQuoteDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            id="reject-quote-form"
+            id='reject-quote-form'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className='space-y-4'
           >
             <FieldGroup>
               <Controller
-                name="rejectReason"
+                name='rejectReason'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="reject-quote-form-reason">Rejection Reason</FieldLabel>
+                      <FieldLabel htmlFor='reject-quote-form-reason'>Rejection Reason</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}
-                      id="reject-quote-form-reason"
-                      placeholder="Enter reason for rejecting this quote..."
+                      id='reject-quote-form-reason'
+                      placeholder='Enter reason for rejecting this quote...'
                       rows={3}
-                      className="resize-none"
+                      className='resize-none'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -95,10 +95,10 @@ export function RejectQuoteDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" variant="destructive" disabled={isPending}>
+              <Button type='submit' variant='destructive' disabled={isPending}>
                 {isPending ? 'Rejecting...' : 'Reject Quote'}
               </Button>
             </DialogFooter>

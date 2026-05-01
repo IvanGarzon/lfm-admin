@@ -7,7 +7,7 @@ import type { InvoiceFormInput } from '@/features/finances/invoices/types';
 
 export function InvoiceNotesField({
   control,
-  isLocked,
+  isLocked
 }: {
   control: Control<InvoiceFormInput>;
   isLocked: boolean;
@@ -15,21 +15,21 @@ export function InvoiceNotesField({
   return (
     <FieldGroup>
       <Controller
-        name="notes"
+        name='notes'
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldContent>
-              <FieldLabel htmlFor="form-rhf-textarea-notes">Notes</FieldLabel>
+              <FieldLabel htmlFor='form-rhf-textarea-notes'>Notes</FieldLabel>
             </FieldContent>
             <Textarea
               {...field}
-              id="form-rhf-textarea-notes"
+              id='form-rhf-textarea-notes'
               aria-invalid={fieldState.invalid}
               value={field.value ?? ''}
-              placeholder="Add any additional comments or notes for this invoice..."
+              placeholder='Add any additional comments or notes for this invoice...'
               rows={3}
-              className="resize-none"
+              className='resize-none'
               disabled={isLocked}
             />
             {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

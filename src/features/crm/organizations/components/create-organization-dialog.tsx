@@ -5,7 +5,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { type CreateOrganizationInput } from '@/schemas/organizations';
 import { useCreateOrganization } from '@/features/crm/organizations/hooks/use-organization-queries';
@@ -14,7 +14,7 @@ import { OrganizationForm } from './organization-form';
 export function CreateOrganizationDialog({
   open,
   onOpenChange,
-  onSuccess,
+  onSuccess
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,14 +27,14 @@ export function CreateOrganizationDialog({
       onSuccess: (result) => {
         onOpenChange(false);
         onSuccess?.(result.id, result.name);
-      },
+      }
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-w-[95vw] p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className='sm:max-w-[600px] max-w-[95vw] p-0'>
+        <DialogHeader className='p-6 pb-0'>
           <DialogTitle>Add New Organization</DialogTitle>
           <DialogDescription>
             Create a new organization. Required fields are marked with (*).

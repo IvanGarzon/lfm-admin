@@ -20,16 +20,16 @@ const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 const UserInviteModal = dynamic(
   () => import('@/features/users/components/user-invite-modal').then((mod) => mod.UserInviteModal),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export function UsersList({ searchParams: serverSearchParams }: { searchParams: SearchParams }) {
@@ -56,7 +56,7 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
     columns,
     pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   const isZeroState =
@@ -64,29 +64,29 @@ export function UsersList({ searchParams: serverSearchParams }: { searchParams: 
     !hasActiveSearchFilters(serverSearchParams, userSearchParams);
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={Users}
-          title="No users yet"
-          description="Invite your first user to start managing team access."
+          title='No users yet'
+          description='Invite your first user to start managing team access.'
           action={
-            <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4" aria-hidden="true" />
+            <Button onClick={handleShowInviteModal} className='w-full sm:w-auto'>
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Invite User
             </Button>
           }
         />
       ) : (
         <>
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-              <p className="text-muted-foreground text-sm">Manage users and their access</p>
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Users</h1>
+              <p className='text-muted-foreground text-sm'>Manage users and their access</p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <Button onClick={handleShowInviteModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" aria-hidden="true" />
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <Button onClick={handleShowInviteModal} className='w-full sm:w-auto'>
+                <Plus className='h-4 w-4' aria-hidden='true' />
                 Invite User
               </Button>
             </Box>

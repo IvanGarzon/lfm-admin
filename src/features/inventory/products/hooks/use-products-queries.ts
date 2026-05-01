@@ -5,14 +5,16 @@ import {
   useMutation,
   useQueryClient,
   keepPreviousData,
-  skipToken,
+  skipToken
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { SearchParams } from 'nuqs/server';
 
 import {
+  getProducts,
   getProductById,
   getProductStatistics,
-  getActiveProducts,
+  getActiveProducts
 } from '@/actions/inventory/products/queries';
 import {
   createProduct,
@@ -21,7 +23,7 @@ import {
   updateProductStatus,
   updateProductStock,
   bulkUpdateProductStatus,
-  bulkDeleteProducts,
+  bulkDeleteProducts
 } from '@/actions/inventory/products/mutations';
 import type { ProductFilters, ProductWithDetails } from '@/features/inventory/products/types';
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
@@ -36,7 +38,7 @@ export const PRODUCT_KEYS = {
   details: () => [...PRODUCT_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRODUCT_KEYS.details(), id] as const,
   statistics: () => [...PRODUCT_KEYS.all, 'statistics'] as const,
-  active: () => [...PRODUCT_KEYS.all, 'active'] as const,
+  active: () => [...PRODUCT_KEYS.all, 'active'] as const
 };
 
 // -- Query hooks -------------------------------------------------------------
@@ -44,6 +46,18 @@ export const PRODUCT_KEYS = {
 /**
  * Hook to fetch a single product by ID
  */
+export function useProductList(searchParams: SearchParams) {
+  return useQuery({
+    queryKey: [...PRODUCT_KEYS.lists(), JSON.stringify(searchParams)],
+    queryFn: async () => {
+      const result = await getProducts(searchParams);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
+
 export function useProduct(id: string | undefined) {
   return useQuery({
     queryKey: PRODUCT_KEYS.detail(id ?? ''),
@@ -58,7 +72,7 @@ export function useProduct(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -77,7 +91,7 @@ export function useProductStatistics(options?: { enabled?: boolean }) {
     },
     staleTime: 60 * 1000, // 1 minute
     placeholderData: keepPreviousData,
-    enabled: options?.enabled,
+    enabled: options?.enabled
   });
 }
 
@@ -96,7 +110,7 @@ export function useActiveProducts(enabled: boolean = true) {
           return result.data;
         }
       : skipToken,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 
@@ -114,7 +128,7 @@ export function usePrefetchProduct() {
         if (!result.success) throw new Error(result.error);
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }
@@ -147,7 +161,7 @@ export function useCreateProduct() {
     },
     onSuccess: () => {
       toast.success('Product created successfully');
-    },
+    }
   });
 }
 
@@ -173,14 +187,14 @@ export function useUpdateProduct() {
 
       // Snapshot the previous value
       const previousProduct = queryClient.getQueryData<ProductWithDetails>(
-        PRODUCT_KEYS.detail(newData.id),
+        PRODUCT_KEYS.detail(newData.id)
       );
 
       // Optimistically update the cache
       if (previousProduct) {
         queryClient.setQueryData(PRODUCT_KEYS.detail(newData.id), {
           ...previousProduct,
-          ...newData,
+          ...newData
         });
       }
 
@@ -201,7 +215,7 @@ export function useUpdateProduct() {
     },
     onSuccess: () => {
       toast.success('Product updated successfully');
-    },
+    }
   });
 }
 
@@ -239,7 +253,7 @@ export function useDeleteProduct() {
     },
     onSuccess: () => {
       toast.success('Product deleted successfully');
-    },
+    }
   });
 }
 
@@ -277,7 +291,7 @@ export function useUpdateProductStatus() {
     },
     onSuccess: () => {
       toast.success('Product status updated');
-    },
+    }
   });
 }
 
@@ -314,7 +328,7 @@ export function useUpdateProductStock() {
     },
     onSuccess: () => {
       toast.success('Product stock updated');
-    },
+    }
   });
 }
 
@@ -345,7 +359,7 @@ export function useBulkDeleteProducts() {
     },
     onSuccess: (data) => {
       toast.success(`${data.count} products deleted successfully`);
-    },
+    }
   });
 }
 
@@ -376,6 +390,6 @@ export function useBulkUpdateProductStatus() {
     },
     onSuccess: (data) => {
       toast.success(`${data.count} products updated successfully`);
-    },
+    }
   });
 }

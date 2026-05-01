@@ -56,7 +56,7 @@ export const PERMISSIONS = {
 
   // Tenant Management Permissions
   canManageSettings: { label: 'Manage tenant settings', group: 'Administration' },
-  canManageUsers: { label: 'Invite and manage users', group: 'Administration' },
+  canManageUsers: { label: 'Invite and manage users', group: 'Administration' }
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
@@ -110,7 +110,7 @@ const USER: RolePolicy = {
     'canReadProducts',
     'canReadVendors',
     'canReadPriceList',
-    'canReadEmployees',
+    'canReadEmployees'
   ],
   deny: [],
   actions: {
@@ -149,10 +149,10 @@ const USER: RolePolicy = {
 
       // Employee read actions
       'employees.getEmployees',
-      'employees.getEmployeeById',
+      'employees.getEmployeeById'
     ],
-    deny: [],
-  },
+    deny: []
+  }
 };
 
 /**
@@ -172,7 +172,7 @@ const MANAGER: RolePolicy = {
     'canManageVendors',
     'canManageRecipes',
     'canManagePriceList',
-    'canManageEmployees',
+    'canManageEmployees'
   ],
   deny: [],
   actions: {
@@ -220,10 +220,10 @@ const MANAGER: RolePolicy = {
 
       // Employee management actions
       'employees.createEmployee',
-      'employees.updateEmployee',
+      'employees.updateEmployee'
     ],
-    deny: [],
-  },
+    deny: []
+  }
 };
 
 /**
@@ -244,10 +244,10 @@ const ADMIN: RolePolicy = {
       'vendors.deleteVendor',
       'recipes.deleteRecipe',
       'priceList.deletePriceListItem',
-      'employees.deleteEmployee',
+      'employees.deleteEmployee'
     ],
-    deny: [],
-  },
+    deny: []
+  }
 };
 
 /**
@@ -258,8 +258,8 @@ const SUPER_ADMIN: RolePolicy = {
   deny: [],
   actions: {
     allow: [...ADMIN.actions.allow],
-    deny: [],
-  },
+    deny: []
+  }
 };
 
 /**
@@ -269,7 +269,7 @@ export const RolePolicies: Record<UserRole, RolePolicy> = {
   SUPER_ADMIN,
   USER,
   MANAGER,
-  ADMIN,
+  ADMIN
 };
 
 // ============================================================================
@@ -284,7 +284,7 @@ export const RolePolicies: Record<UserRole, RolePolicy> = {
  */
 export function hasPermission(
   user: Session['user'] | undefined,
-  permission: PermissionKey,
+  permission: PermissionKey
 ): boolean {
   if (!user || !user.role) {
     return false;
@@ -312,7 +312,7 @@ export function hasPermission(
  */
 export function requirePermission(
   user: Session['user'] | undefined,
-  permission: PermissionKey,
+  permission: PermissionKey
 ): void {
   if (!hasPermission(user, permission)) {
     const permissionLabel = PERMISSIONS[permission]?.label || permission;

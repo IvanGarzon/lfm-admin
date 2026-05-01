@@ -6,7 +6,7 @@ import {
   updateProductStatus,
   updateProductStock,
   bulkUpdateProductStatus,
-  bulkDeleteProducts,
+  bulkDeleteProducts
 } from '../mutations';
 import { testIds, mockSessions, createProductInput, createProductWithDetails } from '@/lib/testing';
 
@@ -18,27 +18,27 @@ const { mockProductRepo, mockAuth } = vi.hoisted(() => ({
     updateProductStatus: vi.fn(),
     updateProductStock: vi.fn(),
     bulkUpdateProductStatus: vi.fn(),
-    bulkDeleteProducts: vi.fn(),
+    bulkDeleteProducts: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/product-repository', () => ({
   ProductRepository: vi.fn().mockImplementation(function () {
     return mockProductRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const TEST_PRODUCT_ID = testIds.product();
@@ -65,7 +65,7 @@ describe('Product Mutations', () => {
       }
       expect(mockProductRepo.createProduct).toHaveBeenCalledWith(
         expect.objectContaining({ name: input.name }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -100,7 +100,7 @@ describe('Product Mutations', () => {
       expect(mockProductRepo.updateProduct).toHaveBeenCalledWith(
         TEST_PRODUCT_ID,
         mockSession.user.tenantId,
-        expect.objectContaining({ name: input.name }),
+        expect.objectContaining({ name: input.name })
       );
     });
 
@@ -132,7 +132,7 @@ describe('Product Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockProductRepo.deleteProduct).toHaveBeenCalledWith(
         TEST_PRODUCT_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -147,7 +147,7 @@ describe('Product Mutations', () => {
 
     it('returns error when product is in use', async () => {
       mockProductRepo.deleteProduct.mockRejectedValue(
-        new Error('Cannot delete product that is used in invoices or quotes.'),
+        new Error('Cannot delete product that is used in invoices or quotes.')
       );
       const result = await deleteProduct({ id: TEST_PRODUCT_ID });
       expect(result.success).toBe(false);
@@ -177,7 +177,7 @@ describe('Product Mutations', () => {
       expect(mockProductRepo.updateProductStatus).toHaveBeenCalledWith(
         TEST_PRODUCT_ID,
         mockSession.user.tenantId,
-        'INACTIVE',
+        'INACTIVE'
       );
     });
 
@@ -209,7 +209,7 @@ describe('Product Mutations', () => {
       expect(mockProductRepo.updateProductStock).toHaveBeenCalledWith(
         TEST_PRODUCT_ID,
         mockSession.user.tenantId,
-        10,
+        10
       );
     });
 
@@ -243,7 +243,7 @@ describe('Product Mutations', () => {
       expect(mockProductRepo.bulkUpdateProductStatus).toHaveBeenCalledWith(
         ids,
         mockSession.user.tenantId,
-        'INACTIVE',
+        'INACTIVE'
       );
     });
 
@@ -267,13 +267,13 @@ describe('Product Mutations', () => {
       }
       expect(mockProductRepo.bulkDeleteProducts).toHaveBeenCalledWith(
         ids,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
     it('returns error when all products are in use', async () => {
       mockProductRepo.bulkDeleteProducts.mockRejectedValue(
-        new Error('Selection cannot be deleted as all products are used in invoices or quotes.'),
+        new Error('Selection cannot be deleted as all products are used in invoices or quotes.')
       );
       const result = await bulkDeleteProducts({ ids: [TEST_PRODUCT_ID] });
       expect(result.success).toBe(false);

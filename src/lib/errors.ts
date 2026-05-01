@@ -57,7 +57,7 @@ export enum ErrorCode {
   INTERNAL_ERROR = 'SYS_001',
   NOT_IMPLEMENTED = 'SYS_002',
   MAINTENANCE_MODE = 'SYS_003',
-  UNKNOWN_ERROR = 'SYS_999',
+  UNKNOWN_ERROR = 'SYS_999'
 }
 
 /**
@@ -75,7 +75,7 @@ export class AppError extends Error {
     code: ErrorCode = ErrorCode.INTERNAL_ERROR,
     statusCode: number = 500,
     isOperational: boolean = true,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -115,7 +115,7 @@ export class ValidationError extends AppError {
   constructor(
     message: string = 'Validation failed',
     fields?: Record<string, string[]>,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, ErrorCode.VALIDATION_ERROR, 400, true, context);
     this.fields = fields;
@@ -159,7 +159,7 @@ export class ResourceInUseError extends AppError {
       ErrorCode.RESOURCE_IN_USE,
       409,
       true,
-      context,
+      context
     );
   }
 }
@@ -180,7 +180,7 @@ export class FileError extends AppError {
   constructor(
     message: string,
     code: ErrorCode = ErrorCode.FILE_NOT_FOUND,
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, code, 400, true, context);
   }

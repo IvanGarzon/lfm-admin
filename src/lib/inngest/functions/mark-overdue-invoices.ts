@@ -16,16 +16,16 @@ export const markOverdueInvoicesFunction = inngest.createFunction(
     name: 'Mark Overdue Invoices',
     retries: 3,
     timeouts: {
-      finish: '2m', // Max 2 minutes for batch update
+      finish: '2m' // Max 2 minutes for batch update
     },
     triggers: [
       { cron: '0 1 * * *' }, // Daily at 1:00 AM
-      { event: 'mark-overdue-invoices/manual' }, // Manual trigger
-    ],
+      { event: 'mark-overdue-invoices/manual' } // Manual trigger
+    ]
   },
   async ({ step }) => {
     logger.info('Inngest function triggered - mark overdue invoices', {
-      context: 'inngest-mark-overdue-invoices',
+      context: 'inngest-mark-overdue-invoices'
     });
 
     const updatedCount = await step.run('update-overdue-invoices', async () => {
@@ -38,14 +38,14 @@ export const markOverdueInvoicesFunction = inngest.createFunction(
         where: {
           status: InvoiceStatus.PENDING,
           dueDate: {
-            lt: startOfToday,
+            lt: startOfToday
           },
-          deletedAt: null,
+          deletedAt: null
         },
         data: {
           status: InvoiceStatus.OVERDUE,
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       });
 
       return result.count;
@@ -54,10 +54,10 @@ export const markOverdueInvoicesFunction = inngest.createFunction(
     logger.info('Mark overdue invoices completed', {
       context: 'inngest-mark-overdue-invoices',
       metadata: {
-        updatedCount,
-      },
+        updatedCount
+      }
     });
 
     return { success: true, updatedCount };
-  },
+  }
 );

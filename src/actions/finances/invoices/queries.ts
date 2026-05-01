@@ -14,7 +14,7 @@ import type {
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
   RevenueTrend,
-  TopCustomerDebtor,
+  TopCustomerDebtor
 } from '@/features/finances/invoices/types';
 import { searchParamsCache } from '@/filters/invoices/invoices-filters';
 
@@ -38,7 +38,7 @@ export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoices');
     }
-  },
+  }
 );
 
 /**
@@ -62,7 +62,7 @@ export const getInvoiceById = withTenantPermission<string, InvoiceWithDetails>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice');
     }
-  },
+  }
 );
 
 /**
@@ -85,7 +85,7 @@ export const getInvoiceMetadata = withTenantPermission<string, InvoiceMetadata>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch basic invoice details');
     }
-  },
+  }
 );
 
 /**
@@ -102,7 +102,7 @@ export const getInvoiceItems = withTenantPermission<string, InvoiceItemDetail[]>
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice items');
     }
-  },
+  }
 );
 
 /**
@@ -119,7 +119,7 @@ export const getInvoicePayments = withTenantPermission<string, InvoicePaymentIte
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice payments');
     }
-  },
+  }
 );
 
 /**
@@ -136,7 +136,7 @@ export const getInvoiceStatusHistory = withTenantPermission<string, InvoiceStatu
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice status history');
     }
-  },
+  }
 );
 
 /**
@@ -172,7 +172,7 @@ export const getMonthlyRevenueTrend = withTenantPermission<number | undefined, R
     } catch (error) {
       return handleActionError(error, 'Failed to fetch revenue trend');
     }
-  },
+  }
 );
 
 /**
@@ -189,7 +189,7 @@ export const getTopDebtors = withTenantPermission<number | undefined, TopCustome
     } catch (error) {
       return handleActionError(error, 'Failed to fetch top debtors');
     }
-  },
+  }
 );
 
 /**
@@ -214,7 +214,7 @@ export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
         await import('@/features/finances/invoices/services/invoice-pdf.service');
       const result = await getOrGenerateInvoicePdf(invoice, {
         context: 'getInvoicePdfUrl',
-        skipDownload: true,
+        skipDownload: true
       });
 
       const { pdfUrl } = result;
@@ -223,7 +223,7 @@ export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
     } catch (error) {
       return handleActionError(error, 'Failed to get invoice PDF URL');
     }
-  },
+  }
 );
 
 /**
@@ -248,7 +248,7 @@ export const getReceiptPdfUrl = withTenantPermission<string, { url: string }>(
         await import('@/features/finances/invoices/services/invoice-pdf.service');
       const result = await getOrGenerateReceiptPdf(invoice, {
         context: 'getReceiptPdfUrl',
-        skipDownload: true,
+        skipDownload: true
       });
 
       const { pdfUrl } = result;
@@ -257,5 +257,5 @@ export const getReceiptPdfUrl = withTenantPermission<string, { url: string }>(
     } catch (error) {
       return handleActionError(error, 'Failed to get receipt PDF URL');
     }
-  },
+  }
 );

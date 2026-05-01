@@ -26,7 +26,7 @@ export const tasks: TaskRegistry = {
   'cleanup-sessions': cleanupSessionsTask,
   'mark-overdue-invoices': markOverdueInvoicesTask,
   'check-expired-quotes': checkExpiredQuotesTask,
-  'quote-expiry-reminder': quoteExpiryReminderTask,
+  'quote-expiry-reminder': quoteExpiryReminderTask
 };
 
 /**

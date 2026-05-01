@@ -4,23 +4,23 @@ import { mockSessions, createSessionWithUser } from '@/lib/testing';
 
 const { mockSessionRepo, mockAuth } = vi.hoisted(() => ({
   mockSessionRepo: {
-    findActiveSessionsByUserId: vi.fn(),
+    findActiveSessionsByUserId: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/session-repository', () => ({
   SessionRepository: vi.fn().mockImplementation(function () {
     return mockSessionRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 const unauthorizedError = 'You must be signed in to perform this action';
@@ -39,7 +39,7 @@ describe('Session Queries', () => {
     it('returns active sessions when authorised', async () => {
       const current = createSessionWithUser({
         sessionToken: mockSession.sessionToken,
-        isCurrent: true,
+        isCurrent: true
       });
       const other = createSessionWithUser();
       mockSessionRepo.findActiveSessionsByUserId.mockResolvedValue([current, other]);
@@ -53,7 +53,7 @@ describe('Session Queries', () => {
       }
       expect(mockSessionRepo.findActiveSessionsByUserId).toHaveBeenCalledWith(
         mockSession.user.id,
-        mockSession.sessionToken,
+        mockSession.sessionToken
       );
     });
 

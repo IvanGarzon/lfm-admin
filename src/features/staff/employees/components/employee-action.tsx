@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import type { EmployeeListItem } from '@/features/staff/employees/types';
 import { Pencil, MoreHorizontal, Trash } from 'lucide-react';
@@ -20,7 +20,7 @@ export function EmployeeAction({
   employee,
   onDelete,
   isDeleting = false,
-  searchParams,
+  searchParams
 }: {
   employee: EmployeeListItem;
   onDelete: (id: string) => void;
@@ -45,7 +45,7 @@ export function EmployeeAction({
         router.push(url, { scroll: false });
       });
     },
-    [router, searchParams],
+    [router, searchParams]
   );
 
   const handleDeleteRequest = () => {
@@ -67,23 +67,23 @@ export function EmployeeAction({
 
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant="secondary" className="h-8 w-8 p-0" aria-label="Open menu">
-            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+          <Button variant='secondary' className='h-8 w-8 p-0' aria-label='Open menu'>
+            <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => handleClick(employee.id)} className="cursor-pointer">
-            <Pencil className="h-4 w-4" aria-hidden="true" />
+          <DropdownMenuItem onClick={() => handleClick(employee.id)} className='cursor-pointer'>
+            <Pencil className='h-4 w-4' aria-hidden='true' />
             Update Employee
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleDeleteRequest}
             disabled={isDeleting}
-            className="text-destructive focus:text-destructive hover:text-destructive"
+            className='text-destructive focus:text-destructive hover:text-destructive'
           >
-            <Trash className="h-4 w-4" aria-hidden="true" />
+            <Trash className='h-4 w-4' aria-hidden='true' />
             Delete Employee
           </DropdownMenuItem>
         </DropdownMenuContent>

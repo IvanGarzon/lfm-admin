@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   previewInvoiceEmail,
-  type InvoiceEmailType,
+  type InvoiceEmailType
 } from '@/actions/finances/invoices/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
@@ -19,7 +19,7 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,7 +34,7 @@ import {
   useUpdateInvoice,
   useSendInvoiceReminder,
   useDownloadInvoicePdf,
-  useDuplicateInvoice,
+  useDuplicateInvoice
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { InvoiceForm } from '@/features/finances/invoices/components/invoice-form';
 import { InvoiceDrawerSkeleton } from '@/features/finances/invoices/components/invoice-drawer-skeleton';
@@ -52,7 +52,7 @@ type DrawerMode = 'edit' | 'create';
 export function InvoiceDrawer({
   id,
   open,
-  onClose,
+  onClose
 }: {
   id?: string;
   open?: boolean;
@@ -74,17 +74,17 @@ export function InvoiceDrawer({
 
   const needsItems = activeTab === 'details' || showPreview;
   const { data: items, isLoading: isLoadingItems } = useInvoiceItems(id, {
-    enabled: needsItems,
+    enabled: needsItems
   });
 
   const isLoading = isLoadingInvoice || (needsItems && isLoadingItems);
 
   const { data: history, isLoading: isLoadingHistory } = useInvoiceHistory(id, {
-    enabled: mode === 'edit' && activeTab === 'history',
+    enabled: mode === 'edit' && activeTab === 'history'
   });
 
   const { data: payments, isLoading: isLoadingPayments } = useInvoicePayments(id, {
-    enabled: mode === 'edit' && (activeTab === 'payments' || showPreview),
+    enabled: mode === 'edit' && (activeTab === 'payments' || showPreview)
   });
 
   const { openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending } =
@@ -101,7 +101,7 @@ export function InvoiceDrawer({
   const queryString = useQueryString(searchParams, invoiceSearchParamsDefaults);
 
   const checkUnsavedChanges = useUnsavedChangesWarning(hasUnsavedChanges, {
-    formId: 'form-rhf-invoice',
+    formId: 'form-rhf-invoice'
   });
 
   const isOpen = id ? (pathname?.includes(`/invoices/${id}`) ?? false) : (open ?? false);
@@ -125,7 +125,7 @@ export function InvoiceDrawer({
         }
       }
     },
-    [id, onClose, router, queryString, hasUnsavedChanges],
+    [id, onClose, router, queryString, hasUnsavedChanges]
   );
 
   const handleDiscardChanges = useCallback(() => {
@@ -154,10 +154,10 @@ export function InvoiceDrawer({
       createInvoice.mutate(data, {
         onSuccess: () => {
           onClose?.();
-        },
+        }
       });
     },
-    [createInvoice, onClose],
+    [createInvoice, onClose]
   );
 
   const handleUpdate = useCallback(
@@ -165,10 +165,10 @@ export function InvoiceDrawer({
       updateInvoice.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-        },
+        }
       });
     },
-    [updateInvoice],
+    [updateInvoice]
   );
 
   const handleDownloadPdf = useCallback(() => {
@@ -178,7 +178,7 @@ export function InvoiceDrawer({
 
     checkUnsavedChanges(
       () => downloadPdf.mutate(invoice.id),
-      'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
+      'Please save your changes before downloading the PDF to ensure it reflects the latest data.'
     );
   }, [invoice, checkUnsavedChanges, downloadPdf]);
 
@@ -197,7 +197,7 @@ export function InvoiceDrawer({
 
         if (!result.success) {
           toast.error('Failed to load email preview', {
-            description: result.error,
+            description: result.error
           });
           setShowEmailPreview(false);
           return;
@@ -206,14 +206,14 @@ export function InvoiceDrawer({
         setEmailPreviewData(result.data);
       } catch (error) {
         toast.error('Failed to load email preview', {
-          description: error instanceof Error ? error.message : 'An error occurred',
+          description: error instanceof Error ? error.message : 'An error occurred'
         });
         setShowEmailPreview(false);
       } finally {
         setIsLoadingEmailPreview(false);
       }
     },
-    [invoice],
+    [invoice]
   );
 
   const handleSendReminder = useCallback(() => {
@@ -223,7 +223,7 @@ export function InvoiceDrawer({
 
     checkUnsavedChanges(
       () => handleLoadEmailPreview('reminder'),
-      'Please save your changes before sending the reminder to ensure it reflects the latest data.',
+      'Please save your changes before sending the reminder to ensure it reflects the latest data.'
     );
   }, [invoice, checkUnsavedChanges, handleLoadEmailPreview]);
 
@@ -234,7 +234,7 @@ export function InvoiceDrawer({
 
     checkUnsavedChanges(
       () => handleLoadEmailPreview('sent'),
-      'Please save your changes before marking as pending to ensure the invoice reflects the latest data.',
+      'Please save your changes before marking as pending to ensure the invoice reflects the latest data.'
     );
   }, [invoice, checkUnsavedChanges, handleLoadEmailPreview]);
 
@@ -330,7 +330,7 @@ export function InvoiceDrawer({
         const basePath = `/finances/invoices/${data.id}`;
         const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
         router.push(targetPath);
-      },
+      }
     });
   }, [invoice, duplicateInvoice, router, queryString]);
 
@@ -338,13 +338,13 @@ export function InvoiceDrawer({
     if (mode === 'create') {
       return {
         title: 'New Invoice',
-        status: null,
+        status: null
       };
     }
 
     return {
       title: invoice?.invoiceNumber || 'Update Invoice',
-      status: invoice?.status ?? null,
+      status: invoice?.status ?? null
     };
   }, [mode, invoice?.invoiceNumber, invoice?.status]);
 
@@ -358,7 +358,7 @@ export function InvoiceDrawer({
       onCancel: handleCancelDialog,
       onDownloadPdf: handleDownloadPdf,
       onSendReceipt: handleOpenReceiptDialog,
-      onDelete: handleDeleteDialog,
+      onDelete: handleDeleteDialog
     }),
     [
       handleDuplicate,
@@ -369,17 +369,17 @@ export function InvoiceDrawer({
       handleCancelDialog,
       handleDownloadPdf,
       handleOpenReceiptDialog,
-      handleDeleteDialog,
-    ],
+      handleDeleteDialog
+    ]
   );
 
   return (
     <>
       <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
         <DrawerContent
-          className="overflow-x-hidden dark:bg-gray-925 pb-0!"
+          className='overflow-x-hidden dark:bg-gray-925 pb-0!'
           style={{
-            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
+            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px'
           }}
         >
           <VisuallyHidden>
@@ -390,11 +390,11 @@ export function InvoiceDrawer({
           {isLoading ? <InvoiceDrawerSkeleton /> : null}
 
           {isError ? (
-            <Box className="p-6 text-destructive">
+            <Box className='p-6 text-destructive'>
               <DrawerHeader>
                 <DrawerTitle>Error</DrawerTitle>
               </DrawerHeader>
-              <p className="mt-4">Could not load invoice details: {error?.message}</p>
+              <p className='mt-4'>Could not load invoice details: {error?.message}</p>
             </Box>
           ) : null}
 
@@ -414,12 +414,12 @@ export function InvoiceDrawer({
                 actionsMenuHandlers={mode === 'edit' && invoice ? actionsMenuHandlers : undefined}
               />
 
-              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
-                <Box className="flex h-full">
+              <DrawerBody className='py-0! -mx-6 h-full overflow-y-auto'>
+                <Box className='flex h-full'>
                   <Box
-                    className="h-full"
+                    className='h-full'
                     style={{
-                      width: mode === 'edit' && showPreview ? '50%' : '100%',
+                      width: mode === 'edit' && showPreview ? '50%' : '100%'
                     }}
                   >
                     {mode === 'create' ? (
@@ -432,31 +432,31 @@ export function InvoiceDrawer({
                       <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
-                        className="w-full h-full flex flex-col"
+                        className='w-full h-full flex flex-col'
                       >
-                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
-                          <TabsTrigger value="details" className="relative">
+                        <TabsList className='w-full justify-start border-b rounded-none h-12 bg-transparent px-6'>
+                          <TabsTrigger value='details' className='relative'>
                             Invoice Details
                           </TabsTrigger>
-                          <TabsTrigger value="payments" className="relative">
+                          <TabsTrigger value='payments' className='relative'>
                             Payments
                             {invoice && invoice._count && invoice._count.payments > 0 ? (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              <Badge variant='secondary' className='ml-2 h-5 min-w-5 px-1.5'>
                                 {invoice._count.payments}
                               </Badge>
                             ) : null}
                           </TabsTrigger>
-                          <TabsTrigger value="history" className="relative">
+                          <TabsTrigger value='history' className='relative'>
                             History
                             {invoice && invoice._count && invoice._count.statusHistory > 0 ? (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              <Badge variant='secondary' className='ml-2 h-5 min-w-5 px-1.5'>
                                 {invoice._count.statusHistory}
                               </Badge>
                             ) : null}
                           </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                        <TabsContent value='details' className='mt-0 h-full flex flex-col'>
                           <InvoiceForm
                             invoice={invoice}
                             items={items}
@@ -467,29 +467,29 @@ export function InvoiceDrawer({
                           />
                         </TabsContent>
 
-                        <TabsContent value="payments" className="mt-0 p-6">
+                        <TabsContent value='payments' className='mt-0 p-6'>
                           {isLoadingPayments ? (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               Loading payments...
                             </Box>
                           ) : payments && payments.length > 0 && invoice ? (
                             <InvoicePayments payments={payments} invoiceAmount={invoice.amount} />
                           ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               No payments recorded yet
                             </Box>
                           )}
                         </TabsContent>
 
-                        <TabsContent value="history" className="mt-0 p-6">
+                        <TabsContent value='history' className='mt-0 p-6'>
                           {isLoadingHistory ? (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               Loading history...
                             </Box>
                           ) : history && history.length > 0 ? (
                             <InvoiceStatusHistory history={history} />
                           ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               No history available
                             </Box>
                           )}
@@ -526,7 +526,7 @@ export function InvoiceDrawer({
         isSending={sendReminder.isPending}
         isMarkingAsSent={false}
         showMarkAsSentOption={pendingEmailType === 'sent'}
-        statusLabel="Pending"
+        statusLabel='Pending'
       />
 
       <UnsavedChangesDialog

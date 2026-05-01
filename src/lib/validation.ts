@@ -44,7 +44,7 @@ export const VALIDATION_LIMITS = {
   PASSWORD_MAX: 128,
 
   // Invitation limits
-  INVITATION_EXPIRY_MS: 72 * 60 * 60 * 1000,
+  INVITATION_EXPIRY_MS: 72 * 60 * 60 * 1000
 } as const;
 
 /**
@@ -67,24 +67,24 @@ export function sanitizeSearchQuery(query: string | null | undefined): string {
  */
 export function validatePaginationParams(
   page: number,
-  perPage: number,
+  perPage: number
 ): {
   page: number;
   perPage: number;
 } {
   const validatedPage = Math.max(
     VALIDATION_LIMITS.PAGE_MIN,
-    Math.min(VALIDATION_LIMITS.PAGE_MAX, Math.floor(page)),
+    Math.min(VALIDATION_LIMITS.PAGE_MAX, Math.floor(page))
   );
 
   const validatedPerPage = Math.max(
     VALIDATION_LIMITS.PER_PAGE_MIN,
-    Math.min(VALIDATION_LIMITS.PER_PAGE_MAX, Math.floor(perPage)),
+    Math.min(VALIDATION_LIMITS.PER_PAGE_MAX, Math.floor(perPage))
   );
 
   return {
     page: validatedPage,
-    perPage: validatedPerPage,
+    perPage: validatedPerPage
   };
 }
 
@@ -126,7 +126,7 @@ export const commonValidators = {
       .optional()
       .nullable()
       .refine((val) => !val || val.length === 0 || /^[0-9\s\-\+\(\)]+$/.test(val), {
-        message: 'Please enter a valid phone number',
+        message: 'Please enter a valid phone number'
       }),
 
   /**
@@ -167,7 +167,7 @@ export const commonValidators = {
       .trim()
       .max(
         VALIDATION_LIMITS.SEARCH_QUERY_MAX,
-        `Search query must be less than ${VALIDATION_LIMITS.SEARCH_QUERY_MAX} characters`,
+        `Search query must be less than ${VALIDATION_LIMITS.SEARCH_QUERY_MAX} characters`
       )
       .transform(sanitizeSearchQuery),
 
@@ -191,6 +191,6 @@ export const commonValidators = {
       .min(VALIDATION_LIMITS.PER_PAGE_MIN, 'Per page must be at least 1')
       .max(
         VALIDATION_LIMITS.PER_PAGE_MAX,
-        `Per page must be at most ${VALIDATION_LIMITS.PER_PAGE_MAX}`,
-      ),
+        `Per page must be at most ${VALIDATION_LIMITS.PER_PAGE_MAX}`
+      )
 };

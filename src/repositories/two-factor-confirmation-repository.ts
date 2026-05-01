@@ -22,7 +22,7 @@ export class TwoFactorConfirmationRepository extends BaseRepository<TwoFactorCon
    */
   async findByUserId(userId: string): Promise<TwoFactorConfirmation | null> {
     return await this.prisma.twoFactorConfirmation.findUnique({
-      where: { userId },
+      where: { userId }
     });
   }
 
@@ -33,7 +33,7 @@ export class TwoFactorConfirmationRepository extends BaseRepository<TwoFactorCon
    */
   async deleteById(id: string): Promise<TwoFactorConfirmation> {
     return await this.prisma.twoFactorConfirmation.delete({
-      where: { id },
+      where: { id }
     });
   }
 
@@ -47,7 +47,7 @@ export class TwoFactorConfirmationRepository extends BaseRepository<TwoFactorCon
     return await this.prisma.twoFactorConfirmation.upsert({
       where: { userId },
       update: {},
-      create: { userId },
+      create: { userId }
     });
   }
 }

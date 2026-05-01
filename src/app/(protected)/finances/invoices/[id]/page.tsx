@@ -5,22 +5,22 @@ import { InvoicesView } from '@/features/finances/invoices/components/invoices-v
 import dynamic from 'next/dynamic';
 
 export const metadata = {
-  title: 'Invoice Detail | Finance',
+  title: 'Invoice Detail | Finance'
 };
 
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(
-      (mod) => mod.InvoiceDrawer,
+      (mod) => mod.InvoiceDrawer
     ),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function InvoicePage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

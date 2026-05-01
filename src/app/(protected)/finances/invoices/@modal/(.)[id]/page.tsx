@@ -9,12 +9,12 @@ import dynamic from 'next/dynamic';
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(
-      (mod) => mod.InvoiceDrawer,
+      (mod) => mod.InvoiceDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default function InvoiceModal({ params }: { params: Promise<{ id: string }> }) {

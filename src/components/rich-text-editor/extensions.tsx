@@ -14,28 +14,28 @@ import StarterKit from '@tiptap/starter-kit';
 export const createExtensions = (placeholder?: string) => [
   StarterKit.configure({
     heading: {
-      levels: [2, 3],
+      levels: [2, 3]
     },
     bulletList: {
       keepMarks: true,
-      keepAttributes: false,
+      keepAttributes: false
     },
     orderedList: {
       keepMarks: true,
-      keepAttributes: false,
-    },
+      keepAttributes: false
+    }
   }),
   Placeholder.configure({
     placeholder: placeholder || 'Start typing...',
     showOnlyWhenEditable: true,
-    emptyEditorClass: 'is-editor-empty',
+    emptyEditorClass: 'is-editor-empty'
   }),
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
-      class: 'text-primary underline',
-    },
-  }),
+      class: 'text-primary underline'
+    }
+  })
 ];
 
 export const extensions = createExtensions();

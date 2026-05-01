@@ -5,7 +5,7 @@ import {
   useMutation,
   useQueryClient,
   skipToken,
-  type QueryClient,
+  type QueryClient
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getSessions as getSessionsAction, getSessionsByUserId } from '@/actions/sessions/queries';
@@ -16,7 +16,7 @@ import {
   extendSession,
   adminRevokeSession,
   adminExtendSession,
-  adminRevokeAllUserSessions,
+  adminRevokeAllUserSessions
 } from '@/actions/sessions/mutations';
 import type { SessionWithUser } from '@/features/sessions/types';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
@@ -26,7 +26,7 @@ const SESSION_KEYS = {
   lists: () => [...SESSION_KEYS.all, 'list'] as const,
   list: () => [...SESSION_KEYS.lists()] as const,
   details: () => [...SESSION_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...SESSION_KEYS.details(), id] as const,
+  detail: (id: string) => [...SESSION_KEYS.details(), id] as const
 };
 
 function invalidateSessionQueries(queryClient: QueryClient, options?: { sessionId?: string }) {
@@ -52,7 +52,7 @@ export function useSessions() {
     },
     refetchOnWindowFocus: true,
     staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000
   });
 }
 
@@ -77,7 +77,7 @@ export function useSession(id: string | undefined) {
           throw new Error('Session not found in cache');
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -104,7 +104,7 @@ export function useDeleteSession() {
       if (previousSessions) {
         queryClient.setQueryData<SessionWithUser[]>(
           listKey,
-          previousSessions.filter((s) => s.id !== sessionId),
+          previousSessions.filter((s) => s.id !== sessionId)
         );
       }
       return { previousSessions };
@@ -118,7 +118,7 @@ export function useDeleteSession() {
     onSuccess: () => {
       invalidateSessionQueries(queryClient);
       toast.success('Session signed out successfully');
-    },
+    }
   });
 }
 
@@ -145,7 +145,7 @@ export function useDeleteOtherSessions() {
       if (previousSessions) {
         queryClient.setQueryData<SessionWithUser[]>(
           listKey,
-          previousSessions.filter((s) => s.id === currentSessionId),
+          previousSessions.filter((s) => s.id === currentSessionId)
         );
       }
       return { previousSessions };
@@ -159,7 +159,7 @@ export function useDeleteOtherSessions() {
     onSuccess: (data: { deactivatedCount: number }) => {
       invalidateSessionQueries(queryClient);
       toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
-    },
+    }
   });
 }
 
@@ -188,7 +188,7 @@ export function useExtendSession() {
         newExpiry.setDate(newExpiry.getDate() + 30);
         queryClient.setQueryData<SessionWithUser[]>(
           listKey,
-          previousSessions.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)),
+          previousSessions.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s))
         );
       }
       return { previousSessions };
@@ -202,7 +202,7 @@ export function useExtendSession() {
     onSuccess: () => {
       invalidateSessionQueries(queryClient);
       toast.success('Session extended successfully');
-    },
+    }
   });
 }
 
@@ -229,7 +229,7 @@ export function useDeleteSessions() {
       if (previousSessions) {
         queryClient.setQueryData<SessionWithUser[]>(
           listKey,
-          previousSessions.filter((s) => !sessionIds.includes(s.id)),
+          previousSessions.filter((s) => !sessionIds.includes(s.id))
         );
       }
       return { previousSessions };
@@ -243,7 +243,7 @@ export function useDeleteSessions() {
     onSuccess: (data: { deactivatedCount: number }) => {
       invalidateSessionQueries(queryClient);
       toast.success(`${data.deactivatedCount} session(s) signed out successfully`);
-    },
+    }
   });
 }
 
@@ -266,7 +266,7 @@ export function useUserSessions(userId: string) {
       }
       return (result.data ?? []) as SessionWithUser[];
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -291,7 +291,7 @@ export function useAdminRevokeUserSession(userId: string) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData(key);
       queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
-        old ? old.filter((s) => s.id !== sessionId) : old,
+        old ? old.filter((s) => s.id !== sessionId) : old
       );
       return { previous };
     },
@@ -306,7 +306,7 @@ export function useAdminRevokeUserSession(userId: string) {
     },
     onSuccess: () => {
       toast.success('Session revoked');
-    },
+    }
   });
 }
 
@@ -333,7 +333,7 @@ export function useAdminExtendUserSession(userId: string) {
       const newExpiry = new Date();
       newExpiry.setDate(newExpiry.getDate() + 30);
       queryClient.setQueryData(key, (old: SessionWithUser[] | undefined) =>
-        old ? old.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)) : old,
+        old ? old.map((s) => (s.id === sessionId ? { ...s, expires: newExpiry } : s)) : old
       );
       return { previous };
     },
@@ -348,7 +348,7 @@ export function useAdminExtendUserSession(userId: string) {
     },
     onSuccess: () => {
       toast.success('Session extended');
-    },
+    }
   });
 }
 
@@ -386,6 +386,6 @@ export function useAdminRevokeAllUserSessions(userId: string) {
     },
     onSuccess: (data) => {
       toast.success(`${data?.revokedCount ?? 'All'} session(s) revoked`);
-    },
+    }
   });
 }

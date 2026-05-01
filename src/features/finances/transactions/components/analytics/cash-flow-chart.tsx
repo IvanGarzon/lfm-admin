@@ -10,7 +10,7 @@ import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
+  ChartTooltipContent
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { TransactionTrend } from '@/features/finances/transactions/types';
@@ -26,12 +26,12 @@ interface CashFlowChartProps {
 const chartConfig = {
   income: {
     label: 'Income',
-    color: 'hsl(var(--chart-1))',
+    color: 'hsl(var(--chart-1))'
   },
   expense: {
     label: 'Expense',
-    color: 'hsl(var(--chart-2))',
-  },
+    color: 'hsl(var(--chart-2))'
+  }
 } satisfies ChartConfig;
 
 function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
@@ -78,7 +78,7 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
     // Helper function to generate N months with offset
     const generateMonths = (
       count: number,
-      offset: number,
+      offset: number
     ): Array<{ month: string; income: number; expense: number }> => {
       const months = [];
       const now = new Date();
@@ -90,7 +90,7 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
         months.push({
           month: formatMonth(date),
           income: 0,
-          expense: 0,
+          expense: 0
         });
       }
       return months;
@@ -110,7 +110,7 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
         return {
           ...existingData,
           income: existingData.income,
-          expense: Math.abs(existingData.expense),
+          expense: Math.abs(existingData.expense)
         };
       }
       return emptyMonth;
@@ -123,11 +123,11 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-72 mt-2" />
+          <Skeleton className='h-6 w-48' />
+          <Skeleton className='h-4 w-72 mt-2' />
         </CardHeader>
-        <CardContent className="h-[400px] flex items-center justify-center">
-          <Skeleton className="h-full w-full" />
+        <CardContent className='h-[400px] flex items-center justify-center'>
+          <Skeleton className='h-full w-full' />
         </CardContent>
       </Card>
     );
@@ -136,46 +136,46 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
   return (
     <Card>
       <CardHeader>
-        <Box className="flex items-center justify-between">
-          <Box className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+        <Box className='flex items-center justify-between'>
+          <Box className='flex items-center gap-2'>
+            <TrendingUp className='h-5 w-5 text-muted-foreground' aria-hidden='true' />
             <CardTitle>Cash Flow</CardTitle>
           </Box>
-          <Box className="flex items-center gap-2">
+          <Box className='flex items-center gap-2'>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={handleNavigateBack}
-              aria-label="Go back in time"
+              aria-label='Go back in time'
             >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              <ChevronLeft className='h-4 w-4' aria-hidden='true' />
             </Button>
-            <span className="text-sm font-medium min-w-[120px] text-center">{dateRangeLabel}</span>
+            <span className='text-sm font-medium min-w-[120px] text-center'>{dateRangeLabel}</span>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={handleNavigateForward}
               disabled={monthOffset >= 0}
-              aria-label="Go forward in time"
+              aria-label='Go forward in time'
             >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              <ChevronRight className='h-4 w-4' aria-hidden='true' />
             </Button>
           </Box>
         </Box>
       </CardHeader>
       <CardContent>
-        <Box className="h-[350px] w-full">
-          <ChartContainer config={chartConfig} className="h-full w-full">
+        <Box className='h-[350px] w-full'>
+          <ChartContainer config={chartConfig} className='h-full w-full'>
             <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
               <CartesianGrid
                 vertical={false}
                 horizontal={true}
-                strokeDasharray="3 3"
+                strokeDasharray='3 3'
                 opacity={0.5}
-                stroke="hsl(var(--muted-foreground))"
+                stroke='hsl(var(--muted-foreground))'
               />
               <XAxis
-                dataKey="month"
+                dataKey='month'
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
@@ -201,23 +201,23 @@ function CashFlowChart({ data, isLoading }: CashFlowChartProps) {
                       const absValue = Math.abs(Number(value));
                       return [
                         formatCurrency({ number: absValue, maxFractionDigits: 0 }),
-                        name === 'income' ? 'Income' : 'Expense',
+                        name === 'income' ? 'Income' : 'Expense'
                       ];
                     }}
                   />
                 }
               />
               <Bar
-                dataKey="income"
-                name="Income"
-                fill="var(--color-income)"
+                dataKey='income'
+                name='Income'
+                fill='var(--color-income)'
                 radius={[4, 4, 0, 0]}
                 barSize={28}
               />
               <Bar
-                dataKey="expense"
-                name="Expense"
-                fill="var(--color-expense)"
+                dataKey='expense'
+                name='Expense'
+                fill='var(--color-expense)'
                 radius={[4, 4, 0, 0]}
                 barSize={28}
               />
@@ -234,12 +234,12 @@ export default dynamic(() => Promise.resolve(CashFlowChart), {
   loading: () => (
     <Card>
       <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-72 mt-2" />
+        <Skeleton className='h-6 w-48' />
+        <Skeleton className='h-4 w-72 mt-2' />
       </CardHeader>
-      <CardContent className="h-[400px] flex items-center justify-center">
-        <Skeleton className="h-full w-full" />
+      <CardContent className='h-[400px] flex items-center justify-center'>
+        <Skeleton className='h-full w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });

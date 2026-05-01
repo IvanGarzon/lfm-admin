@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, skipToken } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { SearchParams } from 'nuqs/server';
 import { getRecipes, getRecipeById } from '@/actions/finances/recipes/queries';
 import { createRecipe, updateRecipe, deleteRecipe } from '@/actions/finances/recipes/mutations';
 import type { RecipeFilters, RecipeWithDetails } from '@/features/finances/recipes/types';
@@ -12,8 +13,20 @@ export const RECIPE_KEYS = {
   lists: () => [...RECIPE_KEYS.all, 'list'] as const,
   list: (filters: RecipeFilters) => [...RECIPE_KEYS.lists(), { filters }] as const,
   details: () => [...RECIPE_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...RECIPE_KEYS.details(), id] as const,
+  detail: (id: string) => [...RECIPE_KEYS.details(), id] as const
 };
+
+export function useRecipeList(searchParams: SearchParams) {
+  return useQuery({
+    queryKey: [...RECIPE_KEYS.lists(), JSON.stringify(searchParams)],
+    queryFn: async () => {
+      const result = await getRecipes(searchParams);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
 
 export function useRecipes(filters: RecipeFilters) {
   return useQuery({
@@ -44,7 +57,7 @@ export function useRecipes(filters: RecipeFilters) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -61,7 +74,7 @@ export function useRecipe(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -77,7 +90,7 @@ export function useAllRecipes(enabled: boolean = true) {
           return result.data?.items ?? [];
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -110,7 +123,7 @@ export function useCreateRecipe() {
     },
     onSuccess: (data) => {
       toast.success(`Recipe ${data.name} created successfully`);
-    },
+    }
   });
 }
 
@@ -143,9 +156,9 @@ export function useUpdateRecipe() {
 
           return {
             ...old,
-            ...newData,
+            ...newData
           };
-        },
+        }
       );
 
       return { previousRecipe };
@@ -164,7 +177,7 @@ export function useUpdateRecipe() {
     },
     onSuccess: () => {
       toast.success('Recipe updated successfully');
-    },
+    }
   });
 }
 
@@ -212,6 +225,6 @@ export function useDeleteRecipe() {
     },
     onSuccess: () => {
       toast.success('Recipe deleted successfully');
-    },
+    }
   });
 }

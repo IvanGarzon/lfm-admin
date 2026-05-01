@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -25,7 +25,7 @@ export function DeleteRecipeDialog({
   onOpenChange,
   onConfirm,
   name,
-  isPending,
+  isPending
 }: DeleteRecipeDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -34,7 +34,7 @@ export function DeleteRecipeDialog({
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the recipe{' '}
-            <span className="font-semibold">{name}</span>.
+            <span className='font-semibold'>{name}</span>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

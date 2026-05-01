@@ -18,14 +18,14 @@ export const getSessions = withAuth<void, SessionWithUser[]>(async (session) => 
     const currentSessionToken = session.sessionToken;
     const sessions = await sessionRepo.findActiveSessionsByUserId(
       session.user.id,
-      currentSessionToken,
+      currentSessionToken
     );
 
     return { success: true, data: sessions };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch sessions', {
       action: 'getSessions',
-      userId: session.user.id,
+      userId: session.user.id
     });
   }
 });
@@ -44,5 +44,5 @@ export const getSessionsByUserId = withTenantPermission<string, SessionWithUser[
     } catch (error) {
       return handleActionError(error, 'Failed to fetch sessions');
     }
-  },
+  }
 );

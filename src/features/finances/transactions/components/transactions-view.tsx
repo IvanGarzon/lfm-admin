@@ -27,12 +27,12 @@ interface TransactionsViewProps {
 const TransactionDrawer = dynamic(
   () =>
     import('@/features/finances/transactions/components/transaction-drawer').then(
-      (mod) => mod.TransactionDrawer,
+      (mod) => mod.TransactionDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export function TransactionsView({ initialData, searchParams }: TransactionsViewProps) {
@@ -42,15 +42,15 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
   const today = useMemo(() => new Date(), []);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
-    to: today,
+    to: today
   }));
 
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
-      endDate: today,
+      endDate: today
     }),
-    [today],
+    [today]
   );
 
   const { data: overviewStats, isLoading: overviewLoading } =
@@ -58,7 +58,7 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
 
   const analyticsFilter = useMemo(
     () => ({ startDate: dateRange?.from, endDate: dateRange?.to }),
-    [dateRange?.from, dateRange?.to],
+    [dateRange?.from, dateRange?.to]
   );
 
   const { data: analyticsStats, isLoading: analyticsLoading } =
@@ -88,33 +88,33 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
     !hasActiveSearchFilters(searchParams, transactionSearchParams);
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={ArrowLeftRight}
-          title="No transactions yet"
-          description="Add your first transaction to start tracking your income and expenses."
+          title='No transactions yet'
+          description='Add your first transaction to start tracking your income and expenses.'
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               New Transaction
             </Button>
           }
         />
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-              <p className="text-muted-foreground text-sm">Track all your income and expenses</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full space-y-6'>
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Transactions</h1>
+              <p className='text-muted-foreground text-sm'>Track all your income and expenses</p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-                <TabsTrigger value="list">List</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <TabsList className='grid w-full grid-cols-2 sm:w-[200px]'>
+                <TabsTrigger value='list'>List</TabsTrigger>
+                <TabsTrigger value='analytics'>Analytics</TabsTrigger>
               </TabsList>
-              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" aria-hidden="true" />
+              <Button onClick={handleShowCreateModal} className='w-full sm:w-auto'>
+                <Plus className='h-4 w-4' aria-hidden='true' />
                 New Transaction
               </Button>
             </Box>
@@ -123,19 +123,19 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
           <TransactionOverview
             stats={overviewStats}
             isLoading={overviewLoading}
-            comparisonLabel="vs. last month"
+            comparisonLabel='vs. last month'
           />
 
           <TabsContent
-            value="list"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='list'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
             <TransactionList data={initialData} searchParams={searchParams} />
           </TabsContent>
 
           <TabsContent
-            value="analytics"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='analytics'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
             <TransactionAnalytics
               stats={analyticsStats}

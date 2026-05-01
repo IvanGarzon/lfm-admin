@@ -8,7 +8,7 @@ import { withTenantPermission } from '@/lib/action-auth';
 import type {
   VendorStatistics,
   VendorWithDetails,
-  VendorPagination,
+  VendorPagination
 } from '@/features/inventory/vendors/types';
 import { searchParamsCache } from '@/filters/vendors/vendors-filters';
 
@@ -30,7 +30,7 @@ export const getVendors = withTenantPermission<SearchParams, VendorPagination>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch vendors');
     }
-  },
+  }
 );
 
 /**
@@ -52,7 +52,7 @@ export const getVendorById = withTenantPermission<string, VendorWithDetails>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch vendor');
     }
-  },
+  }
 );
 
 /**
@@ -69,7 +69,7 @@ export const getVendorStatistics = withTenantPermission<void, VendorStatistics>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch vendor statistics');
     }
-  },
+  }
 );
 
 /**

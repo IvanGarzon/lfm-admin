@@ -14,10 +14,10 @@ export const ReactQueryProvider = ({ children }: { children: React.ReactNode }) 
             // above 0 to avoid refetching immediately on the client
             staleTime: 1000 * 60 * 5, // 5 minutes
             gcTime: 1000 * 60 * 10, // 10 minutes - cleanup unused queries
-            refetchOnWindowFocus: false, // Personal preference
-          },
-        },
-      }),
+            refetchOnWindowFocus: false // Personal preference
+          }
+        }
+      })
   );
 
   return (

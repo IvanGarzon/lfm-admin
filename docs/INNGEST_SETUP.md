@@ -66,9 +66,9 @@ await queueInvoiceEmail({
   subject: `Invoice ${invoice.invoiceNumber}`,
   emailData: {
     invoiceNumber: invoice.invoiceNumber,
-    amount: invoice.amount,
+    amount: invoice.amount
     // ... other data
-  },
+  }
 });
 ```
 
@@ -84,9 +84,9 @@ await queueQuoteEmail({
   recipient: customer.email,
   subject: `Quote ${quote.quoteNumber}`,
   emailData: {
-    quoteNumber: quote.quoteNumber,
+    quoteNumber: quote.quoteNumber
     // ... other data
-  },
+  }
 });
 ```
 
@@ -104,7 +104,7 @@ await queueEmail({
   subject: 'Monthly Report',
   emailData: {
     /* report data */
-  },
+  }
 });
 ```
 

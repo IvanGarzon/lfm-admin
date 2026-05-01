@@ -8,7 +8,7 @@ import { ProductRepository } from '@/repositories/product-repository';
 import type {
   ProductPagination,
   ProductWithDetails,
-  ProductStatistics,
+  ProductStatistics
 } from '@/features/inventory/products/types';
 import { searchParamsCache } from '@/filters/products/products-filters';
 
@@ -31,7 +31,7 @@ export const getProducts = withTenantPermission<SearchParams, ProductPagination>
     } catch (error) {
       return handleActionError(error, 'Failed to fetch products');
     }
-  },
+  }
 );
 
 /**
@@ -55,7 +55,7 @@ export const getProductById = withTenantPermission<string, ProductWithDetails>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch product');
     }
-  },
+  }
 );
 
 /**
@@ -72,7 +72,7 @@ export const getProductStatistics = withTenantPermission<void, ProductStatistics
     } catch (error) {
       return handleActionError(error, 'Failed to fetch product statistics');
     }
-  },
+  }
 );
 
 /**

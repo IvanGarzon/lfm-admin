@@ -10,14 +10,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Box } from '@/components/ui/box';
 import type {
   InvoiceWithDetails,
   InvoiceMetadata,
   InvoiceItemDetail,
-  InvoicePaymentItem,
+  InvoicePaymentItem
 } from '@/features/finances/invoices/types';
 import { InvoicePreview } from '@/features/finances/invoices/components/invoice-preview';
 
@@ -45,7 +45,7 @@ export function SendInvoiceDialog({
   isLoadingItems = false,
   isLoadingPayments = false,
   onDownload,
-  onSendEmail,
+  onSendEmail
 }: SendInvoiceDialogProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -82,9 +82,9 @@ export function SendInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <Box className="flex items-center justify-between">
+      <DialogContent className='max-w-5xl h-[90vh] p-0 flex flex-col gap-0'>
+        <DialogHeader className='px-6 pt-6 pb-4 border-b'>
+          <Box className='flex items-center justify-between'>
             <Box>
               <DialogTitle>Send Invoice</DialogTitle>
               <DialogDescription>
@@ -94,7 +94,7 @@ export function SendInvoiceDialog({
           </Box>
         </DialogHeader>
 
-        <Box className="flex-1 bg-muted overflow-hidden">
+        <Box className='flex-1 bg-muted overflow-hidden'>
           <InvoicePreview
             invoice={invoice}
             items={items}
@@ -104,30 +104,30 @@ export function SendInvoiceDialog({
           />
         </Box>
 
-        <DialogFooter className="px-6 py-4 border-t bg-muted/50">
-          <Box className="flex items-center justify-between w-full">
-            <Box className="text-sm text-muted-foreground">
+        <DialogFooter className='px-6 py-4 border-t bg-muted/50'>
+          <Box className='flex items-center justify-between w-full'>
+            <Box className='text-sm text-muted-foreground'>
               Send invoice to <strong>{invoice.customer.email}</strong>
             </Box>
-            <Box className="flex gap-2">
+            <Box className='flex gap-2'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={handleDownload}
                 disabled={isDownloading}
               >
                 {isDownloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 ) : (
-                  <Download className="h-4 w-4" aria-hidden="true" />
+                  <Download className='h-4 w-4' aria-hidden='true' />
                 )}
                 {isDownloading ? 'Downloading...' : 'Download'}
               </Button>
-              <Button type="button" onClick={handleSendEmail} disabled={isSendingEmail}>
+              <Button type='button' onClick={handleSendEmail} disabled={isSendingEmail}>
                 {isSendingEmail ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 ) : (
-                  <Send className="h-4 w-4" aria-hidden="true" />
+                  <Send className='h-4 w-4' aria-hidden='true' />
                 )}
                 {isSendingEmail ? 'Sending...' : 'Send Invoice'}
               </Button>

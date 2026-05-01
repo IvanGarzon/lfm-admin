@@ -37,7 +37,7 @@ export function RichTextEditor({
   onBlur,
   placeholder = 'Start typing...',
   className,
-  editable = true,
+  editable = true
 }: RichTextEditorProps) {
   const initialValueSet = useRef(false);
 
@@ -88,10 +88,10 @@ export function RichTextEditor({
           'prose-blockquote:border-l-4 prose-blockquote:border-gray-300 dark:prose-blockquote:border-gray-700',
           'prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-2',
           'prose-strong:font-semibold prose-em:italic',
-          !editable && 'cursor-default',
-        ),
-      },
-    },
+          !editable && 'cursor-default'
+        )
+      }
+    }
   });
 
   // Only set initial value once when editor is first created
@@ -115,7 +115,7 @@ export function RichTextEditor({
       className={cn(
         'border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-white dark:bg-gray-950',
         'focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all',
-        className,
+        className
       )}
     >
       {editable ? <Header editor={editor} /> : null}

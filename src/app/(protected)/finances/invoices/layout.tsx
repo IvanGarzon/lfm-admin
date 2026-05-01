@@ -2,7 +2,7 @@ import { InvoiceActionProvider } from '@/features/finances/invoices/context/invo
 
 export default function InvoicesLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

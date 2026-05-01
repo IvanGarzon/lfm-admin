@@ -8,7 +8,7 @@ import {
   CreateCustomerSchema,
   UpdateCustomerSchema,
   type CreateCustomerInput,
-  type UpdateCustomerInput,
+  type UpdateCustomerInput
 } from '@/schemas/customers';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -20,7 +20,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { AddressInlineFields } from '@/components/ui/address-autocomplete/address-inline-fields';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -37,7 +37,7 @@ import { emptyAddress, type AddressInput } from '@/schemas/address';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({
   value: gender,
-  label: gender.charAt(0) + gender.slice(1).toLowerCase(),
+  label: gender.charAt(0) + gender.slice(1).toLowerCase()
 }));
 
 const defaultFormState: CreateCustomerInput = {
@@ -49,7 +49,7 @@ const defaultFormState: CreateCustomerInput = {
   status: CustomerStatusSchema.enum.ACTIVE,
   organizationId: '',
   useOrganizationAddress: false,
-  address: null,
+  address: null
 };
 
 const mapCustomerToFormValues = (customer: CustomerListItem): UpdateCustomerInput => {
@@ -63,7 +63,7 @@ const mapCustomerToFormValues = (customer: CustomerListItem): UpdateCustomerInpu
     status: customer.status,
     organizationId: customer.organizationId ?? '',
     useOrganizationAddress: customer.useOrganizationAddress ?? false,
-    address: customer.address ?? null,
+    address: customer.address ?? null
   };
 };
 
@@ -74,7 +74,7 @@ export function CustomerForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: {
   customer?: CustomerListItem;
   onCreate?: (data: CreateCustomerInput) => void;
@@ -101,7 +101,7 @@ export function CustomerForm({
   const form = useForm<CustomerFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   // Reset form when customer changes (instead of relying on key={id} remount)
@@ -114,7 +114,7 @@ export function CustomerForm({
       onDirtyStateChange?.(false);
       return values;
     }, [customer, onDirtyStateChange]),
-    isUpdating, // Reset form when update completes (true -> false)
+    isUpdating // Reset form when update completes (true -> false)
   );
 
   const { isDirty } = form.formState;
@@ -122,7 +122,7 @@ export function CustomerForm({
   // Watch all form fields we need in a single subscription (more performant than multiple form.watch calls)
   const [watchedAddress, watchedOrgId, watchedUseOrgAddress] = useWatch({
     control: form.control,
-    name: ['address', 'organizationId', 'useOrganizationAddress'],
+    name: ['address', 'organizationId', 'useOrganizationAddress']
   });
 
   // Address autocomplete search input state
@@ -134,7 +134,7 @@ export function CustomerForm({
       const targetAddress = newAddress.formattedAddress ? newAddress : null;
       form.setValue('address', targetAddress, { shouldDirty: true });
     },
-    [form],
+    [form]
   );
 
   // Warn user before leaving page with unsaved changes
@@ -156,7 +156,7 @@ export function CustomerForm({
   // Find selected organization with full details
   const selectedOrganization = useMemo(
     () => organizations.find((org) => org.id === watchedOrgId) ?? null,
-    [organizations, watchedOrgId],
+    [organizations, watchedOrgId]
   );
 
   // Handle address source change
@@ -170,7 +170,7 @@ export function CustomerForm({
         setAddressSearchInput('');
       }
     },
-    [form],
+    [form]
   );
 
   // Handler for organization change - resets useOrganizationAddress
@@ -179,7 +179,7 @@ export function CustomerForm({
       form.setValue('organizationId', organizationId, { shouldDirty: true });
       form.setValue('useOrganizationAddress', false, { shouldDirty: true });
     },
-    [form],
+    [form]
   );
 
   const onSubmit: SubmitHandler<CustomerFormInput> = useCallback(
@@ -189,46 +189,46 @@ export function CustomerForm({
       } else {
         const updateData: UpdateCustomerInput = {
           ...data,
-          id: customer?.id ?? '',
+          id: customer?.id ?? ''
         };
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, customer?.id],
+    [mode, onCreate, onUpdate, customer?.id]
   );
 
   return (
     <Form {...form}>
       <form
-        id="form-rhf-customer"
+        id='form-rhf-customer'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isCreating || isUpdating ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating customer...' : 'Updating customer...'}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Box className='flex-1 overflow-y-auto px-6 py-6 space-y-4'>
+          <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <FieldGroup>
               <Controller
-                name="firstName"
+                name='firstName'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-firstName">First Name</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-firstName'>First Name</FieldLabel>
                     </FieldContent>
                     <Input
                       {...field}
-                      id="form-rhf-input-firstName"
+                      id='form-rhf-input-firstName'
                       aria-invalid={fieldState.invalid}
-                      placeholder="Enter first name"
+                      placeholder='Enter first name'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -238,18 +238,18 @@ export function CustomerForm({
 
             <FieldGroup>
               <Controller
-                name="lastName"
+                name='lastName'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-lastName">Last Name</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-lastName'>Last Name</FieldLabel>
                     </FieldContent>
                     <Input
                       {...field}
-                      id="form-rhf-input-lastName"
+                      id='form-rhf-input-lastName'
                       aria-invalid={fieldState.invalid}
-                      placeholder="Enter last name"
+                      placeholder='Enter last name'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -258,21 +258,21 @@ export function CustomerForm({
             </FieldGroup>
           </Box>
 
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <FieldGroup>
               <Controller
-                name="email"
+                name='email'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-email'>Email</FieldLabel>
                     </FieldContent>
                     <Input
                       {...field}
-                      id="form-rhf-input-email"
+                      id='form-rhf-input-email'
                       aria-invalid={fieldState.invalid}
-                      placeholder="john.doe@example.com"
+                      placeholder='john.doe@example.com'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -282,19 +282,19 @@ export function CustomerForm({
 
             <FieldGroup>
               <Controller
-                name="phone"
+                name='phone'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-phone">Phone</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-phone'>Phone</FieldLabel>
                     </FieldContent>
                     <Input
                       {...field}
                       value={field.value ?? ''}
-                      id="form-rhf-input-phone"
+                      id='form-rhf-input-phone'
                       aria-invalid={fieldState.invalid}
-                      placeholder="+61 400 000 000"
+                      placeholder='+61 400 000 000'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -303,18 +303,18 @@ export function CustomerForm({
             </FieldGroup>
           </Box>
 
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <FieldGroup>
               <Controller
-                name="gender"
+                name='gender'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-gender">Gender</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-gender'>Gender</FieldLabel>
                     </FieldContent>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-gender" aria-invalid={fieldState.invalid}>
+                      <SelectTrigger id='form-rhf-select-gender' aria-invalid={fieldState.invalid}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -333,15 +333,15 @@ export function CustomerForm({
 
             <FieldGroup>
               <Controller
-                name="status"
+                name='status'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
+                      <FieldLabel htmlFor='form-rhf-status'>Status</FieldLabel>
                     </FieldContent>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
+                      <SelectTrigger id='form-rhf-select-status' aria-invalid={fieldState.invalid}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -359,10 +359,10 @@ export function CustomerForm({
             </FieldGroup>
           </Box>
 
-          <Box className="space-y-4 border-t pt-4">
+          <Box className='space-y-4 border-t pt-4'>
             <FieldGroup>
               <Controller
-                name="organizationId"
+                name='organizationId'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -371,8 +371,8 @@ export function CustomerForm({
                       value={field.value ?? undefined}
                       onValueChange={handleOrganizationChange}
                       isLoading={isLoadingOrganizations}
-                      label="Organization (Optional)"
-                      placeholder="Select or create an organization"
+                      label='Organization (Optional)'
+                      placeholder='Select or create an organization'
                       showAddOrganizationLink={true}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -394,10 +394,10 @@ export function CustomerForm({
 
             {/* Custom Address Input - show only when NOT using org address */}
             {!watchedOrgId || !watchedUseOrgAddress ? (
-              <Box className="space-y-2">
+              <Box className='space-y-2'>
                 <FieldLabel>Address {watchedOrgId ? '(Optional)' : '(Required)'}</FieldLabel>
                 <Controller
-                  name="address"
+                  name='address'
                   control={form.control}
                   render={({ fieldState }) => (
                     <>
@@ -406,7 +406,7 @@ export function CustomerForm({
                         setAddress={handleAddressChange}
                         searchInput={addressSearchInput}
                         setSearchInput={setAddressSearchInput}
-                        placeholder="Search for an address"
+                        placeholder='Search for an address'
                         disabled={isCreating || isUpdating}
                       />
                       {fieldState.invalid && !watchedAddress?.formattedAddress && (
@@ -421,21 +421,21 @@ export function CustomerForm({
         </Box>
 
         {/* Action Buttons */}
-        <Box className="border-t p-6 flex gap-3 justify-end bg-muted/50">
+        <Box className='border-t p-6 flex gap-3 justify-end bg-muted/50'>
           {onClose ? (
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={onClose}
               disabled={isCreating || isUpdating}
             >
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isCreating || isUpdating || (customer && !isDirty)}>
+          <Button type='submit' disabled={isCreating || isUpdating || (customer && !isDirty)}>
             {isCreating || isUpdating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 {customer ? 'Updating...' : 'Creating...'}
               </>
             ) : customer ? (

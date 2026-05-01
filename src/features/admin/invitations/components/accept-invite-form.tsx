@@ -14,7 +14,7 @@ import type { InvitationWithTenant } from '@/features/admin/invitations/types';
 
 export function AcceptInviteForm({
   invitation,
-  token,
+  token
 }: {
   invitation: InvitationWithTenant;
   token: string;
@@ -35,7 +35,7 @@ export function AcceptInviteForm({
       toast.success('Account created. Please sign in.');
       router.push('/');
     },
-    onError: () => toast.error('Failed to accept invitation'),
+    onError: () => toast.error('Failed to accept invitation')
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -48,60 +48,60 @@ export function AcceptInviteForm({
   };
 
   return (
-    <Card className="w-full max-w-md p-8 space-y-6">
-      <Box className="text-center space-y-1">
-        <h1 className="text-2xl font-bold">You&apos;re invited</h1>
-        <p className="text-muted-foreground text-sm">
+    <Card className='w-full max-w-md p-8 space-y-6'>
+      <Box className='text-center space-y-1'>
+        <h1 className='text-2xl font-bold'>You&apos;re invited</h1>
+        <p className='text-muted-foreground text-sm'>
           Join <strong>{invitation.tenant.name}</strong> as{' '}
           {invitation.role.charAt(0) + invitation.role.slice(1).toLowerCase()}
         </p>
-        <p className="text-sm text-muted-foreground">{invitation.email}</p>
+        <p className='text-sm text-muted-foreground'>{invitation.email}</p>
       </Box>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Box className="grid grid-cols-2 gap-3">
-          <Box className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
+      <form onSubmit={handleSubmit} className='space-y-4'>
+        <Box className='grid grid-cols-2 gap-3'>
+          <Box className='space-y-2'>
+            <Label htmlFor='firstName'>First Name</Label>
             <Input
-              id="firstName"
+              id='firstName'
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               required
             />
           </Box>
-          <Box className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
+          <Box className='space-y-2'>
+            <Label htmlFor='lastName'>Last Name</Label>
             <Input
-              id="lastName"
+              id='lastName'
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               required
             />
           </Box>
         </Box>
-        <Box className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+        <Box className='space-y-2'>
+          <Label htmlFor='password'>Password</Label>
           <Input
-            id="password"
-            type="password"
+            id='password'
+            type='password'
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
             required
           />
         </Box>
-        <Box className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Box className='space-y-2'>
+          <Label htmlFor='confirmPassword'>Confirm Password</Label>
           <Input
-            id="confirmPassword"
-            type="password"
+            id='confirmPassword'
+            type='password'
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             minLength={8}
             required
           />
         </Box>
-        <Button type="submit" className="w-full" disabled={accept.isPending}>
+        <Button type='submit' className='w-full' disabled={accept.isPending}>
           {accept.isPending ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>

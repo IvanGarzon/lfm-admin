@@ -22,12 +22,12 @@ export function PriceListTable<TData>({ table, items, totalItems }: PriceListTab
   };
 
   return (
-    <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+    <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
       <DataTableToolbar table={table} />
       {items.length ? (
         <DataTable table={table} totalItems={totalItems} onRowHover={handleRowHover} />
       ) : (
-        <Box className="text-center py-12 text-muted-foreground">
+        <Box className='text-center py-12 text-muted-foreground'>
           No items found. Try adjusting your filters or add a new item.
         </Box>
       )}

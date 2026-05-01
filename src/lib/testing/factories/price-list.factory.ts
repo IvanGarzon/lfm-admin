@@ -8,14 +8,14 @@ import { testIds } from '../id-generator';
 import type { CreatePriceListItemInput, UpdatePriceListItemInput } from '@/schemas/price-list';
 import type {
   PriceListItemListItem,
-  PriceListItemWithDetails,
+  PriceListItemWithDetails
 } from '@/features/inventory/price-list/types';
 
 /**
  * Creates valid price list item input data for create mutations.
  */
 export function createPriceListItemInput(
-  overrides: Partial<CreatePriceListItemInput> = {},
+  overrides: Partial<CreatePriceListItemInput> = {}
 ): CreatePriceListItemInput {
   return {
     name: 'Red Roses',
@@ -29,7 +29,7 @@ export function createPriceListItemInput(
     unitType: null,
     bunchSize: null,
     season: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -37,12 +37,12 @@ export function createPriceListItemInput(
  * Creates valid price list item input data for update mutations.
  */
 export function createUpdatePriceListItemInput(
-  overrides: Partial<UpdatePriceListItemInput> = {},
+  overrides: Partial<UpdatePriceListItemInput> = {}
 ): UpdatePriceListItemInput {
   return {
     ...createPriceListItemInput(),
     id: testIds.priceListItem(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -50,7 +50,7 @@ export function createUpdatePriceListItemInput(
  * Creates a mock price list item list item as returned by searchAndPaginate or findAllActive.
  */
 export function createPriceListItemListItem(
-  overrides: Partial<PriceListItemListItem> = {},
+  overrides: Partial<PriceListItemListItem> = {}
 ): PriceListItemListItem {
   return {
     id: testIds.priceListItem(),
@@ -69,7 +69,7 @@ export function createPriceListItemListItem(
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     lastCostChange: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -77,11 +77,11 @@ export function createPriceListItemListItem(
  * Creates a mock price list item with full details as returned by findByIdWithDetails.
  */
 export function createPriceListItemWithDetails(
-  overrides: Partial<PriceListItemWithDetails> = {},
+  overrides: Partial<PriceListItemWithDetails> = {}
 ): PriceListItemWithDetails {
   return {
     ...createPriceListItemListItem(overrides),
     costHistory: [],
-    ...overrides,
+    ...overrides
   };
 }

@@ -11,15 +11,15 @@ const {
   mockAuditService,
   mockLogger,
   mockTokenRepo,
-  mockConfirmationRepo,
+  mockConfirmationRepo
 } = vi.hoisted(() => ({
   mockUserRepo: {
     getUserByEmail: vi.fn(),
-    createUserWithAccount: vi.fn(),
+    createUserWithAccount: vi.fn()
   },
   mockAccountRepo: {
     findByProviderAndAccountId: vi.fn(),
-    createAccount: vi.fn(),
+    createAccount: vi.fn()
   },
   mockAuditService: {
     LoggedIn: vi.fn(),
@@ -28,74 +28,74 @@ const {
     OtpFailed: vi.fn(),
     OtpLocked: vi.fn(),
     OtpExpired: vi.fn(),
-    OtpAlreadyUsed: vi.fn(),
+    OtpAlreadyUsed: vi.fn()
   },
   mockLogger: {
     error: vi.fn(),
-    info: vi.fn(),
+    info: vi.fn()
   },
   mockTokenRepo: {
     upsertToken: vi.fn(),
     findByChallengeToken: vi.fn(),
     incrementAttempts: vi.fn(),
-    markUsed: vi.fn(),
+    markUsed: vi.fn()
   },
   mockConfirmationRepo: {
-    upsertByUserId: vi.fn(),
-  },
+    upsertByUserId: vi.fn()
+  }
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/account-repository', () => ({
   AccountRepository: vi.fn().mockImplementation(function () {
     return mockAccountRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/two-factor-token-repository', () => ({
   TwoFactorTokenRepository: vi.fn().mockImplementation(function () {
     return mockTokenRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/two-factor-confirmation-repository', () => ({
   TwoFactorConfirmationRepository: vi.fn().mockImplementation(function () {
     return mockConfirmationRepo;
-  }),
+  })
 }));
 
 vi.mock('@/services/audit.service', () => ({
   AuditService: vi.fn().mockImplementation(function () {
     return mockAuditService;
-  }),
+  })
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('@/lib/logger', () => ({
-  logger: mockLogger,
+  logger: mockLogger
 }));
 
 vi.mock('bcryptjs', () => ({
-  default: { compare: vi.fn() },
+  default: { compare: vi.fn() }
 }));
 
 vi.mock('@/lib/agent', () => ({
   getClientDetails: vi.fn().mockResolvedValue({
     ipAddress: '127.0.0.1',
-    userAgent: 'test-agent',
-  }),
+    userAgent: 'test-agent'
+  })
 }));
 
 vi.mock('@/lib/email-service', () => ({
-  sendEmailNotification: vi.fn(),
+  sendEmailNotification: vi.fn()
 }));
 
 // -- Helpers ------------------------------------------------------------------
@@ -112,7 +112,7 @@ function createMockUser(
     lastName: string;
     password: string | null;
     isTwoFactorEnabled: boolean;
-  }> = {},
+  }> = {}
 ) {
   return {
     id: TEST_USER_ID,
@@ -121,7 +121,7 @@ function createMockUser(
     lastName: 'Doe',
     password: 'hashed-password',
     isTwoFactorEnabled: false,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -134,7 +134,7 @@ function createMockToken(
     expires: Date;
     usedAt: Date | null;
     numberOfAttempts: number;
-  }> = {},
+  }> = {}
 ) {
   return {
     id: 'token-id',
@@ -144,18 +144,18 @@ function createMockToken(
     expires: new Date(Date.now() + 15 * 60 * 1000),
     usedAt: null,
     numberOfAttempts: 0,
-    ...overrides,
+    ...overrides
   };
 }
 
 function createMockAccount(
-  overrides: Partial<{ provider: string; providerAccountId: string; type: string }> = {},
+  overrides: Partial<{ provider: string; providerAccountId: string; type: string }> = {}
 ) {
   return {
     provider: 'google',
     providerAccountId: 'provider-123',
     type: 'oauth',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -165,14 +165,14 @@ function createMockProfile(
     given_name: string;
     family_name: string;
     picture: string;
-  }> = {},
+  }> = {}
 ) {
   return {
     email: 'test@example.com',
     given_name: 'John',
     family_name: 'Doe',
     picture: 'https://example.com/avatar.jpg',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -199,7 +199,7 @@ describe('Auth Actions', () => {
       it('returns error when email is missing in profile', async () => {
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: { given_name: 'No', family_name: 'Email' } as any,
+          profile: { given_name: 'No', family_name: 'Email' } as any
         });
 
         expect(result.success).toBe(false);
@@ -211,7 +211,7 @@ describe('Auth Actions', () => {
       it('returns error when email is empty string', async () => {
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: createMockProfile({ email: '' }) as any,
+          profile: createMockProfile({ email: '' }) as any
         });
 
         expect(result.success).toBe(false);
@@ -228,7 +228,7 @@ describe('Auth Actions', () => {
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: createMockProfile() as any,
+          profile: createMockProfile() as any
         });
 
         expect(result.success).toBe(true);
@@ -249,13 +249,13 @@ describe('Auth Actions', () => {
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: createMockProfile({ email: existingUser.email }) as any,
+          profile: createMockProfile({ email: existingUser.email }) as any
         });
 
         expect(result.success).toBe(true);
         expect(mockAccountRepo.createAccount).toHaveBeenCalled();
         expect(mockAuditService.LoggedIn).toHaveBeenCalledWith({
-          data: { userId: existingUser.id },
+          data: { userId: existingUser.id }
         });
       });
     });
@@ -269,7 +269,7 @@ describe('Auth Actions', () => {
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: createMockProfile({ email: newUser.email }) as any,
+          profile: createMockProfile({ email: newUser.email }) as any
         });
 
         expect(result.success).toBe(true);
@@ -284,7 +284,7 @@ describe('Auth Actions', () => {
 
         const result = await handleSignIn({
           account: createMockAccount() as any,
-          profile: createMockProfile() as any,
+          profile: createMockProfile() as any
         });
 
         expect(result.success).toBe(false);
@@ -359,10 +359,10 @@ describe('Auth Actions', () => {
         expect(result.data.challengeToken).toBe('challenge-uuid');
       }
       expect(sendEmailNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ template: 'otp' }),
+        expect.objectContaining({ template: 'otp' })
       );
       expect(mockAuditService.OtpRequested).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) })
       );
     });
 
@@ -407,13 +407,13 @@ describe('Auth Actions', () => {
         expect(result.error).toContain('already been used');
       }
       expect(mockAuditService.OtpAlreadyUsed).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) })
       );
     });
 
     it('returns error when token is expired', async () => {
       mockTokenRepo.findByChallengeToken.mockResolvedValue(
-        createMockToken({ expires: new Date(Date.now() - 1000) }),
+        createMockToken({ expires: new Date(Date.now() - 1000) })
       );
 
       const result = await verifyTwoFactorCode(validInput);
@@ -430,7 +430,7 @@ describe('Auth Actions', () => {
 
       const result = await verifyTwoFactorCode({
         challengeToken: 'challenge-uuid',
-        code: '000000',
+        code: '000000'
       });
 
       expect(result.success).toBe(false);
@@ -439,7 +439,7 @@ describe('Auth Actions', () => {
       }
       expect(mockTokenRepo.incrementAttempts).toHaveBeenCalledWith('token-id');
       expect(mockAuditService.OtpFailed).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ attemptsRemaining: 4 }) }),
+        expect.objectContaining({ data: expect.objectContaining({ attemptsRemaining: 4 }) })
       );
     });
 
@@ -449,7 +449,7 @@ describe('Auth Actions', () => {
 
       const result = await verifyTwoFactorCode({
         challengeToken: 'challenge-uuid',
-        code: '000000',
+        code: '000000'
       });
 
       expect(result.success).toBe(false);
@@ -458,19 +458,19 @@ describe('Auth Actions', () => {
       }
       expect(mockTokenRepo.markUsed).toHaveBeenCalledWith('token-id');
       expect(mockAuditService.OtpLocked).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) })
       );
     });
 
     it('audits expiry when token is expired', async () => {
       mockTokenRepo.findByChallengeToken.mockResolvedValue(
-        createMockToken({ expires: new Date(Date.now() - 1000) }),
+        createMockToken({ expires: new Date(Date.now() - 1000) })
       );
 
       await verifyTwoFactorCode(validInput);
 
       expect(mockAuditService.OtpExpired).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) })
       );
     });
 
@@ -488,7 +488,7 @@ describe('Auth Actions', () => {
       expect(mockTokenRepo.markUsed).toHaveBeenCalledWith('token-id', '127.0.0.1');
       expect(mockConfirmationRepo.upsertByUserId).toHaveBeenCalledWith(TEST_USER_ID);
       expect(mockAuditService.OtpVerified).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) }),
+        expect.objectContaining({ data: expect.objectContaining({ userId: TEST_USER_ID }) })
       );
     });
   });

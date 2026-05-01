@@ -3,5 +3,5 @@ interface AuthLayoutProps {
 }
 
 export default async function AuthLayout({ children }: AuthLayoutProps) {
-  return <main className="flex justify-center items-center h-full">{children}</main>;
+  return <main className='flex justify-center items-center h-full'>{children}</main>;
 }

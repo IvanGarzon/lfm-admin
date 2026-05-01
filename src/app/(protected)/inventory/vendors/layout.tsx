@@ -2,7 +2,7 @@ import { VendorActionProvider } from '@/features/inventory/vendors/context/vendo
 
 export default function VendorsLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

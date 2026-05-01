@@ -57,7 +57,7 @@ export function PriceListActionProvider({ children }: { children: React.ReactNod
         onSuccess: () => {
           close();
           state.onSuccess?.();
-        },
+        }
       });
     }
   }, [state, deleteMutation, close]);
@@ -66,9 +66,9 @@ export function PriceListActionProvider({ children }: { children: React.ReactNod
     () => ({
       openDelete,
       openCostHistory,
-      close,
+      close
     }),
-    [openDelete, openCostHistory, close],
+    [openDelete, openCostHistory, close]
   );
 
   return (

@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Form } from '@/components/ui/form';
@@ -24,7 +24,7 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupText,
+  InputGroupText
 } from '@/components/ui/input-group';
 
 import { ConvertQuoteToInvoiceSchema, type ConvertQuoteToInvoiceInput } from '@/schemas/quotes';
@@ -48,7 +48,7 @@ export function ConvertToInvoiceDialog({
   quoteNumber,
   quoteGst = 10,
   quoteDiscount = 0,
-  isPending = false,
+  isPending = false
 }: ConvertToInvoiceDialogProps) {
   const form = useForm<ConvertQuoteToInvoiceInput>({
     resolver: zodResolver(ConvertQuoteToInvoiceSchema),
@@ -56,8 +56,8 @@ export function ConvertToInvoiceDialog({
       id: quoteId,
       dueDate: addDays(new Date(), 30), // 30 days from now
       gst: quoteGst,
-      discount: quoteDiscount,
-    },
+      discount: quoteDiscount
+    }
   });
 
   const handleSubmit = useCallback(
@@ -66,7 +66,7 @@ export function ConvertToInvoiceDialog({
       form.reset();
       onOpenChange(false);
     },
-    [onConfirm, form, onOpenChange],
+    [onConfirm, form, onOpenChange]
   );
 
   const handleCancel = useCallback(() => {
@@ -76,7 +76,7 @@ export function ConvertToInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Convert Quote to Invoice</DialogTitle>
           <DialogDescription>
@@ -86,36 +86,36 @@ export function ConvertToInvoiceDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            id="convert-to-invoice-form"
+            id='convert-to-invoice-form'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className='space-y-4'
           >
             {/* Due Date Field */}
             <FieldGroup>
               <Controller
-                name="dueDate"
+                name='dueDate'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="convert-to-invoice-form-due-date">Due Date</FieldLabel>
+                      <FieldLabel htmlFor='convert-to-invoice-form-due-date'>Due Date</FieldLabel>
                     </FieldContent>
 
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant='outline'
                           className={cn(
                             'justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
+                            !field.value && 'text-muted-foreground'
                           )}
                         >
-                          <CalendarIcon aria-hidden="true" className="h-4 w-4" />
+                          <CalendarIcon aria-hidden='true' className='h-4 w-4' />
                           {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
+                      <PopoverContent className='w-auto p-0' align='start'>
+                        <Calendar mode='single' selected={field.value} onSelect={field.onChange} />
                       </PopoverContent>
                     </Popover>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -127,29 +127,29 @@ export function ConvertToInvoiceDialog({
             {/* GST Field */}
             <FieldGroup>
               <Controller
-                name="gst"
+                name='gst'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="convert-to-invoice-form-gst">GST (%)</FieldLabel>
+                      <FieldLabel htmlFor='convert-to-invoice-form-gst'>GST (%)</FieldLabel>
                     </FieldContent>
                     <InputGroup>
-                      <InputGroupAddon align="inline-start">
+                      <InputGroupAddon align='inline-start'>
                         <InputGroupText>
-                          <Percent aria-hidden="true" className="h-4 w-4" />
+                          <Percent aria-hidden='true' className='h-4 w-4' />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
                         {...field}
-                        id="convert-to-invoice-form-gst"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.5"
+                        id='convert-to-invoice-form-gst'
+                        type='number'
+                        min='0'
+                        max='100'
+                        step='0.5'
                         value={field.value}
                         onChange={(e) => field.onChange(Number(e.target.value))}
-                        placeholder="Enter GST percentage"
+                        placeholder='Enter GST percentage'
                       />
                     </InputGroup>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -161,33 +161,33 @@ export function ConvertToInvoiceDialog({
             {/* Discount Field */}
             <FieldGroup>
               <Controller
-                name="discount"
+                name='discount'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor="convert-to-invoice-form-discount">
+                      <FieldLabel htmlFor='convert-to-invoice-form-discount'>
                         Discount (Optional)
                       </FieldLabel>
                     </FieldContent>
                     <InputGroup>
-                      <InputGroupAddon align="inline-start">
+                      <InputGroupAddon align='inline-start'>
                         <InputGroupText>
-                          <DollarSign aria-hidden="true" className="h-4 w-4" />
+                          <DollarSign aria-hidden='true' className='h-4 w-4' />
                         </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
                         {...field}
-                        id="convert-to-invoice-form-discount"
-                        type="number"
-                        step="1"
-                        min="0"
+                        id='convert-to-invoice-form-discount'
+                        type='number'
+                        step='1'
+                        min='0'
                         value={isNaN(field.value) ? '' : field.value}
                         onChange={(e) => {
                           const value = e.target.valueAsNumber;
                           field.onChange(isNaN(value) ? 0 : value);
                         }}
-                        placeholder="Enter discount amount"
+                        placeholder='Enter discount amount'
                       />
                     </InputGroup>
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -197,10 +197,10 @@ export function ConvertToInvoiceDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type='submit' disabled={isPending}>
                 {isPending ? 'Converting...' : 'Convert to Invoice'}
               </Button>
             </DialogFooter>

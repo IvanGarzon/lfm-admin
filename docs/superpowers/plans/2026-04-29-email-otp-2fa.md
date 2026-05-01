@@ -109,7 +109,7 @@ import { TwoFactorTokenRepository } from '../two-factor-token-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createUserData } from '@/lib/testing';
 import crypto from 'node:crypto';
@@ -125,7 +125,7 @@ function hashCode(code: string): string {
 async function createTestUser(tenantId: string, email?: string) {
   return getTestPrisma().user.create({
     data: { ...createUserData({ email }), tenantId },
-    select: { id: true, email: true },
+    select: { id: true, email: true }
   });
 }
 
@@ -151,7 +151,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const result = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       expect(result.userId).toBe(userId);
@@ -166,7 +166,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const second = await repository.upsertToken({
         userId,
         hashedCode: hashCode('222222'),
-        expires,
+        expires
       });
 
       const db = getTestPrisma();
@@ -182,7 +182,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
         hashedCode: hashCode('123456'),
         expires,
         userAgent: 'Mozilla/5.0',
-        requestedIpAddress: '127.0.0.1',
+        requestedIpAddress: '127.0.0.1'
       });
 
       expect(result.userAgent).toBe('Mozilla/5.0');
@@ -198,7 +198,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const created = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       const found = await repository.findByChallengeToken(created.challengeToken);
@@ -220,7 +220,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.incrementAttempts(token.id);
@@ -237,7 +237,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.markUsed(token.id);
@@ -250,7 +250,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.markUsed(token.id, '192.168.1.1');
@@ -314,15 +314,15 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
         usedAt: null,
         userAgent: userAgent ?? null,
         requestedIpAddress: requestedIpAddress ?? null,
-        loggedInIpAddress: null,
+        loggedInIpAddress: null
       },
       create: {
         userId,
         otpCode: hashedCode,
         expires,
         userAgent: userAgent ?? null,
-        requestedIpAddress: requestedIpAddress ?? null,
-      },
+        requestedIpAddress: requestedIpAddress ?? null
+      }
     });
   }
 
@@ -343,7 +343,7 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
   async incrementAttempts(id: string): Promise<TwoFactorToken> {
     return this.prisma.twoFactorToken.update({
       where: { id },
-      data: { numberOfAttempts: { increment: 1 } },
+      data: { numberOfAttempts: { increment: 1 } }
     });
   }
 
@@ -359,8 +359,8 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
       where: { id },
       data: {
         usedAt: new Date(),
-        loggedInIpAddress: loggedInIpAddress ?? null,
-      },
+        loggedInIpAddress: loggedInIpAddress ?? null
+      }
     });
   }
 }
@@ -399,7 +399,7 @@ export const OtpVerifySchema = z.object({
   code: z
     .string()
     .length(6, 'Code must be 6 digits')
-    .regex(/^\d{6}$/, 'Code must be 6 digits'),
+    .regex(/^\d{6}$/, 'Code must be 6 digits')
 });
 
 export type OtpVerifyInput = z.infer<typeof OtpVerifySchema>;
@@ -464,7 +464,7 @@ export const OtpEmailContent = ({ userName, otpCode, expiresInMinutes }: OtpEmai
                   color: '#111827',
                   margin: '0',
                   padding: '8px 0',
-                  borderBottom: '2px solid #6366f1',
+                  borderBottom: '2px solid #6366f1'
                 }}
               >
                 {digit}
@@ -487,7 +487,7 @@ export const OtpEmailContent = ({ userName, otpCode, expiresInMinutes }: OtpEmai
 
 export function OtpEmail(props: OtpEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText="Your sign-in verification code">
+    <BaseTemplateEmail previewText='Your sign-in verification code'>
       <OtpEmailContent {...props} />
     </BaseTemplateEmail>
   );
@@ -496,7 +496,7 @@ export function OtpEmail(props: OtpEmailProps): React.ReactElement {
 OtpEmail.PreviewProps = {
   userName: 'Alex Taylor',
   otpCode: '482951',
-  expiresInMinutes: 15,
+  expiresInMinutes: 15
 } satisfies OtpEmailProps;
 
 export default OtpEmail;
@@ -528,7 +528,7 @@ const emailTemplates = {
   invitation: InvitationEmail,
   'password-reset': PasswordResetEmail,
   'login-notification': LoginNotificationEmail,
-  otp: OtpEmail,
+  otp: OtpEmail
 } as const;
 ```
 
@@ -583,7 +583,7 @@ function hashOtpCode(code: string): string {
  * @returns Whether an OTP challenge is required, plus the challengeToken if so
  */
 export async function initiateSignIn(
-  data: SignInInput,
+  data: SignInInput
 ): Promise<ActionResult<{ requiresOtp: false } | { requiresOtp: true; challengeToken: string }>> {
   try {
     const { email, password } = SignInSchema.parse(data);
@@ -615,7 +615,7 @@ export async function initiateSignIn(
       hashedCode,
       expires,
       userAgent: details.userAgent,
-      requestedIpAddress: details.ipAddress,
+      requestedIpAddress: details.ipAddress
     });
 
     const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'there';
@@ -624,18 +624,18 @@ export async function initiateSignIn(
       to: email,
       subject: 'Your sign-in verification code',
       template: 'otp',
-      props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES },
+      props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES }
     }).catch((err) =>
       logger.error('Failed to send OTP email', err, {
         context: 'initiateSignIn',
-        metadata: { userId: user.id },
-      }),
+        metadata: { userId: user.id }
+      })
     );
 
     return { success: true, data: { requiresOtp: true, challengeToken: token.challengeToken } };
   } catch (error) {
     return handleActionError(error, 'Sign-in failed. Please try again.', {
-      action: 'initiateSignIn',
+      action: 'initiateSignIn'
     });
   }
 }
@@ -649,7 +649,7 @@ export async function initiateSignIn(
  * @returns Success or a descriptive error
  */
 export async function verifyTwoFactorCode(
-  data: OtpVerifyInput,
+  data: OtpVerifyInput
 ): Promise<ActionResult<{ verified: true }>> {
   try {
     const { challengeToken, code } = OtpVerifySchema.parse(data);
@@ -664,7 +664,7 @@ export async function verifyTwoFactorCode(
     if (token.usedAt) {
       return {
         success: false,
-        error: 'This code has already been used. Please request a new one.',
+        error: 'This code has already been used. Please request a new one.'
       };
     }
 
@@ -688,7 +688,7 @@ export async function verifyTwoFactorCode(
 
       return {
         success: false,
-        error: `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
+        error: `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
       };
     }
 
@@ -698,7 +698,7 @@ export async function verifyTwoFactorCode(
     return { success: true, data: { verified: true } };
   } catch (error) {
     return handleActionError(error, 'Verification failed. Please try again.', {
-      action: 'verifyTwoFactorCode',
+      action: 'verifyTwoFactorCode'
     });
   }
 }
@@ -815,7 +815,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
   const form = useForm<SignInInput>({
     mode: 'onChange',
     resolver: zodResolver(SignInSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '' }
   });
 
   useEffect(() => {
@@ -842,12 +842,12 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
             email: data.email,
             password: data.password,
             callbackUrl,
-            redirect: false,
+            redirect: false
           });
 
           if (res?.error) {
             toast.error('Sign-in failed', {
-              description: 'Invalid email or password. Please try again.',
+              description: 'Invalid email or password. Please try again.'
             });
           } else if (res?.ok) {
             window.location.href = callbackUrl;
@@ -865,7 +865,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
         setIsLoading(false);
       }
     },
-    [callbackUrl],
+    [callbackUrl]
   );
 
   const handleVerify = useCallback(async () => {
@@ -886,7 +886,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
         email: credentials.email,
         password: credentials.password,
         callbackUrl,
-        redirect: false,
+        redirect: false
       });
 
       if (res?.error) {
@@ -944,16 +944,16 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
     const showResend = isMaxAttempts || isExpired || resendCooldown === 0;
 
     return (
-      <div className="flex flex-col gap-4 w-full">
+      <div className='flex flex-col gap-4 w-full'>
         <div>
-          <p className="text-sm font-medium">Check your email</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            We sent a 6-digit code to <span className="font-medium">{maskEmail(email)}</span>. Enter
+          <p className='text-sm font-medium'>Check your email</p>
+          <p className='text-sm text-muted-foreground mt-1'>
+            We sent a 6-digit code to <span className='font-medium'>{maskEmail(email)}</span>. Enter
             it below to continue.
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-4">
+        <div className='flex flex-col items-center gap-4'>
           <InputOTP
             maxLength={6}
             value={otpCode}
@@ -972,33 +972,33 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
             </InputOTPGroup>
           </InputOTP>
 
-          {otpError ? <p className="text-sm text-destructive text-center">{otpError}</p> : null}
+          {otpError ? <p className='text-sm text-destructive text-center'>{otpError}</p> : null}
         </div>
 
         <Button
           onClick={handleVerify}
           disabled={isVerifying || otpCode.length !== 6}
-          className="w-full"
+          className='w-full'
         >
-          {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {isVerifying ? <Loader2 className='h-4 w-4 animate-spin' /> : null}
           Verify
         </Button>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className='flex items-center justify-between text-sm'>
           <button
-            type="button"
+            type='button'
             onClick={handleBack}
-            className="text-muted-foreground hover:text-foreground underline underline-offset-4"
+            className='text-muted-foreground hover:text-foreground underline underline-offset-4'
           >
             Back
           </button>
 
           {showResend ? (
             <button
-              type="button"
+              type='button'
               onClick={handleResend}
               disabled={isResending || resendCooldown > 0}
-              className="text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className='text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {isResending
                 ? 'Sending…'
@@ -1007,7 +1007,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
                   : 'Resend code'}
             </button>
           ) : (
-            <span className="text-muted-foreground">Resend in {resendCooldown}s</span>
+            <span className='text-muted-foreground'>Resend in {resendCooldown}s</span>
           )}
         </div>
       </div>
@@ -1018,24 +1018,24 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleCredentialsSubmit)}
-        className="flex flex-col gap-2 w-full"
+        className='flex flex-col gap-2 w-full'
       >
-        <FieldGroup className="gap-1.5 mb-0">
+        <FieldGroup className='gap-1.5 mb-0'>
           <Controller
-            name="email"
+            name='email'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-email'>Email</FieldLabel>
                 </FieldContent>
                 <Input
                   {...field}
-                  id="form-rhf-email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id='form-rhf-email'
+                  type='email'
+                  placeholder='m@example.com'
                   disabled={isLoading}
-                  autoComplete="email"
+                  autoComplete='email'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -1044,22 +1044,22 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           />
         </FieldGroup>
 
-        <FieldGroup className="gap-1.5 mb-0">
+        <FieldGroup className='gap-1.5 mb-0'>
           <Controller
-            name="password"
+            name='password'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-password">Password</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-password'>Password</FieldLabel>
                 </FieldContent>
                 <Input
                   {...field}
-                  id="form-rhf-password"
-                  type="password"
-                  placeholder="Enter your password"
+                  id='form-rhf-password'
+                  type='password'
+                  placeholder='Enter your password'
                   disabled={isLoading}
-                  autoComplete="current-password"
+                  autoComplete='current-password'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -1068,8 +1068,8 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isLoading} className="w-full mt-2">
-          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        <Button type='submit' disabled={isLoading} className='w-full mt-2'>
+          {isLoading ? <Loader2 className='h-4 w-4 animate-spin' /> : null}
           Sign In
         </Button>
       </form>

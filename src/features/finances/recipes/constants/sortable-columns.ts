@@ -6,7 +6,7 @@ export const SORTABLE_RECIPE_COLUMNS = [
   'totalRetailPrice',
   'sellingPrice',
   'createdAt',
-  'updatedAt',
+  'updatedAt'
 ] as const;
 
 export type SortableRecipeColumn = (typeof SORTABLE_RECIPE_COLUMNS)[number];

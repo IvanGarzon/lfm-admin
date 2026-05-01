@@ -208,7 +208,7 @@ export const BulkUpdateInvoiceStatusSchema = z.object({
   ids: z
     .array(z.cuid({ error: 'Invalid invoice ID' }))
     .min(1, { error: 'At least one invoice ID is required' }),
-  status: InvoiceStatusSchema,
+  status: InvoiceStatusSchema
 });
 
 export type BulkUpdateInvoiceStatusInput = z.infer<typeof BulkUpdateInvoiceStatusSchema>;
@@ -242,12 +242,12 @@ Update `bulkUpdateInvoiceStatus` action signature to use `BulkUpdateInvoiceStatu
 
 ```ts
 export function createCancelInvoiceInput(
-  overrides: Partial<CancelInvoiceInput> = {},
+  overrides: Partial<CancelInvoiceInput> = {}
 ): CancelInvoiceInput {
   return {
     id: overrides.id ?? testIds.invoice(),
     cancelReason: 'Customer request',
-    ...overrides,
+    ...overrides
   };
 }
 ```
@@ -304,7 +304,7 @@ After rename it must be `getInvoiceStatistics`. Also the action passes `(ctx.ten
 ```ts
 expect(mockRepoInstance.getInvoiceStatistics).toHaveBeenCalledWith(
   mockSession.user.tenantId,
-  dateFilter,
+  dateFilter
 );
 ```
 
@@ -342,7 +342,7 @@ import { CustomerRepository } from '../customer-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createInvoiceInput, createCustomerInput } from '@/lib/testing';
 
@@ -373,7 +373,7 @@ describe('InvoiceRepository (integration)', () => {
     it('creates an invoice and returns id and invoiceNumber', async () => {
       const result = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       expect(result.id).toBeDefined();
@@ -383,11 +383,11 @@ describe('InvoiceRepository (integration)', () => {
     it('generates sequential invoice numbers within same tenant', async () => {
       const first = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const second = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const firstNum = parseInt(first.invoiceNumber.split('-')[2], 10);
@@ -402,7 +402,7 @@ describe('InvoiceRepository (integration)', () => {
     it('returns full invoice details including customer and items', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findInvoiceByIdWithDetails(id, tenantId);
@@ -417,7 +417,7 @@ describe('InvoiceRepository (integration)', () => {
     it('returns null for a non-existent ID', async () => {
       const result = await repository.findInvoiceByIdWithDetails(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
 
       expect(result).toBeNull();
@@ -428,7 +428,7 @@ describe('InvoiceRepository (integration)', () => {
       const otherCustomer = await customerRepo.createCustomer(createCustomerInput(), otherTenantId);
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.findInvoiceByIdWithDetails(id, tenantId);
@@ -439,7 +439,7 @@ describe('InvoiceRepository (integration)', () => {
     it('converts Decimal fields to number', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findInvoiceByIdWithDetails(id, tenantId);
@@ -456,7 +456,7 @@ describe('InvoiceRepository (integration)', () => {
     it('returns lightweight metadata without items or payments arrays', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findInvoiceMetadataById(id, tenantId);
@@ -469,7 +469,7 @@ describe('InvoiceRepository (integration)', () => {
     it('returns null for a non-existent ID', async () => {
       const result = await repository.findInvoiceMetadataById(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
 
       expect(result).toBeNull();
@@ -486,7 +486,7 @@ describe('InvoiceRepository (integration)', () => {
       await repository.createInvoiceWithItems(createInvoiceInput({ customerId }), tenantId);
       await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.searchInvoices({ page: 1, perPage: 20 }, tenantId);
@@ -498,7 +498,7 @@ describe('InvoiceRepository (integration)', () => {
       await Promise.all([
         repository.createInvoiceWithItems(createInvoiceInput({ customerId }), tenantId),
         repository.createInvoiceWithItems(createInvoiceInput({ customerId }), tenantId),
-        repository.createInvoiceWithItems(createInvoiceInput({ customerId }), tenantId),
+        repository.createInvoiceWithItems(createInvoiceInput({ customerId }), tenantId)
       ]);
 
       const result = await repository.searchInvoices({ page: 1, perPage: 2 }, tenantId);
@@ -515,7 +515,7 @@ describe('InvoiceRepository (integration)', () => {
     it('transitions invoice from DRAFT to PENDING', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.markInvoiceAsPending(id);
@@ -536,7 +536,7 @@ describe('InvoiceRepository (integration)', () => {
     it('transitions invoice from PENDING to DRAFT', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await repository.markInvoiceAsPending(id);
 
@@ -552,7 +552,7 @@ describe('InvoiceRepository (integration)', () => {
     it('cancels a PENDING invoice with a reason', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await repository.markInvoiceAsPending(id);
 
@@ -574,7 +574,7 @@ describe('InvoiceRepository (integration)', () => {
     it('soft-deletes a DRAFT invoice and returns true', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const deleted = await repository.deleteInvoice(id);
@@ -587,18 +587,18 @@ describe('InvoiceRepository (integration)', () => {
     it('throws when invoice is not in DRAFT status', async () => {
       const { id } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await repository.markInvoiceAsPending(id);
 
       await expect(repository.deleteInvoice(id)).rejects.toThrow(
-        'Only DRAFT invoices can be deleted',
+        'Only DRAFT invoices can be deleted'
       );
     });
 
     it('throws when invoice does not exist', async () => {
       await expect(repository.deleteInvoice('cltest000000000000none0001')).rejects.toThrow(
-        'Invoice not found',
+        'Invoice not found'
       );
     });
   });
@@ -609,7 +609,7 @@ describe('InvoiceRepository (integration)', () => {
     it('creates a new DRAFT invoice with a new invoice number', async () => {
       const { id, invoiceNumber } = await repository.createInvoiceWithItems(
         createInvoiceInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const duplicate = await repository.duplicateInvoice(id);
@@ -620,7 +620,7 @@ describe('InvoiceRepository (integration)', () => {
 
     it('throws when source invoice does not exist', async () => {
       await expect(repository.duplicateInvoice('cltest000000000000none0001')).rejects.toThrow(
-        'Invoice not found',
+        'Invoice not found'
       );
     });
   });

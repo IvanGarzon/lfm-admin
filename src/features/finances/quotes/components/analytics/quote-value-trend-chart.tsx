@@ -9,7 +9,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
+  ChartLegend
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import type { QuoteValueTrend } from '@/features/finances/quotes/types';
@@ -23,47 +23,47 @@ interface QuoteValueTrendChartProps {
 const chartConfig = {
   total: {
     label: 'Total Quoted',
-    color: 'hsl(var(--primary))',
+    color: 'hsl(var(--primary))'
   },
   accepted: {
     label: 'Accepted',
-    color: '#10b981', // Emerald-500
+    color: '#10b981' // Emerald-500
   },
   converted: {
     label: 'Converted',
-    color: '#8b5cf6', // Purple-500
-  },
+    color: '#8b5cf6' // Purple-500
+  }
 } satisfies ChartConfig;
 
 function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartProps) {
   if (isLoading) {
     return (
-      <Card className="col-span-1 md:col-span-2">
+      <Card className='col-span-1 md:col-span-2'>
         <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-72 mt-2" />
+          <Skeleton className='h-6 w-48' />
+          <Skeleton className='h-4 w-72 mt-2' />
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <Skeleton className="h-full w-full" />
+        <CardContent className='h-[300px] flex items-center justify-center'>
+          <Skeleton className='h-full w-full' />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="col-span-1 md:col-span-2">
+    <Card className='col-span-1 md:col-span-2'>
       <CardHeader>
         <CardTitle>Quote Value Trend</CardTitle>
         <CardDescription>
           Monthly comparison of total quoted value vs. accepted and converted quotes.
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-[350px] w-full pt-4">
-        <ChartContainer config={chartConfig} className="h-full w-full">
+      <CardContent className='h-[350px] w-full pt-4'>
+        <ChartContainer config={chartConfig} className='h-full w-full'>
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.4} />
+            <CartesianGrid vertical={false} strokeDasharray='3 3' opacity={0.4} />
             <XAxis
-              dataKey="month"
+              dataKey='month'
               tickLine={false}
               tickMargin={10}
               axisLine={false}
@@ -80,23 +80,23 @@ function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartProps) {
             <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
             <ChartLegend />
             <Bar
-              dataKey="total"
-              name="Total Quoted"
-              fill="var(--color-total)"
+              dataKey='total'
+              name='Total Quoted'
+              fill='var(--color-total)'
               radius={[4, 4, 0, 0]}
               barSize={24}
             />
             <Bar
-              dataKey="accepted"
-              name="Accepted"
-              fill="var(--color-accepted)"
+              dataKey='accepted'
+              name='Accepted'
+              fill='var(--color-accepted)'
               radius={[4, 4, 0, 0]}
               barSize={24}
             />
             <Bar
-              dataKey="converted"
-              name="Converted"
-              fill="var(--color-converted)"
+              dataKey='converted'
+              name='Converted'
+              fill='var(--color-converted)'
               radius={[4, 4, 0, 0]}
               barSize={24}
             />
@@ -110,14 +110,14 @@ function QuoteValueTrendChart({ data, isLoading }: QuoteValueTrendChartProps) {
 export default dynamic(() => Promise.resolve(QuoteValueTrendChart), {
   ssr: false,
   loading: () => (
-    <Card className="col-span-1 md:col-span-2">
+    <Card className='col-span-1 md:col-span-2'>
       <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-72 mt-2" />
+        <Skeleton className='h-6 w-48' />
+        <Skeleton className='h-4 w-72 mt-2' />
       </CardHeader>
-      <CardContent className="h-[300px] flex items-center justify-center">
-        <Skeleton className="h-full w-full" />
+      <CardContent className='h-[300px] flex items-center justify-center'>
+        <Skeleton className='h-full w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });

@@ -46,7 +46,7 @@ const PROFILES: Record<
     employeesPerTenant: 10,
     vendorsPerTenant: 5,
     invoicesPerTenant: 10,
-    quotesPerTenant: 10,
+    quotesPerTenant: 10
   },
   full: {
     profile: 'full',
@@ -55,8 +55,8 @@ const PROFILES: Record<
     employeesPerTenant: 20,
     vendorsPerTenant: 8,
     invoicesPerTenant: 30,
-    quotesPerTenant: 30,
-  },
+    quotesPerTenant: 30
+  }
 };
 
 // -- Config resolution -------------------------------------------------------
@@ -76,7 +76,7 @@ async function resolveConfig(): Promise<SeedConfig> {
       tenantCount: tenantArg ? parseInt(tenantArg, 10) : preset.tenantCount,
       password,
       fresh: true,
-      fakerSeed,
+      fakerSeed
     };
   }
 
@@ -85,14 +85,14 @@ async function resolveConfig(): Promise<SeedConfig> {
     choices: [
       { name: 'Minimal  — 1 tenant, small data set (fast)', value: 'minimal' },
       { name: 'Full     — 3 tenants, full data set', value: 'full' },
-      { name: 'Custom   — choose your own counts', value: 'custom' },
-    ],
+      { name: 'Custom   — choose your own counts', value: 'custom' }
+    ]
   });
 
   const password = await input({ message: 'Seed password', default: 'Password1!' });
   const fresh = await confirm({
     message: 'Fresh mode (truncate all tables first)?',
-    default: true,
+    default: true
   });
 
   if (profile !== 'custom') {
@@ -116,7 +116,7 @@ async function resolveConfig(): Promise<SeedConfig> {
     vendorsPerTenant: vendorsPerTenant ?? 8,
     invoicesPerTenant: invoicesPerTenant ?? 30,
     quotesPerTenant: quotesPerTenant ?? 30,
-    fakerSeed,
+    fakerSeed
   };
 }
 
@@ -216,7 +216,7 @@ async function main() {
       prisma.invoiceItem.count(),
       prisma.quote.count(),
       prisma.quoteItem.count(),
-      prisma.transaction.count(),
+      prisma.transaction.count()
     ]);
 
     const [
@@ -233,7 +233,7 @@ async function main() {
       invoiceItemCount,
       quoteCount,
       quoteItemCount,
-      transactionCount,
+      transactionCount
     ] = stats;
 
     console.log('Summary:');

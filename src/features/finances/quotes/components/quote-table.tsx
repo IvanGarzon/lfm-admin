@@ -27,16 +27,16 @@ export function QuoteTable<TData extends QuoteListItem>({
   totalItems,
   onBulkUpdateStatus,
   onBulkDelete,
-  isBulkPending,
+  isBulkPending
 }: QuoteTableProps<TData>) {
   const prefetchQuote = usePrefetchQuote();
   const [isFavourite, setIsFavourite] = useQueryState(
     'isFavourite',
-    parseAsBoolean.withDefault(false).withOptions({ shallow: false }),
+    parseAsBoolean.withDefault(false).withOptions({ shallow: false })
   );
   const [, setPage] = useQueryState(
     'page',
-    parseAsInteger.withDefault(1).withOptions({ shallow: false }),
+    parseAsInteger.withDefault(1).withOptions({ shallow: false })
   );
 
   const handleRowHover = (quote: TData) => {
@@ -49,7 +49,7 @@ export function QuoteTable<TData extends QuoteListItem>({
   };
 
   return (
-    <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+    <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
       <BulkActionsBar
         table={table}
         onUpdateStatus={onBulkUpdateStatus}
@@ -59,18 +59,18 @@ export function QuoteTable<TData extends QuoteListItem>({
       <DataTableToolbar table={table}>
         <Button
           variant={isFavourite ? 'default' : 'outline'}
-          size="sm"
+          size='sm'
           onClick={toggleFavouritesFilter}
           className={cn(isFavourite && 'bg-amber-500 hover:bg-amber-600')}
         >
-          <Star aria-hidden="true" className={cn('h-4 w-4', isFavourite && 'fill-current')} />
+          <Star aria-hidden='true' className={cn('h-4 w-4', isFavourite && 'fill-current')} />
           {isFavourite ? 'Showing Favourites' : 'Show Favourites'}
         </Button>
       </DataTableToolbar>
       {items.length ? (
         <DataTable table={table} totalItems={totalItems} onRowHover={handleRowHover} />
       ) : (
-        <Box className="text-center py-12 text-muted-foreground">
+        <Box className='text-center py-12 text-muted-foreground'>
           No quotes found. Try adjusting your filters.
         </Box>
       )}

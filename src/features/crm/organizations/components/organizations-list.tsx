@@ -12,7 +12,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { OrganizationsTable } from '@/features/crm/organizations/components/organizations-table';
 import { createOrganizationColumns } from '@/features/crm/organizations/components/organization-columns';
@@ -20,7 +20,7 @@ import {
   useDeleteOrganization,
   useCreateOrganization,
   useUpdateOrganization,
-  useOrganizationsList,
+  useOrganizationsList
 } from '@/features/crm/organizations/hooks/use-organization-queries';
 import { OrganizationForm } from '@/features/crm/organizations/components/organization-form';
 import { DeleteOrganizationDialog } from '@/features/crm/organizations/components/delete-organization-dialog';
@@ -33,7 +33,7 @@ import { searchParams as organizationSearchParams } from '@/filters/organization
 const DEFAULT_PAGE_SIZE = 20;
 
 export function OrganizationsList({
-  searchParams: serverSearchParams,
+  searchParams: serverSearchParams
 }: {
   searchParams: SearchParams;
 }) {
@@ -68,15 +68,15 @@ export function OrganizationsList({
         {
           onSuccess: () => {
             setDeletingOrganization(null);
-          },
-        },
+          }
+        }
       );
     }
   }, [deletingOrganization, deleteOrganization]);
 
   const columns = useMemo(
     () => createOrganizationColumns(handleDelete, handleEdit),
-    [handleDelete, handleEdit],
+    [handleDelete, handleEdit]
   );
 
   const handleShowCreateModal = useCallback(() => {
@@ -88,10 +88,10 @@ export function OrganizationsList({
       createOrganization(data, {
         onSuccess: () => {
           setShowCreateModal(false);
-        },
+        }
       });
     },
-    [createOrganization],
+    [createOrganization]
   );
 
   const handleUpdate = useCallback(
@@ -99,10 +99,10 @@ export function OrganizationsList({
       updateOrganization(data, {
         onSuccess: () => {
           setEditingOrganization(null);
-        },
+        }
       });
     },
-    [updateOrganization],
+    [updateOrganization]
   );
 
   const { table } = useDataTable({
@@ -110,7 +110,7 @@ export function OrganizationsList({
     columns,
     pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   const isZeroState =
@@ -118,31 +118,31 @@ export function OrganizationsList({
     !hasActiveSearchFilters(serverSearchParams, organizationSearchParams);
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={Landmark}
-          title="No organizations yet"
-          description="Add your first organization to start managing your relationships."
+          title='No organizations yet'
+          description='Add your first organization to start managing your relationships.'
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Organization
             </Button>
           }
         />
       ) : (
         <>
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
-              <p className="text-muted-foreground text-sm">
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Organizations</h1>
+              <p className='text-muted-foreground text-sm'>
                 Manage and track all your organizations
               </p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" aria-hidden="true" />
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <Button onClick={handleShowCreateModal} className='w-full sm:w-auto'>
+                <Plus className='h-4 w-4' aria-hidden='true' />
                 Add Organization
               </Button>
             </Box>
@@ -157,8 +157,8 @@ export function OrganizationsList({
       )}
 
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-          <DialogHeader className="px-6 pt-6">
+        <DialogContent className='max-w-2xl max-h-[90vh] p-0'>
+          <DialogHeader className='px-6 pt-6'>
             <DialogTitle>Create Organization</DialogTitle>
             <DialogDescription>
               Add a new organization to your system. Fill in the details below.
@@ -176,8 +176,8 @@ export function OrganizationsList({
         open={!!editingOrganization}
         onOpenChange={(open) => !open && setEditingOrganization(null)}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-          <DialogHeader className="px-6 pt-6">
+        <DialogContent className='max-w-2xl max-h-[90vh] p-0'>
+          <DialogHeader className='px-6 pt-6'>
             <DialogTitle>Edit Organization</DialogTitle>
             <DialogDescription>
               Update the organization details. Click save when you're done.

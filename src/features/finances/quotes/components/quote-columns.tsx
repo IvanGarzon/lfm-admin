@@ -23,7 +23,7 @@ function QuoteLink({ quoteId, quoteNumber }: { quoteId: string; quoteNumber: str
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {quoteNumber}
     </Link>
   );
@@ -37,43 +37,43 @@ const StatusOptions: {
   {
     label: 'Draft',
     value: QuoteStatusSchema.enum.DRAFT,
-    icon: CircleDashed,
+    icon: CircleDashed
   },
   {
     label: 'Sent',
     value: QuoteStatusSchema.enum.SENT,
-    icon: Send,
+    icon: Send
   },
   {
     label: 'On Hold',
     value: QuoteStatusSchema.enum.ON_HOLD,
-    icon: Pause,
+    icon: Pause
   },
   {
     label: 'Accepted',
     value: QuoteStatusSchema.enum.ACCEPTED,
-    icon: Check,
+    icon: Check
   },
   {
     label: 'Rejected',
     value: QuoteStatusSchema.enum.REJECTED,
-    icon: X,
+    icon: X
   },
   {
     label: 'Expired',
     value: QuoteStatusSchema.enum.EXPIRED,
-    icon: Clock,
+    icon: Clock
   },
   {
     label: 'Cancelled',
     value: QuoteStatusSchema.enum.CANCELLED,
-    icon: X,
+    icon: X
   },
   {
     label: 'Converted',
     value: QuoteStatusSchema.enum.CONVERTED,
-    icon: FileCheck,
-  },
+    icon: FileCheck
+  }
 ];
 
 export const createQuoteColumns = (
@@ -89,7 +89,7 @@ export const createQuoteColumns = (
   onSendFollowUp: (id: string) => void,
   onCreateVersion: (id: string) => void,
   onDuplicate: (id: string) => void,
-  onToggleFavourite: (id: string) => void,
+  onToggleFavourite: (id: string) => void
 ): ColumnDef<QuoteListItem>[] => [
   {
     id: 'select',
@@ -99,29 +99,29 @@ export const createQuoteColumns = (
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label='Select all'
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label='Select row'
       />
     ),
     enableSorting: false,
     enableHiding: false,
     meta: {
       label: 'Select',
-      variant: 'text',
-    },
+      variant: 'text'
+    }
   },
   {
     id: 'search',
     accessorKey: 'quoteNumber',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Quote #" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Quote #' />,
     cell: ({ row }) => (
-      <Box className="flex flex-col">
+      <Box className='flex flex-col'>
         <QuoteLink quoteId={row.original.id} quoteNumber={row.original.quoteNumber} />
       </Box>
     ),
@@ -131,8 +131,8 @@ export const createQuoteColumns = (
       label: 'Quote #',
       placeholder: 'Search by Quote number or by customer...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'status',
@@ -147,46 +147,46 @@ export const createQuoteColumns = (
     meta: {
       label: 'Status',
       variant: 'multiSelect',
-      options: StatusOptions,
-    },
+      options: StatusOptions
+    }
   },
   {
     accessorKey: 'customerName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Customer" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Customer' />,
     cell: ({ row }) => {
       const customerName = row.getValue('customerName') as string;
       const customerEmail = row.original.customerEmail;
 
       return (
-        <Box className="flex flex-col gap-1">
-          <span className="font-medium">{customerName}</span>
-          <span className="text-xs text-muted-foreground">{customerEmail}</span>
+        <Box className='flex flex-col gap-1'>
+          <span className='font-medium'>{customerName}</span>
+          <span className='text-xs text-muted-foreground'>{customerEmail}</span>
         </Box>
       );
     },
-    enableSorting: false,
+    enableSorting: false
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Amount' />,
     cell: ({ row }) => {
       const amount = row.getValue('amount') as number;
-      return <span className="font-medium">{formatCurrency({ number: amount })}</span>;
+      return <span className='font-medium'>{formatCurrency({ number: amount })}</span>;
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     accessorKey: 'issuedDate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Issued" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Issued' />,
     cell: ({ row }) => {
       const date = row.getValue('issuedDate') as Date;
-      return <span className="text-sm text-muted-foreground">{format(date, 'MMM dd, yyyy')}</span>;
+      return <span className='text-sm text-muted-foreground'>{format(date, 'MMM dd, yyyy')}</span>;
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     accessorKey: 'validUntil',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Valid Until" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Valid Until' />,
     cell: ({ row }) => {
       const quoteStatus: QuoteStatus = row.getValue('status');
       const validUntil: Date = row.getValue('validUntil');
@@ -199,16 +199,16 @@ export const createQuoteColumns = (
         </span>
       );
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     accessorKey: 'versionNumber',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Version" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Version' />,
     cell: ({ row }) => {
       const versionNumber: number = row.getValue('versionNumber');
-      return <span className="font-medium">{versionNumber}</span>;
+      return <span className='font-medium'>{versionNumber}</span>;
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'actions',
@@ -229,6 +229,6 @@ export const createQuoteColumns = (
         onDuplicate={onDuplicate}
         onToggleFavourite={onToggleFavourite}
       />
-    ),
-  },
+    )
+  }
 ];

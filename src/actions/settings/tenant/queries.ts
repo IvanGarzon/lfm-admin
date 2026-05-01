@@ -22,5 +22,5 @@ export const getTenantSettingsForAdmin = withTenantPermission<void, TenantWithSe
     } catch (error) {
       return handleActionError(error, 'Failed to fetch tenant settings');
     }
-  },
+  }
 );

@@ -19,34 +19,34 @@ export function InvoiceOverview({ stats, isLoading, comparisonLabel }: InvoiceOv
   }, [stats]);
 
   return (
-    <Box className="grid gap-4 md:grid-cols-3">
+    <Box className='grid gap-4 md:grid-cols-3'>
       <StatCard
-        title="Total Revenue"
+        title='Total Revenue'
         value={formatCurrency({ number: stats?.totalRevenue ?? 0, maxFractionDigits: 0 })}
-        description="Collected revenue"
+        description='Collected revenue'
         comparisonLabel={comparisonLabel}
         icon={DollarSign}
         growth={stats?.totalRevenueGrowth}
         isLoading={isLoading}
-        color="text-emerald-500"
+        color='text-emerald-500'
       />
       <StatCard
-        title="Outstanding"
+        title='Outstanding'
         value={formatCurrency({ number: stats?.pendingRevenue ?? 0, maxFractionDigits: 0 })}
-        description="Awaiting payment"
+        description='Awaiting payment'
         comparisonLabel={comparisonLabel}
         icon={Clock}
         growth={stats?.pendingRevenueGrowth}
         isLoading={isLoading}
-        color="text-yellow-500"
+        color='text-yellow-500'
       />
       <StatCard
-        title="Collection Rate"
+        title='Collection Rate'
         value={`${collectionRate.toFixed(0)}%`}
-        description="Revenue collected"
+        description='Revenue collected'
         icon={Percent}
         isLoading={isLoading}
-        color="text-green-500"
+        color='text-green-500'
       />
     </Box>
   );

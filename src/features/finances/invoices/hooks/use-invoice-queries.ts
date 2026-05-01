@@ -6,11 +6,11 @@ import {
   useQueryClient,
   keepPreviousData,
   skipToken,
-  type QueryClient,
+  type QueryClient
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { SearchParams } from 'nuqs/server';
 import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
-
 import {
   getInvoices,
   getInvoiceById,
@@ -20,7 +20,7 @@ import {
   getInvoiceStatusHistory,
   getInvoiceStatistics,
   getInvoicePdfUrl,
-  getReceiptPdfUrl,
+  getReceiptPdfUrl
 } from '@/actions/finances/invoices/queries';
 import {
   createInvoice,
@@ -31,21 +31,21 @@ import {
   deleteInvoice,
   bulkUpdateInvoiceStatus,
   duplicateInvoice,
-  markInvoiceAsDraft,
+  markInvoiceAsDraft
 } from '@/actions/finances/invoices/mutations';
 import type {
-  InvoiceFilters,
   InvoiceMetadata,
   InvoiceItemDetail,
   InvoicePaymentItem,
-  CancelInvoiceData,
+  CancelInvoiceData
 } from '@/features/finances/invoices/types';
 import type {
   CreateInvoiceInput,
   UpdateInvoiceInput,
-  RecordPaymentInput,
+  RecordPaymentInput
 } from '@/schemas/invoices';
 import { formatDateNormalizer } from '@/lib/utils';
+import { INVOICE_KEYS } from '@/features/finances/invoices/constants/query-keys';
 
 // -- Invoice Query Keys: Split Cache Architecture --------------------------
 //
@@ -67,19 +67,6 @@ import { formatDateNormalizer } from '@/lib/utils';
 // Most mutations optimistically update the relevant cache segments and invalidate
 // after server response to ensure consistency.
 
-export const INVOICE_KEYS = {
-  all: ['invoices'] as const,
-  lists: () => [...INVOICE_KEYS.all, 'list'] as const,
-  list: (filters: InvoiceFilters) => [...INVOICE_KEYS.lists(), { filters }] as const,
-  details: () => [...INVOICE_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...INVOICE_KEYS.details(), id] as const,
-  metadata: (id: string) => [...INVOICE_KEYS.all, 'metadata', id] as const,
-  items: (id: string) => [...INVOICE_KEYS.detail(id), 'items'] as const,
-  payments: (id: string) => [...INVOICE_KEYS.detail(id), 'payments'] as const,
-  history: (id: string) => [...INVOICE_KEYS.detail(id), 'history'] as const,
-  statistics: () => [...INVOICE_KEYS.all, 'statistics'] as const,
-};
-
 /**
  * Invalidates invoice-related queries after mutations.
  * Ensures cache consistency across invoice lists, details, metadata, items, payments, history, and statistics.
@@ -90,7 +77,7 @@ function invalidateInvoiceQueries(
     invoiceId?: string;
     invalidateAllDetails?: boolean;
     includeQuotes?: boolean;
-  },
+  }
 ) {
   if (options?.invoiceId) {
     queryClient.invalidateQueries({ queryKey: INVOICE_KEYS.detail(options.invoiceId) });
@@ -124,20 +111,10 @@ function invalidateInvoiceQueries(
  * - Query automatically refetches when filters change
  * - Cache is invalidated when invoices are created, updated, or deleted
  */
-export function useInvoices(filters: InvoiceFilters) {
+export function useInvoices(searchParams: SearchParams) {
   return useQuery({
-    queryKey: INVOICE_KEYS.list(filters),
+    queryKey: INVOICE_KEYS.list(searchParams),
     queryFn: async () => {
-      const searchParams: Record<string, string | string[]> = {};
-
-      if (filters.search) {
-        searchParams.search = filters.search;
-      }
-
-      if (filters.status && filters.status.length > 0) {
-        searchParams.status = filters.status;
-      }
-
       const result = await getInvoices(searchParams);
       if (!result.success) {
         throw new Error(result.error);
@@ -145,7 +122,7 @@ export function useInvoices(filters: InvoiceFilters) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -176,7 +153,7 @@ export function useInvoice(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -216,7 +193,7 @@ export function useInvoiceMetadata(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -256,7 +233,7 @@ export function useInvoiceItems(id: string | undefined, options?: { enabled?: bo
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -296,7 +273,7 @@ export function useInvoicePayments(id: string | undefined, options?: { enabled?:
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -335,7 +312,7 @@ export function useInvoiceHistory(id: string | undefined, options?: { enabled?: 
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -366,14 +343,14 @@ export function useInvoiceHistory(id: string | undefined, options?: { enabled?: 
  */
 export function useInvoiceStatistics(
   dateFilter?: { startDate?: Date; endDate?: Date },
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean }
 ) {
   // Normalize date filter to ISO date strings for stable query keys
   // This prevents cache misses when component remounts with logically identical dates
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null
       }
     : undefined;
 
@@ -388,7 +365,7 @@ export function useInvoiceStatistics(
     },
     staleTime: 60 * 1000, // 1 minute
     placeholderData: keepPreviousData,
-    enabled: options?.enabled,
+    enabled: options?.enabled
   });
 }
 
@@ -435,7 +412,7 @@ export function useCreateInvoice() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create invoice');
-    },
+    }
   });
 }
 
@@ -492,7 +469,7 @@ export function useUpdateInvoice() {
       // Calculate new total amount from items
       const totalAmount = newData.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
-        0,
+        0
       );
 
       // Optimistically update metadata
@@ -506,7 +483,7 @@ export function useUpdateInvoice() {
           currency: newData.currency,
           issuedDate: newData.issuedDate,
           dueDate: newData.dueDate,
-          notes: newData.notes,
+          notes: newData.notes
         });
       }
 
@@ -521,8 +498,8 @@ export function useUpdateInvoice() {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.quantity * item.unitPrice,
-            productId: item.productId ?? null,
-          })),
+            productId: item.productId ?? null
+          }))
         );
       }
 
@@ -547,7 +524,7 @@ export function useUpdateInvoice() {
     },
     onSuccess: () => {
       toast.success('Invoice updated successfully');
-    },
+    }
   });
 }
 
@@ -626,9 +603,9 @@ export function useRecordPayment() {
           ...(newStatus === InvoiceStatusSchema.enum.PAID
             ? {
                 paidDate: newData.paidDate,
-                paymentMethod: newData.paymentMethod,
+                paymentMethod: newData.paymentMethod
               }
-            : {}),
+            : {})
         });
       }
 
@@ -641,9 +618,9 @@ export function useRecordPayment() {
             date: newData.paidDate,
             method: newData.paymentMethod,
             reference: null,
-            notes: newData.notes ?? null,
+            notes: newData.notes ?? null
           },
-          ...previousPayments,
+          ...previousPayments
         ]);
       }
 
@@ -668,7 +645,7 @@ export function useRecordPayment() {
     },
     onSuccess: () => {
       toast.success('Payment recorded successfully');
-    },
+    }
   });
 }
 
@@ -720,7 +697,7 @@ export function useMarkInvoiceAsPending() {
           ...previousMetadata,
           status: InvoiceStatusSchema.enum.PENDING,
           paidDate: null,
-          paymentMethod: null,
+          paymentMethod: null
         });
       }
 
@@ -741,7 +718,7 @@ export function useMarkInvoiceAsPending() {
     },
     onSuccess: () => {
       toast.success('Invoice marked as pending');
-    },
+    }
   });
 }
 
@@ -790,7 +767,7 @@ export function useMarkInvoiceAsDraft() {
       if (previousMetadata) {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
-          status: InvoiceStatusSchema.enum.DRAFT,
+          status: InvoiceStatusSchema.enum.DRAFT
         });
       }
 
@@ -811,7 +788,7 @@ export function useMarkInvoiceAsDraft() {
     },
     onSuccess: () => {
       toast.success('Invoice reverted to draft');
-    },
+    }
   });
 }
 
@@ -866,7 +843,7 @@ export function useCancelInvoice() {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
           status: InvoiceStatusSchema.enum.CANCELLED,
-          cancelReason: newData.cancelReason,
+          cancelReason: newData.cancelReason
         });
       }
 
@@ -887,7 +864,7 @@ export function useCancelInvoice() {
     },
     onSuccess: () => {
       toast.success('Invoice cancelled');
-    },
+    }
   });
 }
 
@@ -936,7 +913,7 @@ export function useSendInvoiceReminder() {
       if (previousMetadata) {
         queryClient.setQueryData<InvoiceMetadata>(metadataKey, {
           ...previousMetadata,
-          remindersSent: (previousMetadata.remindersSent ?? 0) + 1,
+          remindersSent: (previousMetadata.remindersSent ?? 0) + 1
         });
       }
 
@@ -957,7 +934,7 @@ export function useSendInvoiceReminder() {
     },
     onSuccess: () => {
       toast.success('Reminder sent');
-    },
+    }
   });
 }
 
@@ -1024,7 +1001,7 @@ export function useDeleteInvoice() {
     },
     onSuccess: () => {
       toast.success('Invoice deleted');
-    },
+    }
   });
 }
 
@@ -1063,7 +1040,7 @@ export function useDownloadInvoicePdf() {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to download invoice');
-    },
+    }
   });
 }
 
@@ -1099,7 +1076,7 @@ export function useDownloadReceiptPdf() {
     },
     onSuccess: () => {
       toast.success('Receipt downloaded successfully');
-    },
+    }
   });
 }
 
@@ -1138,12 +1115,12 @@ export function useBulkUpdateInvoiceStatus() {
     onSuccess: (data) => {
       invalidateInvoiceQueries(queryClient);
       toast.success(
-        data.successCount > 1 ? `${data.successCount} invoices updated` : 'Invoice updated',
+        data.successCount > 1 ? `${data.successCount} invoices updated` : 'Invoice updated'
       );
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update invoices');
-    },
+    }
   });
 }
 
@@ -1184,7 +1161,7 @@ export function useDuplicateInvoice() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to duplicate invoice');
-    },
+    }
   });
 }
 
@@ -1224,7 +1201,7 @@ export function usePrefetchInvoice() {
 
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }

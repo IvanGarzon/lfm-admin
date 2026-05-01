@@ -13,7 +13,7 @@ export const CreateVendorSchema = z.object({
     .trim()
     .min(1, { error: 'Vendor name is required' })
     .max(VALIDATION_LIMITS.NAME_MAX, {
-      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`,
+      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`
     }),
   email: commonValidators.email(),
   phone: z
@@ -34,7 +34,7 @@ export const CreateVendorSchema = z.object({
     .url({ error: 'Website must be a valid URL' })
     .trim()
     .max(VALIDATION_LIMITS.URL_MAX, {
-      error: `Website must be less than ${VALIDATION_LIMITS.URL_MAX} characters`,
+      error: `Website must be less than ${VALIDATION_LIMITS.URL_MAX} characters`
     })
     .optional()
     .nullable(),
@@ -55,17 +55,17 @@ export const CreateVendorSchema = z.object({
     .string()
     .trim()
     .max(VALIDATION_LIMITS.NOTES_MAX, {
-      error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+      error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`
     })
     .optional()
-    .nullable(),
+    .nullable()
 });
 
 /**
  * Update Vendor Schema
  */
 export const UpdateVendorSchema = CreateVendorSchema.extend({
-  id: z.cuid({ error: 'Invalid vendor ID' }),
+  id: z.cuid({ error: 'Invalid vendor ID' })
 });
 
 /**
@@ -73,21 +73,21 @@ export const UpdateVendorSchema = CreateVendorSchema.extend({
  */
 export const UpdateVendorStatusSchema = z.object({
   id: z.cuid({ error: 'Invalid vendor ID' }),
-  status: VendorStatusSchema,
+  status: VendorStatusSchema
 });
 
 /**
  * Delete Vendor Schema
  */
 export const DeleteVendorSchema = z.object({
-  id: z.cuid({ error: 'Invalid vendor ID' }),
+  id: z.cuid({ error: 'Invalid vendor ID' })
 });
 
 /**
  * Vendor Filters Schema
  */
 export const VendorFiltersSchema = baseFiltersSchema.extend({
-  status: createEnumArrayFilter(VendorStatusSchema),
+  status: createEnumArrayFilter(VendorStatusSchema)
 });
 
 /**

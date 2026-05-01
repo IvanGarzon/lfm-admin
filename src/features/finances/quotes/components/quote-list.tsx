@@ -16,7 +16,7 @@ import {
   useDuplicateQuote,
   useBulkUpdateQuoteStatus,
   useBulkDeleteQuotes,
-  useToggleQuoteFavourite,
+  useToggleQuoteFavourite
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { QuoteTable } from '@/features/finances/quotes/components/quote-table';
 import type { QuotePagination } from '@/features/finances/quotes/types';
@@ -30,7 +30,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 export function QuoteList({
   data,
-  searchParams: serverSearchParams,
+  searchParams: serverSearchParams
 }: {
   data: QuotePagination;
   searchParams: SearchParams;
@@ -80,7 +80,7 @@ export function QuoteList({
 
       if (!result.success) {
         toast.error('Failed to load email preview', {
-          description: result.error,
+          description: result.error
         });
         setShowEmailPreview(false);
         return;
@@ -89,7 +89,7 @@ export function QuoteList({
       setEmailPreviewData(result.data);
     } catch (error) {
       toast.error('Failed to load email preview', {
-        description: error instanceof Error ? error.message : 'An error occurred',
+        description: error instanceof Error ? error.message : 'An error occurred'
       });
       setShowEmailPreview(false);
     } finally {
@@ -101,35 +101,35 @@ export function QuoteList({
     (id: string) => {
       markAsAcceptedMutation.mutate({ id });
     },
-    [markAsAcceptedMutation],
+    [markAsAcceptedMutation]
   );
 
   const handleSend = useCallback(
     (id: string) => {
       handleLoadEmailPreview(id, 'sent');
     },
-    [handleLoadEmailPreview],
+    [handleLoadEmailPreview]
   );
 
   const handleDownloadPdf = useCallback(
     (id: string) => {
       downloadPdfMutation.mutate(id);
     },
-    [downloadPdfMutation],
+    [downloadPdfMutation]
   );
 
   const handleSendEmail = useCallback(
     (id: string) => {
       handleLoadEmailPreview(id, 'sent');
     },
-    [handleLoadEmailPreview],
+    [handleLoadEmailPreview]
   );
 
   const handleSendFollowUp = useCallback(
     (id: string) => {
       handleLoadEmailPreview(id, 'followup');
     },
-    [handleLoadEmailPreview],
+    [handleLoadEmailPreview]
   );
 
   const handleConfirmSendEmail = useCallback(() => {
@@ -179,21 +179,21 @@ export function QuoteList({
     (id: string) => {
       createVersionMutation.mutate(id);
     },
-    [createVersionMutation],
+    [createVersionMutation]
   );
 
   const handleDuplicate = useCallback(
     (id: string) => {
       duplicateQuoteMutation.mutate(id);
     },
-    [duplicateQuoteMutation],
+    [duplicateQuoteMutation]
   );
 
   const handleToggleFavourite = useCallback(
     (id: string) => {
       toggleFavouriteMutation.mutate(id);
     },
-    [toggleFavouriteMutation],
+    [toggleFavouriteMutation]
   );
 
   const columns = useMemo(
@@ -211,7 +211,7 @@ export function QuoteList({
         handleSendFollowUp,
         handleCreateVersion,
         handleDuplicate,
-        handleToggleFavourite,
+        handleToggleFavourite
       ),
     [
       openDelete,
@@ -226,8 +226,8 @@ export function QuoteList({
       handleSendFollowUp,
       handleCreateVersion,
       handleDuplicate,
-      handleToggleFavourite,
-    ],
+      handleToggleFavourite
+    ]
   );
 
   const { table } = useDataTable({
@@ -235,12 +235,12 @@ export function QuoteList({
     columns,
     pageCount: pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
     <>
-      <Box className="space-y-4 min-w-0 w-full">
+      <Box className='space-y-4 min-w-0 w-full'>
         <QuoteTable
           table={table}
           items={data.items}

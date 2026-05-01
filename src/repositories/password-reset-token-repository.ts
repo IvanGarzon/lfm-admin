@@ -12,7 +12,7 @@ export class PasswordResetTokenRepository {
    */
   async create(userId: string, requestedBy: string, expiresAt: Date): Promise<PasswordResetToken> {
     return this.prisma.passwordResetToken.create({
-      data: { userId, requestedBy, expiresAt },
+      data: { userId, requestedBy, expiresAt }
     });
   }
 
@@ -26,8 +26,8 @@ export class PasswordResetTokenRepository {
       where: {
         token,
         usedAt: null,
-        expiresAt: { gt: new Date() },
-      },
+        expiresAt: { gt: new Date() }
+      }
     });
   }
 
@@ -39,7 +39,7 @@ export class PasswordResetTokenRepository {
   async markUsed(id: string): Promise<PasswordResetToken> {
     return this.prisma.passwordResetToken.update({
       where: { id },
-      data: { usedAt: new Date() },
+      data: { usedAt: new Date() }
     });
   }
 
@@ -50,7 +50,7 @@ export class PasswordResetTokenRepository {
   async invalidateAllForUser(userId: string): Promise<void> {
     await this.prisma.passwordResetToken.updateMany({
       where: { userId, usedAt: null },
-      data: { usedAt: new Date() },
+      data: { usedAt: new Date() }
     });
   }
 }

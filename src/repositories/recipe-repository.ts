@@ -5,7 +5,7 @@ import type {
   RecipeListItem,
   RecipeWithDetails,
   RecipeFilters,
-  RecipePagination,
+  RecipePagination
 } from '@/features/finances/recipes/types';
 import type { CreateRecipeInput, UpdateRecipeInput } from '@/schemas/recipes';
 
@@ -76,7 +76,7 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
       totalRetailPrice,
       sellingPrice,
       createdAt: recipe.createdAt,
-      updatedAt: recipe.updatedAt,
+      updatedAt: recipe.updatedAt
     };
   }
 
@@ -91,13 +91,13 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
 
     const whereClause: Prisma.RecipeWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (search) {
       whereClause.OR = [
         { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
-        { description: { contains: search, mode: Prisma.QueryMode.insensitive } },
+        { description: { contains: search, mode: Prisma.QueryMode.insensitive } }
       ];
     }
 
@@ -114,15 +114,15 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
         where: whereClause,
         orderBy,
         skip,
-        take: perPage,
-      }),
+        take: perPage
+      })
     ]);
 
     const items: RecipeListItem[] = recipes.map((r) => this.toListItem(r));
 
     return {
       items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -137,9 +137,9 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
       where: { id, tenantId, deletedAt: null },
       include: {
         items: {
-          orderBy: { order: 'asc' },
-        },
-      },
+          orderBy: { order: 'asc' }
+        }
+      }
     });
 
     if (!recipe) {
@@ -176,8 +176,8 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
         lineTotal: Number(i.lineTotal),
         retailPrice: Number(i.retailPrice),
         retailLineTotal: Number(i.retailLineTotal),
-        order: i.order,
-      })),
+        order: i.order
+      }))
     };
   }
 
@@ -189,7 +189,7 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
    */
   async findRecipeByIdAsListItem(id: string, tenantId: string): Promise<RecipeListItem | null> {
     const recipe = await this.prisma.recipe.findUnique({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!recipe) {
@@ -231,10 +231,10 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
             lineTotal: item.lineTotal,
             retailPrice: item.retailPrice,
             retailLineTotal: item.retailLineTotal,
-            order: item.order ?? index,
-          })),
-        },
-      },
+            order: item.order ?? index
+          }))
+        }
+      }
     });
 
     const createdRecipe = await this.findRecipeByIdAsListItem(recipe.id, tenantId);
@@ -256,11 +256,11 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
   async updateRecipeWithItems(
     id: string,
     tenantId: string,
-    data: UpdateRecipeInput,
+    data: UpdateRecipeInput
   ): Promise<RecipeListItem | null> {
     const updatedRecipe = await this.prisma.$transaction(async (tx) => {
       await tx.recipeItem.deleteMany({
-        where: { recipeId: id },
+        where: { recipeId: id }
       });
 
       return tx.recipe.update({
@@ -287,10 +287,10 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
               lineTotal: item.lineTotal,
               retailPrice: item.retailPrice,
               retailLineTotal: item.retailLineTotal,
-              order: item.order ?? index,
-            })),
-          },
-        },
+              order: item.order ?? index
+            }))
+          }
+        }
       });
     });
 
@@ -312,7 +312,7 @@ export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<obj
     try {
       await this.prisma.recipe.update({
         where: { id, tenantId },
-        data: { deletedAt: new Date() },
+        data: { deletedAt: new Date() }
       });
       return true;
     } catch {

@@ -11,7 +11,7 @@ import type {
   TaskExecution,
   TaskCategory,
   ScheduleType,
-  ExecutionStatus,
+  ExecutionStatus
 } from '@/prisma/client';
 
 const taskRepo = new ScheduledTaskRepository(prisma);
@@ -49,7 +49,7 @@ export const getTasks = withAuth<GetTasksInput, TaskPagination>(async (_session,
       hasNextPage: false,
       hasPreviousPage: false,
       nextPage: null,
-      previousPage: null,
+      previousPage: null
     };
 
     return { success: true, data: { items: tasks, pagination } };
@@ -104,7 +104,7 @@ export const getTaskExecutions = withAuth<
   } catch (error) {
     return handleActionError(error, 'Failed to fetch task executions', {
       action: 'getTaskExecutions',
-      taskId,
+      taskId
     });
   }
 });
@@ -121,7 +121,7 @@ export const getExecutionById = withAuth<string, TaskExecution>(async (_session,
   } catch (error) {
     return handleActionError(error, 'Failed to fetch execution', {
       action: 'getExecutionById',
-      executionId,
+      executionId
     });
   }
 });
@@ -135,7 +135,7 @@ export const getRecentExecutions = withAuth<
     return { success: true, data: executions };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch recent executions', {
-      action: 'getRecentExecutions',
+      action: 'getRecentExecutions'
     });
   }
 });
@@ -147,8 +147,8 @@ export const getTaskCountsByCategory = withAuth<void, Record<TaskCategory, numbe
       return { success: true, data: counts };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch task counts', {
-        action: 'getTaskCountsByCategory',
+        action: 'getTaskCountsByCategory'
       });
     }
-  },
+  }
 );

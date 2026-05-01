@@ -4,7 +4,7 @@ import { getPaginationMetadata } from '@/lib/utils';
 import type {
   EmployeePagination,
   EmployeeListItem,
-  EmployeeFilters,
+  EmployeeFilters
 } from '@/features/staff/employees/types';
 import type { CreateEmployeeInput, UpdateEmployeeInput } from '@/schemas/employees';
 
@@ -45,7 +45,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
       avatarUrl: employee.avatarUrl,
       createdAt: employee.createdAt,
       updatedAt: employee.updatedAt,
-      deletedAt: employee.deletedAt ?? null,
+      deletedAt: employee.deletedAt ?? null
     };
   }
 
@@ -63,32 +63,32 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { firstName: searchFilter },
         { lastName: searchFilter },
-        { email: searchFilter },
+        { email: searchFilter }
       ];
     }
 
     if (alphabet) {
       whereClause.firstName = {
         startsWith: alphabet,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
     }
 
     if (gender && gender.length > 0) {
       whereClause.gender = {
-        in: gender,
+        in: gender
       };
     }
 
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
@@ -108,13 +108,13 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
         where: whereClause,
         orderBy,
         skip,
-        take: perPage,
-      }),
+        take: perPage
+      })
     ]);
 
     return {
       items: employees.map((employee) => this.mapToListItem(employee)),
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -128,10 +128,10 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
     const employees = await this.prisma.employee.findMany({
       where: {
         tenantId,
-        status: EmployeeStatus.ACTIVE,
+        status: EmployeeStatus.ACTIVE
       },
       take: limit,
-      orderBy: { firstName: 'asc' },
+      orderBy: { firstName: 'asc' }
     });
     return employees.map((e) => this.mapToListItem(e));
   }
@@ -144,7 +144,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    */
   async findEmployeeByEmail(email: string, tenantId: string): Promise<EmployeeListItem | null> {
     const employee = await this.prisma.employee.findFirst({
-      where: { email, tenantId },
+      where: { email, tenantId }
     });
     return employee ? this.mapToListItem(employee) : null;
   }
@@ -157,7 +157,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    */
   async findEmployeeById(id: string, tenantId: string): Promise<EmployeeListItem | null> {
     const employee = await this.prisma.employee.findFirst({
-      where: { id, tenantId },
+      where: { id, tenantId }
     });
 
     return employee ? this.mapToListItem(employee) : null;
@@ -181,9 +181,9 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
         dob: data.dob,
         rate: data.rate,
         status: data.status ?? EmployeeStatus.ACTIVE,
-        avatarUrl: data.avatarUrl ?? null,
+        avatarUrl: data.avatarUrl ?? null
       },
-      select: { id: true },
+      select: { id: true }
     });
 
     return { id: employee.id };
@@ -199,7 +199,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
   async updateEmployee(
     id: string,
     tenantId: string,
-    data: Omit<UpdateEmployeeInput, 'id'>,
+    data: Omit<UpdateEmployeeInput, 'id'>
   ): Promise<EmployeeListItem | null> {
     const employee = await this.prisma.employee.updateMany({
       where: { id, tenantId },
@@ -212,8 +212,8 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
         dob: data.dob,
         rate: data.rate,
         status: data.status,
-        avatarUrl: data.avatarUrl || null,
-      },
+        avatarUrl: data.avatarUrl || null
+      }
     });
 
     if (employee.count === 0) {
@@ -231,7 +231,7 @@ export class EmployeeRepository extends BaseRepository<Prisma.EmployeeGetPayload
    */
   async deleteEmployee(id: string, tenantId: string): Promise<boolean> {
     const result = await this.prisma.employee.deleteMany({
-      where: { id, tenantId },
+      where: { id, tenantId }
     });
 
     return result.count > 0;

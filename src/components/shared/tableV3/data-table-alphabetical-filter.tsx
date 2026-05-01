@@ -7,11 +7,11 @@ interface DataTableSearchProps {
   alphabetQuery: string;
   setAlphabetQuery: (
     value: string | ((old: string) => string | null) | null,
-    options?: any | undefined,
+    options?: any | undefined
   ) => Promise<URLSearchParams>;
   setPage: <Shallow>(
     value: number | ((old: number) => number | null) | null,
-    options?: any | undefined,
+    options?: any | undefined
   ) => Promise<URLSearchParams>;
 }
 
@@ -20,7 +20,7 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 export function DataTableAlphabeticalFilter({
   alphabetQuery,
   setAlphabetQuery,
-  setPage,
+  setPage
 }: DataTableSearchProps) {
   const [isLoading, startTransition] = useTransition();
 
@@ -33,18 +33,18 @@ export function DataTableAlphabeticalFilter({
         setPage(1);
       });
     },
-    [alphabetQuery, setAlphabetQuery, setPage],
+    [alphabetQuery, setAlphabetQuery, setPage]
   );
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className='flex flex-wrap gap-1'>
       {ALPHABET.map((letter) => {
         const isSelected = letter === alphabetQuery;
         return (
           <Button
             key={letter}
             variant={isSelected ? 'default' : 'outline'}
-            size="sm"
+            size='sm'
             className={`h-8 w-8 p-0 ${isSelected ? 'bg-primary text-white' : ''}`}
             onClick={() => handleLetterClick(letter)}
             disabled={isLoading}

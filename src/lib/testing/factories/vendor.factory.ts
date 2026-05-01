@@ -9,7 +9,7 @@ import type { CreateVendorInput } from '@/schemas/vendors';
 import type {
   VendorListItem,
   VendorWithDetails,
-  VendorStatistics,
+  VendorStatistics
 } from '@/features/inventory/vendors/types';
 
 /**
@@ -27,7 +27,7 @@ export function createVendorInput(overrides: Partial<CreateVendorInput> = {}): C
     paymentTerms: 30,
     taxId: null,
     notes: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -44,7 +44,7 @@ export function createVendorListItem(overrides: Partial<VendorListItem> = {}): V
     status: 'ACTIVE',
     paymentTerms: 30,
     transactionCount: 0,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -52,7 +52,7 @@ export function createVendorListItem(overrides: Partial<VendorListItem> = {}): V
  * Creates a mock vendor with full details as returned by findByIdWithDetails.
  */
 export function createVendorWithDetails(
-  overrides: Partial<VendorWithDetails> = {},
+  overrides: Partial<VendorWithDetails> = {}
 ): VendorWithDetails {
   return {
     id: testIds.vendor(),
@@ -70,7 +70,7 @@ export function createVendorWithDetails(
     transactionCount: 0,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -78,13 +78,13 @@ export function createVendorWithDetails(
  * Creates mock vendor statistics.
  */
 export function createVendorStatistics(
-  overrides: Partial<VendorStatistics> = {},
+  overrides: Partial<VendorStatistics> = {}
 ): VendorStatistics {
   return {
     total: 50,
     active: 40,
     inactive: 8,
     suspended: 2,
-    ...overrides,
+    ...overrides
   };
 }

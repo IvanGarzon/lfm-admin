@@ -19,8 +19,8 @@ const VendorDrawer = dynamic(
     import('@/features/inventory/vendors/components/vendor-drawer').then((mod) => mod.VendorDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 interface VendorsViewProps {
@@ -42,49 +42,49 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
     !hasActiveSearchFilters(searchParams, vendorSearchParams);
 
   return (
-    <Box className="flex flex-col gap-6 min-w-0 w-full overflow-hidden">
+    <Box className='flex flex-col gap-6 min-w-0 w-full overflow-hidden'>
       {isZeroState ? (
         <EmptyState
           icon={Store}
-          title="No vendors yet"
-          description="Add your first vendor to start managing your suppliers."
+          title='No vendors yet'
+          description='Add your first vendor to start managing your suppliers.'
           action={
             <Button onClick={handleShowCreateDrawer}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Vendor
             </Button>
           }
         />
       ) : (
         <>
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <Box>
-              <h1 className="text-2xl font-bold tracking-tight">Vendors</h1>
-              <p className="text-muted-foreground">Manage your suppliers and vendors</p>
+              <h1 className='text-2xl font-bold tracking-tight'>Vendors</h1>
+              <p className='text-muted-foreground'>Manage your suppliers and vendors</p>
             </Box>
             <Button onClick={handleShowCreateDrawer}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Vendor
             </Button>
           </Box>
 
           {stats && !statsLoading ? (
-            <Box className="grid gap-4 md:grid-cols-4">
-              <Box className="rounded-lg border bg-card p-4">
-                <Box className="text-sm font-medium text-muted-foreground">Total Vendors</Box>
-                <Box className="text-2xl font-bold">{stats.total}</Box>
+            <Box className='grid gap-4 md:grid-cols-4'>
+              <Box className='rounded-lg border bg-card p-4'>
+                <Box className='text-sm font-medium text-muted-foreground'>Total Vendors</Box>
+                <Box className='text-2xl font-bold'>{stats.total}</Box>
               </Box>
-              <Box className="rounded-lg border bg-card p-4">
-                <Box className="text-sm font-medium text-muted-foreground">Active</Box>
-                <Box className="text-2xl font-bold text-green-600">{stats.active}</Box>
+              <Box className='rounded-lg border bg-card p-4'>
+                <Box className='text-sm font-medium text-muted-foreground'>Active</Box>
+                <Box className='text-2xl font-bold text-green-600'>{stats.active}</Box>
               </Box>
-              <Box className="rounded-lg border bg-card p-4">
-                <Box className="text-sm font-medium text-muted-foreground">Inactive</Box>
-                <Box className="text-2xl font-bold text-muted-foreground">{stats.inactive}</Box>
+              <Box className='rounded-lg border bg-card p-4'>
+                <Box className='text-sm font-medium text-muted-foreground'>Inactive</Box>
+                <Box className='text-2xl font-bold text-muted-foreground'>{stats.inactive}</Box>
               </Box>
-              <Box className="rounded-lg border bg-card p-4">
-                <Box className="text-sm font-medium text-muted-foreground">Suspended</Box>
-                <Box className="text-2xl font-bold text-destructive">{stats.suspended}</Box>
+              <Box className='rounded-lg border bg-card p-4'>
+                <Box className='text-sm font-medium text-muted-foreground'>Suspended</Box>
+                <Box className='text-2xl font-bold text-destructive'>{stats.suspended}</Box>
               </Box>
             </Box>
           ) : null}

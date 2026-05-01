@@ -47,7 +47,7 @@ import {
   duplicateInvoice,
   bulkUpdateInvoiceStatus,
   sendInvoiceReceipt,
-  sendInvoiceReminder,
+  sendInvoiceReminder
 } from '../mutations';
 import { revalidatePath } from 'next/cache';
 import { InvoiceStatus } from '@/prisma/client';
@@ -61,7 +61,7 @@ import {
   createInvoiceWithCustomer,
   createInvoiceDetails,
   createRecordPaymentInput,
-  createCancelInvoiceInput,
+  createCancelInvoiceInput
 } from '@/lib/testing';
 
 const { mockInvoiceRepo, mockAuth, mockHasPermission, mockPrisma } = vi.hoisted(() => ({
@@ -77,48 +77,48 @@ const { mockInvoiceRepo, mockAuth, mockHasPermission, mockPrisma } = vi.hoisted(
     duplicateInvoice: vi.fn(),
     bulkUpdateInvoiceStatus: vi.fn(),
     generateInvoiceReceiptNumber: vi.fn(),
-    incrementInvoiceReminderCount: vi.fn(),
+    incrementInvoiceReminderCount: vi.fn()
   },
   mockAuth: vi.fn(),
   mockHasPermission: vi.fn(),
   mockPrisma: {
     invoice: {
-      update: vi.fn(),
+      update: vi.fn()
     },
     emailAudit: {
-      findFirst: vi.fn(),
-    },
-  },
+      findFirst: vi.fn()
+    }
+  }
 }));
 
 // Mock InvoiceRepository
 vi.mock('@/repositories/invoice-repository', () => ({
   InvoiceRepository: vi.fn().mockImplementation(function () {
     return mockInvoiceRepo;
-  }),
+  })
 }));
 
 // Mock TransactionRepository
 vi.mock('@/repositories/transaction-repository', () => ({
   TransactionRepository: vi.fn().mockImplementation(function () {
     return {};
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: mockPrisma,
+  prisma: mockPrisma
 }));
 
 // Generate test IDs using the centralized ID generator
@@ -142,7 +142,7 @@ describe('Invoice Mutations', () => {
 
     it('creates an invoice successfully when authorized', async () => {
       mockInvoiceRepo.createInvoiceWithItems.mockResolvedValue(
-        createInvoiceResponse({ id: TEST_INVOICE_ID, invoiceNumber: 'INV-001' }),
+        createInvoiceResponse({ id: TEST_INVOICE_ID, invoiceNumber: 'INV-001' })
       );
 
       const result = await createInvoice(validData);
@@ -174,15 +174,15 @@ describe('Invoice Mutations', () => {
           createInvoiceItemInput({
             description: 'Updated Item',
             quantity: 2,
-            unitPrice: 150,
-          }),
-        ],
-      }),
+            unitPrice: 150
+          })
+        ]
+      })
     };
 
     it('updates an invoice successfully when authorized', async () => {
       mockInvoiceRepo.updateInvoiceWithItems.mockResolvedValue({
-        id: TEST_INVOICE_ID,
+        id: TEST_INVOICE_ID
       });
 
       const result = await updateInvoice(updateData);
@@ -210,7 +210,7 @@ describe('Invoice Mutations', () => {
   describe('markInvoiceAsPending', () => {
     it('marks an invoice as pending successfully', async () => {
       mockInvoiceRepo.markInvoiceAsPending.mockResolvedValue(
-        createInvoiceWithCustomer({ id: TEST_INVOICE_ID, status: 'PENDING' }),
+        createInvoiceWithCustomer({ id: TEST_INVOICE_ID, status: 'PENDING' })
       );
 
       const result = await markInvoiceAsPending({ id: TEST_INVOICE_ID });
@@ -259,7 +259,7 @@ describe('Invoice Mutations', () => {
       mockInvoiceRepo.addInvoicePayment.mockResolvedValue({
         id: TEST_INVOICE_ID,
         status: 'PAID',
-        receiptNumber: 'REC-001',
+        receiptNumber: 'REC-001'
       });
 
       const result = await recordPayment(paymentData);
@@ -291,7 +291,7 @@ describe('Invoice Mutations', () => {
       const cancelData = createCancelInvoiceInput({ id: TEST_INVOICE_ID });
       mockInvoiceRepo.cancelInvoice.mockResolvedValue({
         id: TEST_INVOICE_ID,
-        status: 'CANCELLED',
+        status: 'CANCELLED'
       });
 
       const result = await cancelInvoice(cancelData);
@@ -339,7 +339,7 @@ describe('Invoice Mutations', () => {
     it('duplicates an invoice successfully', async () => {
       mockInvoiceRepo.duplicateInvoice.mockResolvedValue({
         id: 'new-invoice-id',
-        invoiceNumber: 'INV-002',
+        invoiceNumber: 'INV-002'
       });
 
       const result = await duplicateInvoice(TEST_INVOICE_ID);
@@ -366,7 +366,7 @@ describe('Invoice Mutations', () => {
       mockAuth.mockResolvedValueOnce(null);
       const result = await bulkUpdateInvoiceStatus({
         ids: [TEST_INVOICE_ID],
-        status: 'PENDING' as InvoiceStatus,
+        status: 'PENDING' as InvoiceStatus
       });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -377,19 +377,19 @@ describe('Invoice Mutations', () => {
     it('should call repository bulkUpdateInvoiceStatus', async () => {
       mockInvoiceRepo.bulkUpdateInvoiceStatus.mockResolvedValue([
         { id: TEST_INVOICE_ID, success: true },
-        { id: TEST_INVOICE_ID_2, success: true },
+        { id: TEST_INVOICE_ID_2, success: true }
       ]);
 
       const result = await bulkUpdateInvoiceStatus({
         ids: [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
-        status: 'PENDING' as InvoiceStatus,
+        status: 'PENDING' as InvoiceStatus
       });
 
       expect(mockInvoiceRepo.bulkUpdateInvoiceStatus).toHaveBeenCalledWith(
         [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
         mockSession.user.tenantId,
         'PENDING',
-        mockSession.user.id,
+        mockSession.user.id
       );
       expect(result.success).toBe(true);
       if (result.success) {
@@ -401,12 +401,12 @@ describe('Invoice Mutations', () => {
     it('should handle partial failures', async () => {
       mockInvoiceRepo.bulkUpdateInvoiceStatus.mockResolvedValue([
         { id: TEST_INVOICE_ID, success: true },
-        { id: TEST_INVOICE_ID_2, success: false, error: 'Failed' },
+        { id: TEST_INVOICE_ID_2, success: false, error: 'Failed' }
       ]);
 
       const result = await bulkUpdateInvoiceStatus({
         ids: [TEST_INVOICE_ID, TEST_INVOICE_ID_2],
-        status: 'PENDING' as InvoiceStatus,
+        status: 'PENDING' as InvoiceStatus
       });
 
       expect(result.success).toBe(true);
@@ -420,7 +420,7 @@ describe('Invoice Mutations', () => {
   describe('sendInvoiceReceipt', () => {
     it('sends receipt for paid invoice', async () => {
       mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(
-        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PAID', receiptNumber: 'REC-001' }),
+        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PAID', receiptNumber: 'REC-001' })
       );
 
       const result = await sendInvoiceReceipt(TEST_INVOICE_ID);
@@ -441,7 +441,7 @@ describe('Invoice Mutations', () => {
 
     it('returns error when invoice is not paid', async () => {
       mockInvoiceRepo.findInvoiceByIdWithDetails.mockResolvedValue(
-        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PENDING' }),
+        createInvoiceDetails({ id: TEST_INVOICE_ID, status: 'PENDING' })
       );
 
       const result = await sendInvoiceReceipt(TEST_INVOICE_ID);
@@ -459,8 +459,8 @@ describe('Invoice Mutations', () => {
         createInvoiceDetails({
           id: TEST_INVOICE_ID,
           status: 'PENDING',
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days in future
-        }),
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days in future
+        })
       );
 
       const result = await sendInvoiceReminder(TEST_INVOICE_ID);
@@ -547,7 +547,7 @@ describe('Invoice Mutations - Permission Tests', () => {
       mockHasPermission.mockReturnValue(true);
       mockInvoiceRepo.addInvoicePayment.mockResolvedValue({
         id: TEST_INVOICE_ID,
-        status: 'PAID',
+        status: 'PAID'
       });
 
       const result = await recordPayment(createRecordPaymentInput({ id: TEST_INVOICE_ID }));

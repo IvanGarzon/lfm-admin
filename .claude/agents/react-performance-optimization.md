@@ -36,7 +36,7 @@ const ExpensiveComponent = React.memo(({ data, onUpdate }) => {
   const processedData = useMemo(() => {
     return data.map((item) => ({
       ...item,
-      computed: heavyComputation(item),
+      computed: heavyComputation(item)
     }));
   }, [data]);
 
@@ -59,7 +59,7 @@ const App = () => (
   <Router>
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path='/dashboard' element={<Dashboard />} />
       </Routes>
     </Suspense>
   </Router>

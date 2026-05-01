@@ -16,7 +16,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  useReactTable,
+  useReactTable
 } from '@tanstack/react-table';
 import {
   type Parser,
@@ -25,7 +25,7 @@ import {
   parseAsInteger,
   parseAsString,
   useQueryState,
-  useQueryStates,
+  useQueryStates
 } from 'nuqs';
 import * as React from 'react';
 
@@ -89,35 +89,35 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       throttleMs,
       debounceMs,
       clearOnDefault,
-      startTransition,
+      startTransition
     }),
-    [history, scroll, shallow, throttleMs, debounceMs, clearOnDefault, startTransition],
+    [history, scroll, shallow, throttleMs, debounceMs, clearOnDefault, startTransition]
   );
 
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
-    initialState?.rowSelection ?? {},
+    initialState?.rowSelection ?? {}
   );
 
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
-    initialState?.columnVisibility ?? {},
+    initialState?.columnVisibility ?? {}
   );
 
   const [page, setPage] = useQueryState(
     PAGE_KEY,
-    parseAsInteger.withOptions(queryStateOptions).withDefault(1),
+    parseAsInteger.withOptions(queryStateOptions).withDefault(1)
   );
 
   const [perPage, setPerPage] = useQueryState(
     PER_PAGE_KEY,
     parseAsInteger
       .withOptions(queryStateOptions)
-      .withDefault(initialState?.pagination?.pageSize ?? 20),
+      .withDefault(initialState?.pagination?.pageSize ?? 20)
   );
 
   const pagination: PaginationState = React.useMemo(() => {
     return {
       pageIndex: page - 1, // zero-based index -> one-based index
-      pageSize: perPage,
+      pageSize: perPage
     };
   }, [page, perPage]);
 
@@ -132,18 +132,27 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
         void setPerPage(updaterOrValue.pageSize);
       }
     },
-    [pagination, setPage, setPerPage],
+    [pagination, setPage, setPerPage]
   );
 
   const columnIds = React.useMemo(() => {
-    return new Set(columns.map((column) => column.id).filter((id): id is string => Boolean(id)));
+    return new Set(
+      columns
+        .map((column) => {
+          if (column.id) return column.id;
+          if ('accessorKey' in column && typeof column.accessorKey === 'string')
+            return column.accessorKey;
+          return undefined;
+        })
+        .filter((id): id is string => Boolean(id))
+    );
   }, [columns]);
 
   const [sorting, setSorting] = useQueryState(
     SORT_KEY,
     getSortingStateParser<TData>(columnIds)
-      .withOptions(queryStateOptions)
-      .withDefault(initialState?.sorting ?? []),
+      .withOptions({ ...queryStateOptions, clearOnDefault: true })
+      .withDefault(initialState?.sorting ?? [])
   );
 
   const onSortingChange = React.useCallback(
@@ -155,7 +164,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
         setSorting(updaterOrValue as ExtendedColumnSort<TData>[]);
       }
     },
-    [sorting, setSorting],
+    [sorting, setSorting]
   );
 
   const filterableColumns = React.useMemo(() => {
@@ -173,16 +182,21 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
 
     return filterableColumns.reduce<Record<string, Parser<string> | Parser<string[]>>>(
       (acc, column) => {
+        const key =
+          column.id ??
+          ('accessorKey' in column && typeof column.accessorKey === 'string'
+            ? column.accessorKey
+            : '');
+        if (!key) return acc;
+
         if (column.meta?.options) {
-          acc[column.id ?? ''] = parseAsArrayOf(parseAsString, ARRAY_SEPARATOR).withOptions(
-            queryStateOptions,
-          );
+          acc[key] = parseAsArrayOf(parseAsString, ARRAY_SEPARATOR).withOptions(queryStateOptions);
         } else {
-          acc[column.id ?? ''] = parseAsString.withOptions(queryStateOptions);
+          acc[key] = parseAsString.withOptions(queryStateOptions);
         }
         return acc;
       },
-      {},
+      {}
     );
   }, [filterableColumns, queryStateOptions, enableAdvancedFilter]);
 
@@ -206,7 +220,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
 
         filters.push({
           id: key,
-          value: processedValue,
+          value: processedValue
         });
       }
       return filters;
@@ -230,7 +244,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
             }
             return acc;
           },
-          {},
+          {}
         );
 
         for (const prevFilter of prev) {
@@ -243,7 +257,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
         return next;
       });
     },
-    [debouncedSetFilterValues, filterableColumns, enableAdvancedFilter],
+    [debouncedSetFilterValues, filterableColumns, enableAdvancedFilter]
   );
 
   const table = useReactTable({
@@ -256,11 +270,11 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       sorting,
       columnVisibility,
       rowSelection,
-      columnFilters,
+      columnFilters
     },
     defaultColumn: {
       ...tableProps.defaultColumn,
-      enableColumnFilter: false,
+      enableColumnFilter: false
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -277,7 +291,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     manualPagination: true,
     manualSorting: true,
-    manualFiltering: true,
+    manualFiltering: true
   });
 
   return { table, shallow, debounceMs, throttleMs };

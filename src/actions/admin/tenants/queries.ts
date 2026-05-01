@@ -28,7 +28,7 @@ export const getAdminTenantById = withSuperAdmin<
   try {
     const [tenant, users] = await Promise.all([
       tenantRepo.findTenantById(id),
-      userRepo.findByTenant(id),
+      userRepo.findByTenant(id)
     ]);
 
     if (!tenant) {

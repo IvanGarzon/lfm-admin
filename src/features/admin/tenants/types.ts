@@ -52,7 +52,7 @@ export const EMPTY_BRANDING: TenantBranding = {
   city: null,
   state: null,
   postcode: null,
-  country: null,
+  country: null
 };
 
 export type TenantListItem = {

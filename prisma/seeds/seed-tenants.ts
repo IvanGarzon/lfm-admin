@@ -9,7 +9,7 @@ import {
   fakeBsb,
   capitalise,
   toSlug,
-  parseArg,
+  parseArg
 } from './seed-helpers';
 
 // -- Types -------------------------------------------------------------------
@@ -38,7 +38,7 @@ function fakeBusinessName(): string {
     () => `The ${capitalise(faker.word.adjective({ strategy: 'closest' }))} Petal`,
     () => `${faker.person.firstName()}'s Floral Studio`,
     () => `Bloom & ${capitalise(faker.word.noun({ strategy: 'closest' }))}`,
-    () => `${faker.location.city()} Bloom House`,
+    () => `${faker.location.city()} Bloom House`
   ];
   return faker.helpers.arrayElement(styles)();
 }
@@ -87,12 +87,12 @@ export async function seedTenants(options: SeedTenantsOptions = {}): Promise<See
               'ANZ',
               'Westpac',
               'NAB',
-              'Bendigo Bank',
+              'Bendigo Bank'
             ]),
             bsb: fakeBsb(),
             accountNumber: faker.string.numeric(9),
-            accountName: name,
-          },
+            accountName: name
+          }
         },
         users: {
           createMany: {
@@ -102,20 +102,20 @@ export async function seedTenants(options: SeedTenantsOptions = {}): Promise<See
                 lastName: faker.person.lastName(),
                 email: adminEmail,
                 password: hashedPassword,
-                role: 'ADMIN',
+                role: 'ADMIN'
               },
               {
                 firstName: faker.person.firstName(),
                 lastName: faker.person.lastName(),
                 email: managerEmail,
                 password: hashedPassword,
-                role: 'MANAGER',
-              },
-            ],
-          },
-        },
+                role: 'MANAGER'
+              }
+            ]
+          }
+        }
       },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true }
     });
 
     seeded.push({
@@ -124,7 +124,7 @@ export async function seedTenants(options: SeedTenantsOptions = {}): Promise<See
       slug: tenant.slug,
       adminEmail,
       managerEmail,
-      password: plainPassword,
+      password: plainPassword
     });
 
     console.log(`   ✅ ${tenant.name} (slug: ${tenant.slug})`);

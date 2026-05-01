@@ -26,7 +26,7 @@ export class UserRepository extends BaseRepository<User> {
    */
   async getUserByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({
-      where: { email },
+      where: { email }
     });
   }
 
@@ -43,7 +43,7 @@ export class UserRepository extends BaseRepository<User> {
       email?: string | null;
       avatarUrl?: string | null;
     },
-    accountData: CreateAccountData,
+    accountData: CreateAccountData
   ): Promise<User> {
     return await this.prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({
@@ -51,8 +51,8 @@ export class UserRepository extends BaseRepository<User> {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
-          avatarUrl: userData.avatarUrl,
-        },
+          avatarUrl: userData.avatarUrl
+        }
       });
 
       await tx.account.create({
@@ -66,8 +66,8 @@ export class UserRepository extends BaseRepository<User> {
           expiresAt: accountData.expiresAt,
           tokenType: accountData.tokenType,
           scope: accountData.scope,
-          idToken: accountData.idToken,
-        },
+          idToken: accountData.idToken
+        }
       });
 
       return createdUser;
@@ -93,12 +93,12 @@ export class UserRepository extends BaseRepository<User> {
       lastName: string;
       avatarUrl?: string | null;
       emailVerified?: Date | null;
-    },
+    }
   ): Promise<User> {
     return this.prisma.user.upsert({
       where: { email },
       update: updateData,
-      create: createData,
+      create: createData
     });
   }
 
@@ -110,11 +110,11 @@ export class UserRepository extends BaseRepository<User> {
    */
   async getUserByEmailWithSelect<T extends Prisma.UserSelect>(
     email: string,
-    select: T,
+    select: T
   ): Promise<Prisma.UserGetPayload<{ select: T }> | null> {
     return this.prisma.user.findUnique({
       where: { email },
-      select,
+      select
     }) as Promise<Prisma.UserGetPayload<{ select: T }> | null>;
   }
 
@@ -126,7 +126,7 @@ export class UserRepository extends BaseRepository<User> {
    */
   async getUserByIdWithSelect<T extends Prisma.UserSelect>(
     id: string,
-    select: T,
+    select: T
   ): Promise<Prisma.UserGetPayload<{ select: T }> | null> {
     return this.prisma.user.findUnique({ where: { id }, select }) as Promise<Prisma.UserGetPayload<{
       select: T;
@@ -149,8 +149,8 @@ export class UserRepository extends BaseRepository<User> {
         email: true,
         role: true,
         tenantId: true,
-        tenant: { select: { name: true } },
-      },
+        tenant: { select: { name: true } }
+      }
     });
   }
 
@@ -169,8 +169,8 @@ export class UserRepository extends BaseRepository<User> {
         email: true,
         role: true,
         tenantId: true,
-        tenant: { select: { name: true } },
-      },
+        tenant: { select: { name: true } }
+      }
     });
   }
 
@@ -187,8 +187,8 @@ export class UserRepository extends BaseRepository<User> {
         email: data.email,
         role: data.role,
         tenantId: data.tenantId,
-        password: data.password,
-      },
+        password: data.password
+      }
     });
   }
 
@@ -224,25 +224,25 @@ export class UserRepository extends BaseRepository<User> {
    */
   async searchAndPaginateTenantUsers(
     params: UserFilters,
-    tenantId: string,
+    tenantId: string
   ): Promise<UserPagination> {
     const { search, role, status, page, perPage, sort } = params;
 
     const where: Prisma.UserWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (search) {
       const filter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
       where.OR = [
         { firstName: filter },
         { lastName: filter },
         { email: filter },
-        { phone: filter },
+        { phone: filter }
       ];
     }
 
@@ -277,15 +277,15 @@ export class UserRepository extends BaseRepository<User> {
           status: true,
           lastLoginAt: true,
           avatarUrl: true,
-          addedBy: { select: { firstName: true, lastName: true } },
-        },
+          addedBy: { select: { firstName: true, lastName: true } }
+        }
       }),
-      this.prisma.user.count({ where }),
+      this.prisma.user.count({ where })
     ]);
 
     return {
       items: items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -313,8 +313,8 @@ export class UserRepository extends BaseRepository<User> {
         title: true,
         bio: true,
         avatarUrl: true,
-        addedBy: { select: { firstName: true, lastName: true } },
-      },
+        addedBy: { select: { firstName: true, lastName: true } }
+      }
     });
 
     return user;
@@ -340,7 +340,7 @@ export class UserRepository extends BaseRepository<User> {
       username?: string | null;
       title?: string | null;
       bio?: string | null;
-    },
+    }
   ): Promise<UserDetail> {
     const user = await this.prisma.user.update({
       where: { id, tenantId, deletedAt: null },
@@ -360,8 +360,8 @@ export class UserRepository extends BaseRepository<User> {
         title: true,
         bio: true,
         avatarUrl: true,
-        addedBy: { select: { firstName: true, lastName: true } },
-      },
+        addedBy: { select: { firstName: true, lastName: true } }
+      }
     });
 
     return user;
@@ -377,7 +377,7 @@ export class UserRepository extends BaseRepository<User> {
   async updateUserSecurity(
     id: string,
     tenantId: string,
-    data: { isTwoFactorEnabled?: boolean; loginNotificationsEnabled?: boolean },
+    data: { isTwoFactorEnabled?: boolean; loginNotificationsEnabled?: boolean }
   ): Promise<UserDetail> {
     const user = await this.prisma.user.update({
       where: { id, tenantId, deletedAt: null },
@@ -397,8 +397,8 @@ export class UserRepository extends BaseRepository<User> {
         title: true,
         bio: true,
         avatarUrl: true,
-        addedBy: { select: { firstName: true, lastName: true } },
-      },
+        addedBy: { select: { firstName: true, lastName: true } }
+      }
     });
 
     return user;
@@ -414,7 +414,7 @@ export class UserRepository extends BaseRepository<User> {
   async updateTenantUserRole(id: string, tenantId: string, role: UserRole): Promise<User> {
     return this.prisma.user.update({
       where: { id, tenantId },
-      data: { role },
+      data: { role }
     });
   }
 
@@ -427,7 +427,7 @@ export class UserRepository extends BaseRepository<User> {
   async softDeleteTenantUser(id: string, tenantId: string): Promise<boolean> {
     const result = await this.prisma.user.updateMany({
       where: { id, tenantId, deletedAt: null },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date() }
     });
 
     return result.count > 0;
@@ -447,14 +447,14 @@ export class UserRepository extends BaseRepository<User> {
   async updatePassword(id: string, hashedPassword: string): Promise<void> {
     await this.prisma.user.update({
       where: { id },
-      data: { password: hashedPassword },
+      data: { password: hashedPassword }
     });
   }
 
   async updateLastLoginAt(id: string): Promise<void> {
     await this.prisma.user.update({
       where: { id },
-      data: { lastLoginAt: new Date() },
+      data: { lastLoginAt: new Date() }
     });
   }
 
@@ -468,7 +468,7 @@ export class UserRepository extends BaseRepository<User> {
   async updateUserAvatar(id: string, tenantId: string, avatarUrl: string): Promise<void> {
     await this.prisma.user.update({
       where: { id, tenantId, deletedAt: null },
-      data: { avatarUrl },
+      data: { avatarUrl }
     });
   }
 }

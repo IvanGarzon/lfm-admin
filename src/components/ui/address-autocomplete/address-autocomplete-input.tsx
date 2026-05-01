@@ -32,7 +32,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
     setSearchInput,
     placeholder,
     showMapIcon,
-    mapIconClass,
+    mapIconClass
   } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -83,7 +83,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
         }
       }
     },
-    [getPlacePredictions],
+    [getPlacePredictions]
   );
 
   const debouncedFetchPredictions = useDebouncedCallback(fetchPredictions, 500);
@@ -97,7 +97,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
         setPredictions([]);
       }
     },
-    [setSearchInput, isLoaded, debouncedFetchPredictions],
+    [setSearchInput, isLoaded, debouncedFetchPredictions]
   );
 
   // Clear predictions when search input is cleared
@@ -108,8 +108,8 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
   }, [searchInput]);
 
   return (
-    <Command shouldFilter={false} onKeyDown={handleKeyDown} className="overflow-visible">
-      <div className="flex w-full items-center justify-between rounded-md border text-sm relative">
+    <Command shouldFilter={false} onKeyDown={handleKeyDown} className='overflow-visible'>
+      <div className='flex w-full items-center justify-between rounded-md border text-sm relative'>
         {showMapIcon ? (
           <MapPin
             style={{ left: '6px' }}
@@ -129,17 +129,17 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
       </div>
 
       {searchInput !== '' && !isOpen && !selectedPlaceId && showInlineError && (
-        <div className="pt-1 text-sm text-red-500">Select a valid address from the list</div>
+        <div className='pt-1 text-sm text-red-500'>Select a valid address from the list</div>
       )}
 
       {isOpen && (isLoading || predictions.length > 0 || searchInput !== '') ? (
-        <div className="relative animate-in fade-in-0 zoom-in-95 h-auto">
+        <div className='relative animate-in fade-in-0 zoom-in-95 h-auto'>
           <CommandList>
-            <div className="absolute top-1.5 z-[9999] w-full">
-              <CommandGroup className="relative h-auto z-[9999] min-w-[8rem] overflow-hidden rounded-md border shadow-md bg-background">
+            <div className='absolute top-1.5 z-[9999] w-full'>
+              <CommandGroup className='relative h-auto z-[9999] min-w-[8rem] overflow-hidden rounded-md border shadow-md bg-background'>
                 {isLoading ? (
-                  <div className="h-28 flex items-center justify-center">
-                    <Loader2 className="size-6 animate-spin" />
+                  <div className='h-28 flex items-center justify-center'>
+                    <Loader2 className='size-6 animate-spin' />
                   </div>
                 ) : (
                   <>
@@ -150,7 +150,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
                           setSearchInput('');
                           onPlaceSelect(prediction.placeId);
                         }}
-                        className="flex select-text flex-col cursor-pointer gap-0.5 h-max p-2 px-3 rounded-md text-sm aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-accent hover:text-accent-foreground items-start"
+                        className='flex select-text flex-col cursor-pointer gap-0.5 h-max p-2 px-3 rounded-md text-sm aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-accent hover:text-accent-foreground items-start'
                         key={prediction.placeId}
                         onMouseDown={(e) => e.preventDefault()}
                       >
@@ -162,7 +162,7 @@ export function AddressAutoCompleteInput(props: AddressAutoCompleteInputProps) {
 
                 <CommandEmpty>
                   {!isLoading && predictions.length === 0 && searchInput !== '' ? (
-                    <div className="py-2 flex items-center justify-center">No address found</div>
+                    <div className='py-2 flex items-center justify-center'>No address found</div>
                   ) : null}
                 </CommandEmpty>
               </CommandGroup>

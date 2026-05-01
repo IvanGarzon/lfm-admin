@@ -2,7 +2,7 @@ import { Invitation, InvitationStatus, PrismaClient, UserRole } from '@/prisma/c
 import { prisma } from '@/lib/prisma';
 import type {
   CreateInvitationInput,
-  InvitationWithTenant,
+  InvitationWithTenant
 } from '@/features/admin/invitations/types';
 
 export class InvitationRepository {
@@ -15,7 +15,7 @@ export class InvitationRepository {
   async findByToken(token: string): Promise<InvitationWithTenant | null> {
     const result = await this.prismaClient.invitation.findUnique({
       where: { token },
-      include: { tenant: { select: { id: true, name: true, slug: true } } },
+      include: { tenant: { select: { id: true, name: true, slug: true } } }
     });
     return result ?? null;
   }
@@ -23,27 +23,27 @@ export class InvitationRepository {
   async findByTenant(tenantId: string): Promise<Invitation[]> {
     return this.prismaClient.invitation.findMany({
       where: { tenantId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'desc' }
     });
   }
 
   async findPendingByEmail(email: string, tenantId: string): Promise<Invitation | null> {
     return this.prismaClient.invitation.findFirst({
-      where: { email, tenantId, status: InvitationStatus.PENDING },
+      where: { email, tenantId, status: InvitationStatus.PENDING }
     });
   }
 
   async accept(token: string): Promise<Invitation> {
     return this.prismaClient.invitation.update({
       where: { token },
-      data: { status: InvitationStatus.ACCEPTED },
+      data: { status: InvitationStatus.ACCEPTED }
     });
   }
 
   async revoke(id: string): Promise<Invitation> {
     return this.prismaClient.invitation.update({
       where: { id },
-      data: { status: InvitationStatus.REVOKED },
+      data: { status: InvitationStatus.REVOKED }
     });
   }
 
@@ -51,9 +51,9 @@ export class InvitationRepository {
     await this.prismaClient.invitation.updateMany({
       where: {
         status: InvitationStatus.PENDING,
-        expiresAt: { lt: new Date() },
+        expiresAt: { lt: new Date() }
       },
-      data: { status: InvitationStatus.EXPIRED },
+      data: { status: InvitationStatus.EXPIRED }
     });
   }
 }

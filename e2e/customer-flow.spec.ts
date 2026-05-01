@@ -4,7 +4,7 @@ const TEST_CUSTOMER = {
   firstName: 'Playwright',
   lastName: 'Test',
   email: `playwright.test+${Date.now()}@example.com`,
-  updatedFirstName: 'Updated',
+  updatedFirstName: 'Updated'
 };
 
 const TEST_ORG_NAME = 'E2E Test Organisation';
@@ -70,8 +70,8 @@ test.describe('Customer Management Flow', () => {
 
     await expect(
       page.getByRole('link', {
-        name: `${TEST_CUSTOMER.updatedFirstName} ${TEST_CUSTOMER.lastName}`,
-      }),
+        name: `${TEST_CUSTOMER.updatedFirstName} ${TEST_CUSTOMER.lastName}`
+      })
     ).toBeVisible({ timeout: 10_000 });
 
     // -- Delete ---------------------------------------------------------------
@@ -86,8 +86,8 @@ test.describe('Customer Management Flow', () => {
 
     await expect(
       page.getByRole('link', {
-        name: `${TEST_CUSTOMER.updatedFirstName} ${TEST_CUSTOMER.lastName}`,
-      }),
+        name: `${TEST_CUSTOMER.updatedFirstName} ${TEST_CUSTOMER.lastName}`
+      })
     ).not.toBeVisible({ timeout: 10_000 });
   });
 

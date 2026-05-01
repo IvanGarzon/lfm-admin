@@ -25,7 +25,7 @@ export default defineConfig({
     testTimeout: 30_000,
     hookTimeout: 120_000,
     pool: 'forks',
-    maxWorkers: 1,
+    maxWorkers: 1
   },
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.cjs'],
@@ -38,7 +38,7 @@ export default defineConfig({
       '@/repo': path.resolve(__dirname, 'prisma/prisma-vault'),
       '@': path.resolve(__dirname, 'src'),
       // audit.service.ts imports env as a bare specifier (not @/env)
-      env: path.resolve(__dirname, 'env.ts'),
-    },
-  },
+      env: path.resolve(__dirname, 'env.ts')
+    }
+  }
 });

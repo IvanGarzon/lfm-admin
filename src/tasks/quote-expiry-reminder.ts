@@ -9,10 +9,10 @@ export const quoteExpiryReminderTask: TaskDefinition = {
   schedule: {
     cron: '0 9 * * *', // Daily at 9:00 AM
     timezone: 'UTC',
-    enabled: true,
+    enabled: true
   },
   timeout: 300, // 5 minutes
   retries: 3,
   concurrencyLimit: 1,
-  inngestFunction: quoteExpiryReminderFunction,
+  inngestFunction: quoteExpiryReminderFunction
 };

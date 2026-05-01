@@ -37,8 +37,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Lisianthus - White', quantity: 6 },
       { searchTerm: 'Eucalyptus - Seeded', quantity: 3 },
       { searchTerm: 'Eucalyptus - Silver Dollar', quantity: 2 },
-      { searchTerm: 'Ribbon - Silk', quantity: 1 },
-    ],
+      { searchTerm: 'Ribbon - Silk', quantity: 1 }
+    ]
   },
   {
     name: 'Blush Pink Romance Bouquet',
@@ -53,8 +53,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Spray Rose - Lavender', quantity: 5 },
       { searchTerm: 'Sweet Pea', quantity: 4 },
       { searchTerm: 'Eucalyptus - Baby Blue', quantity: 3 },
-      { searchTerm: 'Ribbon - Organza', quantity: 1 },
-    ],
+      { searchTerm: 'Ribbon - Organza', quantity: 1 }
+    ]
   },
   {
     name: 'Vibrant Garden Mix Centerpiece',
@@ -71,8 +71,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Wax Flower', quantity: 3 },
       { searchTerm: 'Ruscus', quantity: 2 },
       { searchTerm: 'Floral Foam - Standard', quantity: 1 },
-      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 },
-    ],
+      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 }
+    ]
   },
   {
     name: 'Luxury Red Rose Bouquet',
@@ -86,8 +86,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Eucalyptus - Seeded', quantity: 4 },
       { searchTerm: 'Leather Leaf Fern', quantity: 3 },
       { searchTerm: 'Ribbon - Silk', quantity: 1 },
-      { searchTerm: 'Bouquet Wrap - Kraft', quantity: 2 },
-    ],
+      { searchTerm: 'Bouquet Wrap - Kraft', quantity: 2 }
+    ]
   },
   {
     name: 'Spring Tulip & Ranunculus Arrangement',
@@ -102,8 +102,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Ranunculus - Mixed Pastel', quantity: 12 },
       { searchTerm: 'Anemone - White', quantity: 8 },
       { searchTerm: 'Eucalyptus - Parvifolia', quantity: 3 },
-      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 },
-    ],
+      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 }
+    ]
   },
   {
     name: 'Peony & David Austin Rose Centerpiece',
@@ -119,8 +119,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Sweet Pea', quantity: 6 },
       { searchTerm: 'Eucalyptus - Baby Blue', quantity: 4 },
       { searchTerm: 'Jasmine Vine', quantity: 2 },
-      { searchTerm: 'Floral Foam - Standard', quantity: 1 },
-    ],
+      { searchTerm: 'Floral Foam - Standard', quantity: 1 }
+    ]
   },
   {
     name: 'Tropical Orchid Display',
@@ -135,8 +135,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Monstera Leaf', quantity: 4 },
       { searchTerm: 'Palm Leaf', quantity: 3 },
       { searchTerm: 'Aspidistra Leaf', quantity: 5 },
-      { searchTerm: 'Vase - Glass Cylinder 30cm', quantity: 1 },
-    ],
+      { searchTerm: 'Vase - Glass Cylinder 30cm', quantity: 1 }
+    ]
   },
   {
     name: 'Hydrangea & Rose Wedding Centerpiece',
@@ -152,8 +152,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Stock - White', quantity: 6 },
       { searchTerm: 'Eucalyptus - Seeded', quantity: 4 },
       { searchTerm: 'Olive Branch', quantity: 3 },
-      { searchTerm: 'Floral Foam - Standard', quantity: 1 },
-    ],
+      { searchTerm: 'Floral Foam - Standard', quantity: 1 }
+    ]
   },
   {
     name: 'Lavender & Peach Bridesmaid Bouquet',
@@ -168,8 +168,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Ranunculus - Peach', quantity: 7 },
       { searchTerm: 'Spray Rose - Lavender', quantity: 5 },
       { searchTerm: 'Eucalyptus - Baby Blue', quantity: 2 },
-      { searchTerm: 'Ribbon - Silk', quantity: 1 },
-    ],
+      { searchTerm: 'Ribbon - Silk', quantity: 1 }
+    ]
   },
   {
     name: 'Dahlia & Delphinium Summer Arrangement',
@@ -185,8 +185,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Hydrangea - Blue', quantity: 2 },
       { searchTerm: 'Eucalyptus - Seeded', quantity: 3 },
       { searchTerm: 'Dusty Miller', quantity: 3 },
-      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 },
-    ],
+      { searchTerm: 'Vase - Glass Cylinder 20cm', quantity: 1 }
+    ]
   },
   {
     name: 'White & Green Sympathy Arrangement',
@@ -202,8 +202,8 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Carnation - White', quantity: 10 },
       { searchTerm: 'Eucalyptus - Seeded', quantity: 4 },
       { searchTerm: 'Leather Leaf Fern', quantity: 4 },
-      { searchTerm: 'Floral Foam - Standard', quantity: 1 },
-    ],
+      { searchTerm: 'Floral Foam - Standard', quantity: 1 }
+    ]
   },
   {
     name: 'Rustic Wildflower Hand-Tied Bouquet',
@@ -220,9 +220,9 @@ const recipeTemplates: RecipeTemplate[] = [
       { searchTerm: 'Eucalyptus - Parvifolia', quantity: 3 },
       { searchTerm: 'Ivy - English', quantity: 2 },
       { searchTerm: 'Bouquet Wrap - Kraft', quantity: 2 },
-      { searchTerm: 'Ribbon - Organza', quantity: 1 },
-    ],
-  },
+      { searchTerm: 'Ribbon - Organza', quantity: 1 }
+    ]
+  }
 ];
 
 // -- Types -------------------------------------------------------------------
@@ -235,7 +235,7 @@ export type SeedRecipesOptions = {
 
 function buildRecipeItems(
   template: (typeof recipeTemplates)[number],
-  priceListItems: { id: string; name: string; costPerUnit: unknown; retailPrice: unknown }[],
+  priceListItems: { id: string; name: string; costPerUnit: unknown; retailPrice: unknown }[]
 ) {
   const recipeItems: {
     priceListItemId: string;
@@ -252,7 +252,7 @@ function buildRecipeItems(
 
   for (const itemTemplate of template.items) {
     const priceListItem = priceListItems.find((item) =>
-      item.name.toLowerCase().includes(itemTemplate.searchTerm.toLowerCase()),
+      item.name.toLowerCase().includes(itemTemplate.searchTerm.toLowerCase())
     );
 
     if (!priceListItem) continue;
@@ -274,7 +274,7 @@ function buildRecipeItems(
       retailPrice,
       lineTotal,
       retailLineTotal,
-      order: recipeItems.length,
+      order: recipeItems.length
     });
   }
 
@@ -300,7 +300,7 @@ export async function seedRecipes(options: SeedRecipesOptions): Promise<number> 
   for (const tenant of tenants) {
     const priceListItems = await prisma.priceListItem.findMany({
       where: { tenantId: tenant.id, deletedAt: null },
-      orderBy: { name: 'asc' },
+      orderBy: { name: 'asc' }
     });
 
     if (priceListItems.length === 0) {
@@ -314,7 +314,7 @@ export async function seedRecipes(options: SeedRecipesOptions): Promise<number> 
       try {
         const { recipeItems, totalMaterialsCost, totalRetailPrice } = buildRecipeItems(
           template,
-          priceListItems,
+          priceListItems
         );
 
         if (recipeItems.length === 0) continue;
@@ -366,10 +366,10 @@ export async function seedRecipes(options: SeedRecipesOptions): Promise<number> 
                 lineTotal: item.lineTotal,
                 retailPrice: item.retailPrice,
                 retailLineTotal: item.retailLineTotal,
-                order: item.order ?? index,
-              })),
-            },
-          },
+                order: item.order ?? index
+              }))
+            }
+          }
         });
 
         created++;
@@ -403,7 +403,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedRecipes({ tenants: seededTenants });

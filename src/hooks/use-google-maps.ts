@@ -29,7 +29,7 @@ function ensureOptions(): void {
   if (!optionsSet) {
     setOptions({
       key: env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-      v: 'weekly',
+      v: 'weekly'
     });
     optionsSet = true;
   }
@@ -83,7 +83,7 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
         const { suggestions } =
           await placesLibraryRef.current.AutocompleteSuggestion.fetchAutocompleteSuggestions({
             input,
-            includedRegionCodes: ['au'],
+            includedRegionCodes: ['au']
           });
 
         const results: PlacePrediction[] = [];
@@ -95,7 +95,7 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
               placeId: pred.placeId,
               description: pred.text.text,
               mainText: pred.mainText?.text || '',
-              secondaryText: pred.secondaryText?.text || '',
+              secondaryText: pred.secondaryText?.text || ''
             });
           }
         }
@@ -105,7 +105,7 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
         return [];
       }
     },
-    [isLoaded],
+    [isLoaded]
   );
 
   const getPlaceDetails = useCallback(
@@ -117,7 +117,7 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
       try {
         // Use the new Place API
         const place = new placesLibraryRef.current.Place({
-          id: placeId,
+          id: placeId
         });
 
         await place.fetchFields({
@@ -126,8 +126,8 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
             'formattedAddress',
             'location',
             'adrFormatAddress',
-            'displayName',
-          ],
+            'displayName'
+          ]
         });
 
         return place;
@@ -136,7 +136,7 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
         return null;
       }
     },
-    [isLoaded],
+    [isLoaded]
   );
 
   return {
@@ -144,6 +144,6 @@ export function useGoogleMaps(): UseGoogleMapsReturn {
     isLoading,
     error,
     getPlacePredictions,
-    getPlaceDetails,
+    getPlaceDetails
   };
 }

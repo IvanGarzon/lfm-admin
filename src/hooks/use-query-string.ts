@@ -12,7 +12,7 @@ import { useQueryStates, type GenericParserBuilder } from 'nuqs';
  */
 export function useQueryString<T extends Record<string, unknown>>(
   searchParams: { [K in keyof T]: GenericParserBuilder<T[K]> },
-  defaults: Partial<T>,
+  defaults: Partial<T>
 ): string {
   const [currentParams] = useQueryStates(searchParams);
   const queryParts: string[] = [];

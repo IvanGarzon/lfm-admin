@@ -8,7 +8,7 @@ import {
   parseAsString,
   parseAsStringEnum,
   parseAsArrayOf,
-  parseAsBoolean,
+  parseAsBoolean
 } from 'nuqs/server';
 
 const sortableColumnIds = new Set(SORTABLE_QUOTE_COLUMNS);
@@ -18,10 +18,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -31,7 +31,7 @@ export const searchParams = {
   perPage: parseAsInteger.withDefault(20),
   status: parseAsArrayOf(parseAsStringEnum<QuoteStatus>(QuoteStatusSchema.options)).withDefault([]),
   sort: getSortingStateParser(sortableColumnIds).withDefault([]),
-  isFavourite: parseAsBoolean.withDefault(false),
+  isFavourite: parseAsBoolean.withDefault(false)
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

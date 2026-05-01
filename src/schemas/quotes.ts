@@ -11,7 +11,7 @@ export const QuoteItemSchema = z.object({
     .trim()
     .min(1, { error: 'Description is required' })
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     }),
   quantity: z
     .number()
@@ -26,16 +26,16 @@ export const QuoteItemSchema = z.object({
   notes: z
     .string()
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Notes must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Notes must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     })
     .optional(),
   colors: z
     .array(
       z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
-        message: 'Color must be a valid hex code (e.g., #FF5733 or #F00)',
-      }),
+        message: 'Color must be a valid hex code (e.g., #FF5733 or #F00)'
+      })
     )
-    .max(10, { error: 'Maximum 10 colors allowed' }),
+    .max(10, { error: 'Maximum 10 colors allowed' })
 });
 
 const QuoteSchema = z
@@ -48,10 +48,10 @@ const QuoteSchema = z
     gst: z
       .number()
       .min(VALIDATION_LIMITS.GST_MIN, {
-        error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`,
+        error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`
       })
       .max(VALIDATION_LIMITS.GST_MAX, {
-        error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`,
+        error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`
       }),
     discount: z
       .number()
@@ -60,35 +60,35 @@ const QuoteSchema = z
     notes: z
       .string()
       .max(VALIDATION_LIMITS.NOTES_MAX, {
-        error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+        error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`
       })
       .optional(),
     terms: z
       .string()
       .max(VALIDATION_LIMITS.TERMS_MAX, {
-        error: `Terms must be less than ${VALIDATION_LIMITS.TERMS_MAX} characters`,
+        error: `Terms must be less than ${VALIDATION_LIMITS.TERMS_MAX} characters`
       })
       .optional(),
     items: z
       .array(QuoteItemSchema)
       .min(1, { error: 'At least one item is required' })
-      .max(100, { error: 'Maximum 100 items allowed' }),
+      .max(100, { error: 'Maximum 100 items allowed' })
   })
   .refine((data) => data.validUntil >= data.issuedDate, {
     error: 'Valid until date must be on or after issued date',
-    path: ['validUntil'],
+    path: ['validUntil']
   });
 
 export const CreateQuoteSchema = QuoteSchema;
 export const UpdateQuoteSchema = QuoteSchema.safeExtend({
-  id: z.cuid({ error: 'Invalid quote ID' }),
+  id: z.cuid({ error: 'Invalid quote ID' })
 });
 
 /**
  * Mark Quote as Accepted Schema
  */
 export const MarkQuoteAsAcceptedSchema = z.object({
-  id: z.cuid({ error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' })
 });
 
 /**
@@ -101,8 +101,8 @@ export const MarkQuoteAsRejectedSchema = z.object({
     .trim()
     .min(1, { error: 'Rejection reason is required' })
     .max(VALIDATION_LIMITS.REASON_MAX, {
-      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
-    }),
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`
+    })
 });
 
 /**
@@ -114,9 +114,9 @@ export const MarkQuoteAsOnHoldSchema = z.object({
     .string()
     .trim()
     .max(VALIDATION_LIMITS.REASON_MAX, {
-      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`
     })
-    .optional(),
+    .optional()
 });
 
 /**
@@ -129,8 +129,8 @@ export const MarkQuoteAsCancelledSchema = z.object({
     .trim()
     .min(1, { error: 'Cancellation reason is required' })
     .max(VALIDATION_LIMITS.REASON_MAX, {
-      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
-    }),
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`
+    })
 });
 
 /**
@@ -142,22 +142,22 @@ export const ConvertQuoteToInvoiceSchema = z.object({
   gst: z
     .number()
     .min(VALIDATION_LIMITS.GST_MIN, {
-      error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`,
+      error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`
     })
     .max(VALIDATION_LIMITS.GST_MAX, {
-      error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`,
+      error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`
     }),
   discount: z
     .number()
     .min(0, { error: 'Discount must be at least 0' })
-    .max(1000000, { error: 'Discount must be less than 1,000,000' }),
+    .max(1000000, { error: 'Discount must be less than 1,000,000' })
 });
 
 /**
  * Quote Filters Schema
  */
 export const QuoteFiltersSchema = baseFiltersSchema.extend({
-  status: createEnumArrayFilter(QuoteStatusSchema),
+  status: createEnumArrayFilter(QuoteStatusSchema)
 });
 
 /**
@@ -176,7 +176,7 @@ export const QuoteItemAttachmentSchema = z.object({
     .max(VALIDATION_LIMITS.URL_MAX)
     .pipe(z.url({ error: 'Invalid S3 URL' })),
   uploadedBy: z.string().nullable(),
-  uploadedAt: z.date(),
+  uploadedAt: z.date()
 });
 
 /**
@@ -190,25 +190,25 @@ export const UploadItemAttachmentSchema = z.object({
     .int()
     .positive({ error: 'File size must be positive' })
     .max(MAX_FILE_SIZE, {
-      error: `File size must not exceed ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      error: `File size must not exceed ${MAX_FILE_SIZE / 1024 / 1024}MB`
     }),
   mimeType: z.string().refine((type) => ALLOWED_IMAGE_MIME_TYPES.includes(type as any), {
-    error: `File type must be an image: ${ALLOWED_IMAGE_MIME_TYPES.join(', ')}`,
-  }),
+    error: `File type must be an image: ${ALLOWED_IMAGE_MIME_TYPES.join(', ')}`
+  })
 });
 
 /**
  * Delete Item Attachment Schema
  */
 export const DeleteItemAttachmentSchema = z.object({
-  attachmentId: z.cuid({ error: 'Attachment ID is required' }),
+  attachmentId: z.cuid({ error: 'Attachment ID is required' })
 });
 
 /**
  * Delete Quote Schema
  */
 export const DeleteQuoteSchema = z.object({
-  id: z.cuid({ error: 'Quote ID is required' }),
+  id: z.cuid({ error: 'Quote ID is required' })
 });
 
 /**
@@ -216,21 +216,21 @@ export const DeleteQuoteSchema = z.object({
  */
 export const BulkUpdateQuoteStatusSchema = z.object({
   ids: z.array(z.cuid({ error: 'Invalid quote ID' })).min(1, { error: 'At least one ID required' }),
-  status: QuoteStatusSchema,
+  status: QuoteStatusSchema
 });
 
 /**
  * Bulk Delete Quotes Schema
  */
 export const BulkDeleteQuotesSchema = z.object({
-  ids: z.array(z.cuid({ error: 'Invalid quote ID' })).min(1, { error: 'At least one ID required' }),
+  ids: z.array(z.cuid({ error: 'Invalid quote ID' })).min(1, { error: 'At least one ID required' })
 });
 
 /**
  * Create Version Schema
  */
 export const CreateVersionSchema = z.object({
-  quoteId: z.cuid({ error: 'Quote ID is required' }),
+  quoteId: z.cuid({ error: 'Quote ID is required' })
 });
 
 /**
@@ -246,9 +246,9 @@ export const SendQuoteEmailSchema = z.object({
     currency: z.string({ error: 'Currency is required' }),
     issuedDate: z.coerce.date({ error: 'Issued date is required' }),
     validUntil: z.coerce.date({ error: 'Valid until date is required' }),
-    itemCount: z.number().int().nonnegative({ error: 'Item count must be non-negative' }),
+    itemCount: z.number().int().nonnegative({ error: 'Item count must be non-negative' })
   }),
-  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional(),
+  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional()
 });
 
 /**

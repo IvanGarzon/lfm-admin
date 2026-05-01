@@ -7,7 +7,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { GenderSchema } from '@/zod/schemas/enums/Gender.schema';
@@ -15,30 +15,30 @@ import type { EmployeeFormInput } from '@/features/staff/employees/types';
 
 const GenderOptions = GenderSchema.options.map((gender) => ({
   value: gender,
-  label: gender.charAt(0) + gender.slice(1).toLowerCase(),
+  label: gender.charAt(0) + gender.slice(1).toLowerCase()
 }));
 
 export function EmployeeDetailsFields({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<EmployeeFormInput>;
   isDisabled: boolean;
 }) {
   return (
-    <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       <FieldGroup>
         <Controller
-          name="gender"
+          name='gender'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-gender">Gender</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-gender'>Gender</FieldLabel>
               </FieldContent>
               <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                <SelectTrigger id="form-rhf-select-gender" aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Select gender" />
+                <SelectTrigger id='form-rhf-select-gender' aria-invalid={fieldState.invalid}>
+                  <SelectValue placeholder='Select gender' />
                 </SelectTrigger>
                 <SelectContent>
                   {GenderOptions.map(({ value, label }) => (
@@ -56,16 +56,16 @@ export function EmployeeDetailsFields({
 
       <FieldGroup>
         <Controller
-          name="dob"
+          name='dob'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-dob">Date of Birth</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-dob'>Date of Birth</FieldLabel>
               </FieldContent>
               <DatePicker
                 endYear={new Date().getFullYear()}
-                formatString="MMMM d, yyyy"
+                formatString='MMMM d, yyyy'
                 value={field.value as Date | undefined}
                 onChange={field.onChange}
                 disabled={isDisabled}

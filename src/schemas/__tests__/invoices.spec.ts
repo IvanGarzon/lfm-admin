@@ -9,7 +9,7 @@ import {
   MarkInvoiceAsPendingSchema,
   SendInvoiceEmailSchema,
   SendReminderEmailSchema,
-  SendReceiptEmailSchema,
+  SendReceiptEmailSchema
 } from '../invoices';
 import { testIds } from '@/lib/testing';
 
@@ -24,7 +24,7 @@ describe('Invoice Schemas', () => {
         description: 'Web Development',
         quantity: 1,
         unitPrice: 100,
-        productId: TEST_PRODUCT_ID,
+        productId: TEST_PRODUCT_ID
       };
 
       const result = InvoiceItemSchema.safeParse(validItem);
@@ -34,7 +34,7 @@ describe('Invoice Schemas', () => {
     it('fails when description is missing', () => {
       const invalidItem = {
         quantity: 1,
-        unitPrice: 100,
+        unitPrice: 100
       };
 
       const result = InvoiceItemSchema.safeParse(invalidItem);
@@ -45,7 +45,7 @@ describe('Invoice Schemas', () => {
       const invalidItem = {
         description: 'Test',
         quantity: 0,
-        unitPrice: 100,
+        unitPrice: 100
       };
 
       const result = InvoiceItemSchema.safeParse(invalidItem);
@@ -67,9 +67,9 @@ describe('Invoice Schemas', () => {
           description: 'Item 1',
           quantity: 1,
           unitPrice: 100,
-          productId: null,
-        },
-      ],
+          productId: null
+        }
+      ]
     };
 
     it('validates a correct invoice', () => {
@@ -80,7 +80,7 @@ describe('Invoice Schemas', () => {
     it('fails when due date is before issued date', () => {
       const invalidInvoice = {
         ...validInvoice,
-        dueDate: new Date('2023-12-31'),
+        dueDate: new Date('2023-12-31')
       };
 
       const result = CreateInvoiceSchema.safeParse(invalidInvoice);
@@ -94,7 +94,7 @@ describe('Invoice Schemas', () => {
     it('fails when no items are provided', () => {
       const invalidInvoice = {
         ...validInvoice,
-        items: [],
+        items: []
       };
 
       const result = CreateInvoiceSchema.safeParse(invalidInvoice);
@@ -116,10 +116,10 @@ describe('Invoice Schemas', () => {
           description: 'Item 1',
           quantity: 1,
           unitPrice: 100,
-          productId: null,
-        },
+          productId: null
+        }
       ],
-      id: TEST_INVOICE_ID,
+      id: TEST_INVOICE_ID
     };
 
     it('validates a correct update payload', () => {
@@ -138,7 +138,7 @@ describe('Invoice Schemas', () => {
     it('fails when due date is before issued date', () => {
       const invalidUpdate = {
         ...validUpdate,
-        dueDate: new Date('2023-12-31'),
+        dueDate: new Date('2023-12-31')
       };
 
       const result = UpdateInvoiceSchema.safeParse(invalidUpdate);
@@ -152,7 +152,7 @@ describe('Invoice Schemas', () => {
         id: TEST_INVOICE_ID,
         amount: 50,
         paidDate: new Date(),
-        paymentMethod: 'Credit Card',
+        paymentMethod: 'Credit Card'
       };
 
       const result = RecordPaymentSchema.safeParse(validPayment);
@@ -164,7 +164,7 @@ describe('Invoice Schemas', () => {
         id: TEST_INVOICE_ID,
         amount: -10,
         paidDate: new Date(),
-        paymentMethod: 'Cash',
+        paymentMethod: 'Cash'
       };
 
       const result = RecordPaymentSchema.safeParse(invalidPayment);
@@ -175,7 +175,7 @@ describe('Invoice Schemas', () => {
   describe('MarkInvoiceAsPendingSchema', () => {
     it('validates correct ID', () => {
       const validPending = {
-        id: TEST_INVOICE_ID,
+        id: TEST_INVOICE_ID
       };
 
       const result = MarkInvoiceAsPendingSchema.safeParse(validPending);
@@ -195,7 +195,7 @@ describe('Invoice Schemas', () => {
       const validCancel = {
         id: TEST_INVOICE_ID,
         cancelledDate: new Date(),
-        cancelReason: 'Customer changed mind',
+        cancelReason: 'Customer changed mind'
       };
 
       const result = CancelInvoiceSchema.safeParse(validCancel);
@@ -206,7 +206,7 @@ describe('Invoice Schemas', () => {
   describe('InvoiceFiltersSchema', () => {
     it('transforms status string to array of parsed statuses', () => {
       const filters = {
-        status: 'PENDING,PAID',
+        status: 'PENDING,PAID'
       };
 
       const result = InvoiceFiltersSchema.safeParse(filters);
@@ -219,7 +219,7 @@ describe('Invoice Schemas', () => {
 
     it('handles empty status string', () => {
       const filters = {
-        status: '',
+        status: ''
       };
 
       const result = InvoiceFiltersSchema.safeParse(filters);
@@ -241,9 +241,9 @@ describe('Invoice Schemas', () => {
         amount: 100,
         currency: 'AUD',
         dueDate: new Date('2024-01-15'),
-        issuedDate: new Date('2024-01-01'),
+        issuedDate: new Date('2024-01-01')
       },
-      pdfUrl: 'https://example.com/invoice.pdf',
+      pdfUrl: 'https://example.com/invoice.pdf'
     };
 
     it('validates correct email data', () => {
@@ -254,7 +254,7 @@ describe('Invoice Schemas', () => {
     it('fails on invalid email', () => {
       const invalidEmail = {
         ...validEmail,
-        to: 'invalid-email',
+        to: 'invalid-email'
       };
 
       const result = SendInvoiceEmailSchema.safeParse(invalidEmail);
@@ -264,7 +264,7 @@ describe('Invoice Schemas', () => {
     it('fails on missing invoice data', () => {
       const invalidEmail = {
         ...validEmail,
-        invoiceData: {},
+        invoiceData: {}
       };
 
       const result = SendInvoiceEmailSchema.safeParse(invalidEmail);
@@ -284,9 +284,9 @@ describe('Invoice Schemas', () => {
         dueDate: new Date('2024-01-15'),
         daysOverdue: 5,
         amountPaid: 0,
-        amountDue: 100,
+        amountDue: 100
       },
-      pdfUrl: 'https://example.com/invoice.pdf',
+      pdfUrl: 'https://example.com/invoice.pdf'
     };
 
     it('validates correct reminder data', () => {
@@ -299,8 +299,8 @@ describe('Invoice Schemas', () => {
         ...validReminder,
         reminderData: {
           ...validReminder.reminderData,
-          daysOverdue: -1,
-        },
+          daysOverdue: -1
+        }
       };
 
       const result = SendReminderEmailSchema.safeParse(invalidReminder);
@@ -319,9 +319,9 @@ describe('Invoice Schemas', () => {
         amount: 100,
         currency: 'AUD',
         paidDate: new Date('2024-01-20'),
-        paymentMethod: 'Credit Card',
+        paymentMethod: 'Credit Card'
       },
-      pdfUrl: 'https://example.com/receipt.pdf',
+      pdfUrl: 'https://example.com/receipt.pdf'
     };
 
     it('validates correct receipt data', () => {
@@ -334,8 +334,8 @@ describe('Invoice Schemas', () => {
         ...validReceipt,
         receiptData: {
           ...validReceipt.receiptData,
-          amount: 0,
-        },
+          amount: 0
+        }
       };
 
       const result = SendReceiptEmailSchema.safeParse(invalidReceipt);

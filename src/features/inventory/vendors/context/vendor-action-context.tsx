@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import {
   useDeleteVendor,
-  useUpdateVendorStatus,
+  useUpdateVendorStatus
 } from '@/features/inventory/vendors/hooks/use-vendor-queries';
 import { DeleteVendorDialog } from '@/features/inventory/vendors/components/delete-vendor-dialog';
 import type { VendorStatus } from '@/prisma/client';
@@ -28,7 +28,7 @@ interface VendorActionContextType {
     id: string,
     vendorCode?: string,
     vendorName?: string,
-    onSuccess?: () => void,
+    onSuccess?: () => void
   ) => void;
   openUpdateStatus: (id: string, status: VendorStatus, onSuccess?: () => void) => void;
   close: () => void;
@@ -55,7 +55,7 @@ export function VendorActionProvider({ children }: { children: React.ReactNode }
     (id: string, vendorCode?: string, vendorName?: string, onSuccess?: () => void) => {
       setState({ type: 'DELETE', id, vendorCode, vendorName, onSuccess });
     },
-    [],
+    []
   );
 
   // Open status update (used for quick status changes)
@@ -63,7 +63,7 @@ export function VendorActionProvider({ children }: { children: React.ReactNode }
     (id: string, status: VendorStatus, onSuccess?: () => void) => {
       setState({ type: 'UPDATE_STATUS', id, status, onSuccess });
     },
-    [],
+    []
   );
 
   // Close any open modal
@@ -78,7 +78,7 @@ export function VendorActionProvider({ children }: { children: React.ReactNode }
         onSuccess: () => {
           close();
           state.onSuccess?.();
-        },
+        }
       });
     }
   }, [state, deleteMutation, close]);
@@ -88,9 +88,9 @@ export function VendorActionProvider({ children }: { children: React.ReactNode }
     () => ({
       openDelete,
       openUpdateStatus,
-      close,
+      close
     }),
-    [openDelete, openUpdateStatus, close],
+    [openDelete, openUpdateStatus, close]
   );
 
   return (

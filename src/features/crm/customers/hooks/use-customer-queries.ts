@@ -8,12 +8,10 @@ import { updateCustomer, deleteCustomer, createCustomer } from '@/actions/crm/cu
 import type {
   UpdateCustomerInput,
   CreateCustomerInput,
-  DeleteCustomerInput,
+  DeleteCustomerInput
 } from '@/schemas/customers';
 import type { CustomerListItem } from '@/features/crm/customers/types';
 import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
-
-export { CUSTOMER_KEYS };
 
 export function useCustomers(searchParams: SearchParams) {
   const filtersKey = JSON.stringify(searchParams);
@@ -24,8 +22,9 @@ export function useCustomers(searchParams: SearchParams) {
       if (!result.success) {
         throw new Error(result.error);
       }
+
       return result.data;
-    },
+    }
   });
 }
 
@@ -37,7 +36,7 @@ export function useActiveCustomers() {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -62,7 +61,7 @@ export function useCustomer(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -79,7 +78,7 @@ export function usePrefetchCustomer() {
         }
 
         return result.data;
-      },
+      }
     });
   };
 }
@@ -106,7 +105,7 @@ export function useCreateCustomer() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create customer');
-    },
+    }
   });
 }
 
@@ -147,9 +146,9 @@ export function useUpdateCustomer() {
             organizationId: newData.organizationId ?? null,
             organizationName: newData.organizationName ?? null,
             gender: newData.gender,
-            status: newData.status,
+            status: newData.status
           };
-        },
+        }
       );
 
       return { previousCustomer };
@@ -169,7 +168,7 @@ export function useUpdateCustomer() {
     },
     onSuccess: () => {
       toast.success('Customer updated successfully');
-    },
+    }
   });
 }
 
@@ -218,6 +217,6 @@ export function useDeleteCustomer() {
     },
     onSuccess: () => {
       toast.success('Customer deleted');
-    },
+    }
   });
 }

@@ -8,7 +8,7 @@ import { withTenantPermission } from '@/lib/action-auth';
 import type {
   RecipeGroupPagination,
   RecipeGroupWithDetails,
-  RecipeGroupListItem,
+  RecipeGroupListItem
 } from '@/features/finances/recipe-groups/types';
 
 const recipeGroupRepo = new RecipeGroupRepository(prisma);
@@ -23,14 +23,14 @@ export const getRecipeGroups = withTenantPermission<SearchParams, RecipeGroupPag
     try {
       const result = await recipeGroupRepo.searchRecipeGroups(
         searchParams as Record<string, string | string[]>,
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch recipe groups');
     }
-  },
+  }
 );
 
 /**
@@ -67,16 +67,16 @@ export const getRecipeGroupById = withTenantPermission<string, RecipeGroupWithDe
             id: item.recipe.id,
             name: item.recipe.name,
             totalRetailPrice: item.recipe.totalRetailPrice,
-            totalCost: item.recipe.totalCost,
-          },
-        })),
+            totalCost: item.recipe.totalCost
+          }
+        }))
       };
 
       return { success: true, data: result };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch recipe group');
     }
-  },
+  }
 );
 
 /**
@@ -92,5 +92,5 @@ export const getAllRecipeGroups = withTenantPermission<void, RecipeGroupListItem
     } catch (error) {
       return handleActionError(error, 'Failed to fetch recipe groups');
     }
-  },
+  }
 );

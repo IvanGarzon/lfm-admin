@@ -31,7 +31,7 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       disabled = false,
       ...props
     },
-    ref,
+    ref
   ) => {
     const [date, setDate] = React.useState<Date | undefined>(value);
 
@@ -47,7 +47,7 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       'September',
       'October',
       'November',
-      'December',
+      'December'
     ];
 
     const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
@@ -87,21 +87,21 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
             disabled={disabled}
             className={cn(
               'w-full justify-start text-left font-normal',
-              !date && 'text-muted-foreground',
+              !date && 'text-muted-foreground'
             )}
           >
-            <CalendarIcon className="h-4 w-4" />
+            <CalendarIcon className='h-4 w-4' />
             {date ? format(date, formatString) : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <Box className="flex justify-between p-2">
+        <PopoverContent className='w-auto p-0'>
+          <Box className='flex justify-between p-2'>
             <Select
               onValueChange={handleMonthChange}
               value={date ? months[getMonth(date)] : undefined}
             >
-              <SelectTrigger className="w-[110px]">
-                <SelectValue placeholder="Month" />
+              <SelectTrigger className='w-[110px]'>
+                <SelectValue placeholder='Month' />
               </SelectTrigger>
               <SelectContent>
                 {months.map((month) => (
@@ -115,8 +115,8 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
               onValueChange={handleYearChange}
               value={date ? getYear(date).toString() : undefined}
             >
-              <SelectTrigger className="w-[110px]">
-                <SelectValue placeholder="Year" />
+              <SelectTrigger className='w-[110px]'>
+                <SelectValue placeholder='Year' />
               </SelectTrigger>
               <SelectContent>
                 {years.map((year) => (
@@ -129,7 +129,7 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
           </Box>
 
           <Calendar
-            mode="single"
+            mode='single'
             selected={value}
             onSelect={handleSelect}
             month={date}
@@ -140,6 +140,6 @@ export const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
         </PopoverContent>
       </Popover>
     );
-  },
+  }
 );
 DatePicker.displayName = 'DatePicker';

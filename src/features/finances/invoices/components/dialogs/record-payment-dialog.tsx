@@ -18,7 +18,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -26,7 +26,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -51,7 +51,7 @@ const PAYMENT_METHODS = [
   { value: 'Debit Card', label: 'Debit Card' },
   { value: 'Check', label: 'Check' },
   { value: 'PayPal', label: 'PayPal' },
-  { value: 'Other', label: 'Other' },
+  { value: 'Other', label: 'Other' }
 ];
 
 export function RecordPaymentDialog({
@@ -62,7 +62,7 @@ export function RecordPaymentDialog({
   invoiceNumber,
   amountDue,
   invoiceTotal,
-  isPending = false,
+  isPending = false
 }: RecordPaymentDialogProps) {
   const form = useForm<RecordPaymentInput>({
     resolver: zodResolver(RecordPaymentSchema),
@@ -71,8 +71,8 @@ export function RecordPaymentDialog({
       amount: amountDue,
       paidDate: new Date(),
       paymentMethod: 'Bank Transfer',
-      notes: '',
-    },
+      notes: ''
+    }
   });
 
   // Sync form with amountDue when it changes (initial fetch completion)
@@ -107,19 +107,19 @@ export function RecordPaymentDialog({
     form.setValue('amount', roundedAmount, {
       shouldDirty: true,
       shouldTouch: true,
-      shouldValidate: true,
+      shouldValidate: true
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
             Record a payment for invoice <strong>{invoiceNumber}</strong>.
             <br />
-            <span className="flex items-center gap-4 mt-2">
+            <span className='flex items-center gap-4 mt-2'>
               <span>
                 Total: <strong>{formatCurrency({ number: invoiceTotal })}</strong>
               </span>
@@ -133,27 +133,27 @@ export function RecordPaymentDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            id="record-payment-form"
+            id='record-payment-form'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className='space-y-4'
           >
             <FieldGroup>
               <Controller
-                name="amount"
+                name='amount'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <Box className="flex items-center justify-between">
-                        <FieldLabel htmlFor="record-payment-form-amount">Amount</FieldLabel>
-                        <Box className="flex items-center gap-2">
+                      <Box className='flex items-center justify-between'>
+                        <FieldLabel htmlFor='record-payment-form-amount'>Amount</FieldLabel>
+                        <Box className='flex items-center gap-2'>
                           {[25, 50, 75, 100].map((percentage) => (
                             <Button
                               key={percentage}
-                              type="button"
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-xs"
+                              type='button'
+                              variant='link'
+                              size='sm'
+                              className='h-auto p-0 text-xs'
                               onClick={() => setPercentageAmount(percentage)}
                             >
                               {percentage}%
@@ -163,10 +163,10 @@ export function RecordPaymentDialog({
                       </Box>
                     </FieldContent>
                     <Input
-                      id="record-payment-form-amount"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
+                      id='record-payment-form-amount'
+                      type='number'
+                      step='0.01'
+                      placeholder='0.00'
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
@@ -178,30 +178,30 @@ export function RecordPaymentDialog({
 
             <FieldGroup>
               <Controller
-                name="paidDate"
+                name='paidDate'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="record-payment-form-paid-date">Payment Date</FieldLabel>
+                      <FieldLabel htmlFor='record-payment-form-paid-date'>Payment Date</FieldLabel>
                     </FieldContent>
 
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
+                          variant='outline'
                           className={cn(
                             'justify-start text-left font-normal',
-                            !field.value && 'text-muted-foreground',
+                            !field.value && 'text-muted-foreground'
                           )}
                         >
-                          <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                          <CalendarIcon className='h-4 w-4' aria-hidden='true' />
                           {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className='w-auto p-0' align='start'>
                         <Calendar
-                          mode="single"
+                          mode='single'
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
@@ -216,18 +216,18 @@ export function RecordPaymentDialog({
 
             <FieldGroup>
               <Controller
-                name="paymentMethod"
+                name='paymentMethod'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="record-payment-form-payment-method">
+                      <FieldLabel htmlFor='record-payment-form-payment-method'>
                         Payment Method
                       </FieldLabel>
                     </FieldContent>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select payment method" />
+                        <SelectValue placeholder='Select payment method' />
                       </SelectTrigger>
                       <SelectContent>
                         {PAYMENT_METHODS.map((method) => (
@@ -245,17 +245,17 @@ export function RecordPaymentDialog({
 
             <FieldGroup>
               <Controller
-                name="notes"
+                name='notes'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="record-payment-form-notes">Notes (Optional)</FieldLabel>
+                      <FieldLabel htmlFor='record-payment-form-notes'>Notes (Optional)</FieldLabel>
                     </FieldContent>
                     <Textarea
-                      id="record-payment-form-notes"
-                      placeholder="Additional notes about this payment..."
-                      className="resize-none"
+                      id='record-payment-form-notes'
+                      placeholder='Additional notes about this payment...'
+                      className='resize-none'
                       {...field}
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -265,10 +265,10 @@ export function RecordPaymentDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type='submit' disabled={isPending}>
                 {isPending ? 'Recording...' : 'Record Payment'}
               </Button>
             </DialogFooter>

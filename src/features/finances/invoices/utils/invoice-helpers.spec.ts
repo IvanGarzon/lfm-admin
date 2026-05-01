@@ -5,32 +5,32 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('@/env', () => ({
   env: {
     NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
-    NODE_ENV: 'test',
-  },
+    NODE_ENV: 'test'
+  }
 }));
 
 vi.mock('@/lib/utils', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/utils')>();
   return {
     ...actual,
-    absoluteUrl: (path: string) => `http://localhost:3000${path}`,
+    absoluteUrl: (path: string) => `http://localhost:3000${path}`
   };
 });
 
 vi.mock('@/templates/invoice-template', () => ({
-  InvoiceDocument: vi.fn(),
+  InvoiceDocument: vi.fn()
 }));
 
 vi.mock('@/templates/receipt-template', () => ({
-  ReceiptDocument: vi.fn(),
+  ReceiptDocument: vi.fn()
 }));
 
 vi.mock('@/lib/pdf', () => ({
-  generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test')),
+  generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test'))
 }));
 
 vi.mock('@/actions/tenant/queries', () => ({
-  getTenantBranding: vi.fn().mockResolvedValue(null),
+  getTenantBranding: vi.fn().mockResolvedValue(null)
 }));
 
 import {
@@ -45,7 +45,7 @@ import {
   getOverdueDays,
   needsReminder,
   getUrgency,
-  calculateContentHash,
+  calculateContentHash
 } from './invoice-helpers';
 
 import { addDays, subDays } from 'date-fns';
@@ -65,22 +65,19 @@ describe('invoice-helpers', () => {
   describe('Status Transitions', () => {
     it('allows same status transition', () => {
       expect(
-        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.DRAFT, InvoiceStatusSchema.enum.DRAFT),
+        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.DRAFT, InvoiceStatusSchema.enum.DRAFT)
       ).toBe(true);
     });
 
     it('allows valid transition from DRAFT to PENDING', () => {
       expect(
-        canTransitionInvoiceStatus(
-          InvoiceStatusSchema.enum.DRAFT,
-          InvoiceStatusSchema.enum.PENDING,
-        ),
+        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.DRAFT, InvoiceStatusSchema.enum.PENDING)
       ).toBe(true);
     });
 
     it('disallows invalid transition from PAID to DRAFT', () => {
       expect(
-        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.PAID, InvoiceStatusSchema.enum.DRAFT),
+        canTransitionInvoiceStatus(InvoiceStatusSchema.enum.PAID, InvoiceStatusSchema.enum.DRAFT)
       ).toBe(false);
     });
 
@@ -100,22 +97,22 @@ describe('invoice-helpers', () => {
       expect(() =>
         validateInvoiceStatusTransition(
           InvoiceStatusSchema.enum.PAID,
-          InvoiceStatusSchema.enum.PENDING,
-        ),
+          InvoiceStatusSchema.enum.PENDING
+        )
       ).toThrow(/terminal state/);
 
       expect(() =>
         validateInvoiceStatusTransition(
           InvoiceStatusSchema.enum.DRAFT,
-          InvoiceStatusSchema.enum.PAID,
-        ),
+          InvoiceStatusSchema.enum.PAID
+        )
       ).toThrow(/Invalid status transition/);
 
       expect(() =>
         validateInvoiceStatusTransition(
           InvoiceStatusSchema.enum.DRAFT,
-          InvoiceStatusSchema.enum.PENDING,
-        ),
+          InvoiceStatusSchema.enum.PENDING
+        )
       ).not.toThrow();
     });
   });
@@ -137,15 +134,15 @@ describe('invoice-helpers', () => {
 
       const overdueInvoice = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: pastDue,
+        dueDate: pastDue
       } as InvoiceListItem;
       const notOverdueInvoice = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: futureDue,
+        dueDate: futureDue
       } as InvoiceListItem;
       const paidInvoice = {
         status: InvoiceStatusSchema.enum.PAID,
-        dueDate: pastDue,
+        dueDate: pastDue
       } as InvoiceListItem;
 
       expect(isOverdue(overdueInvoice)).toBe(true);
@@ -164,15 +161,15 @@ describe('invoice-helpers', () => {
     it('determines if reminder is needed', () => {
       const overdueInvoice = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: subDays(new Date(), 1),
+        dueDate: subDays(new Date(), 1)
       } as InvoiceListItem;
       const soonDueInvoice = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: addDays(new Date(), 2),
+        dueDate: addDays(new Date(), 2)
       } as InvoiceListItem;
       const farDueInvoice = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: addDays(new Date(), 10),
+        dueDate: addDays(new Date(), 10)
       } as InvoiceListItem;
 
       expect(needsReminder(overdueInvoice)).toBe(true);
@@ -183,19 +180,19 @@ describe('invoice-helpers', () => {
     it('gets urgency levels', () => {
       const farDue = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: addDays(new Date(), 30),
+        dueDate: addDays(new Date(), 30)
       } as InvoiceListItem;
       const mediumDue = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: addDays(new Date(), 7),
+        dueDate: addDays(new Date(), 7)
       } as InvoiceListItem;
       const highDue = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: addDays(new Date(), 2),
+        dueDate: addDays(new Date(), 2)
       } as InvoiceListItem;
       const overdue = {
         status: InvoiceStatusSchema.enum.PENDING,
-        dueDate: subDays(new Date(), 1),
+        dueDate: subDays(new Date(), 1)
       } as InvoiceListItem;
 
       expect(getUrgency(farDue)).toBe('low');
@@ -217,7 +214,7 @@ describe('invoice-helpers', () => {
       items: [{ description: 'Item 1', quantity: 1, unitPrice: 100, total: 100 }],
       amountPaid: 0,
       amountDue: 110,
-      payments: [],
+      payments: []
     } as unknown as InvoiceWithDetails;
 
     it('generates a consistent hash', () => {

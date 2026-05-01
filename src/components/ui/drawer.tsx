@@ -45,12 +45,12 @@ const DrawerOverlay = React.forwardRef<
         'bg-black/30 dark:bg-black/60',
         // transition
         'data-[state=closed]:animate-hide data-[state=open]:animate-dialogOverlayShow',
-        className,
+        className
       )}
       {...props}
       style={{
         animationDuration: '400ms',
-        animationFillMode: 'backwards',
+        animationFillMode: 'backwards'
       }}
     />
   );
@@ -79,7 +79,7 @@ const DrawerContent = React.forwardRef<
           focusRing,
           // Fullscreen styles for non-mobile
           'w-full h-full max-w-none max-h-none sm:max-w-2xl sm:h-auto sm:right-2 sm:inset-y-2 sm:rounded-md',
-          className,
+          className
         )}
         {...props}
       />
@@ -94,22 +94,22 @@ const DrawerHeader = React.forwardRef<HTMLDivElement, React.ComponentPropsWithou
     return (
       <div
         ref={ref}
-        className="-mx-6 flex items-start justify-between gap-x-4 border-b border-border px-6 pb-4"
+        className='-mx-6 flex items-start justify-between gap-x-4 border-b border-border px-6 pb-4'
         {...props}
       >
         <div className={className ?? 'mt-1 flex flex-col gap-y-1'}>{children}</div>
         <DrawerPrimitives.Close asChild>
           <Button
-            variant="ghost"
-            className="aspect-square p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            variant='ghost'
+            className='aspect-square p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           >
-            <X className="size-5" aria-hidden="true" />
-            <span className="sr-only">Close</span>
+            <X className='size-5' aria-hidden='true' />
+            <span className='sr-only'>Close</span>
           </Button>
         </DrawerPrimitives.Close>
       </div>
     );
-  },
+  }
 );
 
 DrawerHeader.displayName = 'Drawer.Header';
@@ -125,7 +125,7 @@ const DrawerTitle = React.forwardRef<
       'text-base font-semibold',
       // text color
       'text-foreground',
-      className,
+      className
     )}
     {...props}
   />
@@ -136,7 +136,7 @@ DrawerTitle.displayName = 'DrawerTitle';
 const DrawerBody = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<'div'>>(
   ({ className, ...props }, ref) => {
     return <div ref={ref} className={clsx('flex-1 py-4', className)} {...props} />;
-  },
+  }
 );
 
 DrawerBody.displayName = 'Drawer.Body';
@@ -161,7 +161,7 @@ const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
     <div
       className={clsx(
         'flex flex-col-reverse border-t border-border pt-4 sm:flex-row sm:justify-end sm:space-x-2',
-        className,
+        className
       )}
       {...props}
     />
@@ -179,5 +179,5 @@ export {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
+  DrawerTrigger
 };

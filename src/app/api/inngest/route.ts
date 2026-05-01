@@ -39,5 +39,5 @@ function getFunctions() {
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: getFunctions(),
+  functions: getFunctions()
 });

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import {
   useDeleteProduct,
-  useUpdateProductStatus,
+  useUpdateProductStatus
 } from '@/features/inventory/products/hooks/use-products-queries';
 import { DeleteProductDialog } from '@/features/inventory/products/components/delete-product-dialog';
 import type { ProductStatus } from '@/prisma/client';
@@ -54,7 +54,7 @@ export function ProductActionProvider({ children }: { children: React.ReactNode 
     (id: string, status: ProductStatus, onSuccess?: () => void) => {
       setState({ type: 'UPDATE_STATUS', id, status, onSuccess });
     },
-    [],
+    []
   );
 
   // Close any open modal
@@ -69,7 +69,7 @@ export function ProductActionProvider({ children }: { children: React.ReactNode 
         onSuccess: () => {
           close();
           state.onSuccess?.();
-        },
+        }
       });
     }
   }, [state, deleteMutation, close]);
@@ -79,9 +79,9 @@ export function ProductActionProvider({ children }: { children: React.ReactNode 
     () => ({
       openDelete,
       openUpdateStatus,
-      close,
+      close
     }),
-    [openDelete, openUpdateStatus, close],
+    [openDelete, openUpdateStatus, close]
   );
 
   return (

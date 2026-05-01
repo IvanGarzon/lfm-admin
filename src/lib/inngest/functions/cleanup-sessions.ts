@@ -19,16 +19,16 @@ export const cleanupSessionsFunction = inngest.createFunction(
     name: 'Cleanup Inactive Sessions',
     retries: 3,
     timeouts: {
-      finish: '2m', // Max 2 minutes for batch deactivation
+      finish: '2m' // Max 2 minutes for batch deactivation
     },
     triggers: [
       { cron: '0 0 * * *' }, // Daily at midnight
-      { event: 'cleanup-sessions/manual' }, // Manual trigger
-    ],
+      { event: 'cleanup-sessions/manual' } // Manual trigger
+    ]
   },
   async ({ step }) => {
     logger.info('Inngest function triggered - cleanup inactive sessions', {
-      context: 'inngest-cleanup-sessions',
+      context: 'inngest-cleanup-sessions'
     });
 
     const deactivatedCount = await step.run('deactivate-inactive-sessions', async () => {
@@ -44,10 +44,10 @@ export const cleanupSessionsFunction = inngest.createFunction(
       context: 'inngest-cleanup-sessions',
       metadata: {
         deactivatedCount,
-        thresholdDays: INACTIVITY_THRESHOLD_DAYS,
-      },
+        thresholdDays: INACTIVITY_THRESHOLD_DAYS
+      }
     });
 
     return { success: true, deactivatedCount };
-  },
+  }
 );

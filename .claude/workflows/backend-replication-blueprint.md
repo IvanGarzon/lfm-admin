@@ -331,7 +331,7 @@ Prisma.QueryMode.insensitive
 return {
   ...entity,
   amount: Number(entity.amount),
-  gst: Number(entity.gst),
+  gst: Number(entity.gst)
 };
 ```
 
@@ -447,7 +447,7 @@ try {
 return handleActionError(error, 'Failed to {operation}', {
   action: '{actionName}',
   userId: session.user.id,
-  entityId: data.id,
+  entityId: data.id
 });
 ```
 
@@ -501,20 +501,20 @@ logger.info('Payment recorded', {
   context: 'recordPayment',
   metadata: {
     invoiceId: invoice.id,
-    amount: amount.toString(),
-  },
+    amount: amount.toString()
+  }
 });
 
 // Warning
 logger.warn('Receipt number missing, generating now', {
   context: 'sendReceipt',
-  metadata: { invoiceId: id },
+  metadata: { invoiceId: id }
 });
 
 // Error with exception
 logger.error('Failed to queue email', err, {
   context: 'sendReminder',
-  metadata: { invoiceId: invoice.id },
+  metadata: { invoiceId: invoice.id }
 });
 ```
 

@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Form } from '@/components/ui/form';
@@ -33,14 +33,14 @@ export function CancelInvoiceDialog({
   onConfirm,
   invoiceId,
   invoiceNumber,
-  isPending = false,
+  isPending = false
 }: CancelInvoiceDialogProps) {
   const form = useForm<CancelInvoiceInput>({
     resolver: zodResolver(CancelInvoiceSchema),
     defaultValues: {
       id: invoiceId,
-      cancelReason: '',
-    },
+      cancelReason: ''
+    }
   });
 
   const handleSubmit = useCallback(
@@ -49,7 +49,7 @@ export function CancelInvoiceDialog({
       form.reset();
       onOpenChange(false);
     },
-    [onConfirm, form, onOpenChange],
+    [onConfirm, form, onOpenChange]
   );
 
   const handleCancel = useCallback(() => {
@@ -61,7 +61,7 @@ export function CancelInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <DialogTitle>Cancel Invoice</DialogTitle>
           <DialogDescription>
@@ -72,32 +72,32 @@ export function CancelInvoiceDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            id="cancel-invoice-form"
+            id='cancel-invoice-form'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className='space-y-4'
           >
             <FieldGroup>
               <Controller
-                name="cancelReason"
+                name='cancelReason'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="cancel-invoice-form-cancelled-reason">
+                      <FieldLabel htmlFor='cancel-invoice-form-cancelled-reason'>
                         Cancellation Reason
                       </FieldLabel>
                     </FieldContent>
 
                     <Textarea
-                      id="cancel-invoice-form-cancelled-reason"
-                      placeholder="Please provide a reason for cancelling this invoice"
-                      className="resize-none"
+                      id='cancel-invoice-form-cancelled-reason'
+                      placeholder='Please provide a reason for cancelling this invoice'
+                      className='resize-none'
                       rows={4}
                       maxLength={500}
                       {...field}
                     />
 
-                    <p className="text-xs text-muted-foreground">
+                    <p className='text-xs text-muted-foreground'>
                       {cancelReason?.length || 0}/500 characters
                     </p>
 
@@ -108,10 +108,10 @@ export function CancelInvoiceDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Go Back
               </Button>
-              <Button type="submit" variant="destructive" disabled={isPending}>
+              <Button type='submit' variant='destructive' disabled={isPending}>
                 {isPending ? 'Cancelling...' : 'Cancel Invoice'}
               </Button>
             </DialogFooter>

@@ -17,8 +17,8 @@ function getEmailRecipient(originalRecipient: string): string {
       context: 'quote-email-service',
       metadata: {
         originalRecipient,
-        testRecipient: env.EMAIL_TEST_RECIPIENT,
-      },
+        testRecipient: env.EMAIL_TEST_RECIPIENT
+      }
     });
 
     return env.EMAIL_TEST_RECIPIENT;
@@ -33,7 +33,7 @@ function getEmailRecipient(originalRecipient: string): string {
 export async function processQuoteEmail(
   quoteId: string,
   type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup',
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const quote = await quoteRepository.findByIdWithDetails(quoteId, tenantId);
 
@@ -63,7 +63,7 @@ export async function processQuoteEmail(
  */
 async function processSentNotification(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
@@ -71,9 +71,9 @@ async function processSentNotification(
   const [{ pdfBuffer, pdfUrl, pdfFilename }, branding] = await Promise.all([
     getOrGenerateQuotePdf(quote, {
       context: 'inngest_sent_notification',
-      skipDownload: false,
+      skipDownload: false
     }),
-    getTenantBrandingById(tenantId),
+    getTenantBrandingById(tenantId)
   ]);
 
   const tenantName = branding?.name ?? '';
@@ -85,7 +85,7 @@ async function processSentNotification(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -94,9 +94,9 @@ async function processSentNotification(
     template: 'quote',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Sent notification email sent', {
@@ -104,8 +104,8 @@ async function processSentNotification(
     metadata: {
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -116,21 +116,21 @@ async function processSentNotification(
  */
 async function processReminder(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
   const daysUntilExpiry = Math.max(
     0,
-    Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   );
 
   const [{ pdfBuffer, pdfUrl, pdfFilename }] = await Promise.all([
     getOrGenerateQuotePdf(quote, {
       context: 'inngest_reminder',
-      skipDownload: false,
-    }),
+      skipDownload: false
+    })
   ]);
 
   const recipient = getEmailRecipient(quote.customer.email);
@@ -141,7 +141,7 @@ async function processReminder(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -150,9 +150,9 @@ async function processReminder(
     template: 'quote',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Reminder email sent', {
@@ -161,8 +161,8 @@ async function processReminder(
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
       daysUntilExpiry,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -173,14 +173,14 @@ async function processReminder(
  */
 async function processAccepted(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_accepted',
-    skipDownload: false,
+    skipDownload: false
   });
 
   const recipient = getEmailRecipient(quote.customer.email);
@@ -191,7 +191,7 @@ async function processAccepted(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -200,9 +200,9 @@ async function processAccepted(
     template: 'quote',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Accepted confirmation email sent', {
@@ -210,8 +210,8 @@ async function processAccepted(
     metadata: {
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -222,14 +222,14 @@ async function processAccepted(
  */
 async function processRejected(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_rejected',
-    skipDownload: false,
+    skipDownload: false
   });
 
   const recipient = getEmailRecipient(quote.customer.email);
@@ -240,7 +240,7 @@ async function processRejected(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -249,9 +249,9 @@ async function processRejected(
     template: 'quote',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Rejected notification email sent', {
@@ -259,8 +259,8 @@ async function processRejected(
     metadata: {
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -271,14 +271,14 @@ async function processRejected(
  */
 async function processExpired(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
 
   const { pdfUrl } = await getOrGenerateQuotePdf(quote, {
     context: 'inngest_expired',
-    skipDownload: true,
+    skipDownload: true
   });
 
   const recipient = getEmailRecipient(quote.customer.email);
@@ -289,7 +289,7 @@ async function processExpired(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -298,9 +298,9 @@ async function processExpired(
     template: 'quote',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: [],
+    attachments: []
   });
 
   logger.info('Expired notification email sent', {
@@ -308,8 +308,8 @@ async function processExpired(
     metadata: {
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -320,7 +320,7 @@ async function processExpired(
  */
 async function processFollowUp(
   quote: QuoteWithDetails,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateQuotePdf } =
     await import('@/features/finances/quotes/services/quote-pdf.service');
@@ -328,9 +328,9 @@ async function processFollowUp(
   const [{ pdfBuffer, pdfUrl, pdfFilename }, branding] = await Promise.all([
     getOrGenerateQuotePdf(quote, {
       context: 'inngest_followup',
-      skipDownload: false,
+      skipDownload: false
     }),
-    getTenantBrandingById(tenantId),
+    getTenantBrandingById(tenantId)
   ]);
 
   const tenantName = branding?.name ?? '';
@@ -342,7 +342,7 @@ async function processFollowUp(
     currency: quote.currency,
     issuedDate: quote.issuedDate,
     validUntil: quote.validUntil,
-    itemCount: quote.items.length,
+    itemCount: quote.items.length
   };
 
   const result = await sendEmailNotification({
@@ -351,9 +351,9 @@ async function processFollowUp(
     template: 'quote-followup',
     props: {
       quoteData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Follow-up email sent', {
@@ -361,8 +361,8 @@ async function processFollowUp(
     metadata: {
       quoteId: quote.id,
       quoteNumber: quote.quoteNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };

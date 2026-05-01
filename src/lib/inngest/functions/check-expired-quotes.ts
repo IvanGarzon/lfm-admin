@@ -16,16 +16,16 @@ export const checkExpiredQuotesFunction = inngest.createFunction(
     name: 'Check and Mark Expired Quotes',
     retries: 3,
     timeouts: {
-      finish: '2m', // Max 2 minutes for batch update
+      finish: '2m' // Max 2 minutes for batch update
     },
     triggers: [
       { cron: '0 0 * * *' }, // Daily at midnight
-      { event: 'check-expired-quotes/manual' }, // Manual trigger
-    ],
+      { event: 'check-expired-quotes/manual' } // Manual trigger
+    ]
   },
   async ({ step }) => {
     logger.info('Inngest function triggered - check expired quotes', {
-      context: 'inngest-check-expired-quotes',
+      context: 'inngest-check-expired-quotes'
     });
 
     // Check and expire quotes that are past their validUntil date
@@ -42,10 +42,10 @@ export const checkExpiredQuotesFunction = inngest.createFunction(
     logger.info('Expired quotes check completed', {
       context: 'inngest-check-expired-quotes',
       metadata: {
-        expiredCount: result?.count || 0,
-      },
+        expiredCount: result?.count || 0
+      }
     });
 
     return { success: true, expiredCount: result?.count || 0 };
-  },
+  }
 );

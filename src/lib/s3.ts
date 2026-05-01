@@ -4,7 +4,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
-  PutObjectCommandInput,
+  PutObjectCommandInput
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env';
@@ -29,14 +29,14 @@ export const s3Client = new S3Client({
   region: AWS_REGION,
   credentials: {
     accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY
   },
   // LocalStack configuration
   ...(isLocalStack &&
     AWS_ENDPOINT_URL && {
       endpoint: AWS_ENDPOINT_URL,
-      forcePathStyle: true, // Required for LocalStack
-    }),
+      forcePathStyle: true // Required for LocalStack
+    })
 });
 
 /**
@@ -53,7 +53,7 @@ export function generateS3Key(
   resourceId: string,
   fileName: string,
   subPath?: string,
-  useTimestamp: boolean = true,
+  useTimestamp: boolean = true
 ): string {
   const timestamp = Date.now();
   const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -97,7 +97,7 @@ export async function uploadFileToS3(params: {
     subPath,
     allowedMimeTypes = ALLOWED_MIME_TYPES,
     metadata = {},
-    useTimestamp = true,
+    useTimestamp = true
   } = params;
 
   // Validate file size
@@ -122,8 +122,8 @@ export async function uploadFileToS3(params: {
       resourceId,
       originalFileName: fileName,
       uploadedAt: new Date().toISOString(),
-      ...metadata,
-    },
+      ...metadata
+    }
   };
 
   try {
@@ -146,7 +146,7 @@ export async function deleteFileFromS3(s3Key: string): Promise<void> {
   try {
     const command = new DeleteObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: s3Key,
+      Key: s3Key
     });
     await s3Client.send(command);
   } catch (error) {
@@ -161,7 +161,7 @@ export async function deleteFileFromS3(s3Key: string): Promise<void> {
 export async function getSignedDownloadUrl(
   s3Key: string,
   expiresIn: number = 24 * 60 * 60, // 24 hours in seconds
-  filename?: string,
+  filename?: string
 ): Promise<string> {
   try {
     const command = new GetObjectCommand({
@@ -169,8 +169,8 @@ export async function getSignedDownloadUrl(
       Key: s3Key,
       // Force download with Content-Disposition header
       ...(filename && {
-        ResponseContentDisposition: `attachment; filename="${filename}"`,
-      }),
+        ResponseContentDisposition: `attachment; filename="${filename}"`
+      })
     });
 
     const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
@@ -188,7 +188,7 @@ export async function fileExistsInS3(s3Key: string): Promise<boolean> {
   try {
     const command = new HeadObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: s3Key,
+      Key: s3Key
     });
     await s3Client.send(command);
     return true;
@@ -208,14 +208,14 @@ export async function getFileMetadata(s3Key: string): Promise<{
   try {
     const command = new HeadObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: s3Key,
+      Key: s3Key
     });
     const response = await s3Client.send(command);
 
     return {
       size: response.ContentLength || 0,
       contentType: response.ContentType || 'application/octet-stream',
-      lastModified: response.LastModified || new Date(),
+      lastModified: response.LastModified || new Date()
     };
   } catch (error) {
     console.error('Error getting file metadata:', error);
@@ -230,7 +230,7 @@ export async function downloadFileFromS3(s3Key: string): Promise<Buffer> {
   try {
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: s3Key,
+      Key: s3Key
     });
 
     const response = await s3Client.send(command);

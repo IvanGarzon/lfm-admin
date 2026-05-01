@@ -12,7 +12,7 @@ import type { EmployeeListItem } from '@/features/staff/employees/types';
  * Creates valid employee input data for create mutations.
  */
 export function createEmployeeInput(
-  overrides: Partial<CreateEmployeeInput> = {},
+  overrides: Partial<CreateEmployeeInput> = {}
 ): CreateEmployeeInput {
   return {
     firstName: 'Jane',
@@ -24,7 +24,7 @@ export function createEmployeeInput(
     gender: 'FEMALE',
     dob: new Date('1990-06-15'),
     avatarUrl: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -32,7 +32,7 @@ export function createEmployeeInput(
  * Creates a mock employee list item as returned by searchEmployees or findEmployeeById.
  */
 export function createEmployeeListItem(
-  overrides: Partial<EmployeeListItem> = {},
+  overrides: Partial<EmployeeListItem> = {}
 ): EmployeeListItem {
   return {
     id: testIds.employee(),
@@ -48,6 +48,6 @@ export function createEmployeeListItem(
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     deletedAt: null,
-    ...overrides,
+    ...overrides
   };
 }

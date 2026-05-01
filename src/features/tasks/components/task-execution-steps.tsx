@@ -21,10 +21,10 @@ export function TaskExecutionSteps({ steps }: TaskExecutionStepsProps) {
 
   return (
     <Box>
-      <p className="text-sm text-muted-foreground mb-1">Steps:</p>
-      <div className="space-y-1">
+      <p className='text-sm text-muted-foreground mb-1'>Steps:</p>
+      <div className='space-y-1'>
         {Array.from(steps).map((step: unknown, idx: number) => (
-          <div key={idx} className="text-xs bg-muted p-2 rounded">
+          <div key={idx} className='text-xs bg-muted p-2 rounded'>
             {typeof step === 'string' ? step : safeStringify(step)}
           </div>
         ))}

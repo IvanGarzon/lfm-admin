@@ -24,11 +24,11 @@ export class ScheduledTaskRepository {
       where: {
         ...(filters?.category && { category: filters.category }),
         ...(filters?.isEnabled !== undefined && { isEnabled: filters.isEnabled }),
-        ...(filters?.scheduleType && { scheduleType: filters.scheduleType }),
+        ...(filters?.scheduleType && { scheduleType: filters.scheduleType })
       },
       orderBy: {
-        category: 'asc',
-      },
+        category: 'asc'
+      }
     });
   }
 
@@ -39,7 +39,7 @@ export class ScheduledTaskRepository {
    */
   async findById(id: string): Promise<ScheduledTask | null> {
     return this.prisma.scheduledTask.findUnique({
-      where: { id },
+      where: { id }
     });
   }
 
@@ -51,7 +51,7 @@ export class ScheduledTaskRepository {
    */
   async findByFunctionId(functionId: string): Promise<ScheduledTask | null> {
     return this.prisma.scheduledTask.findUnique({
-      where: { functionId },
+      where: { functionId }
     });
   }
 
@@ -90,7 +90,7 @@ export class ScheduledTaskRepository {
         timeout: data.timeout,
         metadata: data.metadata,
         codeVersion: data.codeVersion,
-        lastSyncedAt: new Date(),
+        lastSyncedAt: new Date()
       },
       update: {
         functionName: data.functionName,
@@ -104,8 +104,8 @@ export class ScheduledTaskRepository {
         timeout: data.timeout,
         metadata: data.metadata,
         codeVersion: data.codeVersion,
-        lastSyncedAt: new Date(),
-      },
+        lastSyncedAt: new Date()
+      }
     });
   }
 
@@ -124,11 +124,11 @@ export class ScheduledTaskRepository {
       concurrencyLimit?: number;
       timeout?: number;
       metadata?: any;
-    },
+    }
   ): Promise<ScheduledTask> {
     return this.prisma.scheduledTask.update({
       where: { id },
-      data,
+      data
     });
   }
 
@@ -141,7 +141,7 @@ export class ScheduledTaskRepository {
   async setEnabled(id: string, isEnabled: boolean): Promise<ScheduledTask> {
     return this.prisma.scheduledTask.update({
       where: { id },
-      data: { isEnabled },
+      data: { isEnabled }
     });
   }
 
@@ -167,7 +167,7 @@ export class ScheduledTaskRepository {
       where: { id },
       include: {
         _count: {
-          select: { executions: true },
+          select: { executions: true }
         },
         executions: {
           take: 1,
@@ -176,10 +176,10 @@ export class ScheduledTaskRepository {
             id: true,
             status: true,
             startedAt: true,
-            completedAt: true,
-          },
-        },
-      },
+            completedAt: true
+          }
+        }
+      }
     });
 
     if (!task) {
@@ -190,7 +190,7 @@ export class ScheduledTaskRepository {
 
     return {
       ...taskData,
-      lastExecution: executions[0] || null,
+      lastExecution: executions[0] || null
     };
   }
 
@@ -201,7 +201,7 @@ export class ScheduledTaskRepository {
    */
   async delete(id: string): Promise<ScheduledTask> {
     return this.prisma.scheduledTask.delete({
-      where: { id },
+      where: { id }
     });
   }
 
@@ -212,7 +212,7 @@ export class ScheduledTaskRepository {
   async countByCategory(): Promise<Record<TaskCategory, number>> {
     const counts = await this.prisma.scheduledTask.groupBy({
       by: ['category'],
-      _count: true,
+      _count: true
     });
 
     const result = {} as Record<TaskCategory, number>;
@@ -231,7 +231,7 @@ export class ScheduledTaskRepository {
   async findAllEnabled(): Promise<ScheduledTask[]> {
     return this.prisma.scheduledTask.findMany({
       where: { isEnabled: true },
-      orderBy: { category: 'asc' },
+      orderBy: { category: 'asc' }
     });
   }
 
@@ -266,11 +266,11 @@ export class ScheduledTaskRepository {
       where: {
         ...(filters?.category && { category: filters.category }),
         ...(filters?.isEnabled !== undefined && { isEnabled: filters.isEnabled }),
-        ...(filters?.scheduleType && { scheduleType: filters.scheduleType }),
+        ...(filters?.scheduleType && { scheduleType: filters.scheduleType })
       },
       include: {
         _count: {
-          select: { executions: true },
+          select: { executions: true }
         },
         executions: {
           take: 1,
@@ -285,21 +285,21 @@ export class ScheduledTaskRepository {
               select: {
                 firstName: true,
                 lastName: true,
-                email: true,
-              },
-            },
-          },
-        },
+                email: true
+              }
+            }
+          }
+        }
       },
       orderBy: {
-        category: 'asc',
-      },
+        category: 'asc'
+      }
     });
 
     return tasks.map((task) => ({
       ...task,
       lastExecution: task.executions[0] || null,
-      executions: undefined as any,
+      executions: undefined as any
     }));
   }
 }

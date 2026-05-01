@@ -22,8 +22,8 @@ export async function seedSuperAdmin() {
         email,
         password: await bcrypt.hash(password, 10),
         role: 'SUPER_ADMIN',
-        tenantId: null, // Super admins are not linked to any tenant
-      },
+        tenantId: null // Super admins are not linked to any tenant
+      }
     });
     console.log(`   Created super admin user: ${email}`);
   } else {
@@ -33,8 +33,8 @@ export async function seedSuperAdmin() {
         email,
         role: 'SUPER_ADMIN',
         tenantId: null,
-        password: await bcrypt.hash(password, 10),
-      },
+        password: await bcrypt.hash(password, 10)
+      }
     });
     console.log(`   Updated super admin user: ${email}`);
   }

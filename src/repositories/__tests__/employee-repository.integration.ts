@@ -13,7 +13,7 @@ import { EmployeeRepository } from '../employee-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createEmployeeInput } from '@/lib/testing';
 
@@ -89,7 +89,7 @@ describe('EmployeeRepository (integration)', () => {
     it('returns an employee by email', async () => {
       await repository.createEmployee(
         createEmployeeInput({ email: 'unique@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findEmployeeByEmail('unique@example.com', tenantId);
@@ -107,7 +107,7 @@ describe('EmployeeRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Email Isolation Tenant' });
       await repository.createEmployee(
         createEmployeeInput({ email: 'shared@example.com' }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.findEmployeeByEmail('shared@example.com', tenantId);
@@ -132,16 +132,16 @@ describe('EmployeeRepository (integration)', () => {
     it('filters by name search term', async () => {
       await repository.createEmployee(
         createEmployeeInput({ firstName: 'Alice', email: 'alice@example.com' }),
-        tenantId,
+        tenantId
       );
       await repository.createEmployee(
         createEmployeeInput({ firstName: 'Bob', email: 'bob@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchEmployees(
         { search: 'alice', page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -151,16 +151,16 @@ describe('EmployeeRepository (integration)', () => {
     it('filters by status', async () => {
       await repository.createEmployee(
         createEmployeeInput({ status: EmployeeStatus.ACTIVE, email: 'active@example.com' }),
-        tenantId,
+        tenantId
       );
       await repository.createEmployee(
         createEmployeeInput({ status: EmployeeStatus.INACTIVE, email: 'inactive@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchEmployees(
         { status: [EmployeeStatus.INACTIVE], page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -170,16 +170,16 @@ describe('EmployeeRepository (integration)', () => {
     it('filters by gender', async () => {
       await repository.createEmployee(
         createEmployeeInput({ gender: 'FEMALE', email: 'f@example.com' }),
-        tenantId,
+        tenantId
       );
       await repository.createEmployee(
         createEmployeeInput({ gender: 'MALE', email: 'm@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchEmployees(
         { gender: ['MALE'], page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -189,16 +189,16 @@ describe('EmployeeRepository (integration)', () => {
     it('filters by first letter (alphabet)', async () => {
       await repository.createEmployee(
         createEmployeeInput({ firstName: 'Alice', email: 'alice@example.com' }),
-        tenantId,
+        tenantId
       );
       await repository.createEmployee(
         createEmployeeInput({ firstName: 'Bob', email: 'bob@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchEmployees(
         { alphabet: 'B', page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -224,7 +224,7 @@ describe('EmployeeRepository (integration)', () => {
     it('updates employee fields and returns the updated employee', async () => {
       const { id } = await repository.createEmployee(
         createEmployeeInput({ firstName: 'Old', email: 'old@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updateEmployee(id, tenantId, {
@@ -236,7 +236,7 @@ describe('EmployeeRepository (integration)', () => {
         dob: new Date('1985-01-01'),
         rate: 50,
         status: EmployeeStatus.INACTIVE,
-        avatarUrl: null,
+        avatarUrl: null
       });
 
       expect(result!.firstName).toBe('New');
@@ -255,7 +255,7 @@ describe('EmployeeRepository (integration)', () => {
         dob: new Date('1990-01-01'),
         rate: 10,
         status: EmployeeStatus.ACTIVE,
-        avatarUrl: null,
+        avatarUrl: null
       });
 
       expect(result).toBeNull();
@@ -274,7 +274,7 @@ describe('EmployeeRepository (integration)', () => {
         dob: new Date('1990-01-01'),
         rate: 1,
         status: EmployeeStatus.ACTIVE,
-        avatarUrl: null,
+        avatarUrl: null
       });
 
       expect(result).toBeNull();
@@ -320,11 +320,11 @@ describe('EmployeeRepository (integration)', () => {
     it('returns only active employees for the tenant', async () => {
       await repository.createEmployee(
         createEmployeeInput({ status: EmployeeStatus.ACTIVE, email: 'active@example.com' }),
-        tenantId,
+        tenantId
       );
       await repository.createEmployee(
         createEmployeeInput({ status: EmployeeStatus.INACTIVE, email: 'inactive@example.com' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.getActiveEmployees(tenantId);

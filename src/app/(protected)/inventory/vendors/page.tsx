@@ -6,11 +6,11 @@ import { VendorsView } from '@/features/inventory/vendors/components/vendor-view
 
 export const metadata = constructMetadata({
   title: 'Vendors – lfm dashboard',
-  description: 'Manage your suppliers and vendors.',
+  description: 'Manage your suppliers and vendors.'
 });
 
 export default async function VendorsPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

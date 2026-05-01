@@ -11,7 +11,7 @@ import { formatFileSize } from '@/lib/file-constants';
 const FILE_KEYS = {
   all: ['files'] as const,
   lists: () => [...FILE_KEYS.all, 'list'] as const,
-  health: () => [...FILE_KEYS.all, 'health'] as const,
+  health: () => [...FILE_KEYS.all, 'health'] as const
 };
 
 /**
@@ -33,7 +33,7 @@ export function useFiles() {
       return result.data;
     },
     refetchOnWindowFocus: true,
-    staleTime: 10000,
+    staleTime: 10000
   });
 }
 
@@ -56,7 +56,7 @@ export function useStorageHealth() {
       return result.data;
     },
     enabled: false, // Only run when explicitly called
-    retry: false,
+    retry: false
   });
 }
 
@@ -86,14 +86,14 @@ export function useUploadFile() {
     onSuccess: (data, file) => {
       queryClient.invalidateQueries({ queryKey: FILE_KEYS.lists() });
       toast.success('File uploaded successfully', {
-        description: `${data.fileName} (${formatFileSize(data.fileSize)})`,
+        description: `${data.fileName} (${formatFileSize(data.fileSize)})`
       });
     },
     onError: (error: Error) => {
       toast.error('Upload failed', {
-        description: error.message || 'Unknown error',
+        description: error.message || 'Unknown error'
       });
-    },
+    }
   });
 }
 
@@ -109,7 +109,7 @@ export function useDeleteFile() {
   return useMutation({
     mutationFn: async (params: { s3Key: string; fileName: string }) => {
       const confirmed = window.confirm(
-        `Are you sure you want to delete "${params.fileName}"? This action cannot be undone.`,
+        `Are you sure you want to delete "${params.fileName}"? This action cannot be undone.`
       );
 
       if (!confirmed) {
@@ -127,16 +127,16 @@ export function useDeleteFile() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: FILE_KEYS.lists() });
       toast.success('File deleted', {
-        description: data.fileName,
+        description: data.fileName
       });
     },
     onError: (error: Error) => {
       if (error.message !== 'Delete cancelled') {
         toast.error('Delete failed', {
-          description: error.message || 'Unknown error',
+          description: error.message || 'Unknown error'
         });
       }
-    },
+    }
   });
 }
 
@@ -160,14 +160,14 @@ export function useDownloadFile() {
     onSuccess: (data) => {
       window.open(data.url, '_blank');
       toast.success('Download started', {
-        description: data.fileName,
+        description: data.fileName
       });
     },
     onError: (error: Error) => {
       toast.error('Download failed', {
-        description: error.message || 'Unknown error',
+        description: error.message || 'Unknown error'
       });
-    },
+    }
   });
 }
 
@@ -201,13 +201,13 @@ export function useUploadTestFile() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: FILE_KEYS.lists() });
       toast.success('Test file uploaded', {
-        description: `${data.fileName} (${formatFileSize(data.fileSize)})`,
+        description: `${data.fileName} (${formatFileSize(data.fileSize)})`
       });
     },
     onError: (error: Error) => {
       toast.error('Test upload failed', {
-        description: error.message || 'Unknown error',
+        description: error.message || 'Unknown error'
       });
-    },
+    }
   });
 }

@@ -30,7 +30,7 @@ const EXPENSE_CATEGORIES = [
   { desc: 'Insurance premium', vendor: false, min: 300, max: 600 },
   { desc: 'Equipment maintenance', vendor: false, min: 100, max: 500 },
   { desc: 'Professional development', vendor: false, min: 150, max: 400 },
-  { desc: 'Bank fees and charges', vendor: false, min: 20, max: 100 },
+  { desc: 'Bank fees and charges', vendor: false, min: 20, max: 100 }
 ];
 
 // -- Seed function -----------------------------------------------------------
@@ -53,13 +53,13 @@ export async function seedTransactions(options: SeedTransactionsOptions): Promis
     const vendors = await prisma.vendor.findMany({
       where: { tenantId: tenant.id },
       select: { id: true, name: true },
-      take: 10,
+      take: 10
     });
 
     const paidInvoices = await prisma.invoice.findMany({
       where: { tenantId: tenant.id, status: 'PAID', deletedAt: null },
       select: { id: true, amount: true, invoiceNumber: true },
-      take: 20,
+      take: 20
     });
 
     const transactions = [];
@@ -83,7 +83,7 @@ export async function seedTransactions(options: SeedTransactionsOptions): Promis
         referenceNumber: generateReferenceNumber(),
         referenceId: invoice?.id ?? null,
         invoiceId: invoice?.id ?? null,
-        vendorId: null,
+        vendorId: null
       });
     }
 
@@ -104,12 +104,12 @@ export async function seedTransactions(options: SeedTransactionsOptions): Promis
         payee: vendor?.name ?? faker.company.name(),
         status: faker.helpers.weightedArrayElement([
           { value: TransactionStatus.COMPLETED, weight: 0.9 },
-          { value: TransactionStatus.PENDING, weight: 0.1 },
+          { value: TransactionStatus.PENDING, weight: 0.1 }
         ]),
         referenceNumber: generateReferenceNumber(),
         referenceId: vendor?.id ?? null,
         invoiceId: null,
-        vendorId: vendor?.id ?? null,
+        vendorId: vendor?.id ?? null
       });
     }
 
@@ -143,7 +143,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedTransactions({ tenants: seededTenants });

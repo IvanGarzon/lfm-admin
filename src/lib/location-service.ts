@@ -20,7 +20,7 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
       city: '',
       timezone: '',
       latitude: 0,
-      longitude: 0,
+      longitude: 0
     };
   }
 
@@ -29,7 +29,7 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     const res = await fetch(`https://ipapi.co/${ip}/json/`, {
-      signal: controller.signal,
+      signal: controller.signal
     });
 
     clearTimeout(timeoutId);
@@ -37,7 +37,7 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
     if (!res.ok) {
       logger.warn('IP lookup failed', {
         context: 'getLocationFromIP',
-        metadata: { status: res.status, ip },
+        metadata: { status: res.status, ip }
       });
       return {};
     }
@@ -50,18 +50,18 @@ export async function getLocationFromIP(ip: string): Promise<LocationData> {
       city: data.city,
       timezone: data.timezone,
       latitude: data.latitude,
-      longitude: data.longitude,
+      longitude: data.longitude
     };
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       logger.warn('IP lookup timed out', {
         context: 'getLocationFromIP',
-        metadata: { ip },
+        metadata: { ip }
       });
     } else {
       logger.error('IP lookup failed', error, {
         context: 'getLocationFromIP',
-        metadata: { ip },
+        metadata: { ip }
       });
     }
     return {};
@@ -88,20 +88,20 @@ export async function updateSessionLocation(sessionToken: string, ip: string): P
           context: 'updateSessionLocation',
           metadata: {
             sessionToken,
-            ...location,
-          },
+            ...location
+          }
         });
       } else {
         logger.warn('Session not found for location update', {
           context: 'updateSessionLocation',
-          metadata: { sessionToken },
+          metadata: { sessionToken }
         });
       }
     }
   } catch (error) {
     logger.error('Failed to update session location', error, {
       context: 'updateSessionLocation',
-      metadata: { sessionToken, ip },
+      metadata: { sessionToken, ip }
     });
   }
 }

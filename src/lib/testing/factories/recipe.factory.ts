@@ -2,7 +2,7 @@ import { testIds } from '../id-generator';
 import type {
   RecipeListItem,
   RecipeWithDetails,
-  RecipeItemListItem,
+  RecipeItemListItem
 } from '@/features/finances/recipes/types';
 
 export function createRecipeResponse(overrides: Partial<RecipeListItem> = {}): RecipeListItem {
@@ -21,12 +21,12 @@ export function createRecipeResponse(overrides: Partial<RecipeListItem> = {}): R
     sellingPrice: 178.57,
     createdAt: new Date(),
     updatedAt: new Date(),
-    ...overrides,
+    ...overrides
   };
 }
 
 export function createRecipeItemResponse(
-  overrides: Partial<RecipeItemListItem> = {},
+  overrides: Partial<RecipeItemListItem> = {}
 ): RecipeItemListItem {
   return {
     id: testIds.recipeItem(),
@@ -39,7 +39,7 @@ export function createRecipeItemResponse(
     retailPrice: 3,
     retailLineTotal: 30,
     order: 0,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -49,6 +49,6 @@ export function createRecipeDetails(overrides: Partial<RecipeWithDetails> = {}):
     ...recipe,
     notes: 'Test notes',
     items: overrides.items ?? [createRecipeItemResponse({ recipeId: recipe.id })],
-    ...overrides,
+    ...overrides
   };
 }

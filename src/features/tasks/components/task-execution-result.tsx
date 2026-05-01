@@ -23,8 +23,8 @@ export function TaskExecutionResult({ result }: TaskExecutionResultProps) {
 
   return (
     <Box>
-      <p className="text-sm text-muted-foreground mb-1">Result:</p>
-      <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">{stringifiedResult}</pre>
+      <p className='text-sm text-muted-foreground mb-1'>Result:</p>
+      <pre className='text-xs bg-muted p-3 rounded-md overflow-x-auto'>{stringifiedResult}</pre>
     </Box>
   );
 }

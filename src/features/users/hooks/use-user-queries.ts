@@ -12,7 +12,7 @@ import {
   inviteUser,
   changePassword,
   sendPasswordResetEmail,
-  uploadUserAvatar,
+  uploadUserAvatar
 } from '@/actions/users/mutations';
 import type {
   UpdateUserInput,
@@ -20,7 +20,7 @@ import type {
   UpdateUserRoleInput,
   SoftDeleteUserInput,
   InviteUserInput,
-  ChangePasswordInput,
+  ChangePasswordInput
 } from '@/schemas/users';
 import type { UserDetail, UserPagination } from '@/features/users/types';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
@@ -35,7 +35,7 @@ export function useUsers(searchParams: SearchParams) {
         throw new Error(result.error);
       }
       return result.data;
-    },
+    }
   });
 }
 
@@ -59,7 +59,7 @@ export function useUser(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -95,7 +95,7 @@ export function useUpdateUser() {
           isTwoFactorEnabled: newData.isTwoFactorEnabled ?? old.isTwoFactorEnabled,
           username: newData.username ?? null,
           title: newData.title ?? null,
-          bio: newData.bio ?? null,
+          bio: newData.bio ?? null
         };
       });
 
@@ -113,7 +113,7 @@ export function useUpdateUser() {
     },
     onSuccess: () => {
       toast.success('User updated successfully');
-    },
+    }
   });
 }
 
@@ -136,11 +136,11 @@ export function useUpdateUserSecurity() {
         return {
           ...old,
           ...(data.isTwoFactorEnabled !== undefined && {
-            isTwoFactorEnabled: data.isTwoFactorEnabled,
+            isTwoFactorEnabled: data.isTwoFactorEnabled
           }),
           ...(data.loginNotificationsEnabled !== undefined && {
-            loginNotificationsEnabled: data.loginNotificationsEnabled,
-          }),
+            loginNotificationsEnabled: data.loginNotificationsEnabled
+          })
         };
       });
       return { previousUser };
@@ -156,7 +156,7 @@ export function useUpdateUserSecurity() {
     },
     onSuccess: () => {
       toast.success('Security settings updated');
-    },
+    }
   });
 }
 
@@ -196,7 +196,7 @@ export function useUpdateUserRole() {
     },
     onSuccess: () => {
       toast.success('Role updated successfully');
-    },
+    }
   });
 }
 
@@ -210,7 +210,7 @@ export function useUserRoleChanges(userId: string) {
       }
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -242,7 +242,7 @@ export function useInviteUser() {
     },
     onSuccess: () => {
       toast.success('Invitation sent');
-    },
+    }
   });
 }
 
@@ -284,7 +284,7 @@ export function useSoftDeleteUser() {
     },
     onSuccess: () => {
       toast.success('User removed');
-    },
+    }
   });
 }
 
@@ -301,7 +301,7 @@ export function usePrefetchTenantUser() {
         }
 
         return result.data;
-      },
+      }
     });
   };
 }
@@ -319,7 +319,7 @@ export function useChangePassword() {
     },
     onSuccess: () => {
       toast.success('Password updated successfully');
-    },
+    }
   });
 }
 
@@ -336,7 +336,7 @@ export function useSendPasswordResetEmail() {
     },
     onSuccess: () => {
       toast.success('Password reset email sent');
-    },
+    }
   });
 }
 
@@ -370,10 +370,10 @@ export function useUploadUserAvatar(userId: string) {
           return {
             ...old,
             items: old.items.map((item) =>
-              item.id === userId ? { ...item, avatarUrl: data.avatarUrl } : item,
-            ),
+              item.id === userId ? { ...item, avatarUrl: data.avatarUrl } : item
+            )
           };
-        },
+        }
       );
 
       toast.success('Avatar updated');
@@ -381,6 +381,6 @@ export function useUploadUserAvatar(userId: string) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(userId), exact: true });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
-    },
+    }
   });
 }

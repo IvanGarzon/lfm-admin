@@ -6,7 +6,7 @@ import {
   useMarkQuoteAsRejected,
   useMarkQuoteAsOnHold,
   useMarkQuoteAsCancelled,
-  useConvertQuoteToInvoice,
+  useConvertQuoteToInvoice
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { DeleteQuoteDialog } from '@/features/finances/quotes/components/dialogs/delete-quote-dialog';
 import { RejectQuoteDialog } from '@/features/finances/quotes/components/dialogs/reject-quote-dialog';
@@ -64,7 +64,7 @@ export function QuoteActionProvider({ children }: { children: React.ReactNode })
     (id: string, quoteNumber: string, gst: number, discount: number) => {
       setState({ type: 'CONVERT', id, quoteNumber, gst, discount });
     },
-    [],
+    []
   );
 
   const close = useCallback(() => {
@@ -74,46 +74,46 @@ export function QuoteActionProvider({ children }: { children: React.ReactNode })
   const handleConfirmDelete = useCallback(
     (quoteId: string) => {
       deleteQuote.mutate(quoteId, {
-        onSuccess: close,
+        onSuccess: close
       });
     },
-    [deleteQuote, close],
+    [deleteQuote, close]
   );
 
   const handleConfirmReject = useCallback(
     (data: { id: string; rejectReason: string }) => {
       markAsRejected.mutate(data, {
-        onSuccess: close,
+        onSuccess: close
       });
     },
-    [markAsRejected, close],
+    [markAsRejected, close]
   );
 
   const handleConfirmOnHold = useCallback(
     (data: { id: string; reason?: string }) => {
       markAsOnHold.mutate(data, {
-        onSuccess: close,
+        onSuccess: close
       });
     },
-    [markAsOnHold, close],
+    [markAsOnHold, close]
   );
 
   const handleConfirmCancel = useCallback(
     (data: { id: string; cancelReason?: string }) => {
       markAsCancelled.mutate(data, {
-        onSuccess: close,
+        onSuccess: close
       });
     },
-    [markAsCancelled, close],
+    [markAsCancelled, close]
   );
 
   const handleConfirmConvert = useCallback(
     (data: { id: string; dueDate: Date; gst: number; discount: number }) => {
       convertToInvoice.mutate(data, {
-        onSuccess: close,
+        onSuccess: close
       });
     },
-    [convertToInvoice, close],
+    [convertToInvoice, close]
   );
 
   const value = useMemo(
@@ -123,9 +123,9 @@ export function QuoteActionProvider({ children }: { children: React.ReactNode })
       openOnHold,
       openCancel,
       openConvert,
-      close,
+      close
     }),
-    [openDelete, openReject, openOnHold, openCancel, openConvert, close],
+    [openDelete, openReject, openOnHold, openCancel, openConvert, close]
   );
 
   return (

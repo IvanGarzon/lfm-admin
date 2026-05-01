@@ -40,7 +40,7 @@ export const INVOICE_CONFIG = {
    */
   URGENCY_CRITICAL_DAYS: 0, // Overdue or due today
   URGENCY_HIGH_DAYS: 3, // Due within 3 days
-  URGENCY_MEDIUM_DAYS: 7, // Due within 7 days
+  URGENCY_MEDIUM_DAYS: 7 // Due within 7 days
 } as const;
 
 /**

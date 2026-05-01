@@ -56,7 +56,7 @@ export function useTimeout(): UseTimeoutReturn {
       clear();
       timeoutRef.current = setTimeout(callback, delay);
     },
-    [clear],
+    [clear]
   );
 
   return { set, clear };
@@ -86,7 +86,7 @@ export function useTimeout(): UseTimeoutReturn {
 export function useTimeoutEffect(
   callback: () => void,
   delay: number | null,
-  deps: React.DependencyList = [],
+  deps: React.DependencyList = []
 ) {
   const savedCallback = useRef(callback);
 

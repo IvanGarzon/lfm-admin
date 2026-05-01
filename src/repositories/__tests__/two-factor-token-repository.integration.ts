@@ -10,7 +10,7 @@ import { TwoFactorTokenRepository } from '../two-factor-token-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createUserData } from '@/lib/testing';
 import crypto from 'node:crypto';
@@ -26,7 +26,7 @@ function hashCode(code: string): string {
 async function createTestUser(tenantId: string, email?: string) {
   return getTestPrisma().user.create({
     data: { ...createUserData({ email }), tenantId },
-    select: { id: true, email: true },
+    select: { id: true, email: true }
   });
 }
 
@@ -52,7 +52,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const result = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       expect(result.userId).toBe(userId);
@@ -67,7 +67,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const second = await repository.upsertToken({
         userId,
         hashedCode: hashCode('222222'),
-        expires,
+        expires
       });
 
       const db = getTestPrisma();
@@ -83,7 +83,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
         hashedCode: hashCode('123456'),
         expires,
         userAgent: 'Mozilla/5.0',
-        requestedIpAddress: '127.0.0.1',
+        requestedIpAddress: '127.0.0.1'
       });
 
       expect(result.userAgent).toBe('Mozilla/5.0');
@@ -99,7 +99,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const created = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       const found = await repository.findByChallengeToken(created.challengeToken);
@@ -121,7 +121,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.incrementAttempts(token.id);
@@ -138,7 +138,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.markUsed(token.id);
@@ -151,7 +151,7 @@ describe('TwoFactorTokenRepository (integration)', () => {
       const token = await repository.upsertToken({
         userId,
         hashedCode: hashCode('123456'),
-        expires,
+        expires
       });
 
       await repository.markUsed(token.id, '192.168.1.1');

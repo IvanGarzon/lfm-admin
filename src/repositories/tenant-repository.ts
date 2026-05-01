@@ -3,13 +3,13 @@ import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseReposito
 import type {
   CreateTenantInput,
   UpdateTenantInput,
-  UpdateTenantSettingsInput,
+  UpdateTenantSettingsInput
 } from '@/schemas/tenants';
 import type {
   TenantListItem,
   TenantWithSettings,
   TenantBranding,
-  TenantWithDetails,
+  TenantWithDetails
 } from '@/features/admin/tenants/types';
 
 export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<object>> {
@@ -43,8 +43,8 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
         name: true,
         status: true,
         createdAt: true,
-        _count: { select: { users: true } },
-      },
+        _count: { select: { users: true } }
+      }
     });
 
     return tenants.map((t) => ({
@@ -53,7 +53,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
       name: t.name,
       status: t.status,
       createdAt: t.createdAt,
-      userCount: t._count.users,
+      userCount: t._count.users
     }));
   }
 
@@ -97,10 +97,10 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
             city: true,
             state: true,
             postcode: true,
-            country: true,
-          },
-        },
-      },
+            country: true
+          }
+        }
+      }
     });
 
     if (!tenant) return null;
@@ -109,7 +109,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
       ...tenant,
       settings: tenant.settings
         ? { ...tenant.settings, state: tenant.settings.state ?? null }
-        : null,
+        : null
     };
   }
 
@@ -124,8 +124,8 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
       data: {
         name: data.name,
         slug: data.slug,
-        settings: { create: {} },
-      },
+        settings: { create: {} }
+      }
     });
   }
 
@@ -141,7 +141,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
         name: data.name,
         slug: data.slug,
         settings: {
-          create: data.settings ?? {},
+          create: data.settings ?? {}
         },
         users: data.users
           ? {
@@ -151,11 +151,11 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
                   lastName: u.lastName,
                   email: u.email,
                   password: u.hashedPassword,
-                  role: u.role,
-                })),
-              },
+                  role: u.role
+                }))
+              }
             }
-          : undefined,
+          : undefined
       },
       select: {
         id: true,
@@ -180,17 +180,17 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
             city: true,
             state: true,
             postcode: true,
-            country: true,
-          },
-        },
-      },
+            country: true
+          }
+        }
+      }
     });
 
     return {
       ...tenant,
       settings: tenant.settings
         ? { ...tenant.settings, state: tenant.settings.state ?? null }
-        : null,
+        : null
     };
   }
 
@@ -213,7 +213,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
     await this.prisma.tenantSettings.upsert({
       where: { tenantId },
       create: { tenantId, ...data },
-      update: data,
+      update: data
     });
   }
 
@@ -225,7 +225,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
   async suspendTenant(id: string): Promise<Tenant> {
     return this.prisma.tenant.update({
       where: { id },
-      data: { status: TenantStatus.SUSPENDED },
+      data: { status: TenantStatus.SUSPENDED }
     });
   }
 
@@ -237,7 +237,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
   async activateTenant(id: string): Promise<Tenant> {
     return this.prisma.tenant.update({
       where: { id },
-      data: { status: TenantStatus.ACTIVE },
+      data: { status: TenantStatus.ACTIVE }
     });
   }
 
@@ -276,10 +276,10 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
             city: true,
             state: true,
             postcode: true,
-            country: true,
-          },
-        },
-      },
+            country: true
+          }
+        }
+      }
     });
 
     if (!tenant) return null;
@@ -300,7 +300,7 @@ export class TenantRepository extends BaseRepository<Prisma.TenantGetPayload<obj
       city: s?.city ?? null,
       state: s?.state ?? null,
       postcode: s?.postcode ?? null,
-      country: s?.country ?? null,
+      country: s?.country ?? null
     };
   }
 }

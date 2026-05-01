@@ -9,10 +9,10 @@ export const checkExpiredQuotesTask: TaskDefinition = {
   schedule: {
     cron: '0 0 * * *', // Daily at midnight
     timezone: 'UTC',
-    enabled: true,
+    enabled: true
   },
   timeout: 300, // 5 minutes
   retries: 3,
   concurrencyLimit: 1,
-  inngestFunction: checkExpiredQuotesFunction,
+  inngestFunction: checkExpiredQuotesFunction
 };

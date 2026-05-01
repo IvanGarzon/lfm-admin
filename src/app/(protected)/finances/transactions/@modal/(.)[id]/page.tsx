@@ -7,12 +7,12 @@ import dynamic from 'next/dynamic';
 const TransactionDrawer = dynamic(
   () =>
     import('@/features/finances/transactions/components/transaction-drawer').then(
-      (mod) => mod.TransactionDrawer,
+      (mod) => mod.TransactionDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default function TransactionModal({ params }: { params: Promise<{ id: string }> }) {

@@ -12,7 +12,7 @@ import { TransactionRepository } from './transaction-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createTransactionInput } from '@/lib/testing';
 
@@ -39,7 +39,7 @@ describe('TransactionRepository (integration)', () => {
     // TODO: Create transactionCategory repository and use it here
     // Create a category so createTransaction can link to it
     const category = await getTestPrisma().transactionCategory.create({
-      data: { tenantId, name: 'Test Category', isActive: true },
+      data: { tenantId, name: 'Test Category', isActive: true }
     });
     categoryId = category.id;
   });
@@ -48,7 +48,7 @@ describe('TransactionRepository (integration)', () => {
     it('creates a transaction and returns it with details', async () => {
       const result = await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       expect(result.id).toBeDefined();
@@ -60,7 +60,7 @@ describe('TransactionRepository (integration)', () => {
     it('auto-generates a unique reference number', async () => {
       const [a, b] = await Promise.all([
         repository.createTransaction({ ...transactionInput, categoryIds: [categoryId] }, tenantId),
-        repository.createTransaction({ ...transactionInput, categoryIds: [categoryId] }, tenantId),
+        repository.createTransaction({ ...transactionInput, categoryIds: [categoryId] }, tenantId)
       ]);
 
       expect(a.referenceNumber).not.toBe(b.referenceNumber);
@@ -69,7 +69,7 @@ describe('TransactionRepository (integration)', () => {
     it('links categories when categoryIds are provided', async () => {
       const result = await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       expect(result.categories).toHaveLength(1);
@@ -88,7 +88,7 @@ describe('TransactionRepository (integration)', () => {
     it('returns a transaction with details when found', async () => {
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
       const result = await repository.findByIdWithDetails(created.id, tenantId);
 
@@ -106,7 +106,7 @@ describe('TransactionRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: undefined },
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.findByIdWithDetails(created.id, tenantId);
@@ -118,7 +118,7 @@ describe('TransactionRepository (integration)', () => {
     it('returns paginated transactions for the tenant', async () => {
       await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchAndPaginate({ page: 1, perPage: 10 }, tenantId);
@@ -131,11 +131,11 @@ describe('TransactionRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       await repository.createTransaction(
         { ...transactionInput, categoryIds: undefined },
-        otherTenantId,
+        otherTenantId
       );
       await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchAndPaginate({ page: 1, perPage: 10 }, tenantId);
@@ -146,16 +146,16 @@ describe('TransactionRepository (integration)', () => {
     it('filters by type', async () => {
       await repository.createTransaction(
         { ...transactionInput, type: 'INCOME', categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
       await repository.createTransaction(
         { ...transactionInput, type: 'EXPENSE', categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchAndPaginate(
         { page: 1, perPage: 10, type: ['INCOME'] },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((t) => t.type === 'INCOME')).toBe(true);
@@ -164,16 +164,16 @@ describe('TransactionRepository (integration)', () => {
     it('filters by search term across description and payee', async () => {
       await repository.createTransaction(
         { ...transactionInput, description: 'Unique payslip', categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
       await repository.createTransaction(
         { ...transactionInput, description: 'Office rent', categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchAndPaginate(
         { page: 1, perPage: 10, search: 'payslip' },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((t) => t.description === 'Unique payslip')).toBe(true);
@@ -184,12 +184,12 @@ describe('TransactionRepository (integration)', () => {
     it('updates fields and returns the updated record', async () => {
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
       const result = await repository.updateTransaction(created.id, tenantId, {
         ...transactionInput,
         categoryIds: [categoryId],
-        payee: 'Updated Payee',
+        payee: 'Updated Payee'
       });
 
       expect(result).not.toBeNull();
@@ -200,14 +200,14 @@ describe('TransactionRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: undefined },
-        otherTenantId,
+        otherTenantId
       );
 
       await expect(
         repository.updateTransaction(created.id, tenantId, {
           ...transactionInput,
-          categoryIds: [categoryId],
-        }),
+          categoryIds: [categoryId]
+        })
       ).rejects.toThrow();
     });
   });
@@ -216,7 +216,7 @@ describe('TransactionRepository (integration)', () => {
     it('deletes the transaction and returns its ID', async () => {
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: [categoryId] },
-        tenantId,
+        tenantId
       );
       const result = await repository.deleteTransaction(created.id, tenantId);
 
@@ -230,7 +230,7 @@ describe('TransactionRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       const created = await repository.createTransaction(
         { ...transactionInput, categoryIds: undefined },
-        otherTenantId,
+        otherTenantId
       );
 
       await expect(repository.deleteTransaction(created.id, tenantId)).rejects.toThrow();
@@ -271,7 +271,7 @@ describe('TransactionRepository (integration)', () => {
   describe('getActiveCategories', () => {
     it('returns only active categories for the tenant', async () => {
       await getTestPrisma().transactionCategory.create({
-        data: { tenantId, name: 'Inactive Category', isActive: false },
+        data: { tenantId, name: 'Inactive Category', isActive: false }
       });
 
       const result = await repository.getActiveCategories(tenantId);
@@ -283,7 +283,7 @@ describe('TransactionRepository (integration)', () => {
     it('does not return categories from other tenants', async () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       await getTestPrisma().transactionCategory.create({
-        data: { tenantId: otherTenantId, name: 'Other Category', isActive: true },
+        data: { tenantId: otherTenantId, name: 'Other Category', isActive: true }
       });
 
       const result = await repository.getActiveCategories(tenantId);

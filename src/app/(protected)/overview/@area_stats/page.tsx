@@ -3,7 +3,7 @@ import { delay } from '@/lib/utils';
 import { AreaGraphSkeleton } from '@/features/overview/components/area-graph-skeleton';
 
 const AreaGraph = dynamic(() => import('@/features/overview/components/area-graph'), {
-  loading: () => <AreaGraphSkeleton />,
+  loading: () => <AreaGraphSkeleton />
 });
 
 export default async function AreaStats() {

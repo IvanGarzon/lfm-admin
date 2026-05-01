@@ -16,12 +16,12 @@ function InvitationEmailContent({
   tenantName,
   role,
   acceptUrl,
-  expiresAt,
+  expiresAt
 }: InvitationEmailProps): React.ReactElement {
   const formattedExpiry = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(expiresAt));
 
   const formattedRole = role.charAt(0) + role.slice(1).toLowerCase();
@@ -72,7 +72,7 @@ InvitationEmail.PreviewProps = {
   tenantName: 'Las Flores Melbourne',
   role: 'MANAGER',
   acceptUrl: 'http://localhost:3000/invite/accept?token=example-token',
-  expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+  expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000)
 } satisfies InvitationEmailProps;
 
 export default InvitationEmail;

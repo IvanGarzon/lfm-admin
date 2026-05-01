@@ -38,9 +38,9 @@ class Logger {
         formatters: {
           level: (label) => {
             return { level: label };
-          },
+          }
         },
-        timestamp: pino.stdTimeFunctions.isoTime,
+        timestamp: pino.stdTimeFunctions.isoTime
       });
     }
   }
@@ -55,7 +55,7 @@ class Logger {
       this.pinoLogger?.debug({
         msg: message,
         context: options?.context,
-        ...options?.metadata,
+        ...options?.metadata
       });
     }
   }
@@ -70,7 +70,7 @@ class Logger {
       this.pinoLogger?.info({
         msg: message,
         context: options?.context,
-        ...options?.metadata,
+        ...options?.metadata
       });
     }
   }
@@ -85,7 +85,7 @@ class Logger {
       this.pinoLogger?.warn({
         msg: message,
         context: options?.context,
-        ...options?.metadata,
+        ...options?.metadata
       });
     }
   }
@@ -98,14 +98,14 @@ class Logger {
       console.error(
         `[ERROR]${options?.context ? ` [${options.context}]` : ''} ${message}`,
         error || '',
-        options?.metadata || '',
+        options?.metadata || ''
       );
     } else {
       this.pinoLogger?.error({
         msg: message,
         err: error,
         context: options?.context,
-        ...options?.metadata,
+        ...options?.metadata
       });
     }
   }
@@ -153,6 +153,6 @@ export function createLogger(context: string) {
     warn: (message: string, metadata?: Record<string, unknown>) =>
       logger.warn(message, { context, metadata }),
     error: (message: string, error?: unknown, metadata?: Record<string, unknown>) =>
-      logger.error(message, error, { context, metadata }),
+      logger.error(message, error, { context, metadata })
   };
 }

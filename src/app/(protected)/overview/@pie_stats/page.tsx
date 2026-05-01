@@ -3,7 +3,7 @@ import { delay } from '@/lib/utils';
 import { PieGraphSkeleton } from '@/features/overview/components/pie-graph-skeleton';
 
 const PieGraph = dynamic(() => import('@/features/overview/components/pie-graph'), {
-  loading: () => <PieGraphSkeleton />,
+  loading: () => <PieGraphSkeleton />
 });
 
 export default async function Stats() {

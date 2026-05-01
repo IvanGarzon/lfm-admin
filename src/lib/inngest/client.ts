@@ -14,7 +14,7 @@ import type {
   MarkOverdueInvoicesManualEvent,
   CheckExpiredQuotesManualEvent,
   QuoteExpiryReminderManualEvent,
-  CleanupSessionsManualEvent,
+  CleanupSessionsManualEvent
 } from './events';
 
 /**
@@ -37,7 +37,7 @@ export const inngest = new Inngest({
   isDev: env.NODE_ENV === 'development',
 
   // Middleware for task management
-  middleware: [TaskInterceptorMiddleware],
+  middleware: [TaskInterceptorMiddleware]
 });
 
 /**
@@ -52,19 +52,19 @@ export async function sendEmailEvent(data: EmailSendEvent['data'], options?: Sen
   return inngest.send({
     id: options?.id,
     name: 'email/send',
-    data,
+    data
   });
 }
 
 export async function sendManualTriggerEvent<T extends keyof InngestEvents>(
   eventName: T,
   data: InngestEvents[T]['data'],
-  options?: SendEventOptions,
+  options?: SendEventOptions
 ) {
   return inngest.send({
     id: options?.id,
     name: eventName,
-    data,
+    data
   });
 }
 
@@ -78,5 +78,5 @@ export type {
   MarkOverdueInvoicesManualEvent,
   CheckExpiredQuotesManualEvent,
   QuoteExpiryReminderManualEvent,
-  CleanupSessionsManualEvent,
+  CleanupSessionsManualEvent
 };

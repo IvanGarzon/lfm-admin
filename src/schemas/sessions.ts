@@ -22,30 +22,30 @@ export const CreateSessionSchema = z.object({
   latitude: z.number().optional().nullable(),
   longitude: z.number().optional().nullable(),
   deviceName: z.string().optional().nullable(),
-  lastActiveAt: z.date().optional(),
+  lastActiveAt: z.date().optional()
 });
 
 // -- Session Management Schemas ---------------------------------------------
 
 export const DeleteSessionSchema = z.object({
-  sessionId: z.string().min(1, 'Session ID is required'),
+  sessionId: z.string().min(1, 'Session ID is required')
 });
 
 export const DeleteSessionsSchema = z.object({
-  sessionIds: z.array(z.string()).min(1, 'Select at least one session'),
+  sessionIds: z.array(z.string()).min(1, 'Select at least one session')
 });
 
 export const DeleteOtherSessionsSchema = z.object({
-  currentSessionId: z.string().min(1, 'Current session ID is required'),
+  currentSessionId: z.string().min(1, 'Current session ID is required')
 });
 
 export const UpdateSessionNameSchema = z.object({
   sessionId: z.string().min(1, 'Session ID is required'),
-  deviceName: z.string().min(1, 'Device name is required'),
+  deviceName: z.string().min(1, 'Device name is required')
 });
 
 export const ExtendSessionSchema = z.object({
-  sessionId: z.string().min(1, 'Session ID is required'),
+  sessionId: z.string().min(1, 'Session ID is required')
 });
 
 // -- Type Exports -----------------------------------------------------------

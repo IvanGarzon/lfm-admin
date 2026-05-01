@@ -36,7 +36,7 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
     (id: string) => {
       router.push(`/finances/recipes/${id}`);
     },
-    [router],
+    [router]
   );
 
   const close = useCallback(() => {
@@ -52,7 +52,7 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
       onSuccess: () => {
         close();
         state?.onSuccess?.();
-      },
+      }
     });
   }, [state, deleteRecipe, close]);
 
@@ -60,9 +60,9 @@ export function RecipeActionProvider({ children }: { children: React.ReactNode }
     () => ({
       openDelete,
       openEdit,
-      close,
+      close
     }),
-    [openDelete, openEdit, close],
+    [openDelete, openEdit, close]
   );
 
   return (

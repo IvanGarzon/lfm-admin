@@ -13,7 +13,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
+  CommandSeparator
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
@@ -31,7 +31,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   column,
   title,
   options,
-  multiple,
+  multiple
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const [open, setOpen] = useState(false);
 
@@ -58,7 +58,7 @@ export function DataTableFacetedFilter<TData, TValue>({
         setOpen(false);
       }
     },
-    [column, multiple, selectedValues],
+    [column, multiple, selectedValues]
   );
 
   const onReset = useCallback(
@@ -66,36 +66,36 @@ export function DataTableFacetedFilter<TData, TValue>({
       event?.stopPropagation();
       column?.setFilterValue(undefined);
     },
-    [column],
+    [column]
   );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="border-dashed py-0 px-2">
+        <Button variant='outline' className='border-dashed py-0 px-2'>
           {selectedValues?.size > 0 ? (
             <Box
-              role="button"
+              role='button'
               aria-label={`Clear ${title} filter`}
               tabIndex={0}
               onClick={onReset}
-              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className='rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
             >
-              <XCircle className="h-4 w-4" />
+              <XCircle className='h-4 w-4' />
             </Box>
           ) : (
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className='h-4 w-4' />
           )}
           {title}
           {selectedValues?.size > 0 ? (
             <>
-              <Separator orientation="vertical" className="mx-2 h-4" />
-              <Badge variant="secondary" className="rounded-sm px-2 font-normal lg:hidden">
+              <Separator orientation='vertical' className='mx-2 h-4' />
+              <Badge variant='secondary' className='rounded-sm px-2 font-normal lg:hidden'>
                 {selectedValues.size}
               </Badge>
-              <Box className="hidden items-center gap-1 lg:flex">
+              <Box className='hidden items-center gap-1 lg:flex'>
                 {selectedValues.size > 2 ? (
-                  <Badge variant="secondary" className="rounded-sm px-2 font-normal">
+                  <Badge variant='secondary' className='rounded-sm px-2 font-normal'>
                     {selectedValues.size} selected
                   </Badge>
                 ) : (
@@ -103,9 +103,9 @@ export function DataTableFacetedFilter<TData, TValue>({
                     .filter((option) => selectedValues.has(option.value))
                     .map((option) => (
                       <Badge
-                        variant="secondary"
+                        variant='secondary'
                         key={option.value}
-                        className="rounded-sm px-2 font-normal"
+                        className='rounded-sm px-2 font-normal'
                       >
                         {option.label}
                       </Badge>
@@ -116,12 +116,12 @@ export function DataTableFacetedFilter<TData, TValue>({
           ) : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[12.5rem] p-0" align="start">
+      <PopoverContent className='w-[12.5rem] p-0' align='start'>
         <Command>
           <CommandInput placeholder={title} />
-          <CommandList className="max-h-full">
+          <CommandList className='max-h-full'>
             <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup className="max-h-[18.75rem] overflow-y-auto overflow-x-hidden">
+            <CommandGroup className='max-h-[18.75rem] overflow-y-auto overflow-x-hidden'>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
 
@@ -132,20 +132,20 @@ export function DataTableFacetedFilter<TData, TValue>({
                         'mr-2 flex size-4 items-center justify-center rounded-sm border border-primary',
                         isSelected
                           ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50 [&_svg]:invisible',
+                          : 'opacity-50 [&_svg]:invisible'
                       )}
                     >
-                      <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                      <CheckIcon className='h-4 w-4' aria-hidden='true' />
                     </Box>
                     {option.icon ? (
                       <option.icon
-                        className="mr-2 h-4 w-4 text-muted-foreground"
-                        aria-hidden="true"
+                        className='mr-2 h-4 w-4 text-muted-foreground'
+                        aria-hidden='true'
                       />
                     ) : null}
-                    <span className="truncate">{option.label}</span>
+                    <span className='truncate'>{option.label}</span>
                     {option.count ? (
-                      <span className="ml-auto font-mono text-xs">{option.count}</span>
+                      <span className='ml-auto font-mono text-xs'>{option.count}</span>
                     ) : null}
                   </CommandItem>
                 );
@@ -155,7 +155,7 @@ export function DataTableFacetedFilter<TData, TValue>({
               <>
                 <CommandSeparator />
                 <CommandGroup>
-                  <CommandItem onSelect={() => onReset()} className="justify-center text-center">
+                  <CommandItem onSelect={() => onReset()} className='justify-center text-center'>
                     Clear filters
                   </CommandItem>
                 </CommandGroup>

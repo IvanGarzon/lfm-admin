@@ -10,7 +10,7 @@ import {
   CreateRecipeSchema,
   UpdateRecipeSchema,
   type CreateRecipeInput,
-  type UpdateRecipeInput,
+  type UpdateRecipeInput
 } from '@/schemas/recipes';
 import type { RecipeListItem } from '@/features/finances/recipes/types';
 
@@ -30,7 +30,7 @@ export const createRecipe = withTenantPermission<CreateRecipeInput, RecipeListIt
 
       logger.info('Recipe created', {
         context: 'createRecipe',
-        metadata: { id: recipe.id, name: recipe.name },
+        metadata: { id: recipe.id, name: recipe.name }
       });
 
       revalidatePath('/finances/recipes');
@@ -39,7 +39,7 @@ export const createRecipe = withTenantPermission<CreateRecipeInput, RecipeListIt
     } catch (error) {
       return handleActionError(error, 'Failed to create recipe');
     }
-  },
+  }
 );
 
 /**
@@ -60,7 +60,7 @@ export const updateRecipe = withTenantPermission<UpdateRecipeInput, { id: string
       const recipe = await recipeRepo.updateRecipeWithItems(
         validatedData.id,
         ctx.tenantId,
-        validatedData,
+        validatedData
       );
       if (!recipe) {
         return { success: false, error: 'Failed to update recipe' };
@@ -68,7 +68,7 @@ export const updateRecipe = withTenantPermission<UpdateRecipeInput, { id: string
 
       logger.info('Recipe updated', {
         context: 'updateRecipe',
-        metadata: { id: recipe.id },
+        metadata: { id: recipe.id }
       });
 
       revalidatePath('/finances/recipes');
@@ -78,7 +78,7 @@ export const updateRecipe = withTenantPermission<UpdateRecipeInput, { id: string
     } catch (error) {
       return handleActionError(error, 'Failed to update recipe');
     }
-  },
+  }
 );
 
 /**
@@ -94,7 +94,7 @@ export const deleteRecipe = withTenantPermission<string, { success: true }>(
 
       logger.info('Recipe deleted', {
         context: 'deleteRecipe',
-        metadata: { id },
+        metadata: { id }
       });
 
       revalidatePath('/finances/recipes');
@@ -103,5 +103,5 @@ export const deleteRecipe = withTenantPermission<string, { success: true }>(
     } catch (error) {
       return handleActionError(error, 'Failed to delete recipe');
     }
-  },
+  }
 );

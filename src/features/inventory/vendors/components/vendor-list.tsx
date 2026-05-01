@@ -20,9 +20,9 @@ export function VendorList({ initialData, searchParams }: VendorListProps) {
   const columns = useMemo(
     () =>
       createVendorColumns({
-        onDelete: (id: string, name: string) => openDelete(id, name),
+        onDelete: (id: string, name: string) => openDelete(id, name)
       }),
-    [],
+    []
   );
 
   const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;
@@ -32,11 +32,11 @@ export function VendorList({ initialData, searchParams }: VendorListProps) {
     columns,
     pageCount: Math.ceil(initialData.pagination.totalItems / perPage),
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       <VendorTable
         table={table}
         items={initialData.items}

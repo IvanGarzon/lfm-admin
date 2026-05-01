@@ -12,15 +12,15 @@ export function QuotePreviewDates({ issuedDate, validUntil }: QuotePreviewDatesP
   const isExpired = daysUntilExpiry < 0;
 
   return (
-    <Box className="grid grid-cols-2 gap-8 mb-8">
+    <Box className='grid grid-cols-2 gap-8 mb-8'>
       <Box>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Date Issued:</p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+        <p className='text-xs text-gray-600 dark:text-gray-400 mb-1'>Date Issued:</p>
+        <p className='text-sm font-semibold text-gray-900 dark:text-gray-50'>
           {format(issuedDate, 'MMMM dd, yyyy')}
         </p>
       </Box>
       <Box>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Valid Until:</p>
+        <p className='text-xs text-gray-600 dark:text-gray-400 mb-1'>Valid Until:</p>
         <p
           className={`text-sm font-semibold ${
             isExpired

@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
 import Link from 'next/link';
@@ -29,26 +29,26 @@ export function VendorActions({ vendor, onDelete }: VendorActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <Button variant='secondary' className='h-8 w-8 p-0'>
+          <span className='sr-only'>Open menu</span>
+          <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href}>
-            <Pencil className="h-4 w-4" aria-hidden="true" />
+            <Pencil className='h-4 w-4' aria-hidden='true' />
             Edit vendor
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive"
+          className='text-destructive'
           onClick={() => onDelete(vendor.id, vendor.vendorCode, vendor.name)}
         >
-          <Trash className="h-4 w-4" aria-hidden="true" />
+          <Trash className='h-4 w-4' aria-hidden='true' />
           Delete vendor
         </DropdownMenuItem>
       </DropdownMenuContent>

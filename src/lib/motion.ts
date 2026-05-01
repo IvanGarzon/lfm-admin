@@ -15,7 +15,7 @@ export function getMotionVariants(variants: Variants, prefersReducedMotion: bool
     return Object.keys(variants).reduce((acc, key) => {
       acc[key] = {
         ...(typeof variants[key] === 'object' ? variants[key] : {}),
-        transition: { duration: 0 },
+        transition: { duration: 0 }
       };
       return acc;
     }, {} as Variants);
@@ -29,7 +29,7 @@ export function getMotionVariants(variants: Variants, prefersReducedMotion: bool
  */
 export function getMotionTransition(
   transition: Transition | undefined,
-  prefersReducedMotion: boolean,
+  prefersReducedMotion: boolean
 ): Transition | undefined {
   if (prefersReducedMotion) {
     return { duration: 0 };
@@ -42,20 +42,20 @@ export function getMotionTransition(
  */
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1 },
+  visible: { opacity: 1 }
 };
 
 export const slideUp: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
 export const slideDown: Variants = {
   hidden: { opacity: 0, y: -20 },
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 }
 };
 
 export const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1 },
+  visible: { opacity: 1, scale: 1 }
 };

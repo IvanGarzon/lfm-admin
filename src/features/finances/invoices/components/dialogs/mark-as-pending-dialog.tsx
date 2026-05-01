@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface MarkAsPendingDialogProps {
@@ -24,7 +24,7 @@ export function MarkAsPendingDialog({
   onOpenChange,
   onConfirm,
   invoiceNumber,
-  isPending = false,
+  isPending = false
 }: MarkAsPendingDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

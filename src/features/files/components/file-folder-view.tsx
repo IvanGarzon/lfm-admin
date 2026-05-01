@@ -6,7 +6,7 @@ import {
   ChevronDown,
   File as FileIcon,
   Download,
-  Trash2,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatFileSize } from '@/lib/file-constants';
@@ -25,7 +25,7 @@ export function FileFolderView({
   onDownload,
   onDelete,
   expandedFolders,
-  onToggleFolder,
+  onToggleFolder
 }: FileFolderViewProps) {
   const filesByResourceType = useMemo(() => {
     return files.reduce(
@@ -48,53 +48,53 @@ export function FileFolderView({
         acc[file.resourceType][file.resourceId][subPathKey].push(file);
         return acc;
       },
-      {} as Record<string, Record<string, Record<string, S3File[]>>>,
+      {} as Record<string, Record<string, Record<string, S3File[]>>>
     );
   }, [files]);
 
   return (
-    <div className="space-y-2">
+    <div className='space-y-2'>
       {Object.entries(filesByResourceType).map(([resourceType, resourceFolders]) => {
         const resourceTypeId = resourceType;
         const isResourceTypeExpanded = expandedFolders.has(resourceTypeId);
 
         const allFiles = Object.values(resourceFolders).flatMap((subPaths) =>
-          Object.values(subPaths).flat(),
+          Object.values(subPaths).flat()
         );
         const totalFiles = allFiles.length;
         const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
 
         return (
-          <div key={resourceType} className="border rounded-lg overflow-hidden">
+          <div key={resourceType} className='border rounded-lg overflow-hidden'>
             {/* Resource Type Header */}
             <div
-              className="flex items-center justify-between p-3 bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
+              className='flex items-center justify-between p-3 bg-muted/50 hover:bg-muted cursor-pointer transition-colors'
               onClick={() => onToggleFolder(resourceTypeId)}
             >
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 {isResourceTypeExpanded ? (
-                  <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+                  <ChevronDown aria-hidden='true' className='h-4 w-4 text-muted-foreground' />
                 ) : (
-                  <ChevronRight aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight aria-hidden='true' className='h-4 w-4 text-muted-foreground' />
                 )}
                 {isResourceTypeExpanded ? (
-                  <FolderOpen aria-hidden="true" className="h-5 w-5 text-primary" />
+                  <FolderOpen aria-hidden='true' className='h-5 w-5 text-primary' />
                 ) : (
-                  <Folder aria-hidden="true" className="h-5 w-5 text-primary" />
+                  <Folder aria-hidden='true' className='h-5 w-5 text-primary' />
                 )}
-                <span className="font-semibold capitalize">{resourceType}</span>
-                <span className="text-sm text-muted-foreground">
+                <span className='font-semibold capitalize'>{resourceType}</span>
+                <span className='text-sm text-muted-foreground'>
                   ({Object.keys(resourceFolders).length} folder
                   {Object.keys(resourceFolders).length !== 1 ? 's' : ''}, {totalFiles} file
                   {totalFiles !== 1 ? 's' : ''})
                 </span>
               </div>
-              <span className="text-sm text-muted-foreground">{formatFileSize(totalSize)}</span>
+              <span className='text-sm text-muted-foreground'>{formatFileSize(totalSize)}</span>
             </div>
 
             {/* Resource ID Subfolders */}
             {isResourceTypeExpanded && (
-              <div className="bg-background">
+              <div className='bg-background'>
                 {Object.entries(resourceFolders).map(([resourceId, subPaths]) => {
                   const resourceIdFolderId = `${resourceType}/${resourceId}`;
                   const isResourceIdExpanded = expandedFolders.has(resourceIdFolderId);
@@ -104,38 +104,38 @@ export function FileFolderView({
                   const resourceIdSize = resourceIdFiles.reduce((sum, f) => sum + f.size, 0);
 
                   return (
-                    <div key={resourceIdFolderId} className="border-t">
+                    <div key={resourceIdFolderId} className='border-t'>
                       {/* Resource ID Header */}
                       <div
-                        className="flex items-center justify-between p-3 pl-8 hover:bg-accent cursor-pointer transition-colors"
+                        className='flex items-center justify-between p-3 pl-8 hover:bg-accent cursor-pointer transition-colors'
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleFolder(resourceIdFolderId);
                         }}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                           {isResourceIdExpanded ? (
                             <ChevronDown
-                              aria-hidden="true"
-                              className="h-4 w-4 text-muted-foreground"
+                              aria-hidden='true'
+                              className='h-4 w-4 text-muted-foreground'
                             />
                           ) : (
                             <ChevronRight
-                              aria-hidden="true"
-                              className="h-4 w-4 text-muted-foreground"
+                              aria-hidden='true'
+                              className='h-4 w-4 text-muted-foreground'
                             />
                           )}
                           {isResourceIdExpanded ? (
-                            <FolderOpen aria-hidden="true" className="h-4 w-4 text-primary" />
+                            <FolderOpen aria-hidden='true' className='h-4 w-4 text-primary' />
                           ) : (
-                            <Folder aria-hidden="true" className="h-4 w-4 text-primary" />
+                            <Folder aria-hidden='true' className='h-4 w-4 text-primary' />
                           )}
-                          <span className="font-medium">{resourceId}</span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className='font-medium'>{resourceId}</span>
+                          <span className='text-sm text-muted-foreground'>
                             ({resourceIdFileCount} file{resourceIdFileCount !== 1 ? 's' : ''})
                           </span>
                         </div>
-                        <span className="text-sm text-muted-foreground">
+                        <span className='text-sm text-muted-foreground'>
                           {formatFileSize(resourceIdSize)}
                         </span>
                       </div>
@@ -149,43 +149,43 @@ export function FileFolderView({
                             const subPathSize = files.reduce((sum, f) => sum + f.size, 0);
 
                             return (
-                              <div key={subPathFolderId} className="border-t">
+                              <div key={subPathFolderId} className='border-t'>
                                 {/* SubPath Header */}
                                 <div
-                                  className="flex items-center justify-between p-3 pl-16 hover:bg-accent cursor-pointer transition-colors"
+                                  className='flex items-center justify-between p-3 pl-16 hover:bg-accent cursor-pointer transition-colors'
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     onToggleFolder(subPathFolderId);
                                   }}
                                 >
-                                  <div className="flex items-center gap-2">
+                                  <div className='flex items-center gap-2'>
                                     {isSubPathExpanded ? (
                                       <ChevronDown
-                                        aria-hidden="true"
-                                        className="h-3 w-3 text-muted-foreground"
+                                        aria-hidden='true'
+                                        className='h-3 w-3 text-muted-foreground'
                                       />
                                     ) : (
                                       <ChevronRight
-                                        aria-hidden="true"
-                                        className="h-3 w-3 text-muted-foreground"
+                                        aria-hidden='true'
+                                        className='h-3 w-3 text-muted-foreground'
                                       />
                                     )}
                                     {isSubPathExpanded ? (
                                       <FolderOpen
-                                        aria-hidden="true"
-                                        className="h-4 w-4 text-primary"
+                                        aria-hidden='true'
+                                        className='h-4 w-4 text-primary'
                                       />
                                     ) : (
-                                      <Folder aria-hidden="true" className="h-4 w-4 text-primary" />
+                                      <Folder aria-hidden='true' className='h-4 w-4 text-primary' />
                                     )}
-                                    <span className="text-sm font-medium">
+                                    <span className='text-sm font-medium'>
                                       {subPath === '_root' ? '(root)' : subPath}
                                     </span>
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className='text-xs text-muted-foreground'>
                                       ({files.length} file{files.length !== 1 ? 's' : ''})
                                     </span>
                                   </div>
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className='text-xs text-muted-foreground'>
                                     {formatFileSize(subPathSize)}
                                   </span>
                                 </div>
@@ -196,46 +196,46 @@ export function FileFolderView({
                                     {files.map((file) => (
                                       <div
                                         key={file.key}
-                                        className="flex items-center justify-between p-3 pl-24 border-t hover:bg-accent transition-colors"
+                                        className='flex items-center justify-between p-3 pl-24 border-t hover:bg-accent transition-colors'
                                       >
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className='flex items-center gap-3 flex-1 min-w-0'>
                                           <FileIcon
-                                            aria-hidden="true"
-                                            className="h-4 w-4 text-primary shrink-0"
+                                            aria-hidden='true'
+                                            className='h-4 w-4 text-primary shrink-0'
                                           />
-                                          <div className="min-w-0 flex-1">
-                                            <p className="font-medium truncate text-sm">
+                                          <div className='min-w-0 flex-1'>
+                                            <p className='font-medium truncate text-sm'>
                                               {file.fileName}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className='text-xs text-muted-foreground'>
                                               {file.fileType} • {formatFileSize(file.size)} •{' '}
                                               {new Date(file.lastModified).toLocaleDateString(
                                                 'en-AU',
                                                 {
                                                   year: 'numeric',
                                                   month: 'short',
-                                                  day: 'numeric',
-                                                },
+                                                  day: 'numeric'
+                                                }
                                               )}
                                             </p>
                                           </div>
                                         </div>
-                                        <div className="flex items-center gap-2 shrink-0">
+                                        <div className='flex items-center gap-2 shrink-0'>
                                           <Button
-                                            variant="ghost"
-                                            size="sm"
+                                            variant='ghost'
+                                            size='sm'
                                             onClick={() => onDownload(file.key, file.fileName)}
                                             aria-label={`Download ${file.fileName}`}
                                           >
-                                            <Download aria-hidden="true" className="h-4 w-4" />
+                                            <Download aria-hidden='true' className='h-4 w-4' />
                                           </Button>
                                           <Button
-                                            variant="ghost"
-                                            size="sm"
+                                            variant='ghost'
+                                            size='sm'
                                             onClick={() => onDelete(file.key, file.fileName)}
                                             aria-label={`Delete ${file.fileName}`}
                                           >
-                                            <Trash2 aria-hidden="true" className="h-4 w-4" />
+                                            <Trash2 aria-hidden='true' className='h-4 w-4' />
                                           </Button>
                                         </div>
                                       </div>

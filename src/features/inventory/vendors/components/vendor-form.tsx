@@ -17,13 +17,13 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import {
   CreateVendorSchema,
   UpdateVendorSchema,
   type CreateVendorInput,
-  type UpdateVendorInput,
+  type UpdateVendorInput
 } from '@/schemas/vendors';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import type { VendorFormInput, VendorWithDetails } from '@/features/inventory/vendors/types';
@@ -41,7 +41,7 @@ const defaultFormState: CreateVendorInput = {
   website: null,
   paymentTerms: 30,
   taxId: null,
-  notes: null,
+  notes: null
 };
 
 function mapVendorToFormValues(vendor: VendorWithDetails): UpdateVendorInput {
@@ -56,7 +56,7 @@ function mapVendorToFormValues(vendor: VendorWithDetails): UpdateVendorInput {
     website: vendor.website,
     paymentTerms: vendor.paymentTerms,
     taxId: vendor.taxId,
-    notes: vendor.notes,
+    notes: vendor.notes
   };
 }
 
@@ -67,7 +67,7 @@ export function VendorForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: {
   vendor?: VendorWithDetails | null;
   onCreate?: (data: CreateVendorInput) => void;
@@ -94,7 +94,7 @@ export function VendorForm({
   const form = useForm<VendorFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   // Reset form when switching between vendors
@@ -106,13 +106,13 @@ export function VendorForm({
       // Notify parent that form is clean after reset
       onDirtyStateChange?.(false);
       return values;
-    }, [vendor, onDirtyStateChange]),
+    }, [vendor, onDirtyStateChange])
   );
 
   // Watch address field
   const watchedAddress = useWatch({
     control: form.control,
-    name: 'address',
+    name: 'address'
   });
 
   // Address autocomplete search input state
@@ -124,7 +124,7 @@ export function VendorForm({
       const targetAddress = newAddress.formattedAddress ? newAddress : null;
       form.setValue('address', targetAddress, { shouldDirty: true });
     },
-    [form],
+    [form]
   );
 
   // Warn user before leaving page with unsaved changes
@@ -151,13 +151,13 @@ export function VendorForm({
       } else {
         const updateData: UpdateVendorInput = {
           ...data,
-          id: vendor?.id ?? '',
+          id: vendor?.id ?? ''
         };
 
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, vendor?.id, onDirtyStateChange],
+    [mode, onCreate, onUpdate, vendor?.id, onDirtyStateChange]
   );
 
   const isSubmitting = isCreating || isUpdating;
@@ -165,37 +165,37 @@ export function VendorForm({
   return (
     <Form {...form}>
       <form
-        id="form-rhf-vendor"
+        id='form-rhf-vendor'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isCreating || isUpdating ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating vendor...' : 'Updating vendor...'}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        <Box className='flex-1 overflow-y-auto px-6 py-6 space-y-4'>
           {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Basic Information</h3>
-            <div className="grid gap-4 md:grid-cols-2">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-medium'>Basic Information</h3>
+            <div className='grid gap-4 md:grid-cols-2'>
               <FieldGroup>
                 <Controller
-                  name="name"
+                  name='name'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-name">Vendor Name *</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-name'>Vendor Name *</FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-name"
+                        id='form-rhf-vendor-name'
                         {...field}
-                        placeholder="Acme Corp"
+                        placeholder='Acme Corp'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -206,18 +206,18 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="email"
+                  name='email'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-email">Email *</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-email'>Email *</FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-email"
-                        type="email"
+                        id='form-rhf-vendor-email'
+                        type='email'
                         {...field}
-                        placeholder="contact@acme.com"
+                        placeholder='contact@acme.com'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -228,40 +228,18 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="phone"
+                  name='phone'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-phone">Phone</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-phone'>Phone</FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-phone"
-                        {...field}
-                        value={field.value ?? ''}
-                        placeholder="+61 2 1234 5678"
-                        disabled={isSubmitting}
-                      />
-                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
-                    </Field>
-                  )}
-                />
-              </FieldGroup>
-
-              <FieldGroup>
-                <Controller
-                  name="abn"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-abn">ABN</FieldLabel>
-                      </FieldContent>
-                      <Input
-                        id="form-rhf-vendor-abn"
+                        id='form-rhf-vendor-phone'
                         {...field}
                         value={field.value ?? ''}
-                        placeholder="12 345 678 901"
+                        placeholder='+61 2 1234 5678'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -272,19 +250,41 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="status"
+                  name='abn'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-status">Status</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-abn'>ABN</FieldLabel>
+                      </FieldContent>
+                      <Input
+                        id='form-rhf-vendor-abn'
+                        {...field}
+                        value={field.value ?? ''}
+                        placeholder='12 345 678 901'
+                        disabled={isSubmitting}
+                      />
+                      {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              <FieldGroup>
+                <Controller
+                  name='status'
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldContent>
+                        <FieldLabel htmlFor='form-rhf-vendor-status'>Status</FieldLabel>
                       </FieldContent>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                         disabled={isSubmitting}
                       >
-                        <SelectTrigger id="form-rhf-vendor-status">
+                        <SelectTrigger id='form-rhf-vendor-status'>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -303,24 +303,24 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="paymentTerms"
+                  name='paymentTerms'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-payment-terms">
+                        <FieldLabel htmlFor='form-rhf-vendor-payment-terms'>
                           Payment Terms (days)
                         </FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-payment-terms"
-                        type="number"
+                        id='form-rhf-vendor-payment-terms'
+                        type='number'
                         {...field}
                         value={field.value ?? ''}
                         onChange={(e) =>
                           field.onChange(e.target.value ? Number(e.target.value) : null)
                         }
-                        placeholder="30"
+                        placeholder='30'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -332,12 +332,12 @@ export function VendorForm({
           </div>
 
           {/* Address Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Address</h3>
-            <div className="space-y-2">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-medium'>Address</h3>
+            <div className='space-y-2'>
               <FieldLabel>Address (Optional)</FieldLabel>
               <Controller
-                name="address"
+                name='address'
                 control={form.control}
                 render={({ fieldState }) => (
                   <>
@@ -346,7 +346,7 @@ export function VendorForm({
                       setAddress={handleAddressChange}
                       searchInput={addressSearchInput}
                       setSearchInput={setAddressSearchInput}
-                      placeholder="Search for an address"
+                      placeholder='Search for an address'
                       disabled={isSubmitting}
                     />
                     {fieldState.invalid && !watchedAddress?.formattedAddress && (
@@ -359,24 +359,24 @@ export function VendorForm({
           </div>
 
           {/* Additional Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Additional Information</h3>
-            <div className="grid gap-4">
+          <div className='space-y-4'>
+            <h3 className='text-lg font-medium'>Additional Information</h3>
+            <div className='grid gap-4'>
               <FieldGroup>
                 <Controller
-                  name="website"
+                  name='website'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-website">Website</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-website'>Website</FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-website"
-                        type="url"
+                        id='form-rhf-vendor-website'
+                        type='url'
                         {...field}
                         value={field.value ?? ''}
-                        placeholder="https://acme.com"
+                        placeholder='https://acme.com'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -387,18 +387,18 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="taxId"
+                  name='taxId'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-tax-id">Tax ID</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-tax-id'>Tax ID</FieldLabel>
                       </FieldContent>
                       <Input
-                        id="form-rhf-vendor-tax-id"
+                        id='form-rhf-vendor-tax-id'
                         {...field}
                         value={field.value ?? ''}
-                        placeholder="Tax identification number"
+                        placeholder='Tax identification number'
                         disabled={isSubmitting}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -409,18 +409,18 @@ export function VendorForm({
 
               <FieldGroup>
                 <Controller
-                  name="notes"
+                  name='notes'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-vendor-notes">Notes</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-vendor-notes'>Notes</FieldLabel>
                       </FieldContent>
                       <Textarea
-                        id="form-rhf-vendor-notes"
+                        id='form-rhf-vendor-notes'
                         {...field}
                         value={field.value ?? ''}
-                        placeholder="Additional notes about this vendor..."
+                        placeholder='Additional notes about this vendor...'
                         rows={4}
                         disabled={isSubmitting}
                       />
@@ -434,16 +434,16 @@ export function VendorForm({
         </Box>
 
         {/* Action Buttons */}
-        <Box className="border-t p-6 flex gap-3 justify-end bg-muted">
+        <Box className='border-t p-6 flex gap-3 justify-end bg-muted'>
           {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button type='button' variant='outline' onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type='submit' disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

@@ -18,7 +18,7 @@ import {
   CreateEmployeeSchema,
   UpdateEmployeeSchema,
   type CreateEmployeeInput,
-  type UpdateEmployeeInput,
+  type UpdateEmployeeInput
 } from '@/schemas/employees';
 import type { EmployeeListItem, EmployeeFormInput } from '@/features/staff/employees/types';
 import { EmployeePersonalFields } from './form-fields/employee-personal-fields';
@@ -35,7 +35,7 @@ const defaultFormState: CreateEmployeeInput = {
   gender: GenderSchema.enum.MALE,
   status: EmployeeStatusSchema.enum.ACTIVE,
   rate: 0,
-  avatarUrl: null,
+  avatarUrl: null
 };
 
 // Helper function to convert phone number to E.164 format
@@ -71,7 +71,7 @@ const mapEmployeeToFormValues = (employee: EmployeeListItem): UpdateEmployeeInpu
     gender: employee.gender ?? undefined,
     status: employee.status,
     rate: employee.rate,
-    avatarUrl: employee.avatarUrl ?? null,
+    avatarUrl: employee.avatarUrl ?? null
   };
 };
 
@@ -82,7 +82,7 @@ export function EmployeeForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: {
   employee?: EmployeeListItem;
   onCreate?: (data: CreateEmployeeInput) => void;
@@ -109,7 +109,7 @@ export function EmployeeForm({
   const form = useForm<EmployeeFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   useFormReset(
@@ -121,7 +121,7 @@ export function EmployeeForm({
       onDirtyStateChange?.(false);
       return values;
     }, [employee, onDirtyStateChange]),
-    isUpdating, // Reset form when update completes (true -> false)
+    isUpdating // Reset form when update completes (true -> false)
   );
 
   const { isDirty } = form.formState;
@@ -144,13 +144,13 @@ export function EmployeeForm({
       } else {
         const updateData: UpdateEmployeeInput = {
           ...data,
-          id: employee?.id ?? '',
+          id: employee?.id ?? ''
         };
 
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, employee?.id],
+    [mode, onCreate, onUpdate, employee?.id]
   );
 
   const isDisabled = isCreating || isUpdating;
@@ -158,75 +158,75 @@ export function EmployeeForm({
   return (
     <Form {...form}>
       <form
-        id="form-rhf-employee"
+        id='form-rhf-employee'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isDisabled ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating employee...' : 'Updating employee...'}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          <Box className="space-y-4">
-            <Box className="flex items-center gap-2">
-              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <User className="size-3.5 text-primary" aria-hidden="true" />
+        <Box className='flex-1 overflow-y-auto px-6 py-6 space-y-6'>
+          <Box className='space-y-4'>
+            <Box className='flex items-center gap-2'>
+              <Box className='flex items-center justify-center size-7 rounded-md bg-primary/10'>
+                <User className='size-3.5 text-primary' aria-hidden='true' />
               </Box>
-              <span className="text-sm font-semibold text-foreground">Personal</span>
-              <Separator className="flex-1" />
+              <span className='text-sm font-semibold text-foreground'>Personal</span>
+              <Separator className='flex-1' />
             </Box>
             <EmployeePersonalFields control={form.control} isDisabled={isDisabled} />
           </Box>
 
-          <Box className="space-y-4">
-            <Box className="flex items-center gap-2">
-              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <Phone className="size-3.5 text-primary" aria-hidden="true" />
+          <Box className='space-y-4'>
+            <Box className='flex items-center gap-2'>
+              <Box className='flex items-center justify-center size-7 rounded-md bg-primary/10'>
+                <Phone className='size-3.5 text-primary' aria-hidden='true' />
               </Box>
-              <span className="text-sm font-semibold text-foreground">Contact</span>
-              <Separator className="flex-1" />
+              <span className='text-sm font-semibold text-foreground'>Contact</span>
+              <Separator className='flex-1' />
             </Box>
             <EmployeeContactFields control={form.control} isDisabled={isDisabled} />
           </Box>
 
-          <Box className="space-y-4">
-            <Box className="flex items-center gap-2">
-              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <CalendarDays className="size-3.5 text-primary" aria-hidden="true" />
+          <Box className='space-y-4'>
+            <Box className='flex items-center gap-2'>
+              <Box className='flex items-center justify-center size-7 rounded-md bg-primary/10'>
+                <CalendarDays className='size-3.5 text-primary' aria-hidden='true' />
               </Box>
-              <span className="text-sm font-semibold text-foreground">Details</span>
-              <Separator className="flex-1" />
+              <span className='text-sm font-semibold text-foreground'>Details</span>
+              <Separator className='flex-1' />
             </Box>
             <EmployeeDetailsFields control={form.control} isDisabled={isDisabled} />
           </Box>
 
-          <Box className="space-y-4">
-            <Box className="flex items-center gap-2">
-              <Box className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-                <Briefcase className="size-3.5 text-primary" aria-hidden="true" />
+          <Box className='space-y-4'>
+            <Box className='flex items-center gap-2'>
+              <Box className='flex items-center justify-center size-7 rounded-md bg-primary/10'>
+                <Briefcase className='size-3.5 text-primary' aria-hidden='true' />
               </Box>
-              <span className="text-sm font-semibold text-foreground">Employment</span>
-              <Separator className="flex-1" />
+              <span className='text-sm font-semibold text-foreground'>Employment</span>
+              <Separator className='flex-1' />
             </Box>
             <EmployeeEmploymentFields control={form.control} isDisabled={isDisabled} />
           </Box>
         </Box>
 
-        <Box className="border-t p-6 flex gap-3 justify-end bg-muted">
+        <Box className='border-t p-6 flex gap-3 justify-end bg-muted'>
           {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isDisabled}>
+            <Button type='button' variant='outline' onClick={onClose} disabled={isDisabled}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isDisabled || (employee && !isDirty)}>
+          <Button type='submit' disabled={isDisabled || (employee && !isDirty)}>
             {isDisabled ? (
               <>
-                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                <Loader2 aria-hidden='true' className='h-4 w-4 animate-spin' />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

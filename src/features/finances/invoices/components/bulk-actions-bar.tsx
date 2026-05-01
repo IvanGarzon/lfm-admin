@@ -9,7 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
 interface BulkActionsBarProps<TData> {
@@ -21,7 +21,7 @@ interface BulkActionsBarProps<TData> {
 export function BulkActionsBar<TData>({
   table,
   onUpdateStatus,
-  isPending,
+  isPending
 }: BulkActionsBarProps<TData>) {
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedCount = selectedRows.length;
@@ -29,42 +29,42 @@ export function BulkActionsBar<TData>({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg border border-border">
-      <span className="text-sm font-medium px-2">{selectedCount} selected</span>
-      <div className="h-4 w-px bg-border mx-2" />
+    <div className='flex items-center gap-2 bg-muted/50 p-2 rounded-lg border border-border'>
+      <span className='text-sm font-medium px-2'>{selectedCount} selected</span>
+      <div className='h-4 w-px bg-border mx-2' />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" disabled={isPending}>
+          <Button variant='ghost' size='sm' disabled={isPending}>
             Update Status
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align='start'>
           <DropdownMenuItem
             onClick={() =>
               onUpdateStatus(
                 selectedRows.map((r) => r.original),
-                InvoiceStatusSchema.enum.PENDING,
+                InvoiceStatusSchema.enum.PENDING
               )
             }
           >
-            <CheckCircle aria-hidden="true" className="h-4 w-4" />
+            <CheckCircle aria-hidden='true' className='h-4 w-4' />
             Mark as Pending
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
               onUpdateStatus(
                 selectedRows.map((r) => r.original),
-                InvoiceStatusSchema.enum.CANCELLED,
+                InvoiceStatusSchema.enum.CANCELLED
               )
             }
           >
-            <XCircle aria-hidden="true" className="h-4 w-4" />
+            <XCircle aria-hidden='true' className='h-4 w-4' />
             Mark as Cancelled
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <div className="ml-auto">
-        <Button variant="ghost" size="sm" onClick={() => table.toggleAllPageRowsSelected(false)}>
+      <div className='ml-auto'>
+        <Button variant='ghost' size='sm' onClick={() => table.toggleAllPageRowsSelected(false)}>
           Clear selection
         </Button>
       </div>

@@ -16,7 +16,7 @@ import {
   type UpdateSessionNameInput,
   type DeleteSessionInput,
   type DeleteOtherSessionsInput,
-  type ExtendSessionInput,
+  type ExtendSessionInput
 } from '@/schemas/sessions';
 
 const sessionRepo = new SessionRepository(prisma);
@@ -36,7 +36,7 @@ export const deleteSessions = withAuth<DeleteSessionsInput, { deactivatedCount: 
       // the query will only affect sessions belonging to this userId.
       const deactivatedCount = await sessionRepo.deactivateManySessions(
         session.user.id,
-        validatedData.sessionIds,
+        validatedData.sessionIds
       );
 
       revalidatePath('/sessions');
@@ -48,10 +48,10 @@ export const deleteSessions = withAuth<DeleteSessionsInput, { deactivatedCount: 
       }
       return handleActionError(error, 'Unable to sign out selected sessions. Please try again.', {
         action: 'deleteSessions',
-        userId: session.user.id,
+        userId: session.user.id
       });
     }
-  },
+  }
 );
 
 /**
@@ -67,7 +67,7 @@ export const updateSessionName = withAuth<UpdateSessionNameInput, { id: string }
       // Verify ownership
       const isOwner = await sessionRepo.verifySessionOwnership(
         validatedData.sessionId,
-        session.user.id,
+        session.user.id
       );
 
       if (!isOwner) {
@@ -86,10 +86,10 @@ export const updateSessionName = withAuth<UpdateSessionNameInput, { id: string }
       return handleActionError(error, 'Unable to update session name. Please try again.', {
         action: 'updateSessionName',
         userId: session.user.id,
-        sessionId: data.sessionId,
+        sessionId: data.sessionId
       });
     }
-  },
+  }
 );
 
 /**
@@ -104,7 +104,7 @@ export const deleteSession = withAuth<DeleteSessionInput, { id: string }>(async 
     // Verify ownership
     const isOwner = await sessionRepo.verifySessionOwnership(
       validatedData.sessionId,
-      session.user.id,
+      session.user.id
     );
 
     if (!isOwner) {
@@ -123,7 +123,7 @@ export const deleteSession = withAuth<DeleteSessionInput, { id: string }>(async 
     return handleActionError(error, 'Unable to sign out session. Please try again.', {
       action: 'deleteSession',
       userId: session.user.id,
-      sessionId: data.sessionId,
+      sessionId: data.sessionId
     });
   }
 });
@@ -141,7 +141,7 @@ export const deleteOtherSessions = withAuth<DeleteOtherSessionsInput, { deactiva
       // Verify ownership of the current session
       const isOwner = await sessionRepo.verifySessionOwnership(
         validatedData.currentSessionId,
-        session.user.id,
+        session.user.id
       );
 
       if (!isOwner) {
@@ -150,7 +150,7 @@ export const deleteOtherSessions = withAuth<DeleteOtherSessionsInput, { deactiva
 
       const deactivatedCount = await sessionRepo.deactivateOtherSessions(
         session.user.id,
-        validatedData.currentSessionId,
+        validatedData.currentSessionId
       );
 
       revalidatePath('/sessions');
@@ -160,10 +160,10 @@ export const deleteOtherSessions = withAuth<DeleteOtherSessionsInput, { deactiva
       return handleActionError(error, 'Unable to sign out other sessions. Please try again.', {
         action: 'deleteOtherSessions',
         userId: session.user.id,
-        currentSessionId: data.currentSessionId,
+        currentSessionId: data.currentSessionId
       });
     }
-  },
+  }
 );
 
 /**
@@ -184,7 +184,7 @@ export const updateSessionHeartbeat = withAuth<void, { updated: boolean }>(async
     // Heartbeat failures are usually not critical, log but don't show to user
     return handleActionError(error, 'Session heartbeat update failed', {
       action: 'updateSessionHeartbeat',
-      userId: session.user.id,
+      userId: session.user.id
     });
   }
 });
@@ -202,7 +202,7 @@ export const extendSession = withAuth<ExtendSessionInput, { expires: Date }>(
       // Verify ownership
       const isOwner = await sessionRepo.verifySessionOwnership(
         validatedData.sessionId,
-        session.user.id,
+        session.user.id
       );
 
       if (!isOwner) {
@@ -222,10 +222,10 @@ export const extendSession = withAuth<ExtendSessionInput, { expires: Date }>(
       return handleActionError(error, 'Unable to extend session. Please try again.', {
         action: 'extendSession',
         userId: session.user.id,
-        sessionId: data.sessionId,
+        sessionId: data.sessionId
       });
     }
-  },
+  }
 );
 
 /**
@@ -240,7 +240,7 @@ export const adminRevokeAllUserSessions = withTenantPermission<
   try {
     const user = await prisma.user.findFirst({
       where: { id: data.userId, tenantId: ctx.tenantId },
-      select: { id: true },
+      select: { id: true }
     });
 
     if (!user) {
@@ -252,7 +252,7 @@ export const adminRevokeAllUserSessions = withTenantPermission<
   } catch (error) {
     return handleActionError(error, 'Unable to revoke sessions. Please try again.', {
       action: 'adminRevokeAllUserSessions',
-      userId: data.userId,
+      userId: data.userId
     });
   }
 });
@@ -270,7 +270,7 @@ export const adminRevokeSession = withTenantPermission<DeleteSessionInput, { id:
 
       const belongsToTenant = await sessionRepo.verifySessionBelongsToTenant(
         validatedData.sessionId,
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       if (!belongsToTenant) {
@@ -283,10 +283,10 @@ export const adminRevokeSession = withTenantPermission<DeleteSessionInput, { id:
     } catch (error) {
       return handleActionError(error, 'Unable to revoke session. Please try again.', {
         action: 'adminRevokeSession',
-        sessionId: data.sessionId,
+        sessionId: data.sessionId
       });
     }
-  },
+  }
 );
 
 /**
@@ -302,7 +302,7 @@ export const adminExtendSession = withTenantPermission<ExtendSessionInput, { exp
 
       const belongsToTenant = await sessionRepo.verifySessionBelongsToTenant(
         validatedData.sessionId,
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       if (!belongsToTenant) {
@@ -318,8 +318,8 @@ export const adminExtendSession = withTenantPermission<ExtendSessionInput, { exp
     } catch (error) {
       return handleActionError(error, 'Unable to extend session. Please try again.', {
         action: 'adminExtendSession',
-        sessionId: data.sessionId,
+        sessionId: data.sessionId
       });
     }
-  },
+  }
 );

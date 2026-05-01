@@ -119,7 +119,7 @@ export const PLAN_FEATURES: Record<PlanKey, PermissionKey[]> = {
     'canReadTransactions',
     'canManageTransactions',
     'canManageSettings',
-    'canManageUsers',
+    'canManageUsers'
   ],
   GROWTH: [
     // Everything in STARTER plus inventory
@@ -139,9 +139,9 @@ export const PLAN_FEATURES: Record<PlanKey, PermissionKey[]> = {
     'canReadPriceList',
     'canManagePriceList',
     'canManageSettings',
-    'canManageUsers',
+    'canManageUsers'
   ],
-  PRO: Object.keys(PERMISSIONS) as PermissionKey[], // full access
+  PRO: Object.keys(PERMISSIONS) as PermissionKey[] // full access
 };
 
 /**
@@ -155,7 +155,7 @@ export const PLAN_LIMITS: Record<
   TRIAL: { customers: null, invoicesPerMonth: null, seats: null },
   STARTER: { customers: 250, invoicesPerMonth: 50, seats: 1 },
   GROWTH: { customers: 2500, invoicesPerMonth: 500, seats: 3 },
-  PRO: { customers: null, invoicesPerMonth: null, seats: null },
+  PRO: { customers: null, invoicesPerMonth: null, seats: null }
 };
 
 /**
@@ -210,7 +210,7 @@ import { planAllows } from './permissions';
 
 export function withTenantPermission<TInput, TOutput>(
   permission: PermissionKey | PermissionKey[],
-  handler: TenantHandler<TInput, TOutput>,
+  handler: TenantHandler<TInput, TOutput>
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -229,11 +229,11 @@ export function withTenantPermission<TInput, TOutput>(
     // -- Resolve tenant --
     const createContext = async (
       tenantId: string,
-      tenantSlug: string,
+      tenantSlug: string
     ): Promise<TenantContext | null> => {
       const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId },
-        select: { plan: true, subscriptionStatus: true },
+        select: { plan: true, subscriptionStatus: true }
       });
       if (!tenant) return null;
       return {
@@ -242,7 +242,7 @@ export function withTenantPermission<TInput, TOutput>(
         userId: session.user.id,
         user: session.user,
         plan: tenant.plan,
-        subscriptionStatus: tenant.subscriptionStatus,
+        subscriptionStatus: tenant.subscriptionStatus
       };
     };
 
@@ -263,19 +263,19 @@ export function withTenantPermission<TInput, TOutput>(
       return {
         success: false,
         error: 'Your subscription has been cancelled. Please reactivate to continue.',
-        code: ErrorCode.SUBSCRIPTION_INACTIVE,
+        code: ErrorCode.SUBSCRIPTION_INACTIVE
       };
     }
 
     // PAST_DUE: block writes, allow reads
     const isWritePermission = permissions.some(
-      (p) => p.startsWith('canManage') || p === 'canRecordPayments',
+      (p) => p.startsWith('canManage') || p === 'canRecordPayments'
     );
     if (ctx.subscriptionStatus === 'PAST_DUE' && isWritePermission) {
       return {
         success: false,
         error: 'Your payment is overdue. Update your billing details to continue making changes.',
-        code: ErrorCode.SUBSCRIPTION_INACTIVE,
+        code: ErrorCode.SUBSCRIPTION_INACTIVE
       };
     }
 
@@ -285,7 +285,7 @@ export function withTenantPermission<TInput, TOutput>(
       return {
         success: false,
         error: `This feature is not available on your current plan.`,
-        code: ErrorCode.PLAN_UPGRADE_REQUIRED,
+        code: ErrorCode.PLAN_UPGRADE_REQUIRED
       };
     }
 
@@ -315,13 +315,13 @@ export const createCustomer = withTenantPermission<CreateCustomerInput, Customer
         return {
           success: false,
           error: `Your plan allows up to ${limit} customers. Upgrade to add more.`,
-          code: ErrorCode.USAGE_LIMIT_REACHED,
+          code: ErrorCode.USAGE_LIMIT_REACHED
         };
       }
     }
 
     // ... rest of action
-  },
+  }
 );
 ```
 
@@ -359,7 +359,7 @@ import Stripe from 'stripe';
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-01-27.acacia',
-  typescript: true,
+  typescript: true
 });
 ```
 
@@ -377,7 +377,7 @@ import { prisma } from '@/lib/prisma';
 const PRICE_MAP: Record<string, string> = {
   STARTER: process.env.STRIPE_STARTER_PRICE_ID!,
   GROWTH: process.env.STRIPE_GROWTH_PRICE_ID!,
-  PRO: process.env.STRIPE_PRO_PRICE_ID!,
+  PRO: process.env.STRIPE_PRO_PRICE_ID!
 };
 
 /**
@@ -393,7 +393,7 @@ export const createCheckoutSession = withTenant<string, { url: string }>(async (
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: ctx.tenantId },
-    select: { stripeCustomerId: true, settings: { select: { email: true } } },
+    select: { stripeCustomerId: true, settings: { select: { email: true } } }
   });
 
   const session = await stripe.checkout.sessions.create({
@@ -404,7 +404,7 @@ export const createCheckoutSession = withTenant<string, { url: string }>(async (
     line_items: [{ price: priceId, quantity: 1 }],
     metadata: { tenantId: ctx.tenantId },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?cancelled=true`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?cancelled=true`
   });
 
   if (!session.url) {
@@ -421,7 +421,7 @@ export const createCheckoutSession = withTenant<string, { url: string }>(async (
 export const createBillingPortalSession = withTenant<void, { url: string }>(async (ctx) => {
   const tenant = await prisma.tenant.findUnique({
     where: { id: ctx.tenantId },
-    select: { stripeCustomerId: true },
+    select: { stripeCustomerId: true }
   });
 
   if (!tenant?.stripeCustomerId) {
@@ -430,7 +430,7 @@ export const createBillingPortalSession = withTenant<void, { url: string }>(asyn
 
   const session = await stripe.billingPortal.sessions.create({
     customer: tenant.stripeCustomerId,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`
   });
 
   return { success: true, data: { url: session.url } };
@@ -451,7 +451,7 @@ import type Stripe from 'stripe';
 const PLAN_BY_PRICE: Record<string, 'STARTER' | 'GROWTH' | 'PRO'> = {
   [process.env.STRIPE_STARTER_PRICE_ID!]: 'STARTER',
   [process.env.STRIPE_GROWTH_PRICE_ID!]: 'GROWTH',
-  [process.env.STRIPE_PRO_PRICE_ID!]: 'PRO',
+  [process.env.STRIPE_PRO_PRICE_ID!]: 'PRO'
 };
 
 export async function POST(req: NextRequest) {
@@ -484,13 +484,13 @@ export async function POST(req: NextRequest) {
             stripeCustomerId: session.customer as string,
             stripeSubscriptionId: session.subscription as string,
             currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            trialEndsAt: null,
-          },
+            trialEndsAt: null
+          }
         });
 
         logger.info('Subscription activated', {
           context: 'stripe-webhook',
-          metadata: { tenantId, plan },
+          metadata: { tenantId, plan }
         });
         break;
       }
@@ -499,7 +499,7 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const tenant = await prisma.tenant.findUnique({
           where: { stripeSubscriptionId: subscription.id },
-          select: { id: true },
+          select: { id: true }
         });
         if (!tenant) break;
 
@@ -509,7 +509,7 @@ export async function POST(req: NextRequest) {
           active: 'ACTIVE',
           trialing: 'TRIALING',
           past_due: 'PAST_DUE',
-          canceled: 'CANCELED',
+          canceled: 'CANCELED'
         };
 
         await prisma.tenant.update({
@@ -517,8 +517,8 @@ export async function POST(req: NextRequest) {
           data: {
             plan,
             subscriptionStatus: statusMap[subscription.status] ?? 'ACTIVE',
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-          },
+            currentPeriodEnd: new Date(subscription.current_period_end * 1000)
+          }
         });
         break;
       }
@@ -527,13 +527,13 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription;
         const tenant = await prisma.tenant.findUnique({
           where: { stripeSubscriptionId: subscription.id },
-          select: { id: true },
+          select: { id: true }
         });
         if (!tenant) break;
 
         await prisma.tenant.update({
           where: { id: tenant.id },
-          data: { subscriptionStatus: 'CANCELED' },
+          data: { subscriptionStatus: 'CANCELED' }
         });
         break;
       }
@@ -544,13 +544,13 @@ export async function POST(req: NextRequest) {
 
         const tenant = await prisma.tenant.findUnique({
           where: { stripeSubscriptionId: invoice.subscription as string },
-          select: { id: true },
+          select: { id: true }
         });
         if (!tenant) break;
 
         await prisma.tenant.update({
           where: { id: tenant.id },
-          data: { subscriptionStatus: 'PAST_DUE' },
+          data: { subscriptionStatus: 'PAST_DUE' }
         });
         break;
       }
@@ -558,7 +558,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error('Stripe webhook handler failed', {
       context: 'stripe-webhook',
-      metadata: { eventType: event.type, error: String(error) },
+      metadata: { eventType: event.type, error: String(error) }
     });
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
@@ -596,27 +596,27 @@ export const expireTrialsFunction = inngest.createFunction(
       where: {
         plan: 'TRIAL',
         subscriptionStatus: 'TRIALING',
-        trialEndsAt: { lte: new Date() },
+        trialEndsAt: { lte: new Date() }
       },
-      select: { id: true },
+      select: { id: true }
     });
 
     for (const tenant of expired) {
       await prisma.tenant.update({
         where: { id: tenant.id },
-        data: { subscriptionStatus: 'CANCELED' },
+        data: { subscriptionStatus: 'CANCELED' }
       });
 
       logger.info('Trial expired', {
         context: 'expire-trials',
-        metadata: { tenantId: tenant.id },
+        metadata: { tenantId: tenant.id }
       });
 
       // Optionally: fire email/send.trial-expired event here
     }
 
     return { expired: expired.length };
-  },
+  }
 );
 ```
 
@@ -637,8 +637,8 @@ await prisma.tenant.create({
     slug,
     plan: 'TRIAL',
     subscriptionStatus: 'TRIALING',
-    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-  },
+    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days
+  }
 });
 ```
 
@@ -681,12 +681,12 @@ export function PlanUpsell({ feature, requiredPlan }: PlanUpsellProps) {
   const router = useRouter();
 
   return (
-    <div className="rounded-lg border border-dashed p-8 text-center">
-      <h3 className="font-semibold">{feature} is not available on your plan</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <div className='rounded-lg border border-dashed p-8 text-center'>
+      <h3 className='font-semibold'>{feature} is not available on your plan</h3>
+      <p className='mt-1 text-sm text-muted-foreground'>
         Upgrade to {requiredPlan} to unlock this feature.
       </p>
-      <Button className="mt-4" onClick={() => router.push('/settings/billing')}>
+      <Button className='mt-4' onClick={() => router.push('/settings/billing')}>
         View plans
       </Button>
     </div>
@@ -699,7 +699,7 @@ Usage — wrap a page section:
 ```tsx
 // Before rendering inventory features
 if (result.success === false && result.code === 'BIZ_007') {
-  return <PlanUpsell feature="Inventory management" requiredPlan="GROWTH" />;
+  return <PlanUpsell feature='Inventory management' requiredPlan='GROWTH' />;
 }
 ```
 
@@ -720,9 +720,9 @@ Add a site-wide banner in the root layout that appears when `subscriptionStatus 
 // src/app/(protected)/layout.tsx
 {
   tenant.subscriptionStatus === 'PAST_DUE' && (
-    <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-center text-sm">
+    <div className='bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-center text-sm'>
       Your payment is overdue. Data is read-only until resolved.{' '}
-      <button onClick={openBillingPortal} className="underline font-medium">
+      <button onClick={openBillingPortal} className='underline font-medium'>
         Update payment details
       </button>
     </div>

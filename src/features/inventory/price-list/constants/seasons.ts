@@ -7,5 +7,5 @@ export const PRICE_LIST_SEASON_LABELS: Record<PriceListSeason, string> = {
   summer: 'Summer',
   autumn: 'Autumn',
   winter: 'Winter',
-  'all-year': 'All Year',
+  'all-year': 'All Year'
 };

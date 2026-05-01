@@ -7,7 +7,7 @@ import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
 
 export const USER_KEYS = {
   all: ['admin-users'] as const,
-  lists: () => [...USER_KEYS.all, 'list'] as const,
+  lists: () => [...USER_KEYS.all, 'list'] as const
 };
 
 export function useUpdateUserRole() {
@@ -23,6 +23,6 @@ export function useUpdateUserRole() {
       toast.success('User role updated');
       void queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
     },
-    onError: () => toast.error('Failed to update user role'),
+    onError: () => toast.error('Failed to update user role')
   });
 }

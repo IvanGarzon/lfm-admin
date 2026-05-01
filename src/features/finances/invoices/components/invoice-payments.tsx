@@ -24,7 +24,7 @@ export function InvoicePayments({ payments, invoiceAmount }: InvoicePaymentsProp
   // Sort payments by date (oldest first) and calculate status after each payment
   const paymentsWithStatus = useMemo(() => {
     const sorted = [...payments].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
     let cumulativeAmount = 0;
@@ -43,39 +43,39 @@ export function InvoicePayments({ payments, invoiceAmount }: InvoicePaymentsProp
 
       return {
         ...payment,
-        statusAfterPayment,
+        statusAfterPayment
       };
     });
   }, [payments, invoiceAmount]);
 
   return (
-    <Box className="space-y-4">
+    <Box className='space-y-4'>
       {paymentsWithStatus.map((payment) => (
-        <Box key={payment.id} className="w-full p-4 border border-border rounded-lg bg-muted/50">
+        <Box key={payment.id} className='w-full p-4 border border-border rounded-lg bg-muted/50'>
           {/* First row: Payment method and date */}
-          <Box className="flex justify-between items-center mb-2">
-            <p className="font-medium">{payment.method}</p>
-            <p className="text-sm text-muted-foreground">
+          <Box className='flex justify-between items-center mb-2'>
+            <p className='font-medium'>{payment.method}</p>
+            <p className='text-sm text-muted-foreground'>
               {format(new Date(payment.date), 'MMM d, yyyy')}
             </p>
           </Box>
 
           {/* Second row: Invoice status and amount */}
-          <Box className="flex justify-between items-center">
-            <Box className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Status:</span>
+          <Box className='flex justify-between items-center'>
+            <Box className='flex items-center gap-2'>
+              <span className='text-sm text-muted-foreground'>Status:</span>
               <InvoiceStatusBadge status={payment.statusAfterPayment} />
             </Box>
-            <p className="text-lg font-semibold">{formatCurrency({ number: payment.amount })}</p>
+            <p className='text-lg font-semibold'>{formatCurrency({ number: payment.amount })}</p>
           </Box>
 
           {/* Reference and notes */}
           {payment.reference ? (
-            <p className="text-xs text-muted-foreground mt-3">Ref: {payment.reference}</p>
+            <p className='text-xs text-muted-foreground mt-3'>Ref: {payment.reference}</p>
           ) : null}
 
           {payment.notes ? (
-            <p className="text-sm text-muted-foreground mt-2">{payment.notes}</p>
+            <p className='text-sm text-muted-foreground mt-2'>{payment.notes}</p>
           ) : null}
         </Box>
       ))}

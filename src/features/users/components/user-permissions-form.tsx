@@ -12,7 +12,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PERMISSIONS, PERMISSION_GROUPS, RolePolicies } from '@/lib/permissions';
@@ -30,30 +30,30 @@ function RecentAccessChanges({ userId }: { userId: string }) {
 
   return (
     <Card>
-      <CardHeader className="px-6 pt-4 pb-2">
-        <CardTitle className="text-sm font-medium">Recent Access Changes</CardTitle>
+      <CardHeader className='px-6 pt-4 pb-2'>
+        <CardTitle className='text-sm font-medium'>Recent Access Changes</CardTitle>
       </CardHeader>
-      <CardContent className="px-6 pt-0 pb-4">
+      <CardContent className='px-6 pt-0 pb-4'>
         {isLoading ? (
-          <Box className="flex justify-center py-4">
-            <Loader2 aria-hidden="true" className="size-4 animate-spin text-muted-foreground" />
+          <Box className='flex justify-center py-4'>
+            <Loader2 aria-hidden='true' className='size-4 animate-spin text-muted-foreground' />
           </Box>
         ) : changes.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">No access changes recorded yet.</p>
+          <p className='text-sm text-muted-foreground py-2'>No access changes recorded yet.</p>
         ) : (
-          <Box className="divide-y max-h-48 overflow-y-auto">
+          <Box className='divide-y max-h-48 overflow-y-auto'>
             {changes.map((change: AccessChange) => (
-              <Box key={change.id} className="flex items-start justify-between py-3 gap-4">
+              <Box key={change.id} className='flex items-start justify-between py-3 gap-4'>
                 <Box>
-                  <Box className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{change.message}</p>
+                  <Box className='flex items-center gap-2'>
+                    <p className='text-sm font-medium'>{change.message}</p>
                     {change.toRole ? (
-                      <UserRoleBadge role={change.toRole} className="text-xs" />
+                      <UserRoleBadge role={change.toRole} className='text-xs' />
                     ) : null}
                   </Box>
-                  <p className="text-xs text-muted-foreground mt-0.5">By {change.changedByName}</p>
+                  <p className='text-xs text-muted-foreground mt-0.5'>By {change.changedByName}</p>
                 </Box>
-                <span className="text-xs text-muted-foreground shrink-0 mt-0.5">
+                <span className='text-xs text-muted-foreground shrink-0 mt-0.5'>
                   {formatDistanceToNow(new Date(change.createdAt), { addSuffix: true })}
                 </span>
               </Box>
@@ -68,7 +68,7 @@ function RecentAccessChanges({ userId }: { userId: string }) {
 export function UserPermissionsForm({
   user,
   onUpdate,
-  onDirtyChange,
+  onDirtyChange
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserRoleInput) => void;
@@ -76,7 +76,7 @@ export function UserPermissionsForm({
 }) {
   const { control, handleSubmit } = useForm<UpdateUserRoleInput>({
     resolver: zodResolver(UpdateUserRoleSchema),
-    defaultValues: { id: user.id, role: user.role },
+    defaultValues: { id: user.id, role: user.role }
   });
 
   const selectedRole = useWatch({ control, name: 'role' });
@@ -86,23 +86,23 @@ export function UserPermissionsForm({
     (data) => {
       onUpdate({ ...data, id: user.id });
     },
-    [onUpdate, user.id],
+    [onUpdate, user.id]
   );
 
   return (
-    <form id="form-permissions" className="flex flex-col h-full" onSubmit={handleSubmit(onSubmit)}>
-      <Box className="flex-1 overflow-y-auto p-6 space-y-6">
+    <form id='form-permissions' className='flex flex-col h-full' onSubmit={handleSubmit(onSubmit)}>
+      <Box className='flex-1 overflow-y-auto p-6 space-y-6'>
         <Card>
-          <CardHeader className="px-6 pt-4 pb-4">
-            <CardTitle className="text-sm font-medium">Role Assignment</CardTitle>
-            <p className="text-xs text-muted-foreground">
+          <CardHeader className='px-6 pt-4 pb-4'>
+            <CardTitle className='text-sm font-medium'>Role Assignment</CardTitle>
+            <p className='text-xs text-muted-foreground'>
               Select a predefined role to set permissions below
             </p>
           </CardHeader>
-          <CardContent className="px-6 pt-0 pb-4">
+          <CardContent className='px-6 pt-0 pb-4'>
             <Controller
               control={control}
-              name="role"
+              name='role'
               render={({ field }) => (
                 <Select
                   value={field.value}
@@ -129,25 +129,25 @@ export function UserPermissionsForm({
 
         {PERMISSION_GROUPS.map((group) => (
           <Card key={group.title}>
-            <CardHeader className="px-6 pt-4 pb-2">
-              <CardTitle className="text-sm font-medium">{group.title}</CardTitle>
+            <CardHeader className='px-6 pt-4 pb-2'>
+              <CardTitle className='text-sm font-medium'>{group.title}</CardTitle>
             </CardHeader>
-            <CardContent className="px-6 pt-0 pb-4">
-              <Box className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <CardContent className='px-6 pt-0 pb-4'>
+              <Box className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                 {group.keys.map((key) => {
                   const enabled = allowedPermissions.has(key);
                   return (
-                    <Box key={key} className="flex items-center gap-2">
+                    <Box key={key} className='flex items-center gap-2'>
                       <Checkbox
                         id={`perm-${key}`}
                         checked={enabled}
                         disabled
-                        aria-readonly="true"
-                        className="pointer-events-none"
+                        aria-readonly='true'
+                        className='pointer-events-none'
                       />
                       <label
                         htmlFor={`perm-${key}`}
-                        className="text-sm text-muted-foreground cursor-default select-none"
+                        className='text-sm text-muted-foreground cursor-default select-none'
                       >
                         {PERMISSIONS[key]?.label ?? key}
                       </label>

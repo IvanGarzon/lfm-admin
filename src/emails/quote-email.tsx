@@ -22,19 +22,19 @@ function QuoteContent({ quoteData, pdfUrl }: QuoteEmailProps): React.ReactElemen
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency
   }).format(amount);
 
   const formattedIssuedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(issuedDate));
 
   const formattedValidUntil = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(validUntil));
 
   return (
@@ -114,9 +114,9 @@ QuoteEmail.PreviewProps = {
     currency: 'AUD',
     issuedDate: new Date('2025-01-15'),
     validUntil: new Date('2025-02-15'),
-    itemCount: 5,
+    itemCount: 5
   },
-  pdfUrl: 'https://example.com/quote.pdf',
+  pdfUrl: 'https://example.com/quote.pdf'
 } satisfies QuoteEmailProps;
 
 export default QuoteEmail;

@@ -8,7 +8,7 @@ export const SORTABLE_PRODUCT_COLUMNS = [
   'price',
   'stock',
   'createdAt',
-  'updatedAt',
+  'updatedAt'
 ] as const;
 
 export type SortableProductColumn = (typeof SORTABLE_PRODUCT_COLUMNS)[number];

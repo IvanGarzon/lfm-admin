@@ -10,7 +10,7 @@ import {
   DeletePriceListItemSchema,
   type CreatePriceListItemInput,
   type UpdatePriceListItemInput,
-  type DeletePriceListItemInput,
+  type DeletePriceListItemInput
 } from '@/schemas/price-list';
 import { PriceListRepository } from '@/repositories/price-list-repository';
 
@@ -37,7 +37,7 @@ export const createPriceListItem = withTenantPermission<CreatePriceListItemInput
     } catch (error) {
       return handleActionError(error, 'Failed to create price list item');
     }
-  },
+  }
 );
 
 /**
@@ -54,7 +54,7 @@ export const updatePriceListItem = withTenantPermission<UpdatePriceListItemInput
       const result = await priceListRepo.updatePriceListItem(
         validatedData.id,
         ctx.tenantId,
-        validatedData,
+        validatedData
       );
 
       if (!result) {
@@ -67,7 +67,7 @@ export const updatePriceListItem = withTenantPermission<UpdatePriceListItemInput
     } catch (error) {
       return handleActionError(error, 'Failed to update price list item');
     }
-  },
+  }
 );
 
 /**

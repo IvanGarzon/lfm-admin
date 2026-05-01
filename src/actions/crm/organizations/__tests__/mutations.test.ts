@@ -4,7 +4,7 @@ import {
   testIds,
   mockSessions,
   createOrganizationInput,
-  createOrganizationResponse,
+  createOrganizationResponse
 } from '@/lib/testing';
 import { revalidatePath } from 'next/cache';
 import type { UpdateOrganizationInput } from '@/schemas/organizations';
@@ -14,15 +14,15 @@ const { mockOrgRepo, mockAuth } = vi.hoisted(() => ({
     createOrganization: vi.fn(),
     findOrganizationById: vi.fn(),
     updateOrganization: vi.fn(),
-    deleteOrganization: vi.fn(),
+    deleteOrganization: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/organization-repository', () => ({
   OrganizationRepository: vi.fn().mockImplementation(function () {
     return mockOrgRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -54,7 +54,7 @@ describe('Organisation Mutations', () => {
       }
       expect(mockOrgRepo.createOrganization).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Acme Florals' }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
       expect(revalidatePath).toHaveBeenCalledWith('/customers');
       expect(revalidatePath).toHaveBeenCalledWith('/organizations');
@@ -127,7 +127,7 @@ describe('Organisation Mutations', () => {
       }
       expect(mockOrgRepo.deleteOrganization).toHaveBeenCalledWith(
         TEST_ORG_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

@@ -41,7 +41,7 @@ const emailTemplates = {
   invitation: InvitationEmail,
   'password-reset': PasswordResetEmail,
   'login-notification': LoginNotificationEmail,
-  otp: OtpEmail,
+  otp: OtpEmail
 } as const;
 
 /**
@@ -83,7 +83,7 @@ export function isEmailTemplate(name: unknown): name is EmailTemplateName {
  * Get a template component by name
  */
 function getTemplate<N extends EmailTemplateName>(
-  key: N,
+  key: N
 ): React.ComponentType<EmailProps<N>> | undefined {
   const Email = emailTemplates[key];
   if (Email == null) {
@@ -103,7 +103,7 @@ function getTemplate<N extends EmailTemplateName>(
 export async function renderEmail<
   T extends EmailTemplateName,
   Component extends (typeof emailTemplates)[T],
-  Props extends Parameters<Component>[0],
+  Props extends Parameters<Component>[0]
 >(key: T, props: Props): Promise<string> {
   const Email = getTemplate(key);
 
@@ -112,6 +112,6 @@ export async function renderEmail<
   }
 
   return render(<Email {...props} />, {
-    pretty: true,
+    pretty: true
   });
 }

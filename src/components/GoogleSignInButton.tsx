@@ -16,20 +16,20 @@ export function GoogleSignInButton() {
 
     startTransition(() => {
       signIn('google', {
-        callbackUrl: callbackUrl ?? '/',
+        callbackUrl: callbackUrl ?? '/'
       });
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className='w-full'>
       <Button
-        className="w-full text-sm h-12 bg-white text-dark border cursor-pointer hover:bg-black/5"
-        variant="outline"
-        type="submit"
+        className='w-full text-sm h-12 bg-white text-dark border cursor-pointer hover:bg-black/5'
+        variant='outline'
+        type='submit'
         disabled={isPending}
       >
-        <GoogleIcon className="size-8" />
+        <GoogleIcon className='size-8' />
         {isPending ? 'Signing in...' : `Continue with Google`}
       </Button>
     </form>

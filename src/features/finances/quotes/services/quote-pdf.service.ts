@@ -6,7 +6,7 @@ import { getLatestDocument, createDocument, getDocumentUrl } from '@/services/do
 import {
   generateQuoteFilename,
   calculateContentHash,
-  generateQuotePDF,
+  generateQuotePDF
 } from '../utils/quote-helpers';
 
 export interface PdfResult {
@@ -48,7 +48,7 @@ export interface GetPdfOptions {
  */
 export async function getOrGenerateQuotePdf(
   quote: QuoteWithDetails,
-  options: GetPdfOptions = {},
+  options: GetPdfOptions = {}
 ): Promise<PdfResult> {
   const { skipDownload = false, context = 'getOrGenerateQuotePdf' } = options;
 
@@ -99,8 +99,8 @@ export async function getOrGenerateQuotePdf(
           quoteId: quote.id,
           documentId: existingDoc.id,
           contentHash,
-          skipDownload,
-        },
+          skipDownload
+        }
       });
     } catch (error) {
       // If S3 file is missing, regenerate the PDF
@@ -109,8 +109,8 @@ export async function getOrGenerateQuotePdf(
         metadata: {
           quoteId: quote.id,
           s3Key: existingDoc?.s3Key,
-          error: error instanceof Error ? error.message : String(error),
-        },
+          error: error instanceof Error ? error.message : String(error)
+        }
       });
     }
   }
@@ -124,8 +124,8 @@ export async function getOrGenerateQuotePdf(
         quoteId: quote.id,
         reason: !existingDoc ? 'first_generation' : 'content_changed_or_missing',
         oldHash: existingDoc?.fileHash,
-        newHash: contentHash,
-      },
+        newHash: contentHash
+      }
     });
 
     const generatedPdfBuffer = await generateQuotePDF(quote);
@@ -140,8 +140,8 @@ export async function getOrGenerateQuotePdf(
       fileHash: contentHash,
       metadata: {
         quoteNumber: quote.quoteNumber,
-        status: quote.status,
-      },
+        status: quote.status
+      }
     });
 
     s3Key = newDoc.s3Key;
@@ -164,6 +164,6 @@ export async function getOrGenerateQuotePdf(
     pdfUrl,
     pdfFilename,
     pdfFileSize,
-    wasRegenerated,
+    wasRegenerated
   };
 }

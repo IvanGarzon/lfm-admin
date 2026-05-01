@@ -7,7 +7,7 @@
 import type { CreateCustomerInput } from '@/schemas/customers';
 
 export function createCustomerInput(
-  overrides: Partial<CreateCustomerInput> = {},
+  overrides: Partial<CreateCustomerInput> = {}
 ): CreateCustomerInput {
   return {
     firstName: 'Jane',
@@ -28,8 +28,8 @@ export function createCustomerInput(
       country: 'Australia',
       lat: 0,
       lng: 0,
-      formattedAddress: '1 Test St, Melbourne VIC 3000',
+      formattedAddress: '1 Test St, Melbourne VIC 3000'
     },
-    ...overrides,
+    ...overrides
   };
 }

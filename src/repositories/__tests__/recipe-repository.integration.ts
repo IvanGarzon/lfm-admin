@@ -12,7 +12,7 @@ import { RecipeRepository } from '../recipe-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import type { CreateRecipeInput } from '@/schemas/recipes';
 
@@ -27,7 +27,7 @@ const baseItem = {
   lineTotal: 20,
   retailPrice: 3,
   retailLineTotal: 30,
-  order: 0,
+  order: 0
 };
 
 const recipeInput: CreateRecipeInput = {
@@ -42,7 +42,7 @@ const recipeInput: CreateRecipeInput = {
   totalRetailPrice: 40,
   sellingPrice: 85,
   notes: 'Handle with care',
-  items: [baseItem],
+  items: [baseItem]
 };
 
 // -- Tests -------------------------------------------------------------------
@@ -121,7 +121,7 @@ describe('RecipeRepository (integration)', () => {
 
       const result = await repository.searchRecipes(
         { search: 'Rose', page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.some((recipe) => recipe.name === 'Rose Arch')).toBe(true);
@@ -132,7 +132,7 @@ describe('RecipeRepository (integration)', () => {
       for (let i = 0; i < 3; i++) {
         await repository.createRecipeWithItems(
           { ...recipeInput, name: `Paginated Recipe ${i}` },
-          tenantId,
+          tenantId
         );
       }
 
@@ -153,7 +153,7 @@ describe('RecipeRepository (integration)', () => {
         ...recipeInput,
         id: created.id,
         name: 'Updated Bouquet',
-        items: [{ ...baseItem, name: 'Pink Peony', quantity: 5 }],
+        items: [{ ...baseItem, name: 'Pink Peony', quantity: 5 }]
       });
 
       expect(updated?.name).toBe('Updated Bouquet');
@@ -172,8 +172,8 @@ describe('RecipeRepository (integration)', () => {
         repository.updateRecipeWithItems(created.id, tenantId, {
           ...recipeInput,
           id: created.id,
-          name: 'Should Not Update',
-        }),
+          name: 'Should Not Update'
+        })
       ).rejects.toThrow();
     });
   });
@@ -184,7 +184,7 @@ describe('RecipeRepository (integration)', () => {
     it('sets deletedAt and excludes from search results', async () => {
       const created = await repository.createRecipeWithItems(
         { ...recipeInput, name: 'To Be Deleted' },
-        tenantId,
+        tenantId
       );
 
       const deleted = await repository.softDeleteRecipe(created.id, tenantId);

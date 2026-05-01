@@ -14,21 +14,21 @@ export function QuoteNotesFields({ control, isLocked }: QuoteNotesFieldsProps) {
     <>
       <FieldGroup>
         <Controller
-          name="notes"
+          name='notes'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-notes">Notes</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-notes'>Notes</FieldLabel>
               </FieldContent>
               <Textarea
                 {...field}
-                id="form-rhf-textarea-notes"
+                id='form-rhf-textarea-notes'
                 aria-invalid={fieldState.invalid}
                 value={field.value ?? ''}
-                placeholder="Add any additional comments or notes for this quote..."
+                placeholder='Add any additional comments or notes for this quote...'
                 rows={3}
-                className="resize-none"
+                className='resize-none'
                 disabled={isLocked}
               />
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -39,21 +39,21 @@ export function QuoteNotesFields({ control, isLocked }: QuoteNotesFieldsProps) {
 
       <FieldGroup>
         <Controller
-          name="terms"
+          name='terms'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-terms">Terms & Conditions</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-terms'>Terms & Conditions</FieldLabel>
               </FieldContent>
               <Textarea
                 {...field}
-                id="form-rhf-textarea-terms"
+                id='form-rhf-textarea-terms'
                 aria-invalid={fieldState.invalid}
                 value={field.value ?? ''}
-                placeholder="Add terms and conditions for this quote..."
+                placeholder='Add terms and conditions for this quote...'
                 rows={4}
-                className="resize-none"
+                className='resize-none'
                 disabled={isLocked}
               />
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

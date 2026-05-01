@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -49,7 +49,7 @@ function RecipeItemCard({
   isSelected,
   quantity,
   onToggle,
-  onUpdateQuantity,
+  onUpdateQuantity
 }: {
   name: string;
   description?: string | null;
@@ -64,58 +64,58 @@ function RecipeItemCard({
     <Box
       className={cn(
         'flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
-        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50'
       )}
       onClick={onToggle}
     >
       <Box
         className={cn(
           'w-5 h-5 rounded border flex items-center justify-center shrink-0',
-          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-input',
+          isSelected ? 'bg-primary border-primary text-primary-foreground' : 'border-input'
         )}
       >
-        {isSelected ? <Check aria-hidden="true" className="h-3 w-3" /> : null}
+        {isSelected ? <Check aria-hidden='true' className='h-3 w-3' /> : null}
       </Box>
 
-      <Box className="flex-1 min-w-0">
-        <Box className="flex items-center gap-2">
-          <span className="font-medium text-sm truncate">{name}</span>
+      <Box className='flex-1 min-w-0'>
+        <Box className='flex items-center gap-2'>
+          <span className='font-medium text-sm truncate'>{name}</span>
           {badge ? (
-            <Badge variant="outline" className="text-xs shrink-0">
+            <Badge variant='outline' className='text-xs shrink-0'>
               {badge}
             </Badge>
           ) : null}
         </Box>
         {description ? (
-          <Box className="text-xs text-muted-foreground truncate mt-0.5">{description}</Box>
+          <Box className='text-xs text-muted-foreground truncate mt-0.5'>{description}</Box>
         ) : null}
       </Box>
 
-      <Box className="text-sm font-medium shrink-0">{formatCurrency({ number: price })}</Box>
+      <Box className='text-sm font-medium shrink-0'>{formatCurrency({ number: price })}</Box>
 
       {isSelected ? (
-        <Box className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <Box className='flex items-center gap-1 shrink-0' onClick={(e) => e.stopPropagation()}>
           <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            type='button'
+            variant='outline'
+            size='icon'
+            className='h-7 w-7'
             onClick={() => onUpdateQuantity(-1)}
             disabled={quantity <= 1}
-            aria-label="Decrease quantity"
+            aria-label='Decrease quantity'
           >
-            <Minus aria-hidden="true" className="h-3 w-3" />
+            <Minus aria-hidden='true' className='h-3 w-3' />
           </Button>
-          <span className="w-8 text-center text-sm font-medium">{quantity}</span>
+          <span className='w-8 text-center text-sm font-medium'>{quantity}</span>
           <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            type='button'
+            variant='outline'
+            size='icon'
+            className='h-7 w-7'
             onClick={() => onUpdateQuantity(1)}
-            aria-label="Increase quantity"
+            aria-label='Increase quantity'
           >
-            <Plus aria-hidden="true" className="h-3 w-3" />
+            <Plus aria-hidden='true' className='h-3 w-3' />
           </Button>
         </Box>
       ) : null}
@@ -130,7 +130,7 @@ export function AddRecipesDialog({
   isLoadingRecipes,
   recipeGroups,
   isLoadingRecipeGroups,
-  onRequestRecipes,
+  onRequestRecipes
 }: AddRecipesDialogProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -144,7 +144,7 @@ export function AddRecipesDialog({
       }
       setOpen(newOpen);
     },
-    [onRequestRecipes],
+    [onRequestRecipes]
   );
 
   const filteredRecipes = useMemo(() => {
@@ -160,7 +160,7 @@ export function AddRecipesDialog({
     return recipes.filter(
       (r) =>
         r.name.toLowerCase().includes(lowerSearch) ||
-        r.description?.toLowerCase().includes(lowerSearch),
+        r.description?.toLowerCase().includes(lowerSearch)
     );
   }, [recipes, search]);
 
@@ -177,7 +177,7 @@ export function AddRecipesDialog({
     return recipeGroups.filter(
       (g) =>
         g.name.toLowerCase().includes(lowerSearch) ||
-        g.description?.toLowerCase().includes(lowerSearch),
+        g.description?.toLowerCase().includes(lowerSearch)
     );
   }, [recipeGroups, search]);
 
@@ -194,7 +194,7 @@ export function AddRecipesDialog({
           name: recipe.name,
           sellingPrice: recipe.sellingPrice,
           quantity: 1,
-          type: 'recipe',
+          type: 'recipe'
         });
       }
 
@@ -215,7 +215,7 @@ export function AddRecipesDialog({
           name: group.name,
           sellingPrice: group.totalSellingPrice,
           quantity: 1,
-          type: 'group',
+          type: 'group'
         });
       }
 
@@ -243,7 +243,7 @@ export function AddRecipesDialog({
         items.push({
           description: item.name,
           quantity: item.quantity,
-          unitPrice: item.sellingPrice,
+          unitPrice: item.sellingPrice
         });
       } else {
         // For recipe groups, fetch the group details and expand into individual items
@@ -253,8 +253,7 @@ export function AddRecipesDialog({
             items.push({
               description: `${groupItem.recipe.name}`,
               quantity: groupItem.quantity * item.quantity,
-              unitPrice:
-                (groupItem.recipe as any).sellingPrice ?? groupItem.recipe.totalRetailPrice,
+              unitPrice: (groupItem.recipe as any).sellingPrice ?? groupItem.recipe.totalRetailPrice
             });
           }
         }
@@ -280,17 +279,17 @@ export function AddRecipesDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+          type='button'
+          variant='ghost'
+          size='sm'
           disabled={disabled}
-          className="text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+          className='text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer'
         >
-          <ChefHat aria-hidden="true" className="h-4 w-4 mr-1" />
+          <ChefHat aria-hidden='true' className='h-4 w-4 mr-1' />
           Add from Recipes
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className='sm:max-w-[800px]'>
         <DialogHeader>
           <DialogTitle>Add Recipes to Quote</DialogTitle>
           <DialogDescription>
@@ -299,53 +298,53 @@ export function AddRecipesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Box className="relative">
+        <Box className='relative'>
           <Search
-            aria-hidden="true"
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden='true'
+            className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground'
           />
           <Input
-            placeholder="Search recipes..."
+            placeholder='Search recipes...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className='pl-9'
           />
         </Box>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'recipes' | 'groups')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="recipes" className="flex items-center gap-2">
-              <ChefHat aria-hidden="true" className="h-4 w-4" />
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='recipes' className='flex items-center gap-2'>
+              <ChefHat aria-hidden='true' className='h-4 w-4' />
               Recipes
               {filteredRecipes.length > 0 ? (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant='secondary' className='ml-1'>
                   {filteredRecipes.length}
                 </Badge>
               ) : null}
             </TabsTrigger>
-            <TabsTrigger value="groups" className="flex items-center gap-2">
-              <Layers aria-hidden="true" className="h-4 w-4" />
+            <TabsTrigger value='groups' className='flex items-center gap-2'>
+              <Layers aria-hidden='true' className='h-4 w-4' />
               Groups
               {filteredGroups.length > 0 ? (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant='secondary' className='ml-1'>
                   {filteredGroups.length}
                 </Badge>
               ) : null}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="recipes" className="mt-4">
-            <ScrollArea className="h-[300px] pr-4">
+          <TabsContent value='recipes' className='mt-4'>
+            <ScrollArea className='h-[300px] pr-4'>
               {isLoadingRecipes ? (
-                <Box className="flex items-center justify-center h-full">
-                  <Box className="text-sm text-muted-foreground">Loading recipes...</Box>
+                <Box className='flex items-center justify-center h-full'>
+                  <Box className='text-sm text-muted-foreground'>Loading recipes...</Box>
                 </Box>
               ) : filteredRecipes.length === 0 ? (
-                <Box className="flex items-center justify-center h-full">
-                  <Box className="text-sm text-muted-foreground">No recipes found</Box>
+                <Box className='flex items-center justify-center h-full'>
+                  <Box className='text-sm text-muted-foreground'>No recipes found</Box>
                 </Box>
               ) : (
-                <Box className="space-y-2">
+                <Box className='space-y-2'>
                   {filteredRecipes.map((recipe) => {
                     const key = `recipe-${recipe.id}`;
                     const selected = selectedItems.get(key);
@@ -369,18 +368,18 @@ export function AddRecipesDialog({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="groups" className="mt-4">
-            <ScrollArea className="h-[300px] pr-4">
+          <TabsContent value='groups' className='mt-4'>
+            <ScrollArea className='h-[300px] pr-4'>
               {isLoadingRecipeGroups ? (
-                <Box className="flex items-center justify-center h-full">
-                  <Box className="text-sm text-muted-foreground">Loading groups...</Box>
+                <Box className='flex items-center justify-center h-full'>
+                  <Box className='text-sm text-muted-foreground'>Loading groups...</Box>
                 </Box>
               ) : filteredGroups.length === 0 ? (
-                <Box className="flex items-center justify-center h-full">
-                  <Box className="text-sm text-muted-foreground">No recipe groups found</Box>
+                <Box className='flex items-center justify-center h-full'>
+                  <Box className='text-sm text-muted-foreground'>No recipe groups found</Box>
                 </Box>
               ) : (
-                <Box className="space-y-2">
+                <Box className='space-y-2'>
                   {filteredGroups.map((group) => {
                     const key = `group-${group.id}`;
                     const selected = selectedItems.get(key);
@@ -406,17 +405,17 @@ export function AddRecipesDialog({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Box className="flex-1 text-sm text-muted-foreground">
+        <DialogFooter className='flex-col sm:flex-row gap-2'>
+          <Box className='flex-1 text-sm text-muted-foreground'>
             {totalSelected > 0 ? (
               <>
                 {totalSelected} item{totalSelected > 1 ? 's' : ''} selected
-                <span className="mx-2">·</span>
+                <span className='mx-2'>·</span>
                 {formatCurrency({ number: totalValue })}
               </>
             ) : null}
           </Box>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button variant='outline' onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={handleAddToQuote} disabled={totalSelected === 0}>

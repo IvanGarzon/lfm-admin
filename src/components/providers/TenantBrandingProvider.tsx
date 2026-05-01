@@ -7,7 +7,7 @@ const TenantBrandingContext = createContext<TenantBranding | null>(null);
 
 export function TenantBrandingProvider({
   branding,
-  children,
+  children
 }: {
   branding: TenantBranding | null;
   children: React.ReactNode;

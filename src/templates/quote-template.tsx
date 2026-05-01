@@ -16,82 +16,82 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Helvetica'
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 40,
-    position: 'relative',
+    position: 'relative'
   },
   headerLeft: {
-    flex: 1,
+    flex: 1
   },
   headerRight: {
     position: 'absolute',
     top: -10,
     right: 0,
     width: 100,
-    height: 100,
+    height: 100
   },
   logo: {
     width: '100%',
     height: '100%',
-    objectFit: 'contain',
+    objectFit: 'contain'
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 5
   },
   quoteNumber: {
     fontSize: 11,
-    color: '#666',
+    color: '#666'
   },
   billingSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 30
   },
   billingColumn: {
-    width: '48%',
+    width: '48%'
   },
   sectionTitle: {
     fontSize: 9,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#666',
+    color: '#666'
   },
   companyName: {
     fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 3,
+    marginBottom: 3
   },
   text: {
     fontSize: 10,
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 2
   },
   dateSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 30
   },
   dateColumn: {
-    width: '48%',
+    width: '48%'
   },
   dateLabel: {
     fontSize: 9,
     color: '#666',
-    marginBottom: 3,
+    marginBottom: 3
   },
   dateValue: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   table: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   tableHeader: {
     flexDirection: 'row',
@@ -99,51 +99,51 @@ const styles = StyleSheet.create({
     padding: 10,
     fontWeight: 'bold',
     fontSize: 9,
-    color: '#666',
+    color: '#666'
   },
   tableRow: {
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#e5e7eb'
   },
   tableCol1: {
-    width: '50%',
+    width: '50%'
   },
   tableCol2: {
     width: '15%',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   tableCol3: {
     width: '20%',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   tableCol4: {
     width: '15%',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   summarySection: {
     marginTop: 10,
-    alignItems: 'flex-end',
+    alignItems: 'flex-end'
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginBottom: 8,
-    width: '50%',
+    width: '50%'
   },
   summaryLabel: {
     fontSize: 10,
     color: '#666',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   summaryValue: {
     fontSize: 10,
     fontWeight: 'bold',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   totalRow: {
     flexDirection: 'row',
@@ -152,137 +152,137 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 2,
     borderTopColor: '#333',
-    width: '50%',
+    width: '50%'
   },
   totalLabel: {
     fontSize: 12,
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   totalValue: {
     fontSize: 12,
     fontWeight: 'bold',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   itemDetailsSection: {
     marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 20
   },
   itemDetailBox: {
     marginBottom: 15,
     padding: 10,
     backgroundColor: '#f9fafb',
-    borderRadius: 4,
+    borderRadius: 4
   },
   itemDetailTitle: {
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 8
   },
   itemDetailText: {
     fontSize: 9,
     color: '#666',
-    lineHeight: 1.4,
+    lineHeight: 1.4
   },
   attachmentsList: {
-    marginTop: 8,
+    marginTop: 8
   },
   attachmentItem: {
     fontSize: 8,
     color: '#666',
-    marginBottom: 3,
+    marginBottom: 3
   },
   imagesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     marginTop: 4,
-    marginBottom: 4,
+    marginBottom: 4
   },
   imageContainer: {
     width: '30%',
     marginBottom: 6,
-    aspectRatio: '1',
+    aspectRatio: '1'
   },
   itemImage: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
-    borderRadius: 4,
+    borderRadius: 4
   },
   imageCaption: {
     fontSize: 7,
     color: '#666',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   colorsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     marginTop: 8,
-    marginBottom: 12,
+    marginBottom: 12
   },
   colorBox: {
     width: 40,
     height: 40,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#e5e7eb'
   },
   notes: {
     marginTop: 30,
     padding: 12,
     backgroundColor: '#f9fafb',
-    borderRadius: 4,
+    borderRadius: 4
   },
   notesTitle: {
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 5
   },
   notesText: {
     fontSize: 9,
     color: '#666',
-    lineHeight: 1.4,
+    lineHeight: 1.4
   },
   termsSection: {
     marginTop: 30,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#e5e7eb'
   },
   footer: {
     position: 'absolute',
     bottom: 20,
     left: 40,
-    right: 40,
+    right: 40
   },
   footerLine: {
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    marginBottom: 8,
+    marginBottom: 8
   },
   footerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between'
   },
   footerLeft: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'left',
+    textAlign: 'left'
   },
   footerRight: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   pageNumber: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   watermark: {
     position: 'absolute',
@@ -293,8 +293,8 @@ const styles = StyleSheet.create({
     fontSize: 100,
     fontWeight: 'bold',
     color: 'rgba(0, 0, 0, 0.08)',
-    transform: 'rotate(-45deg)',
-  },
+    transform: 'rotate(-45deg)'
+  }
 });
 
 export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
@@ -312,7 +312,7 @@ export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size='A4' style={styles.page}>
         {quote.status === QuoteStatusSchema.enum.DRAFT ? (
           <View style={styles.watermark}>
             <Text>Draft</Text>
@@ -411,7 +411,7 @@ export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
 
         {quote.items.some(
           (item) =>
-            item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0),
+            item.attachments?.length > 0 || item.notes || (item.colors && item.colors.length > 0)
         ) ? (
           <View style={styles.itemDetailsSection}>
             <Text style={styles.sectionTitle}>Item Details</Text>
@@ -420,7 +420,7 @@ export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
                 (item) =>
                   item.attachments?.length > 0 ||
                   item.notes ||
-                  (item.colors && item.colors.length > 0),
+                  (item.colors && item.colors.length > 0)
               )
               .sort((a, b) => a.order - b.order)
               .map((item) => (
@@ -458,7 +458,7 @@ export function QuoteDocument({ quote, settings, logoUrl }: QuotePreviewProps) {
                           ))}
                       </View>
                       {item.attachments.some(
-                        (attachment) => !isSupportedImageFormat(attachment.mimeType),
+                        (attachment) => !isSupportedImageFormat(attachment.mimeType)
                       ) ? (
                         <Text style={styles.itemDetailText}>
                           Note: Some file formats (WebP, documents) cannot be displayed in PDF.

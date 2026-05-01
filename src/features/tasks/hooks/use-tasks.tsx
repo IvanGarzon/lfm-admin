@@ -9,7 +9,7 @@ import {
   getTaskById,
   getTaskExecutions,
   getExecutionById,
-  getRecentExecutions,
+  getRecentExecutions
 } from '@/actions/tasks/queries';
 import { updateTask, setTaskEnabled, executeTask, syncTasks } from '@/actions/tasks/mutations';
 
@@ -24,7 +24,7 @@ export const TASK_KEYS = {
   detail: (id: string) => [...TASK_KEYS.details(), id] as const,
   executions: (id: string) => [...TASK_KEYS.detail(id), 'executions'] as const,
   execution: (executionId: string) => [...TASK_KEYS.all, 'execution', executionId] as const,
-  recentExecutions: () => [...TASK_KEYS.all, 'recent-executions'] as const,
+  recentExecutions: () => [...TASK_KEYS.all, 'recent-executions'] as const
 };
 
 /**
@@ -36,7 +36,7 @@ function invalidateTaskQueries(
   options?: {
     taskId?: string;
     invalidateExecutions?: boolean;
-  },
+  }
 ) {
   if (options?.taskId) {
     queryClient.invalidateQueries({ queryKey: TASK_KEYS.detail(options.taskId) });
@@ -62,7 +62,7 @@ export function useTasks(
     isEnabled?: boolean;
     scheduleType?: ScheduleType;
   },
-  initialData?: TaskPagination,
+  initialData?: TaskPagination
 ) {
   return useQuery({
     queryKey: TASK_KEYS.list(filters),
@@ -78,7 +78,7 @@ export function useTasks(
     initialData,
     refetchOnWindowFocus: true,
     refetchInterval: 30000,
-    staleTime: 10000,
+    staleTime: 10000
   });
 }
 
@@ -102,7 +102,7 @@ export function useTask(taskId: string) {
       return result.data;
     },
     refetchOnWindowFocus: true,
-    staleTime: 10000,
+    staleTime: 10000
   });
 }
 
@@ -120,7 +120,7 @@ export function useTaskExecutions(
     limit?: number;
     offset?: number;
     status?: ExecutionStatus;
-  },
+  }
 ) {
   return useQuery({
     queryKey: TASK_KEYS.executions(taskId),
@@ -140,7 +140,7 @@ export function useTaskExecutions(
       const hasRunningTasks = data?.executions?.some((exec) => exec.status === 'RUNNING');
       return hasRunningTasks ? 5000 : false; // Poll every 5s if running, otherwise stop
     },
-    staleTime: 5000,
+    staleTime: 5000
   });
 }
 
@@ -163,7 +163,7 @@ export function useExecution(executionId: string) {
 
       return result.data;
     },
-    staleTime: 5000,
+    staleTime: 5000
   });
 }
 
@@ -187,7 +187,7 @@ export function useRecentExecutions(limit: number = 10) {
       return result.data;
     },
     refetchOnWindowFocus: true,
-    staleTime: 5000,
+    staleTime: 5000
   });
 }
 
@@ -226,7 +226,7 @@ export function useUpdateTask() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update task');
-    },
+    }
   });
 }
 
@@ -255,7 +255,7 @@ export function useSetTaskEnabled() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update task status');
-    },
+    }
   });
 }
 
@@ -285,7 +285,7 @@ export function useExecuteTask() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to execute task');
-    },
+    }
   });
 }
 
@@ -314,6 +314,6 @@ export function useSyncTasks() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to sync tasks');
-    },
+    }
   });
 }

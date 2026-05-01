@@ -9,7 +9,7 @@ import { withTenantPermission } from '@/lib/action-auth';
 import type {
   CustomerPagination,
   CustomerListItem,
-  CustomerSelectItem,
+  CustomerSelectItem
 } from '@/features/crm/customers/types';
 import { searchParamsCache } from '@/filters/customers/customers-filters';
 
@@ -29,7 +29,7 @@ export const getActiveCustomers = withTenantPermission<void, CustomerSelectItem[
     } catch (error) {
       return handleActionError(error, 'Failed to fetch customers');
     }
-  },
+  }
 );
 
 /**
@@ -49,7 +49,7 @@ export const getCustomers = withTenantPermission<SearchParams, CustomerPaginatio
     } catch (error) {
       return handleActionError(error, 'Failed to fetch customers');
     }
-  },
+  }
 );
 
 /**
@@ -72,5 +72,5 @@ export const getCustomerById = withTenantPermission<string, CustomerListItem | n
     } catch (error) {
       return handleActionError(error, 'Failed to fetch customer');
     }
-  },
+  }
 );

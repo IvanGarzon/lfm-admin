@@ -23,18 +23,18 @@ export class TaskExecutionRepository {
       limit?: number;
       offset?: number;
       status?: ExecutionStatus;
-    },
+    }
   ): Promise<TaskExecution[]> {
     return this.prisma.taskExecution.findMany({
       where: {
         taskId,
-        ...(options?.status && { status: options.status }),
+        ...(options?.status && { status: options.status })
       },
       orderBy: {
-        startedAt: 'desc',
+        startedAt: 'desc'
       },
       take: options?.limit,
-      skip: options?.offset,
+      skip: options?.offset
     });
   }
 
@@ -45,7 +45,7 @@ export class TaskExecutionRepository {
    */
   async findById(id: string): Promise<TaskExecution | null> {
     return this.prisma.taskExecution.findUnique({
-      where: { id },
+      where: { id }
     });
   }
 
@@ -57,7 +57,7 @@ export class TaskExecutionRepository {
    */
   async findByInngestRunId(inngestRunId: string): Promise<TaskExecution | null> {
     return this.prisma.taskExecution.findUnique({
-      where: { inngestRunId },
+      where: { inngestRunId }
     });
   }
 
@@ -84,8 +84,8 @@ export class TaskExecutionRepository {
         triggeredByUser: data.triggeredByUser,
         inngestRunId: data.inngestRunId,
         inngestEventId: data.inngestEventId,
-        startedAt: data.startedAt || new Date(),
-      },
+        startedAt: data.startedAt || new Date()
+      }
     });
   }
 
@@ -108,11 +108,11 @@ export class TaskExecutionRepository {
       steps?: any;
       inngestRunId?: string;
       inngestEventId?: string;
-    },
+    }
   ): Promise<TaskExecution> {
     return this.prisma.taskExecution.update({
       where: { id },
-      data,
+      data
     });
   }
 
@@ -134,8 +134,8 @@ export class TaskExecutionRepository {
         status: 'COMPLETED',
         completedAt,
         duration: duration || undefined,
-        result,
-      },
+        result
+      }
     });
   }
 
@@ -159,8 +159,8 @@ export class TaskExecutionRepository {
         completedAt,
         duration: duration || undefined,
         error,
-        stackTrace,
-      },
+        stackTrace
+      }
     });
   }
 
@@ -173,7 +173,7 @@ export class TaskExecutionRepository {
    */
   async getStats(
     taskId: string,
-    since?: Date,
+    since?: Date
   ): Promise<{
     total: number;
     completed: number;
@@ -184,12 +184,12 @@ export class TaskExecutionRepository {
     const executions = await this.prisma.taskExecution.findMany({
       where: {
         taskId,
-        ...(since && { startedAt: { gte: since } }),
+        ...(since && { startedAt: { gte: since } })
       },
       select: {
         status: true,
-        duration: true,
-      },
+        duration: true
+      }
     });
 
     const total = executions.length;
@@ -206,7 +206,7 @@ export class TaskExecutionRepository {
       completed,
       failed,
       running,
-      avgDuration,
+      avgDuration
     };
   }
 
@@ -228,17 +228,17 @@ export class TaskExecutionRepository {
     return this.prisma.taskExecution.findMany({
       take: limit,
       orderBy: {
-        startedAt: 'desc',
+        startedAt: 'desc'
       },
       include: {
         task: {
           select: {
             id: true,
             functionName: true,
-            category: true,
-          },
-        },
-      },
+            category: true
+          }
+        }
+      }
     });
   }
 
@@ -250,11 +250,11 @@ export class TaskExecutionRepository {
   async findRunning(): Promise<TaskExecution[]> {
     return this.prisma.taskExecution.findMany({
       where: {
-        status: 'RUNNING',
+        status: 'RUNNING'
       },
       orderBy: {
-        startedAt: 'desc',
-      },
+        startedAt: 'desc'
+      }
     });
   }
 
@@ -268,12 +268,12 @@ export class TaskExecutionRepository {
     const result = await this.prisma.taskExecution.deleteMany({
       where: {
         startedAt: {
-          lt: olderThan,
+          lt: olderThan
         },
         status: {
-          not: 'RUNNING',
-        },
-      },
+          not: 'RUNNING'
+        }
+      }
     });
 
     return result.count;
@@ -295,8 +295,8 @@ export class TaskExecutionRepository {
     return this.prisma.taskExecution.update({
       where: { id },
       data: {
-        retryCount: execution.retryCount + 1,
-      },
+        retryCount: execution.retryCount + 1
+      }
     });
   }
 }

@@ -111,7 +111,7 @@ async function runTenantAction<TInput, TOutput>(
   userId: string,
   user: AuthenticatedSession['user'],
   handler: TenantHandler<TInput, TOutput>,
-  input: TInput,
+  input: TInput
 ): Promise<ActionResult<TOutput>> {
   const ctx: TenantContext = { tenantId, tenantSlug, userId, user };
   return prisma.$transaction(async (tx) => {
@@ -135,7 +135,7 @@ return runTenantAction(
   session.user.id,
   session.user,
   handler,
-  input,
+  input
 );
 
 // Super admin path — replace:

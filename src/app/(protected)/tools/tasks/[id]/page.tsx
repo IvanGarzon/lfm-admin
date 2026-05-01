@@ -26,16 +26,16 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       EMAIL: 'bg-blue-100 text-blue-800',
       CLEANUP: 'bg-orange-100 text-orange-800',
       FINANCE: 'bg-green-100 text-green-800',
-      CUSTOM: 'bg-purple-100 text-purple-800',
+      CUSTOM: 'bg-purple-100 text-purple-800'
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
   if (isLoading) {
     return (
-      <Box className="container mx-auto py-8">
-        <Box className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Box className='container mx-auto py-8'>
+        <Box className='flex items-center justify-center py-12'>
+          <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
         </Box>
       </Box>
     );
@@ -43,10 +43,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   if (error || !task) {
     return (
-      <Box className="container mx-auto py-8">
+      <Box className='container mx-auto py-8'>
         <Card>
-          <CardContent className="py-12">
-            <Box className="text-center text-destructive">
+          <CardContent className='py-12'>
+            <Box className='text-center text-destructive'>
               <p>{error?.message || 'Task not found'}</p>
             </Box>
           </CardContent>
@@ -56,23 +56,23 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <Box className="container mx-auto py-8 space-y-6">
+    <Box className='container mx-auto py-8 space-y-6'>
       {/* Header */}
-      <Box className="flex items-center justify-between">
-        <Box className="flex items-center gap-4">
-          <Link href="/tools/tasks">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
+      <Box className='flex items-center justify-between'>
+        <Box className='flex items-center gap-4'>
+          <Link href='/tools/tasks'>
+            <Button variant='ghost' size='icon'>
+              <ArrowLeft className='h-4 w-4' />
             </Button>
           </Link>
           <Box>
-            <h1 className="text-3xl font-bold">{task.functionName}</h1>
-            {task.description && <p className="text-muted-foreground mt-1">{task.description}</p>}
+            <h1 className='text-3xl font-bold'>{task.functionName}</h1>
+            {task.description && <p className='text-muted-foreground mt-1'>{task.description}</p>}
           </Box>
         </Box>
-        <Box className="flex items-center gap-4">
-          <Box className="flex items-center gap-2">
-            <span className="text-sm font-medium">Enabled</span>
+        <Box className='flex items-center gap-4'>
+          <Box className='flex items-center gap-2'>
+            <span className='text-sm font-medium'>Enabled</span>
             <Switch
               checked={task.isEnabled}
               onCheckedChange={(checked) => setEnabled({ taskId: task.id, isEnabled: checked })}
@@ -80,7 +80,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             />
           </Box>
           <Button onClick={() => executeMutate(task.id)} disabled={!task.isEnabled || isExecuting}>
-            <Play className="h-4 w-4" />
+            <Play className='h-4 w-4' />
             Run Now
           </Button>
         </Box>
@@ -92,54 +92,54 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           <CardTitle>Task Details</CardTitle>
           <CardDescription>Configuration and metadata</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Box className="grid grid-cols-2 gap-4">
+        <CardContent className='space-y-4'>
+          <Box className='grid grid-cols-2 gap-4'>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">Category</Box>
-              <Badge className={getCategoryColor(task.category)} variant="secondary">
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>Category</Box>
+              <Badge className={getCategoryColor(task.category)} variant='secondary'>
                 {task.category}
               </Badge>
             </Box>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">Schedule Type</Box>
-              <Badge variant="outline">{task.scheduleType}</Badge>
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>Schedule Type</Box>
+              <Badge variant='outline'>{task.scheduleType}</Badge>
             </Box>
           </Box>
 
           <Separator />
 
-          <Box className="grid grid-cols-2 gap-4">
+          <Box className='grid grid-cols-2 gap-4'>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+              <Box className='text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2'>
+                <Clock className='h-4 w-4' />
                 Cron Schedule
               </Box>
-              <code className="text-sm bg-muted px-2 py-1 rounded">
+              <code className='text-sm bg-muted px-2 py-1 rounded'>
                 {task.cronSchedule || 'N/A'}
               </code>
             </Box>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">Event Name</Box>
-              <code className="text-sm bg-muted px-2 py-1 rounded">{task.eventName || 'N/A'}</code>
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>Event Name</Box>
+              <code className='text-sm bg-muted px-2 py-1 rounded'>{task.eventName || 'N/A'}</code>
             </Box>
           </Box>
 
           <Separator />
 
-          <Box className="grid grid-cols-3 gap-4">
+          <Box className='grid grid-cols-3 gap-4'>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">Retries</Box>
-              <Box className="text-lg font-semibold">{task.retries || 0}</Box>
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>Retries</Box>
+              <Box className='text-lg font-semibold'>{task.retries || 0}</Box>
             </Box>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>
                 Concurrency Limit
               </Box>
-              <Box className="text-lg font-semibold">{task.concurrencyLimit || 1}</Box>
+              <Box className='text-lg font-semibold'>{task.concurrencyLimit || 1}</Box>
             </Box>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1">Timeout</Box>
-              <Box className="text-lg font-semibold">
+              <Box className='text-sm font-medium text-muted-foreground mb-1'>Timeout</Box>
+              <Box className='text-lg font-semibold'>
                 {task.timeout ? `${task.timeout / 1000}s` : 'N/A'}
               </Box>
             </Box>
@@ -147,20 +147,20 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           <Separator />
 
-          <Box className="grid grid-cols-2 gap-4">
+          <Box className='grid grid-cols-2 gap-4'>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
-                <Hash className="h-4 w-4" />
+              <Box className='text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2'>
+                <Hash className='h-4 w-4' />
                 Function ID
               </Box>
-              <code className="text-sm bg-muted px-2 py-1 rounded">{task.functionId}</code>
+              <code className='text-sm bg-muted px-2 py-1 rounded'>{task.functionId}</code>
             </Box>
             <Box>
-              <Box className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <Box className='text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2'>
+                <Calendar className='h-4 w-4' />
                 Last Synced
               </Box>
-              <Box className="text-sm">
+              <Box className='text-sm'>
                 {formatDistanceToNow(new Date(task.lastSyncedAt), { addSuffix: true })}
               </Box>
             </Box>
@@ -170,10 +170,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <>
               <Separator />
               <Box>
-                <Box className="text-sm font-medium text-muted-foreground mb-1">
+                <Box className='text-sm font-medium text-muted-foreground mb-1'>
                   Total Executions
                 </Box>
-                <Box className="text-2xl font-bold">{task._count.executions}</Box>
+                <Box className='text-2xl font-bold'>{task._count.executions}</Box>
               </Box>
             </>
           )}
@@ -182,8 +182,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <>
               <Separator />
               <Box>
-                <Box className="text-sm font-medium text-muted-foreground mb-2">Last Execution</Box>
-                <Box className="flex items-center justify-between">
+                <Box className='text-sm font-medium text-muted-foreground mb-2'>Last Execution</Box>
+                <Box className='flex items-center justify-between'>
                   <Box>
                     <Badge
                       variant={
@@ -193,7 +193,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                       {task.lastExecution.status}
                     </Badge>
                   </Box>
-                  <Box className="text-sm text-muted-foreground">
+                  <Box className='text-sm text-muted-foreground'>
                     {format(new Date(task.lastExecution.startedAt), 'MMM d, yyyy HH:mm:ss')}
                   </Box>
                 </Box>

@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from '@/components/ui/dialog';
 import { type AddressInput, type AddressDialogInput } from '@/schemas/address';
 import { updateAndFormatAddress } from './address-utils';
@@ -46,7 +46,7 @@ export function AddressDialog(props: React.PropsWithChildren<AddressDialogProps>
         address2: address2 || '',
         locality: city || '',
         region: region || '',
-        'postal-code': postalCode || '',
+        'postal-code': postalCode || ''
       });
 
       setAddress({
@@ -56,7 +56,7 @@ export function AddressDialog(props: React.PropsWithChildren<AddressDialogProps>
         address2: address2 || '',
         address1: address1 || '',
         postalCode: postalCode || '',
-        formattedAddress: newFormattedAddress,
+        formattedAddress: newFormattedAddress
       });
     }
     setOpen(false);
@@ -78,8 +78,8 @@ export function AddressDialog(props: React.PropsWithChildren<AddressDialogProps>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="h-52 flex items-center justify-center">
-            <Loader2 className="size-6 animate-spin" />
+          <div className='h-52 flex items-center justify-center'>
+            <Loader2 className='size-6 animate-spin' />
           </div>
         ) : (
           <AddressForm address={address} onSubmit={handleSave} onCancel={handleCancel} />

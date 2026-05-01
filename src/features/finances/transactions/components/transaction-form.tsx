@@ -19,12 +19,12 @@ import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
   type CreateTransactionInput,
-  type UpdateTransactionInput,
+  type UpdateTransactionInput
 } from '@/schemas/transactions';
 
 import type {
   TransactionListItem,
-  TransactionFormInput,
+  TransactionFormInput
 } from '@/features/finances/transactions/types';
 import { type Category } from './category-multi-select';
 import { TransactionAttachments } from './transaction-attachments';
@@ -48,7 +48,7 @@ const defaultFormState: CreateTransactionInput = {
   referenceId: null,
   invoiceId: null,
   vendorId: null,
-  customerId: null,
+  customerId: null
 };
 
 const mapTransactionToFormValues = (transaction: TransactionListItem): UpdateTransactionInput => {
@@ -69,7 +69,7 @@ const mapTransactionToFormValues = (transaction: TransactionListItem): UpdateTra
     referenceId: transaction.referenceId ?? null,
     invoiceId: transaction.invoiceId ?? null,
     vendorId: transaction.vendorId ?? null,
-    customerId: transaction.customerId ?? null,
+    customerId: transaction.customerId ?? null
   };
 };
 
@@ -80,7 +80,7 @@ export function TransactionForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: {
   transaction?: TransactionListItem | null;
   onCreate?: (data: CreateTransactionInput) => void;
@@ -112,7 +112,7 @@ export function TransactionForm({
   const form = useForm<TransactionFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   useFormReset(
@@ -123,14 +123,14 @@ export function TransactionForm({
       onDirtyStateChange?.(false);
       return values;
     }, [transaction, onDirtyStateChange]),
-    isUpdating,
+    isUpdating
   );
 
   const { isDirty } = form.formState;
 
   const watchedType = useWatch({
     control: form.control,
-    name: 'type',
+    name: 'type'
   });
 
   const handleVendorChange = useCallback(
@@ -141,7 +141,7 @@ export function TransactionForm({
         form.setValue('payee', vendor.name, { shouldDirty: true });
       }
     },
-    [vendors, form],
+    [vendors, form]
   );
 
   const handleCustomerChange = useCallback(
@@ -150,11 +150,11 @@ export function TransactionForm({
       const customer = customers.find((c) => c.id === customerId);
       if (customer) {
         form.setValue('payee', `${customer.firstName} ${customer.lastName}`.trim(), {
-          shouldDirty: true,
+          shouldDirty: true
         });
       }
     },
-    [customers, form],
+    [customers, form]
   );
 
   useUnsavedChanges(form.formState.isDirty);
@@ -173,7 +173,7 @@ export function TransactionForm({
     (_newCategory: Category) => {
       queryClient.invalidateQueries({ queryKey: ['transactions', 'categories'] });
     },
-    [queryClient],
+    [queryClient]
   );
 
   const onSubmit: SubmitHandler<TransactionFormInput> = useCallback(
@@ -183,13 +183,13 @@ export function TransactionForm({
       } else {
         const updateData: UpdateTransactionInput = {
           ...data,
-          id: transaction?.id ?? '',
+          id: transaction?.id ?? ''
         };
 
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, transaction?.id],
+    [mode, onCreate, onUpdate, transaction?.id]
   );
 
   const isDisabled = isCreating || isUpdating;
@@ -197,31 +197,31 @@ export function TransactionForm({
   return (
     <Form {...form}>
       <form
-        id="form-rhf-transaction"
+        id='form-rhf-transaction'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isDisabled ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating transaction...' : 'Updating transaction...'}
             </span>
           </Box>
         ) : null}
 
         {mode === 'edit' && transaction?.referenceNumber ? (
-          <Box className="px-6 py-2 bg-muted/30 border-b flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <Box className='px-6 py-2 bg-muted/30 border-b flex items-center justify-between'>
+            <span className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>
               Reference Number
             </span>
-            <span className="text-sm font-mono font-bold text-primary">
+            <span className='text-sm font-mono font-bold text-primary'>
               {transaction.referenceNumber}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        <Box className='flex-1 overflow-y-auto px-6 py-6 space-y-4'>
           <TransactionTypeFields control={form.control} isDisabled={isDisabled} />
           <TransactionCategoryField
             control={form.control}
@@ -251,16 +251,16 @@ export function TransactionForm({
           />
         </Box>
 
-        <Box className="border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900">
+        <Box className='border-t p-6 flex gap-3 justify-end bg-gray-50 dark:bg-gray-900'>
           {onClose ? (
-            <Button type="button" variant="outline" onClick={onClose} disabled={isDisabled}>
+            <Button type='button' variant='outline' onClick={onClose} disabled={isDisabled}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={isDisabled || (Boolean(transaction) && !isDirty)}>
+          <Button type='submit' disabled={isDisabled || (Boolean(transaction) && !isDirty)}>
             {isDisabled ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 {mode === 'create' ? 'Creating...' : 'Updating...'}
               </>
             ) : mode === 'create' ? (

@@ -15,7 +15,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { CustomerSelect } from '@/components/shared/customer-select';
@@ -38,14 +38,14 @@ export function InvoiceHeaderFields({
   invoice,
   customers,
   isLoadingCustomers,
-  isLocked,
+  isLocked
 }: InvoiceHeaderFieldsProps) {
   return (
     <>
       {/* Customer Selection */}
       <FieldGroup>
         <Controller
-          name="customerId"
+          name='customerId'
           control={control}
           render={({ field, fieldState }) => (
             <Box>
@@ -55,7 +55,7 @@ export function InvoiceHeaderFields({
                 onValueChange={field.onChange}
                 isLoading={isLoadingCustomers}
                 disabled={isLoadingCustomers || isLocked}
-                label="Bill to"
+                label='Bill to'
                 showAddCustomerLink={true}
                 isLocked={isLocked}
               />
@@ -66,19 +66,19 @@ export function InvoiceHeaderFields({
       </FieldGroup>
 
       {/* Invoice Number (Read-only when editing) & Currency */}
-      <Box className="grid grid-cols-2 gap-4">
+      <Box className='grid grid-cols-2 gap-4'>
         {mode === 'update' && invoice?.invoiceNumber ? (
           <FieldGroup>
             <Field>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-invoice-number">Invoice Number</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-invoice-number'>Invoice Number</FieldLabel>
               </FieldContent>
               <Input
-                id="form-rhf-invoice-number"
+                id='form-rhf-invoice-number'
                 value={invoice.invoiceNumber}
                 disabled
                 readOnly
-                className="bg-muted cursor-not-allowed"
+                className='bg-muted cursor-not-allowed'
               />
             </Field>
           </FieldGroup>
@@ -86,22 +86,22 @@ export function InvoiceHeaderFields({
 
         <FieldGroup className={mode === 'create' ? 'col-span-2' : ''}>
           <Controller
-            name="currency"
+            name='currency'
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-currency'>Currency</FieldLabel>
                 </FieldContent>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                  <SelectTrigger id="form-rhf-select-currency" aria-invalid={fieldState.invalid}>
+                  <SelectTrigger id='form-rhf-select-currency' aria-invalid={fieldState.invalid}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value='AUD'>AUD - Australian Dollar</SelectItem>
+                    <SelectItem value='USD'>USD - US Dollar</SelectItem>
+                    <SelectItem value='EUR'>EUR - Euro</SelectItem>
+                    <SelectItem value='GBP'>GBP - British Pound</SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -112,33 +112,33 @@ export function InvoiceHeaderFields({
       </Box>
 
       {/* Dates */}
-      <Box className="grid grid-cols-2 gap-4">
+      <Box className='grid grid-cols-2 gap-4'>
         <FieldGroup>
           <Controller
-            name="issuedDate"
+            name='issuedDate'
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-issued-date">Issued Date</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-issued-date'>Issued Date</FieldLabel>
                 </FieldContent>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant='outline'
                       className={cn(
                         'w-full justify-start text-left font-normal',
-                        !field.value && 'text-muted-foreground',
+                        !field.value && 'text-muted-foreground'
                       )}
-                      type="button"
+                      type='button'
                       disabled={isLocked}
                     >
-                      <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                      <CalendarIcon className='h-4 w-4' aria-hidden='true' />
                       {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
+                  <PopoverContent className='w-auto p-0'>
+                    <Calendar mode='single' selected={field.value} onSelect={field.onChange} />
                   </PopoverContent>
                 </Popover>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -149,30 +149,30 @@ export function InvoiceHeaderFields({
 
         <FieldGroup>
           <Controller
-            name="dueDate"
+            name='dueDate'
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-due-date">Due Date</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-due-date'>Due Date</FieldLabel>
                 </FieldContent>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant='outline'
                       className={cn(
                         'w-full justify-start text-left font-normal',
-                        !field.value && 'text-muted-foreground',
+                        !field.value && 'text-muted-foreground'
                       )}
-                      type="button"
+                      type='button'
                       disabled={isLocked}
                     >
-                      <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+                      <CalendarIcon className='h-4 w-4' aria-hidden='true' />
                       {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
+                  <PopoverContent className='w-auto p-0'>
+                    <Calendar mode='single' selected={field.value} onSelect={field.onChange} />
                   </PopoverContent>
                 </Popover>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

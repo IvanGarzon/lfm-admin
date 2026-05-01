@@ -28,7 +28,7 @@ export const getEmployees = withTenantPermission<SearchParams, EmployeePaginatio
     } catch (error) {
       return handleActionError(error, 'Failed to fetch employees');
     }
-  },
+  }
 );
 
 /**
@@ -51,5 +51,5 @@ export const getEmployeeById = withTenantPermission<string, EmployeeListItem | n
     } catch (error) {
       return handleActionError(error, 'Failed to fetch employee');
     }
-  },
+  }
 );

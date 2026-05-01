@@ -10,25 +10,25 @@ import { createTransactionWithDetails } from '@/lib/testing';
 
 // Allows testing form submission without filling in required fields
 vi.mock('@hookform/resolvers/zod', () => ({
-  zodResolver: () => async (values: Record<string, unknown>) => ({ values, errors: {} }),
+  zodResolver: () => async (values: Record<string, unknown>) => ({ values, errors: {} })
 }));
 
 vi.mock('@/features/inventory/vendors/hooks/use-vendor-queries', () => ({
   useActiveVendors: () => ({
     data: [{ id: 'vendor-1', name: 'Acme Corp' }],
-    isLoading: false,
-  }),
+    isLoading: false
+  })
 }));
 
 vi.mock('@/features/crm/customers/hooks/use-customer-queries', () => ({
   useActiveCustomers: () => ({
     data: [{ id: 'customer-1', firstName: 'Jane', lastName: 'Smith' }],
-    isLoading: false,
-  }),
+    isLoading: false
+  })
 }));
 
 vi.mock('@/features/finances/transactions/hooks/use-transaction-queries', () => ({
-  useTransactionCategories: () => ({ data: [], isLoading: false }),
+  useTransactionCategories: () => ({ data: [], isLoading: false })
 }));
 
 type PayeeFieldProps = {
@@ -46,43 +46,43 @@ type CategoryFieldProps = {
 const { mockInvalidateQueries, MockPayeeField, MockCategoryField } = vi.hoisted(() => ({
   mockInvalidateQueries: vi.fn(),
   MockPayeeField: vi.fn((_props: PayeeFieldProps) => null),
-  MockCategoryField: vi.fn((_props: CategoryFieldProps) => null),
+  MockCategoryField: vi.fn((_props: CategoryFieldProps) => null)
 }));
 
 vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries })
 }));
 
 vi.mock('@/hooks/use-unsaved-changes', () => ({
-  useUnsavedChanges: vi.fn(),
+  useUnsavedChanges: vi.fn()
 }));
 
 vi.mock('@/hooks/use-form-reset', () => ({
-  useFormReset: vi.fn(),
+  useFormReset: vi.fn()
 }));
 
 vi.mock('../transaction-attachments', () => ({
-  TransactionAttachments: () => null,
+  TransactionAttachments: () => null
 }));
 
 vi.mock('../form-fields/transaction-type-fields', () => ({
-  TransactionTypeFields: () => null,
+  TransactionTypeFields: () => null
 }));
 
 vi.mock('../form-fields/transaction-category-field', () => ({
-  TransactionCategoryField: MockCategoryField,
+  TransactionCategoryField: MockCategoryField
 }));
 
 vi.mock('../form-fields/transaction-payee-field', () => ({
-  TransactionPayeeField: MockPayeeField,
+  TransactionPayeeField: MockPayeeField
 }));
 
 vi.mock('../form-fields/transaction-description-field', () => ({
-  TransactionDescriptionField: () => null,
+  TransactionDescriptionField: () => null
 }));
 
 vi.mock('../form-fields/transaction-date-status-fields', () => ({
-  TransactionDateStatusFields: () => null,
+  TransactionDateStatusFields: () => null
 }));
 
 // -- Helpers --------------------------------------------------------------
@@ -204,14 +204,14 @@ describe('TransactionForm', () => {
         id: 'txn-abc',
         categories: [
           { category: { id: 'cat-1', name: 'Food' } },
-          { category: { id: 'cat-2', name: 'Travel' } },
-        ],
+          { category: { id: 'cat-2', name: 'Travel' } }
+        ]
       });
       render(<TransactionForm transaction={transaction} onUpdate={onUpdate} />);
       fireEvent.submit(getForm());
       await waitFor(() => {
         expect(onUpdate).toHaveBeenCalledWith(
-          expect.objectContaining({ categoryIds: ['cat-1', 'cat-2'] }),
+          expect.objectContaining({ categoryIds: ['cat-1', 'cat-2'] })
         );
       });
     });
@@ -268,7 +268,7 @@ describe('TransactionForm', () => {
       fireEvent.submit(getForm());
       await waitFor(() => {
         expect(onCreate).toHaveBeenCalledWith(
-          expect.objectContaining({ vendorId: 'vendor-1', payee: 'Acme Corp' }),
+          expect.objectContaining({ vendorId: 'vendor-1', payee: 'Acme Corp' })
         );
       });
     });
@@ -284,7 +284,7 @@ describe('TransactionForm', () => {
       fireEvent.submit(getForm());
       await waitFor(() => {
         expect(onCreate).toHaveBeenCalledWith(
-          expect.objectContaining({ vendorId: 'unknown-id', payee: '' }),
+          expect.objectContaining({ vendorId: 'unknown-id', payee: '' })
         );
       });
     });
@@ -302,7 +302,7 @@ describe('TransactionForm', () => {
       fireEvent.submit(getForm());
       await waitFor(() => {
         expect(onCreate).toHaveBeenCalledWith(
-          expect.objectContaining({ customerId: 'customer-1', payee: 'Jane Smith' }),
+          expect.objectContaining({ customerId: 'customer-1', payee: 'Jane Smith' })
         );
       });
     });
@@ -317,7 +317,7 @@ describe('TransactionForm', () => {
       });
 
       expect(mockInvalidateQueries).toHaveBeenCalledWith({
-        queryKey: ['transactions', 'categories'],
+        queryKey: ['transactions', 'categories']
       });
     });
   });

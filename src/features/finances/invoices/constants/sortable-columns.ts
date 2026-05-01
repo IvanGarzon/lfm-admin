@@ -8,7 +8,7 @@ export const SORTABLE_INVOICE_COLUMNS = [
   'status',
   'amount',
   'issuedDate',
-  'dueDate',
+  'dueDate'
 ] as const;
 
 export type SortableInvoiceColumn = (typeof SORTABLE_INVOICE_COLUMNS)[number];

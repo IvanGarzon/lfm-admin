@@ -26,7 +26,7 @@ export const getRecipes = withTenantPermission<SearchParams, RecipePagination>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch recipes');
     }
-  },
+  }
 );
 
 /**
@@ -48,5 +48,5 @@ export const getRecipeById = withTenantPermission<string, RecipeWithDetails>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch recipe');
     }
-  },
+  }
 );

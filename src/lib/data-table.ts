@@ -5,7 +5,7 @@ import { dataTableConfig } from '@/config/data-table';
 
 export function getCommonPinningStyles<TData>({
   column,
-  withBorder = false,
+  withBorder = false
 }: {
   column: Column<TData>;
   withBorder?: boolean;
@@ -28,7 +28,7 @@ export function getCommonPinningStyles<TData>({
     position: isPinned ? 'sticky' : 'relative',
     // background: isPinned ? 'hsl(var(--background))' : 'hsl(var(--background))',
     width: column.getSize(),
-    zIndex: isPinned ? 1 : 0,
+    zIndex: isPinned ? 1 : 0
   };
 }
 
@@ -41,7 +41,7 @@ export function getFilterOperators(filterVariant: FilterVariant) {
     dateRange: dataTableConfig.dateOperators,
     boolean: dataTableConfig.booleanOperators,
     select: dataTableConfig.selectOperators,
-    multiSelect: dataTableConfig.multiSelectOperators,
+    multiSelect: dataTableConfig.multiSelectOperators
   };
 
   return operatorMap[filterVariant] ?? dataTableConfig.textOperators;
@@ -54,7 +54,7 @@ export function getDefaultFilterOperator(filterVariant: FilterVariant) {
 }
 
 export function getValidFilters<TData>(
-  filters: ExtendedColumnFilter<TData>[],
+  filters: ExtendedColumnFilter<TData>[]
 ): ExtendedColumnFilter<TData>[] {
   return filters.filter(
     (filter) =>
@@ -62,6 +62,6 @@ export function getValidFilters<TData>(
       filter.operator === 'isNotEmpty' ||
       (Array.isArray(filter.value)
         ? filter.value.length > 0
-        : filter.value !== '' && filter.value !== null && filter.value !== undefined),
+        : filter.value !== '' && filter.value !== null && filter.value !== undefined)
   );
 }

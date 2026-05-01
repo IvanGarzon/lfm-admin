@@ -8,8 +8,8 @@ const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default function QuoteModalPage({ params }: { params: Promise<{ id: string }> }) {

@@ -428,8 +428,8 @@ toast.warning('You have unsaved changes', {
   duration: 5000,
   action: {
     label: 'Save Now',
-    onClick: () => form.requestSubmit(),
-  },
+    onClick: () => form.requestSubmit()
+  }
 });
 
 // Info
@@ -441,7 +441,7 @@ toast.info('Processing...', { duration: 2000 });
 ```typescript
 useMutation({
   onSuccess: () => toast.success('Created successfully'),
-  onError: (error: Error) => toast.error(error.message || 'Operation failed'),
+  onError: (error: Error) => toast.error(error.message || 'Operation failed')
 });
 ```
 
@@ -562,7 +562,7 @@ const { table } = useDataTable({
   columns,
   pageCount: Math.ceil(data.pagination.totalItems / perPage),
   shallow: false, // Update URL on changes
-  debounceMs: 500, // Debounce filter changes
+  debounceMs: 500 // Debounce filter changes
 });
 ```
 

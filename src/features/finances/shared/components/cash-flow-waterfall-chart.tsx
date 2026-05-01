@@ -11,7 +11,7 @@ import {
   YAxis,
   Cell,
   ReferenceLine,
-  ResponsiveContainer,
+  ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -27,8 +27,8 @@ import { cn } from '@/lib/utils';
 const chartConfig = {
   value: {
     label: 'Amount',
-    color: 'var(--color-primary)',
-  },
+    color: 'var(--color-primary)'
+  }
 } satisfies ChartConfig;
 
 interface WaterfallDataItem {
@@ -78,7 +78,7 @@ function CashFlowWaterfallChart() {
         displayValue: income,
         start: 0,
         end: income,
-        type: 'income' as const,
+        type: 'income' as const
       },
       {
         name: 'Expenses',
@@ -86,7 +86,7 @@ function CashFlowWaterfallChart() {
         displayValue: expenses,
         start: income,
         end: income - expenses,
-        type: 'expense' as const,
+        type: 'expense' as const
       },
       {
         name: 'Pending',
@@ -94,7 +94,7 @@ function CashFlowWaterfallChart() {
         displayValue: pendingRevenue,
         start: income - expenses,
         end: income - expenses + pendingRevenue,
-        type: 'pending' as const,
+        type: 'pending' as const
       },
       {
         name: 'Net Position',
@@ -102,8 +102,8 @@ function CashFlowWaterfallChart() {
         displayValue: netCashFlow + pendingRevenue,
         start: 0,
         end: netCashFlow + pendingRevenue,
-        type: 'end' as const,
-      },
+        type: 'end' as const
+      }
     ];
   }, [transactionStats, invoiceStats]);
 
@@ -111,7 +111,7 @@ function CashFlowWaterfallChart() {
     return waterfallData.map((item) => ({
       ...item,
       base: item.type === 'end' ? 0 : Math.min(item.start, item.end),
-      height: Math.abs(item.end - item.start),
+      height: Math.abs(item.end - item.start)
     }));
   }, [waterfallData]);
 
@@ -137,11 +137,11 @@ function CashFlowWaterfallChart() {
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-72 mt-2" />
+          <Skeleton className='h-6 w-48' />
+          <Skeleton className='h-4 w-72 mt-2' />
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <Skeleton className="h-full w-full" />
+        <CardContent className='h-[300px] flex items-center justify-center'>
+          <Skeleton className='h-full w-full' />
         </CardContent>
       </Card>
     );
@@ -150,112 +150,112 @@ function CashFlowWaterfallChart() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <div>
             <CardTitle>Cash Flow Overview</CardTitle>
             <CardDescription>How money flows through your business</CardDescription>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
+              variant='outline'
+              size='icon'
+              className='h-8 w-8'
               onClick={() => setMonthOffset((prev) => prev + 1)}
-              aria-label="Previous month"
+              aria-label='Previous month'
             >
-              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              <ChevronLeft className='h-4 w-4' aria-hidden='true' />
             </Button>
-            <div className="min-w-[160px] text-center">
-              <div className="text-sm font-medium">{dateRangeLabel}</div>
+            <div className='min-w-[160px] text-center'>
+              <div className='text-sm font-medium'>{dateRangeLabel}</div>
             </div>
             <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
+              variant='outline'
+              size='icon'
+              className='h-8 w-8'
               onClick={() => setMonthOffset((prev) => Math.max(0, prev - 1))}
               disabled={monthOffset === 0}
-              aria-label="Next month"
+              aria-label='Next month'
             >
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              <ChevronRight className='h-4 w-4' aria-hidden='true' />
             </Button>
           </div>
 
-          <div className="text-right">
-            <div className="text-2xl font-bold">
+          <div className='text-right'>
+            <div className='text-2xl font-bold'>
               {formatCurrency({ number: netCashFlow, maxFractionDigits: 0 })}
             </div>
             {netCashFlowGrowth !== undefined && (
               <div
                 className={cn(
                   'flex items-center justify-end gap-1 text-sm',
-                  netCashFlowGrowth >= 0 ? 'text-emerald-600' : 'text-red-600',
+                  netCashFlowGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'
                 )}
               >
                 {netCashFlowGrowth > 0 ? (
-                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                  <TrendingUp className='h-4 w-4' aria-hidden='true' />
                 ) : netCashFlowGrowth < 0 ? (
-                  <TrendingDown className="h-4 w-4" aria-hidden="true" />
+                  <TrendingDown className='h-4 w-4' aria-hidden='true' />
                 ) : (
-                  <Minus className="h-4 w-4" aria-hidden="true" />
+                  <Minus className='h-4 w-4' aria-hidden='true' />
                 )}
                 <span>
                   {netCashFlowGrowth >= 0 ? '+' : ''}
                   {netCashFlowGrowth.toFixed(1)}%
                 </span>
-                <span className="text-muted-foreground">vs last period</span>
+                <span className='text-muted-foreground'>vs last period</span>
               </div>
             )}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="h-[350px] w-full pt-4">
+      <CardContent className='h-[350px] w-full pt-4'>
         {/* Summary Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
-            <div className="text-xs text-muted-foreground mb-1">Income</div>
-            <div className="text-lg font-semibold text-emerald-600">
+        <div className='grid grid-cols-4 gap-4 mb-6'>
+          <div className='text-center p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20'>
+            <div className='text-xs text-muted-foreground mb-1'>Income</div>
+            <div className='text-lg font-semibold text-emerald-600'>
               {formatCurrency({ number: transactionStats?.totalIncome ?? 0, maxFractionDigits: 0 })}
             </div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20">
-            <div className="text-xs text-muted-foreground mb-1">Expenses</div>
-            <div className="text-lg font-semibold text-red-600">
+          <div className='text-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20'>
+            <div className='text-xs text-muted-foreground mb-1'>Expenses</div>
+            <div className='text-lg font-semibold text-red-600'>
               {formatCurrency({
                 number: transactionStats?.totalExpense ?? 0,
-                maxFractionDigits: 0,
+                maxFractionDigits: 0
               })}
             </div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20">
-            <div className="text-xs text-muted-foreground mb-1">Pending</div>
-            <div className="text-lg font-semibold text-amber-600">
+          <div className='text-center p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20'>
+            <div className='text-xs text-muted-foreground mb-1'>Pending</div>
+            <div className='text-lg font-semibold text-amber-600'>
               {formatCurrency({ number: invoiceStats?.pendingRevenue ?? 0, maxFractionDigits: 0 })}
             </div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20">
-            <div className="text-xs text-muted-foreground mb-1">Net Position</div>
+          <div className='text-center p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20'>
+            <div className='text-xs text-muted-foreground mb-1'>Net Position</div>
             <div
               className={cn(
                 'text-lg font-semibold',
-                netCashFlow >= 0 ? 'text-blue-600' : 'text-amber-600',
+                netCashFlow >= 0 ? 'text-blue-600' : 'text-amber-600'
               )}
             >
               {formatCurrency({
                 number: netCashFlow + (invoiceStats?.pendingRevenue ?? 0),
-                maxFractionDigits: 0,
+                maxFractionDigits: 0
               })}
             </div>
           </div>
         </div>
 
         {/* Waterfall Chart */}
-        <ChartContainer config={chartConfig} className="h-[220px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer config={chartConfig} className='h-[220px] w-full'>
+          <ResponsiveContainer width='100%' height='100%'>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.4} />
+              <CartesianGrid vertical={false} strokeDasharray='3 3' opacity={0.4} />
               <XAxis
-                dataKey="name"
+                dataKey='name'
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
@@ -267,15 +267,15 @@ function CashFlowWaterfallChart() {
                 fontSize={12}
                 tickFormatter={(value) => formatCurrency({ number: value, maxFractionDigits: 0 })}
               />
-              <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="3 3" />
+              <ReferenceLine y={0} stroke='var(--color-border)' strokeDasharray='3 3' />
               <ChartTooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.[0]) return null;
                   const data = payload[0].payload as WaterfallDataItem;
                   return (
-                    <div className="rounded-lg border bg-background p-3 shadow-lg">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground">
+                    <div className='rounded-lg border bg-background p-3 shadow-lg'>
+                      <div className='flex flex-col gap-1'>
+                        <span className='text-xs font-medium text-muted-foreground'>
                           {data.name}
                         </span>
                         <span
@@ -285,7 +285,7 @@ function CashFlowWaterfallChart() {
                               ? 'text-emerald-600'
                               : data.type === 'expense'
                                 ? 'text-red-600'
-                                : 'text-blue-600',
+                                : 'text-blue-600'
                           )}
                         >
                           {data.type === 'expense' ? '-' : ''}
@@ -297,9 +297,9 @@ function CashFlowWaterfallChart() {
                 }}
               />
               {/* Invisible base bar */}
-              <Bar dataKey="base" stackId="stack" fill="transparent" />
+              <Bar dataKey='base' stackId='stack' fill='transparent' />
               {/* Visible bar */}
-              <Bar dataKey="height" stackId="stack" radius={[4, 4, 0, 0]}>
+              <Bar dataKey='height' stackId='stack' radius={[4, 4, 0, 0]}>
                 {chartData.map((entry, index) => (
                   <Cell key={entry.name} fill={getBarColor(entry.type)} />
                 ))}
@@ -317,12 +317,12 @@ export default dynamic(() => Promise.resolve(CashFlowWaterfallChart), {
   loading: () => (
     <Card>
       <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-72 mt-2" />
+        <Skeleton className='h-6 w-48' />
+        <Skeleton className='h-4 w-72 mt-2' />
       </CardHeader>
-      <CardContent className="h-[300px] flex items-center justify-center">
-        <Skeleton className="h-full w-full" />
+      <CardContent className='h-[300px] flex items-center justify-center'>
+        <Skeleton className='h-full w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });

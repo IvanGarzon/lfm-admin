@@ -9,7 +9,7 @@ import {
   CircleDashed,
   CheckCircle,
   XCircle,
-  Paperclip,
+  Paperclip
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,7 +26,7 @@ import { TransactionStatusSchema } from '@/zod/schemas/enums/TransactionStatus.s
 
 import {
   searchParams,
-  transactionSearchParamsDefaults,
+  transactionSearchParamsDefaults
 } from '@/filters/transactions/transactions-filters';
 import { useQueryString } from '@/hooks/use-query-string';
 import { TransactionActions } from './transaction-actions';
@@ -35,36 +35,36 @@ const TypeOptions = [
   {
     label: 'Income',
     value: TransactionTypeSchema.enum.INCOME,
-    icon: TrendingUp,
+    icon: TrendingUp
   },
   {
     label: 'Expense',
     value: TransactionTypeSchema.enum.EXPENSE,
-    icon: TrendingDown,
-  },
+    icon: TrendingDown
+  }
 ];
 
 const StatusOptions = [
   {
     label: 'Pending',
     value: TransactionStatusSchema.enum.PENDING,
-    icon: CircleDashed,
+    icon: CircleDashed
   },
   {
     label: 'Completed',
     value: TransactionStatusSchema.enum.COMPLETED,
-    icon: CheckCircle,
+    icon: CheckCircle
   },
   {
     label: 'Cancelled',
     value: TransactionStatusSchema.enum.CANCELLED,
-    icon: XCircle,
-  },
+    icon: XCircle
+  }
 ];
 
 function TransactionLink({
   transactionId,
-  referenceNumber,
+  referenceNumber
 }: {
   transactionId: string;
   referenceNumber: string;
@@ -74,14 +74,14 @@ function TransactionLink({
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {referenceNumber}
     </Link>
   );
 }
 
 export const createTransactionColumns = (
-  onDelete: (id: string, referenceNumber?: string) => void,
+  onDelete: (id: string, referenceNumber?: string) => void
 ): ColumnDef<TransactionListItem>[] => [
   {
     id: 'select',
@@ -91,30 +91,30 @@ export const createTransactionColumns = (
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label='Select all'
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label='Select row'
       />
     ),
     enableSorting: false,
     enableHiding: false,
     meta: {
       label: 'Select',
-      variant: 'text',
-    },
+      variant: 'text'
+    }
   },
   {
     id: 'referenceNumber',
     accessorKey: 'referenceNumber',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ref #" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Ref #' />,
     cell: ({ row }) => {
       return (
-        <Box className="flex flex-col">
+        <Box className='flex flex-col'>
           <TransactionLink
             transactionId={row.original.id}
             referenceNumber={row.original.referenceNumber || ''}
@@ -125,19 +125,19 @@ export const createTransactionColumns = (
     enableSorting: true,
     enableColumnFilter: true,
     meta: {
-      label: 'Ref #',
-    },
+      label: 'Ref #'
+    }
   },
   {
     id: 'search',
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Description' />,
     cell: ({ row }) => {
       const transaction = row.original;
       return (
-        <Box className="flex flex-col">
-          <span className="font-medium">{transaction.description}</span>
-          <span className="text-xs text-muted-foreground">{transaction.payee}</span>
+        <Box className='flex flex-col'>
+          <span className='font-medium'>{transaction.description}</span>
+          <span className='text-xs text-muted-foreground'>{transaction.payee}</span>
         </Box>
       );
     },
@@ -147,8 +147,8 @@ export const createTransactionColumns = (
       label: 'Description',
       placeholder: 'Search by description or payee...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'type',
@@ -168,21 +168,21 @@ export const createTransactionColumns = (
     meta: {
       label: 'Type',
       variant: 'multiSelect',
-      options: TypeOptions,
-    },
+      options: TypeOptions
+    }
   },
   {
     id: 'date',
     accessorKey: 'date',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Date' />,
     cell: ({ row }) => {
       const date: Date = row.getValue('date');
       return <Box>{format(date, 'MMM dd, yyyy')}</Box>;
     },
     enableSorting: true,
     meta: {
-      label: 'Date',
-    },
+      label: 'Date'
+    }
   },
   {
     id: 'categories',
@@ -193,13 +193,13 @@ export const createTransactionColumns = (
       const categories = transaction.categories || [];
 
       if (categories.length === 0) {
-        return <Badge variant="outline">Uncategorized</Badge>;
+        return <Badge variant='outline'>Uncategorized</Badge>;
       }
 
       return (
-        <Box className="flex flex-wrap gap-1">
+        <Box className='flex flex-wrap gap-1'>
           {categories.map((cat: { category: { id: string; name: string } }) => (
-            <Badge key={cat.category.id} variant="outline" className="capitalize">
+            <Badge key={cat.category.id} variant='outline' className='capitalize'>
               {cat.category.name.toLowerCase().replace(/_/g, ' ')}
             </Badge>
           ))}
@@ -208,20 +208,20 @@ export const createTransactionColumns = (
     },
     enableSorting: false,
     meta: {
-      label: 'Categories',
-    },
+      label: 'Categories'
+    }
   },
   {
     id: 'amount',
     accessorKey: 'amount',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Amount' />,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
       const isIncome = type === TransactionTypeSchema.enum.INCOME;
 
       return (
-        <Box className="flex flex-col">
+        <Box className='flex flex-col'>
           <span className={`font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
             {isIncome ? '+' : '-'}
             {formatCurrency({ number: Math.abs(amount) })}
@@ -231,14 +231,14 @@ export const createTransactionColumns = (
     },
     enableSorting: true,
     meta: {
-      label: 'Amount',
-    },
+      label: 'Amount'
+    }
   },
   {
     id: 'attachments',
     accessorKey: 'attachments',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Attachments" className="justify-center" />
+      <DataTableColumnHeader column={column} title='Attachments' className='justify-center' />
     ),
     cell: ({ row }) => {
       const attachments = row.original.attachments || [];
@@ -247,16 +247,16 @@ export const createTransactionColumns = (
       if (count === 0) return null;
 
       return (
-        <Box className="flex items-center justify-center gap-1 text-muted-foreground">
-          <Paperclip className="h-4 w-4" aria-hidden="true" />
-          <span className="text-xs font-medium">{count}</span>
+        <Box className='flex items-center justify-center gap-1 text-muted-foreground'>
+          <Paperclip className='h-4 w-4' aria-hidden='true' />
+          <span className='text-xs font-medium'>{count}</span>
         </Box>
       );
     },
     enableSorting: false,
     meta: {
-      label: 'Attachments',
-    },
+      label: 'Attachments'
+    }
   },
   {
     id: 'status',
@@ -271,8 +271,8 @@ export const createTransactionColumns = (
     meta: {
       label: 'Status',
       variant: 'multiSelect',
-      options: StatusOptions,
-    },
+      options: StatusOptions
+    }
   },
   {
     id: 'actions',
@@ -284,7 +284,7 @@ export const createTransactionColumns = (
     ),
     enableHiding: false,
     meta: {
-      className: 'text-right',
-    },
-  },
+      className: 'text-right'
+    }
+  }
 ];

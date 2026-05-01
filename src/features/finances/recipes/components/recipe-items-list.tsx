@@ -30,7 +30,7 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
   // Watch all items for totals calculation
   const watchedItems = useWatch({
     control: form.control,
-    name: 'items',
+    name: 'items'
   });
 
   // Calculate section totals
@@ -52,9 +52,9 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
         lineTotal: 0,
         retailPrice: 0,
         retailLineTotal: 0,
-        order: fields.length,
+        order: fields.length
       },
-      { shouldFocus: false },
+      { shouldFocus: false }
     );
   }, [append, fields.length]);
 
@@ -86,41 +86,41 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
       setSearchDialogOpen(false);
       setEditingIndex(null);
     },
-    [editingIndex, form],
+    [editingIndex, form]
   );
 
   return (
-    <Box className="py-6">
+    <Box className='py-6'>
       {/* Section Header */}
-      <Box className="flex items-center gap-3 mb-4">
-        <Box className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-          <Flower2 aria-hidden="true" className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+      <Box className='flex items-center gap-3 mb-4'>
+        <Box className='p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg'>
+          <Flower2 aria-hidden='true' className='h-5 w-5 text-amber-600 dark:text-amber-400' />
         </Box>
-        <Box className="flex-1">
-          <h3 className="text-base font-semibold">Items</h3>
-          <p className="text-sm text-muted-foreground">Add items to your recipe</p>
+        <Box className='flex-1'>
+          <h3 className='text-base font-semibold'>Items</h3>
+          <p className='text-sm text-muted-foreground'>Add items to your recipe</p>
         </Box>
-        <Box className="text-right">
-          <p className="text-lg font-bold text-primary">
+        <Box className='text-right'>
+          <p className='text-lg font-bold text-primary'>
             {formatCurrency({ number: sectionTotals.totalSelling })}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className='text-xs text-muted-foreground'>
             cost {formatCurrency({ number: sectionTotals.totalCost })}
           </p>
         </Box>
       </Box>
 
-      <Box className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <Box className='border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
         {/* Table Header */}
-        <Box className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <Box className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-            <Box className="w-6 shrink-0" />
-            <Box className="flex-1 min-w-0">Name</Box>
-            <Box className="w-20 shrink-0 text-center">Qty</Box>
-            <Box className="w-24 shrink-0 text-right">Cost</Box>
-            <Box className="w-24 shrink-0 text-right">Retail</Box>
-            <Box className="w-28 shrink-0 text-right">Selling</Box>
-            <Box className="w-8 shrink-0" />
+        <Box className='bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700'>
+          <Box className='flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide'>
+            <Box className='w-6 shrink-0' />
+            <Box className='flex-1 min-w-0'>Name</Box>
+            <Box className='w-20 shrink-0 text-center'>Qty</Box>
+            <Box className='w-24 shrink-0 text-right'>Cost</Box>
+            <Box className='w-24 shrink-0 text-right'>Retail</Box>
+            <Box className='w-28 shrink-0 text-right'>Selling</Box>
+            <Box className='w-8 shrink-0' />
           </Box>
         </Box>
 
@@ -138,7 +138,7 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
               move(from, to);
             }
           }}
-          as="div"
+          as='div'
         >
           {fields.map((field, index) => (
             <RecipeItemRow
@@ -156,22 +156,22 @@ export function RecipeItemsList({ form, fieldArray, isLocked = false }: RecipeIt
 
         {/* Empty State */}
         {fields.length === 0 ? (
-          <Box className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <Box className='px-4 py-8 text-center text-sm text-muted-foreground'>
             No items added yet. Click &quot;Add Item&quot; to get started.
           </Box>
         ) : null}
 
         {/* Add Item Button */}
-        <Box className="px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+        <Box className='px-4 py-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800'>
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
+            type='button'
+            variant='ghost'
+            size='sm'
             onClick={handleAddItem}
             disabled={isLocked}
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer"
+            className='text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-secondary cursor-pointer'
           >
-            <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
+            <Plus aria-hidden='true' className='h-4 w-4 mr-1' />
             Add Item
           </Button>
         </Box>

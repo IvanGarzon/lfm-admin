@@ -5,7 +5,7 @@ import {
   deleteSession,
   deleteOtherSessions,
   updateSessionHeartbeat,
-  extendSession,
+  extendSession
 } from '../mutations';
 import {
   testIds,
@@ -14,7 +14,7 @@ import {
   createDeleteSessionsInput,
   createUpdateSessionNameInput,
   createDeleteOtherSessionsInput,
-  createExtendSessionInput,
+  createExtendSessionInput
 } from '@/lib/testing';
 
 const { mockSessionRepo, mockAuth } = vi.hoisted(() => ({
@@ -25,27 +25,27 @@ const { mockSessionRepo, mockAuth } = vi.hoisted(() => ({
     deactivateSession: vi.fn(),
     deactivateOtherSessions: vi.fn(),
     updateSessionHeartbeat: vi.fn(),
-    extendSession: vi.fn(),
+    extendSession: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/session-repository', () => ({
   SessionRepository: vi.fn().mockImplementation(function () {
     return mockSessionRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const unauthorizedError = 'You must be signed in to perform this action';
@@ -73,7 +73,7 @@ describe('Session Mutations', () => {
       }
       expect(mockSessionRepo.deactivateManySessions).toHaveBeenCalledWith(
         mockSession.user.id,
-        input.sessionIds,
+        input.sessionIds
       );
     });
 
@@ -113,11 +113,11 @@ describe('Session Mutations', () => {
       }
       expect(mockSessionRepo.verifySessionOwnership).toHaveBeenCalledWith(
         input.sessionId,
-        mockSession.user.id,
+        mockSession.user.id
       );
       expect(mockSessionRepo.updateSessionDeviceName).toHaveBeenCalledWith(
         input.sessionId,
-        input.deviceName,
+        input.deviceName
       );
     });
 
@@ -200,7 +200,7 @@ describe('Session Mutations', () => {
       }
       expect(mockSessionRepo.deactivateOtherSessions).toHaveBeenCalledWith(
         mockSession.user.id,
-        input.currentSessionId,
+        input.currentSessionId
       );
     });
 
@@ -279,7 +279,7 @@ describe('Session Mutations', () => {
       }
       expect(mockSessionRepo.verifySessionOwnership).toHaveBeenCalledWith(
         input.sessionId,
-        mockSession.user.id,
+        mockSession.user.id
       );
     });
 

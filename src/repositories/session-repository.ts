@@ -28,32 +28,32 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
    */
   async findActiveSessionsByUserId(
     userId: string,
-    currentSessionToken?: string | null,
+    currentSessionToken?: string | null
   ): Promise<SessionWithUser[]> {
     const sessions = await this.prisma.session.findMany({
       where: {
         userId,
         isActive: true,
         expires: {
-          gt: new Date(),
-        },
+          gt: new Date()
+        }
       },
       include: {
         user: {
           select: {
             firstName: true,
-            lastName: true,
-          },
-        },
+            lastName: true
+          }
+        }
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     });
 
     const sessionsWithCurrent: SessionWithUser[] = sessions.map((s) => ({
       ...s,
-      isCurrent: currentSessionToken ? s.sessionToken === currentSessionToken : false,
+      isCurrent: currentSessionToken ? s.sessionToken === currentSessionToken : false
     }));
 
     return sessionsWithCurrent.sort((a: SessionWithUser, b: SessionWithUser) => {
@@ -70,7 +70,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
    */
   async findSessionById(id: string): Promise<Session | null> {
     return this.prisma.session.findUnique({
-      where: { id },
+      where: { id }
     });
   }
 
@@ -81,7 +81,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
    */
   async findSessionByToken(sessionToken: string): Promise<Session | null> {
     return this.prisma.session.findUnique({
-      where: { sessionToken },
+      where: { sessionToken }
     });
   }
 
@@ -94,11 +94,11 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     return this.prisma.session.findFirst({
       where: {
         userId,
-        isActive: true,
+        isActive: true
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     });
   }
 
@@ -120,7 +120,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   async updateSessionDeviceName(id: string, deviceName: string): Promise<Session> {
     return this.prisma.session.update({
       where: { id },
-      data: { deviceName },
+      data: { deviceName }
     });
   }
 
@@ -139,12 +139,12 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
       timezone?: string;
       latitude?: number;
       longitude?: number;
-    },
+    }
   ): Promise<Session | null> {
     try {
       return await this.prisma.session.update({
         where: { sessionToken },
-        data: locationData,
+        data: locationData
       });
     } catch {
       return null;
@@ -162,8 +162,8 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
       where: { id },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
   }
 
@@ -177,12 +177,12 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const result = await this.prisma.session.updateMany({
       where: {
         sessionToken,
-        isActive: true,
+        isActive: true
       },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
     return result.count;
   }
@@ -198,14 +198,14 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
       where: {
         userId,
         id: {
-          not: exceptSessionId,
+          not: exceptSessionId
         },
-        isActive: true,
+        isActive: true
       },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
 
     return result.count;
@@ -221,12 +221,12 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const result = await this.prisma.session.updateMany({
       where: {
         userId,
-        id: { in: ids },
+        id: { in: ids }
       },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
     return result.count;
   }
@@ -242,13 +242,13 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
         isActive: true,
         OR: [
           { lastActiveAt: { lt: threshold } },
-          { lastActiveAt: null, createdAt: { lt: threshold } },
-        ],
+          { lastActiveAt: null, createdAt: { lt: threshold } }
+        ]
       },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
     return result.count;
   }
@@ -261,11 +261,11 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const result = await this.prisma.session.updateMany({
       where: {
         expires: {
-          lt: new Date(),
+          lt: new Date()
         },
-        isActive: true,
+        isActive: true
       },
-      data: { isActive: false },
+      data: { isActive: false }
     });
 
     return result.count;
@@ -280,11 +280,11 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const result = await this.prisma.session.updateMany({
       where: {
         sessionToken,
-        isActive: true,
+        isActive: true
       },
       data: {
-        lastActiveAt: new Date(),
-      },
+        lastActiveAt: new Date()
+      }
     });
 
     return result.count;
@@ -301,8 +301,8 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
       where: { id },
       data: {
         expires: newExpiry,
-        isActive: true,
-      },
+        isActive: true
+      }
     });
   }
 
@@ -317,9 +317,9 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
         userId,
         isActive: true,
         expires: {
-          gt: new Date(),
-        },
-      },
+          gt: new Date()
+        }
+      }
     });
   }
 
@@ -332,11 +332,11 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const oldestSession = await this.prisma.session.findFirst({
       where: {
         userId,
-        isActive: true,
+        isActive: true
       },
       orderBy: {
-        createdAt: 'asc',
-      },
+        createdAt: 'asc'
+      }
     });
 
     if (!oldestSession) {
@@ -347,8 +347,8 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
       where: { id: oldestSession.id },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
   }
 
@@ -360,7 +360,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   async deactivateAllSessionsByUserId(userId: string): Promise<number> {
     const result = await this.prisma.session.updateMany({
       where: { userId, isActive: true },
-      data: { isActive: false, expires: new Date() },
+      data: { isActive: false, expires: new Date() }
     });
     return result.count;
   }
@@ -374,7 +374,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   async verifySessionOwnership(sessionId: string, userId: string): Promise<boolean> {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      select: { userId: true },
+      select: { userId: true }
     });
 
     return session?.userId === userId;
@@ -389,7 +389,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   async verifySessionBelongsToTenant(sessionId: string, tenantId: string): Promise<boolean> {
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
-      select: { user: { select: { tenantId: true } } },
+      select: { user: { select: { tenantId: true } } }
     });
 
     return session?.user?.tenantId === tenantId;
@@ -403,7 +403,7 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
   async isSessionActive(sessionToken: string): Promise<boolean> {
     const session = await this.prisma.session.findUnique({
       where: { sessionToken },
-      select: { isActive: true, expires: true },
+      select: { isActive: true, expires: true }
     });
 
     if (!session) return false;
@@ -420,12 +420,12 @@ export class SessionRepository extends BaseRepository<Prisma.SessionGetPayload<o
     const result = await this.prisma.session.updateMany({
       where: {
         userId,
-        isActive: true,
+        isActive: true
       },
       data: {
         isActive: false,
-        expires: new Date(),
-      },
+        expires: new Date()
+      }
     });
 
     return result.count;

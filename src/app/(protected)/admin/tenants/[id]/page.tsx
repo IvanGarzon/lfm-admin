@@ -4,7 +4,7 @@ import { TenantDetail } from '@/features/admin/tenants/components/tenant-detail'
 import { getAdminTenantById } from '@/actions/admin/tenants/queries';
 
 export default async function AdminTenantDetailPage({
-  params,
+  params
 }: {
   params: Promise<{ id: string }>;
 }) {

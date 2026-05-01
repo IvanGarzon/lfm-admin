@@ -9,7 +9,7 @@ import {
   SendReminderEmailSchema,
   type SendInvoiceEmailInput,
   type SendReceiptEmailInput,
-  type SendReminderEmailInput,
+  type SendReminderEmailInput
 } from '@/schemas/invoices';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 
@@ -24,8 +24,8 @@ function getEmailRecipient(originalRecipient: string): string {
       context: 'invoice-email-service',
       metadata: {
         originalRecipient,
-        testRecipient: env.EMAIL_TEST_RECIPIENT,
-      },
+        testRecipient: env.EMAIL_TEST_RECIPIENT
+      }
     });
 
     return env.EMAIL_TEST_RECIPIENT;
@@ -40,7 +40,7 @@ function getEmailRecipient(originalRecipient: string): string {
 export async function processInvoiceEmail(
   invoiceId: string,
   type: 'pending_notification' | 'receipt' | 'reminder',
-  tenantId: string,
+  tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
   const invoice = await invoiceRepository.findByIdWithDetails(invoiceId, tenantId);
 
@@ -63,7 +63,7 @@ export async function processInvoiceEmail(
  * Process pending notification email
  */
 async function processPendingNotification(
-  invoice: InvoiceWithDetails,
+  invoice: InvoiceWithDetails
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateInvoicePdf } =
     await import('@/features/finances/invoices/services/invoice-pdf.service');
@@ -71,7 +71,7 @@ async function processPendingNotification(
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateInvoicePdf(invoice, {
     context: 'inngest_pending_notification',
-    skipDownload: false,
+    skipDownload: false
   });
 
   // 2. Prepare Data
@@ -85,9 +85,9 @@ async function processPendingNotification(
       amount: invoice.amount,
       currency: invoice.currency,
       dueDate: invoice.dueDate,
-      issuedDate: invoice.issuedDate,
+      issuedDate: invoice.issuedDate
     },
-    pdfUrl,
+    pdfUrl
   });
 
   // 3. Send Email
@@ -97,9 +97,9 @@ async function processPendingNotification(
     template: 'invoice',
     props: {
       invoiceData: emailData.invoiceData,
-      pdfUrl,
+      pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Pending notification email sent', {
@@ -107,8 +107,8 @@ async function processPendingNotification(
     metadata: {
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -118,7 +118,7 @@ async function processPendingNotification(
  * Process receipt email
  */
 async function processReceipt(
-  invoice: InvoiceWithDetails,
+  invoice: InvoiceWithDetails
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateReceiptPdf } =
     await import('@/features/finances/invoices/services/invoice-pdf.service');
@@ -126,7 +126,7 @@ async function processReceipt(
   // 1. Generate PDF
   const { pdfBuffer, pdfFilename } = await getOrGenerateReceiptPdf(invoice, {
     context: 'inngest_receipt',
-    skipDownload: false,
+    skipDownload: false
   });
 
   // 2. Prepare Data
@@ -141,8 +141,8 @@ async function processReceipt(
       amount: invoice.amount,
       currency: invoice.currency,
       paidDate: invoice.paidDate || new Date(),
-      paymentMethod: invoice.paymentMethod || 'Not specified',
-    },
+      paymentMethod: invoice.paymentMethod || 'Not specified'
+    }
   });
 
   // 3. Send Email
@@ -151,9 +151,9 @@ async function processReceipt(
     subject: `Payment Receipt ${emailData.receiptData.receiptNumber || emailData.receiptData.invoiceNumber}`,
     template: 'receipt',
     props: {
-      receiptData: emailData.receiptData,
+      receiptData: emailData.receiptData
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Receipt email sent', {
@@ -162,8 +162,8 @@ async function processReceipt(
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber,
       receiptNumber: invoice.receiptNumber,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };
@@ -173,7 +173,7 @@ async function processReceipt(
  * Process reminder email
  */
 async function processReminder(
-  invoice: InvoiceWithDetails,
+  invoice: InvoiceWithDetails
 ): Promise<{ success: true; emailId?: string }> {
   const { getOrGenerateInvoicePdf } =
     await import('@/features/finances/invoices/services/invoice-pdf.service');
@@ -181,13 +181,13 @@ async function processReminder(
   // Calculate days overdue
   const daysOverdue = Math.max(
     0,
-    Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+    Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24))
   );
 
   // 1. Generate PDF
   const { pdfBuffer, pdfUrl, pdfFilename } = await getOrGenerateInvoicePdf(invoice, {
     context: 'inngest_reminder',
-    skipDownload: false,
+    skipDownload: false
   });
 
   // 2. Prepare Data
@@ -203,9 +203,9 @@ async function processReminder(
       dueDate: invoice.dueDate,
       daysOverdue: daysOverdue,
       amountPaid: invoice.amountPaid,
-      amountDue: invoice.amountDue,
+      amountDue: invoice.amountDue
     },
-    pdfUrl,
+    pdfUrl
   });
 
   // 3. Send Email
@@ -215,9 +215,9 @@ async function processReminder(
     template: 'reminder',
     props: {
       reminderData: emailData.reminderData,
-      pdfUrl: emailData.pdfUrl,
+      pdfUrl: emailData.pdfUrl
     },
-    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : [],
+    attachments: pdfBuffer ? [{ filename: pdfFilename, content: pdfBuffer }] : []
   });
 
   logger.info('Reminder email sent', {
@@ -226,8 +226,8 @@ async function processReminder(
       invoiceId: invoice.id,
       invoiceNumber: invoice.invoiceNumber,
       daysOverdue,
-      emailId: result.emailId,
-    },
+      emailId: result.emailId
+    }
   });
 
   return { success: true, emailId: result.emailId };

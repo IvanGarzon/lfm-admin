@@ -20,5 +20,5 @@ export const updateTenantSettings = withTenantPermission<UpdateTenantSettingsInp
     } catch (error) {
       return handleActionError(error, 'Failed to update tenant settings');
     }
-  },
+  }
 );

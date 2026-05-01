@@ -3,7 +3,7 @@
 import { useQueryString } from '@/hooks/use-query-string';
 import {
   searchParams,
-  priceListSearchParamsDefaults,
+  priceListSearchParamsDefaults
 } from '@/filters/price-list/price-list-filters';
 
 export function usePriceListHref(id: string): string {

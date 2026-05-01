@@ -14,7 +14,7 @@ import type {
   TransactionStatistics,
   TransactionTrend,
   TransactionCategoryBreakdown,
-  TopTransactionCategory,
+  TopTransactionCategory
 } from '@/features/finances/transactions/types';
 
 // Response type for repository returns (minimal)
@@ -35,7 +35,7 @@ interface TransactionCategory {
  * Creates valid transaction input data for create/update mutations.
  */
 export function createTransactionInput(
-  overrides: Partial<CreateTransactionInput> = {},
+  overrides: Partial<CreateTransactionInput> = {}
 ): CreateTransactionInput {
   return {
     type: 'INCOME',
@@ -49,7 +49,7 @@ export function createTransactionInput(
     referenceNumber: null,
     referenceId: null,
     invoiceId: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -57,13 +57,13 @@ export function createTransactionInput(
  * Creates a mock transaction response as returned by the repository.
  */
 export function createTransactionResponse(
-  overrides: Partial<TransactionResponse> = {},
+  overrides: Partial<TransactionResponse> = {}
 ): TransactionResponse {
   return {
     id: overrides.id ?? testIds.transaction(),
     type: 'INCOME',
     amount: 100,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -71,7 +71,7 @@ export function createTransactionResponse(
  * Creates a mock transaction with full details.
  */
 export function createTransactionWithDetails(
-  overrides: Partial<TransactionListItem> = {},
+  overrides: Partial<TransactionListItem> = {}
 ): TransactionListItem {
   return {
     id: testIds.transaction(),
@@ -93,7 +93,7 @@ export function createTransactionWithDetails(
     attachments: [],
     invoice: null,
     vendor: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -101,13 +101,13 @@ export function createTransactionWithDetails(
  * Creates a mock transaction category.
  */
 export function createTransactionCategory(
-  overrides: Partial<TransactionCategory> = {},
+  overrides: Partial<TransactionCategory> = {}
 ): TransactionCategory {
   return {
     id: overrides.id ?? testIds.category(),
     name: overrides.name ?? 'Test Category',
     description: overrides.description ?? null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -115,7 +115,7 @@ export function createTransactionCategory(
  * Creates mock transaction statistics.
  */
 export function createTransactionStatistics(
-  overrides: Partial<TransactionStatistics> = {},
+  overrides: Partial<TransactionStatistics> = {}
 ): TransactionStatistics {
   return {
     totalIncome: 50000,
@@ -127,7 +127,7 @@ export function createTransactionStatistics(
     totalExpenseGrowth: 5,
     netCashFlowGrowth: 15,
     avgTransactionSize: 1000,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -135,14 +135,14 @@ export function createTransactionStatistics(
  * Creates mock transaction trend data.
  */
 export function createTransactionTrend(
-  overrides: Partial<TransactionTrend> = {},
+  overrides: Partial<TransactionTrend> = {}
 ): TransactionTrend {
   return {
     month: '2024-01',
     income: 10000,
     expense: 5000,
     net: 5000,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -150,14 +150,14 @@ export function createTransactionTrend(
  * Creates mock category breakdown data.
  */
 export function createCategoryBreakdown(
-  overrides: Partial<TransactionCategoryBreakdown> = {},
+  overrides: Partial<TransactionCategoryBreakdown> = {}
 ): TransactionCategoryBreakdown {
   return {
     category: 'Office Supplies',
     amount: 5000,
     percentage: 25,
     transactionCount: 10,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -165,7 +165,7 @@ export function createCategoryBreakdown(
  * Creates mock top category data.
  */
 export function createTopCategory(
-  overrides: Partial<TopTransactionCategory> = {},
+  overrides: Partial<TopTransactionCategory> = {}
 ): TopTransactionCategory {
   return {
     categoryId: overrides.categoryId ?? testIds.category(),
@@ -173,6 +173,6 @@ export function createTopCategory(
     totalAmount: 5000,
     transactionCount: 10,
     avgTransactionAmount: 500,
-    ...overrides,
+    ...overrides
   };
 }

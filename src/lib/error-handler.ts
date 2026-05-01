@@ -33,20 +33,20 @@ import { StatusCodes } from 'http-status-codes';
 export function handleActionError<T = never>(
   error: unknown,
   fallbackMessage = 'An unexpected error occurred',
-  context?: Record<string, unknown>,
+  context?: Record<string, unknown>
 ): ActionResult<T> {
   // Handle custom AppError instances first
   if (error instanceof AppError) {
     logger.error('Application error', error, {
       context: 'handleActionError',
-      metadata: { statusCode: error.statusCode, ...context, ...error.context },
+      metadata: { statusCode: error.statusCode, ...context, ...error.context }
     });
 
     return {
       success: false,
       error: error.message,
       statusCode: error.statusCode,
-      context: { ...context, ...error.context },
+      context: { ...context, ...error.context }
     };
   }
 
@@ -68,7 +68,7 @@ export function handleActionError<T = never>(
 
     logger.warn('Validation error in server action', {
       context: 'handleActionError',
-      metadata: { errors: error.issues, ...context },
+      metadata: { errors: error.issues, ...context }
     });
 
     return {
@@ -76,7 +76,7 @@ export function handleActionError<T = never>(
       error: `Invalid ${fieldName}: ${message}`,
       statusCode: StatusCodes.BAD_REQUEST,
       errors,
-      context,
+      context
     };
   }
 
@@ -85,7 +85,7 @@ export function handleActionError<T = never>(
     if (context) {
       logger.error('Prisma error with context', error, {
         context: 'handleActionError',
-        metadata: context,
+        metadata: context
       });
     }
 
@@ -95,14 +95,14 @@ export function handleActionError<T = never>(
   if (error instanceof Prisma.PrismaClientValidationError) {
     logger.error('Prisma validation error', error, {
       context: 'handleActionError',
-      metadata: context,
+      metadata: context
     });
 
     return {
       success: false,
       error: 'Database validation error. Please check your input.',
       statusCode: StatusCodes.BAD_REQUEST,
-      context,
+      context
     };
   }
 
@@ -110,28 +110,28 @@ export function handleActionError<T = never>(
   if (error instanceof Error) {
     logger.error('Error in server action', error, {
       context: 'handleActionError',
-      metadata: { message: error.message, ...context },
+      metadata: { message: error.message, ...context }
     });
 
     return {
       success: false,
       error: error.message || fallbackMessage,
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-      context,
+      context
     };
   }
 
   // Handle unknown errors
   logger.error('Unknown error in server action', error, {
     context: 'handleActionError',
-    metadata: context,
+    metadata: context
   });
 
   return {
     success: false,
     error: fallbackMessage,
     statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-    context,
+    context
   };
 }
 
@@ -141,11 +141,11 @@ export function handleActionError<T = never>(
  * @returns ActionResult with success: false and appropriate error message
  */
 function handlePrismaError<T = never>(
-  error: Prisma.PrismaClientKnownRequestError,
+  error: Prisma.PrismaClientKnownRequestError
 ): ActionResult<T> {
   logger.error('Prisma error in server action', error, {
     context: 'handlePrismaError',
-    metadata: { code: error.code, meta: error.meta },
+    metadata: { code: error.code, meta: error.meta }
   });
 
   switch (error.code) {
@@ -161,7 +161,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: `A record with this ${field} already exists`,
         statusCode: StatusCodes.CONFLICT,
-        context: { prismaCode: error.code, field },
+        context: { prismaCode: error.code, field }
       };
     }
 
@@ -177,7 +177,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: field ? `Related ${field} not found` : 'Related record not found',
         statusCode: StatusCodes.CONFLICT,
-        context: { prismaCode: error.code, field },
+        context: { prismaCode: error.code, field }
       };
     }
 
@@ -187,7 +187,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Record not found or already deleted',
         statusCode: StatusCodes.NOT_FOUND,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Record to delete does not exist
@@ -196,7 +196,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Record not found',
         statusCode: StatusCodes.NOT_FOUND,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Null constraint violation
@@ -205,7 +205,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Required field is missing',
         statusCode: StatusCodes.BAD_REQUEST,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Invalid data type
@@ -214,7 +214,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Invalid data type provided',
         statusCode: StatusCodes.BAD_REQUEST,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Timeout
@@ -223,7 +223,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Database operation timed out. Please try again.',
         statusCode: StatusCodes.REQUEST_TIMEOUT,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Connection error
@@ -234,7 +234,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'Database connection error. Please try again later.',
         statusCode: StatusCodes.SERVICE_UNAVAILABLE,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
 
     // Default case for unknown Prisma errors
@@ -243,7 +243,7 @@ function handlePrismaError<T = never>(
         success: false,
         error: 'A database error occurred. Please try again.',
         statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
-        context: { prismaCode: error.code },
+        context: { prismaCode: error.code }
       };
   }
 }

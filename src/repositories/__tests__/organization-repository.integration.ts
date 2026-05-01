@@ -12,7 +12,7 @@ import { OrganizationRepository } from '../organization-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createOrganizationInput } from '@/lib/testing';
 
@@ -52,7 +52,7 @@ describe('OrganizationRepository (integration)', () => {
       const result = await repository.updateOrganization(created.id, tenantId, {
         ...createOrganizationInput(),
         id: created.id,
-        name: 'Updated Florals',
+        name: 'Updated Florals'
       });
 
       expect(result?.name).toBe('Updated Florals');
@@ -66,8 +66,8 @@ describe('OrganizationRepository (integration)', () => {
         repository.updateOrganization(created.id, tenantId, {
           ...createOrganizationInput(),
           id: created.id,
-          name: 'Should Not Update',
-        }),
+          name: 'Should Not Update'
+        })
       ).rejects.toThrow();
     });
   });
@@ -146,12 +146,12 @@ describe('OrganizationRepository (integration)', () => {
       await repository.createOrganization(createOrganizationInput(), tenantId);
       await repository.createOrganization(
         { ...createOrganizationInput(), name: 'Rose Garden' },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchOrganizations(
         { name: 'Acme', page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.some((o) => o.name === 'Acme Florals')).toBe(true);
@@ -176,7 +176,7 @@ describe('OrganizationRepository (integration)', () => {
       await repository.createOrganization(createOrganizationInput(), tenantId);
       await repository.createOrganization(
         { ...createOrganizationInput(), name: 'Inactive Org', status: 'INACTIVE' },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findActiveOrganizations(tenantId);

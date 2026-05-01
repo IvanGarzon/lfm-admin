@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ColorPicker } from '@/components/ui/color-picker';
@@ -32,7 +32,7 @@ export function QuoteItemColorPaletteDialog({
   quoteId,
   quoteItemId,
   itemDescription,
-  initialColors = EMPTY_COLORS,
+  initialColors = EMPTY_COLORS
 }: QuoteItemColorPaletteDialogProps) {
   const [colors, setColors] = useState<string[]>(EMPTY_COLORS);
 
@@ -51,25 +51,25 @@ export function QuoteItemColorPaletteDialog({
       {
         onSuccess: () => {
           onOpenChange(false);
-        },
-      },
+        }
+      }
     );
   }, [uploadMutation, quoteItemId, quoteId, colors, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className='max-w-2xl'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Palette aria-hidden="true" className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Palette aria-hidden='true' className='h-5 w-5' />
             Color Palette
           </DialogTitle>
           <DialogDescription>
-            Select up to 10 colors for <span className="font-medium">{itemDescription}</span>
+            Select up to 10 colors for <span className='font-medium'>{itemDescription}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <Box className="py-4">
+        <Box className='py-4'>
           <ColorPicker
             colors={colors}
             onChange={setColors}
@@ -80,17 +80,17 @@ export function QuoteItemColorPaletteDialog({
 
         <DialogFooter>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={() => onOpenChange(false)}
             disabled={uploadMutation.isPending}
           >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSaveColors} disabled={uploadMutation.isPending}>
+          <Button type='button' onClick={handleSaveColors} disabled={uploadMutation.isPending}>
             {uploadMutation.isPending ? (
               <>
-                <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
+                <Loader2 aria-hidden='true' className='mr-2 size-4 animate-spin' />
                 Saving...
               </>
             ) : (

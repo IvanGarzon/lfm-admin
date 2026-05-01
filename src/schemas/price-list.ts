@@ -9,15 +9,15 @@ import { PRICE_LIST_SEASONS } from '@/features/inventory/price-list/constants/se
  * Category schema validated against constant set (not enum)
  */
 const PriceListCategorySchema = z.enum(PRICE_LIST_CATEGORIES, {
-  error: 'Invalid category',
+  error: 'Invalid category'
 });
 
 const PriceListUnitTypeSchema = z.enum(PRICE_LIST_UNIT_TYPES, {
-  error: 'Invalid unit type',
+  error: 'Invalid unit type'
 });
 
 const PriceListSeasonSchema = z.enum(PRICE_LIST_SEASONS, {
-  error: 'Invalid season',
+  error: 'Invalid season'
 });
 
 /**
@@ -29,13 +29,13 @@ const PriceListItemSchema = z.object({
     .trim()
     .min(1, { error: 'Name is required' })
     .max(VALIDATION_LIMITS.NAME_MAX, {
-      error: `Name must be at most ${VALIDATION_LIMITS.NAME_MAX} characters`,
+      error: `Name must be at most ${VALIDATION_LIMITS.NAME_MAX} characters`
     }),
   description: z
     .string()
     .trim()
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Description must be at most ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Description must be at most ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     })
     .optional()
     .nullable(),
@@ -66,23 +66,23 @@ const PriceListItemSchema = z.object({
     .positive('Bunch size must be greater than zero')
     .optional()
     .nullable(),
-  season: PriceListSeasonSchema.optional().nullable(),
+  season: PriceListSeasonSchema.optional().nullable()
 });
 
 export const CreatePriceListItemSchema = PriceListItemSchema;
 export const UpdatePriceListItemSchema = PriceListItemSchema.extend({
-  id: z.cuid({ error: 'Invalid price list item ID' }),
+  id: z.cuid({ error: 'Invalid price list item ID' })
 });
 
 /**
  * Schema for price list item filters (search/list)
  */
 export const PriceListFiltersSchema = baseFiltersSchema.extend({
-  category: createEnumArrayFilter(PriceListCategorySchema),
+  category: createEnumArrayFilter(PriceListCategorySchema)
 });
 
 export const DeletePriceListItemSchema = z.object({
-  id: z.cuid({ error: 'Invalid price list item ID' }),
+  id: z.cuid({ error: 'Invalid price list item ID' })
 });
 
 // Inferred types

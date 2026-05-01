@@ -5,7 +5,7 @@ import {
   PrismaClient,
   TransactionType,
   TransactionStatus,
-  DocumentKind,
+  DocumentKind
 } from '@/prisma/client';
 import { BaseRepository, type ModelDelegateOperations } from '@/lib/baseRepository';
 import { validateInvoiceStatusTransition } from '@/features/finances/invoices/utils/invoice-helpers';
@@ -15,7 +15,7 @@ import { withDatabaseRetry } from '@/lib/retry';
 import { TransactionRepository } from './transaction-repository';
 import {
   getOrGenerateInvoicePdf,
-  getOrGenerateReceiptPdf,
+  getOrGenerateReceiptPdf
 } from '@/features/finances/invoices/services/invoice-pdf.service';
 
 import type {
@@ -29,7 +29,7 @@ import type {
   InvoicePaymentItem,
   InvoiceStatusHistoryItem,
   RevenueTrend,
-  TopCustomerDebtor,
+  TopCustomerDebtor
 } from '@/features/finances/invoices/types';
 import { getPaginationMetadata } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -77,28 +77,28 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
     const whereClause: Prisma.InvoiceWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { invoiceNumber: searchFilter },
         {
           customer: {
-            OR: [{ firstName: searchFilter }, { lastName: searchFilter }, { email: searchFilter }],
-          },
-        },
+            OR: [{ firstName: searchFilter }, { lastName: searchFilter }, { email: searchFilter }]
+          }
+        }
       ];
     }
 
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
@@ -129,18 +129,18 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
-          },
+            email: true
+          }
         },
         _count: {
           select: {
-            items: true,
-          },
-        },
+            items: true
+          }
+        }
       },
       orderBy,
       skip,
-      take: perPage,
+      take: perPage
     });
 
     // Run count and query in parallel without transaction
@@ -160,12 +160,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       currency: invoice.currency,
       issuedDate: invoice.issuedDate,
       dueDate: invoice.dueDate,
-      itemCount: invoice._count.items,
+      itemCount: invoice._count.items
     }));
 
     return {
       items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -176,7 +176,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    */
   async findInvoiceByIdWithDetails(
     id: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<InvoiceWithDetails | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
@@ -208,9 +208,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             date: true,
             method: true,
             reference: true,
-            notes: true,
+            notes: true
           },
-          orderBy: { date: 'desc' },
+          orderBy: { date: 'desc' }
         },
         statusHistory: {
           select: {
@@ -223,12 +223,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
                 id: true,
                 firstName: true,
                 lastName: true,
-                avatarUrl: true,
-              },
+                avatarUrl: true
+              }
             },
-            notes: true,
+            notes: true
           },
-          orderBy: { updatedAt: 'asc' },
+          orderBy: { updatedAt: 'asc' }
         },
         customer: {
           select: {
@@ -240,10 +240,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             organization: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         items: {
           select: {
@@ -253,11 +253,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             quantity: true,
             unitPrice: true,
             total: true,
-            productId: true,
+            productId: true
           },
-          orderBy: { createdAt: 'asc' },
-        },
-      },
+          orderBy: { createdAt: 'asc' }
+        }
+      }
     });
 
     if (!invoice) {
@@ -274,14 +274,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       notes: invoice.notes ?? undefined,
       payments: invoice.payments.map((p) => ({
         ...p,
-        amount: Number(p.amount),
+        amount: Number(p.amount)
       })),
       items: invoice.items.map((item) => ({
         ...item,
         quantity: Number(item.quantity),
         unitPrice: Number(item.unitPrice),
-        total: Number(item.total),
-      })),
+        total: Number(item.total)
+      }))
     };
   }
 
@@ -327,19 +327,19 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             organization: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         _count: {
           select: {
             payments: true,
             statusHistory: true,
-            items: true,
-          },
-        },
-      },
+            items: true
+          }
+        }
+      }
     });
 
     if (!invoice) {
@@ -353,7 +353,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       discount: Number(invoice.discount),
       amountPaid: Number(invoice.amountPaid),
       amountDue: Number(invoice.amountDue),
-      notes: invoice.notes ?? undefined,
+      notes: invoice.notes ?? undefined
     };
   }
 
@@ -371,16 +371,16 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         quantity: true,
         unitPrice: true,
         total: true,
-        productId: true,
+        productId: true
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'asc' }
     });
 
     return items.map((item) => ({
       ...item,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
-      total: Number(item.total),
+      total: Number(item.total)
     }));
   }
 
@@ -397,14 +397,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         date: true,
         method: true,
         reference: true,
-        notes: true,
+        notes: true
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: 'desc' }
     });
 
     return payments.map((p) => ({
       ...p,
-      amount: Number(p.amount),
+      amount: Number(p.amount)
     }));
   }
 
@@ -425,12 +425,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             id: true,
             firstName: true,
             lastName: true,
-            avatarUrl: true,
-          },
+            avatarUrl: true
+          }
         },
-        notes: true,
+        notes: true
       },
-      orderBy: { updatedAt: 'asc' },
+      orderBy: { updatedAt: 'asc' }
     });
   }
 
@@ -447,11 +447,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     dateFilter?: {
       startDate?: Date;
       endDate?: Date;
-    },
+    }
   ): Promise<InvoiceStatistics> {
     const whereClause: Prisma.InvoiceWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     // Add date filter if provided
@@ -474,8 +474,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         deletedAt: null,
         issuedDate: {
           gte: new Date(dateFilter.startDate.getTime() - duration),
-          lte: new Date(dateFilter.endDate.getTime() - duration),
-        },
+          lte: new Date(dateFilter.endDate.getTime() - duration)
+        }
       };
     } else if (!dateFilter?.startDate && !dateFilter?.endDate) {
       // Default: Compare this month to last month
@@ -487,8 +487,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         deletedAt: null,
         issuedDate: {
           gte: firstDayLastMonth,
-          lt: firstDayThisMonth,
-        },
+          lt: firstDayThisMonth
+        }
       };
     }
 
@@ -516,13 +516,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             by: ['status'],
             where: whereClause,
             _count: true,
-            _sum: { amount: true },
+            _sum: { amount: true }
           }),
           this.prisma.$queryRaw<[{ avg: number }]>(avgQuery),
           previousWhereClause ? this.getBasicStats(previousWhereClause) : Promise.resolve(null),
           this.getInvoiceMonthlyRevenueTrend(12, tenantId),
-          this.getInvoiceTopDebtors(5, tenantId),
-        ]),
+          this.getInvoiceTopDebtors(5, tenantId)
+        ])
       );
 
     // Process current period data
@@ -542,7 +542,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       pendingRevenue: 0,
       avgInvoiceValue: Number(avgInvoiceData[0]?.avg ?? 0),
       revenueTrend,
-      topDebtors,
+      topDebtors
     };
 
     statusGroupData.forEach((group) => {
@@ -603,7 +603,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       by: ['status'],
       where,
       _count: true,
-      _sum: { amount: true },
+      _sum: { amount: true }
     });
 
     let totalRevenue = 0;
@@ -690,11 +690,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async updateInvoiceReceiptNumber(
     id: string,
     tenantId: string,
-    receiptNumber: string,
+    receiptNumber: string
   ): Promise<Invoice> {
     return this.prisma.invoice.update({
       where: { id, tenantId },
-      data: { receiptNumber },
+      data: { receiptNumber }
     });
   }
 
@@ -710,7 +710,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async createInvoiceWithItems(
     data: CreateInvoiceInput,
     tenantId: string,
-    createdBy?: string,
+    createdBy?: string
   ): Promise<{ id: string; invoiceNumber: string }> {
     let attempts = 0;
     const maxAttempts = 3;
@@ -749,14 +749,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
                   quantity: item.quantity,
                   unitPrice: item.unitPrice,
                   total: item.quantity * item.unitPrice,
-                  productId: item.productId,
-                })),
-              },
+                  productId: item.productId
+                }))
+              }
             },
             select: {
               id: true,
-              invoiceNumber: true,
-            },
+              invoiceNumber: true
+            }
           });
 
           // Create initial status history entry
@@ -767,8 +767,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               previousStatus: null,
               updatedAt: new Date(),
               updatedBy: createdBy,
-              notes: 'Invoice created',
-            },
+              notes: 'Invoice created'
+            }
           });
 
           return invoice;
@@ -804,7 +804,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async updateInvoiceWithItems(
     id: string,
     data: UpdateInvoiceInput,
-    tenantId: string,
+    tenantId: string
   ): Promise<InvoiceWithDetails | null> {
     // Calculate total amount
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -817,7 +817,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       // 1. Fetch current invoice to check status and locking
       const currentInvoice = await tx.invoice.findUnique({
         where: { id, deletedAt: null },
-        select: { status: true, amountPaid: true },
+        select: { status: true, amountPaid: true }
       });
 
       if (!currentInvoice) {
@@ -831,7 +831,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         InvoiceStatus.OVERDUE,
         InvoiceStatus.PAID,
         InvoiceStatus.PARTIALLY_PAID,
-        InvoiceStatus.CANCELLED,
+        InvoiceStatus.CANCELLED
       ];
 
       const isLocked = lockedStatuses.includes(currentInvoice.status);
@@ -852,7 +852,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
 
         if (hasContentChanges) {
           throw new Error(
-            `This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`,
+            `This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`
           );
         }
 
@@ -864,8 +864,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             where: { id },
             data: {
               status: data.status,
-              updatedAt: new Date(),
-            },
+              updatedAt: new Date()
+            }
           });
 
           await tx.invoiceStatusHistory.create({
@@ -874,8 +874,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               status: data.status,
               previousStatus: currentInvoice.status,
               updatedAt: new Date(),
-              notes: `Status updated via edit: ${data.status}`,
-            },
+              notes: `Status updated via edit: ${data.status}`
+            }
           });
         }
 
@@ -903,8 +903,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       await tx.invoiceItem.deleteMany({
         where: {
           invoiceId: data.id,
-          id: { notIn: existingItemIds },
-        },
+          id: { notIn: existingItemIds }
+        }
       });
 
       // Update invoice details
@@ -921,8 +921,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           gst: data.gst,
           discount: data.discount,
           amountDue,
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       });
 
       // Update existing items
@@ -936,8 +936,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             unitPrice: item.unitPrice,
             total: item.quantity * item.unitPrice,
             productId: item.productId,
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         });
       }
 
@@ -951,9 +951,9 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.quantity * item.unitPrice,
-              productId: item.productId,
+              productId: item.productId
             };
-          }),
+          })
         });
       }
 
@@ -980,12 +980,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async markInvoiceAsPending(
     id: string,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!currentInvoice) {
@@ -1000,8 +1000,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         where: { id, tenantId, deletedAt: null },
         data: {
           status: InvoiceStatus.PENDING,
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       });
 
       await tx.invoiceStatusHistory.create({
@@ -1011,8 +1011,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           previousStatus: currentInvoice.status,
           updatedAt: new Date(),
           updatedBy,
-          notes: 'Marked as pending',
-        },
+          notes: 'Marked as pending'
+        }
       });
 
       return invoice;
@@ -1036,11 +1036,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async markInvoiceAsDraft(
     id: string,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<InvoiceWithDetails | null> {
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!currentInvoice) {
@@ -1054,8 +1054,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         where: { id, tenantId, deletedAt: null },
         data: {
           status: InvoiceStatus.DRAFT,
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       });
 
       await tx.invoiceStatusHistory.create({
@@ -1065,8 +1065,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           previousStatus: currentInvoice.status,
           updatedAt: new Date(),
           updatedBy,
-          notes: 'Reverted to draft',
-        },
+          notes: 'Reverted to draft'
+        }
       });
 
       return invoice;
@@ -1094,12 +1094,12 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     id: string,
     tenantId: string,
     cancelReason: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<InvoiceWithDetails | null> {
     // Get current invoice to validate status transition
     const currentInvoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!currentInvoice) {
@@ -1118,8 +1118,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         data: {
           status,
           cancelReason,
-          cancelledDate: today,
-        },
+          cancelledDate: today
+        }
       });
 
       await tx.invoiceStatusHistory.create({
@@ -1129,8 +1129,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           previousStatus: currentInvoice.status,
           updatedAt: today,
           updatedBy,
-          notes: `Cancelled: ${cancelReason}`,
-        },
+          notes: `Cancelled: ${cancelReason}`
+        }
       });
 
       return invoice;
@@ -1148,7 +1148,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
   async incrementInvoiceReminderCount(id: string, tenantId: string): Promise<Invoice | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { remindersSent: true },
+      select: { remindersSent: true }
     });
 
     if (!invoice) {
@@ -1159,8 +1159,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       where: { id, tenantId },
       data: {
         remindersSent: (invoice.remindersSent ?? 0) + 1,
-        updatedAt: new Date(),
-      },
+        updatedAt: new Date()
+      }
     });
   }
 
@@ -1177,7 +1177,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     // First check if the invoice exists and is in DRAFT status
     const invoice = await this.prisma.invoice.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!invoice) {
@@ -1191,8 +1191,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     await this.prisma.invoice.update({
       where: { id, tenantId, deletedAt: null },
       data: {
-        deletedAt: new Date(),
-      },
+        deletedAt: new Date()
+      }
     });
   }
 
@@ -1217,7 +1217,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     date: Date,
     notes?: string,
     updatedBy?: string,
-    idempotencyKey?: string,
+    idempotencyKey?: string
   ): Promise<InvoiceWithDetails> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId, tenantId, deletedAt: null },
@@ -1232,10 +1232,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         customer: {
           select: {
             firstName: true,
-            lastName: true,
-          },
-        },
-      },
+            lastName: true
+          }
+        }
+      }
     });
 
     if (!invoice) {
@@ -1265,7 +1265,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       // (adding another partial payment to an already partially paid invoice)
       if (previousStatus !== InvoiceStatus.PARTIALLY_PAID) {
         throw new Error(
-          `Cannot add payment to invoice with status ${previousStatus}. The payment would not change the invoice status.`,
+          `Cannot add payment to invoice with status ${previousStatus}. The payment would not change the invoice status.`
         );
       }
     }
@@ -1284,7 +1284,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       // Check for existing payment with same idempotency key
       if (idempotencyKey) {
         const existingPayment = await tx.payment.findUnique({
-          where: { idempotencyKey },
+          where: { idempotencyKey }
         });
 
         if (existingPayment) {
@@ -1300,8 +1300,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           method,
           date,
           notes,
-          idempotencyKey,
-        },
+          idempotencyKey
+        }
       });
 
       await tx.invoice.update({
@@ -1316,10 +1316,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             ? {
                 paidDate: date,
                 paymentMethod: method,
-                receiptNumber,
+                receiptNumber
               }
-            : {}),
-        },
+            : {})
+        }
       });
 
       // Create status history entry if:
@@ -1333,8 +1333,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             previousStatus,
             updatedAt: new Date(),
             updatedBy,
-            notes: `Payment of ${amount} ${invoice.currency} received. ${newStatus === InvoiceStatus.PAID ? 'Invoice fully paid.' : 'Invoice partially paid.'}`,
-          },
+            notes: `Payment of ${amount} ${invoice.currency} received. ${newStatus === InvoiceStatus.PAID ? 'Invoice fully paid.' : 'Invoice partially paid.'}`
+          }
         });
       }
 
@@ -1349,8 +1349,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         create: {
           name: categoryName,
           description: `Automatically created for ${categoryName.toLowerCase()}`,
-          tenantId,
-        },
+          tenantId
+        }
       });
 
       // Generate transaction reference number
@@ -1376,11 +1376,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           categories: {
             create: [
               {
-                categoryId: category.id,
-              },
-            ],
-          },
-        },
+                categoryId: category.id
+              }
+            ]
+          }
+        }
       });
 
       // Store transaction ID for document attachment after transaction completes
@@ -1403,13 +1403,13 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         if (newStatus === InvoiceStatus.PAID) {
           await getOrGenerateReceiptPdf(updated, {
             skipDownload: true,
-            context: 'addPayment',
+            context: 'addPayment'
           });
           documentKind = DocumentKind.RECEIPT;
         } else {
           await getOrGenerateInvoicePdf(updated, {
             skipDownload: true,
-            context: 'addPayment',
+            context: 'addPayment'
           });
           documentKind = DocumentKind.INVOICE;
         }
@@ -1418,11 +1418,11 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         const document = await this.prisma.document.findFirst({
           where: {
             invoiceId: invoiceId,
-            kind: documentKind,
+            kind: documentKind
           },
           orderBy: {
-            generatedAt: 'desc',
-          },
+            generatedAt: 'desc'
+          }
         });
 
         // Attach document to transaction
@@ -1435,19 +1435,19 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               mimeType: document.mimeType,
               s3Key: document.s3Key,
               s3Url: document.s3Url,
-              uploadedBy: updatedBy,
-            },
+              uploadedBy: updatedBy
+            }
           });
         }
       } catch (error) {
         logger.error('Failed to attach document to transaction', error, {
           context: 'addPayment',
-          metadata: { transactionId: createdTransactionId },
+          metadata: { transactionId: createdTransactionId }
         });
       }
     } else {
       logger.warn('No transaction ID available for document attachment', {
-        context: 'addPayment',
+        context: 'addPayment'
       });
     }
 
@@ -1468,7 +1468,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     ids: string[],
     tenantId: string,
     status: InvoiceStatus,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
@@ -1478,7 +1478,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
           // Fetch current invoice status scoped to tenant
           const invoice = await tx.invoice.findUnique({
             where: { id, tenantId, deletedAt: null },
-            select: { status: true },
+            select: { status: true }
           });
 
           if (!invoice) {
@@ -1507,8 +1507,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             where: { id, tenantId },
             data: {
               status,
-              updatedAt: new Date(),
-            },
+              updatedAt: new Date()
+            }
           });
 
           // Create audit trail entry
@@ -1519,8 +1519,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
               previousStatus: invoice.status,
               updatedAt: new Date(),
               updatedBy,
-              notes: 'Bulk status update',
-            },
+              notes: 'Bulk status update'
+            }
           });
 
           results.push({ id, success: true });
@@ -1544,7 +1544,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    */
   async duplicateInvoice(
     id: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string; invoiceNumber: string }> {
     // Get the original invoice with all details
     const original = await this.prisma.invoice.findUnique({
@@ -1556,10 +1556,10 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             quantity: true,
             unitPrice: true,
             total: true,
-            productId: true,
-          },
-        },
-      },
+            productId: true
+          }
+        }
+      }
     });
 
     if (!original) {
@@ -1607,14 +1607,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.total,
-            productId: item.productId,
-          })),
-        },
+            productId: item.productId
+          }))
+        }
       },
       select: {
         id: true,
-        invoiceNumber: true,
-      },
+        invoiceNumber: true
+      }
     });
 
     return duplicate;
@@ -1626,7 +1626,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    */
   async getInvoiceMonthlyRevenueTrend(
     limit: number = 12,
-    tenantId: string,
+    tenantId: string
   ): Promise<RevenueTrend[]> {
     const data = await withDatabaseRetry(() =>
       this.prisma.$queryRaw<any[]>(Prisma.sql`
@@ -1642,14 +1642,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         GROUP BY year, month_num, month
         ORDER BY year DESC, month_num DESC
         LIMIT ${limit}
-      `),
+      `)
     );
 
     return data
       .map((item) => ({
         month: `${item.month} ${item.year}`,
         total: item.total,
-        paid: item.paid,
+        paid: item.paid
       }))
       .reverse();
   }
@@ -1674,14 +1674,14 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         GROUP BY c.id, "customerName"
         ORDER BY "amountDue" DESC
         LIMIT ${limit}
-      `),
+      `)
     );
 
     return data.map((item) => ({
       customerId: item.customerId,
       customerName: item.customerName,
       amountDue: item.amountDue,
-      invoiceCount: item.invoiceCount,
+      invoiceCount: item.invoiceCount
     }));
   }
 }

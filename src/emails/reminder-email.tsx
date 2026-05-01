@@ -21,7 +21,7 @@ const overdueCell = {
   ...styles.valueCell,
   fontSize: '16px',
   fontWeight: 'bold',
-  color: '#ef4444',
+  color: '#ef4444'
 };
 
 function ReminderContent({ reminderData, pdfUrl }: ReminderEmailProps): React.ReactElement {
@@ -33,7 +33,7 @@ function ReminderContent({ reminderData, pdfUrl }: ReminderEmailProps): React.Re
     dueDate,
     daysOverdue,
     amountPaid,
-    amountDue,
+    amountDue
   } = reminderData;
 
   const hasPaymentHistory = amountPaid !== undefined && amountPaid > 0;
@@ -41,25 +41,25 @@ function ReminderContent({ reminderData, pdfUrl }: ReminderEmailProps): React.Re
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency
   }).format(amount);
 
   const formattedAmountPaid = hasPaymentHistory
     ? new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency,
+        currency
       }).format(amountPaid)
     : null;
 
   const formattedAmountDue = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency
   }).format(displayAmountDue);
 
   const formattedDueDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(dueDate));
 
   return (
@@ -163,9 +163,9 @@ ReminderEmail.PreviewProps = {
     dueDate: new Date('2025-01-01'),
     daysOverdue: 15,
     amountPaid: 1000.0,
-    amountDue: 2000.0,
+    amountDue: 2000.0
   },
-  pdfUrl: 'https://example.com/invoice.pdf',
+  pdfUrl: 'https://example.com/invoice.pdf'
 } satisfies ReminderEmailProps;
 
 export default ReminderEmail;

@@ -26,7 +26,7 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
       (file) =>
         file.fileName.toLowerCase().includes(query) ||
         file.resourceType.toLowerCase().includes(query) ||
-        file.fileType.toLowerCase().includes(query),
+        file.fileType.toLowerCase().includes(query)
     );
   }, [files, searchQuery]);
 
@@ -45,7 +45,7 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className='flex items-center justify-between'>
           <div>
             <CardTitle>Files</CardTitle>
             <CardDescription>
@@ -53,83 +53,83 @@ export function FileBrowser({ files, isLoading, onDownload, onDelete }: FileBrow
               {searchQuery && ' (filtered)'}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             {/* Search */}
-            <div className="relative">
+            <div className='relative'>
               <Search
-                aria-hidden="true"
-                className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                aria-hidden='true'
+                className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground'
               />
               <Input
-                placeholder="Search files..."
-                className="pl-8 w-64"
+                placeholder='Search files...'
+                className='pl-8 w-64'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-2 hover:bg-transparent"
+                  variant='ghost'
+                  size='sm'
+                  className='absolute right-0 top-0 h-full px-2 hover:bg-transparent'
                   onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
+                  aria-label='Clear search'
                 >
-                  <X aria-hidden="true" className="h-4 w-4" />
+                  <X aria-hidden='true' className='h-4 w-4' />
                 </Button>
               )}
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 border rounded-md p-1">
+            <div className='flex items-center gap-1 border rounded-md p-1'>
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
+                size='sm'
                 onClick={() => setViewMode('list')}
-                className="h-8 px-2"
-                aria-label="List view"
+                className='h-8 px-2'
+                aria-label='List view'
               >
-                <LayoutList aria-hidden="true" className="h-4 w-4" />
+                <LayoutList aria-hidden='true' className='h-4 w-4' />
               </Button>
               <Button
                 variant={viewMode === 'folders' ? 'default' : 'ghost'}
-                size="sm"
+                size='sm'
                 onClick={() => setViewMode('folders')}
-                className="h-8 px-2"
-                aria-label="Folder view"
+                className='h-8 px-2'
+                aria-label='Folder view'
               >
-                <FolderTree aria-hidden="true" className="h-4 w-4" />
+                <FolderTree aria-hidden='true' className='h-4 w-4' />
               </Button>
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 max-h-[600px] overflow-y-auto">
+        <div className='space-y-2 max-h-[600px] overflow-y-auto'>
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Loader2 aria-hidden="true" className="h-8 w-8 animate-spin mb-2" />
+            <div className='flex flex-col items-center justify-center py-12 text-muted-foreground'>
+              <Loader2 aria-hidden='true' className='h-8 w-8 animate-spin mb-2' />
               <p>Loading files...</p>
             </div>
           ) : filteredFiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <div className='flex flex-col items-center justify-center py-12 text-muted-foreground'>
               {searchQuery ? (
                 <>
-                  <Search aria-hidden="true" className="h-8 w-8 mb-2" />
+                  <Search aria-hidden='true' className='h-8 w-8 mb-2' />
                   <p>No files match your search</p>
                   <Button
-                    variant="link"
-                    size="sm"
+                    variant='link'
+                    size='sm'
                     onClick={() => setSearchQuery('')}
-                    className="mt-2"
+                    className='mt-2'
                   >
                     Clear search
                   </Button>
                 </>
               ) : (
                 <>
-                  <FileIcon aria-hidden="true" className="h-8 w-8 mb-2" />
+                  <FileIcon aria-hidden='true' className='h-8 w-8 mb-2' />
                   <p>No files yet</p>
-                  <p className="text-sm">Upload a file to get started</p>
+                  <p className='text-sm'>Upload a file to get started</p>
                 </>
               )}
             </div>

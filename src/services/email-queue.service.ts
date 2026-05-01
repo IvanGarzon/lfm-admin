@@ -47,7 +47,7 @@ const emailAuditRepo = new EmailAuditRepository(prisma);
  * ```
  */
 export async function queueEmail(
-  payload: QueueEmailPayload,
+  payload: QueueEmailPayload
 ): Promise<{ auditId: string; eventId: string }> {
   try {
     // Check if send-email task is enabled
@@ -59,12 +59,12 @@ export async function queueEmail(
         metadata: {
           emailType: payload.emailType,
           recipient: payload.recipient,
-          taskId: sendEmailTask.id,
-        },
+          taskId: sendEmailTask.id
+        }
       });
 
       throw new Error(
-        'Email sending is currently disabled. Please enable the send-email task to send emails.',
+        'Email sending is currently disabled. Please enable the send-email task to send emails.'
       );
     }
 
@@ -81,8 +81,8 @@ export async function queueEmail(
         metadata: {
           originalRecipient: payload.recipient,
           testRecipient: recipient,
-          emailType: payload.emailType,
-        },
+          emailType: payload.emailType
+        }
       });
     }
 
@@ -101,8 +101,8 @@ export async function queueEmail(
         priority: payload.priority,
         attachments: payload.attachments,
         ...payload.metadata,
-        ...(isTestMode && { originalRecipient: payload.recipient }),
-      },
+        ...(isTestMode && { originalRecipient: payload.recipient })
+      }
     });
 
     // Generate event ID for deduplication and tracking
@@ -121,8 +121,8 @@ export async function queueEmail(
         eventId,
         emailType: payload.emailType,
         recipient,
-        ...(isTestMode && { originalRecipient: payload.recipient }),
-      },
+        ...(isTestMode && { originalRecipient: payload.recipient })
+      }
     });
 
     return { auditId: emailAudit.id, eventId };
@@ -131,8 +131,8 @@ export async function queueEmail(
       context: 'email-queue',
       metadata: {
         emailType: payload.emailType,
-        recipient: payload.recipient,
-      },
+        recipient: payload.recipient
+      }
     });
 
     throw error;
@@ -165,7 +165,7 @@ export async function queueInvoiceEmail(params: {
     invoiceId: params.invoiceId,
     emailData: params.emailData,
     attachments: params.attachments,
-    priority: params.type === 'reminder' || params.type === 'receipt' ? 'high' : 'normal',
+    priority: params.type === 'reminder' || params.type === 'receipt' ? 'high' : 'normal'
   });
 }
 
@@ -194,6 +194,6 @@ export async function queueQuoteEmail(params: {
     quoteId: params.quoteId,
     emailData: params.emailData,
     attachments: params.attachments,
-    priority: 'normal',
+    priority: 'normal'
   });
 }

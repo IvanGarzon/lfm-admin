@@ -16,7 +16,7 @@ const BaseEmployeeSchema = z
       .trim()
       .max(VALIDATION_LIMITS.PHONE_MAX, 'Phone number is too long')
       .refine((val) => val.length === 0 || /^[0-9\s\-\+\(\)]+$/.test(val), {
-        message: 'Please enter a valid phone number',
+        message: 'Please enter a valid phone number'
       }),
     gender: GenderSchema,
     rate: z
@@ -31,16 +31,16 @@ const BaseEmployeeSchema = z
       .max(VALIDATION_LIMITS.URL_MAX)
       .pipe(z.url())
       .nullable()
-      .or(z.literal('')),
+      .or(z.literal(''))
   })
   .refine((data) => data.dob <= new Date(), {
     error: 'Date of birth cannot be in the future.',
-    path: ['dob'],
+    path: ['dob']
   });
 
 export const CreateEmployeeSchema = BaseEmployeeSchema;
 export const UpdateEmployeeSchema = BaseEmployeeSchema.extend({
-  id: z.string('Invalid employee ID'),
+  id: z.string('Invalid employee ID')
 });
 export const DeleteEmployeeSchema = z.object({ id: z.string().cuid() });
 

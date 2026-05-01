@@ -11,8 +11,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 10,
-            multiplier: 3,
-          }),
+            multiplier: 3
+          })
         ).toBe(30);
       });
 
@@ -20,8 +20,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 3.33,
-            multiplier: 3,
-          }),
+            multiplier: 3
+          })
         ).toBe(9.99);
       });
 
@@ -29,8 +29,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 0,
-            multiplier: 3,
-          }),
+            multiplier: 3
+          })
         ).toBe(0);
       });
 
@@ -38,8 +38,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 10,
-            multiplier: 2.5,
-          }),
+            multiplier: 2.5
+          })
         ).toBe(25);
       });
     });
@@ -50,8 +50,8 @@ describe('price-list.service', () => {
           calculateRetailPrice({
             costPerUnit: 10,
             multiplier: 3,
-            retailPriceOverride: 25,
-          }),
+            retailPriceOverride: 25
+          })
         ).toBe(25);
       });
 
@@ -60,8 +60,8 @@ describe('price-list.service', () => {
           calculateRetailPrice({
             costPerUnit: 10,
             multiplier: 3,
-            retailPriceOverride: null,
-          }),
+            retailPriceOverride: null
+          })
         ).toBe(30);
       });
 
@@ -70,8 +70,8 @@ describe('price-list.service', () => {
           calculateRetailPrice({
             costPerUnit: 10,
             multiplier: 3,
-            retailPriceOverride: 0,
-          }),
+            retailPriceOverride: 0
+          })
         ).toBe(30);
       });
 
@@ -80,8 +80,8 @@ describe('price-list.service', () => {
           calculateRetailPrice({
             costPerUnit: 10,
             multiplier: 3,
-            retailPriceOverride: 25.999,
-          }),
+            retailPriceOverride: 25.999
+          })
         ).toBe(26);
       });
     });
@@ -91,8 +91,8 @@ describe('price-list.service', () => {
         expect(() =>
           calculateRetailPrice({
             costPerUnit: 10,
-            multiplier: 0,
-          }),
+            multiplier: 0
+          })
         ).toThrow('Multiplier must be greater than zero');
       });
 
@@ -100,8 +100,8 @@ describe('price-list.service', () => {
         expect(() =>
           calculateRetailPrice({
             costPerUnit: 10,
-            multiplier: -1,
-          }),
+            multiplier: -1
+          })
         ).toThrow('Multiplier must be greater than zero');
       });
 
@@ -109,8 +109,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 333333.33,
-            multiplier: 3,
-          }),
+            multiplier: 3
+          })
         ).toBe(999999.99);
       });
 
@@ -118,8 +118,8 @@ describe('price-list.service', () => {
         expect(
           calculateRetailPrice({
             costPerUnit: 0.01,
-            multiplier: 3,
-          }),
+            multiplier: 3
+          })
         ).toBe(0.03);
       });
     });

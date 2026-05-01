@@ -31,7 +31,7 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
     bankName: s?.bankName ?? '',
     bsb: s?.bsb ?? '',
     accountNumber: s?.accountNumber ?? '',
-    accountName: s?.accountName ?? '',
+    accountName: s?.accountName ?? ''
   });
 
   const update = useMutation({
@@ -49,7 +49,7 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
         bankName: form.bankName || null,
         bsb: form.bsb || null,
         accountNumber: form.accountNumber || null,
-        accountName: form.accountName || null,
+        accountName: form.accountName || null
       }),
     onSuccess: (result) => {
       if (!result.success) {
@@ -58,7 +58,7 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
       }
       toast.success('Settings saved');
     },
-    onError: () => toast.error('Failed to save settings'),
+    onError: () => toast.error('Failed to save settings')
   });
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -71,26 +71,26 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Box className="space-y-6">
+      <Box className='space-y-6'>
         {/* -- Business Info ------------------------------------------------- */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Business Info</h2>
-          <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Box className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email} onChange={set('email')} />
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>Business Info</h2>
+          <Box className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <Box className='space-y-2'>
+              <Label htmlFor='email'>Email</Label>
+              <Input id='email' type='email' value={form.email} onChange={set('email')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={form.phone} onChange={set('phone')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='phone'>Phone</Label>
+              <Input id='phone' value={form.phone} onChange={set('phone')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="abn">ABN</Label>
-              <Input id="abn" value={form.abn} onChange={set('abn')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='abn'>ABN</Label>
+              <Input id='abn' value={form.abn} onChange={set('abn')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input id="website" type="url" value={form.website} onChange={set('website')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='website'>Website</Label>
+              <Input id='website' type='url' value={form.website} onChange={set('website')} />
             </Box>
           </Box>
         </Card>
@@ -98,28 +98,28 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
         <Separator />
 
         {/* -- Address ------------------------------------------------------- */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Address</h2>
-          <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Box className="space-y-2 sm:col-span-2">
-              <Label htmlFor="address">Street Address</Label>
-              <Input id="address" value={form.address} onChange={set('address')} />
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>Address</h2>
+          <Box className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <Box className='space-y-2 sm:col-span-2'>
+              <Label htmlFor='address'>Street Address</Label>
+              <Input id='address' value={form.address} onChange={set('address')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input id="city" value={form.city} onChange={set('city')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='city'>City</Label>
+              <Input id='city' value={form.city} onChange={set('city')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input id="state" value={form.state} onChange={set('state')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='state'>State</Label>
+              <Input id='state' value={form.state} onChange={set('state')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="postcode">Postcode</Label>
-              <Input id="postcode" value={form.postcode} onChange={set('postcode')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='postcode'>Postcode</Label>
+              <Input id='postcode' value={form.postcode} onChange={set('postcode')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Input id="country" value={form.country} onChange={set('country')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='country'>Country</Label>
+              <Input id='country' value={form.country} onChange={set('country')} />
             </Box>
           </Box>
         </Card>
@@ -127,25 +127,25 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
         <Separator />
 
         {/* -- Bank Details -------------------------------------------------- */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Bank Details</h2>
-          <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Box className="space-y-2">
-              <Label htmlFor="bankName">Bank Name</Label>
-              <Input id="bankName" value={form.bankName} onChange={set('bankName')} />
+        <Card className='p-6'>
+          <h2 className='text-lg font-semibold mb-4'>Bank Details</h2>
+          <Box className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <Box className='space-y-2'>
+              <Label htmlFor='bankName'>Bank Name</Label>
+              <Input id='bankName' value={form.bankName} onChange={set('bankName')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="accountName">Account Name</Label>
-              <Input id="accountName" value={form.accountName} onChange={set('accountName')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='accountName'>Account Name</Label>
+              <Input id='accountName' value={form.accountName} onChange={set('accountName')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="bsb">BSB</Label>
-              <Input id="bsb" value={form.bsb} onChange={set('bsb')} />
+            <Box className='space-y-2'>
+              <Label htmlFor='bsb'>BSB</Label>
+              <Input id='bsb' value={form.bsb} onChange={set('bsb')} />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="accountNumber">Account Number</Label>
+            <Box className='space-y-2'>
+              <Label htmlFor='accountNumber'>Account Number</Label>
               <Input
-                id="accountNumber"
+                id='accountNumber'
                 value={form.accountNumber}
                 onChange={set('accountNumber')}
               />
@@ -153,8 +153,8 @@ export function TenantSettingsForm({ tenant }: { tenant: TenantWithSettings }) {
           </Box>
         </Card>
 
-        <Box className="flex justify-end">
-          <Button type="submit" disabled={update.isPending}>
+        <Box className='flex justify-end'>
+          <Button type='submit' disabled={update.isPending}>
             {update.isPending ? 'Saving...' : 'Save Settings'}
           </Button>
         </Box>

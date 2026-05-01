@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -54,7 +54,7 @@ export function EmailPreviewDialog({
   isSending = false,
   isMarkingAsSent = false,
   showMarkAsSentOption = false,
-  statusLabel = 'Sent',
+  statusLabel = 'Sent'
 }: EmailPreviewDialogProps) {
   const [showRawHtml, setShowRawHtml] = useState(false);
 
@@ -77,10 +77,10 @@ export function EmailPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className='max-w-4xl max-h-[90vh] overflow-hidden flex flex-col'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2'>
+            <Mail className='h-5 w-5' />
             Email Preview
           </DialogTitle>
           <DialogDescription>
@@ -89,20 +89,20 @@ export function EmailPreviewDialog({
         </DialogHeader>
 
         {isLoading ? (
-          <Box className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Box className='flex items-center justify-center py-12'>
+            <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
           </Box>
         ) : emailData ? (
-          <Box className="flex-1 overflow-y-auto space-y-4">
+          <Box className='flex-1 overflow-y-auto space-y-4'>
             {emailData.isTestMode ? (
-              <Box className="p-3 bg-amber-50 border border-amber-200 rounded-md dark:bg-amber-900/20 dark:border-amber-800">
-                <Box className="flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
-                  <Box className="flex-1">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+              <Box className='p-3 bg-amber-50 border border-amber-200 rounded-md dark:bg-amber-900/20 dark:border-amber-800'>
+                <Box className='flex items-start gap-2'>
+                  <AlertCircle className='h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5' />
+                  <Box className='flex-1'>
+                    <p className='text-sm font-medium text-amber-800 dark:text-amber-300'>
                       Test Mode Active
                     </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                    <p className='text-sm text-amber-700 dark:text-amber-400 mt-1'>
                       Email will be sent to {emailData.testRecipient} instead of the customer
                     </p>
                   </Box>
@@ -110,49 +110,49 @@ export function EmailPreviewDialog({
               </Box>
             ) : null}
 
-            <Box className="space-y-2">
-              <Box className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground min-w-16">To:</span>
-                <span className="text-sm">{emailData.to}</span>
+            <Box className='space-y-2'>
+              <Box className='flex items-center gap-2'>
+                <span className='text-sm font-medium text-muted-foreground min-w-16'>To:</span>
+                <span className='text-sm'>{emailData.to}</span>
               </Box>
-              <Box className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground min-w-16">Subject:</span>
-                <span className="text-sm font-medium">{emailData.subject}</span>
+              <Box className='flex items-center gap-2'>
+                <span className='text-sm font-medium text-muted-foreground min-w-16'>Subject:</span>
+                <span className='text-sm font-medium'>{emailData.subject}</span>
               </Box>
               {emailData.hasAttachment ? (
-                <Box className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-muted-foreground min-w-16">
+                <Box className='flex items-center gap-2'>
+                  <span className='text-sm font-medium text-muted-foreground min-w-16'>
                     Attachment:
                   </span>
-                  <Badge variant="secondary" className="gap-1.5">
-                    <Paperclip className="h-3 w-3" />
+                  <Badge variant='secondary' className='gap-1.5'>
+                    <Paperclip className='h-3 w-3' />
                     {emailData.attachmentName || 'PDF Attachment'}
                   </Badge>
                 </Box>
               ) : null}
             </Box>
 
-            <Box className="border-t pt-4">
-              <Box className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Email Content</span>
+            <Box className='border-t pt-4'>
+              <Box className='flex items-center justify-between mb-2'>
+                <span className='text-sm font-medium'>Email Content</span>
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
+                  type='button'
+                  variant='ghost'
+                  size='sm'
                   onClick={() => setShowRawHtml(!showRawHtml)}
                 >
                   {showRawHtml ? 'Show Preview' : 'Show HTML'}
                 </Button>
               </Box>
 
-              <Box className="border rounded-md bg-white dark:bg-gray-950 max-h-96 overflow-y-auto">
+              <Box className='border rounded-md bg-white dark:bg-gray-950 max-h-96 overflow-y-auto'>
                 {showRawHtml ? (
-                  <pre className="p-4 text-xs whitespace-pre-wrap break-words">
+                  <pre className='p-4 text-xs whitespace-pre-wrap break-words'>
                     {emailData.htmlContent}
                   </pre>
                 ) : (
                   <Box
-                    className="p-4"
+                    className='p-4'
                     dangerouslySetInnerHTML={{ __html: emailData.htmlContent }}
                   />
                 )}
@@ -160,54 +160,54 @@ export function EmailPreviewDialog({
             </Box>
           </Box>
         ) : (
-          <Box className="flex items-center justify-center py-12 text-muted-foreground">
-            <p className="text-sm">No preview available</p>
+          <Box className='flex items-center justify-center py-12 text-muted-foreground'>
+            <p className='text-sm'>No preview available</p>
           </Box>
         )}
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className='gap-2'>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={handleCancel}
             disabled={isAnyActionPending}
           >
-            <X className="h-4 w-4" />
+            <X className='h-4 w-4' />
             Cancel
           </Button>
           {showMarkAsSentOption ? (
             <Button
-              type="button"
-              variant="secondary"
+              type='button'
+              variant='secondary'
               onClick={handleConfirmWithoutEmail}
               disabled={isLoading || !emailData || isAnyActionPending}
             >
               {isMarkingAsSent ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className='h-4 w-4 animate-spin mr-2' />
                   Marking as {statusLabel.toLowerCase()}...
                 </>
               ) : (
                 <>
-                  <FileCheck className="h-4 w-4" />
+                  <FileCheck className='h-4 w-4' />
                   Mark as {statusLabel} (No Email)
                 </>
               )}
             </Button>
           ) : null}
           <Button
-            type="button"
+            type='button'
             onClick={handleConfirm}
             disabled={isLoading || !emailData || isAnyActionPending}
           >
             {isSending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className='h-4 w-4 animate-spin mr-2' />
                 Sending...
               </>
             ) : (
               <>
-                <Send className="h-4 w-4" />
+                <Send className='h-4 w-4' />
                 Send Email
               </>
             )}

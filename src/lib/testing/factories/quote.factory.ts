@@ -34,7 +34,7 @@ export function createQuoteInput(overrides: Partial<CreateQuoteInput> = {}): Cre
     gst: 10,
     discount: 0,
     items: [createQuoteItemInput()],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -48,7 +48,7 @@ export function createQuoteItemInput(overrides: Partial<QuoteItemInput> = {}): Q
     unitPrice: 100,
     productId: null,
     colors: [],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -59,7 +59,7 @@ export function createQuoteResponse(overrides: Partial<QuoteResponse> = {}): Quo
   return {
     id: overrides.id ?? testIds.quote(),
     quoteNumber: overrides.quoteNumber ?? 'QUO-2024-0001',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -71,7 +71,7 @@ export function createQuoteVersionResponse(overrides: Partial<QuoteResponse> = {
     id: overrides.id ?? testIds.quoteVersion(),
     quoteNumber: overrides.quoteNumber ?? 'QUO-2024-0001-v2',
     versionNumber: overrides.versionNumber ?? 2,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -79,7 +79,7 @@ export function createQuoteVersionResponse(overrides: Partial<QuoteResponse> = {
  * Creates a mock quote item attachment.
  */
 export function createQuoteItemAttachment(
-  overrides: Partial<QuoteItemAttachment> = {},
+  overrides: Partial<QuoteItemAttachment> = {}
 ): QuoteItemAttachment {
   const id = overrides.id ?? testIds.attachment();
   return {
@@ -92,7 +92,7 @@ export function createQuoteItemAttachment(
     s3Url: `https://test.s3.amazonaws.com/quotes/items/${id}/image.jpg`,
     uploadedBy: overrides.uploadedBy ?? testIds.user(),
     uploadedAt: new Date(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -107,7 +107,7 @@ export function createQuoteStatistics(overrides: Partial<Record<string, number>>
     accepted: 25,
     rejected: 10,
     expired: 15,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -134,5 +134,5 @@ export const mockQuotes = {
    * Creates a version response.
    */
   versionResponse: (id?: string, versionNumber?: number) =>
-    createQuoteVersionResponse({ id, versionNumber }),
+    createQuoteVersionResponse({ id, versionNumber })
 } as const;

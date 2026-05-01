@@ -6,17 +6,17 @@ import type { SearchParams } from 'nuqs/server';
 import {
   getActiveOrganizations,
   getOrganizationById,
-  getOrganizations,
+  getOrganizations
 } from '@/actions/crm/organizations/queries';
 import {
   createOrganization,
   updateOrganization,
-  deleteOrganization,
+  deleteOrganization
 } from '@/actions/crm/organizations/mutations';
 import type {
   CreateOrganizationInput,
   UpdateOrganizationInput,
-  DeleteOrganizationInput,
+  DeleteOrganizationInput
 } from '@/schemas/organizations';
 import type { OrganizationListItem } from '@/features/crm/organizations/types';
 import { ORGANIZATION_KEYS } from '@/features/crm/organizations/constants/query-keys';
@@ -33,7 +33,7 @@ export function useOrganizationsList(searchParams: SearchParams) {
         throw new Error(result.error);
       }
       return result.data;
-    },
+    }
   });
 }
 
@@ -45,7 +45,7 @@ export function useOrganizations() {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
-    staleTime: 60 * 1000, // 60 seconds
+    staleTime: 60 * 1000 // 60 seconds
   });
 }
 
@@ -64,7 +64,7 @@ export function useOrganization(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -92,7 +92,7 @@ export function useCreateOrganization() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create organization');
-    },
+    }
   });
 }
 
@@ -131,9 +131,9 @@ export function useUpdateOrganization() {
             city: newData.city,
             state: newData.state,
             postcode: newData.postcode,
-            country: newData.country,
+            country: newData.country
           };
-        },
+        }
       );
 
       return { previousOrganization };
@@ -143,7 +143,7 @@ export function useUpdateOrganization() {
       if (context?.previousOrganization) {
         queryClient.setQueryData(
           ORGANIZATION_KEYS.detail(newData.id),
-          context.previousOrganization,
+          context.previousOrganization
         );
       }
       toast.error(err.message || 'Failed to update organization');
@@ -157,7 +157,7 @@ export function useUpdateOrganization() {
     },
     onSuccess: () => {
       toast.success('Organization updated successfully');
-    },
+    }
   });
 }
 
@@ -207,6 +207,6 @@ export function useDeleteOrganization() {
     },
     onSuccess: () => {
       toast.success('Organization deleted');
-    },
+    }
   });
 }

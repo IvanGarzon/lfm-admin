@@ -5,7 +5,7 @@ import { SearchParams } from 'nuqs/server';
 import { toast } from 'sonner';
 import {
   previewInvoiceEmail,
-  type InvoiceEmailType,
+  type InvoiceEmailType
 } from '@/actions/finances/invoices/preview-email';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
@@ -18,7 +18,7 @@ import {
   useDownloadInvoicePdf,
   useBulkUpdateInvoiceStatus,
   useDuplicateInvoice,
-  useMarkInvoiceAsDraft,
+  useMarkInvoiceAsDraft
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import type { InvoicePagination, InvoiceListItem } from '@/features/finances/invoices/types';
 import { createInvoiceColumns } from '@/features/finances/invoices/components/invoice-columns';
@@ -28,16 +28,17 @@ const DEFAULT_PAGE_SIZE = 20;
 
 export function InvoiceList({
   data,
-  searchParams: serverSearchParams,
+  searchParams: serverSearchParams
 }: {
-  data: InvoicePagination;
+  data?: InvoicePagination;
   searchParams: SearchParams;
 }) {
   const { openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending } =
     useInvoiceActions();
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(data.pagination.totalItems / perPage);
+  const totalItems = data?.pagination.totalItems ?? 0;
+  const pageCount = Math.ceil(totalItems / perPage);
 
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
@@ -64,7 +65,7 @@ export function InvoiceList({
 
         if (!result.success) {
           toast.error('Failed to load email preview', {
-            description: result.error,
+            description: result.error
           });
           setShowEmailPreview(false);
           setPendingEmailAction(null);
@@ -74,7 +75,7 @@ export function InvoiceList({
         setEmailPreviewData(result.data);
       } catch (error) {
         toast.error('Failed to load email preview', {
-          description: error instanceof Error ? error.message : 'An error occurred',
+          description: error instanceof Error ? error.message : 'An error occurred'
         });
         setShowEmailPreview(false);
         setPendingEmailAction(null);
@@ -82,14 +83,14 @@ export function InvoiceList({
         setIsLoadingEmailPreview(false);
       }
     },
-    [],
+    []
   );
 
   const handleSendReminder = useCallback(
     (id: string) => {
       handleLoadEmailPreview(id, 'reminder');
     },
-    [handleLoadEmailPreview],
+    [handleLoadEmailPreview]
   );
 
   const handleMarkAsPending = useCallback(
@@ -97,7 +98,7 @@ export function InvoiceList({
       // Show email preview before marking as pending
       handleLoadEmailPreview(id, 'sent');
     },
-    [handleLoadEmailPreview],
+    [handleLoadEmailPreview]
   );
 
   const handleConfirmSendEmail = useCallback(() => {
@@ -150,7 +151,7 @@ export function InvoiceList({
         (id) => downloadPdf.mutate(id),
         (id) => markAsDraft.mutate(id),
         (id) => openSendReceipt(id),
-        (id) => duplicateInvoice.mutate(id),
+        (id) => duplicateInvoice.mutate(id)
       ),
     [
       handleSendReminder,
@@ -161,16 +162,16 @@ export function InvoiceList({
       openCancel,
       openSendReceipt,
       duplicateInvoice,
-      markAsDraft,
-    ],
+      markAsDraft
+    ]
   );
 
   const { table } = useDataTable({
-    data: data.items,
+    data: data?.items ?? [],
     columns,
     pageCount: pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   const handleBulkUpdateStatus = (rows: InvoiceListItem[], status: string) => {
@@ -178,20 +179,24 @@ export function InvoiceList({
       // @ts-expect-error Status enum mismatch
       { ids: rows.map((r) => r.id), status },
       {
-        onSuccess: () => table.toggleAllPageRowsSelected(false),
-      },
+        onSuccess: () => table.toggleAllPageRowsSelected(false)
+      }
     );
   };
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       <BulkActionsBar
         table={table}
         onUpdateStatus={handleBulkUpdateStatus}
         isPending={bulkUpdateStatus.isPending}
       />
 
-      <InvoiceTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
+      <InvoiceTable
+        table={table}
+        items={data?.items ?? []}
+        totalItems={data?.pagination.totalItems ?? 0}
+      />
 
       <EmailPreviewDialog
         open={showEmailPreview}
@@ -204,7 +209,7 @@ export function InvoiceList({
         isSending={sendReminder.isPending}
         isMarkingAsSent={false}
         showMarkAsSentOption={pendingEmailAction?.emailType === 'sent'}
-        statusLabel="Pending"
+        statusLabel='Pending'
       />
     </Box>
   );

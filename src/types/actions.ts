@@ -20,7 +20,7 @@ export type AuthenticatedSession = Session & {
 
 export type AuthenticatedHandler<TInput, TOutput> = (
   session: AuthenticatedSession,
-  input: TInput,
+  input: TInput
 ) => Promise<ActionResult<TOutput>>;
 
 export type TenantContext = {
@@ -32,11 +32,11 @@ export type TenantContext = {
 
 export type TenantHandler<TInput, TOutput> = (
   ctx: TenantContext,
-  input: TInput,
+  input: TInput
 ) => Promise<ActionResult<TOutput>>;
 
 export type UnauthenticatedHandler<TInput, TOutput> = (
-  input: TInput,
+  input: TInput
 ) => Promise<ActionResult<TOutput>>;
 
 // -- Super Admin Wrapper ----------------------------------------------------

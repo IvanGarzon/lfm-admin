@@ -14,7 +14,7 @@ import type {
   TopCustomerByQuotedValue,
   ConversionFunnelData,
   AverageTimeToDecision,
-  StatsDateFilter,
+  StatsDateFilter
 } from '@/features/finances/quotes/types';
 import { getPaginationMetadata } from '@/lib/utils';
 import { validateQuoteStatusTransition } from '@/features/finances/quotes/utils/quote-helpers';
@@ -67,28 +67,28 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const whereClause: Prisma.QuoteWhereInput = {
       tenantId,
       deletedAt: null,
-      isLatestVersion: true,
+      isLatestVersion: true
     };
 
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { quoteNumber: searchFilter },
         {
           customer: {
-            OR: [{ firstName: searchFilter }, { lastName: searchFilter }, { email: searchFilter }],
-          },
-        },
+            OR: [{ firstName: searchFilter }, { lastName: searchFilter }, { email: searchFilter }]
+          }
+        }
       ];
     }
 
@@ -136,18 +136,18 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
-          },
+            email: true
+          }
         },
         _count: {
           select: {
-            items: true,
-          },
-        },
+            items: true
+          }
+        }
       },
       orderBy,
       skip,
-      take: perPage,
+      take: perPage
     });
 
     // Run count and query in parallel without transaction
@@ -170,12 +170,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       itemCount: quote._count.items,
       versionNumber: quote.versionNumber,
       parentQuoteId: quote.parentQuoteId,
-      isFavourite: quote.isFavourite,
+      isFavourite: quote.isFavourite
     }));
 
     return {
       items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -215,10 +215,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             organization: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         items: {
           select: {
@@ -243,19 +243,19 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
                 s3Key: true,
                 s3Url: true,
                 uploadedBy: true,
-                uploadedAt: true,
+                uploadedAt: true
               },
-              orderBy: { uploadedAt: 'desc' },
-            },
+              orderBy: { uploadedAt: 'desc' }
+            }
           },
-          orderBy: { order: 'asc' },
+          orderBy: { order: 'asc' }
         },
         _count: {
           select: {
-            statusHistory: true,
-          },
-        },
-      },
+            statusHistory: true
+          }
+        }
+      }
     });
 
     if (!quote) {
@@ -276,8 +276,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       items: quote.items.map((item) => ({
         ...item,
         unitPrice: Number(item.unitPrice),
-        total: Number(item.total),
-      })),
+        total: Number(item.total)
+      }))
     };
   }
 
@@ -317,17 +317,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             organization: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         _count: {
           select: {
-            statusHistory: true,
-          },
-        },
-      },
+            statusHistory: true
+          }
+        }
+      }
     });
 
     if (!quote) {
@@ -344,7 +344,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       discount: Number(quote.discount),
       notes: quote.notes ?? undefined,
       terms: quote.terms ?? undefined,
-      versionsCount,
+      versionsCount
     };
   }
 
@@ -359,8 +359,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       where: {
         quoteId,
         quote: {
-          deletedAt: null,
-        },
+          deletedAt: null
+        }
       },
       select: {
         id: true,
@@ -384,18 +384,18 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             s3Key: true,
             s3Url: true,
             uploadedBy: true,
-            uploadedAt: true,
+            uploadedAt: true
           },
-          orderBy: { uploadedAt: 'desc' },
-        },
+          orderBy: { uploadedAt: 'desc' }
+        }
       },
-      orderBy: { order: 'asc' },
+      orderBy: { order: 'asc' }
     });
 
     return items.map((item) => ({
       ...item,
       unitPrice: Number(item.unitPrice),
-      total: Number(item.total),
+      total: Number(item.total)
     }));
   }
 
@@ -418,12 +418,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             id: true,
             firstName: true,
             lastName: true,
-            avatarUrl: true,
-          },
+            avatarUrl: true
+          }
         },
-        notes: true,
+        notes: true
       },
-      orderBy: { updatedAt: 'asc' },
+      orderBy: { updatedAt: 'asc' }
     });
   }
 
@@ -438,13 +438,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async getQuoteStatistics(
     tenantId: string,
-    dateFilter?: { startDate?: Date; endDate?: Date },
+    dateFilter?: { startDate?: Date; endDate?: Date }
   ): Promise<QuoteStatistics> {
     const whereClause: Prisma.QuoteWhereInput = {
       tenantId,
       deletedAt: null,
       // Only count latest versions
-      isLatestVersion: true,
+      isLatestVersion: true
     };
 
     // Add date filter if provided
@@ -469,8 +469,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         isLatestVersion: true,
         issuedDate: {
           gte: new Date(dateFilter.startDate.getTime() - duration),
-          lte: new Date(dateFilter.endDate.getTime() - duration),
-        },
+          lte: new Date(dateFilter.endDate.getTime() - duration)
+        }
       };
     } else if (!dateFilter?.startDate && !dateFilter?.endDate) {
       const now = new Date();
@@ -482,8 +482,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         isLatestVersion: true,
         issuedDate: {
           gte: firstDayLastMonth,
-          lt: firstDayThisMonth,
-        },
+          lt: firstDayThisMonth
+        }
       };
     }
 
@@ -493,37 +493,37 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         by: ['status'],
         where: whereClause,
         _count: {
-          _all: true,
+          _all: true
         },
         _sum: {
-          amount: true,
-        },
+          amount: true
+        }
       }),
 
       // Query 2: Get total count and average in a single aggregate query
       this.prisma.quote.aggregate({
         where: whereClause,
         _count: {
-          _all: true,
+          _all: true
         },
         _avg: {
-          amount: true,
+          amount: true
         },
         _sum: {
-          amount: true,
-        },
+          amount: true
+        }
       }),
 
       // Query 3: Previous period aggregate for growth calculation
       previousWhereClause
         ? this.prisma.quote.aggregate({
             where: previousWhereClause,
-            _sum: { amount: true },
+            _sum: { amount: true }
           })
         : Promise.resolve(null),
 
       // Query 4: Monthly trend data
-      this.getMonthlyQuoteValueTrend(6, tenantId),
+      this.getMonthlyQuoteValueTrend(6, tenantId)
     ]);
 
     // Initialize stats with totals from aggregate
@@ -543,7 +543,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       conversionRate: 0,
       acceptanceRate: 0,
       avgQuoteValue: Number(aggregateData._avg.amount ?? 0),
-      quoteTrend,
+      quoteTrend
     };
 
     // Map status counts and sums from grouped data
@@ -610,7 +610,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async createQuoteWithItems(
     data: CreateQuoteInput,
     tenantId: string,
-    createdBy?: string,
+    createdBy?: string
   ): Promise<{ id: string; quoteNumber: string }> {
     let attempts = 0;
     const maxAttempts = 3;
@@ -623,7 +623,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         // Calculate total amount
         const totalAmount = data.items.reduce(
           (sum, item) => sum + item.quantity * item.unitPrice,
-          0,
+          0
         );
 
         const createdDate = new Date();
@@ -651,14 +651,14 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
                   unitPrice: item.unitPrice,
                   total: item.quantity * item.unitPrice,
                   productId: item.productId,
-                  order: index,
-                })),
-              },
+                  order: index
+                }))
+              }
             },
             select: {
               id: true,
-              quoteNumber: true,
-            },
+              quoteNumber: true
+            }
           });
 
           // Create initial status history entry
@@ -669,8 +669,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               previousStatus: null,
               updatedAt: createdDate,
               updatedBy: createdBy,
-              notes: 'Quote created',
-            },
+              notes: 'Quote created'
+            }
           });
 
           return quote;
@@ -710,7 +710,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     id: string,
     data: UpdateQuoteInput,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Calculate total amount
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -723,7 +723,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       // Get current quote to check for status changes
       const currentQuote = await tx.quote.findUnique({
         where: { id },
-        select: { status: true },
+        select: { status: true }
       });
 
       if (!currentQuote) {
@@ -747,8 +747,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       await tx.quoteItem.deleteMany({
         where: {
           quoteId: data.id,
-          id: { notIn: existingItemIds },
-        },
+          id: { notIn: existingItemIds }
+        }
       });
 
       // Update the quote
@@ -765,8 +765,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           validUntil: data.validUntil,
           notes: data.notes ?? null,
           terms: data.terms ?? null,
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       });
 
       // Create status history entry if status changed
@@ -778,8 +778,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             previousStatus,
             updatedAt: new Date(),
             updatedBy: updatedBy,
-            notes: 'Status updated via quote edit',
-          },
+            notes: 'Status updated via quote edit'
+          }
         });
       }
 
@@ -795,8 +795,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             total: item.quantity * item.unitPrice,
             productId: item.productId,
             order: data.items.findIndex((i) => i.id === item.id),
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         });
       }
 
@@ -812,9 +812,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               unitPrice: item.unitPrice,
               total: item.quantity * item.unitPrice,
               productId: item.productId,
-              order: index,
+              order: index
             };
-          }),
+          })
         });
       }
 
@@ -842,15 +842,15 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       where: {
         tenantId,
         quoteNumber: {
-          startsWith: prefix,
-        },
+          startsWith: prefix
+        }
       },
       orderBy: {
-        quoteNumber: 'desc',
+        quoteNumber: 'desc'
       },
       select: {
-        quoteNumber: true,
-      },
+        quoteNumber: true
+      }
     });
 
     if (!lastQuote) {
@@ -876,12 +876,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async markQuoteAsAccepted(
     id: string,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!quote) {
@@ -901,8 +901,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.ACCEPTED,
-          updatedAt: updatedAt,
-        },
+          updatedAt: updatedAt
+        }
       });
 
       // Create status history entry
@@ -913,8 +913,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus,
           updatedAt,
           updatedBy,
-          notes: 'Quote accepted by customer',
-        },
+          notes: 'Quote accepted by customer'
+        }
       });
 
       return updatedQuote;
@@ -942,12 +942,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     id: string,
     tenantId: string,
     reason?: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!quote) {
@@ -967,8 +967,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.ON_HOLD,
-          updatedAt: updatedAt,
-        },
+          updatedAt: updatedAt
+        }
       });
 
       // Create status history entry
@@ -979,8 +979,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus,
           updatedAt,
           updatedBy,
-          notes: reason || 'Quote put on hold by customer',
-        },
+          notes: reason || 'Quote put on hold by customer'
+        }
       });
 
       return updatedQuote;
@@ -1008,12 +1008,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     id: string,
     tenantId: string,
     cancelReason?: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!quote) {
@@ -1033,8 +1033,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         data: {
           status: QuoteStatus.CANCELLED,
           cancelledDate: new Date(),
-          cancelReason: cancelReason || 'Quote cancelled',
-        },
+          cancelReason: cancelReason || 'Quote cancelled'
+        }
       });
 
       // Create status history entry
@@ -1044,8 +1044,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           status: QuoteStatus.CANCELLED,
           previousStatus,
           updatedBy,
-          notes: cancelReason || 'Quote cancelled',
-        },
+          notes: cancelReason || 'Quote cancelled'
+        }
       });
 
       return updatedQuote;
@@ -1073,12 +1073,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     id: string,
     tenantId: string,
     rejectReason: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!quote) {
@@ -1098,8 +1098,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.REJECTED,
-          updatedAt: updatedAt,
-        },
+          updatedAt: updatedAt
+        }
       });
 
       // Create status history entry
@@ -1110,8 +1110,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus,
           updatedAt,
           updatedBy,
-          notes: `Quote rejected by customer${rejectReason ? `: ${rejectReason}` : ''}`,
-        },
+          notes: `Quote rejected by customer${rejectReason ? `: ${rejectReason}` : ''}`
+        }
       });
 
       return updatedQuote;
@@ -1133,12 +1133,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async markQuoteAsSent(
     id: string,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<QuoteWithDetails | null> {
     // Get current status before update
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { status: true },
+      select: { status: true }
     });
 
     if (!quote) {
@@ -1158,8 +1158,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id, tenantId, deletedAt: null },
         data: {
           status: QuoteStatus.SENT,
-          updatedAt: sentDate,
-        },
+          updatedAt: sentDate
+        }
       });
 
       // Create status history entry
@@ -1170,8 +1170,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus,
           updatedAt: sentDate,
           updatedBy,
-          notes: 'Quote sent to customer',
-        },
+          notes: 'Quote sent to customer'
+        }
       });
 
       return updatedQuote;
@@ -1209,7 +1209,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       discount: number;
       dueDate: Date;
     },
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<{ invoiceId: string; invoiceNumber: string }> {
     return this.prisma.$transaction(async (tx) => {
       // Get quote with details
@@ -1217,8 +1217,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id: quoteId, tenantId: invoiceData.tenantId, deletedAt: null },
         include: {
           items: true,
-          customer: true,
-        },
+          customer: true
+        }
       });
 
       if (!quote) {
@@ -1251,10 +1251,10 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.total,
-              productId: item.productId,
-            })),
-          },
-        },
+              productId: item.productId
+            }))
+          }
+        }
       });
 
       // Update quote status
@@ -1262,8 +1262,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         where: { id: quoteId },
         data: {
           status: QuoteStatus.CONVERTED,
-          invoiceId: invoice.id,
-        },
+          invoiceId: invoice.id
+        }
       });
 
       // Create status history entry
@@ -1274,8 +1274,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus,
           updatedAt: convertedDate,
           updatedBy: updatedBy,
-          notes: `Quote converted to invoice ${invoice.invoiceNumber}`,
-        },
+          notes: `Quote converted to invoice ${invoice.invoiceNumber}`
+        }
       });
 
       return { invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber };
@@ -1296,16 +1296,16 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const quotesToExpire = await this.prisma.quote.findMany({
       where: {
         status: {
-          in: [QuoteStatus.DRAFT, QuoteStatus.SENT],
+          in: [QuoteStatus.DRAFT, QuoteStatus.SENT]
         },
         validUntil: { lt: today },
-        deletedAt: null,
+        deletedAt: null
       },
       select: {
         id: true,
         status: true,
-        validUntil: true,
-      },
+        validUntil: true
+      }
     });
 
     // Update each quote and create status history
@@ -1317,8 +1317,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           where: { id: quote.id },
           data: {
             status: QuoteStatus.EXPIRED,
-            updatedAt: new Date(),
-          },
+            updatedAt: new Date()
+          }
         });
 
         // Create status history entry
@@ -1329,8 +1329,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             previousStatus: quote.status,
             updatedAt: quote.validUntil,
             updatedBy: null, // System-initiated
-            notes: 'Quote expired automatically',
-          },
+            notes: 'Quote expired automatically'
+          }
         });
 
         expiredCount++;
@@ -1351,8 +1351,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     await this.prisma.quote.update({
       where: { id, tenantId, deletedAt: null },
       data: {
-        deletedAt: new Date(),
-      },
+        deletedAt: new Date()
+      }
     });
   }
 
@@ -1366,7 +1366,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     // First, get the quote to determine if it has a parent or is the root
     const quote = await this.prisma.quote.findUnique({
       where: { id: quoteId, deletedAt: null },
-      select: { id: true, parentQuoteId: true },
+      select: { id: true, parentQuoteId: true }
     });
 
     if (!quote) {
@@ -1380,8 +1380,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const count = await this.prisma.quote.count({
       where: {
         OR: [{ id: rootQuoteId }, { parentQuoteId: rootQuoteId }],
-        deletedAt: null,
-      },
+        deletedAt: null
+      }
     });
 
     return count;
@@ -1398,7 +1398,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     // First, get the quote to determine if it has a parent or is the root
     const quote = await this.prisma.quote.findUnique({
       where: { id: quoteId, deletedAt: null },
-      select: { id: true, parentQuoteId: true },
+      select: { id: true, parentQuoteId: true }
     });
 
     if (!quote) {
@@ -1412,7 +1412,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     const versions = await this.prisma.quote.findMany({
       where: {
         OR: [{ id: rootQuoteId }, { parentQuoteId: rootQuoteId }],
-        deletedAt: null,
+        deletedAt: null
       },
       select: {
         id: true,
@@ -1422,9 +1422,9 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         amount: true,
         issuedDate: true,
         createdAt: true,
-        updatedAt: true,
+        updatedAt: true
       },
-      orderBy: { versionNumber: 'asc' },
+      orderBy: { versionNumber: 'asc' }
     });
 
     return versions;
@@ -1441,7 +1441,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async quoteNumberExists(quoteNumber: string, excludeId?: string): Promise<boolean> {
     const where: Prisma.QuoteWhereInput = {
       quoteNumber,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (excludeId) {
@@ -1462,7 +1462,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async findQuoteItemAttachments(itemId: string) {
     return this.prisma.quoteItemAttachment.findMany({
       where: { quoteItemId: itemId },
-      orderBy: { uploadedAt: 'desc' },
+      orderBy: { uploadedAt: 'desc' }
     });
   }
 
@@ -1492,8 +1492,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         s3Key: data.s3Key,
         s3Url: data.s3Url,
         uploadedBy: data.uploadedBy ?? null,
-        uploadedAt: new Date(),
-      },
+        uploadedAt: new Date()
+      }
     });
   }
 
@@ -1508,7 +1508,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async updateQuoteItemNotes(quoteItemId: string, notes: string) {
     return this.prisma.quoteItem.update({
       where: { id: quoteItemId },
-      data: { notes },
+      data: { notes }
     });
   }
 
@@ -1523,7 +1523,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async updateQuoteItemColors(quoteItemId: string, colors: string[]) {
     return this.prisma.quoteItem.update({
       where: { id: quoteItemId },
-      data: { colors },
+      data: { colors }
     });
   }
 
@@ -1535,7 +1535,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async findQuoteItemAttachmentById(attachmentId: string) {
     return this.prisma.quoteItemAttachment.findUnique({
-      where: { id: attachmentId },
+      where: { id: attachmentId }
     });
   }
 
@@ -1549,7 +1549,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async deleteQuoteItemAttachment(attachmentId: string): Promise<boolean> {
     try {
       await this.prisma.quoteItemAttachment.delete({
-        where: { id: attachmentId },
+        where: { id: attachmentId }
       });
       return true;
     } catch (error) {
@@ -1565,7 +1565,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async countQuoteItemAttachments(itemId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
-      where: { quoteItemId: itemId },
+      where: { quoteItemId: itemId }
     });
   }
 
@@ -1578,7 +1578,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async countQuoteItemAttachmentsByS3Key(s3Key: string, excludeId: string): Promise<number> {
     return this.prisma.quoteItemAttachment.count({
-      where: { s3Key, id: { not: excludeId } },
+      where: { s3Key, id: { not: excludeId } }
     });
   }
 
@@ -1604,7 +1604,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
   async createQuoteVersion(
     parentQuoteId: string,
     tenantId: string,
-    createdBy?: string,
+    createdBy?: string
   ): Promise<{ id: string; quoteNumber: string; versionNumber: number }> {
     return this.prisma.$transaction(async (tx) => {
       // Get the parent quote with all details including item attachments
@@ -1613,11 +1613,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         include: {
           items: {
             include: {
-              attachments: true,
+              attachments: true
             },
-            orderBy: { order: 'asc' },
-          },
-        },
+            orderBy: { order: 'asc' }
+          }
+        }
       });
 
       if (!parentQuote) {
@@ -1632,13 +1632,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             { id: parentQuoteId },
             { parentQuoteId: parentQuoteId },
             {
-              parentQuoteId: parentQuote.parentQuoteId ? parentQuote.parentQuoteId : undefined,
-            },
+              parentQuoteId: parentQuote.parentQuoteId ? parentQuote.parentQuoteId : undefined
+            }
           ],
-          deletedAt: null,
+          deletedAt: null
         },
         orderBy: { versionNumber: 'desc' },
-        select: { versionNumber: true },
+        select: { versionNumber: true }
       });
 
       const nextVersionNumber = (highestVersionQuote?.versionNumber || 1) + 1;
@@ -1687,17 +1687,17 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
                   s3Key: attachment.s3Key,
                   s3Url: attachment.s3Url,
                   uploadedBy: createdBy,
-                  uploadedAt: createdDate,
-                })),
-              },
-            })),
-          },
+                  uploadedAt: createdDate
+                }))
+              }
+            }))
+          }
         },
         select: {
           id: true,
           quoteNumber: true,
-          versionNumber: true,
-        },
+          versionNumber: true
+        }
       });
 
       // Create initial status history entry for the new version
@@ -1708,8 +1708,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus: null,
           updatedAt: createdDate,
           updatedBy: createdBy,
-          notes: `New version created from ${parentQuote.quoteNumber}`,
-        },
+          notes: `New version created from ${parentQuote.quoteNumber}`
+        }
       });
 
       // Mark parent quote as CANCELLED and no longer the latest version
@@ -1719,8 +1719,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         data: {
           status: QuoteStatus.CANCELLED,
           isLatestVersion: false,
-          updatedAt: createdDate,
-        },
+          updatedAt: createdDate
+        }
       });
 
       // Create status history entry for parent quote cancellation
@@ -1731,8 +1731,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           previousStatus: previousParentStatus,
           updatedAt: createdDate,
           updatedBy: createdBy,
-          notes: `Quote cancelled due to new version ${newQuoteNumber} being created`,
-        },
+          notes: `Quote cancelled due to new version ${newQuoteNumber} being created`
+        }
       });
 
       return newVersion;
@@ -1752,7 +1752,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async getMonthlyQuoteValueTrend(
     limit: number = 12,
-    tenantId: string,
+    tenantId: string
   ): Promise<QuoteValueTrend[]> {
     const data = await this.prisma.$queryRaw<
       {
@@ -1785,7 +1785,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         month: `${item.month} ${item.year}`,
         total: item.total,
         accepted: item.accepted,
-        converted: item.converted,
+        converted: item.converted
       }))
       .reverse();
   }
@@ -1799,13 +1799,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async getConversionFunnel(
     tenantId: string,
-    dateFilter?: StatsDateFilter,
+    dateFilter?: StatsDateFilter
   ): Promise<ConversionFunnelData> {
     const whereClause: Prisma.QuoteWhereInput = {
       tenantId,
       deletedAt: null,
       // Only count latest versions
-      isLatestVersion: true,
+      isLatestVersion: true
     };
 
     // Add date filter if provided
@@ -1824,11 +1824,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       by: ['status'],
       where: whereClause,
       _count: {
-        _all: true,
+        _all: true
       },
       _sum: {
-        amount: true,
-      },
+        amount: true
+      }
     });
 
     const funnel: ConversionFunnelData = {
@@ -1840,7 +1840,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       converted: 0,
       sentValue: 0,
       acceptedValue: 0,
-      convertedValue: 0,
+      convertedValue: 0
     };
 
     funnelData.forEach((item) => {
@@ -1884,7 +1884,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async getTopCustomersByQuotedValue(
     limit: number = 5,
-    tenantId: string,
+    tenantId: string
   ): Promise<TopCustomerByQuotedValue[]> {
     const data = await this.prisma.$queryRaw<
       {
@@ -1918,7 +1918,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       acceptedValue: item.acceptedValue,
       quoteCount: item.quoteCount,
       conversionRate:
-        item.totalQuotedValue > 0 ? (item.acceptedValue / item.totalQuotedValue) * 100 : 0,
+        item.totalQuotedValue > 0 ? (item.acceptedValue / item.totalQuotedValue) * 100 : 0
     }));
   }
 
@@ -1935,8 +1935,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         tenantId,
         deletedAt: null,
         status: {
-          in: [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED],
-        },
+          in: [QuoteStatus.ACCEPTED, QuoteStatus.REJECTED]
+        }
       },
       select: {
         id: true,
@@ -1944,13 +1944,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         statusHistory: {
           select: {
             status: true,
-            updatedAt: true,
+            updatedAt: true
           },
           orderBy: {
-            updatedAt: 'asc',
-          },
-        },
-      },
+            updatedAt: 'asc'
+          }
+        }
+      }
     });
 
     let totalDaysToAccept = 0;
@@ -1964,13 +1964,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
 
       // Find when it was marked as ACCEPTED or REJECTED
       const decisionHistory = quote.statusHistory.find(
-        (h) => h.status === QuoteStatus.ACCEPTED || h.status === QuoteStatus.REJECTED,
+        (h) => h.status === QuoteStatus.ACCEPTED || h.status === QuoteStatus.REJECTED
       );
 
       if (sentHistory && decisionHistory) {
         const days = Math.ceil(
           (decisionHistory.updatedAt.getTime() - sentHistory.updatedAt.getTime()) /
-            (1000 * 60 * 60 * 24),
+            (1000 * 60 * 60 * 24)
         );
 
         if (quote.status === QuoteStatus.ACCEPTED) {
@@ -1992,7 +1992,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     return {
       avgDaysToAccept: Math.round(avgDaysToAccept * 10) / 10, // Round to 1 decimal place
       avgDaysToReject: Math.round(avgDaysToReject * 10) / 10,
-      avgDaysToDecision: Math.round(avgDaysToDecision * 10) / 10,
+      avgDaysToDecision: Math.round(avgDaysToDecision * 10) / 10
     };
   }
 
@@ -2028,13 +2028,13 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
                 mimeType: true,
                 s3Key: true,
                 s3Url: true,
-                uploadedBy: true,
-              },
-            },
+                uploadedBy: true
+              }
+            }
           },
-          orderBy: { order: 'asc' },
-        },
-      },
+          orderBy: { order: 'asc' }
+        }
+      }
     });
 
     if (!original) {
@@ -2096,16 +2096,16 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
                       s3Key: attachment.s3Key,
                       s3Url: attachment.s3Url,
                       uploadedBy: attachment.uploadedBy,
-                      uploadedAt: new Date(),
-                    })),
-                  },
-                })),
-              },
+                      uploadedAt: new Date()
+                    }))
+                  }
+                }))
+              }
             },
             select: {
               id: true,
-              quoteNumber: true,
-            },
+              quoteNumber: true
+            }
           });
 
           // Create initial status history entry
@@ -2115,8 +2115,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               status: QuoteStatus.DRAFT,
               previousStatus: null,
               updatedAt: new Date(),
-              notes: `Duplicated from quote ${original.quoteNumber}`,
-            },
+              notes: `Duplicated from quote ${original.quoteNumber}`
+            }
           });
 
           return newQuote;
@@ -2153,7 +2153,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     ids: string[],
     status: QuoteStatus,
     tenantId: string,
-    updatedBy?: string,
+    updatedBy?: string
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
@@ -2163,7 +2163,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           // Fetch current quote status
           const quote = await tx.quote.findUnique({
             where: { id, tenantId, deletedAt: null },
-            select: { status: true },
+            select: { status: true }
           });
 
           if (!quote) {
@@ -2192,8 +2192,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             where: { id, tenantId },
             data: {
               status,
-              updatedAt: new Date(),
-            },
+              updatedAt: new Date()
+            }
           });
 
           // Create audit trail entry
@@ -2204,8 +2204,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
               previousStatus: quote.status,
               updatedAt: new Date(),
               updatedBy,
-              notes: 'Bulk status update',
-            },
+              notes: 'Bulk status update'
+            }
           });
 
           results.push({ id, success: true });
@@ -2228,7 +2228,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async bulkSoftDeleteQuotes(
     ids: string[],
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string; success: boolean; error?: string }[]> {
     return this.prisma.$transaction(async (tx) => {
       const results: { id: string; success: boolean; error?: string }[] = [];
@@ -2237,7 +2237,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         try {
           const quote = await tx.quote.findUnique({
             where: { id, tenantId, deletedAt: null },
-            select: { status: true },
+            select: { status: true }
           });
 
           if (!quote) {
@@ -2249,7 +2249,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             results.push({
               id,
               success: false,
-              error: 'Only DRAFT quotes can be deleted',
+              error: 'Only DRAFT quotes can be deleted'
             });
             continue;
           }
@@ -2258,8 +2258,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
             where: { id, tenantId },
             data: {
               deletedAt: new Date(),
-              updatedAt: new Date(),
-            },
+              updatedAt: new Date()
+            }
           });
 
           results.push({ id, success: true });
@@ -2280,11 +2280,11 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
    */
   async toggleQuoteFavourite(
     id: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string; isFavourite: boolean } | null> {
     const quote = await this.prisma.quote.findUnique({
       where: { id, tenantId, deletedAt: null },
-      select: { isFavourite: true },
+      select: { isFavourite: true }
     });
 
     if (!quote) {
@@ -2295,12 +2295,12 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       where: { id, tenantId, deletedAt: null },
       data: {
         isFavourite: !quote.isFavourite,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       },
       select: {
         id: true,
-        isFavourite: true,
-      },
+        isFavourite: true
+      }
     });
 
     return updated;

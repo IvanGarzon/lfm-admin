@@ -16,7 +16,7 @@ import {
   Pause,
   Ban,
   Mail,
-  Star,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -26,14 +26,14 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import type { QuoteListItem } from '@/features/finances/quotes/types';
 import { useQueryString } from '@/hooks/use-query-string';
 import { searchParams, quoteSearchParamsDefaults } from '@/filters/quotes/quotes-filters';
 import {
   getQuotePermissions,
-  needsAttention,
+  needsAttention
 } from '@/features/finances/quotes/utils/quote-helpers';
 
 interface QuoteActionsProps {
@@ -67,7 +67,7 @@ export function QuoteActions({
   onSendFollowUp,
   onCreateVersion,
   onDuplicate,
-  onToggleFavourite,
+  onToggleFavourite
 }: QuoteActionsProps) {
   const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
   const basePath = `/finances/quotes/${quote.id}`;
@@ -83,88 +83,88 @@ export function QuoteActions({
     canCancel,
     canConvert,
     canDelete,
-    canCreateVersion,
+    canCreateVersion
   } = getQuotePermissions(quote.status);
 
   // Check if follow-up should be available
   // Only show when status is SENT and within 3 days of validUntil
   const showFollowUp = useMemo(
     () => needsAttention({ status: quote.status, validUntil: quote.validUntil }),
-    [quote.status, quote.validUntil],
+    [quote.status, quote.validUntil]
   );
 
   return (
-    <Box className="flex items-center gap-1 justify-end">
+    <Box className='flex items-center gap-1 justify-end'>
       <Button
-        variant="secondary"
-        size="icon"
-        className="h-8 w-8 p-0"
+        variant='secondary'
+        size='icon'
+        className='h-8 w-8 p-0'
         onClick={() => onToggleFavourite(quote.id)}
         aria-label={quote.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
         title={quote.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
       >
         <Star
           className={`h-4 w-4 ${quote.isFavourite ? 'fill-amber-400 text-amber-400' : ''}`}
-          aria-hidden="true"
+          aria-hidden='true'
         />
       </Button>
       <Button
-        variant="secondary"
-        size="icon"
-        className="h-8 w-8 p-0"
+        variant='secondary'
+        size='icon'
+        className='h-8 w-8 p-0'
         onClick={() => onDownloadPdf(quote.id)}
-        aria-label="Download quote"
-        title="Download quote"
+        aria-label='Download quote'
+        title='Download quote'
       >
-        <FileDown className="h-4 w-4" aria-hidden="true" />
+        <FileDown className='h-4 w-4' aria-hidden='true' />
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="h-8 w-8 p-0" variant="secondary" aria-label="Open menu">
-            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+          <Button className='h-8 w-8 p-0' variant='secondary' aria-label='Open menu'>
+            <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href={quoteUrl}>
-              <Eye className="h-4 w-4" aria-hidden="true" />
+              <Eye className='h-4 w-4' aria-hidden='true' />
               View quote
             </Link>
           </DropdownMenuItem>
 
           {canSend ? (
             <DropdownMenuItem onClick={() => onSend(quote.id)}>
-              <Send className="h-4 w-4" aria-hidden="true" />
+              <Send className='h-4 w-4' aria-hidden='true' />
               Send quote
             </DropdownMenuItem>
           ) : null}
 
           {canPutOnHold ? (
             <DropdownMenuItem onClick={() => onOnHold(quote.id, quote.quoteNumber)}>
-              <Pause className="h-4 w-4" aria-hidden="true" />
+              <Pause className='h-4 w-4' aria-hidden='true' />
               Put on hold
             </DropdownMenuItem>
           ) : null}
 
           {canAccept ? (
             <DropdownMenuItem onClick={() => onAccept(quote.id)}>
-              <Check className="h-4 w-4" aria-hidden="true" />
+              <Check className='h-4 w-4' aria-hidden='true' />
               Accept quote
             </DropdownMenuItem>
           ) : null}
 
           {canReject ? (
             <DropdownMenuItem onClick={() => onReject(quote.id, quote.quoteNumber)}>
-              <X className="h-4 w-4" aria-hidden="true" />
+              <X className='h-4 w-4' aria-hidden='true' />
               Reject quote
             </DropdownMenuItem>
           ) : null}
 
           {canCancel ? (
             <DropdownMenuItem onClick={() => onCancel(quote.id, quote.quoteNumber)}>
-              <Ban className="h-4 w-4" aria-hidden="true" />
+              <Ban className='h-4 w-4' aria-hidden='true' />
               Cancel quote
             </DropdownMenuItem>
           ) : null}
@@ -175,33 +175,33 @@ export function QuoteActions({
                 onConvert(quote.id, quote.quoteNumber, Number(quote.gst), Number(quote.discount))
               }
             >
-              <FileCheck className="h-4 w-4" aria-hidden="true" />
+              <FileCheck className='h-4 w-4' aria-hidden='true' />
               Convert to invoice
             </DropdownMenuItem>
           ) : null}
 
           {canCreateVersion ? (
             <DropdownMenuItem onClick={() => onCreateVersion(quote.id)}>
-              <Copy className="h-4 w-4" aria-hidden="true" />
+              <Copy className='h-4 w-4' aria-hidden='true' />
               Create new version
             </DropdownMenuItem>
           ) : null}
 
           <DropdownMenuItem onClick={() => onDuplicate(quote.id)}>
-            <Files className="h-4 w-4" aria-hidden="true" />
+            <Files className='h-4 w-4' aria-hidden='true' />
             Duplicate quote
           </DropdownMenuItem>
 
           {canSendQuote ? (
             <DropdownMenuItem onClick={() => onSendEmail(quote.id)}>
-              <Mail className="h-4 w-4" aria-hidden="true" />
+              <Mail className='h-4 w-4' aria-hidden='true' />
               Resend quote
             </DropdownMenuItem>
           ) : null}
 
           {showFollowUp ? (
             <DropdownMenuItem onClick={() => onSendFollowUp(quote.id)}>
-              <Send className="h-4 w-4" aria-hidden="true" />
+              <Send className='h-4 w-4' aria-hidden='true' />
               Send follow-up
             </DropdownMenuItem>
           ) : null}
@@ -211,9 +211,9 @@ export function QuoteActions({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(quote.id, quote.quoteNumber)}
-                className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+                className='text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30'
               >
-                <Trash className="h-4 w-4" aria-hidden="true" />
+                <Trash className='h-4 w-4' aria-hidden='true' />
                 Delete quote
               </DropdownMenuItem>
             </>

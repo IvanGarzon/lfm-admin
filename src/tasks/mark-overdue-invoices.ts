@@ -9,10 +9,10 @@ export const markOverdueInvoicesTask: TaskDefinition = {
   schedule: {
     cron: '0 1 * * *', // Daily at 1:00 AM
     timezone: 'UTC',
-    enabled: true,
+    enabled: true
   },
   timeout: 300, // 5 minutes
   retries: 3,
   concurrencyLimit: 1,
-  inngestFunction: markOverdueInvoicesFunction,
+  inngestFunction: markOverdueInvoicesFunction
 };

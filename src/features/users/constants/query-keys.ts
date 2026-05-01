@@ -4,5 +4,5 @@ export const USER_KEYS = {
   list: (filters: string) => [...USER_KEYS.lists(), { filters }] as const,
   details: () => [...USER_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...USER_KEYS.details(), id] as const,
-  accessChanges: (id: string) => [...USER_KEYS.detail(id), 'access-changes'] as const,
+  accessChanges: (id: string) => [...USER_KEYS.detail(id), 'access-changes'] as const
 };

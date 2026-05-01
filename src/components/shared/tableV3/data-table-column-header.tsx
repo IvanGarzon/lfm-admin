@@ -8,7 +8,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
@@ -34,43 +34,43 @@ export function DataTableColumnHeader<TData, TValue>({
       <DropdownMenuTrigger
         className={cn(
           'hover:bg-accent data-[state=open]:bg-accent [&_svg]:text-muted-foreground -ml-1.5 flex h-8 items-center gap-1.5 rounded-md px-2 py-1.5 focus:outline-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer',
-          className,
+          className
         )}
         {...props}
       >
         {title}
         {column.getCanSort() ? (
           column.getIsSorted() === 'desc' ? (
-            <ArrowDown size={12} className="ml-2" />
+            <ArrowDown size={12} className='ml-2' />
           ) : column.getIsSorted() === 'asc' ? (
-            <ArrowUp size={12} className="ml-2" />
+            <ArrowUp size={12} className='ml-2' />
           ) : (
-            <ArrowUpDown size={12} className="ml-2" />
+            <ArrowUpDown size={12} className='ml-2' />
           )
         ) : null}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-28">
+      <DropdownMenuContent align='start' className='w-28'>
         {column.getCanSort() ? (
           <>
             <DropdownMenuCheckboxItem
-              className="[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer"
+              className='[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer'
               checked={column.getIsSorted() === 'asc'}
               onClick={() => column.toggleSorting(false)}
             >
-              <ArrowUp size={16} className="mr-2" />
+              <ArrowUp size={16} className='mr-2' />
               Asc
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
-              className="[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer"
+              className='[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer'
               checked={column.getIsSorted() === 'desc'}
               onClick={() => column.toggleSorting(true)}
             >
-              <ArrowDown size={16} className="mr-2" />
+              <ArrowDown size={16} className='mr-2' />
               Desc
             </DropdownMenuCheckboxItem>
             {column.getIsSorted() ? (
               <DropdownMenuItem
-                className="[&_svg]:text-muted-foreground pl-2"
+                className='[&_svg]:text-muted-foreground pl-2'
                 onClick={() => column.clearSorting()}
               >
                 <X size={16} />
@@ -82,11 +82,11 @@ export function DataTableColumnHeader<TData, TValue>({
 
         {column.getCanHide() ? (
           <DropdownMenuCheckboxItem
-            className="[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer"
+            className='[&_svg]:text-muted-foreground relative pr-8 pl-2 [&>span:first-child]:right-2 [&>span:first-child]:left-auto cursor-pointer'
             checked={!column.getIsVisible()}
             onClick={() => column.toggleVisibility(false)}
           >
-            <EyeOff size={16} className="mr-2" />
+            <EyeOff size={16} className='mr-2' />
             Hide
           </DropdownMenuCheckboxItem>
         ) : null}

@@ -18,7 +18,7 @@ function LoginNotificationEmailContent({
   deviceName,
   browserName,
   location,
-  ipAddress,
+  ipAddress
 }: LoginNotificationEmailProps): React.ReactElement {
   const formattedDate = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
@@ -26,7 +26,7 @@ function LoginNotificationEmailContent({
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZoneName: 'short',
+    timeZoneName: 'short'
   }).format(new Date(loginAt));
 
   return (
@@ -92,7 +92,7 @@ function LoginNotificationEmailContent({
 
 function LoginNotificationEmail(props: LoginNotificationEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText="New sign-in to your account">
+    <BaseTemplateEmail previewText='New sign-in to your account'>
       <LoginNotificationEmailContent {...props} />
     </BaseTemplateEmail>
   );
@@ -104,7 +104,7 @@ LoginNotificationEmail.PreviewProps = {
   deviceName: 'MacBook Pro',
   browserName: 'Chrome',
   location: 'Melbourne, VIC, AU',
-  ipAddress: '203.0.113.42',
+  ipAddress: '203.0.113.42'
 } satisfies LoginNotificationEmailProps;
 
 export default LoginNotificationEmail;

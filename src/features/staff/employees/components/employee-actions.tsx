@@ -11,14 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { searchParams, employeeSearchParamsDefaults } from '@/filters/employees/employee-filters';
 import { useQueryString } from '@/hooks/use-query-string';
 
 export function EmployeeActions({
   employee,
-  onDelete,
+  onDelete
 }: {
   employee: EmployeeListItem;
   onDelete: (id: string) => void;
@@ -28,28 +28,28 @@ export function EmployeeActions({
   const employeeUrl = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Box className="flex items-center gap-1 justify-end">
+    <Box className='flex items-center gap-1 justify-end'>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="secondary" className="h-8 w-8 p-0" aria-label="Open menu">
-            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+          <Button variant='secondary' className='h-8 w-8 p-0' aria-label='Open menu'>
+            <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href={employeeUrl}>
-              <Pencil className="h-4 w-4" aria-hidden="true" />
+              <Pencil className='h-4 w-4' aria-hidden='true' />
               Update Employee
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => onDelete(employee.id)}
-            className="text-destructive focus:text-destructive hover:text-destructive"
+            className='text-destructive focus:text-destructive hover:text-destructive'
           >
-            <Trash className="h-4 w-4" aria-hidden="true" />
+            <Trash className='h-4 w-4' aria-hidden='true' />
             Delete employee
           </DropdownMenuItem>
         </DropdownMenuContent>

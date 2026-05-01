@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface DeleteOrganizationDialogProps {
@@ -26,7 +26,7 @@ export function DeleteOrganizationDialog({
   onConfirm,
   organizationName,
   customersCount = 0,
-  isPending = false,
+  isPending = false
 }: DeleteOrganizationDialogProps) {
   const hasLinkedCustomers = customersCount > 0;
 
@@ -37,7 +37,7 @@ export function DeleteOrganizationDialog({
           <AlertDialogTitle>
             {hasLinkedCustomers ? 'Cannot delete organization' : 'Are you sure?'}
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
+          <AlertDialogDescription className='space-y-2'>
             {hasLinkedCustomers ? (
               <>
                 <p>

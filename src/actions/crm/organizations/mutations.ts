@@ -9,7 +9,7 @@ import {
   DeleteOrganizationSchema,
   type CreateOrganizationInput,
   type UpdateOrganizationInput,
-  type DeleteOrganizationInput,
+  type DeleteOrganizationInput
 } from '@/schemas/organizations';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 
@@ -34,8 +34,8 @@ export const createOrganization = withTenantPermission<
       success: true,
       data: {
         id: organization.id,
-        name: organization.name,
-      },
+        name: organization.name
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create organisation');
@@ -62,7 +62,7 @@ export const updateOrganization = withTenantPermission<UpdateOrganizationInput, 
       const organization = await organizationRepo.updateOrganization(
         validatedData.id,
         ctx.tenantId,
-        validatedData,
+        validatedData
       );
 
       if (!organization) {
@@ -73,7 +73,7 @@ export const updateOrganization = withTenantPermission<UpdateOrganizationInput, 
     } catch (error) {
       return handleActionError(error, 'Failed to update organisation');
     }
-  },
+  }
 );
 
 /**
@@ -100,5 +100,5 @@ export const deleteOrganization = withTenantPermission<DeleteOrganizationInput, 
     } catch (error) {
       return handleActionError(error, 'Failed to delete organisation');
     }
-  },
+  }
 );

@@ -2,7 +2,7 @@ import type {
   CreateRecipeInput,
   UpdateRecipeInput,
   LabourCostType,
-  RoundingMethod,
+  RoundingMethod
 } from '@/schemas/recipes';
 import type { PaginationMeta } from '@/types/pagination';
 

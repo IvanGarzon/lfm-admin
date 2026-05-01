@@ -1,6 +1,6 @@
 import {
   CustomerStatusSchema,
-  type CustomerStatus,
+  type CustomerStatus
 } from '@/zod/schemas/enums/CustomerStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_CUSTOMER_COLUMNS } from '@/features/crm/customers/constants/sortable-columns';
@@ -10,7 +10,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  parseAsArrayOf,
+  parseAsArrayOf
 } from 'nuqs/server';
 
 const sortableColumnIds = new Set(SORTABLE_CUSTOMER_COLUMNS);
@@ -20,10 +20,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -32,9 +32,9 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   status: parseAsArrayOf(
-    parseAsStringEnum<CustomerStatus>(CustomerStatusSchema.options),
+    parseAsStringEnum<CustomerStatus>(CustomerStatusSchema.options)
   ).withDefault([]),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

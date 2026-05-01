@@ -7,16 +7,16 @@ import { PriceListView } from '@/features/inventory/price-list/components/price-
 const PriceListDrawer = dynamic(
   () =>
     import('@/features/inventory/price-list/components/price-list-drawer').then(
-      (mod) => mod.PriceListDrawer,
+      (mod) => mod.PriceListDrawer
     ),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function PriceListItemPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

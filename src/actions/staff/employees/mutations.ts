@@ -7,7 +7,7 @@ import {
   DeleteEmployeeSchema,
   type UpdateEmployeeInput,
   type CreateEmployeeInput,
-  type DeleteEmployeeInput,
+  type DeleteEmployeeInput
 } from '@/schemas/employees';
 import { prisma } from '@/lib/prisma';
 import { EmployeeRepository } from '@/repositories/employee-repository';
@@ -31,7 +31,7 @@ export const createEmployee = withTenantPermission<CreateEmployeeInput, { id: st
 
       logger.info('Employee created', {
         context: 'createEmployee',
-        metadata: { employeeId: employee.id },
+        metadata: { employeeId: employee.id }
       });
 
       revalidatePath('/staff/employees');
@@ -40,7 +40,7 @@ export const createEmployee = withTenantPermission<CreateEmployeeInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to create employee');
     }
-  },
+  }
 );
 
 /**
@@ -61,7 +61,7 @@ export const updateEmployee = withTenantPermission<UpdateEmployeeInput, { id: st
 
       logger.info('Employee updated', {
         context: 'updateEmployee',
-        metadata: { employeeId: employee.id },
+        metadata: { employeeId: employee.id }
       });
 
       revalidatePath('/staff/employees');
@@ -71,7 +71,7 @@ export const updateEmployee = withTenantPermission<UpdateEmployeeInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to update employee');
     }
-  },
+  }
 );
 
 /**
@@ -92,7 +92,7 @@ export const deleteEmployee = withTenantPermission<DeleteEmployeeInput, { succes
 
       logger.info('Employee deleted', {
         context: 'deleteEmployee',
-        metadata: { employeeId: id },
+        metadata: { employeeId: id }
       });
 
       revalidatePath('/staff/employees');
@@ -101,5 +101,5 @@ export const deleteEmployee = withTenantPermission<DeleteEmployeeInput, { succes
     } catch (error) {
       return handleActionError(error, 'Failed to delete employee');
     }
-  },
+  }
 );

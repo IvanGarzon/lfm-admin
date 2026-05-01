@@ -16,14 +16,14 @@ enum LogEventMessage {
   OtpFailed = 'OTP verification attempt failed',
   OtpLocked = 'OTP verification locked after max attempts',
   OtpExpired = 'OTP verification code expired',
-  OtpAlreadyUsed = 'OTP verification code already used',
+  OtpAlreadyUsed = 'OTP verification code already used'
 }
 
 enum LogEventTag {
   LOGIN = 'login',
   EMPLOYEES = 'employees',
   USERS = 'users',
-  AUTH = 'auth',
+  AUTH = 'auth'
 }
 
 const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
@@ -36,7 +36,7 @@ const LogEventMapping: Record<keyof typeof LogEventMessage, LogEventTag> = {
   OtpFailed: LogEventTag.AUTH,
   OtpLocked: LogEventTag.AUTH,
   OtpExpired: LogEventTag.AUTH,
-  OtpAlreadyUsed: LogEventTag.AUTH,
+  OtpAlreadyUsed: LogEventTag.AUTH
 };
 
 const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
@@ -49,7 +49,7 @@ const LogEventMessages: Record<keyof typeof LogEventMessage, string> = {
   OtpFailed: 'OTP verification attempt failed',
   OtpLocked: 'OTP verification locked after max attempts',
   OtpExpired: 'OTP verification code expired',
-  OtpAlreadyUsed: 'OTP verification code already used',
+  OtpAlreadyUsed: 'OTP verification code already used'
 };
 
 // -- Event data shapes --------------------------------------------------------
@@ -140,7 +140,7 @@ export class AuditService {
         event,
         message,
         data,
-        level: level.toUpperCase() as AuditLevel,
+        level: level.toUpperCase() as AuditLevel
       })
       .catch((err) => {
         logger.error('Failed to write audit log', err, { context: 'AuditService' });

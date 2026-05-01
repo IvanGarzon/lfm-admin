@@ -7,24 +7,24 @@ const { mockOrgRepo, mockAuth } = vi.hoisted(() => ({
   mockOrgRepo: {
     searchOrganizations: vi.fn(),
     findOrganizationById: vi.fn(),
-    findActiveOrganizations: vi.fn(),
+    findActiveOrganizations: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/organization-repository', () => ({
   OrganizationRepository: vi.fn().mockImplementation(function () {
     return mockOrgRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
 vi.mock('@/filters/organizations/organizations-filters', () => ({
   searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 }),
+    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 })
   },
-  validateOrganizationSearchParams: vi.fn().mockImplementation((p) => p),
+  validateOrganizationSearchParams: vi.fn().mockImplementation((p) => p)
 }));
 
 const TEST_ORG_ID = testIds.organization();
@@ -39,8 +39,8 @@ const mockPagination: OrganizationPagination = {
     hasNextPage: false,
     hasPreviousPage: false,
     nextPage: null,
-    previousPage: null,
-  },
+    previousPage: null
+  }
 };
 
 describe('Organisation Queries', () => {
@@ -64,7 +64,7 @@ describe('Organisation Queries', () => {
       }
       expect(mockOrgRepo.searchOrganizations).toHaveBeenCalledWith(
         expect.objectContaining({ page: 1, perPage: 10 }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -93,7 +93,7 @@ describe('Organisation Queries', () => {
       }
       expect(mockOrgRepo.findOrganizationById).toHaveBeenCalledWith(
         TEST_ORG_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

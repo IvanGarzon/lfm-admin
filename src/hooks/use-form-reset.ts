@@ -30,7 +30,7 @@ export function useFormReset<T extends FieldValues>(
   form: UseFormReturn<T>,
   entityId: string | undefined | null,
   getDefaultValues: () => DefaultValues<T>,
-  resetTrigger?: unknown,
+  resetTrigger?: unknown
 ) {
   const previousEntityIdRef = useRef<string | undefined | null>(entityId);
   const previousResetTriggerRef = useRef<unknown>(resetTrigger);

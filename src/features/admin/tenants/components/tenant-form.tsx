@@ -14,7 +14,7 @@ import { Box } from '@/components/ui/box';
 
 export function TenantForm({
   onCancel,
-  onSuccess,
+  onSuccess
 }: {
   onCancel: () => void;
   onSuccess: () => void;
@@ -23,7 +23,7 @@ export function TenantForm({
 
   const form = useForm<CreateTenantInput>({
     resolver: zodResolver(CreateTenantSchema),
-    defaultValues: { name: '', slug: '', adminEmail: '' },
+    defaultValues: { name: '', slug: '', adminEmail: '' }
   });
 
   const handleNameChange = useCallback(
@@ -34,10 +34,10 @@ export function TenantForm({
         value
           .toLowerCase()
           .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, ''),
+          .replace(/[^a-z0-9-]/g, '')
       );
     },
-    [form],
+    [form]
   );
 
   const handleSubmit: SubmitHandler<CreateTenantInput> = useCallback(
@@ -47,18 +47,18 @@ export function TenantForm({
           if (result.success) {
             onSuccess();
           }
-        },
+        }
       });
     },
-    [createTenant, onSuccess],
+    [createTenant, onSuccess]
   );
 
   return (
     <Form {...form}>
-      <form id="form-rhf-tenant" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form id='form-rhf-tenant' onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
         <FieldGroup>
           <Controller
-            name="name"
+            name='name'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
@@ -68,7 +68,7 @@ export function TenantForm({
                 <Input
                   {...field}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="Acme Florist"
+                  placeholder='Acme Florist'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid ? (
@@ -81,18 +81,18 @@ export function TenantForm({
 
         <FieldGroup>
           <Controller
-            name="slug"
+            name='slug'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
                   <FieldLabel>Slug</FieldLabel>
                 </FieldContent>
-                <Input {...field} placeholder="acme-florist" aria-invalid={fieldState.invalid} />
+                <Input {...field} placeholder='acme-florist' aria-invalid={fieldState.invalid} />
                 {fieldState.invalid ? (
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 ) : null}
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   Lowercase letters, numbers, and hyphens only.
                 </p>
               </Field>
@@ -102,7 +102,7 @@ export function TenantForm({
 
         <FieldGroup>
           <Controller
-            name="adminEmail"
+            name='adminEmail'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
@@ -110,15 +110,15 @@ export function TenantForm({
                   <FieldLabel>Admin Email</FieldLabel>
                 </FieldContent>
                 <Input
-                  type="email"
+                  type='email'
                   {...field}
-                  placeholder="admin@example.com"
+                  placeholder='admin@example.com'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid ? (
                   <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                 ) : null}
-                <p className="text-xs text-muted-foreground">
+                <p className='text-xs text-muted-foreground'>
                   An invitation will be sent to this address with the Admin role.
                 </p>
               </Field>
@@ -126,17 +126,17 @@ export function TenantForm({
           />
         </FieldGroup>
 
-        <Box className="flex justify-end gap-2 pt-2">
+        <Box className='flex justify-end gap-2 pt-2'>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={onCancel}
             disabled={createTenant.isPending}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={createTenant.isPending}>
-            {createTenant.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+          <Button type='submit' disabled={createTenant.isPending}>
+            {createTenant.isPending ? <Loader2 className='mr-2 size-4 animate-spin' /> : null}
             Create Tenant
           </Button>
         </Box>

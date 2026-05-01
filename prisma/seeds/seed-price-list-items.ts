@@ -18,7 +18,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Rose - White Avalanche',
@@ -27,7 +27,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Rose - Pink Engagement',
@@ -36,7 +36,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Rose - Yellow Aalsmeer Gold',
@@ -45,7 +45,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Rose - Peach Juliet',
@@ -54,7 +54,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'Spring/Summer',
+    season: 'Spring/Summer'
   },
   {
     name: 'Rose - Lavender Ocean Song',
@@ -63,7 +63,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'David Austin Rose - Patience',
@@ -72,7 +72,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring/Summer',
+    season: 'Spring/Summer'
   },
   {
     name: 'Spray Rose - Lavender',
@@ -81,7 +81,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
 
   // Peonies
@@ -92,7 +92,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring',
+    season: 'Spring'
   },
   {
     name: 'Peony - White Duchesse de Nemours',
@@ -101,7 +101,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring',
+    season: 'Spring'
   },
   {
     name: 'Peony - Coral Charm',
@@ -110,7 +110,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring',
+    season: 'Spring'
   },
 
   // Ranunculus
@@ -121,7 +121,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Ranunculus - Pink',
@@ -130,7 +130,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Ranunculus - Peach',
@@ -139,7 +139,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Ranunculus - Mixed Pastel',
@@ -148,7 +148,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
 
   // Tulips
@@ -159,7 +159,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Tulip - Pink',
@@ -168,7 +168,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Tulip - Purple',
@@ -177,7 +177,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Tulip - Yellow',
@@ -186,7 +186,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'French Tulip - Parrot Mix',
@@ -195,7 +195,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring',
+    season: 'Spring'
   },
 
   // Lilies
@@ -206,7 +206,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Oriental Lily - Pink Stargazer',
@@ -215,7 +215,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Asiatic Lily - Orange',
@@ -224,7 +224,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'LA Hybrid Lily - Pink',
@@ -233,7 +233,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
 
   // Hydrangeas
@@ -244,7 +244,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 5,
-    season: 'Summer/Autumn',
+    season: 'Summer/Autumn'
   },
   {
     name: 'Hydrangea - Blue',
@@ -253,7 +253,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 5,
-    season: 'Summer/Autumn',
+    season: 'Summer/Autumn'
   },
   {
     name: 'Hydrangea - Pink',
@@ -262,7 +262,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 5,
-    season: 'Summer/Autumn',
+    season: 'Summer/Autumn'
   },
   {
     name: 'Hydrangea - Green',
@@ -271,7 +271,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 5,
-    season: 'Summer/Autumn',
+    season: 'Summer/Autumn'
   },
 
   // Other Premium Flowers
@@ -282,7 +282,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 1,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Orchid - Phalaenopsis White',
@@ -291,7 +291,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 1,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Orchid - Dendrobium Purple',
@@ -300,7 +300,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 5,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Calla Lily - White',
@@ -309,7 +309,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Calla Lily - Pink',
@@ -318,7 +318,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Dahlia - Cafe au Lait',
@@ -327,7 +327,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Summer/Autumn',
+    season: 'Summer/Autumn'
   },
   {
     name: 'Anemone - White',
@@ -336,7 +336,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Winter/Spring',
+    season: 'Winter/Spring'
   },
   {
     name: 'Sweet Pea - Mixed',
@@ -345,7 +345,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring',
+    season: 'Spring'
   },
   {
     name: 'Freesia - White',
@@ -354,7 +354,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Stock - White',
@@ -363,7 +363,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Delphinium - Blue',
@@ -372,7 +372,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'Spring/Summer',
+    season: 'Spring/Summer'
   },
   {
     name: 'Lisianthus - White',
@@ -381,7 +381,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Carnation - White',
@@ -390,7 +390,7 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 20,
-    season: 'All Year',
+    season: 'All Year'
   },
   {
     name: 'Gerbera - Pink',
@@ -399,8 +399,8 @@ const floralItems = [
     multiplier: 3,
     unitType: 'stem',
     bunchSize: 10,
-    season: 'All Year',
-  },
+    season: 'All Year'
+  }
 ];
 
 const foliageItems = [
@@ -413,7 +413,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Eucalyptus - Silver Dollar',
@@ -423,7 +423,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Eucalyptus - Baby Blue',
@@ -433,7 +433,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Eucalyptus - Parvifolia',
@@ -443,7 +443,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Ruscus - Italian',
@@ -453,7 +453,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Leather Leaf Fern',
@@ -463,7 +463,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Aspidistra Leaf',
@@ -473,7 +473,7 @@ const foliageItems = [
     unitType: 'stem',
     bunchSize: 10,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Monstera Leaf',
@@ -483,7 +483,7 @@ const foliageItems = [
     unitType: 'stem',
     bunchSize: 5,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Palm Leaf - Areca',
@@ -493,7 +493,7 @@ const foliageItems = [
     unitType: 'stem',
     bunchSize: 5,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Ivy - English',
@@ -503,7 +503,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Salal - Tips',
@@ -513,7 +513,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Pittosporum',
@@ -523,7 +523,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Olive Branch',
@@ -533,7 +533,7 @@ const foliageItems = [
     unitType: 'stem',
     bunchSize: 5,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Wax Flower - White',
@@ -543,7 +543,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Viburnum - Snowball',
@@ -553,7 +553,7 @@ const foliageItems = [
     unitType: 'stem',
     bunchSize: 5,
     season: 'Spring',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Hypericum - Green',
@@ -563,7 +563,7 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
+    category: 'FOLIAGE'
   },
   {
     name: 'Dusty Miller',
@@ -573,8 +573,8 @@ const foliageItems = [
     unitType: 'bunch',
     bunchSize: 1,
     season: 'All Year',
-    category: 'FOLIAGE',
-  },
+    category: 'FOLIAGE'
+  }
 ];
 
 const supplyItems = [
@@ -587,7 +587,7 @@ const supplyItems = [
     unitType: 'block',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Floral Foam - Sphere 15cm',
@@ -597,7 +597,7 @@ const supplyItems = [
     unitType: 'each',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Floral Tape - Green',
@@ -607,7 +607,7 @@ const supplyItems = [
     unitType: 'roll',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Floral Wire - 22 Gauge',
@@ -617,7 +617,7 @@ const supplyItems = [
     unitType: 'pack',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Ribbon - Silk 25mm',
@@ -627,7 +627,7 @@ const supplyItems = [
     unitType: 'roll',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Ribbon - Organza 50mm',
@@ -637,7 +637,7 @@ const supplyItems = [
     unitType: 'roll',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Vase - Glass Cylinder 20cm',
@@ -647,7 +647,7 @@ const supplyItems = [
     unitType: 'each',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Vase - Glass Cylinder 30cm',
@@ -657,7 +657,7 @@ const supplyItems = [
     unitType: 'each',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Bouquet Wrap - Kraft Paper',
@@ -667,7 +667,7 @@ const supplyItems = [
     unitType: 'sheet',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Bouquet Wrap - Tissue Paper',
@@ -677,7 +677,7 @@ const supplyItems = [
     unitType: 'sheet',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Cellophane - Clear',
@@ -687,7 +687,7 @@ const supplyItems = [
     unitType: 'sheet',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
+    category: 'SUPPLY'
   },
   {
     name: 'Pins - Corsage',
@@ -697,8 +697,8 @@ const supplyItems = [
     unitType: 'pack',
     bunchSize: null,
     season: null,
-    category: 'SUPPLY',
-  },
+    category: 'SUPPLY'
+  }
 ];
 
 // -- Types -------------------------------------------------------------------
@@ -723,7 +723,7 @@ export async function seedPriceListItems(options: SeedPriceListItemsOptions): Pr
   const allItems = [
     ...floralItems.map((item) => ({ ...item, category: 'FLORAL' as const })),
     ...foliageItems,
-    ...supplyItems,
+    ...supplyItems
   ];
 
   let total = 0;
@@ -744,9 +744,9 @@ export async function seedPriceListItems(options: SeedPriceListItemsOptions): Pr
           season: item.season,
           wholesalePrice: item.costPerUnit * 0.9,
           description:
-            faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
+            faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null
         },
-        select: { id: true },
+        select: { id: true }
       });
     });
 
@@ -779,7 +779,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedPriceListItems({ tenants: seededTenants });

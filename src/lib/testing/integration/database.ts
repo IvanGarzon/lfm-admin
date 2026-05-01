@@ -58,11 +58,11 @@ export async function setupTestDatabase(): Promise<{
   execSync('pnpm prisma migrate deploy', {
     cwd: getProjectRoot(),
     env: { ...process.env, DATABASE_URL: connectionString },
-    stdio: 'pipe',
+    stdio: 'pipe'
   });
 
   prismaInstance = new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter: new PrismaPg({ connectionString })
   });
 
   return { connectionString, prisma: prismaInstance, container };
@@ -85,7 +85,7 @@ export async function teardownTestDatabase(): Promise<void> {
 export function getTestPrisma(): PrismaClient {
   if (!prismaInstance) {
     throw new Error(
-      'Test database not initialised. Call setupTestDatabase() in beforeAll, or use setupTestDatabaseLifecycle().',
+      'Test database not initialised. Call setupTestDatabase() in beforeAll, or use setupTestDatabaseLifecycle().'
     );
   }
   return prismaInstance;
@@ -131,7 +131,7 @@ export async function truncateAllTables(): Promise<void> {
  * });
  */
 export function setupTestDatabaseLifecycle(
-  options: { beforeEach?: () => Promise<void> } = {},
+  options: { beforeEach?: () => Promise<void> } = {}
 ): void {
   beforeAll(async () => {
     await setupTestDatabase();
@@ -154,7 +154,7 @@ export function setupTestDatabaseLifecycle(
  * Returns the tenant ID and slug for use in repository calls.
  */
 export async function createTestTenant(
-  overrides: { name?: string; slug?: string } = {},
+  overrides: { name?: string; slug?: string } = {}
 ): Promise<{ id: string; slug: string }> {
   const db = getTestPrisma();
   const name = overrides.name ?? 'Test Tenant';
@@ -162,7 +162,7 @@ export async function createTestTenant(
 
   const tenant = await db.tenant.create({
     data: { name, slug },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true }
   });
 
   return tenant;

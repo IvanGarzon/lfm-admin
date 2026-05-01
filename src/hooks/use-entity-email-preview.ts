@@ -19,7 +19,7 @@ export interface UseEntityEmailPreviewConfig<TEmailType extends string> {
    * Returns the mutation function that should be called with the entity ID
    */
   sendEmailFn: (
-    emailType: TEmailType,
+    emailType: TEmailType
   ) => (entityId: string, options?: { onSuccess?: () => void }) => void;
 
   /**
@@ -77,7 +77,7 @@ export interface UseEntityEmailPreviewReturn<TEmailType extends string> {
  * ```
  */
 export function useEntityEmailPreview<TEmailType extends string>(
-  config: UseEntityEmailPreviewConfig<TEmailType>,
+  config: UseEntityEmailPreviewConfig<TEmailType>
 ): UseEntityEmailPreviewReturn<TEmailType> {
   const { previewFn, sendEmailFn, onSuccess } = config;
 
@@ -98,7 +98,7 @@ export function useEntityEmailPreview<TEmailType extends string>(
 
         if (!result.success) {
           toast.error('Failed to load email preview', {
-            description: result.error,
+            description: result.error
           });
           setShowEmailPreview(false);
           setPendingEmailAction(null);
@@ -108,7 +108,7 @@ export function useEntityEmailPreview<TEmailType extends string>(
         setEmailPreviewData(result.data);
       } catch (error) {
         toast.error('Failed to load email preview', {
-          description: error instanceof Error ? error.message : 'An error occurred',
+          description: error instanceof Error ? error.message : 'An error occurred'
         });
         setShowEmailPreview(false);
         setPendingEmailAction(null);
@@ -116,7 +116,7 @@ export function useEntityEmailPreview<TEmailType extends string>(
         setIsLoadingEmailPreview(false);
       }
     },
-    [previewFn],
+    [previewFn]
   );
 
   const handleConfirmSendEmail = useCallback(() => {
@@ -154,6 +154,6 @@ export function useEntityEmailPreview<TEmailType extends string>(
     handleCancelEmailPreview,
 
     // State setters
-    setShowEmailPreview,
+    setShowEmailPreview
   };
 }

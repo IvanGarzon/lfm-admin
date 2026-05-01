@@ -14,7 +14,7 @@ const BaseCustomerSchema = z.object({
   organizationName: z.string().optional().nullable(),
   status: CustomerStatusSchema,
   useOrganizationAddress: z.boolean(),
-  address: AddressSchema.optional().nullable(),
+  address: AddressSchema.optional().nullable()
 });
 
 // Refinement function for address validation
@@ -33,22 +33,22 @@ const addressRefinement = (data: z.infer<typeof BaseCustomerSchema>) => {
 
 const addressRefinementMessage = {
   message: 'Address is required when not linked to an organization',
-  path: ['address'],
+  path: ['address']
 };
 
 export const CustomerSchema = BaseCustomerSchema;
 
 export const CreateCustomerSchema = BaseCustomerSchema.refine(
   addressRefinement,
-  addressRefinementMessage,
+  addressRefinementMessage
 );
 
 export const UpdateCustomerSchema = BaseCustomerSchema.extend({
-  id: z.cuid({ error: 'Invalid customer ID' }),
+  id: z.cuid({ error: 'Invalid customer ID' })
 }).refine(addressRefinement, addressRefinementMessage);
 
 export const DeleteCustomerSchema = z.object({
-  id: z.cuid({ error: 'Invalid customer ID' }),
+  id: z.cuid({ error: 'Invalid customer ID' })
 });
 
 export type CreateCustomerInput = z.infer<typeof CreateCustomerSchema>;

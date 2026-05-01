@@ -8,7 +8,7 @@ import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
   type CreateOrganizationInput,
-  type UpdateOrganizationInput,
+  type UpdateOrganizationInput
 } from '@/schemas/organizations';
 import { StatesSchema, type States } from '@/zod/schemas/enums/States.schema';
 import { Form } from '@/components/ui/form';
@@ -21,14 +21,14 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { AddressInlineFields } from '@/components/ui/address-autocomplete/address-inline-fields';
 import { emptyAddress, type AddressInput } from '@/schemas/address';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import type {
   OrganizationListItem,
-  OrganizationFormInput,
+  OrganizationFormInput
 } from '@/features/crm/organizations/types';
 
 const defaultFormState: CreateOrganizationInput = {
@@ -42,11 +42,11 @@ const defaultFormState: CreateOrganizationInput = {
   email: null,
   website: null,
   abn: null,
-  status: 'ACTIVE',
+  status: 'ACTIVE'
 };
 
 const mapOrganizationToFormValues = (
-  organization: OrganizationListItem,
+  organization: OrganizationListItem
 ): UpdateOrganizationInput => {
   return {
     id: organization.id,
@@ -60,7 +60,7 @@ const mapOrganizationToFormValues = (
     email: organization.email,
     website: organization.website,
     abn: organization.abn,
-    status: organization.status,
+    status: organization.status
   };
 };
 
@@ -81,7 +81,7 @@ export function OrganizationForm({
   isCreating = false,
   isUpdating = false,
   onDirtyStateChange,
-  onClose,
+  onClose
 }: OrganizationFormProps) {
   const mode = organization ? 'update' : 'create';
 
@@ -100,7 +100,7 @@ export function OrganizationForm({
   const form = useForm<OrganizationFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   const { isDirty } = form.formState;
@@ -120,7 +120,7 @@ export function OrganizationForm({
         country: organization.country || 'Australia',
         lat: 0,
         lng: 0,
-        formattedAddress: organization.address || '',
+        formattedAddress: organization.address || ''
       };
     }
     return emptyAddress;
@@ -154,7 +154,7 @@ export function OrganizationForm({
           email: data.email,
           website: data.website,
           abn: data.abn,
-          status: data.status,
+          status: data.status
         };
         onCreate?.(organizationData);
       } else {
@@ -170,12 +170,12 @@ export function OrganizationForm({
           email: data.email,
           website: data.website,
           abn: data.abn,
-          status: data.status,
+          status: data.status
         };
         onUpdate?.(updateData);
       }
     },
-    [onCreate, onUpdate, address, mode],
+    [onCreate, onUpdate, address, mode]
   );
 
   const handleSubmit = useCallback(
@@ -184,36 +184,36 @@ export function OrganizationForm({
       e.stopPropagation();
       form.handleSubmit(onSubmit)(e);
     },
-    [form, onSubmit],
+    [form, onSubmit]
   );
 
   return (
     <Form {...form}>
-      <form id="form-rhf-organization" onSubmit={handleSubmit} className="flex flex-col h-full">
+      <form id='form-rhf-organization' onSubmit={handleSubmit} className='flex flex-col h-full'>
         {isCreating || isUpdating ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating organization...' : 'Updating organization...'}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 px-6 py-6 space-y-4 overflow-y-auto">
+        <Box className='flex-1 px-6 py-6 space-y-4 overflow-y-auto'>
           <FieldGroup>
             <Controller
-              name="name"
+              name='name'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-name">Organization Name *</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-name'>Organization Name *</FieldLabel>
                   </FieldContent>
                   <Input
                     {...field}
-                    id="form-rhf-input-name"
+                    id='form-rhf-input-name'
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter organization name"
+                    placeholder='Enter organization name'
                     disabled={isCreating || isUpdating}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -222,21 +222,21 @@ export function OrganizationForm({
             />
           </FieldGroup>
 
-          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FieldGroup className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <Controller
-              name="phone"
+              name='phone'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-phone">Phone</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-phone'>Phone</FieldLabel>
                   </FieldContent>
                   <Input
                     {...field}
                     value={field.value || ''}
-                    id="form-rhf-input-phone"
+                    id='form-rhf-input-phone'
                     aria-invalid={fieldState.invalid}
-                    placeholder="e.g. 0412 345 678"
+                    placeholder='e.g. 0412 345 678'
                     disabled={isCreating || isUpdating}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -245,20 +245,20 @@ export function OrganizationForm({
             />
 
             <Controller
-              name="email"
+              name='email'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-email'>Email</FieldLabel>
                   </FieldContent>
                   <Input
                     {...field}
                     value={field.value || ''}
-                    id="form-rhf-input-email"
-                    type="email"
+                    id='form-rhf-input-email'
+                    type='email'
                     aria-invalid={fieldState.invalid}
-                    placeholder="e.g. contact@example.com"
+                    placeholder='e.g. contact@example.com'
                     disabled={isCreating || isUpdating}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -267,22 +267,22 @@ export function OrganizationForm({
             />
           </FieldGroup>
 
-          <FieldGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FieldGroup className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <Controller
-              name="website"
+              name='website'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-website">Website</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-website'>Website</FieldLabel>
                   </FieldContent>
                   <Input
                     {...field}
                     value={field.value || ''}
-                    id="form-rhf-input-website"
-                    type="url"
+                    id='form-rhf-input-website'
+                    type='url'
                     aria-invalid={fieldState.invalid}
-                    placeholder="e.g. https://example.com"
+                    placeholder='e.g. https://example.com'
                     disabled={isCreating || isUpdating}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -291,19 +291,19 @@ export function OrganizationForm({
             />
 
             <Controller
-              name="abn"
+              name='abn'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-abn">ABN</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-abn'>ABN</FieldLabel>
                   </FieldContent>
                   <Input
                     {...field}
                     value={field.value || ''}
-                    id="form-rhf-input-abn"
+                    id='form-rhf-input-abn'
                     aria-invalid={fieldState.invalid}
-                    placeholder="e.g. 12 345 678 901"
+                    placeholder='e.g. 12 345 678 901'
                     disabled={isCreating || isUpdating}
                   />
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -314,25 +314,25 @@ export function OrganizationForm({
 
           <FieldGroup>
             <Controller
-              name="status"
+              name='status'
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldContent>
-                    <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
+                    <FieldLabel htmlFor='form-rhf-status'>Status</FieldLabel>
                   </FieldContent>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || 'ACTIVE'}
                     disabled={isCreating || isUpdating}
                   >
-                    <SelectTrigger id="form-rhf-select-status">
-                      <SelectValue placeholder="Select status" />
+                    <SelectTrigger id='form-rhf-select-status'>
+                      <SelectValue placeholder='Select status' />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ACTIVE">Active</SelectItem>
-                      <SelectItem value="INACTIVE">Inactive</SelectItem>
-                      <SelectItem value="DELETED">Deleted</SelectItem>
+                      <SelectItem value='ACTIVE'>Active</SelectItem>
+                      <SelectItem value='INACTIVE'>Inactive</SelectItem>
+                      <SelectItem value='DELETED'>Deleted</SelectItem>
                     </SelectContent>
                   </Select>
                   {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -341,40 +341,40 @@ export function OrganizationForm({
             />
           </FieldGroup>
 
-          <Box className="space-y-2">
+          <Box className='space-y-2'>
             <FieldLabel>Address</FieldLabel>
             <AddressInlineFields
               address={address}
               setAddress={setAddress}
               searchInput={addressSearchInput}
               setSearchInput={setAddressSearchInput}
-              placeholder="Search for an address"
+              placeholder='Search for an address'
               disabled={isCreating || isUpdating}
             />
           </Box>
         </Box>
 
         {/* Action Buttons */}
-        <Box className="border-t p-6 flex gap-3 justify-end bg-muted">
+        <Box className='border-t p-6 flex gap-3 justify-end bg-muted'>
           {onClose && (
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={onClose}
               disabled={isCreating || isUpdating}
             >
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isCreating || isUpdating}>
+          <Button type='submit' disabled={isCreating || isUpdating}>
             {isCreating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 Creating...
               </>
             ) : isUpdating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 Updating...
               </>
             ) : mode === 'update' ? (

@@ -6,7 +6,7 @@ import {
   getTransactionCategories,
   getTransactionTrend,
   getTransactionCategoryBreakdown,
-  getTopTransactionCategories,
+  getTopTransactionCategories
 } from '../queries';
 import {
   testIds,
@@ -16,7 +16,7 @@ import {
   createTransactionTrend,
   createCategoryBreakdown,
   createTopCategory,
-  createTransactionCategory,
+  createTransactionCategory
 } from '@/lib/testing';
 
 const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
@@ -27,25 +27,25 @@ const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
     getActiveCategories: vi.fn(),
     getMonthlyTransactionTrend: vi.fn(),
     getCategoryBreakdown: vi.fn(),
-    getTopCategories: vi.fn(),
+    getTopCategories: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/transaction-repository', () => {
   return {
     TransactionRepository: vi.fn().mockImplementation(function () {
       return mockTransactionRepo;
-    }),
+    })
   };
 });
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 const TEST_TRANSACTION_ID = testIds.transaction();
@@ -64,9 +64,9 @@ describe('Transaction Queries', () => {
       const mockResult = {
         items: [
           createTransactionWithDetails({ id: '1' }),
-          createTransactionWithDetails({ id: '2' }),
+          createTransactionWithDetails({ id: '2' })
         ],
-        pagination: { page: 1, perPage: 10, total: 2 },
+        pagination: { page: 1, perPage: 10, total: 2 }
       };
 
       mockTransactionRepo.searchAndPaginate.mockResolvedValue(mockResult);
@@ -92,7 +92,7 @@ describe('Transaction Queries', () => {
     it('applies filters correctly', async () => {
       const mockResult = {
         items: [createTransactionWithDetails()],
-        pagination: { page: 1, perPage: 10, total: 1 },
+        pagination: { page: 1, perPage: 10, total: 1 }
       };
 
       mockTransactionRepo.searchAndPaginate.mockResolvedValue(mockResult);
@@ -140,7 +140,7 @@ describe('Transaction Queries', () => {
     it('converts Decimal amount to number', async () => {
       const mockTransaction = {
         ...createTransactionWithDetails(),
-        amount: { toNumber: () => 150.5 } as unknown as number,
+        amount: { toNumber: () => 150.5 } as unknown as number
       };
 
       mockTransactionRepo.findByIdWithDetails.mockResolvedValue(mockTransaction);
@@ -175,7 +175,7 @@ describe('Transaction Queries', () => {
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
+        endDate: new Date('2024-12-31')
       };
 
       const result = await getTransactionStatistics(dateFilter);
@@ -183,7 +183,7 @@ describe('Transaction Queries', () => {
       expect(result.success).toBe(true);
       expect(mockTransactionRepo.getStatistics).toHaveBeenCalledWith(
         mockSession.user.tenantId,
-        dateFilter,
+        dateFilter
       );
     });
 
@@ -198,7 +198,7 @@ describe('Transaction Queries', () => {
     it('returns categories successfully when authorized', async () => {
       const mockCategories = [
         createTransactionCategory({ id: '1', name: 'Sales' }),
-        createTransactionCategory({ id: '2', name: 'Office Supplies' }),
+        createTransactionCategory({ id: '2', name: 'Office Supplies' })
       ];
 
       mockTransactionRepo.getActiveCategories.mockResolvedValue(mockCategories);
@@ -226,7 +226,7 @@ describe('Transaction Queries', () => {
     it('returns monthly trend successfully', async () => {
       const mockTrend = [
         createTransactionTrend({ month: '2024-01' }),
-        createTransactionTrend({ month: '2024-02' }),
+        createTransactionTrend({ month: '2024-02' })
       ];
 
       mockTransactionRepo.getMonthlyTransactionTrend.mockResolvedValue(mockTrend);
@@ -239,7 +239,7 @@ describe('Transaction Queries', () => {
       }
       expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(
         12,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -250,7 +250,7 @@ describe('Transaction Queries', () => {
 
       expect(mockTransactionRepo.getMonthlyTransactionTrend).toHaveBeenCalledWith(
         12,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -265,7 +265,7 @@ describe('Transaction Queries', () => {
     it('returns category breakdown successfully', async () => {
       const mockBreakdown = [
         createCategoryBreakdown({ category: 'Sales', percentage: 60 }),
-        createCategoryBreakdown({ category: 'Office Supplies', percentage: 40 }),
+        createCategoryBreakdown({ category: 'Office Supplies', percentage: 40 })
       ];
 
       mockTransactionRepo.getCategoryBreakdown.mockResolvedValue(mockBreakdown);
@@ -283,14 +283,14 @@ describe('Transaction Queries', () => {
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-06-30'),
+        endDate: new Date('2024-06-30')
       };
 
       await getTransactionCategoryBreakdown(dateFilter);
 
       expect(mockTransactionRepo.getCategoryBreakdown).toHaveBeenCalledWith(
         mockSession.user.tenantId,
-        dateFilter,
+        dateFilter
       );
     });
 
@@ -305,7 +305,7 @@ describe('Transaction Queries', () => {
     it('returns top categories successfully', async () => {
       const mockTopCategories = [
         createTopCategory({ categoryName: 'Sales', totalAmount: 10000 }),
-        createTopCategory({ categoryName: 'Office Supplies', totalAmount: 5000 }),
+        createTopCategory({ categoryName: 'Office Supplies', totalAmount: 5000 })
       ];
 
       mockTransactionRepo.getTopCategories.mockResolvedValue(mockTopCategories);
@@ -318,7 +318,7 @@ describe('Transaction Queries', () => {
       }
       expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(
         5,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -329,7 +329,7 @@ describe('Transaction Queries', () => {
 
       expect(mockTransactionRepo.getTopCategories).toHaveBeenCalledWith(
         5,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

@@ -8,16 +8,16 @@ import type { QuoteMetadata, QuoteItem } from '@/features/finances/quotes/types'
 const QuotePreview = dynamic(
   () =>
     import('@/features/finances/quotes/components/preview/quote-preview').then(
-      (mod) => mod.QuotePreview,
+      (mod) => mod.QuotePreview
     ),
   {
     ssr: false,
     loading: () => (
-      <Box className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading preview...</p>
+      <Box className='flex items-center justify-center h-full'>
+        <p className='text-sm text-muted-foreground'>Loading preview...</p>
       </Box>
-    ),
-  },
+    )
+  }
 );
 
 interface QuotePreviewPanelProps {
@@ -29,23 +29,23 @@ interface QuotePreviewPanelProps {
 export function QuotePreviewPanel({ quote, items, onDownloadPdf }: QuotePreviewPanelProps) {
   return (
     <Box
-      className="border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col"
+      className='border-l dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col'
       style={{ width: '50%' }}
     >
-      <Box className="px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between">
-        <p className="text-lg font-semibold">Preview</p>
+      <Box className='px-8 py-4 border-b dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between'>
+        <p className='text-lg font-semibold'>Preview</p>
         <Button
-          type="button"
-          variant="ghost"
-          size="icon"
+          type='button'
+          variant='ghost'
+          size='icon'
           onClick={onDownloadPdf}
-          aria-label="Download PDF"
+          aria-label='Download PDF'
         >
-          <Download className="h-4 w-4" aria-hidden="true" />
+          <Download className='h-4 w-4' aria-hidden='true' />
         </Button>
       </Box>
 
-      <Box className="flex-1 overflow-hidden">
+      <Box className='flex-1 overflow-hidden'>
         <QuotePreview quote={quote} items={items} />
       </Box>
     </Box>

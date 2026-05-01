@@ -37,13 +37,13 @@ interface StatusBadgeProps<TStatus extends string> {
 export function StatusBadge<TStatus extends string>({
   status,
   config,
-  className,
+  className
 }: StatusBadgeProps<TStatus>) {
   const badgeConfig = config[status];
 
   if (!badgeConfig) {
     return (
-      <Badge variant="outline" className={className}>
+      <Badge variant='outline' className={className}>
         {status}
       </Badge>
     );

@@ -22,14 +22,14 @@ const statusOptions: {
 }[] = [
   { label: 'Active', value: ProductStatusSchema.enum.ACTIVE, icon: Package },
   { label: 'Inactive', value: ProductStatusSchema.enum.INACTIVE, icon: PackageMinus },
-  { label: 'Out of Stock', value: ProductStatusSchema.enum.OUT_OF_STOCK, icon: PackageX },
+  { label: 'Out of Stock', value: ProductStatusSchema.enum.OUT_OF_STOCK, icon: PackageX }
 ];
 
 function ProductLink({ productId, name }: { productId: string; name: string }) {
   const href = useProductHref(productId);
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {name}
     </Link>
   );
@@ -40,7 +40,7 @@ interface CreateProductColumnsOptions {
 }
 
 export const createProductColumns = ({
-  onDelete,
+  onDelete
 }: CreateProductColumnsOptions): ColumnDef<ProductListItem>[] => [
   {
     id: 'select',
@@ -50,36 +50,36 @@ export const createProductColumns = ({
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label='Select all'
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label='Select row'
       />
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: false
   },
   {
     id: 'search',
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Product Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Product Name' />,
     cell: ({ row }) => <ProductLink productId={row.original.id} name={row.original.name} />,
     enableSorting: true,
     enableColumnFilter: true,
     meta: {
       label: 'Product Name',
       placeholder: 'Search products...',
-      variant: 'text',
-    },
+      variant: 'text'
+    }
   },
   {
     id: 'status',
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ row }) => <ProductStatusBadge status={row.getValue('status')} />,
     filterFn: (row, id, value: string[]) => {
       return value.includes(row.getValue(id));
@@ -88,23 +88,23 @@ export const createProductColumns = ({
     meta: {
       label: 'Status',
       variant: 'multiSelect',
-      options: statusOptions,
-    },
+      options: statusOptions
+    }
   },
   {
     id: 'price',
     accessorKey: 'price',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Price" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Price' />,
     cell: ({ row }) => {
       const price = row.original.price ?? 0;
-      return <Box className="font-medium">{formatCurrency({ number: price })}</Box>;
+      return <Box className='font-medium'>{formatCurrency({ number: price })}</Box>;
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'stock',
     accessorKey: 'stock',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Stock" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Stock' />,
     cell: ({ row }) => {
       const stock = row.getValue('stock') as number;
       const isLowStock = stock > 0 && stock <= 10;
@@ -117,26 +117,26 @@ export const createProductColumns = ({
           }`}
         >
           {stock}
-          {isOutOfStock && <span className="sr-only">(out of stock)</span>}
-          {isLowStock && <span className="sr-only">(low stock)</span>}
+          {isOutOfStock && <span className='sr-only'>(out of stock)</span>}
+          {isLowStock && <span className='sr-only'>(low stock)</span>}
         </Box>
       );
     },
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'createdAt',
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Created' />,
     cell: ({ row }) => format(new Date(row.getValue('createdAt')), 'MMM d, yyyy'),
-    enableSorting: true,
+    enableSorting: true
   },
   {
     id: 'actions',
     cell: ({ row }) => <ProductActions product={row.original} onDelete={onDelete} />,
     enableHiding: false,
     meta: {
-      className: 'text-right',
-    },
-  },
+      className: 'text-right'
+    }
+  }
 ];

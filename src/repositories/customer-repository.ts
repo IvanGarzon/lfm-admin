@@ -4,7 +4,7 @@ import { getPaginationMetadata } from '@/lib/utils';
 import type {
   CustomerPagination,
   CustomerListItem,
-  CustomerFilters,
+  CustomerFilters
 } from '@/features/crm/customers/types';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@/schemas/customers';
 import type { AddressInput } from '@/schemas/address';
@@ -55,7 +55,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       country: customer.country ?? 'Australia',
       lat: Number(customer.lat) ?? 0,
       lng: Number(customer.lng) ?? 0,
-      formattedAddress: customer.formattedAddress ?? '',
+      formattedAddress: customer.formattedAddress ?? ''
     };
   }
 
@@ -83,13 +83,13 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
 
     const whereClause: Prisma.CustomerWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
@@ -97,13 +97,13 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         { lastName: searchFilter },
         { email: searchFilter },
         { phone: searchFilter },
-        { organization: { name: searchFilter } },
+        { organization: { name: searchFilter } }
       ];
     }
 
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
@@ -128,19 +128,19 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         organization: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
         _count: {
           select: {
             invoices: true,
-            quotes: true,
-          },
-        },
+            quotes: true
+          }
+        }
       },
       orderBy,
       skip,
-      take: perPage,
+      take: perPage
     });
 
     // Run count and query in parallel without transaction
@@ -162,12 +162,12 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
       quotesCount: customer._count.quotes ?? 0,
-      address: this.mapToAddress(customer),
+      address: this.mapToAddress(customer)
     }));
 
     return {
       items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -194,14 +194,14 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         organization: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
         _count: {
           select: {
             invoices: true,
-            quotes: true,
-          },
+            quotes: true
+          }
         },
         address1: true,
         address2: true,
@@ -211,8 +211,8 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         country: true,
         lat: true,
         lng: true,
-        formattedAddress: true,
-      },
+        formattedAddress: true
+      }
     });
 
     if (!customer) {
@@ -234,7 +234,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       deletedAt: customer.deletedAt ?? null,
       invoicesCount: customer._count.invoices ?? 0,
       quotesCount: customer._count.quotes ?? 0,
-      address: this.mapToAddress(customer),
+      address: this.mapToAddress(customer)
     };
   }
 
@@ -245,7 +245,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
    */
   async findCustomerByEmail(email: string, tenantId: string) {
     return this.prisma.customer.findFirst({
-      where: { email, tenantId },
+      where: { email, tenantId }
     });
   }
 
@@ -259,7 +259,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       where: {
         tenantId,
         deletedAt: null,
-        status: CustomerStatus.ACTIVE,
+        status: CustomerStatus.ACTIVE
       },
       select: {
         id: true,
@@ -269,13 +269,13 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         organization: {
           select: {
             id: true,
-            name: true,
-          },
-        },
+            name: true
+          }
+        }
       },
       orderBy: {
-        firstName: 'asc',
-      },
+        firstName: 'asc'
+      }
     });
   }
 
@@ -302,8 +302,8 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
         organizationId: organizationId || null,
         useOrganizationAddress: useOrganizationAddress ?? false,
         status: CustomerStatus.ACTIVE,
-        ...addressData,
-      },
+        ...addressData
+      }
     });
   }
 
@@ -318,7 +318,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   async updateCustomer(
     id: string,
     tenantId: string,
-    data: UpdateCustomerInput,
+    data: UpdateCustomerInput
   ): Promise<CustomerListItem | null> {
     const {
       id: _,
@@ -341,7 +341,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
           country: null,
           lat: null,
           lng: null,
-          formattedAddress: null,
+          formattedAddress: null
         }
       : address || {
           address1: null,
@@ -352,7 +352,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
           country: null,
           lat: null,
           lng: null,
-          formattedAddress: null,
+          formattedAddress: null
         };
 
     try {
@@ -362,16 +362,16 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
           ...restUpdateData,
           ...addressData,
           useOrganizationAddress: useOrganizationAddress ?? false,
-          organization: organizationId ? { connect: { id: organizationId } } : { disconnect: true },
+          organization: organizationId ? { connect: { id: organizationId } } : { disconnect: true }
         },
         include: {
           organization: {
             select: {
               id: true,
-              name: true,
-            },
-          },
-        },
+              name: true
+            }
+          }
+        }
       });
 
       return await this.findCustomerById(updatedCustomer.id, tenantId);
@@ -393,8 +393,8 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
       where: { id, tenantId },
       data: {
         deletedAt: new Date(),
-        status: CustomerStatus.DELETED,
-      },
+        status: CustomerStatus.DELETED
+      }
     });
   }
 }

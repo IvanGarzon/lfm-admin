@@ -38,15 +38,15 @@ export class AccountRepository extends BaseRepository<Prisma.AccountGetPayload<o
    */
   async findByProviderAndAccountId(
     provider: string,
-    providerAccountId: string,
+    providerAccountId: string
   ): Promise<Account | null> {
     return this.prisma.account.findUnique({
       where: {
         provider_providerAccountId: {
           provider,
-          providerAccountId,
-        },
-      },
+          providerAccountId
+        }
+      }
     });
   }
 
@@ -68,8 +68,8 @@ export class AccountRepository extends BaseRepository<Prisma.AccountGetPayload<o
         expiresAt: accountData.expiresAt,
         tokenType: accountData.tokenType,
         scope: accountData.scope,
-        idToken: accountData.idToken,
-      },
+        idToken: accountData.idToken
+      }
     });
   }
 
@@ -82,7 +82,7 @@ export class AccountRepository extends BaseRepository<Prisma.AccountGetPayload<o
   async findAccountsByUserId(userId: string): Promise<Account[]> {
     return this.prisma.account.findMany({
       where: { userId },
-      orderBy: { provider: 'asc' },
+      orderBy: { provider: 'asc' }
     });
   }
 }

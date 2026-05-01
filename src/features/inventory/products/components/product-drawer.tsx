@@ -12,7 +12,7 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { ProductForm } from '@/features/inventory/products/components/product-form';
@@ -22,7 +22,7 @@ import { searchParams, productSearchParamsDefaults } from '@/filters/products/pr
 import {
   useProduct,
   useCreateProduct,
-  useUpdateProduct,
+  useUpdateProduct
 } from '@/features/inventory/products/hooks/use-products-queries';
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
@@ -68,7 +68,7 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
         }
       }
     },
-    [id, onClose, router, queryString],
+    [id, onClose, router, queryString]
   );
 
   // Handle create
@@ -78,10 +78,10 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
         onSuccess: () => {
           setIsDirty(false);
           handleOpenChange(false);
-        },
+        }
       });
     },
-    [createMutation, handleOpenChange],
+    [createMutation, handleOpenChange]
   );
 
   // Handle update
@@ -90,10 +90,10 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
       updateMutation.mutate(data, {
         onSuccess: () => {
           setIsDirty(false);
-        },
+        }
       });
     },
-    [updateMutation],
+    [updateMutation]
   );
 
   // Handle dirty state change
@@ -106,7 +106,7 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
 
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+      <DrawerContent className='overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]'>
         <VisuallyHidden>
           <DrawerDescription>
             {mode === 'create'
@@ -117,36 +117,36 @@ export function ProductDrawer({ id, open: openProp, onClose }: ProductDrawerProp
         {mode === 'update' && isLoading ? (
           <ProductDrawerSkeleton />
         ) : isError ? (
-          <Box className="p-6 text-destructive">
+          <Box className='p-6 text-destructive'>
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <p className="mt-4">Could not load product: {error?.message}</p>
+            <p className='mt-4'>Could not load product: {error?.message}</p>
           </Box>
         ) : (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-              <Box className="mt-1 flex flex-col flex-1">
+            <Box className='-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900'>
+              <Box className='mt-1 flex flex-col flex-1'>
                 <DrawerTitle>{mode === 'create' ? 'Add Product' : 'Edit Product'}</DrawerTitle>
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className='text-xs text-muted-foreground mt-1'>
                   {mode === 'create'
                     ? 'Fill in the information to add a new product to your inventory.'
                     : `Updating product: ${product?.name ?? id}`}
                 </div>
               </Box>
               <Button
-                variant="ghost"
-                className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+                variant='ghost'
+                className='aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10'
                 onClick={() => handleOpenChange(false)}
               >
-                <X className="size-5" aria-hidden="true" />
-                <span className="sr-only">Close</span>
+                <X className='size-5' aria-hidden='true' />
+                <span className='sr-only'>Close</span>
               </Button>
             </Box>
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
-              <Box className="flex h-full">
-                <Box className="overflow-y-auto w-full">
+            <DrawerBody className='py-0! -mx-6 h-full overflow-y-auto'>
+              <Box className='flex h-full'>
+                <Box className='overflow-y-auto w-full'>
                   <ProductForm
                     product={mode === 'update' ? product : null}
                     onCreate={handleCreate}

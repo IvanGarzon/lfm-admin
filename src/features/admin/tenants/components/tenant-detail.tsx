@@ -16,13 +16,13 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { InviteUserDialog } from '@/features/admin/tenants/components/invite-user-dialog';
 import {
   useUpdateTenant,
   useSuspendTenant,
-  useActivateTenant,
+  useActivateTenant
 } from '@/features/admin/tenants/hooks/use-tenant-queries';
 import type { TenantWithSettings } from '@/features/admin/tenants/types';
 import type { UserListItem } from '@/features/admin/users/types';
@@ -31,7 +31,7 @@ import { UserRoleBadge } from '@/features/admin/users/components/user-role-badge
 
 export function TenantDetail({
   tenant,
-  users,
+  users
 }: {
   tenant: TenantWithSettings;
   users: UserListItem[];
@@ -59,26 +59,26 @@ export function TenantDetail({
   };
 
   return (
-    <Box className="space-y-6 min-w-0 w-full">
+    <Box className='space-y-6 min-w-0 w-full'>
       {/* -- Header ---------------------------------------------------------- */}
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Box className="flex items-center gap-3 min-w-0">
+      <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+        <Box className='flex items-center gap-3 min-w-0'>
           <Link
-            href="/admin/tenants"
-            aria-label="Back to tenants"
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            href='/admin/tenants'
+            aria-label='Back to tenants'
+            className='text-muted-foreground hover:text-foreground transition-colors'
           >
-            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+            <ChevronLeft aria-hidden='true' className='h-5 w-5' />
           </Link>
           <Box>
-            <Box className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold tracking-tight">{tenant.name}</h1>
+            <Box className='flex items-center gap-2'>
+              <h1 className='text-3xl font-bold tracking-tight'>{tenant.name}</h1>
               <TenantStatusBadge status={tenant.status} />
             </Box>
-            <p className="text-muted-foreground text-sm font-mono">{tenant.slug}</p>
+            <p className='text-muted-foreground text-sm font-mono'>{tenant.slug}</p>
           </Box>
         </Box>
-        <Box className="flex gap-2 shrink-0">
+        <Box className='flex gap-2 shrink-0'>
           <Button
             variant={tenant.status === 'ACTIVE' ? 'destructive' : 'default'}
             onClick={handleToggleStatus}
@@ -90,24 +90,24 @@ export function TenantDetail({
       </Box>
 
       {/* -- Edit form ------------------------------------------------------- */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Details</h2>
+      <Card className='p-6'>
+        <h2 className='text-lg font-semibold mb-4'>Details</h2>
         <form onSubmit={handleSave}>
-          <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Box className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Box className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <Box className='space-y-2'>
+              <Label htmlFor='name'>Name</Label>
+              <Input id='name' value={name} onChange={(e) => setName(e.target.value)} required />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+            <Box className='space-y-2'>
+              <Label htmlFor='slug'>Slug</Label>
+              <Input id='slug' value={slug} onChange={(e) => setSlug(e.target.value)} required />
             </Box>
           </Box>
-          <Box className="flex justify-between items-center mt-4">
-            <p className="text-xs text-muted-foreground">
+          <Box className='flex justify-between items-center mt-4'>
+            <p className='text-xs text-muted-foreground'>
               Created {format(new Date(tenant.createdAt), 'dd MMM yyyy')}
             </p>
-            <Button type="submit" disabled={updateTenant.isPending}>
+            <Button type='submit' disabled={updateTenant.isPending}>
               {updateTenant.isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </Box>
@@ -118,10 +118,10 @@ export function TenantDetail({
 
       {/* -- Users ----------------------------------------------------------- */}
       <Box>
-        <Box className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Users ({users.length})</h2>
-          <Button size="sm" onClick={() => setShowInvite(true)}>
-            <UserPlus aria-hidden="true" className="h-4 w-4" />
+        <Box className='flex items-center justify-between mb-4'>
+          <h2 className='text-lg font-semibold'>Users ({users.length})</h2>
+          <Button size='sm' onClick={() => setShowInvite(true)}>
+            <UserPlus aria-hidden='true' className='h-4 w-4' />
             Invite User
           </Button>
         </Box>
@@ -138,17 +138,17 @@ export function TenantDetail({
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={3} className='text-center py-8 text-muted-foreground'>
                     No users yet. Invite someone to get started.
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className='font-medium'>
                       {user.firstName} {user.lastName}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell className='text-muted-foreground'>{user.email}</TableCell>
                     <TableCell>
                       <UserRoleBadge role={user.role} />
                     </TableCell>

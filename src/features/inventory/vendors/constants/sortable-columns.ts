@@ -8,7 +8,7 @@ export const SORTABLE_VENDOR_COLUMNS = [
   'email',
   'status',
   'paymentTerms',
-  'createdAt',
+  'createdAt'
 ] as const;
 
 export type SortableVendorColumn = (typeof SORTABLE_VENDOR_COLUMNS)[number];

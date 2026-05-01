@@ -15,7 +15,7 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupButton,
+  InputGroupButton
 } from '@/components/ui/input-group';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { ProductSearchDialog } from '@/components/shared/product-search-dialog';
@@ -49,7 +49,7 @@ export const QuoteItemRow = memo(function QuoteItemRow({
   onRequestProducts,
   isLocked,
   quoteId,
-  itemId,
+  itemId
 }: QuoteItemRowProps) {
   const prefersReducedMotion = useReducedMotion();
   const y = useMotionValue(0);
@@ -74,12 +74,12 @@ export const QuoteItemRow = memo(function QuoteItemRow({
         ...current,
         productId,
         description: product.name ?? '',
-        unitPrice: Number(product.price),
+        unitPrice: Number(product.price)
       },
       {
         shouldValidate: true,
-        shouldDirty: true,
-      },
+        shouldDirty: true
+      }
     );
 
     setProductSearchOpen(false);
@@ -92,12 +92,12 @@ export const QuoteItemRow = memo(function QuoteItemRow({
         ...form.getValues(`items.${index}`),
         productId: null,
         description: '',
-        unitPrice: 0,
+        unitPrice: 0
       },
       {
         shouldDirty: true,
-        shouldValidate: true,
-      },
+        shouldValidate: true
+      }
     );
   };
 
@@ -108,8 +108,8 @@ export const QuoteItemRow = memo(function QuoteItemRow({
       `items.${index}.productId`,
       `items.${index}.quantity`,
       `items.${index}.unitPrice`,
-      `items.${index}.description`,
-    ],
+      `items.${index}.description`
+    ]
   });
   const quantity = watchedQuantity || 0;
   const unitPrice = watchedUnitPrice || 0;
@@ -123,18 +123,18 @@ export const QuoteItemRow = memo(function QuoteItemRow({
 
   return (
     <Reorder.Item
-      as="div"
+      as='div'
       value={field}
       dragListener={false}
       dragControls={dragControls}
       style={{ y }}
-      layout="position"
+      layout='position'
       transition={
         prefersReducedMotion
           ? { duration: 0 }
           : { type: 'spring', stiffness: 500, damping: 50, mass: 1 }
       }
-      className="border-b border-gray-100 dark:border-gray-800 last:border-b-0 relative"
+      className='border-b border-gray-100 dark:border-gray-800 last:border-b-0 relative'
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}
     >
@@ -143,57 +143,57 @@ export const QuoteItemRow = memo(function QuoteItemRow({
           'flex items-center gap-2 px-4 py-3 transition-colors',
           isDragging
             ? 'bg-gray-100 dark:bg-gray-800 shadow-lg cursor-grabbing'
-            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
         )}
       >
         <Box
-          className="w-4 shrink-0 flex items-center justify-center"
+          className='w-4 shrink-0 flex items-center justify-center'
           onPointerDown={(e) => dragControls.start(e)}
         >
           <GripVertical
-            className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing"
-            aria-hidden="true"
+            className='h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing'
+            aria-hidden='true'
           />
         </Box>
 
         {/* Item Description with Product Selector */}
-        <Box className="flex-1 min-w-0">
+        <Box className='flex-1 min-w-0'>
           <FormField
             control={form.control}
             name={`items.${index}.description`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <InputGroup
                     className={cn(
-                      descriptionError && 'border-destructive focus-within:ring-destructive/20',
+                      descriptionError && 'border-destructive focus-within:ring-destructive/20'
                     )}
                   >
-                    <InputGroupInput {...field} placeholder="Enter item name" disabled={isLocked} />
-                    <InputGroupAddon align="inline-end">
+                    <InputGroupInput {...field} placeholder='Enter item name' disabled={isLocked} />
+                    <InputGroupAddon align='inline-end'>
                       {selectedProductId ? (
                         <InputGroupButton
-                          type="button"
+                          type='button'
                           onClick={handleClearProduct}
-                          aria-label="Clear product"
-                          title="Clear product selection"
-                          size="icon-xs"
-                          className="cursor-pointer hover:text-destructive"
+                          aria-label='Clear product'
+                          title='Clear product selection'
+                          size='icon-xs'
+                          className='cursor-pointer hover:text-destructive'
                           disabled={isLocked}
                         >
                           <X />
                         </InputGroupButton>
                       ) : (
                         <InputGroupButton
-                          type="button"
+                          type='button'
                           onClick={() => {
                             onRequestProducts();
                             setProductSearchOpen(true);
                           }}
-                          aria-label="Browse products"
-                          title="Browse products"
-                          size="icon-xs"
-                          className="cursor-pointer hover:text-primary"
+                          aria-label='Browse products'
+                          title='Browse products'
+                          size='icon-xs'
+                          className='cursor-pointer hover:text-primary'
                           disabled={isLocked}
                         >
                           <Package />
@@ -208,22 +208,22 @@ export const QuoteItemRow = memo(function QuoteItemRow({
         </Box>
 
         {/* Quantity */}
-        <Box className="w-18 shrink-0">
+        <Box className='w-18 shrink-0'>
           <FormField
             control={form.control}
             name={`items.${index}.quantity`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <Input
                     {...field}
-                    type="number"
-                    step="1"
-                    min="1"
+                    type='number'
+                    step='1'
+                    min='1'
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     className={cn(
                       'text-left border-gray-200 dark:border-gray-700 h-9 py-0',
-                      quantityError && 'border-destructive focus:ring-destructive/20',
+                      quantityError && 'border-destructive focus:ring-destructive/20'
                     )}
                     disabled={isLocked}
                   />
@@ -234,25 +234,25 @@ export const QuoteItemRow = memo(function QuoteItemRow({
         </Box>
 
         {/* Unit Price */}
-        <Box className="w-30 shrink-0">
+        <Box className='w-30 shrink-0'>
           <FormField
             control={form.control}
             name={`items.${index}.unitPrice`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <InputGroup
                     className={cn(
-                      unitPriceError && 'border-destructive focus-within:ring-destructive/20',
+                      unitPriceError && 'border-destructive focus-within:ring-destructive/20'
                     )}
                   >
                     <InputGroupInput
                       {...field}
-                      type="number"
-                      step="0.5"
+                      type='number'
+                      step='0.5'
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      min="0"
-                      className="text-left"
+                      min='0'
+                      className='text-left'
                       disabled={isLocked}
                     />
                   </InputGroup>
@@ -263,69 +263,69 @@ export const QuoteItemRow = memo(function QuoteItemRow({
         </Box>
 
         {/* Total */}
-        <Box className="w-30 shrink-0">
-          <Box className="h-9 px-3 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 font-semibold text-sm text-gray-700 dark:text-gray-300 w-full flex items-center justify-end">
+        <Box className='w-30 shrink-0'>
+          <Box className='h-9 px-3 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 font-semibold text-sm text-gray-700 dark:text-gray-300 w-full flex items-center justify-end'>
             {formatCurrency({
               number: total,
-              maxFractionDigits: 0,
+              maxFractionDigits: 0
             })}
           </Box>
         </Box>
 
         {/* Color Palette Button */}
-        <Box className="w-4 shrink-0 flex items-center justify-center">
+        <Box className='w-4 shrink-0 flex items-center justify-center'>
           <Button
-            type="button"
-            variant="ghost"
+            type='button'
+            variant='ghost'
             onClick={() => setColorPaletteDialogOpen(true)}
             className={cn(
               'h-8 w-8 p-0',
               quoteId && itemId
                 ? 'text-muted-foreground hover:text-purple-500 hover:bg-transparent cursor-pointer'
-                : 'text-muted-foreground/40 cursor-not-allowed',
+                : 'text-muted-foreground/40 cursor-not-allowed'
             )}
             aria-label={
               quoteId && itemId ? 'Edit colour palette' : 'Save the quote first to add colours'
             }
             disabled={isLocked || !quoteId || !itemId}
           >
-            <Palette className="h-4 w-4" aria-hidden="true" />
+            <Palette className='h-4 w-4' aria-hidden='true' />
           </Button>
         </Box>
 
         {/* Attach Images Button */}
-        <Box className="w-4 shrink-0 flex items-center justify-center">
+        <Box className='w-4 shrink-0 flex items-center justify-center'>
           <Button
-            type="button"
-            variant="ghost"
+            type='button'
+            variant='ghost'
             onClick={() => setAttachmentsDialogOpen(true)}
             className={cn(
               'h-8 w-8 p-0',
               quoteId && itemId
                 ? 'text-muted-foreground hover:text-blue-500 hover:bg-transparent cursor-pointer'
-                : 'text-muted-foreground/40 cursor-not-allowed',
+                : 'text-muted-foreground/40 cursor-not-allowed'
             )}
             aria-label={
               quoteId && itemId ? 'Attach images' : 'Save the quote first to attach images'
             }
             disabled={isLocked || !quoteId || !itemId}
           >
-            <ImagePlus className="h-4 w-4" aria-hidden="true" />
+            <ImagePlus className='h-4 w-4' aria-hidden='true' />
           </Button>
         </Box>
 
         {/* Delete Button */}
-        <Box className="w-4 shrink-0 flex items-center justify-center">
+        <Box className='w-4 shrink-0 flex items-center justify-center'>
           {canRemove ? (
             <Button
-              type="button"
-              variant="ghost"
+              type='button'
+              variant='ghost'
               onClick={onRemove}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer"
-              aria-label="Remove item"
+              className='h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer'
+              aria-label='Remove item'
               disabled={isLocked}
             >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              <Trash2 className='h-4 w-4' aria-hidden='true' />
             </Button>
           ) : null}
         </Box>

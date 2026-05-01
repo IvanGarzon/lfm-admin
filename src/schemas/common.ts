@@ -6,7 +6,7 @@ import { commonValidators, VALIDATION_LIMITS } from '@/lib/validation';
  */
 export const sortingItemSchema = z.object({
   id: z.string(),
-  desc: z.boolean(),
+  desc: z.boolean()
 });
 
 export const sortingSchema = z.union([z.string(), z.array(z.unknown())]).transform((val) => {
@@ -65,5 +65,5 @@ export const baseFiltersSchema = z.object({
   search: searchFilterSchema,
   page: pageFilterSchema,
   perPage: perPageFilterSchema,
-  sort: sortFilterSchema,
+  sort: sortFilterSchema
 });

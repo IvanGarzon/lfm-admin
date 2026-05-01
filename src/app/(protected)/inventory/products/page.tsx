@@ -6,11 +6,11 @@ import { ProductsView } from '@/features/inventory/products/components/product-v
 
 export const metadata = constructMetadata({
   title: 'Products – lfm dashboard',
-  description: 'Manage your product catalog and inventory.',
+  description: 'Manage your product catalog and inventory.'
 });
 
 export default async function ProductsPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

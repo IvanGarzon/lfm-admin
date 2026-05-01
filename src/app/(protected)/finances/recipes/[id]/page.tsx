@@ -5,20 +5,20 @@ import { RecipesView } from '@/features/finances/recipes/components/recipes-view
 import { getRecipes } from '@/actions/finances/recipes/queries';
 
 export const metadata = {
-  title: 'Recipe Detail | Finance',
+  title: 'Recipe Detail | Finance'
 };
 
 const RecipeDrawer = dynamic(
   () =>
     import('@/features/finances/recipes/components/recipe-drawer').then((mod) => mod.RecipeDrawer),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function RecipePage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

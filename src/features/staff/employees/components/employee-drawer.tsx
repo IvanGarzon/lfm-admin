@@ -10,14 +10,14 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import {
   useEmployeeById,
   useUpdateEmployee,
-  useCreateEmployee,
+  useCreateEmployee
 } from '@/features/staff/employees/hooks/use-employees';
 import { EmployeeForm } from './employee-form';
 import { EmployeeView } from './employee-view';
@@ -33,7 +33,7 @@ type DrawerMode = 'edit' | 'create';
 export function EmployeeDrawer({
   id,
   open,
-  onClose,
+  onClose
 }: {
   id?: string;
   open?: boolean;
@@ -74,7 +74,7 @@ export function EmployeeDrawer({
         }
       }
     },
-    [id, onClose, router, queryString],
+    [id, onClose, router, queryString]
   );
 
   const handleCreate = useCallback(
@@ -82,10 +82,10 @@ export function EmployeeDrawer({
       createEmployee.mutate(data, {
         onSuccess: () => {
           onClose?.();
-        },
+        }
       });
     },
-    [createEmployee, onClose],
+    [createEmployee, onClose]
   );
 
   const handleUpdate = useCallback(
@@ -95,29 +95,29 @@ export function EmployeeDrawer({
           setHasUnsavedChanges(false);
           setIsEditingView(false);
           // If we were in a sub-route /id, we stay there but exit edit mode
-        },
+        }
       });
     },
-    [updateEmployee],
+    [updateEmployee]
   );
 
   const { title, status } = useMemo(() => {
     if (mode === 'create') {
       return {
         title: 'New Employee',
-        status: null,
+        status: null
       };
     }
 
     return {
       title: employee ? `${employee.firstName} ${employee.lastName}` : 'Employee Details',
-      status: employee?.status ?? null,
+      status: employee?.status ?? null
     };
   }, [mode, employee?.firstName, employee?.lastName, employee?.status]);
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden pb-0!">
+      <DrawerContent className='overflow-x-hidden pb-0!'>
         <VisuallyHidden>
           <DrawerDescription>
             {mode === 'create' ? 'Create a new employee' : 'View and edit employee details'}
@@ -128,7 +128,7 @@ export function EmployeeDrawer({
             <DrawerHeader>
               <DrawerTitle>Employee Details</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6">Loading...</Box>
+            <Box className='p-6'>Loading...</Box>
           </>
         ) : null}
 
@@ -137,73 +137,73 @@ export function EmployeeDrawer({
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6 text-destructive">
-              <p className="mt-4">Could not load employee details: {error?.message}</p>
+            <Box className='p-6 text-destructive'>
+              <p className='mt-4'>Could not load employee details: {error?.message}</p>
             </Box>
           </>
         ) : null}
 
         {(employee && !isLoading && !isError) || mode === 'create' ? (
           <>
-            <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
-              <Box className="mt-1 flex flex-row items-center gap-4 flex-1">
+            <Box className='-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4'>
+              <Box className='mt-1 flex flex-row items-center gap-4 flex-1'>
                 {employee ? (
                   <UserAvatar
                     user={{
                       name: `${employee.firstName} ${employee.lastName}`,
-                      image: employee.avatarUrl,
+                      image: employee.avatarUrl
                     }}
-                    className="size-12"
+                    className='size-12'
                   />
                 ) : null}
-                <Box className="flex flex-col">
-                  <Box className="flex items-center gap-2">
-                    <DrawerTitle className="text-xl font-semibold tracking-tight">
+                <Box className='flex flex-col'>
+                  <Box className='flex items-center gap-2'>
+                    <DrawerTitle className='text-xl font-semibold tracking-tight'>
                       {title}
                     </DrawerTitle>
                     {mode === 'edit' && hasUnsavedChanges ? (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                        <AlertCircle aria-hidden="true" className="h-3 w-3" />
+                      <span className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20'>
+                        <AlertCircle aria-hidden='true' className='h-3 w-3' />
                         Unsaved changes
                       </span>
                     ) : null}
                   </Box>
-                  <Box className="flex items-center gap-2 mt-1">
+                  <Box className='flex items-center gap-2 mt-1'>
                     {status ? <EmployeeStatusBadge status={status} /> : null}
                     {employee ? (
-                      <Box className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                        <span className="font-mono">{employee.id}</span>
-                        <CopyButton value={employee.id} className="size-4 p-0 border-none" />
+                      <Box className='flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full'>
+                        <span className='font-mono'>{employee.id}</span>
+                        <CopyButton value={employee.id} className='size-4 p-0 border-none' />
                       </Box>
                     ) : null}
                   </Box>
                 </Box>
               </Box>
 
-              <Box className="flex items-center gap-2">
+              <Box className='flex items-center gap-2'>
                 {mode === 'edit' && !isEditing ? (
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
+                    variant='outline'
+                    size='sm'
+                    className='gap-2'
                     onClick={() => setIsEditingView(true)}
                   >
-                    <Edit2 className="size-4" />
+                    <Edit2 className='size-4' />
                     Edit
                   </Button>
                 ) : null}
                 <Button
-                  variant="ghost"
-                  className="aspect-square p-1 text-muted-foreground hover:bg-muted"
+                  variant='ghost'
+                  className='aspect-square p-1 text-muted-foreground hover:bg-muted'
                   onClick={() => handleOpenChange(false)}
                 >
-                  <X className="size-5" aria-hidden="true" />
-                  <span className="sr-only">Close</span>
+                  <X className='size-5' aria-hidden='true' />
+                  <span className='sr-only'>Close</span>
                 </Button>
               </Box>
             </Box>
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
+            <DrawerBody className='py-0! -mx-6 h-full overflow-hidden'>
               {isEditing ? (
                 <EmployeeForm
                   employee={employee ?? undefined}

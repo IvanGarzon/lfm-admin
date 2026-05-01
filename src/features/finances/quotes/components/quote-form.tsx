@@ -16,12 +16,12 @@ import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
   type CreateQuoteInput,
-  type UpdateQuoteInput,
+  type UpdateQuoteInput
 } from '@/schemas/quotes';
 import type { QuoteMetadata, QuoteItem, QuoteFormInput } from '@/features/finances/quotes/types';
 import {
   getQuoteStatusLabel,
-  getQuotePermissions,
+  getQuotePermissions
 } from '@/features/finances/quotes/utils/quote-helpers';
 import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
@@ -30,7 +30,7 @@ import { useAllRecipeGroups } from '@/features/finances/recipe-groups/hooks/use-
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import {
   useDeleteQuoteItemAttachment,
-  useGetItemAttachmentDownloadUrl,
+  useGetItemAttachmentDownloadUrl
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { QuoteHeaderFields } from './form-fields/quote-header-fields';
@@ -42,16 +42,16 @@ import { QuoteTotalSummary } from './form-fields/quote-total-summary';
 const QuoteItemDetails = dynamic(
   () =>
     import('@/features/finances/quotes/components/quote-item-details').then(
-      (mod) => mod.QuoteItemDetails,
+      (mod) => mod.QuoteItemDetails
     ),
   {
     ssr: false,
     loading: () => (
-      <Box className="p-4">
-        <p className="text-sm text-muted-foreground">Loading item details...</p>
+      <Box className='p-4'>
+        <p className='text-sm text-muted-foreground'>Loading item details...</p>
       </Box>
-    ),
-  },
+    )
+  }
 );
 
 const defaultFormState: CreateQuoteInput = {
@@ -70,9 +70,9 @@ const defaultFormState: CreateQuoteInput = {
       quantity: 1,
       unitPrice: 0,
       productId: null,
-      colors: [],
-    },
-  ],
+      colors: []
+    }
+  ]
 };
 
 const mapQuoteToFormValues = (quote: QuoteMetadata, items: QuoteItem[] = []): UpdateQuoteInput => {
@@ -93,8 +93,8 @@ const mapQuoteToFormValues = (quote: QuoteMetadata, items: QuoteItem[] = []): Up
       quantity: item.quantity,
       unitPrice: Number(item.unitPrice),
       productId: item.productId,
-      colors: item.colors,
-    })),
+      colors: item.colors
+    }))
   };
 };
 
@@ -106,7 +106,7 @@ export function QuoteForm({
   isCreating = false,
   isUpdating = false,
   isLoadingItems = false,
-  onDirtyStateChange,
+  onDirtyStateChange
 }: {
   quote?: QuoteMetadata | null;
   items?: QuoteItem[] | null;
@@ -146,17 +146,17 @@ export function QuoteForm({
   const form = useForm<QuoteFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   const itemsFieldArray = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: 'items'
   });
 
   const [watchedItems, watchedGst, watchedDiscount] = useWatch({
     control: form.control,
-    name: ['items', 'gst', 'discount'],
+    name: ['items', 'gst', 'discount']
   });
 
   const gst = watchedGst ?? 0;
@@ -171,7 +171,7 @@ export function QuoteForm({
 
       return values;
     }, [quote, items, onDirtyStateChange]),
-    isUpdating,
+    isUpdating
   );
 
   useUnsavedChanges(form.formState.isDirty);
@@ -200,12 +200,12 @@ export function QuoteForm({
       } else {
         const updateData: UpdateQuoteInput = {
           ...data,
-          id: quote?.id ?? '',
+          id: quote?.id ?? ''
         };
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, quote?.id],
+    [isLocked, mode, onCreate, onUpdate, quote?.id]
   );
 
   const handleDownloadItemImage = useCallback(
@@ -216,7 +216,7 @@ export function QuoteForm({
 
       downloadItemMutation.mutate(attachmentId);
     },
-    [downloadItemMutation, quote?.id],
+    [downloadItemMutation, quote?.id]
   );
 
   const handleDeleteItemImage = useCallback(
@@ -230,17 +230,17 @@ export function QuoteForm({
         {
           onSuccess: () => {
             onSuccess();
-          },
-        },
+          }
+        }
       );
     },
-    [deleteItemMutation, quote?.id],
+    [deleteItemMutation, quote?.id]
   );
 
   const subtotal = useMemo(() => {
     return watchedItems.reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
-      0,
+      0
     );
   }, [watchedItems]);
 
@@ -250,33 +250,33 @@ export function QuoteForm({
   return (
     <Form {...form}>
       <form
-        id="form-rhf-quote"
+        id='form-rhf-quote'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isCreating || isUpdating ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating quote...' : 'Updating quote...'}
             </span>
           </Box>
         ) : null}
 
         {isLocked ? (
-          <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
+          <Box className='px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20'>
             <AlertCircle
-              className="h-4 w-4 text-amber-600 dark:text-amber-400"
-              aria-hidden="true"
+              className='h-4 w-4 text-amber-600 dark:text-amber-400'
+              aria-hidden='true'
             />
-            <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            <span className='text-sm font-medium text-amber-800 dark:text-amber-300'>
               This quote is {quote?.status ? getQuoteStatusLabel(quote.status) : 'locked'} and
               cannot be edited.
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+        <Box className='flex-1 overflow-y-auto px-6 py-6 space-y-4'>
           <QuoteHeaderFields
             control={form.control}
             customers={customers}
@@ -289,9 +289,9 @@ export function QuoteForm({
           <QuoteDateFields control={form.control} isLocked={isLocked} />
 
           {isLoadingItems ? (
-            <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
-              <p className="text-sm text-muted-foreground">Loading invoice items...</p>
+            <Box className='py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg'>
+              <Loader2 className='h-6 w-6 animate-spin text-primary' aria-hidden='true' />
+              <p className='text-sm text-muted-foreground'>Loading invoice items...</p>
             </Box>
           ) : (
             <QuoteItemsList
@@ -313,7 +313,7 @@ export function QuoteForm({
           <QuoteTaxDiscountFields control={form.control} isLocked={isLocked} />
 
           {mode === 'update' && quote && items && items.length > 0 ? (
-            <Box className="space-y-4">
+            <Box className='space-y-4'>
               <QuoteItemDetails
                 quoteId={quote.id}
                 items={items}

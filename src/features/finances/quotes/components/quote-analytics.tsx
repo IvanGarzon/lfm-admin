@@ -6,7 +6,7 @@ import {
   useQuoteValueTrend,
   useConversionFunnel,
   useTopCustomersByQuotedValue,
-  useAverageTimeToDecision,
+  useAverageTimeToDecision
 } from '../hooks/use-quote-queries';
 import { StatCard } from '@/features/finances/invoices/components/analytics/stat-card';
 import { TopCustomersQuotedTable } from './analytics/top-customers-quoted-table';
@@ -28,10 +28,10 @@ const QuoteValueTrendChart = dynamic(() => import('./analytics/quote-value-trend
         <CardDescription>Loading chart...</CardDescription>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className='h-[300px] w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });
 
 const ConversionFunnelChart = dynamic(() => import('./analytics/conversion-funnel-chart'), {
@@ -43,10 +43,10 @@ const ConversionFunnelChart = dynamic(() => import('./analytics/conversion-funne
         <CardDescription>Loading chart...</CardDescription>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className='h-[300px] w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });
 
 interface QuoteAnalyticsProps {
@@ -62,12 +62,12 @@ export function QuoteAnalytics({
   isLoading,
   dateRange,
   onDateRangeChange,
-  comparisonLabel,
+  comparisonLabel
 }: QuoteAnalyticsProps) {
   const { data: valueTrend, isLoading: isLoadingTrend } = useQuoteValueTrend(12);
   const { data: funnelData, isLoading: isLoadingFunnel } = useConversionFunnel({
     startDate: dateRange?.from,
-    endDate: dateRange?.to,
+    endDate: dateRange?.to
   });
   const { data: topCustomers, isLoading: isLoadingTopCustomers } = useTopCustomersByQuotedValue(5);
   const { data: avgTimeToDecision, isLoading: isLoadingAvgTime } = useAverageTimeToDecision();
@@ -84,56 +84,56 @@ export function QuoteAnalytics({
   };
 
   return (
-    <Box className="space-y-6">
+    <Box className='space-y-6'>
       {/* Controls */}
-      <Box className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Box className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <Box>
-          <h2 className="text-2xl font-bold tracking-tight">Detailed Analytics</h2>
-          <p className="text-muted-foreground">
+          <h2 className='text-2xl font-bold tracking-tight'>Detailed Analytics</h2>
+          <p className='text-muted-foreground'>
             Comprehensive overview of your quoting performance and conversion metrics
           </p>
         </Box>
-        <Box className="flex flex-wrap items-center gap-2">
+        <Box className='flex flex-wrap items-center gap-2'>
           <CalendarDateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" />
+          <Button variant='outline' size='sm' onClick={handleExport}>
+            <Download className='h-4 w-4' aria-hidden='true' />
             Export
           </Button>
         </Box>
       </Box>
 
       {/* Additional Metrics */}
-      <Box className="grid gap-4 md:grid-cols-2">
+      <Box className='grid gap-4 md:grid-cols-2'>
         <StatCard
-          title="Win Rate"
+          title='Win Rate'
           value={`${winRate.toFixed(1)}%`}
-          description="Accepted / Decisions"
+          description='Accepted / Decisions'
           icon={TrendingUp}
           isLoading={isLoading}
-          color="text-purple-500"
+          color='text-purple-500'
         />
         <StatCard
-          title="Avg Time to Decision"
+          title='Avg Time to Decision'
           value={`${avgTimeToDecision?.avgDaysToDecision.toFixed(1) ?? 0} days`}
-          description="From sent to decision"
+          description='From sent to decision'
           icon={Clock}
           isLoading={isLoadingAvgTime}
-          color="text-orange-500"
+          color='text-orange-500'
         />
       </Box>
 
       {/* Charts */}
-      <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Box className="lg:col-span-4">
+      <Box className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
+        <Box className='lg:col-span-4'>
           <QuoteValueTrendChart data={valueTrend} isLoading={isLoadingTrend} />
         </Box>
-        <Box className="lg:col-span-3">
+        <Box className='lg:col-span-3'>
           <ConversionFunnelChart data={funnelData} isLoading={isLoadingFunnel} />
         </Box>
       </Box>
 
       {/* Top Customers Table */}
-      <Box className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+      <Box className='grid gap-4 md:grid-cols-1 lg:grid-cols-1'>
         <TopCustomersQuotedTable customers={topCustomers} isLoading={isLoadingTopCustomers} />
       </Box>
     </Box>

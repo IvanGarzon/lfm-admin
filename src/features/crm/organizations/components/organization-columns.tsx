@@ -12,7 +12,7 @@ import { OrganizationActions } from './organization-actions';
 
 export const createOrganizationColumns = (
   onDelete: (id: string, name: string, customersCount: number) => void,
-  onEdit?: (organization: OrganizationListItem) => void,
+  onEdit?: (organization: OrganizationListItem) => void
 ): ColumnDef<OrganizationListItem>[] => [
   {
     id: 'select',
@@ -22,32 +22,32 @@ export const createOrganizationColumns = (
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label='Select all'
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label='Select row'
       />
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: false
   },
   {
     id: 'name',
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Organization" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Organization' />,
     cell: ({ row }) => (
-      <Box className="flex items-center gap-3">
-        <Box className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-          <Building2 className="h-4 w-4" aria-hidden="true" />
+      <Box className='flex items-center gap-3'>
+        <Box className='flex h-8 w-8 items-center justify-center rounded-lg bg-muted'>
+          <Building2 className='h-4 w-4' aria-hidden='true' />
         </Box>
-        <Box className="flex flex-col">
-          <Box className="font-medium">{row.original.name}</Box>
+        <Box className='flex flex-col'>
+          <Box className='font-medium'>{row.original.name}</Box>
           {row.original.address ? (
-            <Box className="text-xs text-muted-foreground">
+            <Box className='text-xs text-muted-foreground'>
               {row.original.city && row.original.state
                 ? `${row.original.city}, ${row.original.state}`
                 : row.original.city || row.original.state || '-'}
@@ -62,13 +62,13 @@ export const createOrganizationColumns = (
       label: 'Organization',
       placeholder: 'Search organizations...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'address',
     accessorKey: 'address',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Address' />,
     cell: ({ row }) => {
       const { address, city, state, postcode, country } = row.original;
 
@@ -80,42 +80,42 @@ export const createOrganizationColumns = (
       const cityStatePostcode = [city, state, postcode].filter(Boolean).join(' ');
 
       return (
-        <Box className="flex flex-col text-sm">
+        <Box className='flex flex-col text-sm'>
           {addressLine1 && <Box>{addressLine1}</Box>}
-          {cityStatePostcode && <Box className="text-muted-foreground">{cityStatePostcode}</Box>}
+          {cityStatePostcode && <Box className='text-muted-foreground'>{cityStatePostcode}</Box>}
         </Box>
       );
-    },
+    }
   },
   {
     id: 'phone',
     accessorKey: 'phone',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
-    cell: ({ row }) => row.original.phone || '-',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Phone' />,
+    cell: ({ row }) => row.original.phone || '-'
   },
   {
     id: 'email',
     accessorKey: 'email',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
-    cell: ({ row }) => row.original.email || '-',
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Email' />,
+    cell: ({ row }) => row.original.email || '-'
   },
   {
     id: 'status',
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => <OrganizationStatusBadge status={row.original.status} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
+    cell: ({ row }) => <OrganizationStatusBadge status={row.original.status} />
   },
   {
     id: 'customersCount',
     accessorKey: 'customersCount',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Customers" />,
-    cell: ({ row }) => row.original.customersCount ?? 0,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Customers' />,
+    cell: ({ row }) => row.original.customersCount ?? 0
   },
   {
     id: 'createdAt',
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-    cell: ({ row }) => format(new Date(row.original.createdAt), 'MMM dd, yyyy'),
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Created' />,
+    cell: ({ row }) => format(new Date(row.original.createdAt), 'MMM dd, yyyy')
   },
   {
     id: 'actions',
@@ -124,7 +124,7 @@ export const createOrganizationColumns = (
     ),
     enableHiding: false,
     meta: {
-      className: 'text-right',
-    },
-  },
+      className: 'text-right'
+    }
+  }
 ];

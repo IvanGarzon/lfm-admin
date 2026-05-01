@@ -2,7 +2,7 @@ import { QuoteActionProvider } from '@/features/finances/quotes/context/quote-ac
 
 export default function QuotesLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

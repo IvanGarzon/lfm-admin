@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { CustomerListItem } from '@/features/crm/customers/types';
@@ -17,7 +17,7 @@ import { customerSearchParamsDefaults, searchParams } from '@/filters/customers/
 
 export function CustomerActions({
   customer,
-  onDelete,
+  onDelete
 }: {
   customer: CustomerListItem;
   onDelete: (id: string, name: string) => void;
@@ -29,26 +29,26 @@ export function CustomerActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
+        <Button variant='secondary' className='h-8 w-8 p-0'>
+          <span className='sr-only'>Open menu</span>
+          <MoreHorizontal className='h-4 w-4' />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={href} className="flex items-center">
-            <Pencil className="h-4 w-4" aria-hidden="true" />
+          <Link href={href} className='flex items-center'>
+            <Pencil className='h-4 w-4' aria-hidden='true' />
             View customer
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive hover:text-destructive"
+          className='text-destructive focus:text-destructive hover:text-destructive'
           onClick={() => onDelete(customer.id, `${customer.firstName} ${customer.lastName}`)}
         >
-          <Trash className="h-4 w-4" aria-hidden="true" />
+          <Trash className='h-4 w-4' aria-hidden='true' />
           Delete customer
         </DropdownMenuItem>
       </DropdownMenuContent>

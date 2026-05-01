@@ -14,14 +14,14 @@ export const tenantNavItems: NavItem[] = [
     href: '/',
     icon: 'dashboard',
     shortcut: ['d', 'd'],
-    authorizeOnly: ['*'],
+    authorizeOnly: ['*']
   },
   {
     title: 'Users',
     href: '/users',
     icon: 'users',
     shortcut: ['u', 'u'],
-    authorizeOnly: ['canManageUsers'],
+    authorizeOnly: ['canManageUsers']
   },
   {
     title: 'CRM',
@@ -33,16 +33,16 @@ export const tenantNavItems: NavItem[] = [
         href: '/crm/customers',
         icon: 'users',
         shortcut: ['c', 'c'],
-        authorizeOnly: ['*'],
+        authorizeOnly: ['*']
       },
       {
         title: 'Organizations',
         href: '/crm/organizations',
         icon: 'building',
         shortcut: ['o', 'o'],
-        authorizeOnly: ['*'],
-      },
-    ],
+        authorizeOnly: ['*']
+      }
+    ]
   },
   {
     title: 'Staff',
@@ -54,9 +54,9 @@ export const tenantNavItems: NavItem[] = [
         href: '/staff/employees',
         icon: 'user',
         shortcut: ['e', 'e'],
-        authorizeOnly: ['*'],
-      },
-    ],
+        authorizeOnly: ['*']
+      }
+    ]
   },
   {
     title: 'Finances',
@@ -68,30 +68,30 @@ export const tenantNavItems: NavItem[] = [
         href: '/finances/invoices',
         icon: 'fileText',
         shortcut: ['i', 'i'],
-        authorizeOnly: ['*'],
+        authorizeOnly: ['*']
       },
       {
         title: 'Quotes',
         href: '/finances/quotes',
         icon: 'kanban',
         shortcut: ['q', 'q'],
-        authorizeOnly: ['*'],
+        authorizeOnly: ['*']
       },
       {
         title: 'Transactions',
         href: '/finances/transactions',
         icon: 'arrowLeftRight',
         shortcut: ['t', 't'],
-        authorizeOnly: ['*'],
+        authorizeOnly: ['*']
       },
       {
         title: 'Recipes',
         href: '/finances/recipes',
         icon: 'pizza',
         shortcut: ['r', 'r'],
-        authorizeOnly: ['*'],
-      },
-    ],
+        authorizeOnly: ['*']
+      }
+    ]
   },
   {
     title: 'Inventory',
@@ -103,30 +103,30 @@ export const tenantNavItems: NavItem[] = [
         href: '/inventory/products',
         icon: 'product',
         shortcut: ['p', 'p'],
-        authorizeOnly: ['*'],
+        authorizeOnly: ['*']
       },
       {
         title: 'Price List',
         href: '/inventory/price-list',
         icon: 'list',
         shortcut: ['l', 'l'],
-        authorizeOnly: ['canReadPriceList', 'canManagePriceList'],
+        authorizeOnly: ['canReadPriceList', 'canManagePriceList']
       },
       {
         title: 'Vendors',
         href: '/inventory/vendors',
         icon: 'users',
         shortcut: ['v', 'v'],
-        authorizeOnly: ['*'],
-      },
-    ],
+        authorizeOnly: ['*']
+      }
+    ]
   },
   {
     title: 'Settings',
     href: '/settings/profile',
     icon: 'settings',
-    authorizeOnly: ['canManageSettings'],
-  },
+    authorizeOnly: ['canManageSettings']
+  }
 ];
 
 // -- Super admin nav items ---------------------------------------------------
@@ -142,22 +142,22 @@ export const superAdminNavItems: NavItem[] = [
       {
         title: 'Tenants',
         href: '/admin/tenants',
-        authorizeOnly: ['SUPER_ADMIN'],
+        authorizeOnly: ['SUPER_ADMIN']
       },
       {
         title: 'All Users',
         href: '/admin/users',
-        authorizeOnly: ['SUPER_ADMIN'],
-      },
-    ],
+        authorizeOnly: ['SUPER_ADMIN']
+      }
+    ]
   },
   {
     title: 'Tools',
     href: '/tools',
     icon: 'flask',
     shortcut: ['t', 'o'],
-    authorizeOnly: ['SUPER_ADMIN'],
-  },
+    authorizeOnly: ['SUPER_ADMIN']
+  }
 ];
 
 // -- Combined (kept for any consumers that still import navItems) -------------

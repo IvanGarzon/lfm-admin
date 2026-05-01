@@ -52,10 +52,10 @@ export const updateTask = withAuth<UpdateTaskInput, ScheduledTask>(
       return handleActionError(error, 'Failed to update task', {
         action: 'updateTask',
         userId: session.user.id,
-        taskId,
+        taskId
       });
     }
-  },
+  }
 );
 
 export const setTaskEnabled = withAuth<SetTaskEnabledInput, ScheduledTask>(
@@ -76,10 +76,10 @@ export const setTaskEnabled = withAuth<SetTaskEnabledInput, ScheduledTask>(
         action: 'setTaskEnabled',
         userId: session.user.id,
         taskId,
-        isEnabled,
+        isEnabled
       });
     }
-  },
+  }
 );
 
 export const executeTask = withAuth<string, { executionId: string; taskId: string }>(
@@ -100,13 +100,13 @@ export const executeTask = withAuth<string, { executionId: string; taskId: strin
 
       logger.info('Triggering task via Inngest event', {
         context: 'task-execute',
-        metadata: { taskId, functionId: dbTask.functionId, userId: session.user.id },
+        metadata: { taskId, functionId: dbTask.functionId, userId: session.user.id }
       });
 
       const execution = await executionRepo.create({
         taskId,
         triggeredBy: 'MANUAL',
-        triggeredByUser: session.user.id,
+        triggeredByUser: session.user.id
       });
 
       const { inngest } = await import('@/lib/inngest/client');
@@ -115,13 +115,13 @@ export const executeTask = withAuth<string, { executionId: string; taskId: strin
         name: `${dbTask.functionId}/manual`,
         data: {
           triggeredBy: session.user.id,
-          executionId: execution.id,
-        },
+          executionId: execution.id
+        }
       });
 
       logger.info('Task triggered successfully', {
         context: 'task-execute',
-        metadata: { executionId: execution.id, taskId, functionId: dbTask.functionId },
+        metadata: { executionId: execution.id, taskId, functionId: dbTask.functionId }
       });
 
       revalidatePath(`/tools/tasks/${taskId}`);
@@ -132,10 +132,10 @@ export const executeTask = withAuth<string, { executionId: string; taskId: strin
       return handleActionError(error, 'Failed to execute task', {
         action: 'executeTask',
         userId: session.user.id,
-        taskId,
+        taskId
       });
     }
-  },
+  }
 );
 
 export const syncTasks = withAuth<void, { synced: number; created: number; updated: number }>(
@@ -156,8 +156,8 @@ export const syncTasks = withAuth<void, { synced: number; created: number; updat
           userId: session.user.id,
           synced: result.synced,
           created: result.created,
-          updated: result.updated,
-        },
+          updated: result.updated
+        }
       });
 
       revalidatePath('/tools/tasks');
@@ -166,10 +166,10 @@ export const syncTasks = withAuth<void, { synced: number; created: number; updat
     } catch (error) {
       return handleActionError(error, 'Failed to sync tasks', {
         action: 'syncTasks',
-        userId: session.user.id,
+        userId: session.user.id
       });
     }
-  },
+  }
 );
 
 export const executeTaskDirect = withAuth<string, { executionId: string; taskId: string }>(
@@ -195,13 +195,13 @@ export const executeTaskDirect = withAuth<string, { executionId: string; taskId:
 
       logger.info('Executing task directly', {
         context: 'task-execute-direct',
-        metadata: { taskId, functionId: dbTask.functionId, userId: session.user.id },
+        metadata: { taskId, functionId: dbTask.functionId, userId: session.user.id }
       });
 
       const execution = await executionRepo.create({
         taskId,
         triggeredBy: 'MANUAL',
-        triggeredByUser: session.user.id,
+        triggeredByUser: session.user.id
       });
 
       executeTaskInBackground(execution.id, taskDef, dbTask.functionId);
@@ -214,10 +214,10 @@ export const executeTaskDirect = withAuth<string, { executionId: string; taskId:
       return handleActionError(error, 'Failed to execute task directly', {
         action: 'executeTaskDirect',
         userId: session.user.id,
-        taskId,
+        taskId
       });
     }
-  },
+  }
 );
 
 // -- Private Helpers -------------------------------------------------------
@@ -236,14 +236,14 @@ async function executeTaskInBackground(executionId: string, taskDef: any, functi
       },
       recordException: (error: Error) => {
         logger.error('Task exception', error, { context: `task:${functionId}` });
-      },
+      }
     };
 
     const inngestFn = taskDef.inngestFunction;
     const timeoutMs = taskDef.timeout || 300000;
     const result = await Promise.race([
       executeInngestFunction(inngestFn, mockSpan),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Task timeout')), timeoutMs)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Task timeout')), timeoutMs))
     ]);
 
     const duration = Date.now() - startTime;
@@ -252,13 +252,12 @@ async function executeTaskInBackground(executionId: string, taskDef: any, functi
       status: 'COMPLETED',
       completedAt: new Date(),
       duration,
-      result:
-        typeof result === 'string' ? { message: result } : (result as Record<string, unknown>),
+      result: typeof result === 'string' ? { message: result } : (result as Record<string, unknown>)
     });
 
     logger.info('Task executed successfully', {
       context: 'task-execute-direct',
-      metadata: { executionId, duration, functionId },
+      metadata: { executionId, duration, functionId }
     });
   } catch (error) {
     const duration = Date.now() - startTime;
@@ -270,12 +269,12 @@ async function executeTaskInBackground(executionId: string, taskDef: any, functi
       completedAt: new Date(),
       duration,
       error: errorMessage,
-      stackTrace,
+      stackTrace
     });
 
     logger.error('Task execution failed', error, {
       context: 'task-execute-direct',
-      metadata: { executionId, duration, functionId },
+      metadata: { executionId, duration, functionId }
     });
   }
 }
@@ -283,7 +282,7 @@ async function executeTaskInBackground(executionId: string, taskDef: any, functi
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function executeInngestFunction(
   inngestFn: any,
-  mockSpan: unknown,
+  mockSpan: unknown
 ): Promise<ActionResult<unknown>> {
   const fnConfig = inngestFn._def || inngestFn.config || {};
   const handler = fnConfig.fn || fnConfig.handler;
@@ -297,7 +296,7 @@ async function executeInngestFunction(
       id: `direct-${Date.now()}`,
       name: 'manual-trigger',
       data: {},
-      ts: Date.now(),
+      ts: Date.now()
     },
     step: {
       run: async (name: string, fn: () => unknown) => {
@@ -313,8 +312,8 @@ async function executeInngestFunction(
       },
       sleep: async (duration: number) => {
         return new Promise((resolve) => setTimeout(resolve, duration));
-      },
-    },
+      }
+    }
   };
 
   return await handler(mockContext, mockSpan);

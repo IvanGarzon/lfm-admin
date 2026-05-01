@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import type { PriceListItemListItem } from '@/features/inventory/price-list/types';
@@ -17,7 +17,7 @@ import { usePriceListHref } from '@/features/inventory/price-list/hooks/use-pric
 export function PriceListActions({
   item,
   onDelete,
-  onViewCostHistory,
+  onViewCostHistory
 }: {
   item: PriceListItemListItem;
   onDelete: (id: string, name: string) => void;
@@ -28,30 +28,30 @@ export function PriceListActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+        <Button variant='secondary' className='h-8 w-8 p-0'>
+          <span className='sr-only'>Open menu</span>
+          <MoreHorizontal aria-hidden='true' className='h-4 w-4' />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={href}>
-            <Pencil aria-hidden="true" className="h-4 w-4" />
+            <Pencil aria-hidden='true' className='h-4 w-4' />
             Edit item
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onViewCostHistory(item.id, item.name)}>
-          <History aria-hidden="true" className="h-4 w-4" />
+          <History aria-hidden='true' className='h-4 w-4' />
           Cost history
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
+          className='text-destructive focus:text-destructive'
           onClick={() => onDelete(item.id, item.name)}
         >
-          <Trash aria-hidden="true" className="h-4 w-4" />
+          <Trash aria-hidden='true' className='h-4 w-4' />
           Delete item
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -201,7 +201,7 @@ export const LATE_FEE_CONFIG = {
   gracePeriodDays: 30,
   feePercentage: 1.5, // per month
   maxFeePercentage: 10, // cap at 10% of invoice
-  flatFeeAmount: 0, // or $X
+  flatFeeAmount: 0 // or $X
 } as const;
 ```
 

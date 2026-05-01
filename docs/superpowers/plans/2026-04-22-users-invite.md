@@ -36,7 +36,7 @@ Open `src/schemas/users.ts`. The file currently exports `UpdateUserSchema`, `Upd
 ```ts
 export const InviteUserSchema = z.object({
   email: commonValidators.email(),
-  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER'),
+  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER')
 });
 
 export type InviteUserInput = z.infer<typeof InviteUserSchema>;
@@ -86,43 +86,43 @@ const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoiste
     updateTenantUserRole: vi.fn(),
     softDeleteTenantUser: vi.fn(),
     getUserByEmail: vi.fn(),
-    findById: vi.fn(),
+    findById: vi.fn()
   },
   mockInvitationRepo: {
     findPendingByEmail: vi.fn(),
-    create: vi.fn(),
+    create: vi.fn()
   },
   mockTenantRepo: {
-    findTenantById: vi.fn(),
+    findTenantById: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/invitation-repository', () => ({
   InvitationRepository: vi.fn().mockImplementation(function () {
     return mockInvitationRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/tenant-repository', () => ({
   TenantRepository: vi.fn().mockImplementation(function () {
     return mockTenantRepo;
-  }),
+  })
 }));
 
 vi.mock('@/lib/email-service', () => ({
-  sendEmailNotification: vi.fn().mockResolvedValue(undefined),
+  sendEmailNotification: vi.fn().mockResolvedValue(undefined)
 }));
 
 vi.mock('@/lib/utils', () => ({
   absoluteUrl: vi.fn((path: string) => `https://example.com${path}`),
-  getPaginationMetadata: vi.fn(),
+  getPaginationMetadata: vi.fn()
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -137,7 +137,7 @@ describe('inviteUser', () => {
     id: 'inv-1',
     token: 'test-token-abc',
     role: 'USER' as const,
-    expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000)
   };
 
   const mockTenant = { id: 'tenant-1', name: 'Test Tenant' };
@@ -174,7 +174,7 @@ describe('inviteUser', () => {
   it('returns error when user with email already exists in tenant', async () => {
     mockUserRepo.getUserByEmail.mockResolvedValue({
       id: 'u-1',
-      tenantId: mockSession.user.tenantId,
+      tenantId: mockSession.user.tenantId
     });
 
     const result = await inviteUser({ email: 'existing@example.com', role: 'USER' });
@@ -253,10 +253,10 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
           role,
           tenantId: ctx.tenantId,
           invitedBy: ctx.userId,
-          expiresAt,
+          expiresAt
         }),
         tenantRepo.findTenantById(ctx.tenantId),
-        userRepo.findById(ctx.userId),
+        userRepo.findById(ctx.userId)
       ]);
 
       if (!tenant || !inviter) {
@@ -272,8 +272,8 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
           tenantName: tenant.name,
           role: invitation.role,
           acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
-          expiresAt: invitation.expiresAt,
-        },
+          expiresAt: invitation.expiresAt
+        }
       });
 
       revalidatePath('/users');
@@ -281,7 +281,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
     } catch (error) {
       return handleActionError(error, 'Failed to send invitation');
     }
-  },
+  }
 );
 ```
 
@@ -323,7 +323,7 @@ import type {
   UpdateUserInput,
   UpdateUserRoleInput,
   SoftDeleteUserInput,
-  InviteUserInput,
+  InviteUserInput
 } from '@/schemas/users';
 ```
 
@@ -348,7 +348,7 @@ export function useInviteUser() {
     },
     onSuccess: () => {
       toast.success('Invitation sent');
-    },
+    }
   });
 }
 ```
@@ -396,7 +396,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -408,18 +408,18 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 
 const INVITABLE_ROLES = [
   { value: 'USER', label: USER_ROLE_LABELS.USER },
   { value: 'MANAGER', label: USER_ROLE_LABELS.MANAGER },
-  { value: 'ADMIN', label: USER_ROLE_LABELS.ADMIN },
+  { value: 'ADMIN', label: USER_ROLE_LABELS.ADMIN }
 ] as const;
 
 export function UserInviteModal({
   open,
-  onOpenChange,
+  onOpenChange
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -428,7 +428,7 @@ export function UserInviteModal({
 
   const form = useForm<InviteUserInput>({
     resolver: zodResolver(InviteUserSchema),
-    defaultValues: { email: '', role: 'USER' },
+    defaultValues: { email: '', role: 'USER' }
   });
 
   const handleSubmit = useCallback(
@@ -437,15 +437,15 @@ export function UserInviteModal({
         onSuccess: () => {
           form.reset();
           onOpenChange(false);
-        },
+        }
       });
     },
-    [inviteUser, form, onOpenChange],
+    [inviteUser, form, onOpenChange]
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className='sm:max-w-[440px]'>
         <DialogHeader>
           <DialogTitle>Invite User</DialogTitle>
           <DialogDescription>
@@ -454,10 +454,10 @@ export function UserInviteModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-2">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4 pt-2'>
             <FieldGroup>
               <Controller
-                name="email"
+                name='email'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -465,8 +465,8 @@ export function UserInviteModal({
                       <FieldLabel>Email</FieldLabel>
                     </FieldContent>
                     <Input
-                      type="email"
-                      placeholder="name@example.com"
+                      type='email'
+                      placeholder='name@example.com'
                       {...field}
                       aria-invalid={fieldState.invalid}
                     />
@@ -478,7 +478,7 @@ export function UserInviteModal({
 
             <FieldGroup>
               <Controller
-                name="role"
+                name='role'
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
@@ -487,7 +487,7 @@ export function UserInviteModal({
                     </FieldContent>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger aria-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Select role" />
+                        <SelectValue placeholder='Select role' />
                       </SelectTrigger>
                       <SelectContent>
                         {INVITABLE_ROLES.map((opt) => (
@@ -503,17 +503,17 @@ export function UserInviteModal({
               />
             </FieldGroup>
 
-            <Box className="flex justify-end gap-3 pt-2">
+            <Box className='flex justify-end gap-3 pt-2'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={inviteUser.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={inviteUser.isPending}>
-                {inviteUser.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+              <Button type='submit' disabled={inviteUser.isPending}>
+                {inviteUser.isPending ? <Loader2 className='size-4 animate-spin mr-2' /> : null}
                 Send Invite
               </Button>
             </Box>
@@ -547,18 +547,18 @@ import type { UserPagination } from '@/features/users/types';
 
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
-  { ssr: false, loading: () => null },
+  { ssr: false, loading: () => null }
 );
 
 const UserInviteModal = dynamic(
   () => import('@/features/users/components/user-invite-modal').then((mod) => mod.UserInviteModal),
-  { ssr: false, loading: () => null },
+  { ssr: false, loading: () => null }
 );
 
 export function UsersList({
   initialData,
   searchParams: serverSearchParams,
-  openUserId,
+  openUserId
 }: {
   initialData: UserPagination;
   searchParams: SearchParams;
@@ -576,30 +576,30 @@ export function UsersList({
     columns,
     pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <Box className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground text-sm">Manage users and their access</p>
+    <Box className='space-y-4 min-w-0 w-full'>
+      <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+        <Box className='min-w-0'>
+          <h1 className='text-3xl font-bold tracking-tight'>Users</h1>
+          <p className='text-muted-foreground text-sm'>Manage users and their access</p>
         </Box>
-        <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-          <Button onClick={() => setShowInviteModal(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
+        <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+          <Button onClick={() => setShowInviteModal(true)} className='w-full sm:w-auto'>
+            <Plus className='h-4 w-4' />
             Invite User
           </Button>
         </Box>
       </Box>
 
-      <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+      <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
         <DataTableToolbar table={table} />
         {initialData.items.length ? (
           <DataTable table={table} totalItems={initialData.pagination.totalItems} />
         ) : (
-          <Box className="text-center py-12 text-muted-foreground">No users found.</Box>
+          <Box className='text-center py-12 text-muted-foreground'>No users found.</Box>
         )}
       </Card>
 

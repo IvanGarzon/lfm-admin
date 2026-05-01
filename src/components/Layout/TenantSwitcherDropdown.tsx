@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Box } from '@/components/ui/box';
@@ -24,7 +24,7 @@ export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: str
   const { data: result } = useQuery({
     queryKey: ['admin-tenants-switcher'],
     queryFn: () => getAdminTenants(),
-    staleTime: 60 * 1000,
+    staleTime: 60 * 1000
   });
 
   const tenants: TenantListItem[] = result?.success ? result.data : [];
@@ -36,7 +36,7 @@ export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: str
         if (result.success) {
           router.refresh();
         }
-      },
+      }
     });
   };
 
@@ -46,43 +46,43 @@ export function TenantSwitcherDropdown({ activeTenantId }: { activeTenantId: str
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              size='lg'
+              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <Box className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Building2 className="size-4" />
+              <Box className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+                <Building2 className='size-4' />
               </Box>
-              <Box className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
+              <Box className='grid flex-1 text-left text-sm leading-tight'>
+                <span className='truncate font-semibold'>
                   {activeTenant?.name ?? 'All Tenants'}
                 </span>
-                <span className="truncate text-xs text-sidebar-foreground/60">
+                <span className='truncate text-xs text-sidebar-foreground/60'>
                   {activeTenant ? activeTenant.slug : 'Super Admin'}
                 </span>
               </Box>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className='ml-auto size-4' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            side="bottom"
+            className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'
+            align='start'
+            side='bottom'
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Tenants</DropdownMenuLabel>
+            <DropdownMenuLabel className='text-xs text-muted-foreground'>Tenants</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => handleSelect(null)}>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <Building2 className='h-4 w-4 text-muted-foreground' />
               <span>All Tenants</span>
-              {activeTenantId === undefined && <Check className="ml-auto h-4 w-4" />}
+              {activeTenantId === undefined && <Check className='ml-auto h-4 w-4' />}
             </DropdownMenuItem>
             {tenants.length > 0 && <DropdownMenuSeparator />}
             {tenants.map((tenant) => (
               <DropdownMenuItem key={tenant.id} onClick={() => handleSelect(tenant.id)}>
-                <Box className="flex aspect-square size-5 items-center justify-center rounded bg-sidebar-primary/10 text-sidebar-primary text-xs font-bold mr-2">
+                <Box className='flex aspect-square size-5 items-center justify-center rounded bg-sidebar-primary/10 text-sidebar-primary text-xs font-bold mr-2'>
                   {tenant.name.charAt(0).toUpperCase()}
                 </Box>
                 <span>{tenant.name}</span>
-                {tenant.id === activeTenantId && <Check className="ml-auto h-4 w-4" />}
+                {tenant.id === activeTenantId && <Check className='ml-auto h-4 w-4' />}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

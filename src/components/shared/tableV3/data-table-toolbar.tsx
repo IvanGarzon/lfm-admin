@@ -2,7 +2,6 @@
 
 import { ComponentProps, useMemo, useCallback } from 'react';
 import type { Column, Table } from '@tanstack/react-table';
-import { useRouter } from 'next/navigation';
 import { DataTableDateFilter } from '@/components/shared/tableV3/data-table-date-filter';
 import { DataTableFacetedFilter } from '@/components/shared/tableV3/data-table-faceted-filter';
 import { DataTableSliderFilter } from '@/components/shared/tableV3/data-table-slider-filter';
@@ -23,58 +22,45 @@ export function DataTableToolbar<TData>({
   className,
   ...props
 }: DataTableToolbarProps<TData>) {
-  const router = useRouter();
   const isFiltered = table.getState().columnFilters.length > 0;
 
   const columns = useMemo(
     () => table.getAllColumns().filter((column) => column.getCanFilter()),
-    [table],
+    [table]
   );
 
   const onReset = useCallback(() => {
-    // Clear filters from table state
+    // Both calls go through nuqs — no manual router.replace needed.
+    // clearOnDefault:true on the sort query state ensures setSorting([]) removes
+    // the sort param entirely rather than writing sort=[].
     table.resetColumnFilters();
-
-    // Immediately clear URL params without debounce
-    const url = new URL(window.location.href);
-    const filterableColumnIds = columns.map((col) => col.id).filter(Boolean);
-
-    // Remove all filter params from URL
-    filterableColumnIds.forEach((id) => {
-      url.searchParams.delete(id);
-    });
-
-    // Reset to page 1
-    url.searchParams.set('page', '1');
-
-    // Navigate immediately
-    router.replace(url.pathname + url.search);
-  }, [table, columns, router]);
+    table.resetSorting();
+  }, [table]);
 
   return (
     <Box
-      role="toolbar"
-      aria-orientation="horizontal"
+      role='toolbar'
+      aria-orientation='horizontal'
       className={cn('flex flex-wrap items-center w-full justify-between gap-2 p-1', className)}
       {...props}
     >
-      <Box className="flex flex-1 flex-wrap items-center gap-2">
+      <Box className='flex flex-1 flex-wrap items-center gap-2'>
         {columns.map((column) => (
           <DataTableToolbarFilter key={column.id} column={column} />
         ))}
         {isFiltered ? (
           <Button
-            aria-label="Reset filters"
-            variant="outline"
-            className="border-dashed py-0 px-2"
+            aria-label='Reset filters'
+            variant='outline'
+            className='border-dashed py-0 px-2'
             onClick={onReset}
           >
             Reset
-            <X className="ml-2 h-4 w-4" />
+            <X className='ml-2 h-4 w-4' />
           </Button>
         ) : null}
       </Box>
-      <Box className="flex items-center gap-2">
+      <Box className='flex items-center gap-2'>
         {children}
         <DataTableViewOptions table={table} />
       </Box>
@@ -99,27 +85,27 @@ function DataTableToolbarFilter<TData>({ column }: DataTableToolbarFilterProps<T
         case 'text':
           return (
             <Input
-              type="search"
+              type='search'
               placeholder={columnMeta.placeholder ?? columnMeta.label}
               value={(column.getFilterValue() as string) ?? ''}
               onChange={(event) => column.setFilterValue(event.target.value)}
-              className="w-full md:max-w-sm"
+              className='w-full md:max-w-sm'
             />
           );
 
         case 'number':
           return (
-            <div className="relative">
+            <div className='relative'>
               <Input
-                type="number"
-                inputMode="numeric"
+                type='number'
+                inputMode='numeric'
                 placeholder={columnMeta.placeholder ?? columnMeta.label}
                 value={(column.getFilterValue() as string) ?? ''}
                 onChange={(event) => column.setFilterValue(event.target.value)}
                 className={cn('h-8 w-[120px]', columnMeta.unit && 'pr-8')}
               />
               {columnMeta.unit ? (
-                <span className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm">
+                <span className='absolute top-0 right-0 bottom-0 flex items-center rounded-r-md bg-accent px-2 text-muted-foreground text-sm'>
                   {columnMeta.unit}
                 </span>
               ) : null}

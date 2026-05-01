@@ -9,7 +9,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
@@ -26,26 +26,26 @@ export function DeletePriceListItemDialog({
   onOpenChange,
   onConfirm,
   itemName,
-  isPending = false,
+  isPending = false
 }: DeletePriceListItemDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <AlertTriangle aria-hidden="true" className="h-5 w-5 text-destructive" />
+          <AlertDialogTitle className='flex items-center gap-2'>
+            <AlertTriangle aria-hidden='true' className='h-5 w-5 text-destructive' />
             Delete Price List Item
           </AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{' '}
-            <span className="font-semibold">{itemName || 'this item'}</span>? This action cannot be
+            <span className='font-semibold'>{itemName || 'this item'}</span>? This action cannot be
             undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <Button variant="destructive" onClick={onConfirm} disabled={isPending}>
+            <Button variant='destructive' onClick={onConfirm} disabled={isPending}>
               {isPending ? 'Deleting...' : 'Delete'}
             </Button>
           </AlertDialogAction>

@@ -32,7 +32,7 @@ export const previewQuoteEmail = createEmailPreviewFunction<
       currency: quote.currency,
       issuedDate: quote.issuedDate,
       validUntil: quote.validUntil,
-      itemCount: quote.items.length,
+      itemCount: quote.items.length
     };
 
     switch (type) {
@@ -42,26 +42,26 @@ export const previewQuoteEmail = createEmailPreviewFunction<
           template: 'quote' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${quote.quoteNumber}.pdf`,
+          attachmentName: `${quote.quoteNumber}.pdf`
         };
 
       case 'reminder': {
         const daysUntilExpiry = Math.max(
           0,
-          Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+          Math.floor((new Date(quote.validUntil).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
         );
         return {
           subject: `Reminder: Quote ${quoteData.quoteNumber} expires ${daysUntilExpiry === 0 ? 'today' : `in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}`}`,
           template: 'quote' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${quote.quoteNumber}.pdf`,
+          attachmentName: `${quote.quoteNumber}.pdf`
         };
       }
 
@@ -71,10 +71,10 @@ export const previewQuoteEmail = createEmailPreviewFunction<
           template: 'quote' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${quote.quoteNumber}.pdf`,
+          attachmentName: `${quote.quoteNumber}.pdf`
         };
 
       case 'rejected':
@@ -83,10 +83,10 @@ export const previewQuoteEmail = createEmailPreviewFunction<
           template: 'quote' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${quote.quoteNumber}.pdf`,
+          attachmentName: `${quote.quoteNumber}.pdf`
         };
 
       case 'expired':
@@ -95,9 +95,9 @@ export const previewQuoteEmail = createEmailPreviewFunction<
           template: 'quote' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
-          hasAttachment: false,
+          hasAttachment: false
         };
 
       case 'followup':
@@ -106,14 +106,14 @@ export const previewQuoteEmail = createEmailPreviewFunction<
           template: 'quote-followup' as const,
           props: {
             quoteData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${quote.quoteNumber}.pdf`,
+          attachmentName: `${quote.quoteNumber}.pdf`
         };
 
       default:
         return { error: `Unknown email type: ${type}` };
     }
-  },
+  }
 });

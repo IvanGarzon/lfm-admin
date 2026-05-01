@@ -5,16 +5,16 @@ import { toast } from 'sonner';
 import {
   getRecipeGroups,
   getRecipeGroupById,
-  getAllRecipeGroups,
+  getAllRecipeGroups
 } from '@/actions/finances/recipe-groups/queries';
 import {
   createRecipeGroup,
   updateRecipeGroup,
-  deleteRecipeGroup,
+  deleteRecipeGroup
 } from '@/actions/finances/recipe-groups/mutations';
 import type {
   RecipeGroupFilters,
-  RecipeGroupWithDetails,
+  RecipeGroupWithDetails
 } from '@/features/finances/recipe-groups/types';
 import type { CreateRecipeGroupInput, UpdateRecipeGroupInput } from '@/schemas/recipe-groups';
 
@@ -23,7 +23,7 @@ export const RECIPE_GROUP_KEYS = {
   lists: () => [...RECIPE_GROUP_KEYS.all, 'list'] as const,
   list: (filters: RecipeGroupFilters) => [...RECIPE_GROUP_KEYS.lists(), { filters }] as const,
   details: () => [...RECIPE_GROUP_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...RECIPE_GROUP_KEYS.details(), id] as const,
+  detail: (id: string) => [...RECIPE_GROUP_KEYS.details(), id] as const
 };
 
 export function useRecipeGroups(filters: RecipeGroupFilters) {
@@ -55,7 +55,7 @@ export function useRecipeGroups(filters: RecipeGroupFilters) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -72,7 +72,7 @@ export function useRecipeGroup(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -89,7 +89,7 @@ export function useAllRecipeGroups(enabled: boolean = true) {
           return result.data;
         }
       : skipToken,
-    staleTime: 60 * 1000,
+    staleTime: 60 * 1000
   });
 }
 
@@ -110,7 +110,7 @@ export function useCreateRecipeGroup() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create recipe group');
-    },
+    }
   });
 }
 
@@ -132,7 +132,7 @@ export function useUpdateRecipeGroup() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update recipe group');
-    },
+    }
   });
 }
 
@@ -153,6 +153,6 @@ export function useDeleteRecipeGroup() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete recipe group');
-    },
+    }
   });
 }

@@ -16,12 +16,12 @@ import type { TaskPagination } from '@/features/tasks/types';
 const TaskExecutionDrawer = dynamic(
   () =>
     import('@/features/tasks/components/task-execution-drawer').then(
-      (mod) => mod.TaskExecutionDrawer,
+      (mod) => mod.TaskExecutionDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -47,14 +47,14 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
     (taskId: string, isEnabled: boolean) => {
       setEnabledMutation.mutate({ taskId, isEnabled });
     },
-    [setEnabledMutation],
+    [setEnabledMutation]
   );
 
   const handleExecuteTask = useCallback(
     (taskId: string) => {
       executeTaskMutation.mutate(taskId);
     },
-    [executeTaskMutation],
+    [executeTaskMutation]
   );
 
   const handleViewExecutions = useCallback((taskId: string, taskName: string) => {
@@ -81,7 +81,7 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
         handleViewExecutions,
         executeTaskMutation.isPending,
         executeTaskMutation.variables,
-        setEnabledMutation.isPending,
+        setEnabledMutation.isPending
       ),
     [
       handleToggleEnabled,
@@ -89,8 +89,8 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
       handleViewExecutions,
       executeTaskMutation.isPending,
       executeTaskMutation.variables,
-      setEnabledMutation.isPending,
-    ],
+      setEnabledMutation.isPending
+    ]
   );
 
   const { table } = useDataTable({
@@ -98,27 +98,27 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
     columns,
     pageCount: pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
     <>
-      <Box className="space-y-4 min-w-0 w-full">
-        <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <Box className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-tight">Schedule Tasks</h1>
-            <p className="text-muted-foreground text-sm">
+      <Box className='space-y-4 min-w-0 w-full'>
+        <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <Box className='min-w-0'>
+            <h1 className='text-3xl font-bold tracking-tight'>Schedule Tasks</h1>
+            <p className='text-muted-foreground text-sm'>
               Manage and monitor your background jobs and scheduled tasks
             </p>
           </Box>
-          <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
+          <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
             <Button
               onClick={handleSyncTasks}
               disabled={syncTasksMutation.isPending}
-              className="w-full sm:w-auto"
+              className='w-full sm:w-auto'
             >
               <RefreshCw
-                aria-hidden="true"
+                aria-hidden='true'
                 className={`h-4 w-4 ${syncTasksMutation.isPending ? 'animate-spin' : ''}`}
               />
               Sync Tasks

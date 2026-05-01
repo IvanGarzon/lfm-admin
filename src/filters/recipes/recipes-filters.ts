@@ -10,10 +10,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -21,7 +21,7 @@ export const searchParams = {
   search: parseAsString.withDefault(''),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

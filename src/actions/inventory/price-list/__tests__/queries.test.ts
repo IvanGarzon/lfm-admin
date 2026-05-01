@@ -3,13 +3,13 @@ import {
   getPriceListItems,
   getPriceListItemById,
   getPriceListCostHistory,
-  getActivePriceListItems,
+  getActivePriceListItems
 } from '../queries';
 import {
   testIds,
   mockSessions,
   createPriceListItemListItem,
-  createPriceListItemWithDetails,
+  createPriceListItemWithDetails
 } from '@/lib/testing';
 
 const { mockPriceListRepo, mockAuth } = vi.hoisted(() => ({
@@ -17,23 +17,23 @@ const { mockPriceListRepo, mockAuth } = vi.hoisted(() => ({
     searchPriceListItems: vi.fn(),
     findPriceListItemById: vi.fn(),
     getPriceListCostHistory: vi.fn(),
-    findActivePriceListItems: vi.fn(),
+    findActivePriceListItems: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/price-list-repository', () => ({
   PriceListRepository: vi.fn().mockImplementation(function () {
     return mockPriceListRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 const unauthorizedError = 'You must be signed in to perform this action';
@@ -52,7 +52,7 @@ describe('Price List Queries', () => {
     it('returns paginated items when authorised', async () => {
       const mockResult = {
         items: [createPriceListItemListItem()],
-        pagination: { total: 1, page: 1, perPage: 20, totalPages: 1 },
+        pagination: { total: 1, page: 1, perPage: 20, totalPages: 1 }
       };
       mockPriceListRepo.searchPriceListItems.mockResolvedValue(mockResult);
 
@@ -112,8 +112,8 @@ describe('Price List Queries', () => {
           id: testIds.priceListItem(),
           previousCost: 1.0,
           newCost: 1.5,
-          changedAt: new Date('2024-01-01'),
-        },
+          changedAt: new Date('2024-01-01')
+        }
       ];
       mockPriceListRepo.getPriceListCostHistory.mockResolvedValue(mockHistory);
 

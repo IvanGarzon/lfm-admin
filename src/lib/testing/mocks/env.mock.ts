@@ -18,5 +18,5 @@ export const env = {
   RESEND_API_KEY: 're_test',
   CRON_SECRET: 'test',
   INNGEST_APP_ID: 'test',
-  AUTH_TRUST_HOST: true,
+  AUTH_TRUST_HOST: true
 } as const;

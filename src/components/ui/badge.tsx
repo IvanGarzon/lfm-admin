@@ -18,13 +18,13 @@ const badgeVariants = cva(
         success:
           'border-transparent bg-green-500 text-white [a&]:hover:bg-green-500/90 dark:bg-green-600 dark:hover:bg-green-600/90',
         warning:
-          'border-transparent bg-orange-500 text-white [a&]:hover:bg-orange-500/90 dark:bg-orange-600 dark:hover:bg-orange-600/90',
-      },
+          'border-transparent bg-orange-500 text-white [a&]:hover:bg-orange-500/90 dark:bg-orange-600 dark:hover:bg-orange-600/90'
+      }
     },
     defaultVariants: {
-      variant: 'default',
-    },
-  },
+      variant: 'default'
+    }
+  }
 );
 
 function Badge({
@@ -36,7 +36,7 @@ function Badge({
   const Comp = asChild ? Slot : 'span';
 
   return (
-    <Comp data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props} />
+    <Comp data-slot='badge' className={cn(badgeVariants({ variant }), className)} {...props} />
   );
 }
 

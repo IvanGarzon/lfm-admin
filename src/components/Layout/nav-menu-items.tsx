@@ -9,7 +9,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
+  useSidebar
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -53,7 +53,7 @@ export function NavMenuItems({ items, pathname }: { items: NavItem[]; pathname: 
                       <span>{item.title}</span>
                     </SidebarMenuButton>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent side="right" align="start" className="min-w-40">
+                  <DropdownMenuContent side='right' align='start' className='min-w-40'>
                     <DropdownMenuLabel>{item.title}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {item.items.map((subItem) => (
@@ -72,14 +72,14 @@ export function NavMenuItems({ items, pathname }: { items: NavItem[]; pathname: 
               key={item.title}
               asChild
               defaultOpen={pathname.startsWith(item.href === '#' ? '/__never__' : item.href)}
-              className="group/collapsible"
+              className='group/collapsible'
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton tooltip={item.title} isActive={pathname === item.href}>
                     {item.icon ? <Icon /> : null}
                     <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>

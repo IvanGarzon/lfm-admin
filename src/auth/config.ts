@@ -21,19 +21,19 @@ export const authConfig = {
   logger: {
     error(error) {
       logger.error('NextAuth error', error, {
-        context: 'next-auth',
+        context: 'next-auth'
       });
-    },
+    }
   },
   secret: env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt', // Use JWT strategy for performance
     maxAge: 60 * 60 * 24, // 1 Day - Session expiry
-    updateAge: 60 * 60, // 1 Hour - How often to update the session
+    updateAge: 60 * 60 // 1 Hour - How often to update the session
   },
   pages: {
     signIn: '/signin',
-    signOut: '/signout',
+    signOut: '/signout'
   },
   events: {
     async linkAccount({ user }) {
@@ -45,7 +45,7 @@ export const authConfig = {
       // E.g., send welcome email, initialize other related data
       logger.info('New user created', {
         context: 'auth:createUser',
-        metadata: { userId: user.id, email: user.email },
+        metadata: { userId: user.id, email: user.email }
       });
     },
 
@@ -61,10 +61,10 @@ export const authConfig = {
         }
       } catch (error) {
         logger.error('Failed to update session records on sign out', error, {
-          context: 'auth:signOut',
+          context: 'auth:signOut'
         });
       }
-    },
+    }
   },
   callbacks: {
     async authorized({ auth }) {
@@ -86,7 +86,7 @@ export const authConfig = {
         } catch (error) {
           logger.error('Failed to verify session', error, {
             context: 'auth:authorized',
-            metadata: { sessionToken },
+            metadata: { sessionToken }
           });
           return false;
         }
@@ -138,14 +138,14 @@ export const authConfig = {
               deviceName: generateSessionName(
                 details.os?.name,
                 details.browser?.name,
-                details.device?.type,
+                details.device?.type
               ),
-              lastActiveAt: new Date(),
+              lastActiveAt: new Date()
             });
 
             await Promise.all([
               sessionRepo.createSession(sessionData),
-              userRepo.updateLastLoginAt(dbUser.id),
+              userRepo.updateLastLoginAt(dbUser.id)
             ]);
 
             if (dbUser.loginNotificationsEnabled && dbUser.email) {
@@ -166,18 +166,18 @@ export const authConfig = {
                   deviceName: sessionData.deviceName ?? null,
                   browserName: details.browser?.name ?? null,
                   location: location || null,
-                  ipAddress: details.ipAddress ?? null,
-                },
+                  ipAddress: details.ipAddress ?? null
+                }
               }).catch((err) =>
                 logger.error('Failed to send login notification email', err, {
-                  context: 'auth:signIn:credentials',
-                }),
+                  context: 'auth:signIn:credentials'
+                })
               );
             }
           }
         } catch (error) {
           logger.error('Failed to create session for credentials sign-in', error, {
-            context: 'auth:signIn:credentials',
+            context: 'auth:signIn:credentials'
           });
         }
 
@@ -186,7 +186,7 @@ export const authConfig = {
 
       const args: SignInArgs = {
         account: account as Account | null,
-        profile: profile as Profile | undefined,
+        profile: profile as Profile | undefined
       };
 
       // 1. Check authorisation first
@@ -204,15 +204,15 @@ export const authConfig = {
             user.email,
             {
               avatarUrl: user.image,
-              emailVerified: new Date(),
+              emailVerified: new Date()
             },
             {
               email: user.email,
               firstName: user.name?.split(' ')[0] || '',
               lastName: user.name?.split(' ').slice(1).join(' ') || '',
               avatarUrl: user.image,
-              emailVerified: new Date(),
-            },
+              emailVerified: new Date()
+            }
           );
 
           // Get the user ID for session creation
@@ -222,7 +222,7 @@ export const authConfig = {
             firstName: true,
             lastName: true,
             email: true,
-            loginNotificationsEnabled: true,
+            loginNotificationsEnabled: true
           });
 
           if (dbUser) {
@@ -263,14 +263,14 @@ export const authConfig = {
               deviceName: generateSessionName(
                 details.os?.name,
                 details.browser?.name,
-                details.device?.type,
+                details.device?.type
               ),
-              lastActiveAt: new Date(), // Initialize last active timestamp
+              lastActiveAt: new Date() // Initialize last active timestamp
             });
 
             await Promise.all([
               sessionRepo.createSession(sessionData),
-              userRepo.updateLastLoginAt(dbUser.id),
+              userRepo.updateLastLoginAt(dbUser.id)
             ]);
 
             if (dbUser.loginNotificationsEnabled && dbUser.email) {
@@ -289,12 +289,12 @@ export const authConfig = {
                   deviceName: sessionData.deviceName ?? null,
                   browserName: details.browser?.name ?? null,
                   location: location || null,
-                  ipAddress: details.ipAddress ?? null,
-                },
+                  ipAddress: details.ipAddress ?? null
+                }
               }).catch((err) =>
                 logger.error('Failed to send login notification email', err, {
-                  context: 'auth:signIn',
-                }),
+                  context: 'auth:signIn'
+                })
               );
             }
 
@@ -307,14 +307,14 @@ export const authConfig = {
                   updateSessionLocation(sessionData.sessionToken, details.ipAddress!).catch((err) =>
                     logger.error('Background location update failed', err, {
                       context: 'auth:signIn',
-                      metadata: { sessionToken: sessionData.sessionToken },
-                    }),
+                      metadata: { sessionToken: sessionData.sessionToken }
+                    })
                   );
                 })
                 .catch((err) =>
                   logger.error('Failed to load location service', err, {
-                    context: 'auth:signIn',
-                  }),
+                    context: 'auth:signIn'
+                  })
                 );
             }
           }
@@ -322,7 +322,7 @@ export const authConfig = {
       } catch (error) {
         logger.error('Failed to handle user/session creation', error, {
           context: 'auth:signIn',
-          metadata: { email: user.email },
+          metadata: { email: user.email }
         });
         // Don't fail sign-in for session tracking errors
       }
@@ -343,7 +343,7 @@ export const authConfig = {
           id: true,
           role: true,
           tenantId: true,
-          tenant: { select: { slug: true } },
+          tenant: { select: { slug: true } }
         });
 
         if (dbUser) {
@@ -378,7 +378,7 @@ export const authConfig = {
         } catch (error) {
           logger.error('Session validation failed', error, {
             context: 'auth:session',
-            metadata: { sessionToken: token.sessionToken as string },
+            metadata: { sessionToken: token.sessionToken as string }
           });
           throw error; // Re-throw to force session invalidation
         }
@@ -396,7 +396,7 @@ export const authConfig = {
           const fresh = await userRepo.getUserByIdWithSelect(token.sub, {
             role: true,
             tenantId: true,
-            tenant: { select: { slug: true } },
+            tenant: { select: { slug: true } }
           });
           if (fresh) {
             role = fresh.role;
@@ -419,14 +419,14 @@ export const authConfig = {
             image: token.picture || session.user.image,
             role,
             tenantId,
-            tenantSlug,
+            tenantSlug
           },
-          sessionToken: token.sessionToken as string | undefined,
+          sessionToken: token.sessionToken as string | undefined
         };
       }
 
       return session;
-    },
+    }
   },
   providers: [
     GoogleProvider,
@@ -436,7 +436,7 @@ export const authConfig = {
             name: 'Credentials',
             credentials: {
               email: { label: 'Email', type: 'email' },
-              password: { label: 'Password', type: 'password' },
+              password: { label: 'Password', type: 'password' }
             },
             async authorize(credentials) {
               if (!credentials?.email || !credentials?.password) {
@@ -452,7 +452,7 @@ export const authConfig = {
 
               const passwordValid = await bcrypt.compare(
                 credentials.password as string,
-                user.password,
+                user.password
               );
 
               if (!passwordValid) {
@@ -471,9 +471,9 @@ export const authConfig = {
               }
 
               return user;
-            },
-          }),
+            }
+          })
         ]
-      : []),
-  ],
+      : [])
+  ]
 } satisfies NextAuthConfig;

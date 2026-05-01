@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -27,7 +27,7 @@ export function DeleteQuoteDialog({
   onConfirm,
   quoteId,
   quoteNumber,
-  isPending = false,
+  isPending = false
 }: DeleteQuoteDialogProps) {
   const handleConfirm = useCallback(() => {
     onConfirm(quoteId);
@@ -39,10 +39,10 @@ export function DeleteQuoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle aria-hidden="true" className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2 text-destructive'>
+            <AlertCircle aria-hidden='true' className='h-5 w-5' />
             Delete Quote
           </DialogTitle>
           <DialogDescription>
@@ -52,10 +52,10 @@ export function DeleteQuoteDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+          <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="button" variant="destructive" onClick={handleConfirm} disabled={isPending}>
+          <Button type='button' variant='destructive' onClick={handleConfirm} disabled={isPending}>
             {isPending ? 'Deleting...' : 'Delete Quote'}
           </Button>
         </DialogFooter>

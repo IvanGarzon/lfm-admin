@@ -9,7 +9,7 @@ export const SORTABLE_CUSTOMER_COLUMNS = [
   'phone',
   'organizationName',
   'status',
-  'createdAt',
+  'createdAt'
 ] as const;
 
 export type SortableCustomerColumn = (typeof SORTABLE_CUSTOMER_COLUMNS)[number];

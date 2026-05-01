@@ -15,7 +15,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
           'w-full caption-bottom text-sm',
           // border color
           'border-border',
-          className,
+          className
         )}
         {...props}
       />
@@ -25,8 +25,8 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
       return table;
     }
 
-    return <div className="w-full overflow-auto">{table}</div>;
-  },
+    return <div className='w-full overflow-auto'>{table}</div>;
+  }
 );
 Table.displayName = 'Table';
 
@@ -50,7 +50,7 @@ const TableBody = React.forwardRef<
       // divide color
       'divide-border',
       '[&_tr:last-child]:border-0',
-      className,
+      className
     )}
     {...props}
   />
@@ -78,11 +78,11 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
         '[&_td:last-child]:pr-4 [&_th:last-child]:pr-4',
         '[&_td:first-child]:pl-4 [&_th:first-child]:pl-4',
         'border-b transition-colors data-[state=selected]:bg-muted',
-        className,
+        className
       )}
       {...props}
     />
-  ),
+  )
 );
 TableRow.displayName = 'TableRow';
 
@@ -94,7 +94,7 @@ const TableHead = React.forwardRef<
     ref={ref}
     className={cn(
       'h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
-      className,
+      className
     )}
     {...props}
   />
@@ -109,7 +109,7 @@ const TableCell = React.forwardRef<
     ref={ref}
     className={cn(
       'p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
-      className,
+      className
     )}
     {...props}
   />

@@ -9,14 +9,14 @@ import type { CreateProductInput } from '@/schemas/products';
 import type {
   ProductListItem,
   ProductWithDetails,
-  ProductStatistics,
+  ProductStatistics
 } from '@/features/inventory/products/types';
 
 /**
  * Creates valid product input data for create mutations.
  */
 export function createProductInput(
-  overrides: Partial<CreateProductInput> = {},
+  overrides: Partial<CreateProductInput> = {}
 ): CreateProductInput {
   return {
     name: 'Rose Bouquet',
@@ -26,7 +26,7 @@ export function createProductInput(
     description: null,
     imageUrl: null,
     availableAt: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -45,7 +45,7 @@ export function createProductListItem(overrides: Partial<ProductListItem> = {}):
     availableAt: null,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -53,7 +53,7 @@ export function createProductListItem(overrides: Partial<ProductListItem> = {}):
  * Creates a mock product with full details as returned by findProductById.
  */
 export function createProductWithDetails(
-  overrides: Partial<ProductWithDetails> = {},
+  overrides: Partial<ProductWithDetails> = {}
 ): ProductWithDetails {
   return {
     id: testIds.product(),
@@ -67,7 +67,7 @@ export function createProductWithDetails(
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     _count: { invoiceItems: 0, quoteItems: 0 },
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -75,7 +75,7 @@ export function createProductWithDetails(
  * Creates mock product statistics.
  */
 export function createProductStatistics(
-  overrides: Partial<ProductStatistics> = {},
+  overrides: Partial<ProductStatistics> = {}
 ): ProductStatistics {
   return {
     totalProducts: 50,
@@ -86,6 +86,6 @@ export function createProductStatistics(
     averagePrice: 100,
     lowStockProducts: 5,
     growth: { totalProducts: 0 },
-    ...overrides,
+    ...overrides
   };
 }

@@ -42,7 +42,7 @@ export const uploadFile = withAuth<
           Bucket: env.AWS_S3_BUCKET_NAME,
           Key: s3Key,
           Body: buffer,
-          ContentType: file.type,
+          ContentType: file.type
         });
         await s3Client.send(command);
         result = { s3Key, s3Url: getS3Url(s3Key) };
@@ -54,13 +54,13 @@ export const uploadFile = withAuth<
           resourceType: 'quotes',
           resourceId: quoteId,
           subPath: 'attachments',
-          metadata: { quoteId },
+          metadata: { quoteId }
         });
       }
     } else {
       return {
         success: false,
-        error: `File type ${file.type} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}, text/plain (test only)`,
+        error: `File type ${file.type} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}, text/plain (test only)`
       };
     }
 
@@ -70,8 +70,8 @@ export const uploadFile = withAuth<
         userId: session.user.id,
         fileName: file.name,
         fileSize: file.size,
-        s3Key: result.s3Key,
-      },
+        s3Key: result.s3Key
+      }
     });
 
     revalidatePath('/tools/files');
@@ -84,13 +84,13 @@ export const uploadFile = withAuth<
         s3Url: result.s3Url,
         fileName: file.name,
         fileSize: file.size,
-        mimeType: file.type,
-      },
+        mimeType: file.type
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to upload file', {
       action: 'uploadFile',
-      userId: session.user.id,
+      userId: session.user.id
     });
   }
 });
@@ -111,8 +111,8 @@ export const deleteFile = withAuth<string, { message: string }>(async (session, 
       context: 'file-delete',
       metadata: {
         userId: session.user.id,
-        s3Key,
-      },
+        s3Key
+      }
     });
 
     revalidatePath('/tools/files');
@@ -121,13 +121,13 @@ export const deleteFile = withAuth<string, { message: string }>(async (session, 
 
     return {
       success: true,
-      data: { message: 'File deleted successfully' },
+      data: { message: 'File deleted successfully' }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to delete file', {
       action: 'deleteFile',
       userId: session.user.id,
-      s3Key,
+      s3Key
     });
   }
 });

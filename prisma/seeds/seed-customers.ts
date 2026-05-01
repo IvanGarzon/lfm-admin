@@ -30,7 +30,7 @@ export async function seedCustomers(options: SeedCustomersOptions): Promise<numb
   for (const tenant of tenants) {
     const organisations = await prisma.organization.findMany({
       where: { tenantId: tenant.id },
-      select: { id: true },
+      select: { id: true }
     });
 
     const fns = Array.from({ length: countPerTenant }, () => async () => {
@@ -59,9 +59,9 @@ export async function seedCustomers(options: SeedCustomersOptions): Promise<numb
           address1: organisationId ? null : faker.location.streetAddress(),
           city: organisationId ? null : faker.location.city(),
           postalCode: organisationId ? null : faker.location.zipCode('####'),
-          country: organisationId ? null : 'Australia',
+          country: organisationId ? null : 'Australia'
         },
-        select: { id: true },
+        select: { id: true }
       });
     });
 
@@ -94,7 +94,7 @@ if (isMain) {
       ...tenant,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedCustomers({ tenants: seededTenants });

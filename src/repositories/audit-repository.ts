@@ -36,8 +36,8 @@ export class AuditRepository extends BaseRepository<Audit> {
         event: props.event,
         message: props.message,
         data: props.data as Prisma.InputJsonValue,
-        level: props.level ?? 'INFO',
-      },
+        level: props.level ?? 'INFO'
+      }
     });
   }
 
@@ -66,7 +66,7 @@ export class AuditRepository extends BaseRepository<Audit> {
         message: r.message,
         toRole: parsedRole.success ? parsedRole.data : undefined,
         changedByName: data?.changedByName ?? 'System',
-        createdAt: r.created_at,
+        createdAt: r.created_at
       };
     });
   }
@@ -79,9 +79,9 @@ export class AuditRepository extends BaseRepository<Audit> {
     return await this.prisma.audit.deleteMany({
       where: {
         createdAt: {
-          lt: new Date(new Date().setMonth(new Date().getMonth() - 6)),
-        },
-      },
+          lt: new Date(new Date().setMonth(new Date().getMonth() - 6))
+        }
+      }
     });
   }
 }

@@ -8,7 +8,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarRail,
+  SidebarRail
 } from '@/components/ui/sidebar';
 import { GalleryVerticalEnd } from 'lucide-react';
 import { Box } from '@/components/ui/box';
@@ -43,26 +43,26 @@ export function AppSidebar({ activeTenantId }: { activeTenantId?: string }) {
   }, [isSuperAdmin, activeTenantId, session?.user]);
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible='icon'>
       <SidebarHeader>
         {isSuperAdmin ? (
           <TenantSwitcherDropdown activeTenantId={activeTenantId} />
         ) : (
-          <Box className="flex gap-2 py-2 text-sidebar-accent-foreground">
-            <Box className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <GalleryVerticalEnd className="size-4" />
+          <Box className='flex gap-2 py-2 text-sidebar-accent-foreground'>
+            <Box className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+              <GalleryVerticalEnd className='size-4' />
             </Box>
-            <Box className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{branding?.name ?? ''}</span>
+            <Box className='grid flex-1 text-left text-sm leading-tight'>
+              <span className='truncate font-semibold'>{branding?.name ?? ''}</span>
             </Box>
           </Box>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="overflow-x-hidden">
+      <SidebarContent className='overflow-x-hidden'>
         {isSuperAdmin && !activeTenantId ? (
           <SidebarGroup>
-            <Box className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            <Box className='px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden'>
               Select a tenant above to browse its data.
             </Box>
           </SidebarGroup>

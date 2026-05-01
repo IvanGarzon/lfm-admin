@@ -6,11 +6,11 @@ import { TransactionsView } from '@/features/finances/transactions/components/tr
 
 export const metadata = constructMetadata({
   title: 'Transactions – lfm dashboard',
-  description: 'Track all your income and expenses.',
+  description: 'Track all your income and expenses.'
 });
 
 export default async function TransactionsPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

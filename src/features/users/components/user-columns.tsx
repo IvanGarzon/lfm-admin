@@ -18,13 +18,13 @@ import { UserRoleSchema } from '@/zod/schemas/enums/UserRole.schema';
 const RoleOptions = [
   { label: USER_ROLE_LABELS.USER, value: UserRoleSchema.enum.USER, icon: User },
   { label: USER_ROLE_LABELS.MANAGER, value: UserRoleSchema.enum.MANAGER, icon: UserCog },
-  { label: USER_ROLE_LABELS.ADMIN, value: UserRoleSchema.enum.ADMIN, icon: Shield },
+  { label: USER_ROLE_LABELS.ADMIN, value: UserRoleSchema.enum.ADMIN, icon: Shield }
 ];
 
 const StatusOptions = [
   { label: 'Active', value: UserStatusSchema.enum.ACTIVE, icon: CheckCircle2 },
   { label: 'Invited', value: UserStatusSchema.enum.INVITED, icon: CircleDashed },
-  { label: 'Suspended', value: UserStatusSchema.enum.SUSPENDED, icon: Ban },
+  { label: 'Suspended', value: UserStatusSchema.enum.SUSPENDED, icon: Ban }
 ];
 
 function UserLink({ userId, name }: { userId: string; name: string }) {
@@ -33,7 +33,7 @@ function UserLink({ userId, name }: { userId: string; name: string }) {
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {name}
     </Link>
   );
@@ -43,22 +43,22 @@ export const userColumns: ColumnDef<UserListItem>[] = [
   {
     id: 'search',
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
-    header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='User' />,
     cell: ({ row }) => (
-      <Box className="flex items-center gap-3">
+      <Box className='flex items-center gap-3'>
         <UserAvatar
           user={{
             name: `${row.original.firstName} ${row.original.lastName}`,
-            image: row.original.avatarUrl,
+            image: row.original.avatarUrl
           }}
-          className="h-8 w-8"
+          className='h-8 w-8'
         />
-        <Box className="flex flex-col">
+        <Box className='flex flex-col'>
           <UserLink
             userId={row.original.id}
             name={`${row.original.firstName} ${row.original.lastName}`}
           />
-          <Box className="text-xs text-muted-foreground">{row.original.email}</Box>
+          <Box className='text-xs text-muted-foreground'>{row.original.email}</Box>
         </Box>
       </Box>
     ),
@@ -68,13 +68,13 @@ export const userColumns: ColumnDef<UserListItem>[] = [
       label: 'User',
       placeholder: 'Search users...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'role',
     accessorKey: 'role',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Role' />,
     cell: ({ row }) => <UserRoleBadge role={row.original.role} />,
     enableSorting: true,
     enableColumnFilter: true,
@@ -82,13 +82,13 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     meta: {
       label: 'Role',
       variant: 'multiSelect',
-      options: RoleOptions,
-    },
+      options: RoleOptions
+    }
   },
   {
     id: 'status',
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ row }) => <UserStatusBadge status={row.original.status} />,
     enableSorting: true,
     enableColumnFilter: true,
@@ -96,29 +96,29 @@ export const userColumns: ColumnDef<UserListItem>[] = [
     meta: {
       label: 'Status',
       variant: 'multiSelect',
-      options: StatusOptions,
-    },
+      options: StatusOptions
+    }
   },
   {
     id: 'phone',
     accessorKey: 'phone',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Phone' />,
     cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">{row.original.phone ?? '—'}</span>
+      <span className='text-sm text-muted-foreground'>{row.original.phone ?? '—'}</span>
     ),
     meta: {
-      label: 'Phone',
-    },
+      label: 'Phone'
+    }
   },
   {
     id: 'lastLoginAt',
     accessorKey: 'lastLoginAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Seen" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Last Seen' />,
     cell: ({ row }) =>
       row.original.lastLoginAt ? format(new Date(row.original.lastLoginAt), 'MMM dd, yyyy') : '—',
     enableSorting: true,
     meta: {
-      label: 'Last Seen',
-    },
-  },
+      label: 'Last Seen'
+    }
+  }
 ];

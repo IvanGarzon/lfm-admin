@@ -10,31 +10,37 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
+import { hasActiveSearchFilters } from '@/lib/utils';
+import { searchParams as invoiceSearchParams } from '@/filters/invoices/invoices-filters';
 import { InvoiceList } from '@/features/finances/invoices/components/invoice-list';
 import { InvoiceOverview } from '@/features/finances/invoices/components/invoice-overview';
 import { InvoiceAnalytics } from '@/features/finances/invoices/components/invoice-analytics';
-import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
-import type { InvoicePagination } from '@/features/finances/invoices/types';
+import {
+  useInvoices,
+  useInvoiceStatistics
+} from '@/features/finances/invoices/hooks/use-invoice-queries';
+// import type { InvoicePagination } from '@/features/finances/invoices/types';
 
 interface InvoicesViewProps {
-  initialData: InvoicePagination;
   searchParams: SearchParams;
 }
 
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(
-      (mod) => mod.InvoiceDrawer,
+      (mod) => mod.InvoiceDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
-export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
+export function InvoicesView({ searchParams }: InvoicesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
+
+  const { data } = useInvoices(searchParams);
 
   // Use useMemo to ensure stable date between server and client renders
   const today = useMemo(() => new Date(), []);
@@ -42,16 +48,16 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
   // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
-    to: today,
+    to: today
   }));
 
   // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
-      endDate: today,
+      endDate: today
     }),
-    [today],
+    [today]
   );
 
   // Stats for Overview (current month)
@@ -61,7 +67,7 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
   // Stats for Analytics (custom date range)
   const { data: analyticsStats, isLoading: analyticsLoading } = useInvoiceStatistics({
     startDate: dateRange?.from,
-    endDate: dateRange?.to,
+    endDate: dateRange?.to
   });
 
   const getComparisonLabel = () => {
@@ -83,37 +89,37 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
     setShowCreateModal((prev) => !prev);
   }, []);
 
-  const hasActiveFilters = Boolean(searchParams.search) || Boolean(searchParams.status);
-  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+  const isZeroState =
+    data?.pagination.totalItems === 0 && !hasActiveSearchFilters(searchParams, invoiceSearchParams);
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={Receipt}
-          title="No invoices yet"
-          description="Add your first invoice to start managing your invoices."
+          title='No invoices yet'
+          description='Add your first invoice to start managing your invoices.'
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus aria-hidden="true" className="h-4 w-4" />
+              <Plus aria-hidden='true' className='h-4 w-4' />
               Add Invoice
             </Button>
           }
         />
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-              <p className="text-muted-foreground text-sm">Manage and track all your invoices</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full space-y-6'>
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Invoices</h1>
+              <p className='text-muted-foreground text-sm'>Manage and track all your invoices</p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-                <TabsTrigger value="list">List</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <TabsList className='grid w-full grid-cols-2 sm:w-[200px]'>
+                <TabsTrigger value='list'>List</TabsTrigger>
+                <TabsTrigger value='analytics'>Analytics</TabsTrigger>
               </TabsList>
-              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus aria-hidden="true" className="h-4 w-4" />
+              <Button onClick={handleShowCreateModal} className='w-full sm:w-auto'>
+                <Plus aria-hidden='true' className='h-4 w-4' />
                 New Invoice
               </Button>
             </Box>
@@ -122,19 +128,19 @@ export function InvoicesView({ initialData, searchParams }: InvoicesViewProps) {
           <InvoiceOverview
             stats={overviewStats}
             isLoading={overviewLoading}
-            comparisonLabel="vs. last month"
+            comparisonLabel='vs. last month'
           />
 
           <TabsContent
-            value="list"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='list'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
-            <InvoiceList data={initialData} searchParams={searchParams} />
+            <InvoiceList data={data} searchParams={searchParams} />
           </TabsContent>
 
           <TabsContent
-            value="analytics"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='analytics'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
             <InvoiceAnalytics
               stats={analyticsStats}

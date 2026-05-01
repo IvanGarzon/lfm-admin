@@ -97,9 +97,9 @@ ReceiptEmail.PreviewProps = {
     amount: 2500.0,
     currency: 'AUD',
     paidDate: new Date('2025-01-20'),
-    paymentMethod: 'Credit Card',
+    paymentMethod: 'Credit Card'
   },
-  pdfUrl: 'https://example.com/receipt.pdf',
+  pdfUrl: 'https://example.com/receipt.pdf'
 } satisfies ReceiptEmailProps;
 
 export default ReceiptEmail;

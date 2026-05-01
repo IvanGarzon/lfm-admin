@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { usePriceListCostHistory } from '@/features/inventory/price-list/hooks/use-price-list-queries';
@@ -25,16 +25,16 @@ export function PriceListCostHistory({
   open,
   onOpenChange,
   itemId,
-  itemName,
+  itemName
 }: PriceListCostHistoryProps) {
   const { data: history, isLoading } = usePriceListCostHistory(open ? itemId : undefined);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className='max-w-md'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" aria-hidden="true" />
+          <DialogTitle className='flex items-center gap-2'>
+            <History className='h-5 w-5' aria-hidden='true' />
             Cost History {itemName ? `— ${itemName}` : ''}
           </DialogTitle>
           <VisuallyHidden>
@@ -44,34 +44,34 @@ export function PriceListCostHistory({
           </VisuallyHidden>
         </DialogHeader>
 
-        <Box className="max-h-80 overflow-y-auto">
+        <Box className='max-h-80 overflow-y-auto'>
           {isLoading ? (
-            <Box className="py-8 text-center text-sm text-muted-foreground">Loading history...</Box>
+            <Box className='py-8 text-center text-sm text-muted-foreground'>Loading history...</Box>
           ) : !history || history.length === 0 ? (
-            <Box className="py-8 text-center text-sm text-muted-foreground">
+            <Box className='py-8 text-center text-sm text-muted-foreground'>
               No cost changes recorded yet.
             </Box>
           ) : (
-            <Box className="space-y-3">
+            <Box className='space-y-3'>
               {history.map((entry) => {
                 const isIncrease = entry.newCost > entry.previousCost;
                 return (
                   <Box
                     key={entry.id}
-                    className="flex items-center justify-between rounded-lg border px-4 py-3"
+                    className='flex items-center justify-between rounded-lg border px-4 py-3'
                   >
-                    <Box className="flex items-center gap-3">
+                    <Box className='flex items-center gap-3'>
                       {isIncrease ? (
-                        <TrendingUp className="h-4 w-4 text-red-500" aria-hidden="true" />
+                        <TrendingUp className='h-4 w-4 text-red-500' aria-hidden='true' />
                       ) : (
-                        <TrendingDown className="h-4 w-4 text-green-500" aria-hidden="true" />
+                        <TrendingDown className='h-4 w-4 text-green-500' aria-hidden='true' />
                       )}
                       <Box>
-                        <Box className="text-sm font-medium">
+                        <Box className='text-sm font-medium'>
                           {formatCurrency({ number: entry.previousCost })} →{' '}
                           {formatCurrency({ number: entry.newCost })}
                         </Box>
-                        <Box className="text-xs text-muted-foreground">
+                        <Box className='text-xs text-muted-foreground'>
                           {format(new Date(entry.changedAt), 'MMM d, yyyy h:mm a')}
                         </Box>
                       </Box>

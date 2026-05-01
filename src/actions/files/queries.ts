@@ -77,7 +77,7 @@ export const listFiles = withAuth<void, { files: S3File[]; count: number; summar
           resourceType,
           resourceId,
           subPath,
-          fileType,
+          fileType
         };
       });
 
@@ -89,14 +89,14 @@ export const listFiles = withAuth<void, { files: S3File[]; count: number; summar
               resourceType: file.resourceType,
               fileType: file.fileType,
               count: 0,
-              totalSize: 0,
+              totalSize: 0
             };
           }
           acc[key].count++;
           acc[key].totalSize += file.size;
           return acc;
         },
-        {} as Record<string, FileSummary>,
+        {} as Record<string, FileSummary>
       );
 
       return {
@@ -104,13 +104,13 @@ export const listFiles = withAuth<void, { files: S3File[]; count: number; summar
         data: {
           files,
           count: files.length,
-          summary: Object.values(summary),
-        },
+          summary: Object.values(summary)
+        }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to list files', { action: 'listFiles' });
     }
-  },
+  }
 );
 
 export const getFileDownloadUrl = withAuth<string, { url: string; expiresIn: string }>(
@@ -124,15 +124,15 @@ export const getFileDownloadUrl = withAuth<string, { url: string; expiresIn: str
 
       return {
         success: true,
-        data: { url, expiresIn: '24 hours' },
+        data: { url, expiresIn: '24 hours' }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to generate download URL', {
         action: 'getFileDownloadUrl',
-        s3Key,
+        s3Key
       });
     }
-  },
+  }
 );
 
 export const checkStorageHealth = withAuth<
@@ -154,7 +154,7 @@ export const checkStorageHealth = withAuth<
 
     const response = await fetch(`${endpoint}/_localstack/health`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' }
     });
 
     const data = await response.json();
@@ -169,12 +169,12 @@ export const checkStorageHealth = withAuth<
         endpoint,
         services: data.services,
         version: data.version,
-        edition: data.edition,
-      },
+        edition: data.edition
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to check storage health', {
-      action: 'checkStorageHealth',
+      action: 'checkStorageHealth'
     });
   }
 });

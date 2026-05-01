@@ -20,7 +20,7 @@ export function SettingsSidebarNav({ items }: SettingsSidebarNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className='flex flex-col gap-1'>
       {items.map((item) => (
         <Link
           key={item.href}
@@ -30,7 +30,7 @@ export function SettingsSidebarNav({ items }: SettingsSidebarNavProps) {
             'justify-start gap-2',
             pathname === item.href
               ? 'bg-muted hover:bg-muted font-medium'
-              : 'hover:bg-transparent hover:underline',
+              : 'hover:bg-transparent hover:underline'
           )}
         >
           {item.icon}

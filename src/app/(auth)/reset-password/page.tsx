@@ -3,7 +3,7 @@ import { ResetPasswordForm } from '@/features/users/components/reset-password-fo
 import { getPasswordResetToken } from '@/actions/users/queries';
 
 export default async function ResetPasswordPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<{ token?: string }>;
 }) {
@@ -11,10 +11,10 @@ export default async function ResetPasswordPage({
 
   if (!token) {
     return (
-      <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
-        <Box className="max-w-md w-full text-center space-y-2">
-          <h1 className="text-2xl font-bold">Invalid Link</h1>
-          <p className="text-muted-foreground">This password reset link is missing a token.</p>
+      <Box className='w-full min-h-screen flex justify-center items-start md:items-center p-8'>
+        <Box className='max-w-md w-full text-center space-y-2'>
+          <h1 className='text-2xl font-bold'>Invalid Link</h1>
+          <p className='text-muted-foreground'>This password reset link is missing a token.</p>
         </Box>
       </Box>
     );
@@ -24,17 +24,17 @@ export default async function ResetPasswordPage({
 
   if (!result.success || !result.data) {
     return (
-      <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
-        <Box className="max-w-md w-full text-center space-y-2">
-          <h1 className="text-2xl font-bold">Link Unavailable</h1>
-          <p className="text-muted-foreground">{result.error}</p>
+      <Box className='w-full min-h-screen flex justify-center items-start md:items-center p-8'>
+        <Box className='max-w-md w-full text-center space-y-2'>
+          <h1 className='text-2xl font-bold'>Link Unavailable</h1>
+          <p className='text-muted-foreground'>{result.error}</p>
         </Box>
       </Box>
     );
   }
 
   return (
-    <Box className="w-full min-h-screen flex justify-center items-start md:items-center p-8">
+    <Box className='w-full min-h-screen flex justify-center items-start md:items-center p-8'>
       <ResetPasswordForm token={token} email={result.data.email} />
     </Box>
   );

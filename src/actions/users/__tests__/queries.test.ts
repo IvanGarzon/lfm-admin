@@ -6,23 +6,23 @@ import type { UserPagination, UserDetail } from '@/features/users/types';
 const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
     searchAndPaginateTenantUsers: vi.fn(),
-    findTenantUserById: vi.fn(),
+    findTenantUserById: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
 vi.mock('@/filters/users/users-filters', () => ({
   searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 }),
-  },
+    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 })
+  }
 }));
 
 const TEST_USER_ID = testIds.user();
@@ -39,8 +39,8 @@ const mockPagination: UserPagination = {
       status: 'ACTIVE',
       lastLoginAt: null,
       avatarUrl: null,
-      addedBy: null,
-    },
+      addedBy: null
+    }
   ],
   pagination: {
     totalItems: 1,
@@ -49,8 +49,8 @@ const mockPagination: UserPagination = {
     hasNextPage: false,
     hasPreviousPage: false,
     nextPage: null,
-    previousPage: null,
-  },
+    previousPage: null
+  }
 };
 
 const mockUser: UserDetail = {
@@ -68,7 +68,7 @@ const mockUser: UserDetail = {
   title: null,
   bio: null,
   avatarUrl: null,
-  addedBy: null,
+  addedBy: null
 };
 
 describe('User Queries', () => {

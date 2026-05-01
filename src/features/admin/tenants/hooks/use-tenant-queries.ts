@@ -6,7 +6,7 @@ import {
   createTenant,
   updateTenant,
   suspendTenant,
-  activateTenant,
+  activateTenant
 } from '@/actions/admin/tenants/mutations';
 import { switchActiveTenant } from '@/actions/admin/switch-tenant';
 import type { CreateTenantInput, UpdateTenantInput } from '@/schemas/tenants';
@@ -14,7 +14,7 @@ import type { CreateTenantInput, UpdateTenantInput } from '@/schemas/tenants';
 export const TENANT_KEYS = {
   all: ['admin-tenants'] as const,
   lists: () => [...TENANT_KEYS.all, 'list'] as const,
-  detail: (id: string) => [...TENANT_KEYS.all, 'detail', id] as const,
+  detail: (id: string) => [...TENANT_KEYS.all, 'detail', id] as const
 };
 
 export function useCreateTenant() {
@@ -30,7 +30,7 @@ export function useCreateTenant() {
       toast.success('Tenant created');
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.lists() });
     },
-    onError: () => toast.error('Failed to create tenant'),
+    onError: () => toast.error('Failed to create tenant')
   });
 }
 
@@ -48,7 +48,7 @@ export function useUpdateTenant(id: string) {
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.detail(id) });
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.lists() });
     },
-    onError: () => toast.error('Failed to update tenant'),
+    onError: () => toast.error('Failed to update tenant')
   });
 }
 
@@ -66,7 +66,7 @@ export function useSuspendTenant() {
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.detail(id) });
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.lists() });
     },
-    onError: () => toast.error('Failed to suspend tenant'),
+    onError: () => toast.error('Failed to suspend tenant')
   });
 }
 
@@ -84,7 +84,7 @@ export function useActivateTenant() {
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.detail(id) });
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.lists() });
     },
-    onError: () => toast.error('Failed to activate tenant'),
+    onError: () => toast.error('Failed to activate tenant')
   });
 }
 
@@ -96,6 +96,6 @@ export function useSwitchActiveTenant() {
         toast.error(result.error);
       }
     },
-    onError: () => toast.error('Failed to switch tenant'),
+    onError: () => toast.error('Failed to switch tenant')
   });
 }

@@ -18,7 +18,7 @@ export const updateUserRole = withSuperAdmin<{ id: string; role: UserRole }, Use
     } catch (error) {
       return handleActionError(error, 'Failed to update user role');
     }
-  },
+  }
 );
 
 export const reassignUserTenant = withSuperAdmin<{ id: string; tenantId: string }, User>(
@@ -30,5 +30,5 @@ export const reassignUserTenant = withSuperAdmin<{ id: string; tenantId: string 
     } catch (error) {
       return handleActionError(error, 'Failed to reassign user tenant');
     }
-  },
+  }
 );

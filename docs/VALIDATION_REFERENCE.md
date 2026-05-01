@@ -57,7 +57,7 @@ const MySchema = z.object({
   email: commonValidators.emailOptional(),
   phone: commonValidators.phoneOptional(),
   website: commonValidators.urlOptional(),
-  description: commonValidators.stringOptional(VALIDATION_LIMITS.DESCRIPTION_MAX, 'Description'),
+  description: commonValidators.stringOptional(VALIDATION_LIMITS.DESCRIPTION_MAX, 'Description')
 });
 ```
 
@@ -135,7 +135,7 @@ import { commonValidators } from '@/lib/validation';
 
 export const MyResourceSchema = z.object({
   name: commonValidators.name('Resource name'),
-  email: commonValidators.emailOptional(),
+  email: commonValidators.emailOptional()
   // ... other fields
 });
 ```
@@ -149,7 +149,7 @@ import { sanitizeSearchQuery, validatePaginationParams } from '@/lib/validation'
 export const searchParams = {
   search: parseAsString.withDefault(''),
   page: parseAsInteger.withDefault(1),
-  perPage: parseAsInteger.withDefault(20),
+  perPage: parseAsInteger.withDefault(20)
   // ... other params
 };
 
@@ -158,7 +158,7 @@ export function validateMyResourceSearchParams(params) {
   return {
     search: sanitizeSearchQuery(params.search),
     page,
-    perPage,
+    perPage
     // ... other params
   };
 }

@@ -29,7 +29,7 @@ export function QuoteItemDetails({
   readOnly = false,
   onDownloadImage,
   onDeleteImage,
-  isDeleting = false,
+  isDeleting = false
 }: QuoteItemDetailsProps) {
   const [deleteItemAttachment, setDeleteItemAttachment] = useState<{
     attachmentId: string;
@@ -63,7 +63,7 @@ export function QuoteItemDetails({
         (item) =>
           (item.attachments && item.attachments.length > 0) ||
           (item.colors && item.colors.length > 0) ||
-          item.notes,
+          item.notes
       )
       .sort((a, b) => a.order - b.order);
   }, [items]);
@@ -118,7 +118,7 @@ export function QuoteItemDetails({
         updateNotesMutation.mutate({
           quoteItemId,
           quoteId,
-          notes: newNotes,
+          notes: newNotes
         });
       }
       // Clear editing state
@@ -128,7 +128,7 @@ export function QuoteItemDetails({
         return updated;
       });
     },
-    [editingNotes, quoteId, updateNotesMutation],
+    [editingNotes, quoteId, updateNotesMutation]
   );
 
   // Check if there are any item attachments or colors
@@ -138,9 +138,9 @@ export function QuoteItemDetails({
 
   return (
     <>
-      <Card className="p-6 my-6">
-        <Box className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+      <Card className='p-6 my-6'>
+        <Box className='space-y-4'>
+          <h3 className='text-sm font-medium text-gray-900 dark:text-gray-50'>
             Item Colors & Images
           </h3>
 
@@ -149,18 +149,18 @@ export function QuoteItemDetails({
             const hasImages = item.attachments && item.attachments.length > 0;
 
             return (
-              <Box key={item.id} className="space-y-3">
+              <Box key={item.id} className='space-y-3'>
                 {/* Item Title */}
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  <span className="font-medium">{item.description}</span>
+                <p className='text-sm text-gray-700 dark:text-gray-300'>
+                  <span className='font-medium'>{item.description}</span>
                   {hasColors ? (
-                    <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
+                    <span className='text-xs text-gray-500 dark:text-gray-500 ml-2'>
                       ({item.colors.length} {item.colors.length === 1 ? 'color' : 'colors'})
                     </span>
                   ) : null}
 
                   {hasImages ? (
-                    <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">
+                    <span className='text-xs text-gray-500 dark:text-gray-500 ml-2'>
                       ({item.attachments.length}{' '}
                       {item.attachments.length === 1 ? 'image' : 'images'})
                     </span>
@@ -169,32 +169,32 @@ export function QuoteItemDetails({
 
                 {/* Color Palette */}
                 {hasColors ? (
-                  <Box className="flex flex-wrap gap-1 items-center">
+                  <Box className='flex flex-wrap gap-1 items-center'>
                     {item.colors.map((color, colorIndex) => (
                       <Box
                         key={`${item.id}-color-${colorIndex}`}
-                        className="w-16 h-16 rounded-lg border-2 border-border shadow-sm"
+                        className='w-16 h-16 rounded-lg border-2 border-border shadow-sm'
                         style={{ backgroundColor: color }}
                         title={color}
-                        aria-hidden="true"
+                        aria-hidden='true'
                       />
                     ))}
                     {!readOnly ? (
                       <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
+                        type='button'
+                        variant='outline'
+                        size='sm'
                         onClick={() =>
                           setEditingColors({
                             quoteItemId: item.id,
                             itemDescription: item.description,
-                            colors: item.colors,
+                            colors: item.colors
                           })
                         }
-                        className="w-16 h-16 px-4"
+                        className='w-16 h-16 px-4'
                         aria-label={`Edit colour palette for ${item.description}`}
                       >
-                        <Edit className="h-4 w-4" aria-hidden="true" />
+                        <Edit className='h-4 w-4' aria-hidden='true' />
                       </Button>
                     ) : null}
                   </Box>
@@ -202,20 +202,20 @@ export function QuoteItemDetails({
 
                 {/* Images Grid */}
                 {hasImages ? (
-                  <Box className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  <Box className='grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'>
                     {item.attachments.map((attachment) => (
                       <Box
                         key={attachment.id}
-                        className="relative group rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden"
+                        className='relative group rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden'
                       >
                         {/* Image Preview */}
-                        <Box className="aspect-square bg-gray-100 dark:bg-gray-800 relative">
+                        <Box className='aspect-square bg-gray-100 dark:bg-gray-800 relative'>
                           {/* Loading Spinner */}
                           {loadingImages.has(attachment.id) ? (
-                            <Box className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800">
+                            <Box className='absolute inset-0 flex items-center justify-center z-10 bg-gray-100 dark:bg-gray-800'>
                               <Loader2
-                                className="size-8 animate-spin text-muted-foreground"
-                                aria-hidden="true"
+                                className='size-8 animate-spin text-muted-foreground'
+                                aria-hidden='true'
                               />
                             </Box>
                           ) : null}
@@ -226,67 +226,67 @@ export function QuoteItemDetails({
                             className={`object-cover transition-opacity duration-300 ${
                               loadingImages.has(attachment.id) ? 'opacity-0' : 'opacity-100'
                             }`}
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            sizes='(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'
                             onLoadingComplete={() => handleImageLoadComplete(attachment.id)}
                           />
 
                           {/* Hover Overlay */}
-                          <Box className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Box className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2'>
                             <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
+                              type='button'
+                              variant='secondary'
+                              size='sm'
                               onClick={() =>
                                 setPreviewImage({
                                   url: attachment.s3Url,
                                   fileName: attachment.fileName,
-                                  itemDescription: item.description,
+                                  itemDescription: item.description
                                 })
                               }
-                              className="h-8 w-8 p-0"
+                              className='h-8 w-8 p-0'
                               aria-label={`View ${attachment.fileName}`}
                             >
-                              <Eye className="size-4" aria-hidden="true" />
+                              <Eye className='size-4' aria-hidden='true' />
                             </Button>
 
                             <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
+                              type='button'
+                              variant='secondary'
+                              size='sm'
                               onClick={() => onDownloadImage(attachment.id)}
-                              className="h-8 w-8 p-0"
+                              className='h-8 w-8 p-0'
                               aria-label={`Download ${attachment.fileName}`}
                             >
-                              <Download className="size-4" aria-hidden="true" />
+                              <Download className='size-4' aria-hidden='true' />
                             </Button>
 
                             {!readOnly ? (
                               <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
+                                type='button'
+                                variant='destructive'
+                                size='sm'
                                 onClick={() =>
                                   setDeleteItemAttachment({
                                     attachmentId: attachment.id,
-                                    quoteItemId: item.id,
+                                    quoteItemId: item.id
                                   })
                                 }
                                 disabled={isDeleting}
-                                className="h-8 w-8 p-0"
+                                className='h-8 w-8 p-0'
                                 aria-label={`Delete ${attachment.fileName}`}
                               >
-                                <Trash2 className="size-4" aria-hidden="true" />
+                                <Trash2 className='size-4' aria-hidden='true' />
                               </Button>
                             ) : null}
                           </Box>
                         </Box>
 
                         {/* Image Info */}
-                        <Box className="p-2 bg-white dark:bg-gray-900">
-                          <p className="text-xs font-medium text-gray-900 dark:text-gray-50 truncate">
+                        <Box className='p-2 bg-white dark:bg-gray-900'>
+                          <p className='text-xs font-medium text-gray-900 dark:text-gray-50 truncate'>
                             {attachment.fileName}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                          <p className='text-xs text-gray-500 dark:text-gray-500'>
                             {formatFileSize(attachment.fileSize)}
                           </p>
                         </Box>
@@ -301,7 +301,7 @@ export function QuoteItemDetails({
                     <Box>
                       <RichTextEditor
                         key={`editor-${item.id}`}
-                        placeholder="Add notes about these colors and images..."
+                        placeholder='Add notes about these colors and images...'
                         value={editingNotes[item.id] ?? item.notes ?? ''}
                         onChange={(value) => handleNotesChange(item.id, value)}
                         onBlur={() => handleNotesBlur(item.id, item.notes)}
@@ -309,7 +309,7 @@ export function QuoteItemDetails({
                       />
                     </Box>
                   ) : item.notes ? (
-                    <Box className="border border-gray-200 dark:border-gray-800 rounded-md p-3">
+                    <Box className='border border-gray-200 dark:border-gray-800 rounded-md p-3'>
                       <RichTextEditor
                         key={`editor-readonly-${item.id}`}
                         value={item.notes ?? ''}

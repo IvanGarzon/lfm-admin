@@ -9,7 +9,7 @@ import type {
   PriceListFilters,
   PriceListPagination,
   PriceListCostHistoryItem,
-  PriceListCostChange,
+  PriceListCostChange
 } from '@/features/inventory/price-list/types';
 
 /**
@@ -33,7 +33,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
    */
   private toListItem(
     item: Prisma.PriceListItemGetPayload<object>,
-    lastCostChange?: PriceListCostChange | null,
+    lastCostChange?: PriceListCostChange | null
   ): PriceListItemListItem {
     return {
       id: item.id,
@@ -51,7 +51,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
       season: item.season,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
-      lastCostChange: lastCostChange ?? null,
+      lastCostChange: lastCostChange ?? null
     };
   }
 
@@ -63,7 +63,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
    */
   async searchPriceListItems(
     params: PriceListFilters,
-    tenantId: string,
+    tenantId: string
   ): Promise<PriceListPagination> {
     const { search, category, page, perPage, sort } = params;
 
@@ -72,17 +72,17 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
       deletedAt: null,
       ...(search
         ? {
-            name: { contains: search, mode: 'insensitive' as Prisma.QueryMode },
+            name: { contains: search, mode: 'insensitive' as Prisma.QueryMode }
           }
         : {}),
-      ...(category && category.length > 0 ? { category: { in: category } } : {}),
+      ...(category && category.length > 0 ? { category: { in: category } } : {})
     };
 
     // Build orderBy from sort params
     const orderBy: Prisma.PriceListItemOrderByWithRelationInput[] =
       sort && sort.length > 0
         ? sort.map((s) => ({
-            [s.id]: s.desc ? ('desc' as const) : ('asc' as const),
+            [s.id]: s.desc ? ('desc' as const) : ('asc' as const)
           }))
         : [{ createdAt: 'desc' as const }];
 
@@ -95,11 +95,11 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
         include: {
           costHistory: {
             orderBy: { changedAt: 'desc' },
-            take: 1,
-          },
-        },
+            take: 1
+          }
+        }
       }),
-      this.prisma.priceListItem.count({ where }),
+      this.prisma.priceListItem.count({ where })
     ]);
 
     const pagination = getPaginationMetadata(totalItems, perPage, page);
@@ -112,12 +112,12 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
               previousCost: Number(lastHistory.previousCost),
               newCost: Number(lastHistory.newCost),
               changedAt: lastHistory.changedAt,
-              trend: Number(lastHistory.newCost) > Number(lastHistory.previousCost) ? 'up' : 'down',
+              trend: Number(lastHistory.newCost) > Number(lastHistory.previousCost) ? 'up' : 'down'
             }
           : null;
         return this.toListItem(item, lastCostChange);
       }),
-      pagination,
+      pagination
     };
   }
 
@@ -128,16 +128,16 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
    */
   async findPriceListItemById(
     id: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<PriceListItemWithDetails | null> {
     const item = await this.prisma.priceListItem.findFirst({
       where: { id, tenantId, deletedAt: null },
       include: {
         costHistory: {
           orderBy: { changedAt: 'desc' },
-          take: 50,
-        },
-      },
+          take: 50
+        }
+      }
     });
 
     if (!item) {
@@ -150,7 +150,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
           previousCost: Number(lastHistory.previousCost),
           newCost: Number(lastHistory.newCost),
           changedAt: lastHistory.changedAt,
-          trend: Number(lastHistory.newCost) > Number(lastHistory.previousCost) ? 'up' : 'down',
+          trend: Number(lastHistory.newCost) > Number(lastHistory.previousCost) ? 'up' : 'down'
         }
       : null;
 
@@ -160,8 +160,8 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
         id: h.id,
         previousCost: Number(h.previousCost),
         newCost: Number(h.newCost),
-        changedAt: h.changedAt,
-      })),
+        changedAt: h.changedAt
+      }))
     };
   }
 
@@ -173,12 +173,12 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
    */
   async createPriceListItem(
     data: CreatePriceListItemInput,
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string }> {
     const retailPrice = calculateRetailPrice({
       costPerUnit: data.costPerUnit,
       multiplier: data.multiplier,
-      retailPriceOverride: data.retailPriceOverride,
+      retailPriceOverride: data.retailPriceOverride
     });
 
     const item = await this.prisma.priceListItem.create({
@@ -195,9 +195,9 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
         retailPriceOverride: data.retailPriceOverride,
         unitType: data.unitType,
         bunchSize: data.bunchSize,
-        season: data.season,
+        season: data.season
       },
-      select: { id: true },
+      select: { id: true }
     });
 
     return { id: item.id };
@@ -213,10 +213,10 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
   async updatePriceListItem(
     id: string,
     tenantId: string,
-    data: UpdatePriceListItemInput,
+    data: UpdatePriceListItemInput
   ): Promise<PriceListItemWithDetails | null> {
     const existing = await this.prisma.priceListItem.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!existing) {
@@ -226,7 +226,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
     const retailPrice = calculateRetailPrice({
       costPerUnit: data.costPerUnit,
       multiplier: data.multiplier,
-      retailPriceOverride: data.retailPriceOverride,
+      retailPriceOverride: data.retailPriceOverride
     });
 
     const previousCost = Number(existing.costPerUnit);
@@ -239,8 +239,8 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
           data: {
             priceListItemId: id,
             previousCost: previousCost,
-            newCost: data.costPerUnit,
-          },
+            newCost: data.costPerUnit
+          }
         });
       }
 
@@ -258,14 +258,14 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
           retailPriceOverride: data.retailPriceOverride,
           unitType: data.unitType,
           bunchSize: data.bunchSize,
-          season: data.season,
+          season: data.season
         },
         include: {
           costHistory: {
             orderBy: { changedAt: 'desc' },
-            take: 50,
-          },
-        },
+            take: 50
+          }
+        }
       });
     });
 
@@ -278,7 +278,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
           trend:
             Number(lastHistoryUpdated.newCost) > Number(lastHistoryUpdated.previousCost)
               ? 'up'
-              : 'down',
+              : 'down'
         }
       : null;
 
@@ -288,8 +288,8 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
         id: h.id,
         previousCost: Number(h.previousCost),
         newCost: Number(h.newCost),
-        changedAt: h.changedAt,
-      })),
+        changedAt: h.changedAt
+      }))
     };
   }
 
@@ -300,7 +300,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
    */
   async deletePriceListItem(id: string, tenantId: string): Promise<boolean> {
     const item = await this.prisma.priceListItem.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: { id, tenantId, deletedAt: null }
     });
 
     if (!item) {
@@ -309,7 +309,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
 
     await this.prisma.priceListItem.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date() }
     });
 
     return true;
@@ -324,14 +324,14 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
     const history = await this.prisma.priceListCostHistory.findMany({
       where: { priceListItemId },
       orderBy: { changedAt: 'desc' },
-      take: 100,
+      take: 100
     });
 
     return history.map((h) => ({
       id: h.id,
       previousCost: Number(h.previousCost),
       newCost: Number(h.newCost),
-      changedAt: h.changedAt,
+      changedAt: h.changedAt
     }));
   }
 
@@ -342,7 +342,7 @@ export class PriceListRepository extends BaseRepository<Prisma.PriceListItemGetP
   async findActivePriceListItems(tenantId: string): Promise<PriceListItemListItem[]> {
     const items = await this.prisma.priceListItem.findMany({
       where: { tenantId, deletedAt: null },
-      orderBy: { name: 'asc' },
+      orderBy: { name: 'asc' }
     });
 
     return items.map((item) => this.toListItem(item, null));

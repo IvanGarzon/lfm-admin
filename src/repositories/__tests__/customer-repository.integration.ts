@@ -12,7 +12,7 @@ import { CustomerRepository } from '../customer-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createCustomerInput } from '@/lib/testing';
 
@@ -46,7 +46,7 @@ describe('CustomerRepository (integration)', () => {
     it('stores address fields when useOrganizationAddress is false', async () => {
       const result = await repository.createCustomer(
         { ...createCustomerInput(), useOrganizationAddress: false },
-        tenantId,
+        tenantId
       );
 
       expect(result.address1).toBe('1 Test St');
@@ -56,7 +56,7 @@ describe('CustomerRepository (integration)', () => {
     it('omits address fields when useOrganizationAddress is true', async () => {
       const result = await repository.createCustomer(
         { ...createCustomerInput(), useOrganizationAddress: true },
-        tenantId,
+        tenantId
       );
 
       expect(result.address1).toBeNull();
@@ -65,12 +65,12 @@ describe('CustomerRepository (integration)', () => {
 
     it('links to an organisation when organizationId is provided', async () => {
       const org = await getTestPrisma().organization.create({
-        data: { name: 'Acme', tenantId },
+        data: { name: 'Acme', tenantId }
       });
 
       const result = await repository.createCustomer(
         { ...createCustomerInput(), organizationId: org.id },
-        tenantId,
+        tenantId
       );
 
       expect(result.organizationId).toBe(org.id);
@@ -79,7 +79,7 @@ describe('CustomerRepository (integration)', () => {
     it('always creates with ACTIVE status regardless of input', async () => {
       const result = await repository.createCustomer(
         { ...createCustomerInput(), status: 'INACTIVE' },
-        tenantId,
+        tenantId
       );
 
       expect(result.status).toBe('ACTIVE');
@@ -94,7 +94,7 @@ describe('CustomerRepository (integration)', () => {
       const result = await repository.updateCustomer(created.id, tenantId, {
         ...createCustomerInput(),
         id: created.id,
-        phone: '+1234567890',
+        phone: '+1234567890'
       });
 
       expect(result).not.toBeNull();
@@ -105,7 +105,7 @@ describe('CustomerRepository (integration)', () => {
       const nonExistentId = 'non-existent';
       const result = await repository.updateCustomer(nonExistentId, tenantId, {
         ...createCustomerInput(),
-        id: nonExistentId,
+        id: nonExistentId
       });
 
       expect(result).toBeNull();
@@ -118,7 +118,7 @@ describe('CustomerRepository (integration)', () => {
       const result = await repository.updateCustomer(created.id, tenantId, {
         ...createCustomerInput(),
         id: created.id,
-        phone: '+1234567890',
+        phone: '+1234567890'
       });
 
       expect(result).toBeNull();
@@ -187,12 +187,12 @@ describe('CustomerRepository (integration)', () => {
       await repository.createCustomer(createCustomerInput(), tenantId);
       await repository.createCustomer(
         { ...createCustomerInput(), firstName: 'Bob', email: 'bob@example.com' },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchCustomers(
         { search: 'Jane', page: 1, perPage: 10 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.some((c) => c.firstName === 'Jane')).toBe(true);
@@ -213,7 +213,7 @@ describe('CustomerRepository (integration)', () => {
       for (let i = 0; i < 3; i++) {
         await repository.createCustomer(
           { ...createCustomerInput(), email: `customer${i}@example.com` },
-          tenantId,
+          tenantId
         );
       }
 
@@ -232,7 +232,7 @@ describe('CustomerRepository (integration)', () => {
       await repository.softDeleteCustomer(created.id, tenantId);
       await repository.createCustomer(
         { ...createCustomerInput(), email: 'active@example.com' },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findActiveCustomers(tenantId);

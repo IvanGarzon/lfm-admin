@@ -21,7 +21,7 @@ const ORG_TYPES = [
   () => `${faker.location.city()} Botanical Gardens`,
   () => `${faker.company.name()} Floral Design Studio`,
   () => `${faker.company.name()} Funeral Services`,
-  () => `${faker.location.city()} Corporate Events`,
+  () => `${faker.location.city()} Corporate Events`
 ] as const;
 
 function buildOrganisation() {
@@ -45,10 +45,10 @@ function buildOrganisation() {
           .toLowerCase()
           .replace(/[^a-z0-9]/g, '-')
           .replace(/-+/g, '-')}.com.au`,
-      { probability: 0.6 },
+      { probability: 0.6 }
     ),
     abn: faker.helpers.maybe(() => fakeAbn(), { probability: 0.7 }),
-    status: 'ACTIVE' as const,
+    status: 'ACTIVE' as const
   };
 }
 
@@ -74,9 +74,9 @@ export async function seedOrganizations(options: SeedOrganizationsOptions): Prom
       prisma.organization.create({
         data: {
           ...org,
-          tenantId: tenant.id,
-        },
-      }),
+          tenantId: tenant.id
+        }
+      })
     );
 
     await Promise.all(creates);
@@ -107,7 +107,7 @@ if (isMain) {
       ...tenant,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedOrganizations({ tenants: seededTenants });

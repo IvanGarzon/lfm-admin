@@ -16,17 +16,17 @@ const OrganizationSchema = z.object({
   email: commonValidators.emailOptional(),
   website: commonValidators.urlOptional(),
   abn: commonValidators.stringOptional(VALIDATION_LIMITS.ABN_MAX, 'ABN'),
-  status: OrganizationStatusSchema.default('ACTIVE').optional(),
+  status: OrganizationStatusSchema.default('ACTIVE').optional()
 });
 
 export const CreateOrganizationSchema = OrganizationSchema;
 
 export const UpdateOrganizationSchema = OrganizationSchema.extend({
-  id: z.cuid({ error: 'Invalid organization ID' }),
+  id: z.cuid({ error: 'Invalid organization ID' })
 });
 
 export const DeleteOrganizationSchema = z.object({
-  id: z.cuid({ error: 'Invalid organization ID' }),
+  id: z.cuid({ error: 'Invalid organization ID' })
 });
 
 export type CreateOrganizationInput = z.infer<typeof CreateOrganizationSchema>;

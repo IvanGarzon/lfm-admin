@@ -16,16 +16,16 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
     name: 'Send Quote Expiry Reminders',
     retries: 3,
     timeouts: {
-      finish: '10m', // Max 10 minutes (may process many quotes)
+      finish: '10m' // Max 10 minutes (may process many quotes)
     },
     triggers: [
       { cron: '0 9 * * *' }, // Daily at 9 AM
-      { event: 'quote-expiry-reminder/manual' }, // Manual trigger
-    ],
+      { event: 'quote-expiry-reminder/manual' } // Manual trigger
+    ]
   },
   async ({ step }) => {
     logger.info('Inngest function triggered - quote expiry reminder', {
-      context: 'inngest-quote-expiry-reminder',
+      context: 'inngest-quote-expiry-reminder'
     });
 
     // Find quotes expiring in 3 days
@@ -43,22 +43,22 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
           status: 'SENT',
           validUntil: {
             gte: startOfDay,
-            lte: threeDaysFromNow,
+            lte: threeDaysFromNow
           },
-          deletedAt: null,
+          deletedAt: null
         },
         include: {
           customer: true,
-          items: true,
-        },
+          items: true
+        }
       });
     });
 
     logger.info('Found expiring quotes', {
       context: 'inngest-quote-expiry-reminder',
       metadata: {
-        count: expiringQuotes.length,
-      },
+        count: expiringQuotes.length
+      }
     });
 
     // Queue reminder emails
@@ -80,8 +80,8 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
               currency: quote.currency,
               issuedDate: quote.issuedDate,
               validUntil: quote.validUntil,
-              itemCount: quote.items.length,
-            },
+              itemCount: quote.items.length
+            }
           });
           queuedCount++;
         } catch (error) {
@@ -89,8 +89,8 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
             context: 'inngest-quote-expiry-reminder',
             metadata: {
               quoteId: quote.id,
-              quoteNumber: quote.quoteNumber,
-            },
+              quoteNumber: quote.quoteNumber
+            }
           });
         }
       });
@@ -100,10 +100,10 @@ export const quoteExpiryReminderFunction = inngest.createFunction(
       context: 'inngest-quote-expiry-reminder',
       metadata: {
         total: expiringQuotes.length,
-        queued: queuedCount,
-      },
+        queued: queuedCount
+      }
     });
 
     return { success: true, total: expiringQuotes.length, queued: queuedCount };
-  },
+  }
 );

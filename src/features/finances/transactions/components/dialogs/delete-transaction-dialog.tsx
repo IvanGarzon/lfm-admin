@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -25,7 +25,7 @@ export function DeleteTransactionDialog({
   onOpenChange,
   onConfirm,
   referenceNumber,
-  isPending = false,
+  isPending = false
 }: DeleteTransactionDialogProps) {
   const handleCancel = useCallback(() => {
     onOpenChange(false);
@@ -33,10 +33,10 @@ export function DeleteTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle aria-hidden="true" className="h-5 w-5" />
+          <DialogTitle className='flex items-center gap-2 text-destructive'>
+            <AlertCircle aria-hidden='true' className='h-5 w-5' />
             Delete Transaction
           </DialogTitle>
           <DialogDescription>
@@ -53,10 +53,10 @@ export function DeleteTransactionDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+          <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isPending}>
+          <Button type='button' variant='destructive' onClick={onConfirm} disabled={isPending}>
             {isPending ? 'Deleting...' : 'Delete Transaction'}
           </Button>
         </DialogFooter>

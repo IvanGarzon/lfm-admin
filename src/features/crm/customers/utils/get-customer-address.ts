@@ -33,7 +33,7 @@ export function getEffectiveAddress(customer: CustomerAddressInfo): string {
  * Determine the source of a customer's address.
  */
 export function getAddressSource(
-  customer: CustomerAddressInfo,
+  customer: CustomerAddressInfo
 ): 'organization' | 'custom' | 'none' {
   if (customer.useOrganizationAddress && customer.organization) {
     return 'organization';

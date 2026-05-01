@@ -6,27 +6,27 @@ const { mockEmployeeRepo, mockAuth } = vi.hoisted(() => ({
   mockEmployeeRepo: {
     createEmployee: vi.fn(),
     updateEmployee: vi.fn(),
-    deleteEmployee: vi.fn(),
+    deleteEmployee: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/employee-repository', () => ({
   EmployeeRepository: vi.fn().mockImplementation(function () {
     return mockEmployeeRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const TEST_EMPLOYEE_ID = testIds.employee();
@@ -53,7 +53,7 @@ describe('Employee Mutations', () => {
       }
       expect(mockEmployeeRepo.createEmployee).toHaveBeenCalledWith(
         expect.objectContaining({ firstName: input.firstName }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -88,7 +88,7 @@ describe('Employee Mutations', () => {
       expect(mockEmployeeRepo.updateEmployee).toHaveBeenCalledWith(
         TEST_EMPLOYEE_ID,
         mockSession.user.tenantId,
-        expect.objectContaining({ firstName: input.firstName }),
+        expect.objectContaining({ firstName: input.firstName })
       );
     });
 
@@ -120,7 +120,7 @@ describe('Employee Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockEmployeeRepo.deleteEmployee).toHaveBeenCalledWith(
         TEST_EMPLOYEE_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

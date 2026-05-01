@@ -13,13 +13,13 @@ import {
   CreateInvoiceSchema,
   UpdateInvoiceSchema,
   type CreateInvoiceInput,
-  type UpdateInvoiceInput,
+  type UpdateInvoiceInput
 } from '@/schemas/invoices';
 import type {
   InvoiceFormInput,
   InvoiceMetadata,
   InvoiceItemDetail,
-  InvoiceStatusHistoryItem,
+  InvoiceStatusHistoryItem
 } from '@/features/finances/invoices/types';
 import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
@@ -45,14 +45,14 @@ const defaultFormState: CreateInvoiceInput = {
       description: '',
       quantity: 1,
       unitPrice: 0,
-      productId: null,
-    },
-  ],
+      productId: null
+    }
+  ]
 };
 
 const mapInvoiceToFormValues = (
   invoice: InvoiceMetadata,
-  items: InvoiceItemDetail[] = [],
+  items: InvoiceItemDetail[] = []
 ): UpdateInvoiceInput => {
   return {
     id: invoice.id,
@@ -68,8 +68,8 @@ const mapInvoiceToFormValues = (
       description: item.description,
       quantity: item.quantity,
       unitPrice: Number(item.unitPrice),
-      productId: item.productId,
-    })),
+      productId: item.productId
+    }))
   };
 };
 
@@ -81,7 +81,7 @@ export function InvoiceForm({
   isCreating = false,
   isUpdating = false,
   isLoadingItems = false,
-  onDirtyStateChange,
+  onDirtyStateChange
 }: {
   invoice?: InvoiceMetadata | null;
   items?: InvoiceItemDetail[];
@@ -114,17 +114,17 @@ export function InvoiceForm({
   const form = useForm<InvoiceFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   const itemsFieldArray = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: 'items'
   });
 
   const [watchedItems, watchedGst, watchedDiscount] = useWatch({
     control: form.control,
-    name: ['items', 'gst', 'discount'],
+    name: ['items', 'gst', 'discount']
   });
 
   const gst = watchedGst ?? 0;
@@ -145,7 +145,7 @@ export function InvoiceForm({
       onDirtyStateChange?.(false);
       return values;
     }, [invoice, items, onDirtyStateChange]),
-    isUpdating, // Reset form when update completes (true -> false)
+    isUpdating // Reset form when update completes (true -> false)
   );
 
   // Warn user before leaving page with unsaved changes
@@ -177,7 +177,7 @@ export function InvoiceForm({
       InvoiceStatusSchema.enum.PARTIALLY_PAID,
       InvoiceStatusSchema.enum.CANCELLED,
       InvoiceStatusSchema.enum.PENDING,
-      InvoiceStatusSchema.enum.OVERDUE,
+      InvoiceStatusSchema.enum.OVERDUE
     ];
 
     return lockedStatuses.includes(invoice.status);
@@ -194,18 +194,18 @@ export function InvoiceForm({
       } else {
         const updateData: UpdateInvoiceInput = {
           ...data,
-          id: invoice?.id ?? '',
+          id: invoice?.id ?? ''
         };
         onUpdate?.(updateData);
       }
     },
-    [isLocked, mode, onCreate, onUpdate, invoice?.id],
+    [isLocked, mode, onCreate, onUpdate, invoice?.id]
   );
 
   const subtotal = useMemo(() => {
     return watchedItems.reduce(
       (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),
-      0,
+      0
     );
   }, [watchedItems]);
 
@@ -215,33 +215,33 @@ export function InvoiceForm({
   return (
     <Form {...form}>
       <form
-        id="form-rhf-invoice"
+        id='form-rhf-invoice'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isCreating || isUpdating ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 aria-hidden='true' className='h-4 w-4 animate-spin' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating invoice...' : 'Updating invoice...'}
             </span>
           </Box>
         ) : null}
 
         {isLocked ? (
-          <Box className="px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20">
+          <Box className='px-6 py-3 bg-amber-50 border-b flex items-center gap-2 dark:bg-amber-900/20'>
             <AlertCircle
-              aria-hidden="true"
-              className="h-4 w-4 text-amber-600 dark:text-amber-400"
+              aria-hidden='true'
+              className='h-4 w-4 text-amber-600 dark:text-amber-400'
             />
-            <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
+            <span className='text-sm font-medium text-amber-800 dark:text-amber-300'>
               This invoice is {invoice?.status.toLowerCase().replace(/_/g, ' ')} and cannot be
               edited.
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 overflow-y-auto px-6 py-6">
+        <Box className='flex-1 overflow-y-auto px-6 py-6'>
           <InvoiceHeaderFields
             control={form.control}
             mode={mode}
@@ -253,9 +253,9 @@ export function InvoiceForm({
 
           {/* Items details */}
           {isLoadingItems ? (
-            <Box className="py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg">
-              <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Loading invoice items...</p>
+            <Box className='py-12 flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg'>
+              <Loader2 aria-hidden='true' className='h-6 w-6 animate-spin text-primary' />
+              <p className='text-sm text-muted-foreground'>Loading invoice items...</p>
             </Box>
           ) : (
             <InvoiceItemsList

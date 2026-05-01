@@ -2,7 +2,7 @@ import { RecipeActionProvider } from '@/features/finances/recipes/context/recipe
 
 export default function QuotesLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

@@ -10,6 +10,6 @@ import { searchParams } from '@/filters/vendors/vendors-filters';
 export function useVendorQueryString() {
   return useQueryStates(searchParams, {
     history: 'push',
-    shallow: false,
+    shallow: false
   });
 }

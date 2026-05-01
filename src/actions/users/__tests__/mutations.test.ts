@@ -5,7 +5,7 @@ import {
   updateUserRole,
   softDeleteUser,
   inviteUser,
-  uploadUserAvatar,
+  uploadUserAvatar
 } from '../mutations';
 import { testIds, mockSessions, createUpdateUserInput } from '@/lib/testing';
 import { revalidatePath } from 'next/cache';
@@ -22,51 +22,51 @@ const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoiste
     softDeleteTenantUser: vi.fn(),
     updateUserAvatar: vi.fn(),
     getUserByEmail: vi.fn(),
-    findById: vi.fn(),
+    findById: vi.fn()
   },
   mockInvitationRepo: {
     findPendingByEmail: vi.fn(),
     create: vi.fn(),
-    revoke: vi.fn(),
+    revoke: vi.fn()
   },
   mockTenantRepo: {
-    findTenantById: vi.fn(),
+    findTenantById: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/invitation-repository', () => ({
   InvitationRepository: vi.fn().mockImplementation(function () {
     return mockInvitationRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/tenant-repository', () => ({
   TenantRepository: vi.fn().mockImplementation(function () {
     return mockTenantRepo;
-  }),
+  })
 }));
 
 vi.mock('@/lib/email-service', () => ({
-  sendEmailNotification: vi.fn().mockResolvedValue(undefined),
+  sendEmailNotification: vi.fn().mockResolvedValue(undefined)
 }));
 
 vi.mock('@/lib/s3', () => ({
   uploadFileToS3: vi.fn().mockResolvedValue({
     s3Key: 'users/test-id/avatar/avatar.jpg',
-    s3Url: 'https://bucket.s3.region.amazonaws.com/users/test-id/avatar/avatar.jpg',
-  }),
+    s3Url: 'https://bucket.s3.region.amazonaws.com/users/test-id/avatar/avatar.jpg'
+  })
 }));
 
 vi.mock('@/lib/utils', () => ({
   absoluteUrl: vi.fn((path: string) => `https://example.com${path}`),
-  getPaginationMetadata: vi.fn(),
+  getPaginationMetadata: vi.fn()
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -89,7 +89,7 @@ const mockUser: UserDetail = {
   title: null,
   bio: null,
   avatarUrl: null,
-  addedBy: null,
+  addedBy: null
 };
 
 const baseInput = createUpdateUserInput({ id: TEST_USER_ID });
@@ -147,7 +147,7 @@ describe('User Mutations', () => {
       expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        { isTwoFactorEnabled: true },
+        { isTwoFactorEnabled: true }
       );
     });
 
@@ -160,45 +160,45 @@ describe('User Mutations', () => {
       expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        { isTwoFactorEnabled: false },
+        { isTwoFactorEnabled: false }
       );
     });
 
     it('enables login notifications', async () => {
       mockUserRepo.updateUserSecurity.mockResolvedValue({
         ...mockUser,
-        loginNotificationsEnabled: true,
+        loginNotificationsEnabled: true
       });
 
       const result = await updateUserSecurity({
         id: TEST_USER_ID,
-        loginNotificationsEnabled: true,
+        loginNotificationsEnabled: true
       });
 
       expect(result.success).toBe(true);
       expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        { loginNotificationsEnabled: true },
+        { loginNotificationsEnabled: true }
       );
     });
 
     it('disables login notifications', async () => {
       mockUserRepo.updateUserSecurity.mockResolvedValue({
         ...mockUser,
-        loginNotificationsEnabled: false,
+        loginNotificationsEnabled: false
       });
 
       const result = await updateUserSecurity({
         id: TEST_USER_ID,
-        loginNotificationsEnabled: false,
+        loginNotificationsEnabled: false
       });
 
       expect(result.success).toBe(true);
       expect(mockUserRepo.updateUserSecurity).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        { loginNotificationsEnabled: false },
+        { loginNotificationsEnabled: false }
       );
     });
 
@@ -233,7 +233,7 @@ describe('User Mutations', () => {
       expect(mockUserRepo.updateTenantUserRole).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        'ADMIN',
+        'ADMIN'
       );
     });
 
@@ -281,7 +281,7 @@ describe('User Mutations', () => {
       id: 'inv-1',
       token: 'test-token-abc',
       role: 'USER' as const,
-      expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000)
     };
 
     const mockTenant = { id: 'tenant-1', name: 'Test Tenant' };
@@ -301,7 +301,7 @@ describe('User Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockInvitationRepo.create).toHaveBeenCalled();
       expect(vi.mocked(sendEmailNotification)).toHaveBeenCalledWith(
-        expect.objectContaining({ to: 'new@example.com' }),
+        expect.objectContaining({ to: 'new@example.com' })
       );
       expect(revalidatePath).toHaveBeenCalledWith('/users');
     });
@@ -321,7 +321,7 @@ describe('User Mutations', () => {
     it('returns error when user with email already exists in tenant', async () => {
       mockUserRepo.getUserByEmail.mockResolvedValue({
         id: 'u-1',
-        tenantId: mockSession.user.tenantId,
+        tenantId: mockSession.user.tenantId
       });
 
       const result = await inviteUser({ email: 'existing@example.com', role: 'USER' });
@@ -359,7 +359,7 @@ describe('User Mutations', () => {
       mockUserRepo.updateUserAvatar.mockResolvedValue(undefined);
       vi.mocked(uploadFileToS3).mockResolvedValue({
         s3Key: 'users/test-id/avatar/avatar.jpg',
-        s3Url: mockAvatarUrl,
+        s3Url: mockAvatarUrl
       });
     });
 
@@ -377,7 +377,7 @@ describe('User Mutations', () => {
       expect(mockUserRepo.updateUserAvatar).toHaveBeenCalledWith(
         TEST_USER_ID,
         mockSession.user.tenantId,
-        mockAvatarUrl,
+        mockAvatarUrl
       );
     });
 

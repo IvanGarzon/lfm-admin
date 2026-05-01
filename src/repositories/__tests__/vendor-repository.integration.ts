@@ -12,7 +12,7 @@ import { VendorRepository } from '../vendor-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createVendorInput } from '@/lib/testing';
 
@@ -45,7 +45,7 @@ describe('VendorRepository (integration)', () => {
     it('auto-generates unique vendor codes', async () => {
       const [a, b] = await Promise.all([
         repository.createVendor(createVendorInput(), tenantId),
-        repository.createVendor(createVendorInput(), tenantId),
+        repository.createVendor(createVendorInput(), tenantId)
       ]);
 
       expect(a.vendorCode).not.toBe(b.vendorCode);
@@ -103,16 +103,16 @@ describe('VendorRepository (integration)', () => {
     it('filters by search term across name and email', async () => {
       await repository.createVendor(
         { ...createVendorInput(), name: 'Unique Botanicals' },
-        tenantId,
+        tenantId
       );
       await repository.createVendor(
         { ...createVendorInput(), name: 'Standard Supplies', email: 'standard@supply.com' },
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchAndPaginate(
         { page: 1, perPage: 10, search: 'Botanicals' },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((v) => v.name === 'Unique Botanicals')).toBe(true);
@@ -124,7 +124,7 @@ describe('VendorRepository (integration)', () => {
 
       const result = await repository.searchAndPaginate(
         { page: 1, perPage: 10, status: ['ACTIVE'] },
-        tenantId,
+        tenantId
       );
 
       expect(result.items.every((v) => v.status === 'ACTIVE')).toBe(true);
@@ -139,7 +139,7 @@ describe('VendorRepository (integration)', () => {
       const result = await repository.updateVendor(created.id, tenantId, {
         ...createVendorInput(),
         id: created.id,
-        name: 'Updated Vendor Name',
+        name: 'Updated Vendor Name'
       });
 
       expect(result).not.toBeNull();
@@ -152,7 +152,7 @@ describe('VendorRepository (integration)', () => {
 
       const result = await repository.updateVendor(created.id, tenantId, {
         ...createVendorInput(),
-        id: created.id,
+        id: created.id
       });
       expect(result).toBeNull();
     });
@@ -173,7 +173,7 @@ describe('VendorRepository (integration)', () => {
       const created = await repository.createVendor(createVendorInput(), otherTenantId);
 
       await expect(
-        repository.updateVendorStatus(created.id, tenantId, 'INACTIVE'),
+        repository.updateVendorStatus(created.id, tenantId, 'INACTIVE')
       ).rejects.toThrow();
     });
   });

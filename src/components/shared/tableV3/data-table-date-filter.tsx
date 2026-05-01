@@ -54,7 +54,7 @@ interface DataTableDateFilterProps<TData> {
 export function DataTableDateFilter<TData>({
   column,
   title,
-  multiple,
+  multiple
 }: DataTableDateFilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
 
@@ -67,7 +67,7 @@ export function DataTableDateFilter<TData>({
       const timestamps = parseColumnFilterValue(columnFilterValue);
       return {
         from: parseAsDate(timestamps[0]),
-        to: parseAsDate(timestamps[1]),
+        to: parseAsDate(timestamps[1])
       };
     }
 
@@ -91,7 +91,7 @@ export function DataTableDateFilter<TData>({
         column.setFilterValue(date.getTime());
       }
     },
-    [column, multiple],
+    [column, multiple]
   );
 
   const onReset = React.useCallback(
@@ -99,7 +99,7 @@ export function DataTableDateFilter<TData>({
       event.stopPropagation();
       column.setFilterValue(undefined);
     },
-    [column],
+    [column]
   );
 
   const hasValue = React.useMemo(() => {
@@ -127,13 +127,13 @@ export function DataTableDateFilter<TData>({
       const dateText = hasSelectedDates ? formatDateRange(selectedDates) : 'Select date range';
 
       return (
-        <span className="flex items-center gap-2">
+        <span className='flex items-center gap-2'>
           <span>{title}</span>
           {hasSelectedDates ? (
             <>
               <Separator
-                orientation="vertical"
-                className="mx-0.5 data-[orientation=vertical]:h-4"
+                orientation='vertical'
+                className='mx-0.5 data-[orientation=vertical]:h-4'
               />
               <span>{dateText}</span>
             </>
@@ -148,11 +148,11 @@ export function DataTableDateFilter<TData>({
     const dateText = hasSelectedDate ? formatDate(selectedDates[0]) : 'Select date';
 
     return (
-      <span className="flex items-center gap-2">
+      <span className='flex items-center gap-2'>
         <span>{title}</span>
         {hasSelectedDate && (
           <>
-            <Separator orientation="vertical" className="mx-0.5 data-[orientation=vertical]:h-4" />
+            <Separator orientation='vertical' className='mx-0.5 data-[orientation=vertical]:h-4' />
             <span>{dateText}</span>
           </>
         )}
@@ -163,14 +163,14 @@ export function DataTableDateFilter<TData>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="border-dashed">
+        <Button variant='outline' size='sm' className='border-dashed'>
           {hasValue ? (
             <div
-              role="button"
+              role='button'
               aria-label={`Clear ${title} filter`}
               tabIndex={0}
               onClick={onReset}
-              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className='rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
             >
               <XCircle />
             </div>
@@ -180,10 +180,10 @@ export function DataTableDateFilter<TData>({
           {label}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className='w-auto p-0' align='start'>
         {multiple ? (
           <Calendar
-            mode="range"
+            mode='range'
             selected={
               getIsDateRange(selectedDates) ? selectedDates : { from: undefined, to: undefined }
             }
@@ -191,7 +191,7 @@ export function DataTableDateFilter<TData>({
           />
         ) : (
           <Calendar
-            mode="single"
+            mode='single'
             selected={!getIsDateRange(selectedDates) ? selectedDates[0] : undefined}
             onSelect={onSelect}
           />

@@ -11,13 +11,13 @@ const ProductSchema = z.object({
     .string({ error: 'Product name is required' })
     .min(1, { error: 'Product name is required' })
     .max(VALIDATION_LIMITS.NAME_MAX, {
-      error: `Name must be at most ${VALIDATION_LIMITS.NAME_MAX} characters`,
+      error: `Name must be at most ${VALIDATION_LIMITS.NAME_MAX} characters`
     }),
   description: z
     .string()
     .max(
       VALIDATION_LIMITS.NOTES_MAX,
-      `Description must be at most ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+      `Description must be at most ${VALIDATION_LIMITS.NOTES_MAX} characters`
     )
     .optional()
     .nullable(),
@@ -28,40 +28,40 @@ const ProductSchema = z.object({
     .int('Stock must be a whole number')
     .min(0, 'Stock must be a positive number'),
   imageUrl: z.url('Invalid image URL').optional().nullable(),
-  availableAt: z.date().optional().nullable(),
+  availableAt: z.date().optional().nullable()
 });
 
 export const CreateProductSchema = ProductSchema;
 export const UpdateProductSchema = ProductSchema.safeExtend({
-  id: z.cuid({ error: 'Invalid product ID' }),
+  id: z.cuid({ error: 'Invalid product ID' })
 });
 
 /**
  * Schema for product filters (search/list)
  */
 export const ProductFiltersSchema = baseFiltersSchema.extend({
-  status: createEnumArrayFilter(ProductStatusSchema),
+  status: createEnumArrayFilter(ProductStatusSchema)
 });
 
 export const DeleteProductSchema = z.object({ id: z.cuid({ error: 'Invalid product ID' }) });
 
 export const UpdateProductStatusSchema = z.object({
   id: z.cuid({ error: 'Invalid product ID' }),
-  status: ProductStatusSchema,
+  status: ProductStatusSchema
 });
 
 export const UpdateProductStockSchema = z.object({
   id: z.cuid({ error: 'Invalid product ID' }),
-  quantity: z.number({ error: 'Quantity is required' }).int('Quantity must be a whole number'),
+  quantity: z.number({ error: 'Quantity is required' }).int('Quantity must be a whole number')
 });
 
 export const BulkUpdateProductStatusSchema = z.object({
   ids: z.array(z.cuid({ error: 'Invalid product ID' })),
-  status: ProductStatusSchema,
+  status: ProductStatusSchema
 });
 
 export const BulkDeleteProductsSchema = z.object({
-  ids: z.array(z.cuid({ error: 'Invalid product ID' })),
+  ids: z.array(z.cuid({ error: 'Invalid product ID' }))
 });
 
 // Inferred types

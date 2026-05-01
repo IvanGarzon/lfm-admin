@@ -15,7 +15,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 export function TransactionList({
   data,
-  searchParams: serverSearchParams,
+  searchParams: serverSearchParams
 }: {
   data: TransactionPagination;
   searchParams: SearchParams;
@@ -39,7 +39,7 @@ export function TransactionList({
         onSuccess: () => {
           setPendingDeleteId(null);
           setPendingDeleteRef(undefined);
-        },
+        }
       });
     }
   }, [pendingDeleteId, deleteMutation]);
@@ -51,7 +51,7 @@ export function TransactionList({
 
   const columns = useMemo(
     () => createTransactionColumns(handleDeleteRequest),
-    [handleDeleteRequest],
+    [handleDeleteRequest]
   );
 
   const { table } = useDataTable({
@@ -59,11 +59,11 @@ export function TransactionList({
     columns,
     pageCount: pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       <TransactionTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
 
       <DeleteTransactionDialog

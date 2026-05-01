@@ -43,11 +43,11 @@ export const env = createEnv({
 
     // E2E testing
     E2E_EMAIL: z.email().optional(),
-    E2E_PASSWORD: z.string().optional(),
+    E2E_PASSWORD: z.string().optional()
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1),
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1)
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -75,6 +75,6 @@ export const env = createEnv({
     EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
     EMAIL_DRY_RUN: process.env.EMAIL_DRY_RUN,
     E2E_EMAIL: process.env.E2E_EMAIL,
-    E2E_PASSWORD: process.env.E2E_PASSWORD,
-  },
+    E2E_PASSWORD: process.env.E2E_PASSWORD
+  }
 });

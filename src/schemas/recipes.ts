@@ -4,7 +4,7 @@ import { VALIDATION_LIMITS } from '@/lib/validation';
 export const LabourCostTypeSchema = z.enum([
   'FIXED_AMOUNT',
   'PERCENTAGE_OF_RETAIL',
-  'PERCENTAGE_OF_MATERIAL',
+  'PERCENTAGE_OF_MATERIAL'
 ]);
 
 export type LabourCostType = z.infer<typeof LabourCostTypeSchema>;
@@ -21,14 +21,14 @@ const RecipeItemSchema = z.object({
     .trim()
     .min(1, { error: 'Name is required' })
     .max(VALIDATION_LIMITS.NAME_MAX, {
-      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`,
+      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`
     }),
   quantity: z.number().positive({ error: 'Quantity must be positive' }),
   unitPrice: z.number().nonnegative({ error: 'Price must be non-negative' }),
   lineTotal: z.number().nonnegative(),
   retailPrice: z.number().nonnegative(),
   retailLineTotal: z.number().nonnegative(),
-  order: z.number().int(),
+  order: z.number().int()
 });
 
 const RecipeSchema = z.object({
@@ -37,12 +37,12 @@ const RecipeSchema = z.object({
     .trim()
     .min(1, { error: 'Name is required' })
     .max(VALIDATION_LIMITS.NAME_MAX, {
-      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`,
+      error: `Name must be less than ${VALIDATION_LIMITS.NAME_MAX} characters`
     }),
   description: z
     .string()
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     })
     .optional(),
   labourCostType: LabourCostTypeSchema,
@@ -57,18 +57,18 @@ const RecipeSchema = z.object({
   notes: z
     .string()
     .max(VALIDATION_LIMITS.NOTES_MAX, {
-      error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+      error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`
     })
     .optional(),
   items: z
     .array(RecipeItemSchema)
     .min(1, { error: 'At least one item is required' })
-    .max(100, { error: 'Maximum 100 items allowed' }),
+    .max(100, { error: 'Maximum 100 items allowed' })
 });
 
 export const CreateRecipeSchema = RecipeSchema;
 export const UpdateRecipeSchema = RecipeSchema.safeExtend({
-  id: z.cuid({ error: 'Invalid recipe ID' }),
+  id: z.cuid({ error: 'Invalid recipe ID' })
 });
 
 export type CreateRecipeInput = z.infer<typeof CreateRecipeSchema>;

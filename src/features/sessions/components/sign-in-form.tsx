@@ -43,7 +43,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
   const form = useForm<SignInInput>({
     mode: 'onChange',
     resolver: zodResolver(SignInSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '' }
   });
 
   useEffect(() => {
@@ -70,12 +70,12 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
             email: data.email,
             password: data.password,
             callbackUrl,
-            redirect: false,
+            redirect: false
           });
 
           if (res?.error) {
             toast.error('Sign-in failed', {
-              description: 'Invalid email or password. Please try again.',
+              description: 'Invalid email or password. Please try again.'
             });
           } else if (res?.ok) {
             window.location.href = callbackUrl;
@@ -93,7 +93,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
         setIsLoading(false);
       }
     },
-    [callbackUrl],
+    [callbackUrl]
   );
 
   const handleVerify = useCallback(async () => {
@@ -114,7 +114,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
         email: credentials.email,
         password: credentials.password,
         callbackUrl,
-        redirect: false,
+        redirect: false
       });
 
       if (res?.error) {
@@ -172,16 +172,16 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
     const showResend = isMaxAttempts || isExpired || resendCooldown === 0;
 
     return (
-      <div className="flex flex-col gap-4 w-full">
+      <div className='flex flex-col gap-4 w-full'>
         <div>
-          <p className="text-sm font-medium">Check your email</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            We sent a 6-digit code to <span className="font-medium">{maskEmail(email)}</span>. Enter
+          <p className='text-sm font-medium'>Check your email</p>
+          <p className='text-sm text-muted-foreground mt-1'>
+            We sent a 6-digit code to <span className='font-medium'>{maskEmail(email)}</span>. Enter
             it below to continue.
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-4">
+        <div className='flex flex-col items-center gap-4'>
           <InputOTP
             maxLength={6}
             value={otpCode}
@@ -200,33 +200,33 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
             </InputOTPGroup>
           </InputOTP>
 
-          {otpError ? <p className="text-sm text-destructive text-center">{otpError}</p> : null}
+          {otpError ? <p className='text-sm text-destructive text-center'>{otpError}</p> : null}
         </div>
 
         <Button
           onClick={handleVerify}
           disabled={isVerifying || otpCode.length !== 6}
-          className="w-full"
+          className='w-full'
         >
-          {isVerifying ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
+          {isVerifying ? <Loader2 aria-hidden='true' className='h-4 w-4 animate-spin' /> : null}
           Verify
         </Button>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className='flex items-center justify-between text-sm'>
           <button
-            type="button"
+            type='button'
             onClick={handleBack}
-            className="text-muted-foreground hover:text-foreground underline underline-offset-4"
+            className='text-muted-foreground hover:text-foreground underline underline-offset-4'
           >
             Back
           </button>
 
           {showResend ? (
             <button
-              type="button"
+              type='button'
               onClick={handleResend}
               disabled={isResending || resendCooldown > 0}
-              className="text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              className='text-muted-foreground hover:text-foreground underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {isResending
                 ? 'Sending…'
@@ -235,7 +235,7 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
                   : 'Resend code'}
             </button>
           ) : (
-            <span className="text-muted-foreground">Resend in {resendCooldown}s</span>
+            <span className='text-muted-foreground'>Resend in {resendCooldown}s</span>
           )}
         </div>
       </div>
@@ -246,24 +246,24 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleCredentialsSubmit)}
-        className="flex flex-col gap-2 w-full"
+        className='flex flex-col gap-2 w-full'
       >
-        <FieldGroup className="gap-1.5 mb-0">
+        <FieldGroup className='gap-1.5 mb-0'>
           <Controller
-            name="email"
+            name='email'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-email'>Email</FieldLabel>
                 </FieldContent>
                 <Input
                   {...field}
-                  id="form-rhf-email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id='form-rhf-email'
+                  type='email'
+                  placeholder='m@example.com'
                   disabled={isLoading}
-                  autoComplete="email"
+                  autoComplete='email'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -272,22 +272,22 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           />
         </FieldGroup>
 
-        <FieldGroup className="gap-1.5 mb-0">
+        <FieldGroup className='gap-1.5 mb-0'>
           <Controller
-            name="password"
+            name='password'
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-password">Password</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-password'>Password</FieldLabel>
                 </FieldContent>
                 <Input
                   {...field}
-                  id="form-rhf-password"
-                  type="password"
-                  placeholder="Enter your password"
+                  id='form-rhf-password'
+                  type='password'
+                  placeholder='Enter your password'
                   disabled={isLoading}
-                  autoComplete="current-password"
+                  autoComplete='current-password'
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -296,8 +296,8 @@ export function SignInForm({ callbackUrl = '/' }: SignInFormProps) {
           />
         </FieldGroup>
 
-        <Button type="submit" disabled={isLoading} className="w-full mt-2">
-          {isLoading ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> : null}
+        <Button type='submit' disabled={isLoading} className='w-full mt-2'>
+          {isLoading ? <Loader2 aria-hidden='true' className='h-4 w-4 animate-spin' /> : null}
           Sign In
         </Button>
       </form>

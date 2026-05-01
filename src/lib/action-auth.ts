@@ -10,7 +10,7 @@ import type {
   AuthenticatedHandler,
   TenantHandler,
   TenantContext,
-  UnauthenticatedHandler,
+  UnauthenticatedHandler
 } from '@/types/actions';
 import { type PermissionKey, hasPermission } from './permissions';
 
@@ -55,7 +55,7 @@ function isAuthenticatedSession(session: Session | null): session is Authenticat
  * );
  */
 export function withAuth<TInput, TOutput>(
-  handler: AuthenticatedHandler<TInput, TOutput>,
+  handler: AuthenticatedHandler<TInput, TOutput>
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -63,7 +63,7 @@ export function withAuth<TInput, TOutput>(
     if (!isAuthenticatedSession(session)) {
       return {
         success: false,
-        error: 'You must be signed in to perform this action',
+        error: 'You must be signed in to perform this action'
       };
     }
 
@@ -91,7 +91,7 @@ export function withAuth<TInput, TOutput>(
  */
 export function withTenantPermission<TInput, TOutput>(
   permission: PermissionKey | PermissionKey[],
-  handler: TenantHandler<TInput, TOutput>,
+  handler: TenantHandler<TInput, TOutput>
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -99,7 +99,7 @@ export function withTenantPermission<TInput, TOutput>(
     if (!isAuthenticatedSession(session)) {
       return {
         success: false,
-        error: 'You must be signed in to perform this action',
+        error: 'You must be signed in to perform this action'
       };
     }
 
@@ -109,7 +109,7 @@ export function withTenantPermission<TInput, TOutput>(
     if (missingPermissions.length > 0) {
       return {
         success: false,
-        error: 'You do not have permission to perform this action',
+        error: 'You do not have permission to perform this action'
       };
     }
 
@@ -117,7 +117,7 @@ export function withTenantPermission<TInput, TOutput>(
       tenantId,
       tenantSlug,
       userId: session.user.id,
-      user: session.user,
+      user: session.user
     });
 
     if (session.user.tenantId && session.user.tenantSlug) {
@@ -130,7 +130,7 @@ export function withTenantPermission<TInput, TOutput>(
       if (!tenant) {
         return {
           success: false,
-          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.'
         };
       }
       return handler(createContext(tenant.id, tenant.slug), input);
@@ -153,7 +153,7 @@ async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string 
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true }
   });
 
   return tenant ?? null;
@@ -177,7 +177,7 @@ async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string 
  * );
  */
 export function withTenant<TInput, TOutput>(
-  handler: TenantHandler<TInput, TOutput>,
+  handler: TenantHandler<TInput, TOutput>
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -190,7 +190,7 @@ export function withTenant<TInput, TOutput>(
       tenantId,
       tenantSlug,
       userId: session.user.id,
-      user: session.user,
+      user: session.user
     });
 
     if (session.user.tenantId && session.user.tenantSlug) {
@@ -203,7 +203,7 @@ export function withTenant<TInput, TOutput>(
       if (!tenant) {
         return {
           success: false,
-          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.'
         };
       }
       return handler(createContext(tenant.id, tenant.slug), input);
@@ -226,7 +226,7 @@ export function withTenant<TInput, TOutput>(
  * );
  */
 export function withSuperAdmin<TInput, TOutput>(
-  handler: (session: SuperAdminSession, input: TInput) => Promise<ActionResult<TOutput>>,
+  handler: (session: SuperAdminSession, input: TInput) => Promise<ActionResult<TOutput>>
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();

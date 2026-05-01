@@ -15,7 +15,7 @@ export const publicRoutePrefixes: string[] = ['/invite/accept', '/reset-password
  * Single source of truth for all auth routes
  * */
 export const AUTH_ROUTES = {
-  SIGN_IN: '/signin',
+  SIGN_IN: '/signin'
   // REGISTER: '/register',
   // ERROR: '/error',
   // RESEND: '/resend',
@@ -31,7 +31,7 @@ export const AUTH_ROUTES = {
 export const authRoutes: string[] = [
   ...Object.values(AUTH_ROUTES),
   '/invite/accept',
-  '/reset-password',
+  '/reset-password'
 ];
 
 /**

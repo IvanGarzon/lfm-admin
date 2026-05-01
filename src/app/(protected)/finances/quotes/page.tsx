@@ -6,11 +6,11 @@ import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 
 export const metadata = constructMetadata({
   title: 'Quotes – lfm dashboard',
-  description: 'Manage your quotes and track conversions.',
+  description: 'Manage your quotes and track conversions.'
 });
 
 export default async function QuotesPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

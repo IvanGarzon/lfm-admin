@@ -20,7 +20,7 @@ export function useAdminSendInvitation(tenantId: string) {
       toast.success('Invitation sent');
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.detail(tenantId) });
     },
-    onError: () => toast.error('Failed to send invitation'),
+    onError: () => toast.error('Failed to send invitation')
   });
 }
 
@@ -37,6 +37,6 @@ export function useAdminRevokeInvitation() {
       toast.success('Invitation revoked');
       void queryClient.invalidateQueries({ queryKey: TENANT_KEYS.all });
     },
-    onError: () => toast.error('Failed to revoke invitation'),
+    onError: () => toast.error('Failed to revoke invitation')
   });
 }

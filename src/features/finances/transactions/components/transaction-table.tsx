@@ -15,7 +15,7 @@ interface TransactionTableProps<TData extends TransactionListItem> {
 export function TransactionTable<TData extends TransactionListItem>({
   table,
   items,
-  totalItems,
+  totalItems
 }: TransactionTableProps<TData>) {
   const prefetchTransaction = usePrefetchTransaction();
 
@@ -24,12 +24,12 @@ export function TransactionTable<TData extends TransactionListItem>({
   };
 
   return (
-    <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+    <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
       <DataTableToolbar table={table} />
       {items.length ? (
         <DataTable table={table} totalItems={totalItems} onRowHover={handleRowHover} />
       ) : (
-        <Box className="text-center py-12 text-muted-foreground">
+        <Box className='text-center py-12 text-muted-foreground'>
           No transactions found. Try adjusting your filters.
         </Box>
       )}

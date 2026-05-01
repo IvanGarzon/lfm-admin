@@ -8,10 +8,10 @@ export const sendEmailTask: TaskDefinition = {
   category: 'EMAIL',
   schedule: {
     event: 'email/send',
-    enabled: true,
+    enabled: true
   },
   timeout: 300, // 5 minutes
   retries: 3,
   concurrencyLimit: 10,
-  inngestFunction: sendEmailFunction,
+  inngestFunction: sendEmailFunction
 };

@@ -130,7 +130,7 @@ export async function generateReceiptPDF(invoice: InvoiceWithDetails): Promise<B
  */
 export function calculateContentHash(
   invoice: InvoiceWithDetails,
-  type: 'invoice' | 'receipt' = 'invoice',
+  type: 'invoice' | 'receipt' = 'invoice'
 ): string {
   const baseData = {
     invoiceNumber: invoice.invoiceNumber,
@@ -138,8 +138,8 @@ export function calculateContentHash(
     customer: {
       firstName: invoice.customer.firstName,
       lastName: invoice.customer.lastName,
-      email: invoice.customer.email,
-    },
+      email: invoice.customer.email
+    }
   };
 
   // Add type-specific fields
@@ -155,7 +155,7 @@ export function calculateContentHash(
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice.toString(),
-            total: item.total.toString(),
+            total: item.total.toString()
           })),
           notes: invoice.notes,
           amountPaid: invoice.amountPaid.toString(),
@@ -166,8 +166,8 @@ export function calculateContentHash(
               amount: payment.amount.toString(),
               date: payment.date.toISOString(),
               method: payment.method,
-              notes: payment.notes,
-            })) || [],
+              notes: payment.notes
+            })) || []
         }
       : {
           ...baseData,
@@ -179,8 +179,8 @@ export function calculateContentHash(
               amount: payment.amount.toString(),
               date: payment.date.toISOString(),
               method: payment.method,
-              notes: payment.notes,
-            })) || [],
+              notes: payment.notes
+            })) || []
         };
 
   return crypto.createHash('sha256').update(JSON.stringify(relevantData)).digest('hex');
@@ -213,29 +213,29 @@ export function calculateContentHash(
 export const VALID_INVOICE_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
   [InvoiceStatusSchema.enum.DRAFT]: [
     InvoiceStatusSchema.enum.PENDING,
-    InvoiceStatusSchema.enum.CANCELLED,
+    InvoiceStatusSchema.enum.CANCELLED
   ],
   [InvoiceStatusSchema.enum.PENDING]: [
     InvoiceStatusSchema.enum.PARTIALLY_PAID,
     InvoiceStatusSchema.enum.PAID,
     InvoiceStatusSchema.enum.OVERDUE,
     InvoiceStatusSchema.enum.CANCELLED,
-    InvoiceStatusSchema.enum.DRAFT,
+    InvoiceStatusSchema.enum.DRAFT
   ],
   [InvoiceStatusSchema.enum.PARTIALLY_PAID]: [
     InvoiceStatusSchema.enum.PARTIALLY_PAID,
     InvoiceStatusSchema.enum.PAID,
     InvoiceStatusSchema.enum.OVERDUE,
-    InvoiceStatusSchema.enum.CANCELLED,
+    InvoiceStatusSchema.enum.CANCELLED
   ],
   [InvoiceStatusSchema.enum.OVERDUE]: [
     InvoiceStatusSchema.enum.PAID,
     InvoiceStatusSchema.enum.PARTIALLY_PAID,
     InvoiceStatusSchema.enum.CANCELLED,
-    InvoiceStatusSchema.enum.PENDING,
+    InvoiceStatusSchema.enum.PENDING
   ],
   [InvoiceStatusSchema.enum.PAID]: [],
-  [InvoiceStatusSchema.enum.CANCELLED]: [],
+  [InvoiceStatusSchema.enum.CANCELLED]: []
 };
 
 /**
@@ -256,7 +256,7 @@ export const VALID_INVOICE_STATUS_TRANSITIONS: Record<InvoiceStatus, InvoiceStat
  */
 export function canTransitionInvoiceStatus(
   fromStatus: InvoiceStatus,
-  toStatus: InvoiceStatus,
+  toStatus: InvoiceStatus
 ): boolean {
   // If statuses are the same, no transition needed
   if (fromStatus === toStatus) {
@@ -325,16 +325,16 @@ export function isTerminalInvoiceStatus(status: InvoiceStatus): boolean {
  */
 export function validateInvoiceStatusTransition(
   fromStatus: InvoiceStatus,
-  toStatus: InvoiceStatus,
+  toStatus: InvoiceStatus
 ): void {
   if (!canTransitionInvoiceStatus(fromStatus, toStatus)) {
     if (isTerminalInvoiceStatus(fromStatus)) {
       throw new Error(
-        `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`,
+        `Cannot change status from ${fromStatus} as it is a terminal state. Current status: ${fromStatus}, Attempted status: ${toStatus}`
       );
     }
     throw new Error(
-      `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_INVOICE_STATUS_TRANSITIONS[fromStatus].join(', ')}`,
+      `Invalid status transition from ${fromStatus} to ${toStatus}. Valid transitions: ${VALID_INVOICE_STATUS_TRANSITIONS[fromStatus].join(', ')}`
     );
   }
 }

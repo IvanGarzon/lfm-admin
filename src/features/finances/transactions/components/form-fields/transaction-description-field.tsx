@@ -6,7 +6,7 @@ import type { TransactionFormInput } from '@/features/finances/transactions/type
 
 export function TransactionDescriptionField({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<TransactionFormInput>;
   isDisabled: boolean;
@@ -14,21 +14,21 @@ export function TransactionDescriptionField({
   return (
     <FieldGroup>
       <Controller
-        name="description"
+        name='description'
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldContent>
-              <FieldLabel htmlFor="form-rhf-description">Description</FieldLabel>
+              <FieldLabel htmlFor='form-rhf-description'>Description</FieldLabel>
             </FieldContent>
             <Textarea
               {...field}
-              id="form-rhf-textarea-description"
+              id='form-rhf-textarea-description'
               aria-invalid={fieldState.invalid}
               value={field.value ?? ''}
-              placeholder="Enter transaction description..."
+              placeholder='Enter transaction description...'
               rows={3}
-              className="resize-none"
+              className='resize-none'
               disabled={isDisabled}
             />
             {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

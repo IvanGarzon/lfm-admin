@@ -4,7 +4,7 @@ import {
   testIds,
   mockSessions,
   createVendorWithDetails,
-  createVendorStatistics,
+  createVendorStatistics
 } from '@/lib/testing';
 
 const { mockVendorRepo, mockAuth } = vi.hoisted(() => ({
@@ -12,29 +12,29 @@ const { mockVendorRepo, mockAuth } = vi.hoisted(() => ({
     searchAndPaginate: vi.fn(),
     findByIdWithDetails: vi.fn(),
     getStatistics: vi.fn(),
-    getActiveVendors: vi.fn(),
+    getActiveVendors: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/vendor-repository', () => ({
   VendorRepository: vi.fn().mockImplementation(function () {
     return mockVendorRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('@/filters/vendors/vendors-filters', () => ({
   searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 }),
-  },
+    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 })
+  }
 }));
 
 const TEST_VENDOR_ID = testIds.vendor();
@@ -52,7 +52,7 @@ describe('Vendor Queries', () => {
     it('returns paginated vendors successfully when authorised', async () => {
       const mockResult = {
         items: [createVendorWithDetails({ id: 'v1' }), createVendorWithDetails({ id: 'v2' })],
-        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 },
+        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 }
       };
       mockVendorRepo.searchAndPaginate.mockResolvedValue(mockResult);
 
@@ -135,7 +135,7 @@ describe('Vendor Queries', () => {
     it('returns active vendors successfully when authorised', async () => {
       const mockVendors = [
         { id: 'v1', vendorCode: 'VEN-2026-0001', name: 'Acme' },
-        { id: 'v2', vendorCode: 'VEN-2026-0002', name: 'Beta' },
+        { id: 'v2', vendorCode: 'VEN-2026-0002', name: 'Beta' }
       ];
       mockVendorRepo.getActiveVendors.mockResolvedValue(mockVendors);
 

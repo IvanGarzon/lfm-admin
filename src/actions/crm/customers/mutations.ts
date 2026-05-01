@@ -11,7 +11,7 @@ import {
   DeleteCustomerSchema,
   type CreateCustomerInput,
   type UpdateCustomerInput,
-  type DeleteCustomerInput,
+  type DeleteCustomerInput
 } from '@/schemas/customers';
 
 const customerRepo = new CustomerRepository(prisma);
@@ -30,13 +30,13 @@ export const createCustomer = withTenantPermission<CreateCustomerInput, { id: st
       const validatedData = CreateCustomerSchema.parse(data);
       const existingCustomer = await customerRepo.findCustomerByEmail(
         validatedData.email,
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       if (existingCustomer) {
         return {
           success: false,
-          error: 'A customer with this email already exists',
+          error: 'A customer with this email already exists'
         };
       }
 
@@ -45,7 +45,7 @@ export const createCustomer = withTenantPermission<CreateCustomerInput, { id: st
       if (validatedData.organizationName && !validatedData.organizationId) {
         const organization = await organizationRepo.findOrCreateOrganization(
           validatedData.organizationName,
-          ctx.tenantId,
+          ctx.tenantId
         );
         finalOrganizationId = organization.id;
       }
@@ -53,16 +53,16 @@ export const createCustomer = withTenantPermission<CreateCustomerInput, { id: st
       const customer = await customerRepo.createCustomer(
         {
           ...validatedData,
-          organizationId: finalOrganizationId,
+          organizationId: finalOrganizationId
         },
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       return { success: true, data: { id: customer.id } };
     } catch (error) {
       return handleActionError(error, 'Failed to create customer');
     }
-  },
+  }
 );
 
 /**
@@ -86,7 +86,7 @@ export const updateCustomer = withTenantPermission<UpdateCustomerInput, { id: st
       if (validatedData.organizationName && !validatedData.organizationId) {
         const organization = await organizationRepo.findOrCreateOrganization(
           validatedData.organizationName,
-          ctx.tenantId,
+          ctx.tenantId
         );
         finalOrganizationId = organization.id;
       }
@@ -96,9 +96,9 @@ export const updateCustomer = withTenantPermission<UpdateCustomerInput, { id: st
         ctx.tenantId,
         {
           ...validatedData,
-          organizationId: finalOrganizationId,
+          organizationId: finalOrganizationId
         },
-        ctx.userId,
+        ctx.userId
       );
 
       if (!customer) {
@@ -109,7 +109,7 @@ export const updateCustomer = withTenantPermission<UpdateCustomerInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to update customer');
     }
-  },
+  }
 );
 
 /**
@@ -133,5 +133,5 @@ export const deleteCustomer = withTenantPermission<DeleteCustomerInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to delete customer');
     }
-  },
+  }
 );

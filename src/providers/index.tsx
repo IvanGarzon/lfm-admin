@@ -9,7 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ThemeProvider attribute="class" enableSystem>
+    <ThemeProvider attribute='class' enableSystem>
       <SessionProvider>
         <ReactQueryProvider>
           <NuqsAdapter>

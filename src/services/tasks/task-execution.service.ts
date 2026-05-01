@@ -22,7 +22,7 @@ const executionRepo = new TaskExecutionRepository(prisma);
  */
 export async function triggerTaskManually(
   taskId: string,
-  userId?: string,
+  userId?: string
 ): Promise<{
   success: boolean;
   executionId: string;
@@ -45,15 +45,15 @@ export async function triggerTaskManually(
       metadata: {
         taskId,
         functionId: task.functionId,
-        userId,
-      },
+        userId
+      }
     });
 
     // Create execution record
     const execution = await executionRepo.create({
       taskId,
       triggeredBy: 'MANUAL',
-      triggeredByUser: userId,
+      triggeredByUser: userId
     });
 
     // Generate event ID for the manual trigger
@@ -61,7 +61,7 @@ export async function triggerTaskManually(
 
     // Update execution with event ID
     await executionRepo.update(execution.id, {
-      inngestEventId: eventId,
+      inngestEventId: eventId
     });
 
     // Send event to Inngest to trigger the function
@@ -73,8 +73,8 @@ export async function triggerTaskManually(
         taskId,
         executionId: execution.id,
         triggeredBy: userId,
-        manual: true,
-      },
+        manual: true
+      }
     });
 
     logger.info('Task triggered successfully', {
@@ -82,19 +82,19 @@ export async function triggerTaskManually(
       metadata: {
         taskId,
         executionId: execution.id,
-        eventId,
-      },
+        eventId
+      }
     });
 
     return {
       success: true,
       executionId: execution.id,
-      eventId,
+      eventId
     };
   } catch (error) {
     logger.error('Failed to trigger task manually', error, {
       context: 'task-execution',
-      metadata: { taskId, userId },
+      metadata: { taskId, userId }
     });
 
     throw error;
@@ -120,7 +120,7 @@ export async function trackExecutionStart(params: {
       inngestRunId: params.inngestRunId,
       inngestEventId: params.inngestEventId,
       triggeredBy: params.triggeredBy || 'SCHEDULE',
-      triggeredByUser: params.triggeredByUser,
+      triggeredByUser: params.triggeredByUser
     });
 
     logger.info('Execution started', {
@@ -128,15 +128,15 @@ export async function trackExecutionStart(params: {
       metadata: {
         executionId: execution.id,
         taskId: params.taskId,
-        inngestRunId: params.inngestRunId,
-      },
+        inngestRunId: params.inngestRunId
+      }
     });
 
     return execution;
   } catch (error) {
     logger.error('Failed to track execution start', error, {
       context: 'task-execution',
-      metadata: params,
+      metadata: params
     });
 
     throw error;
@@ -157,7 +157,7 @@ export async function trackExecutionComplete(inngestRunId: string, result?: any)
     if (!execution) {
       logger.warn('Execution not found for completion tracking', {
         context: 'task-execution',
-        metadata: { inngestRunId },
+        metadata: { inngestRunId }
       });
       return null;
     }
@@ -169,15 +169,15 @@ export async function trackExecutionComplete(inngestRunId: string, result?: any)
       metadata: {
         executionId: execution.id,
         inngestRunId,
-        duration: updated.duration,
-      },
+        duration: updated.duration
+      }
     });
 
     return updated;
   } catch (error) {
     logger.error('Failed to track execution completion', error, {
       context: 'task-execution',
-      metadata: { inngestRunId },
+      metadata: { inngestRunId }
     });
 
     throw error;
@@ -195,7 +195,7 @@ export async function trackExecutionComplete(inngestRunId: string, result?: any)
 export async function trackExecutionFailure(
   inngestRunId: string,
   error: string,
-  stackTrace?: string,
+  stackTrace?: string
 ) {
   try {
     const execution = await executionRepo.findByInngestRunId(inngestRunId);
@@ -203,7 +203,7 @@ export async function trackExecutionFailure(
     if (!execution) {
       logger.warn('Execution not found for failure tracking', {
         context: 'task-execution',
-        metadata: { inngestRunId },
+        metadata: { inngestRunId }
       });
       return null;
     }
@@ -215,15 +215,15 @@ export async function trackExecutionFailure(
       metadata: {
         executionId: execution.id,
         inngestRunId,
-        duration: updated.duration,
-      },
+        duration: updated.duration
+      }
     });
 
     return updated;
   } catch (err) {
     logger.error('Failed to track execution failure', err, {
       context: 'task-execution',
-      metadata: { inngestRunId },
+      metadata: { inngestRunId }
     });
 
     throw err;
@@ -250,12 +250,12 @@ export async function getExecutionStatus(inngestRunId: string) {
       startedAt: execution.startedAt,
       completedAt: execution.completedAt,
       duration: execution.duration,
-      error: execution.error,
+      error: execution.error
     };
   } catch (error) {
     logger.error('Failed to get execution status', error, {
       context: 'task-execution',
-      metadata: { inngestRunId },
+      metadata: { inngestRunId }
     });
 
     throw error;

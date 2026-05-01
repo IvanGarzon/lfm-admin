@@ -7,27 +7,27 @@ const { mockVendorRepo, mockAuth } = vi.hoisted(() => ({
     createVendor: vi.fn(),
     updateVendor: vi.fn(),
     updateVendorStatus: vi.fn(),
-    softDeleteVendor: vi.fn(),
+    softDeleteVendor: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/vendor-repository', () => ({
   VendorRepository: vi.fn().mockImplementation(function () {
     return mockVendorRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const TEST_VENDOR_ID = testIds.vendor();
@@ -46,7 +46,7 @@ describe('Vendor Mutations', () => {
       const input = createVendorInput();
       mockVendorRepo.createVendor.mockResolvedValue({
         id: TEST_VENDOR_ID,
-        vendorCode: 'VEN-2026-0001',
+        vendorCode: 'VEN-2026-0001'
       });
 
       const result = await createVendor(input);
@@ -58,7 +58,7 @@ describe('Vendor Mutations', () => {
       }
       expect(mockVendorRepo.createVendor).toHaveBeenCalledWith(
         expect.objectContaining({ name: input.name }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -93,7 +93,7 @@ describe('Vendor Mutations', () => {
       expect(mockVendorRepo.updateVendor).toHaveBeenCalledWith(
         TEST_VENDOR_ID,
         mockSession.user.tenantId,
-        expect.objectContaining({ name: input.name }),
+        expect.objectContaining({ name: input.name })
       );
     });
 
@@ -121,7 +121,7 @@ describe('Vendor Mutations', () => {
       const mockVendor = {
         id: TEST_VENDOR_ID,
         vendorCode: 'VEN-2026-0001',
-        status: 'INACTIVE',
+        status: 'INACTIVE'
       };
       mockVendorRepo.updateVendorStatus.mockResolvedValue(mockVendor);
 
@@ -134,7 +134,7 @@ describe('Vendor Mutations', () => {
       expect(mockVendorRepo.updateVendorStatus).toHaveBeenCalledWith(
         TEST_VENDOR_ID,
         mockSession.user.tenantId,
-        'INACTIVE',
+        'INACTIVE'
       );
     });
 
@@ -150,7 +150,7 @@ describe('Vendor Mutations', () => {
       const mockVendor = {
         id: TEST_VENDOR_ID,
         vendorCode: 'VEN-2026-0001',
-        status: 'ACTIVE',
+        status: 'ACTIVE'
       };
       mockVendorRepo.softDeleteVendor.mockResolvedValue(mockVendor);
 
@@ -162,13 +162,13 @@ describe('Vendor Mutations', () => {
       }
       expect(mockVendorRepo.softDeleteVendor).toHaveBeenCalledWith(
         TEST_VENDOR_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
     it('returns error when vendor has transactions', async () => {
       mockVendorRepo.softDeleteVendor.mockRejectedValue(
-        new Error('Cannot delete vendor with associated transactions'),
+        new Error('Cannot delete vendor with associated transactions')
       );
 
       const result = await deleteVendor({ id: TEST_VENDOR_ID });
@@ -192,7 +192,7 @@ describe('Vendor Mutations - Permission Tests', () => {
     vi.clearAllMocks();
     mockVendorRepo.createVendor.mockResolvedValue({
       id: TEST_VENDOR_ID,
-      vendorCode: 'VEN-2026-0001',
+      vendorCode: 'VEN-2026-0001'
     });
   });
 

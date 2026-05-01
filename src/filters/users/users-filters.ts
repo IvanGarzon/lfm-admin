@@ -8,7 +8,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  parseAsArrayOf,
+  parseAsArrayOf
 } from 'nuqs/server';
 
 const sortableColumnIds = new Set(SORTABLE_USER_COLUMNS);
@@ -18,10 +18,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -31,7 +31,7 @@ export const searchParams = {
   perPage: parseAsInteger.withDefault(20),
   role: parseAsArrayOf(parseAsStringEnum<UserRole>(UserRoleSchema.options)).withDefault([]),
   status: parseAsArrayOf(parseAsStringEnum<UserStatus>(UserStatusSchema.options)).withDefault([]),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

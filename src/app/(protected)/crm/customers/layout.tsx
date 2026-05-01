@@ -1,6 +1,6 @@
 export default function CustomersLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

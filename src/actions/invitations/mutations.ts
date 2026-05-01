@@ -26,7 +26,7 @@ async function dispatchInvitationEmail(
   role: UserRole,
   token: string,
   recipientEmail: string,
-  expiresAt: Date,
+  expiresAt: Date
 ): Promise<void> {
   const acceptUrl = absoluteUrl(`/invite/accept?token=${token}`);
 
@@ -39,8 +39,8 @@ async function dispatchInvitationEmail(
       tenantName,
       role,
       acceptUrl,
-      expiresAt,
-    },
+      expiresAt
+    }
   });
 }
 
@@ -63,10 +63,10 @@ export const sendInvitation = withTenantPermission<{ email: string; role: UserRo
           role,
           tenantId: ctx.tenantId,
           invitedBy: ctx.userId,
-          expiresAt,
+          expiresAt
         }),
         tenantRepo.findTenantById(ctx.tenantId),
-        userRepo.findById(ctx.userId),
+        userRepo.findById(ctx.userId)
       ]);
 
       if (!tenant || !inviter) {
@@ -80,7 +80,7 @@ export const sendInvitation = withTenantPermission<{ email: string; role: UserRo
         invitation.role,
         invitation.token,
         email,
-        invitation.expiresAt,
+        invitation.expiresAt
       );
 
       revalidatePath('/settings/tenant');
@@ -88,7 +88,7 @@ export const sendInvitation = withTenantPermission<{ email: string; role: UserRo
     } catch (error) {
       return handleActionError(error, 'Failed to send invitation');
     }
-  },
+  }
 );
 
 export const revokeInvitation = withTenantPermission<string, void>(
@@ -101,7 +101,7 @@ export const revokeInvitation = withTenantPermission<string, void>(
     } catch (error) {
       return handleActionError(error, 'Failed to revoke invitation');
     }
-  },
+  }
 );
 
 // -- SUPER_ADMIN: invite user to any tenant -----------------------------------
@@ -124,10 +124,10 @@ export const adminSendInvitation = withSuperAdmin<
         role,
         tenantId,
         invitedBy: ctx.userId,
-        expiresAt,
+        expiresAt
       }),
       tenantRepo.findById(tenantId),
-      userRepo.findById(ctx.userId),
+      userRepo.findById(ctx.userId)
     ]);
 
     if (!tenant || !inviter) {
@@ -141,7 +141,7 @@ export const adminSendInvitation = withSuperAdmin<
       invitation.role,
       invitation.token,
       email,
-      invitation.expiresAt,
+      invitation.expiresAt
     );
 
     revalidatePath(`/admin/tenants/${tenantId}`);

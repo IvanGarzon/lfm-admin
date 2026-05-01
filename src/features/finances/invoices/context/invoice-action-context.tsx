@@ -9,7 +9,7 @@ import {
   useInvoiceMetadata,
   useInvoiceItems,
   useInvoicePayments,
-  useMarkInvoiceAsPending,
+  useMarkInvoiceAsPending
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 import { DeleteInvoiceDialog } from '@/features/finances/invoices/components/dialogs/delete-invoice-dialog';
 import { RecordPaymentDialog } from '@/features/finances/invoices/components/dialogs/record-payment-dialog';
@@ -19,7 +19,7 @@ import { MarkAsPendingDialog } from '@/features/finances/invoices/components/dia
 import type {
   InvoiceWithDetails,
   InvoiceMetadata,
-  CancelInvoiceData,
+  CancelInvoiceData
 } from '@/features/finances/invoices/types';
 import type { RecordPaymentInput } from '@/schemas/invoices';
 
@@ -40,19 +40,19 @@ interface InvoiceActionContextType {
     id: string,
     invoiceNumber: string,
     invoice?: InvoiceWithDetails | InvoiceMetadata,
-    onSuccess?: () => void,
+    onSuccess?: () => void
   ) => void;
   openCancel: (id: string, invoiceNumber: string, onSuccess?: () => void) => void;
   openSendReceipt: (
     id: string,
     invoice?: InvoiceWithDetails | InvoiceMetadata,
-    onSuccess?: () => void,
+    onSuccess?: () => void
   ) => void;
   openMarkAsPending: (
     id: string,
     invoiceNumber?: string,
     onSuccess?: () => void,
-    sendEmail?: boolean,
+    sendEmail?: boolean
   ) => void;
   close: () => void;
 }
@@ -92,11 +92,11 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
       id: string,
       invoiceNumber: string,
       invoice?: InvoiceWithDetails | InvoiceMetadata,
-      onSuccess?: () => void,
+      onSuccess?: () => void
     ) => {
       setState({ type: 'RECORD_PAYMENT', id, invoiceNumber, invoice, onSuccess });
     },
-    [],
+    []
   );
 
   const openCancel = useCallback((id: string, invoiceNumber: string, onSuccess?: () => void) => {
@@ -107,14 +107,14 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
     (id: string, invoice?: InvoiceWithDetails | InvoiceMetadata, onSuccess?: () => void) => {
       setState({ type: 'SEND_RECEIPT', id, invoice, onSuccess });
     },
-    [],
+    []
   );
 
   const openMarkAsPending = useCallback(
     (id: string, invoiceNumber?: string, onSuccess?: () => void, sendEmail?: boolean) => {
       setState({ type: 'MARK_AS_PENDING', id, invoiceNumber, onSuccess, sendEmail });
     },
-    [],
+    []
   );
 
   const close = useCallback(() => {
@@ -127,7 +127,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
         onSuccess: () => {
           close();
           state.onSuccess?.();
-        },
+        }
       });
     }
   }, [state, deleteInvoice, close]);
@@ -147,7 +147,7 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
         state?.onSuccess?.();
       }
     },
-    [recordPayment, state, close, openSendReceipt],
+    [recordPayment, state, close, openSendReceipt]
   );
 
   const handleConfirmCancel = useCallback(
@@ -156,10 +156,10 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
         onSuccess: () => {
           close();
           state?.onSuccess?.();
-        },
+        }
       });
     },
-    [cancelInvoice, state, close],
+    [cancelInvoice, state, close]
   );
 
   const handleConfirmMarkAsPending = useCallback(() => {
@@ -170,8 +170,8 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
           onSuccess: () => {
             close();
             state.onSuccess?.();
-          },
-        },
+          }
+        }
       );
     }
   }, [state, markInvoiceAsPending, close]);
@@ -208,9 +208,9 @@ export function InvoiceActionProvider({ children }: { children: React.ReactNode 
       openCancel,
       openSendReceipt,
       openMarkAsPending,
-      close,
+      close
     }),
-    [openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending, close],
+    [openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending, close]
   );
 
   return (

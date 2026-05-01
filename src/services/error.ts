@@ -13,7 +13,7 @@ class AppError extends Error {
     options?: {
       isOperational?: boolean;
       context?: Record<string, unknown>;
-    },
+    }
   ) {
     super(message);
 
@@ -34,7 +34,7 @@ class AppError extends Error {
 class BadRequestError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.BAD_REQUEST),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.BAD_REQUEST, { context });
   }
@@ -43,7 +43,7 @@ class BadRequestError extends AppError {
 class UnauthorizedError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.UNAUTHORIZED),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.UNAUTHORIZED, { context });
   }
@@ -64,7 +64,7 @@ class NotFoundError extends AppError {
 class InternalServerError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.INTERNAL_SERVER_ERROR, { context });
   }
@@ -79,7 +79,7 @@ class DuplicateRecordError extends AppError {
 class BusinessRuleError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.UNPROCESSABLE_ENTITY),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.UNPROCESSABLE_ENTITY, { context });
   }
@@ -94,7 +94,7 @@ class ResourceInUseError extends AppError {
 class RateLimitError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.TOO_MANY_REQUESTS),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.TOO_MANY_REQUESTS, { context });
   }
@@ -103,7 +103,7 @@ class RateLimitError extends AppError {
 class FileError extends AppError {
   constructor(
     message = getReasonPhrase(StatusCodes.BAD_REQUEST),
-    context?: Record<string, unknown>,
+    context?: Record<string, unknown>
   ) {
     super(message, StatusCodes.BAD_REQUEST, { context });
   }
@@ -114,7 +114,7 @@ export {
   BadRequestError,
   UnauthorizedError,
   InternalServerError,
-  RateLimitError,
+  RateLimitError
   // ForbiddenError,
   // NotFoundError,
   // DuplicateRecordError,

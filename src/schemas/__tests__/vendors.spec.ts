@@ -3,7 +3,7 @@ import {
   CreateVendorSchema,
   UpdateVendorSchema,
   UpdateVendorStatusSchema,
-  DeleteVendorSchema,
+  DeleteVendorSchema
 } from '../vendors';
 import { testIds } from '@/lib/testing';
 
@@ -19,7 +19,7 @@ const validVendor = {
   website: null,
   paymentTerms: 30,
   taxId: null,
-  notes: null,
+  notes: null
 };
 
 describe('Vendor Schemas', () => {
@@ -33,7 +33,7 @@ describe('Vendor Schemas', () => {
       const result = CreateVendorSchema.safeParse({
         name: 'Simple Vendor',
         email: 'simple@vendor.com',
-        status: 'ACTIVE',
+        status: 'ACTIVE'
       });
       expect(result.success).toBe(true);
     });
@@ -50,8 +50,8 @@ describe('Vendor Schemas', () => {
           country: 'Australia',
           lat: -37.8136,
           lng: 144.9631,
-          formattedAddress: '123 Main St, Melbourne VIC 3000',
-        },
+          formattedAddress: '123 Main St, Melbourne VIC 3000'
+        }
       });
       expect(result.success).toBe(true);
     });
@@ -108,7 +108,7 @@ describe('Vendor Schemas', () => {
     it('validates a correct status update', () => {
       const result = UpdateVendorStatusSchema.safeParse({
         id: TEST_VENDOR_ID,
-        status: 'INACTIVE',
+        status: 'INACTIVE'
       });
       expect(result.success).toBe(true);
     });

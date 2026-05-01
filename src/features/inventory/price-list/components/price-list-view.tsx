@@ -16,12 +16,12 @@ import type { PriceListPagination } from '@/features/inventory/price-list/types'
 const PriceListDrawer = dynamic(
   () =>
     import('@/features/inventory/price-list/components/price-list-drawer').then(
-      (mod) => mod.PriceListDrawer,
+      (mod) => mod.PriceListDrawer
     ),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 interface PriceListViewProps {
@@ -41,30 +41,30 @@ export function PriceListView({ initialData, searchParams }: PriceListViewProps)
     !hasActiveSearchFilters(searchParams, priceListSearchParams);
 
   return (
-    <Box className="flex flex-col gap-6 min-w-0 w-full overflow-hidden">
+    <Box className='flex flex-col gap-6 min-w-0 w-full overflow-hidden'>
       {isZeroState ? (
         <EmptyState
           icon={Tag}
-          title="No price list items yet"
-          description="Add your first item to start building your pricing catalogue."
+          title='No price list items yet'
+          description='Add your first item to start building your pricing catalogue.'
           action={
             <Button onClick={handleShowCreateDrawer}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Item
             </Button>
           }
         />
       ) : (
         <>
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <Box>
-              <h1 className="text-2xl font-bold tracking-tight">Price List</h1>
-              <p className="text-muted-foreground">
+              <h1 className='text-2xl font-bold tracking-tight'>Price List</h1>
+              <p className='text-muted-foreground'>
                 Manage your pricing catalog for florals, sundries, and supplies
               </p>
             </Box>
             <Button onClick={handleShowCreateDrawer}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Item
             </Button>
           </Box>

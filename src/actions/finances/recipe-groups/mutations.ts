@@ -8,7 +8,7 @@ import {
   createRecipeGroupSchema,
   updateRecipeGroupSchema,
   type CreateRecipeGroupInput,
-  type UpdateRecipeGroupInput,
+  type UpdateRecipeGroupInput
 } from '@/schemas/recipe-groups';
 import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
 import { revalidatePath } from 'next/cache';
@@ -40,13 +40,13 @@ export const createRecipeGroup = withTenantPermission<CreateRecipeGroupInput, Re
           totalSellingPrice: recipeGroup.totalSellingPrice,
           itemCount: validatedInput.items.length,
           createdAt: recipeGroup.createdAt,
-          updatedAt: recipeGroup.updatedAt,
-        },
+          updatedAt: recipeGroup.updatedAt
+        }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to create recipe group');
     }
-  },
+  }
 );
 
 export const updateRecipeGroup = withTenantPermission<
@@ -71,8 +71,8 @@ export const updateRecipeGroup = withTenantPermission<
         totalSellingPrice: recipeGroup.totalSellingPrice,
         itemCount: validatedInput.items?.length ?? 0,
         createdAt: recipeGroup.createdAt,
-        updatedAt: recipeGroup.updatedAt,
-      },
+        updatedAt: recipeGroup.updatedAt
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update recipe group');
@@ -91,5 +91,5 @@ export const deleteRecipeGroup = withTenantPermission<string, void>(
     } catch (error) {
       return handleActionError(error, 'Failed to delete recipe group');
     }
-  },
+  }
 );

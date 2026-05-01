@@ -23,9 +23,9 @@ const prismaClientSingleton = () => {
             { emit: 'event', level: 'query' },
             { emit: 'stdout', level: 'info' },
             { emit: 'stdout', level: 'warn' },
-            { emit: 'stdout', level: 'error' },
+            { emit: 'stdout', level: 'error' }
           ]
-        : [{ emit: 'stdout', level: 'error' }],
+        : [{ emit: 'stdout', level: 'error' }]
   });
 
   // Add query performance monitoring in development
@@ -43,8 +43,8 @@ const prismaClientSingleton = () => {
             query,
             params,
             duration: `${duration}ms`,
-            timestamp: e.timestamp,
-          },
+            timestamp: e.timestamp
+          }
         });
       }
 
@@ -53,7 +53,7 @@ const prismaClientSingleton = () => {
       const reset = '\x1b[0m';
 
       console.log(
-        `${durationColor}[Prisma Query]${reset} ${duration}ms - ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`,
+        `${durationColor}[Prisma Query]${reset} ${duration}ms - ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`
       );
 
       // Optionally log params for debugging

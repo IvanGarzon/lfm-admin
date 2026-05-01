@@ -45,7 +45,7 @@ export interface UnsavedChangesWarningConfig {
  */
 export function useUnsavedChangesWarning(
   hasUnsavedChanges: boolean,
-  config: UnsavedChangesWarningConfig,
+  config: UnsavedChangesWarningConfig
 ) {
   const { formId, duration = 5000 } = config;
 
@@ -66,10 +66,10 @@ export function useUnsavedChangesWarning(
             if (form && form instanceof HTMLFormElement) {
               form.requestSubmit();
             }
-          },
-        },
+          }
+        }
       });
     },
-    [hasUnsavedChanges, formId, config.description, duration],
+    [hasUnsavedChanges, formId, config.description, duration]
   );
 }

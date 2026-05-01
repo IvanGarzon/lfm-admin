@@ -14,7 +14,7 @@ export const UpdateTaskSchema = z.object({
     .string()
     .regex(
       /^(\*|([0-5]?\d)) (\*|([0-5]?\d)) (\*|(1?\d|2[0-3])) (\*|([1-9]|[12]\d|3[01])) (\*|([1-9]|1[0-2])) (\*|[0-6])$/,
-      { message: 'Invalid cron expression' },
+      { message: 'Invalid cron expression' }
     )
     .optional(),
   retries: z
@@ -35,7 +35,7 @@ export const UpdateTaskSchema = z.object({
     .min(1000, { error: 'Timeout must be at least 1000ms (1 second)' })
     .max(600000, { error: 'Timeout cannot exceed 600000ms (10 minutes)' })
     .optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional()
 });
 
 /**
@@ -44,7 +44,7 @@ export const UpdateTaskSchema = z.object({
  */
 export const SetTaskEnabledSchema = z.object({
   id: z.cuid({ error: 'Invalid task ID' }),
-  isEnabled: z.boolean({ error: 'isEnabled must be a boolean' }),
+  isEnabled: z.boolean({ error: 'isEnabled must be a boolean' })
 });
 
 /**
@@ -52,7 +52,7 @@ export const SetTaskEnabledSchema = z.object({
  * Used for manually triggering task execution
  */
 export const ExecuteTaskSchema = z.object({
-  id: z.cuid({ error: 'Invalid task ID' }),
+  id: z.cuid({ error: 'Invalid task ID' })
 });
 
 /**
@@ -62,7 +62,7 @@ export const ExecuteTaskSchema = z.object({
 export const GetTasksSchema = z.object({
   category: TaskCategorySchema.optional(),
   isEnabled: z.boolean().optional(),
-  scheduleType: ScheduleTypeSchema.optional(),
+  scheduleType: ScheduleTypeSchema.optional()
 });
 
 /**
@@ -73,7 +73,7 @@ export const GetTaskExecutionsSchema = z.object({
   taskId: z.cuid({ error: 'Invalid task ID' }),
   limit: z.number().int().min(1).max(100).optional(),
   offset: z.number().int().min(0).optional(),
-  status: ExecutionStatusSchema.optional(),
+  status: ExecutionStatusSchema.optional()
 });
 
 /**
@@ -81,7 +81,7 @@ export const GetTaskExecutionsSchema = z.object({
  * Used for fetching recent executions across all tasks
  */
 export const GetRecentExecutionsSchema = z.object({
-  limit: z.number().int().min(1).max(100).default(10),
+  limit: z.number().int().min(1).max(100).default(10)
 });
 
 // Export input types inferred from schemas

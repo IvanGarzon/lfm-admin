@@ -25,8 +25,8 @@ const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
@@ -37,15 +37,15 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
-    to: today,
+    to: today
   }));
 
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
-      endDate: today,
+      endDate: today
     }),
-    [today],
+    [today]
   );
 
   const { data: overviewStats, isLoading: overviewLoading } =
@@ -53,7 +53,7 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
 
   const { data: analyticsStats, isLoading: analyticsLoading } = useQuoteStatistics({
     startDate: dateRange?.from,
-    endDate: dateRange?.to,
+    endDate: dateRange?.to
   });
 
   const getComparisonLabel = () => {
@@ -81,33 +81,33 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
   const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={ScrollText}
-          title="No quotes yet"
-          description="Add your first quote to start managing your quotes."
+          title='No quotes yet'
+          description='Add your first quote to start managing your quotes.'
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="h-4 w-4" />
+              <Plus className='h-4 w-4' />
               Add Quote
             </Button>
           }
         />
       ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Quotes</h1>
-              <p className="text-muted-foreground text-sm">Manage and track all your quotes</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full space-y-6'>
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Quotes</h1>
+              <p className='text-muted-foreground text-sm'>Manage and track all your quotes</p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <TabsList className="grid w-full grid-cols-2 sm:w-[200px]">
-                <TabsTrigger value="list">List</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <TabsList className='grid w-full grid-cols-2 sm:w-[200px]'>
+                <TabsTrigger value='list'>List</TabsTrigger>
+                <TabsTrigger value='analytics'>Analytics</TabsTrigger>
               </TabsList>
-              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
+              <Button onClick={handleShowCreateModal} className='w-full sm:w-auto'>
+                <Plus className='h-4 w-4' />
                 New Quote
               </Button>
             </Box>
@@ -116,19 +116,19 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
           <QuoteOverview
             stats={overviewStats}
             isLoading={overviewLoading}
-            comparisonLabel="vs. last month"
+            comparisonLabel='vs. last month'
           />
 
           <TabsContent
-            value="list"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='list'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
             <QuoteList data={initialData} searchParams={searchParams} />
           </TabsContent>
 
           <TabsContent
-            value="analytics"
-            className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0"
+            value='analytics'
+            className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
             <QuoteAnalytics
               stats={analyticsStats}

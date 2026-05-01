@@ -10,12 +10,12 @@ import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
 const CustomerDrawer = dynamic(
   () =>
     import('@/features/crm/customers/components/customer-drawer').then((mod) => mod.CustomerDrawer),
-  { loading: () => null },
+  { loading: () => null }
 );
 
 export default async function CustomerPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;
@@ -31,7 +31,7 @@ export default async function CustomerPage({
         const result = await getCustomers(searchParamsResolved);
         if (!result.success) throw new Error(result.error);
         return result.data;
-      },
+      }
     }),
     queryClient.prefetchQuery({
       queryKey: CUSTOMER_KEYS.detail(id),
@@ -39,8 +39,8 @@ export default async function CustomerPage({
         const result = await getCustomerById(id);
         if (!result.success) throw new Error(result.error);
         return result.data;
-      },
-    }),
+      }
+    })
   ]);
 
   return (

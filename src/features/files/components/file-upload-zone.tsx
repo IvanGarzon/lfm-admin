@@ -18,8 +18,8 @@ export function FileUploadZone({ onDrop, isUploading }: FileUploadZoneProps) {
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'application/vnd.ms-excel': ['.xls'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-    },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
+    }
   });
 
   return (
@@ -31,7 +31,7 @@ export function FileUploadZone({ onDrop, isUploading }: FileUploadZoneProps) {
       <CardContent>
         <div
           {...getRootProps()}
-          id="dropzone"
+          id='dropzone'
           className={`
             border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
             ${
@@ -43,20 +43,20 @@ export function FileUploadZone({ onDrop, isUploading }: FileUploadZoneProps) {
           `}
         >
           <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2">
+          <div className='flex flex-col items-center gap-2'>
             <div className={`rounded-full p-3 ${isDragActive ? 'bg-primary/10' : 'bg-muted'}`}>
               <Upload
                 className={`h-6 w-6 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`}
               />
             </div>
             {isDragActive ? (
-              <p className="text-sm font-medium">Drop the file here...</p>
+              <p className='text-sm font-medium'>Drop the file here...</p>
             ) : isUploading ? (
-              <p className="text-sm font-medium">Uploading...</p>
+              <p className='text-sm font-medium'>Uploading...</p>
             ) : (
               <>
-                <p className="text-sm font-medium">Drag & drop a file here, or click to select</p>
-                <p className="text-xs text-muted-foreground">
+                <p className='text-sm font-medium'>Drag & drop a file here, or click to select</p>
+                <p className='text-xs text-muted-foreground'>
                   Supported: Images, PDF, Word, Excel (Max 5MB)
                 </p>
               </>

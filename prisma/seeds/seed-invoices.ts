@@ -27,7 +27,7 @@ const ITEM_DESCRIPTIONS = [
   'Premium Rose Bouquet',
   'Orchid Collection',
   'Tropical Arrangement',
-  'Arrangement for Funeral',
+  'Arrangement for Funeral'
 ];
 
 /**
@@ -48,7 +48,7 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
     const customers = await prisma.customer.findMany({
       where: { tenantId: tenant.id, deletedAt: null },
       select: { id: true },
-      take: 20,
+      take: 20
     });
 
     if (customers.length === 0) {
@@ -59,7 +59,7 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
     const products = await prisma.product.findMany({
       where: { tenantId: tenant.id },
       select: { id: true },
-      take: 10,
+      take: 10
     });
 
     const year = new Date().getFullYear();
@@ -81,7 +81,7 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
       const itemCount = faker.number.int({ min: 1, max: 5 });
       const discount = faker.helpers.weightedArrayElement([
         { value: 0, weight: 0.7 },
-        { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+        { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 }
       ]);
       const gst = 10;
 
@@ -96,7 +96,7 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
           productId:
             products.length > 0 && faker.datatype.boolean({ probability: 0.5 })
               ? faker.helpers.arrayElement(products).id
-              : null,
+              : null
         };
       });
 
@@ -120,9 +120,9 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
           tenantId: tenant.id,
           notes:
             faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? undefined,
-          items: { create: items },
+          items: { create: items }
         },
-        select: { id: true },
+        select: { id: true }
       });
     });
 
@@ -132,7 +132,7 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
     // 2. Move most DRAFTs to PENDING
     const draftInvoices = await prisma.invoice.findMany({
       where: { tenantId: tenant.id, status: InvoiceStatus.DRAFT, deletedAt: null },
-      select: { id: true },
+      select: { id: true }
     });
 
     for (const inv of draftInvoices) {
@@ -140,15 +140,15 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
         try {
           await prisma.invoice.update({
             where: { id: inv.id },
-            data: { status: InvoiceStatus.PENDING },
+            data: { status: InvoiceStatus.PENDING }
           });
           await prisma.invoiceStatusHistory.create({
             data: {
               invoiceId: inv.id,
               status: InvoiceStatus.PENDING,
               previousStatus: InvoiceStatus.DRAFT,
-              notes: 'Invoice marked as pending',
-            },
+              notes: 'Invoice marked as pending'
+            }
           });
         } catch {
           // Ignore transition errors
@@ -159,12 +159,12 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
     // 3. Record payments for some PENDING invoices
     const pendingInvoices = await prisma.invoice.findMany({
       where: { tenantId: tenant.id, status: InvoiceStatus.PENDING, deletedAt: null },
-      select: { id: true, amount: true, issuedDate: true },
+      select: { id: true, amount: true, issuedDate: true }
     });
 
     const toPay = faker.helpers.arrayElements(pendingInvoices, {
       min: Math.floor(pendingInvoices.length * 0.4),
-      max: Math.floor(pendingInvoices.length * 0.7),
+      max: Math.floor(pendingInvoices.length * 0.7)
     });
 
     for (const inv of toPay) {
@@ -180,8 +180,8 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
             amount: amountToPay,
             method: method,
             date: payDate,
-            notes: isPartial ? 'Partial payment received' : 'Full payment received',
-          },
+            notes: isPartial ? 'Partial payment received' : 'Full payment received'
+          }
         });
 
         if (isPartial && faker.datatype.boolean({ probability: 0.5 })) {
@@ -191,8 +191,8 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
               amount: amountToPay,
               method: method,
               date: new Date(),
-              notes: 'Final payment',
-            },
+              notes: 'Final payment'
+            }
           });
         }
       } catch {
@@ -203,21 +203,21 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
     // 4. Cancel or overdue some remaining PENDING invoices
     const remainingPending = await prisma.invoice.findMany({
       where: { tenantId: tenant.id, status: InvoiceStatus.PENDING, deletedAt: null },
-      select: { id: true },
+      select: { id: true }
     });
 
     for (const inv of remainingPending) {
       const action = faker.helpers.weightedArrayElement([
         { value: 'CANCEL', weight: 0.1 },
         { value: 'OVERDUE', weight: 0.2 },
-        { value: 'KEEP', weight: 0.7 },
+        { value: 'KEEP', weight: 0.7 }
       ]);
 
       try {
         if (action === 'CANCEL') {
           await prisma.invoice.update({
             where: { id: inv.id },
-            data: { status: InvoiceStatus.CANCELLED },
+            data: { status: InvoiceStatus.CANCELLED }
           });
           await prisma.invoiceStatusHistory.create({
             data: {
@@ -227,22 +227,22 @@ export async function seedInvoices(options: SeedInvoicesOptions): Promise<number
               notes: faker.helpers.arrayElement([
                 'Client Request',
                 'Duplicate Invoice',
-                'Pricing Error',
-              ]),
-            },
+                'Pricing Error'
+              ])
+            }
           });
         } else if (action === 'OVERDUE') {
           await prisma.invoice.update({
             where: { id: inv.id },
-            data: { status: InvoiceStatus.OVERDUE },
+            data: { status: InvoiceStatus.OVERDUE }
           });
           await prisma.invoiceStatusHistory.create({
             data: {
               invoiceId: inv.id,
               status: InvoiceStatus.OVERDUE,
               previousStatus: InvoiceStatus.PENDING,
-              notes: 'Invoice marked as overdue (System)',
-            },
+              notes: 'Invoice marked as overdue (System)'
+            }
           });
         }
       } catch {
@@ -275,7 +275,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedInvoices({ tenants: seededTenants });

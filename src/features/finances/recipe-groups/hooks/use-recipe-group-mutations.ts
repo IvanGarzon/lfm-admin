@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
   createRecipeGroup,
   updateRecipeGroup,
-  deleteRecipeGroup,
+  deleteRecipeGroup
 } from '@/actions/finances/recipe-groups/mutations';
 import type { CreateRecipeGroupInput, UpdateRecipeGroupInput } from '@/schemas/recipe-groups';
 
@@ -23,7 +23,7 @@ export function useCreateRecipeGroup() {
     },
     onError: () => {
       toast.error('Failed to create recipe group');
-    },
+    }
   });
 }
 
@@ -43,7 +43,7 @@ export function useUpdateRecipeGroup() {
     },
     onError: () => {
       toast.error('Failed to update recipe group');
-    },
+    }
   });
 }
 
@@ -62,6 +62,6 @@ export function useDeleteRecipeGroup() {
     },
     onError: () => {
       toast.error('Failed to delete recipe group');
-    },
+    }
   });
 }

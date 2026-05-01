@@ -13,13 +13,13 @@ import { usePriceListHref } from '@/features/inventory/price-list/hooks/use-pric
 import {
   PRICE_LIST_CATEGORY_LABELS,
   PRICE_LIST_CATEGORY_ICONS,
-  PRICE_LIST_CATEGORIES,
+  PRICE_LIST_CATEGORIES
 } from '@/features/inventory/price-list/constants/categories';
 
 const categoryOptions = PRICE_LIST_CATEGORIES.map((value) => ({
   label: PRICE_LIST_CATEGORY_LABELS[value],
   value,
-  icon: PRICE_LIST_CATEGORY_ICONS[value],
+  icon: PRICE_LIST_CATEGORY_ICONS[value]
 }));
 
 interface CreatePriceListColumnsOptions {
@@ -31,7 +31,7 @@ function PriceListLink({ id, name }: { id: string; name: string }) {
   const href = usePriceListHref(id);
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {name}
     </Link>
   );
@@ -39,20 +39,20 @@ function PriceListLink({ id, name }: { id: string; name: string }) {
 
 export function createPriceListColumns({
   onDelete,
-  onViewCostHistory,
+  onViewCostHistory
 }: CreatePriceListColumnsOptions): ColumnDef<PriceListItemListItem>[] {
   return [
     {
       id: 'search',
       accessorKey: 'name',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Name' />,
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <Box className="flex items-center gap-2">
+          <Box className='flex items-center gap-2'>
             {item.imageUrl ? (
-              <Box className="h-5 w-5 text-green-500 flex-shrink-0">
-                <ImageIcon aria-hidden="true" className="h-4 w-4" />
+              <Box className='h-5 w-5 text-green-500 flex-shrink-0'>
+                <ImageIcon aria-hidden='true' className='h-4 w-4' />
               </Box>
             ) : null}
             <PriceListLink id={item.id} name={item.name} />
@@ -64,42 +64,42 @@ export function createPriceListColumns({
       meta: {
         label: 'Name',
         placeholder: 'Search items...',
-        variant: 'text',
-      },
+        variant: 'text'
+      }
     },
     {
       id: 'category',
       accessorKey: 'category',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Category' />,
       cell: ({ row }) => <PriceListCategoryBadge category={row.getValue('category')} />,
       filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
       enableColumnFilter: true,
       meta: {
         label: 'Category',
         variant: 'multiSelect',
-        options: categoryOptions,
-      },
+        options: categoryOptions
+      }
     },
     {
       id: 'costPerUnit',
       accessorKey: 'costPerUnit',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Cost/Unit" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Cost/Unit' />,
       cell: ({ row }) => {
         const cost = row.original.costPerUnit ?? 0;
-        return <Box className="font-medium">{formatCurrency({ number: cost })}</Box>;
+        return <Box className='font-medium'>{formatCurrency({ number: cost })}</Box>;
       },
-      enableSorting: true,
+      enableSorting: true
     },
     {
       id: 'costChange',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Cost Change" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Cost Change' />,
       cell: ({ row }) => {
         const lastCostChange = row.original.lastCostChange;
 
         if (!lastCostChange) {
           return (
-            <Box className="flex items-center gap-1.5 text-muted-foreground">
-              <Minus aria-hidden="true" className="h-4 w-4" />
+            <Box className='flex items-center gap-1.5 text-muted-foreground'>
+              <Minus aria-hidden='true' className='h-4 w-4' />
             </Box>
           );
         }
@@ -107,7 +107,7 @@ export function createPriceListColumns({
         const isIncrease = lastCostChange.trend === 'up';
         const percentChange = Math.abs(
           ((lastCostChange.newCost - lastCostChange.previousCost) / lastCostChange.previousCost) *
-            100,
+            100
         ).toFixed(1);
 
         return (
@@ -115,68 +115,68 @@ export function createPriceListColumns({
             className={`flex items-center gap-1.5 ${isIncrease ? 'text-destructive' : 'text-green-600'}`}
           >
             {isIncrease ? (
-              <TrendingUp aria-hidden="true" className="h-4 w-4" />
+              <TrendingUp aria-hidden='true' className='h-4 w-4' />
             ) : (
-              <TrendingDown aria-hidden="true" className="h-4 w-4" />
+              <TrendingDown aria-hidden='true' className='h-4 w-4' />
             )}
-            <span className="text-sm font-medium">{percentChange}%</span>
+            <span className='text-sm font-medium'>{percentChange}%</span>
           </Box>
         );
       },
-      enableSorting: false,
+      enableSorting: false
     },
     {
       id: 'unitType',
       accessorKey: 'unitType',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Unit Type" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Unit Type' />,
       cell: ({ row }) => {
         const unitType = row.original.unitType;
         return (
-          <Box className="text-muted-foreground">
+          <Box className='text-muted-foreground'>
             {unitType ? unitType.charAt(0).toUpperCase() + unitType.slice(1) : '—'}
           </Box>
         );
       },
-      enableSorting: true,
+      enableSorting: true
     },
     {
       id: 'season',
       accessorKey: 'season',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Season" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Season' />,
       cell: ({ row }) => {
         const season = row.original.season;
         return (
-          <Box className="text-muted-foreground">
+          <Box className='text-muted-foreground'>
             {season ? season.charAt(0).toUpperCase() + season.slice(1) : '—'}
           </Box>
         );
       },
-      enableSorting: true,
+      enableSorting: true
     },
     {
       id: 'multiplier',
       accessorKey: 'multiplier',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Multiplier" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Multiplier' />,
       cell: ({ row }) => {
         const multiplier = row.original.multiplier;
-        return <Box className="font-mono text-sm">{multiplier}x</Box>;
+        return <Box className='font-mono text-sm'>{multiplier}x</Box>;
       },
-      enableSorting: true,
+      enableSorting: true
     },
     {
       id: 'retailPrice',
       accessorKey: 'retailPrice',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Retail Price" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Retail Price' />,
       cell: ({ row }) => {
         const item = row.original;
         const retailPrice = item.retailPriceOverride ?? item.retailPrice;
         return (
-          <Box className="font-semibold text-teal-700 dark:text-teal-400">
+          <Box className='font-semibold text-teal-700 dark:text-teal-400'>
             {formatCurrency({ number: retailPrice })}
           </Box>
         );
       },
-      enableSorting: true,
+      enableSorting: true
     },
     {
       id: 'actions',
@@ -189,8 +189,8 @@ export function createPriceListColumns({
       ),
       enableHiding: false,
       meta: {
-        className: 'text-right',
-      },
-    },
+        className: 'text-right'
+      }
+    }
   ];
 }

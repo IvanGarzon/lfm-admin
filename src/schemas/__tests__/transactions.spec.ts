@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
-  DeleteTransactionSchema,
+  DeleteTransactionSchema
 } from '../transactions';
 import { testIds } from '@/lib/testing';
 
@@ -20,7 +20,7 @@ const validTransaction = {
   referenceId: null,
   invoiceId: null,
   vendorId: null,
-  customerId: null,
+  customerId: null
 };
 
 describe('Transaction Schemas', () => {
@@ -38,7 +38,7 @@ describe('Transaction Schemas', () => {
     it('validates with optional categoryIds', () => {
       const result = CreateTransactionSchema.safeParse({
         ...validTransaction,
-        categoryIds: [testIds.category()],
+        categoryIds: [testIds.category()]
       });
       expect(result.success).toBe(true);
     });
@@ -76,7 +76,7 @@ describe('Transaction Schemas', () => {
     it('fails when referenceNumber exceeds 100 characters', () => {
       const result = CreateTransactionSchema.safeParse({
         ...validTransaction,
-        referenceNumber: 'x'.repeat(101),
+        referenceNumber: 'x'.repeat(101)
       });
       expect(result.success).toBe(false);
     });
@@ -84,7 +84,7 @@ describe('Transaction Schemas', () => {
     it('fails when invoiceId is not a valid CUID', () => {
       const result = CreateTransactionSchema.safeParse({
         ...validTransaction,
-        invoiceId: 'not-a-cuid',
+        invoiceId: 'not-a-cuid'
       });
       expect(result.success).toBe(false);
     });
@@ -94,7 +94,7 @@ describe('Transaction Schemas', () => {
     it('validates a correct update payload with an ID', () => {
       const result = UpdateTransactionSchema.safeParse({
         ...validTransaction,
-        id: TEST_TRANSACTION_ID,
+        id: TEST_TRANSACTION_ID
       });
       expect(result.success).toBe(true);
     });
@@ -107,7 +107,7 @@ describe('Transaction Schemas', () => {
     it('fails when id is not a valid CUID', () => {
       const result = UpdateTransactionSchema.safeParse({
         ...validTransaction,
-        id: 'not-a-cuid',
+        id: 'not-a-cuid'
       });
       expect(result.success).toBe(false);
     });

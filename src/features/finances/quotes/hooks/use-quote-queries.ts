@@ -4,8 +4,9 @@ import {
   useQueryClient,
   keepPreviousData,
   skipToken,
-  type QueryClient,
+  type QueryClient
 } from '@tanstack/react-query';
+import type { SearchParams } from 'nuqs/server';
 import {
   getQuotes,
   getQuoteById,
@@ -20,7 +21,7 @@ import {
   getMonthlyQuoteValueTrend,
   getConversionFunnel,
   getTopCustomersByQuotedValue,
-  getAverageTimeToDecision,
+  getAverageTimeToDecision
 } from '@/actions/finances/quotes/queries';
 import {
   createQuote,
@@ -43,7 +44,7 @@ import {
   duplicateQuote,
   sendQuoteEmail,
   sendQuoteFollowUp,
-  toggleQuoteFavourite,
+  toggleQuoteFavourite
 } from '@/actions/finances/quotes/mutations';
 
 import type {
@@ -54,7 +55,7 @@ import type {
   MarkQuoteAsRejectedData,
   MarkQuoteAsOnHoldData,
   MarkQuoteAsCancelledData,
-  ConvertQuoteToInvoiceData,
+  ConvertQuoteToInvoiceData
 } from '@/features/finances/quotes/types';
 import { formatDateNormalizer } from '@/lib/utils';
 
@@ -89,8 +90,8 @@ export const QUOTE_KEYS = {
     }) => [...QUOTE_KEYS.analytics.all(), 'conversion-funnel', dateFilter] as const,
     topCustomers: (limit?: number) =>
       [...QUOTE_KEYS.analytics.all(), 'top-customers', limit] as const,
-    avgTimeToDecision: () => [...QUOTE_KEYS.analytics.all(), 'avg-time-to-decision'] as const,
-  },
+    avgTimeToDecision: () => [...QUOTE_KEYS.analytics.all(), 'avg-time-to-decision'] as const
+  }
 };
 
 // -- HELPER FUNCTIONS -------------------------------------------------------
@@ -111,7 +112,7 @@ function invalidateQuoteQueries(
     quoteId?: string;
     invalidateAllDetails?: boolean;
     includeInvoices?: boolean;
-  },
+  }
 ) {
   if (options?.quoteId) {
     queryClient.invalidateQueries({ queryKey: QUOTE_KEYS.detail(options.quoteId) });
@@ -144,6 +145,18 @@ function invalidateQuoteQueries(
  * - Query automatically refetches when filters change
  * - Cache is invalidated when quotes are created, updated, or deleted
  */
+export function useQuoteList(searchParams: SearchParams) {
+  return useQuery({
+    queryKey: [...QUOTE_KEYS.lists(), JSON.stringify(searchParams)],
+    queryFn: async () => {
+      const result = await getQuotes(searchParams);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
+
 export function useQuotes(filters: QuoteFilters) {
   return useQuery({
     queryKey: QUOTE_KEYS.list(filters),
@@ -165,7 +178,7 @@ export function useQuotes(filters: QuoteFilters) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -192,7 +205,7 @@ export function useQuote(id: string | undefined, options?: { enabled?: boolean }
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -217,7 +230,7 @@ export function useQuoteMetadata(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -245,7 +258,7 @@ export function useQuoteItems(quoteId: string | undefined, options?: { enabled?:
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -269,7 +282,7 @@ export function usePrefetchQuote() {
 
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }
@@ -297,7 +310,7 @@ export function useQuoteVersions(quoteId: string | undefined, options?: { enable
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -324,7 +337,7 @@ export function useQuoteHistory(id: string | undefined, options?: { enabled?: bo
         }
       : skipToken,
     enabled: options?.enabled,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -344,7 +357,7 @@ export function useQuoteStatistics(dateFilter?: { startDate?: Date; endDate?: Da
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null
       }
     : undefined;
 
@@ -358,7 +371,7 @@ export function useQuoteStatistics(dateFilter?: { startDate?: Date; endDate?: Da
       return result.data;
     },
     staleTime: 60_000, // 1 minute
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   });
 }
 
@@ -412,7 +425,7 @@ export function useCreateQuote() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create quote');
-    },
+    }
   });
 }
 
@@ -465,7 +478,7 @@ export function useUpdateQuote() {
       // Calculate new total amount from items
       const totalAmount = newData.items.reduce(
         (sum, item) => sum + item.quantity * item.unitPrice,
-        0,
+        0
       );
 
       // Optimistically update metadata
@@ -480,7 +493,7 @@ export function useUpdateQuote() {
           issuedDate: newData.issuedDate,
           validUntil: newData.validUntil,
           notes: newData.notes,
-          terms: newData.terms,
+          terms: newData.terms
         });
       }
 
@@ -500,8 +513,8 @@ export function useUpdateQuote() {
             order: index,
             colors: item.colors ?? previousItems[index]?.colors ?? [],
             createdAt: previousItems[index]?.createdAt ?? new Date(),
-            attachments: previousItems[index]?.attachments ?? [],
-          })),
+            attachments: previousItems[index]?.attachments ?? []
+          }))
         );
       }
 
@@ -522,7 +535,7 @@ export function useUpdateQuote() {
     },
     onSuccess: () => {
       toast.success('Quote updated successfully');
-    },
+    }
   });
 }
 
@@ -572,7 +585,7 @@ export function useMarkQuoteAsAccepted() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'ACCEPTED' as const,
+          status: 'ACCEPTED' as const
         });
       }
 
@@ -590,7 +603,7 @@ export function useMarkQuoteAsAccepted() {
     },
     onSuccess: () => {
       toast.success('Quote marked as accepted');
-    },
+    }
   });
 }
 
@@ -640,7 +653,7 @@ export function useMarkQuoteAsRejected() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'REJECTED' as const,
+          status: 'REJECTED' as const
         });
       }
 
@@ -658,7 +671,7 @@ export function useMarkQuoteAsRejected() {
     },
     onSuccess: () => {
       toast.success('Quote marked as rejected');
-    },
+    }
   });
 }
 
@@ -715,7 +728,7 @@ export function useMarkQuoteAsSent() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'SENT' as const,
+          status: 'SENT' as const
         });
       }
 
@@ -737,12 +750,12 @@ export function useMarkQuoteAsSent() {
       if (data.message) {
         toast.warning('Quote marked as sent, but email was not sent', {
           description: data.message,
-          duration: 10000,
+          duration: 10000
         });
       } else {
         toast.success('Quote marked as sent');
       }
-    },
+    }
   });
 }
 
@@ -793,7 +806,7 @@ export function useMarkQuoteAsOnHold() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'ON_HOLD' as const,
+          status: 'ON_HOLD' as const
         });
       }
 
@@ -811,7 +824,7 @@ export function useMarkQuoteAsOnHold() {
     },
     onSuccess: () => {
       toast.success('Quote put on hold');
-    },
+    }
   });
 }
 
@@ -862,7 +875,7 @@ export function useMarkQuoteAsCancelled() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'CANCELLED' as const,
+          status: 'CANCELLED' as const
         });
       }
 
@@ -880,7 +893,7 @@ export function useMarkQuoteAsCancelled() {
     },
     onSuccess: () => {
       toast.success('Quote cancelled');
-    },
+    }
   });
 }
 
@@ -919,7 +932,7 @@ export function useConvertQuoteToInvoice() {
       const result = await convertQuoteToInvoice({
         ...data,
         gst: data.gst ?? 10,
-        discount: data.discount ?? 0,
+        discount: data.discount ?? 0
       });
       if (!result.success) {
         throw new Error(result.error);
@@ -940,7 +953,7 @@ export function useConvertQuoteToInvoice() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          status: 'CONVERTED' as const,
+          status: 'CONVERTED' as const
         });
       }
 
@@ -958,7 +971,7 @@ export function useConvertQuoteToInvoice() {
     },
     onSuccess: (data) => {
       toast.success(`Quote converted to invoice ${data.invoiceNumber}`);
-    },
+    }
   });
 }
 
@@ -1000,7 +1013,7 @@ export function useExpireQuotes() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to expire quotes');
-    },
+    }
   });
 }
 
@@ -1068,7 +1081,7 @@ export function useDeleteQuote() {
     },
     onSuccess: () => {
       toast.success('Quote deleted');
-    },
+    }
   });
 }
 
@@ -1109,7 +1122,7 @@ export function useCreateQuoteVersion() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create quote version');
-    },
+    }
   });
 }
 
@@ -1145,7 +1158,7 @@ export function useDuplicateQuote() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to duplicate quote');
-    },
+    }
   });
 }
 
@@ -1189,7 +1202,7 @@ export function useDownloadQuotePdf() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to download PDF');
-    },
+    }
   });
 }
 
@@ -1228,13 +1241,13 @@ export function useSendQuoteEmail() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: QUOTE_KEYS.detail(variables.quoteId),
+        queryKey: QUOTE_KEYS.detail(variables.quoteId)
       });
       toast.success('Email queued successfully');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to send email');
-    },
+    }
   });
 }
 
@@ -1269,13 +1282,13 @@ export function useSendQuoteFollowUp() {
     },
     onSuccess: (_, quoteId) => {
       queryClient.invalidateQueries({
-        queryKey: QUOTE_KEYS.detail(quoteId),
+        queryKey: QUOTE_KEYS.detail(quoteId)
       });
       toast.success('Follow-up email queued successfully');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to send follow-up');
-    },
+    }
   });
 }
 
@@ -1299,7 +1312,7 @@ export function useQuoteItemAttachments(quoteItemId: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 
@@ -1349,7 +1362,7 @@ export function useUploadQuoteItemAttachment() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to upload image');
-    },
+    }
   });
 }
 
@@ -1385,7 +1398,7 @@ export function useDeleteQuoteItemAttachment() {
     mutationFn: async (data: { attachmentId: string; quoteItemId: string; quoteId: string }) => {
       const result = await deleteQuoteItemAttachment({
         attachmentId: data.attachmentId,
-        quoteId: data.quoteId,
+        quoteId: data.quoteId
       });
       if (!result.success) {
         throw new Error(result.error);
@@ -1401,7 +1414,7 @@ export function useDeleteQuoteItemAttachment() {
 
       // Snapshot the previous values
       const previousItemAttachments = queryClient.getQueryData(
-        QUOTE_KEYS.itemAttachments(data.quoteItemId),
+        QUOTE_KEYS.itemAttachments(data.quoteItemId)
       );
       const previousItems = queryClient.getQueryData<QuoteItem[]>(itemsKey);
 
@@ -1413,11 +1426,11 @@ export function useDeleteQuoteItemAttachment() {
             if (item.id === data.quoteItemId) {
               return {
                 ...item,
-                attachments: item.attachments.filter((att) => att.id !== data.attachmentId),
+                attachments: item.attachments.filter((att) => att.id !== data.attachmentId)
               };
             }
             return item;
-          }),
+          })
         );
       }
 
@@ -1428,7 +1441,7 @@ export function useDeleteQuoteItemAttachment() {
       if (context?.previousItemAttachments) {
         queryClient.setQueryData(
           QUOTE_KEYS.itemAttachments(data.quoteItemId),
-          context.previousItemAttachments,
+          context.previousItemAttachments
         );
       }
       if (context?.previousItems) {
@@ -1438,13 +1451,13 @@ export function useDeleteQuoteItemAttachment() {
     },
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
-        queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId),
+        queryKey: QUOTE_KEYS.itemAttachments(variables.quoteItemId)
       });
       invalidateQuoteQueries(queryClient, { quoteId: variables.quoteId });
     },
     onSuccess: () => {
       toast.success('Image deleted successfully');
-    },
+    }
   });
 }
 
@@ -1488,7 +1501,7 @@ export function useGetItemAttachmentDownloadUrl() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to download image');
-    },
+    }
   });
 }
 
@@ -1525,7 +1538,7 @@ export function useUpdateQuoteItemNotes() {
       const result = await updateQuoteItemNotes({
         quoteItemId: data.quoteItemId,
         quoteId: data.quoteId,
-        notes: data.notes,
+        notes: data.notes
       });
 
       if (!result.success) {
@@ -1550,11 +1563,11 @@ export function useUpdateQuoteItemNotes() {
             if (item.id === data.quoteItemId) {
               return {
                 ...item,
-                notes: data.notes,
+                notes: data.notes
               };
             }
             return item;
-          }),
+          })
         );
       }
 
@@ -1573,7 +1586,7 @@ export function useUpdateQuoteItemNotes() {
     },
     onSuccess: () => {
       toast.success('Notes updated successfully');
-    },
+    }
   });
 }
 
@@ -1611,7 +1624,7 @@ export function useUploadQuoteItemColorPalette() {
       const result = await updateQuoteItemColors({
         quoteItemId: data.quoteItemId,
         quoteId: data.quoteId,
-        colors: data.colors,
+        colors: data.colors
       });
 
       if (!result.success) {
@@ -1637,11 +1650,11 @@ export function useUploadQuoteItemColorPalette() {
             if (item.id === data.quoteItemId) {
               return {
                 ...item,
-                colors: data.colors,
+                colors: data.colors
               };
             }
             return item;
-          }),
+          })
         );
       }
 
@@ -1660,7 +1673,7 @@ export function useUploadQuoteItemColorPalette() {
     },
     onSuccess: () => {
       toast.success('Color palette updated successfully');
-    },
+    }
   });
 }
 
@@ -1690,7 +1703,7 @@ export function useQuoteValueTrend(limit?: number) {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 
@@ -1718,7 +1731,7 @@ export function useConversionFunnel(dateFilter?: { startDate?: Date; endDate?: D
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null
       }
     : undefined;
 
@@ -1732,7 +1745,7 @@ export function useConversionFunnel(dateFilter?: { startDate?: Date; endDate?: D
       return result.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   });
 }
 
@@ -1758,7 +1771,7 @@ export function useTopCustomersByQuotedValue(limit?: number) {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 
@@ -1784,7 +1797,7 @@ export function useAverageTimeToDecision() {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 
@@ -1825,22 +1838,22 @@ export function useBulkUpdateQuoteStatus() {
     onSuccess: (data) => {
       if (data.failureCount > 0) {
         toast.warning(
-          `${data.successCount} quotes updated, ${data.failureCount} failed. Check console for details.`,
+          `${data.successCount} quotes updated, ${data.failureCount} failed. Check console for details.`
         );
         console.warn(
           'Bulk update failures:',
-          data.results.filter((r) => !r.success),
+          data.results.filter((r) => !r.success)
         );
       } else {
         toast.success(
-          data.successCount > 1 ? `${data.successCount} quotes updated` : 'Quote updated',
+          data.successCount > 1 ? `${data.successCount} quotes updated` : 'Quote updated'
         );
       }
       invalidateQuoteQueries(queryClient);
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update quotes');
-    },
+    }
   });
 }
 
@@ -1879,18 +1892,18 @@ export function useBulkDeleteQuotes() {
     onSuccess: (data) => {
       if (data.failureCount > 0) {
         toast.warning(
-          `${data.successCount} quotes deleted, ${data.failureCount} failed (likely not in DRAFT status).`,
+          `${data.successCount} quotes deleted, ${data.failureCount} failed (likely not in DRAFT status).`
         );
       } else {
         toast.success(
-          data.successCount > 1 ? `${data.successCount} quotes deleted` : 'Quote deleted',
+          data.successCount > 1 ? `${data.successCount} quotes deleted` : 'Quote deleted'
         );
       }
       invalidateQuoteQueries(queryClient);
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete quotes');
-    },
+    }
   });
 }
 
@@ -1938,7 +1951,7 @@ export function useToggleQuoteFavourite() {
       if (previousMetadata) {
         queryClient.setQueryData<QuoteMetadata>(metadataKey, {
           ...previousMetadata,
-          isFavourite: !previousMetadata.isFavourite,
+          isFavourite: !previousMetadata.isFavourite
         });
       }
 
@@ -1955,6 +1968,6 @@ export function useToggleQuoteFavourite() {
     },
     onSuccess: (data) => {
       toast.success(data.isFavourite ? 'Added to favourites' : 'Removed from favourites');
-    },
+    }
   });
 }

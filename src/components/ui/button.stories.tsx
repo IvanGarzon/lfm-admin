@@ -55,8 +55,8 @@ const meta: Meta<typeof Button> = {
   component: Button,
   tags: ['autodocs'],
   args: {
-    children: 'Click Me',
-  },
+    children: 'Click Me'
+  }
 };
 
 export default meta;
@@ -66,56 +66,56 @@ export const Default: Story = {};
 
 export const Destructive: Story = {
   args: {
-    variant: 'destructive',
-  },
+    variant: 'destructive'
+  }
 };
 
 export const Loading: Story = {
   args: {
     isLoading: true,
-    loadingText: 'Loading...',
-  },
+    loadingText: 'Loading...'
+  }
 };
 
 export const Outline: Story = {
   args: {
-    variant: 'outline',
-  },
+    variant: 'outline'
+  }
 };
 
 export const Ghost: Story = {
   args: {
-    variant: 'ghost',
-  },
+    variant: 'ghost'
+  }
 };
 
 export const Link: Story = {
   args: {
-    variant: 'link',
-  },
+    variant: 'link'
+  }
 };
 
 // Size Variants
 export const Small: Story = {
   args: {
     size: 'sm',
-    children: 'Small',
-  },
+    children: 'Small'
+  }
 };
 
 export const Large: Story = {
   args: {
     size: 'lg',
-    children: 'Large',
-  },
+    children: 'Large'
+  }
 };
 
 export const Icon: Story = {
   args: {
     size: 'icon',
-    children: <RiAddLine className="size-4" />,
-    'aria-label': 'Add',
-  },
+    children: <RiAddLine className='size-4' />,
+    'aria-label': 'Add'
+  }
 };
 
 // import type { Meta, StoryObj } from '@storybook/react';
@@ -136,11 +136,11 @@ const sizes = ['sm', 'default', 'lg'] as const;
 
 export const AllVariantsAndSizes: Story = {
   render: () => (
-    <div className="space-y-10">
+    <div className='space-y-10'>
       {variants.map((variant) => (
         <div key={variant}>
-          <p className="font-semibold capitalize mb-2">{variant} variant</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <p className='font-semibold capitalize mb-2'>{variant} variant</p>
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
             {sizes.map((size) => (
               <Button key={`${variant}-${size}`} variant={variant} size={size}>
                 {size}
@@ -150,20 +150,20 @@ export const AllVariantsAndSizes: Story = {
         </div>
       ))}
     </div>
-  ),
+  )
 };
 
 export const AllLoadingVariantsAndSizes: Story = {
   args: {
     isLoading: true,
-    loadingText: 'Loading...',
+    loadingText: 'Loading...'
   },
   render: (args) => (
-    <div className="space-y-10">
+    <div className='space-y-10'>
       {variants.map((variant) => (
         <div key={variant}>
-          <p className="font-semibold capitalize mb-2">{variant} variant (Loading)</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <p className='font-semibold capitalize mb-2'>{variant} variant (Loading)</p>
+          <div className='grid grid-cols-2 sm:grid-cols-4 gap-4'>
             {sizes.map((size) => (
               <Button key={`${variant}-${size}`} variant={variant} size={size} {...args}>
                 {size}
@@ -173,5 +173,5 @@ export const AllLoadingVariantsAndSizes: Story = {
         </div>
       ))}
     </div>
-  ),
+  )
 };

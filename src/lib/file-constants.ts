@@ -8,7 +8,7 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/jpg',
   'image/png',
-  'image/webp',
+  'image/webp'
 ] as const;
 
 // Allowed MIME types for quote attachments
@@ -20,7 +20,7 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'text/plain',
-  'text/csv',
+  'text/csv'
 ] as const;
 
 // Maximum file size: 10MB

@@ -6,7 +6,7 @@ export const SORTABLE_ORGANIZATION_COLUMNS = [
   'name',
   'status',
   'customersCount',
-  'createdAt',
+  'createdAt'
 ] as const;
 
 export type SortableOrganizationColumn = (typeof SORTABLE_ORGANIZATION_COLUMNS)[number];

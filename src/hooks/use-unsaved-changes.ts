@@ -38,7 +38,7 @@ interface UseUnsavedChangesOptions {
 export function useUnsavedChanges(isDirty: boolean, options: UseUnsavedChangesOptions = {}) {
   const {
     warnOnRouteChange = true,
-    message = 'You have unsaved changes. Are you sure you want to leave?',
+    message = 'You have unsaved changes. Are you sure you want to leave?'
   } = options;
 
   // Handle browser navigation (refresh, close tab, back button to external site)
@@ -77,7 +77,7 @@ export function useUnsavedChanges(isDirty: boolean, options: UseUnsavedChangesOp
  */
 export function useUnsavedChangesCallback(
   hasUnsavedChanges: () => boolean,
-  options: UseUnsavedChangesOptions = {},
+  options: UseUnsavedChangesOptions = {}
 ) {
   const { message = 'You have unsaved changes. Are you sure you want to leave?' } = options;
 
@@ -109,7 +109,7 @@ export function useUnsavedChangesCallback(
 export function useUnsavedChangesDialog(
   isDirty: boolean,
   onConfirm?: () => void,
-  onCancel?: () => void,
+  onCancel?: () => void
 ) {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

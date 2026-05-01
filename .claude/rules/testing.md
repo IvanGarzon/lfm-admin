@@ -21,7 +21,7 @@ Repository tests must run against the actual database — do not mock Prisma. Al
 // correct — integration test, fresh call per test
 const result = await repository.createEmployee(
   createEmployeeInput({ email: 'x@example.com' }),
-  tenantId,
+  tenantId
 );
 
 // correct — unit/action test, module-level const is fine

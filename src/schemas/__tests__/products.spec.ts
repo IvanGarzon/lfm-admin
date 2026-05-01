@@ -3,7 +3,7 @@ import {
   CreateProductSchema,
   UpdateProductSchema,
   DeleteProductSchema,
-  ProductFiltersSchema,
+  ProductFiltersSchema
 } from '../products';
 import { testIds } from '@/lib/testing';
 
@@ -16,7 +16,7 @@ const validInput = {
   stock: 10,
   description: null,
   imageUrl: null,
-  availableAt: null,
+  availableAt: null
 };
 
 describe('Products Schemas', () => {
@@ -65,7 +65,7 @@ describe('Products Schemas', () => {
 
     it('accepts a valid image URL', () => {
       expect(() =>
-        CreateProductSchema.parse({ ...validInput, imageUrl: 'https://example.com/img.jpg' }),
+        CreateProductSchema.parse({ ...validInput, imageUrl: 'https://example.com/img.jpg' })
       ).not.toThrow();
     });
 
@@ -83,7 +83,7 @@ describe('Products Schemas', () => {
 
     it('accepts OUT_OF_STOCK status', () => {
       expect(() =>
-        CreateProductSchema.parse({ ...validInput, status: 'OUT_OF_STOCK' }),
+        CreateProductSchema.parse({ ...validInput, status: 'OUT_OF_STOCK' })
       ).not.toThrow();
     });
   });

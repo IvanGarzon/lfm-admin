@@ -7,27 +7,27 @@ import type { EmployeeFormInput } from '@/features/staff/employees/types';
 
 export function EmployeePersonalFields({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<EmployeeFormInput>;
   isDisabled: boolean;
 }) {
   return (
-    <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       <FieldGroup>
         <Controller
-          name="firstName"
+          name='firstName'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-firstName">First Name</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-firstName'>First Name</FieldLabel>
               </FieldContent>
               <Input
                 {...field}
-                id="form-rhf-input-firstName"
+                id='form-rhf-input-firstName'
                 aria-invalid={fieldState.invalid}
-                placeholder="Enter first name"
+                placeholder='Enter first name'
                 disabled={isDisabled}
               />
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -38,18 +38,18 @@ export function EmployeePersonalFields({
 
       <FieldGroup>
         <Controller
-          name="lastName"
+          name='lastName'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-lastName">Last Name</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-lastName'>Last Name</FieldLabel>
               </FieldContent>
               <Input
                 {...field}
-                id="form-rhf-input-lastName"
+                id='form-rhf-input-lastName'
                 aria-invalid={fieldState.invalid}
-                placeholder="Enter last name"
+                placeholder='Enter last name'
                 disabled={isDisabled}
               />
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

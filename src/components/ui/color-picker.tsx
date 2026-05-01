@@ -34,14 +34,14 @@ const PRESET_COLORS = [
   '#F43F5E', // Rose
   '#000000', // Black
   '#FFFFFF', // White
-  '#6B7280', // Gray
+  '#6B7280' // Gray
 ];
 
 export function ColorPicker({
   colors,
   onChange,
   maxColors = 10,
-  disabled = false,
+  disabled = false
 }: ColorPickerProps) {
   const hexInputId = useId();
   const rInputId = useId();
@@ -59,7 +59,7 @@ export function ColorPicker({
       ? {
           r: parseInt(result[1], 16),
           g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
+          b: parseInt(result[3], 16)
         }
       : null;
   };
@@ -110,29 +110,29 @@ export function ColorPicker({
   };
 
   return (
-    <Box className="space-y-4">
+    <Box className='space-y-4'>
       {/* Selected Colors */}
       {colors.length > 0 ? (
         <Box>
-          <Box className="text-sm font-medium text-foreground mb-2">
+          <Box className='text-sm font-medium text-foreground mb-2'>
             Selected Colors ({colors.length}/{maxColors})
           </Box>
-          <Box className="flex flex-wrap gap-1">
+          <Box className='flex flex-wrap gap-1'>
             {colors.map((color, index) => (
-              <Box key={color} className="relative group">
+              <Box key={color} className='relative group'>
                 <Box
-                  className="w-12 h-12 rounded-sm border-2 border-border"
+                  className='w-12 h-12 rounded-sm border-2 border-border'
                   style={{ backgroundColor: color }}
                 />
                 {!disabled && (
                   <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity z-1"
+                    type='button'
+                    variant='destructive'
+                    size='icon'
+                    className='absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity z-1'
                     onClick={() => removeColor(index)}
                   >
-                    <X className="h-3 w-3" />
+                    <X className='h-3 w-3' />
                   </Button>
                 )}
               </Box>
@@ -144,31 +144,31 @@ export function ColorPicker({
       {/* Color Picker Section */}
       {colors.length < maxColors && !disabled && (
         <Box>
-          <Box className="text-sm font-medium text-foreground mb-2">Add Colors</Box>
-          <Box className="space-y-4">
+          <Box className='text-sm font-medium text-foreground mb-2'>Add Colors</Box>
+          <Box className='space-y-4'>
             {/* Top Row: Custom Color Picker and Preset Colors */}
-            <Box className="flex gap-4">
+            <Box className='flex gap-4'>
               {/* Custom Color - Left Side */}
-              <Box className="shrink-0">
-                <Box className="text-xs text-muted-foreground mb-2">Custom Color</Box>
-                <Box className="h-[100px]">
+              <Box className='shrink-0'>
+                <Box className='text-xs text-muted-foreground mb-2'>Custom Color</Box>
+                <Box className='h-[100px]'>
                   <Input
-                    type="color"
+                    type='color'
                     value={customColor}
                     onChange={(e) => updateFromHex(e.target.value)}
-                    className="w-25 h-full p-0 cursor-pointer overflow-hidden"
+                    className='w-25 h-full p-0 cursor-pointer overflow-hidden'
                   />
                 </Box>
               </Box>
 
               {/* Preset Colors - Right Side in 2 Rows */}
-              <Box className="flex-1">
-                <Box className="text-xs text-muted-foreground mb-2">Preset Colors</Box>
-                <Box className="grid grid-cols-10 gap-1">
+              <Box className='flex-1'>
+                <Box className='text-xs text-muted-foreground mb-2'>Preset Colors</Box>
+                <Box className='grid grid-cols-10 gap-1'>
                   {PRESET_COLORS.map((color) => (
                     <button
                       key={color}
-                      type="button"
+                      type='button'
                       onClick={() => addColor(color)}
                       disabled={colors.includes(color) || colors.length >= maxColors}
                       className={cn(
@@ -176,7 +176,7 @@ export function ColorPicker({
                         colors.includes(color)
                           ? 'border-muted-foreground opacity-50 cursor-not-allowed'
                           : 'border-border hover:border-muted-foreground cursor-pointer',
-                        color === '#FFFFFF' && 'border-border',
+                        color === '#FFFFFF' && 'border-border'
                       )}
                       style={{ backgroundColor: color }}
                       aria-label={`Add ${color}`}
@@ -187,79 +187,79 @@ export function ColorPicker({
             </Box>
 
             {/* Bottom Row: HEX and RGB Inputs */}
-            <Box className="flex gap-2 items-end">
+            <Box className='flex gap-2 items-end'>
               {/* HEX Input */}
-              <Box className="flex-1">
-                <label htmlFor={hexInputId} className="text-xs text-muted-foreground mb-1 block">
+              <Box className='flex-1'>
+                <label htmlFor={hexInputId} className='text-xs text-muted-foreground mb-1 block'>
                   HEX
                 </label>
                 <Input
                   id={hexInputId}
-                  type="text"
+                  type='text'
                   value={customColor}
                   onChange={(e) => updateFromHex(e.target.value)}
-                  placeholder="#000000"
-                  className="font-mono text-sm"
+                  placeholder='#000000'
+                  className='font-mono text-sm'
                   maxLength={7}
                 />
               </Box>
 
               {/* R Input */}
-              <Box className="w-20">
-                <label htmlFor={rInputId} className="text-xs text-muted-foreground mb-1 block">
+              <Box className='w-20'>
+                <label htmlFor={rInputId} className='text-xs text-muted-foreground mb-1 block'>
                   R
                 </label>
                 <Input
                   id={rInputId}
-                  type="number"
+                  type='number'
                   value={r}
                   onChange={(e) => updateFromRgb(parseInt(e.target.value) || 0, g, b)}
                   min={0}
                   max={255}
-                  className="text-sm"
+                  className='text-sm'
                 />
               </Box>
 
               {/* G Input */}
-              <Box className="w-20">
-                <label htmlFor={gInputId} className="text-xs text-muted-foreground mb-1 block">
+              <Box className='w-20'>
+                <label htmlFor={gInputId} className='text-xs text-muted-foreground mb-1 block'>
                   G
                 </label>
                 <Input
                   id={gInputId}
-                  type="number"
+                  type='number'
                   value={g}
                   onChange={(e) => updateFromRgb(r, parseInt(e.target.value) || 0, b)}
                   min={0}
                   max={255}
-                  className="text-sm"
+                  className='text-sm'
                 />
               </Box>
 
               {/* B Input */}
-              <Box className="w-20">
-                <label htmlFor={bInputId} className="text-xs text-muted-foreground mb-1 block">
+              <Box className='w-20'>
+                <label htmlFor={bInputId} className='text-xs text-muted-foreground mb-1 block'>
                   B
                 </label>
                 <Input
                   id={bInputId}
-                  type="number"
+                  type='number'
                   value={b}
                   onChange={(e) => updateFromRgb(r, g, parseInt(e.target.value) || 0)}
                   min={0}
                   max={255}
-                  className="text-sm"
+                  className='text-sm'
                 />
               </Box>
 
               {/* Add Button */}
               <Button
-                type="button"
+                type='button'
                 onClick={addCustomColor}
                 disabled={colors.includes(customColor) || colors.length >= maxColors}
-                className="h-9"
+                className='h-9'
               >
-                <Plus className="h-6 w-6 mr-2" />
+                <Plus className='h-6 w-6 mr-2' />
                 Add Color
               </Button>
             </Box>
@@ -268,7 +268,7 @@ export function ColorPicker({
       )}
 
       {colors.length >= maxColors && (
-        <Box className="text-sm text-amber-600 dark:text-amber-400">
+        <Box className='text-sm text-amber-600 dark:text-amber-400'>
           Maximum of {maxColors} colors reached
         </Box>
       )}

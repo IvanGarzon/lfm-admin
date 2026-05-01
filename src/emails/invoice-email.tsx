@@ -20,19 +20,19 @@ function InvoiceContent({ invoiceData, pdfUrl }: InvoiceEmailProps): React.React
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency
   }).format(amount);
 
   const formattedDueDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(dueDate));
 
   const formattedIssuedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(issuedDate));
 
   return (
@@ -104,9 +104,9 @@ InvoiceEmail.PreviewProps = {
     amount: 2500.0,
     currency: 'AUD',
     issuedDate: new Date('2025-01-15'),
-    dueDate: new Date('2025-02-15'),
+    dueDate: new Date('2025-02-15')
   },
-  pdfUrl: 'https://example.com/invoice.pdf',
+  pdfUrl: 'https://example.com/invoice.pdf'
 } satisfies InvoiceEmailProps;
 
 export default InvoiceEmail;

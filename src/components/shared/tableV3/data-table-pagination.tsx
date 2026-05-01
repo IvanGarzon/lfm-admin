@@ -6,7 +6,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -30,60 +30,60 @@ export function DataTablePagination<TData>({
       onClick: () => table.setPageIndex(0),
       disabled: !table.getCanPreviousPage(),
       srText: 'First page',
-      mobileView: '',
+      mobileView: ''
     },
     {
       icon: ChevronLeft,
       onClick: () => table.previousPage(),
       disabled: !table.getCanPreviousPage(),
       srText: 'Previous page',
-      mobileView: '',
+      mobileView: ''
     },
     {
       icon: ChevronRight,
       onClick: () => table.nextPage(),
       disabled: !table.getCanNextPage(),
       srText: 'Next page',
-      mobileView: '',
+      mobileView: ''
     },
     {
       icon: ChevronsRight,
       onClick: () => table.setPageIndex(table.getPageCount() - 1),
       disabled: !table.getCanNextPage(),
       srText: 'Last page',
-      mobileView: '',
-    },
+      mobileView: ''
+    }
   ];
 
   return (
-    <Box className="flex w-full items-center justify-between">
-      <Box className="flex items-center gap-x-6 lg:gap-x-8">
-        <Box className="text-sm tabular-nums text-gray-500 sm:block">
+    <Box className='flex w-full items-center justify-between'>
+      <Box className='flex items-center gap-x-6 lg:gap-x-8'>
+        <Box className='text-sm tabular-nums text-gray-500 sm:block'>
           Showing{' '}
-          <span className="font-medium text-gray-900 dark:text-gray-50">
+          <span className='font-medium text-gray-900 dark:text-gray-50'>
             {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}-
             {Math.min(
               (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              totalItems,
+              totalItems
             )}
           </span>{' '}
-          of <span className="font-medium text-gray-900 dark:text-gray-50">{totalItems}</span>
+          of <span className='font-medium text-gray-900 dark:text-gray-50'>{totalItems}</span>
         </Box>
       </Box>
 
-      <Box className="hidden sm:flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-        <Box className="flex items-center space-x-2">
-          <p className="whitespace-nowrap text-sm">Size</p>
+      <Box className='hidden sm:flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8'>
+        <Box className='flex items-center space-x-2'>
+          <p className='whitespace-nowrap text-sm'>Size</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className='h-8 w-[70px]'>
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
-            <SelectContent side="top">
+            <SelectContent side='top'>
               {pageSizeOptions.map((pageSize) => (
                 <SelectItem key={`pagesize-${pageSize}`} value={`${pageSize}`}>
                   {pageSize}
@@ -94,17 +94,17 @@ export function DataTablePagination<TData>({
         </Box>
       </Box>
 
-      <Box className="flex items-center justify-between gap-2 sm:justify-end">
-        <Box className="hidden sm:flex w-[150px] items-center justify-center">
-          <Box className="text-sm tabular-nums text-gray-500 sm:block">
+      <Box className='flex items-center justify-between gap-2 sm:justify-end'>
+        <Box className='hidden sm:flex w-[150px] items-center justify-center'>
+          <Box className='text-sm tabular-nums text-gray-500 sm:block'>
             {totalItems > 0 ? (
               <>
                 Page{' '}
-                <span className="font-medium text-gray-900 dark:text-gray-50">
+                <span className='font-medium text-gray-900 dark:text-gray-50'>
                   {table.getState().pagination.pageIndex + 1}{' '}
                 </span>
                 of{' '}
-                <span className="font-medium text-gray-900 dark:text-gray-50">
+                <span className='font-medium text-gray-900 dark:text-gray-50'>
                   {table.getPageCount()}
                 </span>
               </>
@@ -113,12 +113,12 @@ export function DataTablePagination<TData>({
             )}
           </Box>
         </Box>
-        <Box className="flex items-center gap-x-1">
+        <Box className='flex items-center gap-x-1'>
           {paginationButtons.map((button, index) => (
             <Button
               key={button.srText}
               aria-label={button.srText}
-              variant="outline"
+              variant='outline'
               className={cn(button.mobileView, 'h-8 w-8 p-1.5')}
               onClick={() => {
                 button.onClick();
@@ -126,8 +126,8 @@ export function DataTablePagination<TData>({
               }}
               disabled={button.disabled}
             >
-              <span className="sr-only">{button.srText}</span>
-              <button.icon className="size-4 shrink-0" aria-hidden="true" />
+              <span className='sr-only'>{button.srText}</span>
+              <button.icon className='size-4 shrink-0' aria-hidden='true' />
             </Button>
           ))}
         </Box>

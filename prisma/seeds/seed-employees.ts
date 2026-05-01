@@ -44,17 +44,17 @@ export async function seedEmployees(options: SeedEmployeesOptions): Promise<numb
           rate: faker.number.float({ min: 25, max: 150, multipleOf: 0.25 }),
           status: faker.helpers.weightedArrayElement([
             { value: 'ACTIVE' as const, weight: 0.85 },
-            { value: 'INACTIVE' as const, weight: 0.15 },
+            { value: 'INACTIVE' as const, weight: 0.15 }
           ]),
           avatarUrl:
             faker.helpers.maybe(
               () =>
                 `https://api.slingacademy.com/public/sample-users/${faker.number.int({ min: 1, max: 100 })}.png`,
-              { probability: 0.7 },
+              { probability: 0.7 }
             ) ?? null,
-          tenantId: tenant.id,
+          tenantId: tenant.id
         },
-        select: { id: true },
+        select: { id: true }
       });
     });
 
@@ -87,7 +87,7 @@ if (isMain) {
       ...tenant,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedEmployees({ tenants: seededTenants });

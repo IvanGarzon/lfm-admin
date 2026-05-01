@@ -6,11 +6,11 @@ import { PriceListView } from '@/features/inventory/price-list/components/price-
 
 export const metadata = constructMetadata({
   title: 'Price List – lfm dashboard',
-  description: 'Manage your pricing catalog for florals, sundries, and supplies.',
+  description: 'Manage your pricing catalog for florals, sundries, and supplies.'
 });
 
 export default async function PriceListPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

@@ -9,11 +9,11 @@ import { ORGANIZATION_KEYS } from '@/features/crm/organizations/constants/query-
 
 export const metadata = constructMetadata({
   title: 'Organizations – lfm dashboard',
-  description: 'Manage your organizations.',
+  description: 'Manage your organizations.'
 });
 
 export default async function OrganizationsPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {
@@ -28,7 +28,7 @@ export default async function OrganizationsPage({
         throw new Error(result.error);
       }
       return result.data;
-    },
+    }
   });
 
   return (

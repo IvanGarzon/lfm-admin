@@ -11,22 +11,22 @@ export function useEmployeeTableFilters() {
 
   const [search, setSearch] = useQueryState(
     'search',
-    searchParams.search.withOptions({ shallow: false, throttleMs: 3000 }).withDefault(''),
+    searchParams.search.withOptions({ shallow: false, throttleMs: 3000 }).withDefault('')
   );
 
   const [alphabet, setAlphabet] = useQueryState(
     'alphabet',
-    searchParams.alphabet.withOptions({ shallow: false }).withDefault(''),
+    searchParams.alphabet.withOptions({ shallow: false }).withDefault('')
   );
 
   const [gender, setGender] = useQueryState(
     'gender',
-    searchParams.gender.withOptions({ shallow: false }),
+    searchParams.gender.withOptions({ shallow: false })
   );
 
   const [status, setStatus] = useQueryState(
     'status',
-    searchParams.status.withOptions({ shallow: false }),
+    searchParams.status.withOptions({ shallow: false })
   );
 
   const resetFilters = useCallback(() => {
@@ -55,6 +55,6 @@ export function useEmployeeTableFilters() {
     status,
     setStatus,
     resetFilters,
-    isAnyFilterActive,
+    isAnyFilterActive
   };
 }

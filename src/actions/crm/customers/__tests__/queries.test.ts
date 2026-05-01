@@ -7,23 +7,23 @@ const { mockCustomerRepo, mockAuth } = vi.hoisted(() => ({
   mockCustomerRepo: {
     searchCustomers: vi.fn(),
     findCustomerById: vi.fn(),
-    findActiveCustomers: vi.fn(),
+    findActiveCustomers: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/customer-repository', () => ({
   CustomerRepository: vi.fn().mockImplementation(function () {
     return mockCustomerRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
 vi.mock('@/filters/customers/customers-filters', () => ({
   searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 }),
-  },
+    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 })
+  }
 }));
 
 const TEST_CUSTOMER_ID = testIds.customer();
@@ -43,7 +43,7 @@ const mockCustomer: CustomerListItem = {
   createdAt: new Date('2024-01-01'),
   deletedAt: null,
   invoicesCount: 0,
-  quotesCount: 0,
+  quotesCount: 0
 };
 
 const mockPagination: CustomerPagination = {
@@ -55,8 +55,8 @@ const mockPagination: CustomerPagination = {
     hasNextPage: false,
     hasPreviousPage: false,
     nextPage: null,
-    previousPage: null,
-  },
+    previousPage: null
+  }
 };
 
 describe('Customer Queries', () => {
@@ -80,7 +80,7 @@ describe('Customer Queries', () => {
       }
       expect(mockCustomerRepo.searchCustomers).toHaveBeenCalledWith(
         expect.objectContaining({ page: 1, perPage: 10 }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -108,7 +108,7 @@ describe('Customer Queries', () => {
       }
       expect(mockCustomerRepo.findCustomerById).toHaveBeenCalledWith(
         TEST_CUSTOMER_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -127,7 +127,7 @@ describe('Customer Queries', () => {
   describe('getActiveCustomers', () => {
     it('returns active customers for selection', async () => {
       const selectItems = [
-        { id: TEST_CUSTOMER_ID, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
+        { id: TEST_CUSTOMER_ID, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' }
       ];
       mockCustomerRepo.findActiveCustomers.mockResolvedValue(selectItems);
 

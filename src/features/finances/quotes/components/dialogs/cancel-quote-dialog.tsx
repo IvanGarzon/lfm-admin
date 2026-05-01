@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -34,14 +34,14 @@ export function CancelQuoteDialog({
   onConfirm,
   quoteId,
   quoteNumber,
-  isPending = false,
+  isPending = false
 }: CancelQuoteDialogProps) {
   const form = useForm<MarkQuoteAsCancelledInput>({
     resolver: zodResolver(MarkQuoteAsCancelledSchema),
     defaultValues: {
       id: quoteId,
-      cancelReason: '',
-    },
+      cancelReason: ''
+    }
   });
 
   const handleSubmit = useCallback(
@@ -50,7 +50,7 @@ export function CancelQuoteDialog({
       form.reset();
       onOpenChange(false);
     },
-    [onConfirm, form, onOpenChange],
+    [onConfirm, form, onOpenChange]
   );
 
   const handleCancel = useCallback(() => {
@@ -60,7 +60,7 @@ export function CancelQuoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Cancel Quote</DialogTitle>
           <DialogDescription>
@@ -71,28 +71,28 @@ export function CancelQuoteDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            id="cancel-quote-form"
+            id='cancel-quote-form'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className='space-y-4'
           >
             <FieldGroup>
               <Controller
-                name="cancelReason"
+                name='cancelReason'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="cancel-quote-form-cancelReason">Reason</FieldLabel>
-                      <span className="text-xs text-muted-foreground">
+                      <FieldLabel htmlFor='cancel-quote-form-cancelReason'>Reason</FieldLabel>
+                      <span className='text-xs text-muted-foreground'>
                         {field.value?.length || 0} / {VALIDATION_LIMITS.REASON_MAX}
                       </span>
                     </FieldContent>
                     <Textarea
                       {...field}
-                      id="cancel-quote-form-cancelReason"
-                      placeholder="Enter reason for cancelling this quote..."
+                      id='cancel-quote-form-cancelReason'
+                      placeholder='Enter reason for cancelling this quote...'
                       rows={3}
-                      className="resize-none"
+                      className='resize-none'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -101,10 +101,10 @@ export function CancelQuoteDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" variant="destructive" disabled={isPending}>
+              <Button type='submit' variant='destructive' disabled={isPending}>
                 {isPending ? 'Cancelling...' : 'Cancel Quote'}
               </Button>
             </DialogFooter>

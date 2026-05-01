@@ -31,7 +31,7 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
       amount: invoice.amount,
       currency: invoice.currency,
       issuedDate: invoice.issuedDate,
-      dueDate: invoice.dueDate,
+      dueDate: invoice.dueDate
     };
 
     switch (type) {
@@ -41,16 +41,16 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
           template: 'invoice' as const,
           props: {
             invoiceData,
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${invoice.invoiceNumber}.pdf`,
+          attachmentName: `${invoice.invoiceNumber}.pdf`
         };
 
       case 'reminder': {
         const daysOverdue = Math.max(
           0,
-          Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+          Math.floor((Date.now() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24))
         );
 
         const amountPaid = invoice.amountPaid ?? 0;
@@ -68,17 +68,17 @@ export const previewInvoiceEmail = createEmailPreviewFunction<
               dueDate: invoiceData.dueDate,
               daysOverdue,
               amountPaid: amountPaid > 0 ? amountPaid : undefined,
-              amountDue: amountPaid > 0 ? amountDue : undefined,
+              amountDue: amountPaid > 0 ? amountDue : undefined
             },
-            pdfUrl: '#',
+            pdfUrl: '#'
           },
           hasAttachment: true,
-          attachmentName: `${invoice.invoiceNumber}.pdf`,
+          attachmentName: `${invoice.invoiceNumber}.pdf`
         };
       }
 
       default:
         return { error: `Unknown email type: ${type}` };
     }
-  },
+  }
 });

@@ -16,7 +16,7 @@ export const UpdateUserSchema = z.object({
     .max(VALIDATION_LIMITS.USERNAME_MAX, 'Username is too long')
     .regex(
       /^[a-z0-9_.-]+$/,
-      'Username may only contain lowercase letters, numbers, underscores, hyphens, and dots',
+      'Username may only contain lowercase letters, numbers, underscores, hyphens, and dots'
     )
     .nullable()
     .optional(),
@@ -25,24 +25,24 @@ export const UpdateUserSchema = z.object({
     .string()
     .max(VALIDATION_LIMITS.BIO_MAX, `Bio must be ${VALIDATION_LIMITS.BIO_MAX} characters or fewer`)
     .nullable()
-    .optional(),
+    .optional()
 });
 
 export const UpdateUserSecuritySchema = z.object({
   id: z.cuid({ error: 'Invalid user ID' }),
   isTwoFactorEnabled: z.boolean().optional(),
-  loginNotificationsEnabled: z.boolean().optional(),
+  loginNotificationsEnabled: z.boolean().optional()
 });
 
 export type UpdateUserSecurityInput = z.infer<typeof UpdateUserSecuritySchema>;
 
 export const UpdateUserRoleSchema = z.object({
   id: z.cuid({ error: 'Invalid user ID' }),
-  role: UserRoleSchema,
+  role: UserRoleSchema
 });
 
 export const SoftDeleteUserSchema = z.object({
-  id: z.cuid({ error: 'Invalid user ID' }),
+  id: z.cuid({ error: 'Invalid user ID' })
 });
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -53,7 +53,7 @@ const passwordField = z
   .string()
   .min(
     VALIDATION_LIMITS.PASSWORD_MIN,
-    `Password must be at least ${VALIDATION_LIMITS.PASSWORD_MIN} characters`,
+    `Password must be at least ${VALIDATION_LIMITS.PASSWORD_MIN} characters`
   )
   .max(VALIDATION_LIMITS.PASSWORD_MAX, 'Password is too long');
 
@@ -62,22 +62,22 @@ export const ChangePasswordSchema = z
     userId: z.cuid({ error: 'Invalid user ID' }),
     currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: passwordField,
-    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+    confirmPassword: z.string().min(1, 'Please confirm your new password')
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });
 
 export const AdminResetPasswordSchema = z
   .object({
     userId: z.cuid({ error: 'Invalid user ID' }),
     newPassword: passwordField,
-    confirmPassword: z.string(),
+    confirmPassword: z.string()
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });
 
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
@@ -86,18 +86,18 @@ export type AdminResetPasswordInput = z.infer<typeof AdminResetPasswordSchema>;
 export const ResetPasswordSchema = z
   .object({
     newPassword: passwordField,
-    confirmPassword: z.string(),
+    confirmPassword: z.string()
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });
 
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 
 export const InviteUserSchema = z.object({
   email: commonValidators.email(),
-  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER'),
+  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER')
 });
 
 export type InviteUserInput = z.infer<typeof InviteUserSchema>;

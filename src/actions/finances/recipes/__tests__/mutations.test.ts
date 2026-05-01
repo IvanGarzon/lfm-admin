@@ -9,28 +9,28 @@ const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
     createRecipeWithItems: vi.fn(),
     findRecipeByIdAsListItem: vi.fn(),
     updateRecipeWithItems: vi.fn(),
-    softDeleteRecipe: vi.fn(),
+    softDeleteRecipe: vi.fn()
   },
   mockAuth: vi.fn(),
-  mockHasPermission: vi.fn(),
+  mockHasPermission: vi.fn()
 }));
 
 vi.mock('@/repositories/recipe-repository', () => ({
   RecipeRepository: vi.fn().mockImplementation(function () {
     return mockRepoInstance;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const TEST_RECIPE_ID = testIds.recipe();
@@ -42,7 +42,7 @@ const baseItem = {
   lineTotal: 20,
   retailPrice: 3,
   retailLineTotal: 30,
-  order: 0,
+  order: 0
 };
 
 const createInput: CreateRecipeInput = {
@@ -54,7 +54,7 @@ const createInput: CreateRecipeInput = {
   totalCost: 125,
   totalRetailPrice: 150,
   sellingPrice: 178.57,
-  items: [baseItem],
+  items: [baseItem]
 };
 
 const updateInput: UpdateRecipeInput = {
@@ -67,7 +67,7 @@ const updateInput: UpdateRecipeInput = {
   totalCost: 125,
   totalRetailPrice: 150,
   sellingPrice: 178.57,
-  items: [baseItem],
+  items: [baseItem]
 };
 
 describe('Recipe Mutations', () => {
@@ -135,7 +135,7 @@ describe('Recipe Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockRepoInstance.softDeleteRecipe).toHaveBeenCalledWith(
         TEST_RECIPE_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
       expect(revalidatePath).toHaveBeenCalledWith('/finances/recipes');
     });

@@ -26,8 +26,8 @@ export class EmailAuditRepository {
     return this.prisma.emailAudit.create({
       data: {
         ...data,
-        status: EmailStatus.QUEUED,
-      },
+        status: EmailStatus.QUEUED
+      }
     });
   }
 
@@ -40,7 +40,7 @@ export class EmailAuditRepository {
   async findStatusById(id: string): Promise<Pick<EmailAudit, 'status' | 'sentAt'> | null> {
     return this.prisma.emailAudit.findUnique({
       where: { id },
-      select: { status: true, sentAt: true },
+      select: { status: true, sentAt: true }
     });
   }
 
@@ -53,7 +53,7 @@ export class EmailAuditRepository {
   async updateInngestEventId(id: string, inngestEventId: string): Promise<EmailAudit> {
     return this.prisma.emailAudit.update({
       where: { id },
-      data: { inngestEventId },
+      data: { inngestEventId }
     });
   }
 
@@ -66,7 +66,7 @@ export class EmailAuditRepository {
   async markAsSending(id: string, inngestRunId: string | undefined): Promise<EmailAudit> {
     return this.prisma.emailAudit.update({
       where: { id },
-      data: { status: EmailStatus.SENDING, inngestRunId },
+      data: { status: EmailStatus.SENDING, inngestRunId }
     });
   }
 
@@ -80,15 +80,15 @@ export class EmailAuditRepository {
   async markAsSent(
     id: string,
     emailId: string | undefined,
-    existingMetadata: Record<string, unknown>,
+    existingMetadata: Record<string, unknown>
   ): Promise<EmailAudit> {
     return this.prisma.emailAudit.update({
       where: { id },
       data: {
         status: EmailStatus.SENT,
         sentAt: new Date(),
-        metadata: { ...existingMetadata, emailId },
-      },
+        metadata: { ...existingMetadata, emailId }
+      }
     });
   }
 
@@ -105,8 +105,8 @@ export class EmailAuditRepository {
         status: EmailStatus.FAILED,
         failedAt: new Date(),
         errorMessage,
-        retryCount: { increment: 1 },
-      },
+        retryCount: { increment: 1 }
+      }
     });
   }
 
@@ -121,16 +121,16 @@ export class EmailAuditRepository {
   async findLastSentByQuote(
     quoteId: string,
     emailType: string,
-    since: Date,
+    since: Date
   ): Promise<EmailAudit | null> {
     return this.prisma.emailAudit.findFirst({
       where: {
         quoteId,
         emailType,
         status: EmailStatus.SENT,
-        sentAt: { gte: since },
+        sentAt: { gte: since }
       },
-      orderBy: { sentAt: 'desc' },
+      orderBy: { sentAt: 'desc' }
     });
   }
 
@@ -145,16 +145,16 @@ export class EmailAuditRepository {
   async findLastSentByInvoice(
     invoiceId: string,
     emailType: string,
-    since: Date,
+    since: Date
   ): Promise<EmailAudit | null> {
     return this.prisma.emailAudit.findFirst({
       where: {
         invoiceId,
         emailType,
         status: EmailStatus.SENT,
-        sentAt: { gte: since },
+        sentAt: { gte: since }
       },
-      orderBy: { sentAt: 'desc' },
+      orderBy: { sentAt: 'desc' }
     });
   }
 
@@ -169,16 +169,16 @@ export class EmailAuditRepository {
   async findLastSentByCustomer(
     customerId: string,
     emailType: string,
-    since: Date,
+    since: Date
   ): Promise<EmailAudit | null> {
     return this.prisma.emailAudit.findFirst({
       where: {
         customerId,
         emailType,
         status: EmailStatus.SENT,
-        sentAt: { gte: since },
+        sentAt: { gte: since }
       },
-      orderBy: { sentAt: 'desc' },
+      orderBy: { sentAt: 'desc' }
     });
   }
 }

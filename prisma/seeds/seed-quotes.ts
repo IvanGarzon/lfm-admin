@@ -25,7 +25,7 @@ const ITEM_DESCRIPTIONS = [
   'Elegant Orchid Display',
   'Tropical Flower Collection',
   'Vintage Garden Arrangement',
-  'Modern Minimalist Bouquet',
+  'Modern Minimalist Bouquet'
 ];
 
 const COLOR_PALETTES = [
@@ -34,7 +34,7 @@ const COLOR_PALETTES = [
   ['#E8D5C4', '#EEAC99', '#C98474'],
   ['#B4A7D6', '#D5AAFF', '#E6B0FF'],
   ['#FFB3BA', '#FFDFBA', '#FFFFBA'],
-  ['#BAE1FF', '#BAFFC9', '#FFFFBA'],
+  ['#BAE1FF', '#BAFFC9', '#FFFFBA']
 ];
 
 // -- Seed function -----------------------------------------------------------
@@ -57,7 +57,7 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
     const customers = await prisma.customer.findMany({
       where: { tenantId: tenant.id, deletedAt: null },
       select: { id: true },
-      take: 25,
+      take: 25
     });
 
     if (customers.length === 0) {
@@ -68,7 +68,7 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
     const products = await prisma.product.findMany({
       where: { tenantId: tenant.id },
       select: { id: true },
-      take: 15,
+      take: 15
     });
 
     const year = new Date().getFullYear();
@@ -76,7 +76,7 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
     const lastQuote = await prisma.quote.findFirst({
       where: { tenantId: tenant.id, quoteNumber: { startsWith: `QTE-${year}-` } },
       orderBy: { quoteNumber: 'desc' },
-      select: { quoteNumber: true },
+      select: { quoteNumber: true }
     });
     const startCounter = lastQuote ? parseInt(lastQuote.quoteNumber.split('-')[2], 10) + 1 : 1;
 
@@ -87,7 +87,7 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
       const validUntil = addDays(issuedDate, faker.number.int({ min: 14, max: 60 }));
       const discount = faker.helpers.weightedArrayElement([
         { value: 0, weight: 0.7 },
-        { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 },
+        { value: faker.number.float({ min: 50, max: 500, multipleOf: 10 }), weight: 0.3 }
       ]);
       const gst = 10;
 
@@ -106,8 +106,8 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
               : null,
           colors:
             faker.helpers.maybe(() => faker.helpers.arrayElement(COLOR_PALETTES), {
-              probability: 0.6,
-            }) ?? [],
+              probability: 0.6
+            }) ?? []
         };
       });
 
@@ -133,11 +133,11 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
             faker.helpers.maybe(
               () =>
                 'Payment due within 14 days of acceptance. 50% deposit required to commence work.',
-              { probability: 0.7 },
+              { probability: 0.7 }
             ) ?? undefined,
-          items: { create: items },
+          items: { create: items }
         },
-        select: { id: true },
+        select: { id: true }
       });
     });
 
@@ -150,15 +150,15 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
       try {
         await prisma.quote.update({
           where: { id },
-          data: { status: QuoteStatus.SENT },
+          data: { status: QuoteStatus.SENT }
         });
         await prisma.quoteStatusHistory.create({
           data: {
             quoteId: id,
             status: QuoteStatus.SENT,
             previousStatus: QuoteStatus.DRAFT,
-            notes: 'Quote sent to customer',
-          },
+            notes: 'Quote sent to customer'
+          }
         });
       } catch {
         // Ignore transition errors
@@ -172,27 +172,27 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
         { value: 'ACCEPTED', weight: 0.6 },
         { value: 'REJECTED', weight: 0.15 },
         { value: 'ON_HOLD', weight: 0.15 },
-        { value: 'CANCELLED', weight: 0.1 },
+        { value: 'CANCELLED', weight: 0.1 }
       ]);
 
       try {
         if (action === 'ACCEPTED') {
           await prisma.quote.update({
             where: { id },
-            data: { status: QuoteStatus.ACCEPTED },
+            data: { status: QuoteStatus.ACCEPTED }
           });
           await prisma.quoteStatusHistory.create({
             data: {
               quoteId: id,
               status: QuoteStatus.ACCEPTED,
               previousStatus: QuoteStatus.SENT,
-              notes: 'Quote accepted by customer',
-            },
+              notes: 'Quote accepted by customer'
+            }
           });
         } else if (action === 'REJECTED') {
           await prisma.quote.update({
             where: { id },
-            data: { status: QuoteStatus.REJECTED },
+            data: { status: QuoteStatus.REJECTED }
           });
           await prisma.quoteStatusHistory.create({
             data: {
@@ -202,35 +202,35 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
               notes: faker.helpers.arrayElement([
                 'Too expensive',
                 'No longer needed',
-                'Other quote selected',
-              ]),
-            },
+                'Other quote selected'
+              ])
+            }
           });
         } else if (action === 'ON_HOLD') {
           await prisma.quote.update({
             where: { id },
-            data: { status: QuoteStatus.ON_HOLD },
+            data: { status: QuoteStatus.ON_HOLD }
           });
           await prisma.quoteStatusHistory.create({
             data: {
               quoteId: id,
               status: QuoteStatus.ON_HOLD,
               previousStatus: QuoteStatus.SENT,
-              notes: 'Waiting for venue confirmation',
-            },
+              notes: 'Waiting for venue confirmation'
+            }
           });
         } else if (action === 'CANCELLED') {
           await prisma.quote.update({
             where: { id },
-            data: { status: QuoteStatus.CANCELLED },
+            data: { status: QuoteStatus.CANCELLED }
           });
           await prisma.quoteStatusHistory.create({
             data: {
               quoteId: id,
               status: QuoteStatus.CANCELLED,
               previousStatus: QuoteStatus.SENT,
-              notes: 'Client decided not to proceed',
-            },
+              notes: 'Client decided not to proceed'
+            }
           });
         }
       } catch {
@@ -253,15 +253,15 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
             quantity: true,
             unitPrice: true,
             total: true,
-            productId: true,
-          },
-        },
-      },
+            productId: true
+          }
+        }
+      }
     });
 
     const toConvert = faker.helpers.arrayElements(acceptedQuotes, {
       min: Math.min(3, acceptedQuotes.length),
-      max: Math.min(7, acceptedQuotes.length),
+      max: Math.min(7, acceptedQuotes.length)
     });
 
     let invoiceCounter = 1;
@@ -273,7 +273,7 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
         const gst = Number(quote.gst);
         const subtotal = quote.items.reduce(
           (sum, item) => sum + item.quantity * Number(item.unitPrice),
-          0,
+          0
         );
         const amount = subtotal + (subtotal * gst) / 100 - discount;
 
@@ -297,16 +297,16 @@ export async function seedQuotes(options: SeedQuotesOptions): Promise<number> {
                 quantity: item.quantity,
                 unitPrice: Number(item.unitPrice),
                 total: Number(item.total),
-                productId: item.productId,
-              })),
-            },
+                productId: item.productId
+              }))
+            }
           },
-          select: { id: true },
+          select: { id: true }
         });
 
         await prisma.quote.update({
           where: { id: quote.id },
-          data: { invoiceId: invoice.id },
+          data: { invoiceId: invoice.id }
         });
       } catch (error) {
         console.error(`Failed to convert quote to invoice for ${tenant.name}:`, error);
@@ -338,7 +338,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedQuotes({ tenants: seededTenants });

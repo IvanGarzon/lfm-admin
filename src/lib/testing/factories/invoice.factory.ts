@@ -10,12 +10,12 @@ import type { InvoiceStatus } from '@/prisma/client';
 import type {
   CreateInvoiceInput,
   RecordPaymentInput,
-  CancelInvoiceInput,
+  CancelInvoiceInput
 } from '@/schemas/invoices';
 import type {
   InvoiceWithDetails,
   InvoiceItemDetail,
-  InvoicePaymentItem,
+  InvoicePaymentItem
 } from '@/features/finances/invoices/types';
 
 // Derive item type from schema
@@ -46,7 +46,7 @@ interface InvoiceWithCustomer extends InvoiceResponse {
  * Creates valid invoice input data for create/update mutations.
  */
 export function createInvoiceInput(
-  overrides: Partial<CreateInvoiceInput> = {},
+  overrides: Partial<CreateInvoiceInput> = {}
 ): CreateInvoiceInput {
   return {
     customerId: overrides.customerId ?? testIds.customer(),
@@ -57,7 +57,7 @@ export function createInvoiceInput(
     gst: 10,
     discount: 0,
     items: [createInvoiceItemInput()],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -65,14 +65,14 @@ export function createInvoiceInput(
  * Creates an invoice item input.
  */
 export function createInvoiceItemInput(
-  overrides: Partial<InvoiceItemInput> = {},
+  overrides: Partial<InvoiceItemInput> = {}
 ): InvoiceItemInput {
   return {
     description: 'Test Item',
     quantity: 1,
     unitPrice: 100,
     productId: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -83,7 +83,7 @@ export function createInvoiceResponse(overrides: Partial<InvoiceResponse> = {}):
   return {
     id: overrides.id ?? testIds.invoice(),
     invoiceNumber: overrides.invoiceNumber ?? 'INV-2024-0001',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -91,7 +91,7 @@ export function createInvoiceResponse(overrides: Partial<InvoiceResponse> = {}):
  * Creates a mock invoice with customer data (for markAsPending, etc.).
  */
 export function createInvoiceWithCustomer(
-  overrides: Partial<InvoiceWithCustomer> = {},
+  overrides: Partial<InvoiceWithCustomer> = {}
 ): InvoiceWithCustomer {
   const customerId = overrides.customer?.id ?? testIds.customer();
   return {
@@ -107,9 +107,9 @@ export function createInvoiceWithCustomer(
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
-      ...overrides.customer,
+      ...overrides.customer
     },
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -117,7 +117,7 @@ export function createInvoiceWithCustomer(
  * Creates a mock invoice item detail.
  */
 export function createInvoiceItemDetail(
-  overrides: Partial<InvoiceItemDetail> = {},
+  overrides: Partial<InvoiceItemDetail> = {}
 ): InvoiceItemDetail {
   const invoiceId = overrides.invoiceId ?? testIds.invoice();
   return {
@@ -128,7 +128,7 @@ export function createInvoiceItemDetail(
     unitPrice: 100,
     total: 100,
     productId: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -136,7 +136,7 @@ export function createInvoiceItemDetail(
  * Creates a mock invoice payment item.
  */
 export function createInvoicePaymentItem(
-  overrides: Partial<InvoicePaymentItem> = {},
+  overrides: Partial<InvoicePaymentItem> = {}
 ): InvoicePaymentItem {
   return {
     id: overrides.id ?? testIds.payment(),
@@ -145,7 +145,7 @@ export function createInvoicePaymentItem(
     method: 'Credit Card',
     reference: null,
     notes: null,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -153,7 +153,7 @@ export function createInvoicePaymentItem(
  * Creates a full invoice with details as returned by findByIdWithDetails.
  */
 export function createInvoiceDetails(
-  overrides: Partial<InvoiceWithDetails> = {},
+  overrides: Partial<InvoiceWithDetails> = {}
 ): InvoiceWithDetails {
   const invoiceId = overrides.id ?? testIds.invoice();
   const customerId = overrides.customer?.id ?? testIds.customer();
@@ -181,11 +181,11 @@ export function createInvoiceDetails(
       email: 'john@example.com',
       phone: null,
       organization: null,
-      ...overrides.customer,
+      ...overrides.customer
     },
     createdAt: overrides.createdAt ?? now,
     updatedAt: overrides.updatedAt ?? now,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -193,14 +193,14 @@ export function createInvoiceDetails(
  * Creates record payment input data.
  */
 export function createRecordPaymentInput(
-  overrides: Partial<RecordPaymentInput> = {},
+  overrides: Partial<RecordPaymentInput> = {}
 ): RecordPaymentInput {
   return {
     id: overrides.id ?? testIds.invoice(),
     amount: 50,
     paidDate: new Date(),
     paymentMethod: 'Credit Card',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -208,12 +208,12 @@ export function createRecordPaymentInput(
  * Creates cancel invoice input data.
  */
 export function createCancelInvoiceInput(
-  overrides: Partial<CancelInvoiceInput> = {},
+  overrides: Partial<CancelInvoiceInput> = {}
 ): CancelInvoiceInput {
   return {
     id: overrides.id ?? testIds.invoice(),
     cancelReason: 'Customer request',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -232,7 +232,7 @@ export function createInvoiceStatistics(overrides: Partial<Record<string, number
     totalAmount: 50000,
     paidAmount: 30000,
     overdueAmount: 8000,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -267,11 +267,11 @@ export const mockInvoices = {
     createInvoiceResponse({
       id,
       status: 'PAID',
-      receiptNumber: 'REC-2024-0001',
+      receiptNumber: 'REC-2024-0001'
     }),
 
   /**
    * Creates a full invoice with details.
    */
-  withDetails: (id?: string, status?: InvoiceStatus) => createInvoiceDetails({ id, status }),
+  withDetails: (id?: string, status?: InvoiceStatus) => createInvoiceDetails({ id, status })
 } as const;

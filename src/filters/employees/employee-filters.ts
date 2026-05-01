@@ -1,7 +1,7 @@
 import { GenderSchema, type Gender } from '@/zod/schemas/enums/Gender.schema';
 import {
   EmployeeStatusSchema,
-  type EmployeeStatus,
+  type EmployeeStatus
 } from '@/zod/schemas/enums/EmployeeStatus.schema';
 import { getSortingStateParser } from '@/lib/parsers';
 import { SORTABLE_EMPLOYEE_COLUMNS } from '@/features/staff/employees/constants/sortable-columns';
@@ -11,7 +11,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
-  parseAsArrayOf,
+  parseAsArrayOf
 } from 'nuqs/server';
 
 const sortableColumnIds = new Set(SORTABLE_EMPLOYEE_COLUMNS);
@@ -21,10 +21,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 export function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -35,9 +35,9 @@ export const searchParams = {
   perPage: parseAsInteger.withDefault(20),
   gender: parseAsArrayOf(parseAsStringEnum<Gender>(GenderSchema.options)).withDefault([]),
   status: parseAsArrayOf(
-    parseAsStringEnum<EmployeeStatus>(EmployeeStatusSchema.options),
+    parseAsStringEnum<EmployeeStatus>(EmployeeStatusSchema.options)
   ).withDefault([]),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

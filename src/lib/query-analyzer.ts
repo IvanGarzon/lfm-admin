@@ -12,7 +12,7 @@ import { logger } from '@/lib/logger';
 export const QUERY_THRESHOLDS = {
   SLOW: 1000, // 1 second
   MODERATE: 100, // 100ms
-  FAST: 50, // 50ms
+  FAST: 50 // 50ms
 } as const;
 
 /**
@@ -28,7 +28,7 @@ export function analyzeQueryPerformance(duration: number): {
       level: 'slow',
       color: '\x1b[31m', // Red
       recommendation:
-        'Consider adding indexes, optimizing joins, or implementing caching for this query.',
+        'Consider adding indexes, optimizing joins, or implementing caching for this query.'
     };
   }
 
@@ -36,13 +36,13 @@ export function analyzeQueryPerformance(duration: number): {
     return {
       level: 'moderate',
       color: '\x1b[33m', // Yellow
-      recommendation: 'Monitor this query. Consider optimization if it runs frequently.',
+      recommendation: 'Monitor this query. Consider optimization if it runs frequently.'
     };
   }
 
   return {
     level: 'fast',
-    color: '\x1b[32m', // Green
+    color: '\x1b[32m' // Green
   };
 }
 
@@ -74,7 +74,7 @@ export async function getQueryMetrics() {
     return result;
   } catch (error) {
     logger.error('Failed to fetch query metrics', error as Error, {
-      context: 'getQueryMetrics',
+      context: 'getQueryMetrics'
     });
     return [];
   }
@@ -93,7 +93,7 @@ export async function explainQuery(query: string, params?: unknown[]): Promise<s
   } catch (error) {
     logger.error('Failed to explain query', error as Error, {
       context: 'explainQuery',
-      metadata: { query },
+      metadata: { query }
     });
     return null;
   }
@@ -131,7 +131,7 @@ export async function checkMissingIndexes() {
     return result;
   } catch (error) {
     logger.error('Failed to check missing indexes', error as Error, {
-      context: 'checkMissingIndexes',
+      context: 'checkMissingIndexes'
     });
     return [];
   }
@@ -172,7 +172,7 @@ export async function getTableSizes() {
     return result;
   } catch (error) {
     logger.error('Failed to get table sizes', error as Error, {
-      context: 'getTableSizes',
+      context: 'getTableSizes'
     });
     return [];
   }
@@ -186,7 +186,7 @@ export function getConnectionStats() {
   // This is a placeholder for tracking connection usage
   return {
     timestamp: new Date().toISOString(),
-    note: 'Connection pooling is managed by Neon serverless adapter',
+    note: 'Connection pooling is managed by Neon serverless adapter'
   };
 }
 
@@ -198,7 +198,7 @@ export async function getPerformanceSummary() {
   const [queryMetrics, missingIndexes, tableSizes] = await Promise.all([
     getQueryMetrics(),
     checkMissingIndexes(),
-    getTableSizes(),
+    getTableSizes()
   ]);
 
   return {
@@ -206,6 +206,6 @@ export async function getPerformanceSummary() {
     potentialMissingIndexes: missingIndexes,
     largestTables: tableSizes,
     connectionStats: getConnectionStats(),
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString()
   };
 }

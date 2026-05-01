@@ -12,7 +12,7 @@ import { CustomersTable } from '@/features/crm/customers/components/customers-ta
 import { createCustomerColumns } from '@/features/crm/customers/components/customer-columns';
 import {
   useDeleteCustomer,
-  useCustomers,
+  useCustomers
 } from '@/features/crm/customers/hooks/use-customer-queries';
 import { searchParams as customerSearchParams } from '@/filters/customers/customers-filters';
 import { hasActiveSearchFilters } from '@/lib/utils';
@@ -24,12 +24,12 @@ const CustomerDrawer = dynamic(
     import('@/features/crm/customers/components/customer-drawer').then((mod) => mod.CustomerDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export function CustomersList({
-  searchParams: serverSearchParams,
+  searchParams: serverSearchParams
 }: {
   searchParams: SearchParams;
 }) {
@@ -49,7 +49,7 @@ export function CustomersList({
           deleteCustomer.mutate({ id });
         }
       }),
-    [deleteCustomer],
+    [deleteCustomer]
   );
 
   const handleShowCreateModal = useCallback(() => {
@@ -61,7 +61,7 @@ export function CustomersList({
     columns,
     pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   const isZeroState =
@@ -69,29 +69,29 @@ export function CustomersList({
     !hasActiveSearchFilters(serverSearchParams, customerSearchParams);
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       {isZeroState ? (
         <EmptyState
           icon={Users}
-          title="No customers yet"
-          description="Add your first customer to start managing your relationships."
+          title='No customers yet'
+          description='Add your first customer to start managing your relationships.'
           action={
             <Button onClick={handleShowCreateModal}>
-              <Plus className="h-4 w-4" aria-hidden="true" />
+              <Plus className='h-4 w-4' aria-hidden='true' />
               Add Customer
             </Button>
           }
         />
       ) : (
         <>
-          <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-            <Box className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-              <p className="text-muted-foreground text-sm">Manage and track all your customers</p>
+          <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+            <Box className='min-w-0'>
+              <h1 className='text-3xl font-bold tracking-tight'>Customers</h1>
+              <p className='text-muted-foreground text-sm'>Manage and track all your customers</p>
             </Box>
-            <Box className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0">
-              <Button onClick={handleShowCreateModal} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" aria-hidden="true" />
+            <Box className='flex flex-col-reverse gap-3 sm:flex-row sm:items-center shrink-0'>
+              <Button onClick={handleShowCreateModal} className='w-full sm:w-auto'>
+                <Plus className='h-4 w-4' aria-hidden='true' />
                 Add Customer
               </Button>
             </Box>

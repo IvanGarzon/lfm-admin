@@ -14,31 +14,31 @@ export const InvoiceStatus = {
   PAID: 'PAID',
   PARTIALLY_PAID: 'PARTIALLY_PAID',
   OVERDUE: 'OVERDUE',
-  CANCELLED: 'CANCELLED',
+  CANCELLED: 'CANCELLED'
 } as const;
 
 export const UserRole = {
   USER: 'USER',
   MANAGER: 'MANAGER',
-  ADMIN: 'ADMIN',
+  ADMIN: 'ADMIN'
 } as const;
 
 export const TransactionType = {
   INCOME: 'INCOME',
-  EXPENSE: 'EXPENSE',
+  EXPENSE: 'EXPENSE'
 } as const;
 
 export const TransactionStatus = {
   PENDING: 'PENDING',
   COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED',
+  CANCELLED: 'CANCELLED'
 } as const;
 
 export const DocumentKind = {
   INVOICE: 'INVOICE',
   RECEIPT: 'RECEIPT',
   QUOTE: 'QUOTE',
-  OTHER: 'OTHER',
+  OTHER: 'OTHER'
 } as const;
 
 export const RecipeItemType = {
@@ -46,7 +46,7 @@ export const RecipeItemType = {
   FOLIAGE: 'FOLIAGE',
   SUPPLY: 'SUPPLY',
   INGREDIENT: 'INGREDIENT',
-  OTHER: 'OTHER',
+  OTHER: 'OTHER'
 } as const;
 
 // Prisma Decimal class mock
@@ -68,11 +68,11 @@ export const Prisma = {
   Decimal: DecimalMock,
   sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
     strings,
-    values,
+    values
   })),
   QueryMode: {
     insensitive: 'insensitive',
-    default: 'default',
+    default: 'default'
   },
   PrismaClientKnownRequestError: class extends Error {
     public code: string = '';
@@ -80,7 +80,7 @@ export const Prisma = {
   PrismaClientValidationError: class extends Error {},
   PrismaClientUnknownRequestError: class extends Error {},
   PrismaClientRustPanicError: class extends Error {},
-  PrismaClientInitializationError: class extends Error {},
+  PrismaClientInitializationError: class extends Error {}
 } as const;
 
 // PrismaClient class mock - exported for type imports

@@ -14,9 +14,9 @@ export default defineConfig({
     // environment: 'jsdom',
     setupFiles: ['./src/lib/testing/setup.ts'],
     deps: {
-      interopDefault: true,
+      interopDefault: true
     },
-    testTimeout: 10000,
+    testTimeout: 10000
   },
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.cjs'],
@@ -28,7 +28,7 @@ export default defineConfig({
       '@/zod': path.resolve(__dirname, 'prisma/zod'),
       '@/repo': path.resolve(__dirname, 'prisma/prisma-vault'),
       '@': path.resolve(__dirname, 'src'),
-      '@prisma': path.resolve(__dirname, 'prisma'),
-    },
-  },
+      '@prisma': path.resolve(__dirname, 'prisma')
+    }
+  }
 });

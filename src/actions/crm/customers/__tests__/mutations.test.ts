@@ -10,24 +10,24 @@ const { mockCustomerRepo, mockOrgRepo, mockAuth } = vi.hoisted(() => ({
     createCustomer: vi.fn(),
     findById: vi.fn(),
     updateCustomer: vi.fn(),
-    softDeleteCustomer: vi.fn(),
+    softDeleteCustomer: vi.fn()
   },
   mockOrgRepo: {
-    findOrCreateOrganization: vi.fn(),
+    findOrCreateOrganization: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/customer-repository', () => ({
   CustomerRepository: vi.fn().mockImplementation(function () {
     return mockCustomerRepo;
-  }),
+  })
 }));
 
 vi.mock('@/repositories/organization-repository', () => ({
   OrganizationRepository: vi.fn().mockImplementation(function () {
     return mockOrgRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
@@ -59,7 +59,7 @@ describe('Customer Mutations', () => {
       }
       expect(mockCustomerRepo.createCustomer).toHaveBeenCalledWith(
         expect.objectContaining({ email: 'jane@example.com' }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
       expect(revalidatePath).toHaveBeenCalledWith('/customers');
     });
@@ -86,11 +86,11 @@ describe('Customer Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockOrgRepo.findOrCreateOrganization).toHaveBeenCalledWith(
         'Acme',
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
       expect(mockCustomerRepo.createCustomer).toHaveBeenCalledWith(
         expect.objectContaining({ organizationId: orgId }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -110,7 +110,7 @@ describe('Customer Mutations', () => {
     const updateInput: UpdateCustomerInput = {
       ...baseInput,
       phone: '+1234567890',
-      id: TEST_CUSTOMER_ID,
+      id: TEST_CUSTOMER_ID
     };
 
     it('updates a customer and returns the ID', async () => {
@@ -164,7 +164,7 @@ describe('Customer Mutations', () => {
       }
       expect(mockCustomerRepo.softDeleteCustomer).toHaveBeenCalledWith(
         TEST_CUSTOMER_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

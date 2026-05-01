@@ -9,7 +9,7 @@ import { constructMetadata } from '@/lib/utils';
 
 export const metadata = constructMetadata({
   title: 'Users – lfm dashboard',
-  description: 'Manage users and their access.',
+  description: 'Manage users and their access.'
 });
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
@@ -24,7 +24,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         throw new Error(result.error);
       }
       return result.data;
-    },
+    }
   });
 
   return (

@@ -12,7 +12,7 @@ import type {
   TransactionStatistics,
   TransactionTrend,
   TransactionCategoryBreakdown,
-  TopTransactionCategory,
+  TopTransactionCategory
 } from '@/features/finances/transactions/types';
 import { searchParamsCache } from '@/filters/transactions/transactions-filters';
 
@@ -33,7 +33,7 @@ export const getTransactions = withTenantPermission<SearchParams, TransactionPag
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transactions');
     }
-  },
+  }
 );
 
 /**
@@ -56,14 +56,14 @@ export const getTransactionById = withTenantPermission<string, TransactionListIt
         amount: Number(transaction.amount),
         categories: transaction.categories ?? [],
         attachments: transaction.attachments ?? [],
-        invoice: transaction.invoice ?? null,
+        invoice: transaction.invoice ?? null
       };
 
       return { success: true, data: serializedTransaction };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transaction');
     }
-  },
+  }
 );
 
 /**
@@ -113,7 +113,7 @@ export const getTransactionTrend = withTenantPermission<number | undefined, Tran
     } catch (error) {
       return handleActionError(error, 'Failed to fetch transaction trend');
     }
-  },
+  }
 );
 
 /**

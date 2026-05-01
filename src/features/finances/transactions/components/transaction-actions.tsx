@@ -9,13 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import type { TransactionListItem } from '@/features/finances/transactions/types';
 import { useQueryString } from '@/hooks/use-query-string';
 import {
   searchParams,
-  transactionSearchParamsDefaults,
+  transactionSearchParamsDefaults
 } from '@/filters/transactions/transactions-filters';
 
 interface TransactionActionsProps {
@@ -31,28 +31,28 @@ export function TransactionActions({ transaction, onDelete }: TransactionActions
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="h-8 w-8 p-0" variant="secondary" aria-label="Open actions menu">
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <Button className='h-8 w-8 p-0' variant='secondary' aria-label='Open actions menu'>
+          <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-          <Copy className="h-4 w-4" aria-hidden="true" />
+          <Copy className='h-4 w-4' aria-hidden='true' />
           Copy transaction ID
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={transactionUrl}>
-            <Edit className="h-4 w-4" aria-hidden="true" />
+            <Edit className='h-4 w-4' aria-hidden='true' />
             Edit transaction
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => onDelete(transaction.id)}
-          className="text-destructive focus:text-destructive hover:text-destructive bg-destructive/5 hover:bg-destructive/10 dark:bg-destructive/10 hover:dark:bg-destructive/20"
+          className='text-destructive focus:text-destructive hover:text-destructive bg-destructive/5 hover:bg-destructive/10 dark:bg-destructive/10 hover:dark:bg-destructive/20'
         >
-          <Trash className="h-4 w-4" aria-hidden="true" />
+          <Trash className='h-4 w-4' aria-hidden='true' />
           Delete transaction
         </DropdownMenuItem>
       </DropdownMenuContent>

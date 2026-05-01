@@ -8,41 +8,41 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import type { EmployeeFormInput } from '@/features/staff/employees/types';
 import { EmployeeStatusSchema } from '@/zod/schemas/enums/EmployeeStatus.schema';
 
 const StatusOptions = EmployeeStatusSchema.options.map((status) => ({
   value: status,
-  label: status.charAt(0) + status.slice(1).toLowerCase(),
+  label: status.charAt(0) + status.slice(1).toLowerCase()
 }));
 
 export function EmployeeEmploymentFields({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<EmployeeFormInput>;
   isDisabled: boolean;
 }) {
   return (
-    <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       <FieldGroup>
         <Controller
-          name="rate"
+          name='rate'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-rate">Rate ($)</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-rate'>Rate ($)</FieldLabel>
               </FieldContent>
               <Input
-                id="form-rhf-input-rate"
-                type="number"
-                step="0.01"
-                min="0"
+                id='form-rhf-input-rate'
+                type='number'
+                step='0.01'
+                min='0'
                 aria-invalid={fieldState.invalid}
-                placeholder="Enter rate"
+                placeholder='Enter rate'
                 {...field}
                 value={field.value ?? ''}
                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -56,16 +56,16 @@ export function EmployeeEmploymentFields({
 
       <FieldGroup>
         <Controller
-          name="status"
+          name='status'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-status">Status</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-status'>Status</FieldLabel>
               </FieldContent>
               <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                <SelectTrigger id="form-rhf-select-status" aria-invalid={fieldState.invalid}>
-                  <SelectValue placeholder="Select status" />
+                <SelectTrigger id='form-rhf-select-status' aria-invalid={fieldState.invalid}>
+                  <SelectValue placeholder='Select status' />
                 </SelectTrigger>
                 <SelectContent>
                   {StatusOptions.map(({ value, label }) => (

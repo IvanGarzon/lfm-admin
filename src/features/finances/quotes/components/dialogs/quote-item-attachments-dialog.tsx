@@ -8,13 +8,13 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import {
   useQuoteItemAttachments,
   useUploadQuoteItemAttachment,
   useDeleteQuoteItemAttachment,
-  useGetItemAttachmentDownloadUrl,
+  useGetItemAttachmentDownloadUrl
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { formatFileSize } from '@/lib/file-constants';
 import { format } from 'date-fns';
@@ -26,7 +26,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface QuoteItemAttachmentsDialogProps {
@@ -56,7 +56,7 @@ export function QuoteItemAttachmentsDialog({
   quoteItemId,
   itemDescription,
   acceptedFileTypes = ['image/jpeg', 'image/jpg', 'image/png'],
-  acceptedFileTypesLabel = 'JPG, JPEG, PNG',
+  acceptedFileTypesLabel = 'JPG, JPEG, PNG'
 }: QuoteItemAttachmentsDialogProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [deleteAttachmentId, setDeleteAttachmentId] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function QuoteItemAttachmentsDialog({
         uploadMutation.mutate({ quoteItemId, quoteId, file: files[0] });
       }
     },
-    [quoteItemId, quoteId, uploadMutation],
+    [quoteItemId, quoteId, uploadMutation]
   );
 
   const handleFileSelect = useCallback(
@@ -101,7 +101,7 @@ export function QuoteItemAttachmentsDialog({
       // Reset input
       e.target.value = '';
     },
-    [quoteItemId, quoteId, uploadMutation],
+    [quoteItemId, quoteId, uploadMutation]
   );
 
   const handleDelete = useCallback(() => {
@@ -111,8 +111,8 @@ export function QuoteItemAttachmentsDialog({
         {
           onSuccess: () => {
             setDeleteAttachmentId(null);
-          },
-        },
+          }
+        }
       );
     }
   }, [deleteAttachmentId, deleteMutation, quoteItemId, quoteId]);
@@ -121,49 +121,49 @@ export function QuoteItemAttachmentsDialog({
     (attachmentId: string) => {
       downloadMutation.mutate(attachmentId);
     },
-    [downloadMutation],
+    [downloadMutation]
   );
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>Item Images</DialogTitle>
             <DialogDescription>
-              Upload images for: <span className="font-medium">{itemDescription}</span>
+              Upload images for: <span className='font-medium'>{itemDescription}</span>
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {/* Upload Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">Upload Images</h3>
-                <label htmlFor="item-file-upload">
+            <div className='space-y-3'>
+              <div className='flex items-center justify-between'>
+                <h3 className='text-sm font-medium text-foreground'>Upload Images</h3>
+                <label htmlFor='item-file-upload'>
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    type='button'
+                    variant='outline'
+                    size='sm'
                     disabled={uploadMutation.isPending}
                     onClick={() => document.getElementById('item-file-upload')?.click()}
                   >
                     {uploadMutation.isPending ? (
                       <>
-                        <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
+                        <Loader2 aria-hidden='true' className='mr-2 size-4 animate-spin' />
                         Uploading...
                       </>
                     ) : (
                       <>
-                        <Upload aria-hidden="true" className="mr-2 size-4" />
+                        <Upload aria-hidden='true' className='mr-2 size-4' />
                         Upload Image
                       </>
                     )}
                   </Button>
                   <input
-                    id="item-file-upload"
-                    type="file"
-                    className="sr-only"
+                    id='item-file-upload'
+                    type='file'
+                    className='sr-only'
                     accept={acceptedFileTypes.join(',')}
                     onChange={handleFileSelect}
                     disabled={uploadMutation.isPending}
@@ -182,15 +182,15 @@ export function QuoteItemAttachmentsDialog({
                 onDrop={handleDrop}
               >
                 <Upload
-                  aria-hidden="true"
+                  aria-hidden='true'
                   className={`mx-auto size-8 ${
                     isDragging ? 'text-primary' : 'text-muted-foreground'
                   }`}
                 />
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className='mt-2 text-sm text-muted-foreground'>
                   Drag and drop an image here, or click Upload Image
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className='mt-1 text-xs text-muted-foreground'>
                   Supported: {acceptedFileTypesLabel} (Max 5MB)
                 </p>
               </div>
@@ -198,59 +198,59 @@ export function QuoteItemAttachmentsDialog({
 
             {/* Images List */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 aria-hidden="true" className="size-6 animate-spin text-muted-foreground" />
+              <div className='flex items-center justify-center py-8'>
+                <Loader2 aria-hidden='true' className='size-6 animate-spin text-muted-foreground' />
               </div>
             ) : attachments && attachments.length > 0 ? (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-foreground">
+              <div className='space-y-2'>
+                <h3 className='text-sm font-medium text-foreground'>
                   Uploaded Images ({attachments.length})
                 </h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className='grid grid-cols-2 gap-3'>
                   {attachments.map((attachment) => (
                     <div
                       key={attachment.id}
-                      className="relative group rounded-lg border border-border p-3"
+                      className='relative group rounded-lg border border-border p-3'
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="shrink-0">
-                          <ImageIcon aria-hidden="true" className="size-5 text-primary" />
+                      <div className='flex items-start gap-3'>
+                        <div className='shrink-0'>
+                          <ImageIcon aria-hidden='true' className='size-5 text-primary' />
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-sm font-medium text-foreground truncate'>
                             {attachment.fileName}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className='text-xs text-muted-foreground'>
                             {formatFileSize(attachment.fileSize)} •{' '}
                             {format(new Date(attachment.uploadedAt), 'MMM d, yyyy')}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 mt-3">
+                      <div className='flex items-center gap-1 mt-3'>
                         <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                          type='button'
+                          variant='ghost'
+                          size='sm'
                           onClick={() => handleDownload(attachment.id)}
                           disabled={downloadMutation.isPending}
-                          className="flex-1"
+                          className='flex-1'
                         >
-                          <Download aria-hidden="true" className="mr-1 size-3" />
-                          <span className="text-xs">Download</span>
+                          <Download aria-hidden='true' className='mr-1 size-3' />
+                          <span className='text-xs'>Download</span>
                         </Button>
 
                         <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                          type='button'
+                          variant='ghost'
+                          size='sm'
                           onClick={() => setDeleteAttachmentId(attachment.id)}
                           disabled={deleteMutation.isPending}
-                          className="text-destructive hover:text-destructive/80"
+                          className='text-destructive hover:text-destructive/80'
                         >
-                          <Trash2 aria-hidden="true" className="size-3" />
-                          <span className="sr-only">Delete</span>
+                          <Trash2 aria-hidden='true' className='size-3' />
+                          <span className='sr-only'>Delete</span>
                         </Button>
                       </div>
                     </div>
@@ -258,7 +258,7 @@ export function QuoteItemAttachmentsDialog({
                 </div>
               </div>
             ) : (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className='py-8 text-center text-sm text-muted-foreground'>
                 No images uploaded yet
               </div>
             )}
@@ -283,11 +283,11 @@ export function QuoteItemAttachmentsDialog({
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="bg-destructive hover:bg-destructive/90"
+              className='bg-destructive hover:bg-destructive/90'
             >
               {deleteMutation.isPending ? (
                 <>
-                  <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
+                  <Loader2 aria-hidden='true' className='mr-2 size-4 animate-spin' />
                   Deleting...
                 </>
               ) : (

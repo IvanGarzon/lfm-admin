@@ -8,7 +8,7 @@ import {
   apiAuthPrefix,
   authRoutes,
   publicRoutes,
-  publicRoutePrefixes,
+  publicRoutePrefixes
 } from '@/routes';
 
 // -- Types ------------------------------------------------------------------
@@ -99,5 +99,5 @@ export default auth(async (req: AuthenticatedRequest) => {
 });
 
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)']
 };

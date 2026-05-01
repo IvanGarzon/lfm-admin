@@ -7,7 +7,7 @@ import type {
   ProductWithDetails,
   ProductFilters,
   ProductPagination,
-  ProductStatistics,
+  ProductStatistics
 } from '@/features/inventory/products/types';
 
 export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<object>> {
@@ -37,7 +37,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
     if (search && search.trim()) {
       whereClause.OR = [
         { name: { contains: search.trim(), mode: 'insensitive' } },
-        { description: { contains: search.trim(), mode: 'insensitive' } },
+        { description: { contains: search.trim(), mode: 'insensitive' } }
       ];
     }
 
@@ -49,7 +49,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
 
     if (sort && sort.length > 0) {
       orderBy = sort.map((s) => ({
-        [s.id]: s.desc ? 'desc' : 'asc',
+        [s.id]: s.desc ? 'desc' : 'asc'
       }));
     }
 
@@ -69,10 +69,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
           stock: true,
           availableAt: true,
           createdAt: true,
-          updatedAt: true,
-        },
+          updatedAt: true
+        }
       }),
-      this.prisma.product.count({ where: whereClause }),
+      this.prisma.product.count({ where: whereClause })
     ]);
 
     const formattedItems: ProductListItem[] = items.map((item) => ({
@@ -85,7 +85,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       stock: item.stock,
       availableAt: item.availableAt,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
+      updatedAt: item.updatedAt
     }));
 
     const pagination = getPaginationMetadata(totalItems, perPage, page);
@@ -107,10 +107,10 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
         _count: {
           select: {
             invoiceItems: true,
-            quoteItems: true,
-          },
-        },
-      },
+            quoteItems: true
+          }
+        }
+      }
     });
 
     if (!product) {
@@ -135,24 +135,24 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       outOfStockProducts,
       lowStockProducts,
       aggregates,
-      products,
+      products
     ] = await Promise.all([
       this.prisma.product.count({ where: { tenantId } }),
       this.prisma.product.count({ where: { tenantId, status: ProductStatus.ACTIVE } }),
       this.prisma.product.count({ where: { tenantId, status: ProductStatus.INACTIVE } }),
       this.prisma.product.count({ where: { tenantId, status: ProductStatus.OUT_OF_STOCK } }),
       this.prisma.product.count({
-        where: { tenantId, stock: { lte: LOW_STOCK_THRESHOLD }, status: ProductStatus.ACTIVE },
+        where: { tenantId, stock: { lte: LOW_STOCK_THRESHOLD }, status: ProductStatus.ACTIVE }
       }),
       this.prisma.product.aggregate({
         where: { tenantId },
         _sum: { price: true },
-        _avg: { price: true },
+        _avg: { price: true }
       }),
       this.prisma.product.findMany({
         where: { tenantId },
-        select: { price: true, stock: true },
-      }),
+        select: { price: true, stock: true }
+      })
     ]);
 
     const totalValue = products.reduce((sum, p) => sum + Number(p.price) * p.stock, 0);
@@ -165,7 +165,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       totalValue,
       averagePrice: Number(aggregates._avg.price) || 0,
       lowStockProducts,
-      growth: { totalProducts: 0 },
+      growth: { totalProducts: 0 }
     };
   }
 
@@ -185,9 +185,9 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
         price: data.price,
         stock: data.stock,
         imageUrl: data.imageUrl,
-        availableAt: data.availableAt,
+        availableAt: data.availableAt
       },
-      select: { id: true },
+      select: { id: true }
     });
 
     return { id: product.id };
@@ -204,7 +204,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   async updateProduct(
     id: string,
     tenantId: string,
-    data: UpdateProductInput,
+    data: UpdateProductInput
   ): Promise<ProductWithDetails | null> {
     const existing = await this.prisma.product.findFirst({ where: { id, tenantId } });
 
@@ -221,8 +221,8 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
         price: data.price,
         stock: data.stock,
         imageUrl: data.imageUrl,
-        availableAt: data.availableAt,
-      },
+        availableAt: data.availableAt
+      }
     });
 
     return this.findProductById(id, tenantId);
@@ -241,8 +241,8 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
     const existing = await this.prisma.product.findFirst({
       where: { id, tenantId },
       include: {
-        _count: { select: { invoiceItems: true, quoteItems: true } },
-      },
+        _count: { select: { invoiceItems: true, quoteItems: true } }
+      }
     });
 
     if (!existing) {
@@ -251,7 +251,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
 
     if (existing._count.invoiceItems > 0 || existing._count.quoteItems > 0) {
       throw new Error(
-        'Cannot delete product that is used in invoices or quotes. Consider marking it as inactive instead.',
+        'Cannot delete product that is used in invoices or quotes. Consider marking it as inactive instead.'
       );
     }
 
@@ -270,7 +270,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   async updateProductStatus(
     id: string,
     tenantId: string,
-    status: ProductStatus,
+    status: ProductStatus
   ): Promise<ProductWithDetails | null> {
     const existing = await this.prisma.product.findFirst({ where: { id, tenantId } });
 
@@ -294,11 +294,11 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   async bulkUpdateProductStatus(
     ids: string[],
     tenantId: string,
-    status: ProductStatus,
+    status: ProductStatus
   ): Promise<number> {
     const result = await this.prisma.product.updateMany({
       where: { id: { in: ids }, tenantId },
-      data: { status },
+      data: { status }
     });
     return result.count;
   }
@@ -317,9 +317,9 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       where: {
         id: { in: ids },
         tenantId,
-        OR: [{ invoiceItems: { some: {} } }, { quoteItems: { some: {} } }],
+        OR: [{ invoiceItems: { some: {} } }, { quoteItems: { some: {} } }]
       },
-      select: { id: true },
+      select: { id: true }
     });
 
     const usedIds = new Set(productsWithRelations.map((p) => p.id));
@@ -328,14 +328,14 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
     if (safeIds.length === 0) {
       if (ids.length > 0) {
         throw new Error(
-          'Selection cannot be deleted as all products are used in invoices or quotes.',
+          'Selection cannot be deleted as all products are used in invoices or quotes.'
         );
       }
       return 0;
     }
 
     const result = await this.prisma.product.deleteMany({
-      where: { id: { in: safeIds }, tenantId },
+      where: { id: { in: safeIds }, tenantId }
     });
 
     return result.count;
@@ -347,18 +347,18 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
    * @returns A promise that resolves to an array of active products for selection
    */
   async getActiveProducts(
-    tenantId: string,
+    tenantId: string
   ): Promise<Array<{ id: string; name: string; price: number }>> {
     const products = await this.prisma.product.findMany({
       where: { tenantId, status: ProductStatus.ACTIVE },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true, price: true },
+      select: { id: true, name: true, price: true }
     });
 
     return products.map((p) => ({
       id: p.id,
       name: p.name,
-      price: Number(p.price),
+      price: Number(p.price)
     }));
   }
 
@@ -375,7 +375,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   async updateProductStock(
     id: string,
     tenantId: string,
-    quantity: number,
+    quantity: number
   ): Promise<ProductWithDetails | null> {
     const existing = await this.prisma.product.findFirst({ where: { id, tenantId } });
 
@@ -398,7 +398,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
 
     await this.prisma.product.update({
       where: { id },
-      data: { stock: newStock, status: newStatus },
+      data: { stock: newStock, status: newStatus }
     });
 
     return this.findProductById(id, tenantId);
@@ -415,7 +415,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
   private mapToProductWithDetails(
     product: Prisma.ProductGetPayload<{
       include: { _count: { select: { invoiceItems: true; quoteItems: true } } };
-    }>,
+    }>
   ): ProductWithDetails {
     return {
       id: product.id,
@@ -428,7 +428,7 @@ export class ProductRepository extends BaseRepository<Prisma.ProductGetPayload<o
       availableAt: product.availableAt,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
-      _count: product._count,
+      _count: product._count
     };
   }
 }

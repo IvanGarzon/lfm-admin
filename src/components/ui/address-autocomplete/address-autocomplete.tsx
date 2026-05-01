@@ -31,7 +31,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
     setSearchInput,
     placeholder,
     showMapIcon = true,
-    mapIconClass,
+    mapIconClass
   } = props;
 
   const [selectedPlaceId, setSelectedPlaceId] = useState('');
@@ -57,7 +57,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
           // Helper to get address component by type
           const getComponent = (
             type: string,
-            nameType: 'longText' | 'shortText' = 'longText',
+            nameType: 'longText' | 'shortText' = 'longText'
           ): string => {
             const component = addressComponents.find((c) => c.types.includes(type));
             return component?.[nameType] || '';
@@ -83,7 +83,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
             postalCode: getComponent('postal_code'),
             country: getComponent('country'),
             lat,
-            lng,
+            lng
           });
 
           // Use adrFormatAddress from new API (may be undefined)
@@ -96,7 +96,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
         setIsLoading(false);
       }
     },
-    [isLoaded, getPlaceDetails, setAddress],
+    [isLoaded, getPlaceDetails, setAddress]
   );
 
   const handleClear = useCallback(() => {
@@ -108,7 +108,7 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
   return (
     <>
       {selectedPlaceId !== '' || address.formattedAddress ? (
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Input value={address?.formattedAddress} readOnly />
           <AddressDialog
             isLoading={isLoading}
@@ -119,18 +119,18 @@ export function AddressAutoComplete(props: AddressAutoCompleteProps) {
             open={isOpen}
             setOpen={setIsOpen}
           >
-            <Button disabled={isLoading} size="icon" variant="outline" className="shrink-0">
-              <Pencil className="size-4" />
+            <Button disabled={isLoading} size='icon' variant='outline' className='shrink-0'>
+              <Pencil className='size-4' />
             </Button>
           </AddressDialog>
           <Button
-            type="reset"
+            type='reset'
             onClick={handleClear}
-            size="icon"
-            variant="outline"
-            className="shrink-0"
+            size='icon'
+            variant='outline'
+            className='shrink-0'
           >
-            <Delete className="size-4" />
+            <Delete className='size-4' />
           </Button>
         </div>
       ) : (

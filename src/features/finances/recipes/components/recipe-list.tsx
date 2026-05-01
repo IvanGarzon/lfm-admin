@@ -26,9 +26,9 @@ export function RecipeList({ initialData, searchParams: serverSearchParams }: Re
     () =>
       createRecipeColumns(
         (id, name) => openDelete(id, name),
-        (id) => openEdit(id),
+        (id) => openEdit(id)
       ),
-    [openDelete, openEdit],
+    [openDelete, openEdit]
   );
 
   const { table } = useDataTable({
@@ -36,11 +36,11 @@ export function RecipeList({ initialData, searchParams: serverSearchParams }: Re
     columns,
     pageCount: pageCount,
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0">
+    <Box className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'>
       <RecipeTable
         table={table}
         items={initialData.items}

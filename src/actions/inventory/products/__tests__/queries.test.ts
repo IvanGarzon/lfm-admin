@@ -4,7 +4,7 @@ import {
   testIds,
   mockSessions,
   createProductWithDetails,
-  createProductStatistics,
+  createProductStatistics
 } from '@/lib/testing';
 
 const { mockProductRepo, mockAuth } = vi.hoisted(() => ({
@@ -12,23 +12,23 @@ const { mockProductRepo, mockAuth } = vi.hoisted(() => ({
     searchProducts: vi.fn(),
     findProductById: vi.fn(),
     getProductStatistics: vi.fn(),
-    getActiveProducts: vi.fn(),
+    getActiveProducts: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/product-repository', () => ({
   ProductRepository: vi.fn().mockImplementation(function () {
     return mockProductRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 const TEST_PRODUCT_ID = testIds.product();
@@ -46,7 +46,7 @@ describe('Product Queries', () => {
     it('returns paginated products when authorised', async () => {
       const mockResult = {
         items: [createProductWithDetails({ id: 'p1' }), createProductWithDetails({ id: 'p2' })],
-        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 },
+        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 }
       };
       mockProductRepo.searchProducts.mockResolvedValue(mockResult);
 
@@ -58,7 +58,7 @@ describe('Product Queries', () => {
       }
       expect(mockProductRepo.searchProducts).toHaveBeenCalledWith(
         expect.objectContaining({ page: 1, perPage: 20 }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -91,7 +91,7 @@ describe('Product Queries', () => {
       }
       expect(mockProductRepo.findProductById).toHaveBeenCalledWith(
         TEST_PRODUCT_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -140,7 +140,7 @@ describe('Product Queries', () => {
     it('returns active products when authorised', async () => {
       const mockProducts = [
         { id: 'p1', name: 'Rose Bouquet', price: 49.99 },
-        { id: 'p2', name: 'Lily Arrangement', price: 35.0 },
+        { id: 'p2', name: 'Lily Arrangement', price: 35.0 }
       ];
       mockProductRepo.getActiveProducts.mockResolvedValue(mockProducts);
 

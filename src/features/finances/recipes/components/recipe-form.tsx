@@ -8,7 +8,7 @@ import {
   Controller,
   FormProvider,
   type Resolver,
-  type SubmitHandler,
+  type SubmitHandler
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
@@ -22,7 +22,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import {
@@ -31,12 +31,12 @@ import {
   type CreateRecipeInput,
   type UpdateRecipeInput,
   type LabourCostType,
-  type RoundingMethod,
+  type RoundingMethod
 } from '@/schemas/recipes';
 import type {
   RecipeFormInput,
   RecipeWithDetails,
-  RecipeItemListItem,
+  RecipeItemListItem
 } from '@/features/finances/recipes/types';
 import { RecipeItemsList } from '@/features/finances/recipes/components/recipe-items-list';
 import { formatCurrency } from '@/lib/utils';
@@ -48,13 +48,13 @@ import { RoundingMethodSchema } from '@/zod/schemas/enums/RoundingMethod.schema'
 const LABOUR_COST_TYPE_OPTIONS: { value: LabourCostType; label: string }[] = [
   { value: 'FIXED_AMOUNT', label: 'Fixed Amount' },
   { value: 'PERCENTAGE_OF_RETAIL', label: '% of Retail Price' },
-  { value: 'PERCENTAGE_OF_MATERIAL', label: '% of Material Cost' },
+  { value: 'PERCENTAGE_OF_MATERIAL', label: '% of Material Cost' }
 ];
 
 const ROUNDING_METHOD_OPTIONS: { value: RoundingMethod; label: string }[] = [
   { value: 'NEAREST', label: 'Round to Nearest' },
   { value: 'PSYCHOLOGICAL_99', label: 'Psychological Price (.99)' },
-  { value: 'PSYCHOLOGICAL_95', label: 'Psychological Price (.95)' },
+  { value: 'PSYCHOLOGICAL_95', label: 'Psychological Price (.95)' }
 ];
 
 const defaultFormState: CreateRecipeInput = {
@@ -78,9 +78,9 @@ const defaultFormState: CreateRecipeInput = {
       lineTotal: 0,
       retailPrice: 0,
       retailLineTotal: 0,
-      order: 0,
-    },
-  ],
+      order: 0
+    }
+  ]
 };
 
 const mapRecipeToFormValues = (recipe: RecipeWithDetails): UpdateRecipeInput => {
@@ -107,8 +107,8 @@ const mapRecipeToFormValues = (recipe: RecipeWithDetails): UpdateRecipeInput => 
       lineTotal: Number(item.lineTotal),
       retailPrice: Number(item.retailPrice),
       retailLineTotal: Number(item.retailLineTotal),
-      order: item.order ?? index,
-    })),
+      order: item.order ?? index
+    }))
   };
 };
 
@@ -118,7 +118,7 @@ export function RecipeForm({
   onUpdate,
   isCreating = false,
   isUpdating = false,
-  onDirtyStateChange,
+  onDirtyStateChange
 }: {
   recipe?: RecipeWithDetails | null;
   onCreate?: (data: CreateRecipeInput) => void;
@@ -144,12 +144,12 @@ export function RecipeForm({
   const form = useForm<RecipeFormInput>({
     mode: 'onChange',
     resolver: createResolver,
-    defaultValues,
+    defaultValues
   });
 
   const fieldArray = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: 'items'
   });
 
   const [
@@ -157,10 +157,10 @@ export function RecipeForm({
     watchedLabourCostType,
     watchedLabourAmount,
     watchedRoundPrice,
-    watchedRoundingMethod,
+    watchedRoundingMethod
   ] = useWatch({
     control: form.control,
-    name: ['items', 'labourCostType', 'labourAmount', 'roundPrice', 'roundingMethod'],
+    name: ['items', 'labourCostType', 'labourAmount', 'roundPrice', 'roundingMethod']
   });
 
   const totals = useMemo(() => {
@@ -173,7 +173,7 @@ export function RecipeForm({
     const totalMaterialsCost = items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
     const totalRetailPrice = items.reduce(
       (sum, item) => sum + (Number(item.retailLineTotal) || 0),
-      0,
+      0
     );
 
     let labourCost = 0;
@@ -210,14 +210,14 @@ export function RecipeForm({
       totalRetailPrice,
       sellingPrice,
       profit,
-      profitPercentage,
+      profitPercentage
     };
   }, [
     watchedItems,
     watchedLabourCostType,
     watchedLabourAmount,
     watchedRoundPrice,
-    watchedRoundingMethod,
+    watchedRoundingMethod
   ]);
 
   const { isDirty } = form.formState;
@@ -231,7 +231,7 @@ export function RecipeForm({
       onDirtyStateChange?.(false);
       return values;
     }, [recipe, onDirtyStateChange]),
-    isUpdating, // Reset form when update completes (true -> false)
+    isUpdating // Reset form when update completes (true -> false)
   );
 
   useUnsavedChanges(isDirty);
@@ -251,7 +251,7 @@ export function RecipeForm({
     (data: RecipeFormInput) => {
       const finalData = {
         ...data,
-        ...totals,
+        ...totals
       };
 
       if (mode === 'create') {
@@ -259,12 +259,12 @@ export function RecipeForm({
       } else {
         const updateData: UpdateRecipeInput = {
           ...finalData,
-          id: recipe?.id ?? '',
+          id: recipe?.id ?? ''
         };
         onUpdate?.(updateData);
       }
     },
-    [mode, onCreate, onUpdate, recipe?.id, totals],
+    [mode, onCreate, onUpdate, recipe?.id, totals]
   );
 
   const isPending = isCreating || isUpdating;
@@ -273,38 +273,38 @@ export function RecipeForm({
   return (
     <FormProvider {...form}>
       <form
-        id="form-rhf-recipe"
+        id='form-rhf-recipe'
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
         {isPending ? (
-          <Box className="px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2">
-            <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-            <span className="text-sm font-medium">
+          <Box className='px-6 py-3 bg-primary/10 border-b flex items-center justify-center gap-2'>
+            <Loader2 aria-hidden='true' className='h-4 w-4 animate-spin' />
+            <span className='text-sm font-medium'>
               {isCreating ? 'Creating recipe...' : 'Updating recipe...'}
             </span>
           </Box>
         ) : null}
 
-        <Box className="flex-1 flex overflow-hidden">
-          <Box className="flex flex-1 min-h-0">
+        <Box className='flex-1 flex overflow-hidden'>
+          <Box className='flex flex-1 min-h-0'>
             {/* Left Column: Form */}
-            <Box className="flex-1 p-6 space-y-6 border-r border-border overflow-y-auto">
+            <Box className='flex-1 p-6 space-y-6 border-r border-border overflow-y-auto'>
               {/* Recipe Name */}
               <FieldGroup>
                 <Controller
-                  name="name"
+                  name='name'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-recipe-name">Recipe Name</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-recipe-name'>Recipe Name</FieldLabel>
                       </FieldContent>
                       <Input
                         {...field}
-                        id="form-rhf-recipe-name"
-                        placeholder="e.g., Summer Bridal Bouquet"
-                        className="h-11"
+                        id='form-rhf-recipe-name'
+                        placeholder='e.g., Summer Bridal Bouquet'
+                        className='h-11'
                         aria-invalid={fieldState.invalid}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -314,24 +314,24 @@ export function RecipeForm({
               </FieldGroup>
 
               {/* Labour Cost Type & Amount */}
-              <Box className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Box className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
                 <FieldGroup>
                   <Controller
-                    name="labourCostType"
+                    name='labourCostType'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel htmlFor="form-rhf-labour-cost-type">
+                          <FieldLabel htmlFor='form-rhf-labour-cost-type'>
                             Labour Cost Type
                           </FieldLabel>
                         </FieldContent>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <SelectTrigger
-                            id="form-rhf-labour-cost-type"
+                            id='form-rhf-labour-cost-type'
                             aria-invalid={fieldState.invalid}
                           >
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder='Select type' />
                           </SelectTrigger>
                           <SelectContent>
                             {LABOUR_COST_TYPE_OPTIONS.map((option) => (
@@ -349,19 +349,19 @@ export function RecipeForm({
 
                 <FieldGroup>
                   <Controller
-                    name="labourAmount"
+                    name='labourAmount'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel htmlFor="form-rhf-labour-amount">
+                          <FieldLabel htmlFor='form-rhf-labour-amount'>
                             {isPercentageType ? 'Labour Percentage (%)' : 'Labour Amount ($)'}
                           </FieldLabel>
                         </FieldContent>
                         <Input
                           {...field}
-                          id="form-rhf-labour-amount"
-                          type="number"
+                          id='form-rhf-labour-amount'
+                          type='number'
                           step={isPercentageType ? '0.1' : '0.01'}
                           placeholder={isPercentageType ? 'e.g., 25' : 'e.g., 50.00'}
                           onChange={(e) => field.onChange(e.target.valueAsNumber)}
@@ -376,15 +376,15 @@ export function RecipeForm({
                 <FieldGroup>
                   <Field>
                     <FieldContent>
-                      <FieldLabel htmlFor="form-rhf-labour-cost-calculated">
+                      <FieldLabel htmlFor='form-rhf-labour-cost-calculated'>
                         Calculated Labour Cost
                       </FieldLabel>
                     </FieldContent>
                     <Input
-                      id="form-rhf-labour-cost-calculated"
+                      id='form-rhf-labour-cost-calculated'
                       value={formatCurrency({ number: totals.labourCost })}
                       readOnly
-                      className="bg-muted/50 cursor-not-allowed"
+                      className='bg-muted/50 cursor-not-allowed'
                     />
                   </Field>
                 </FieldGroup>
@@ -393,18 +393,18 @@ export function RecipeForm({
               {/* Description */}
               <FieldGroup>
                 <Controller
-                  name="description"
+                  name='description'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-recipe-description">Description</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-recipe-description'>Description</FieldLabel>
                       </FieldContent>
                       <Textarea
                         {...field}
-                        id="form-rhf-recipe-description"
-                        placeholder="Add notes about design style, techniques, or customer preferences..."
-                        className="resize-none"
+                        id='form-rhf-recipe-description'
+                        placeholder='Add notes about design style, techniques, or customer preferences...'
+                        className='resize-none'
                         rows={2}
                         aria-invalid={fieldState.invalid}
                       />
@@ -419,62 +419,62 @@ export function RecipeForm({
             </Box>
 
             {/* Right Column: Summary Panel */}
-            <Box className="w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4">
-              <Box className="sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <Box className='w-[340px] shrink-0 bg-muted/20 overflow-y-auto p-4'>
+              <Box className='sticky top-0 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden'>
                 {/* Selling Price Header */}
-                <Box className="bg-primary text-primary-foreground p-6 text-center dark:bg-primary/10 dark:text-primary-foreground/70">
-                  <p className="text-xs uppercase tracking-wider mb-1 text-primary-foreground/70">
+                <Box className='bg-primary text-primary-foreground p-6 text-center dark:bg-primary/10 dark:text-primary-foreground/70'>
+                  <p className='text-xs uppercase tracking-wider mb-1 text-primary-foreground/70'>
                     Selling Price
                   </p>
-                  <p className="text-4xl font-bold">
+                  <p className='text-4xl font-bold'>
                     {formatCurrency({ number: totals.sellingPrice })}
                   </p>
                 </Box>
 
                 {/* Cost Breakdown */}
-                <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
+                <Box className='p-4 space-y-4 bg-white dark:bg-gray-900'>
                   {/* Costs Section */}
-                  <Box className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Box className='space-y-2'>
+                    <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
                       Costs
                     </p>
-                    <Box className="space-y-1.5">
-                      <Box className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Materials</span>
+                    <Box className='space-y-1.5'>
+                      <Box className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>Materials</span>
                         <span>{formatCurrency({ number: totals.totalMaterialsCost })}</span>
                       </Box>
-                      <Box className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Labour</span>
+                      <Box className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>Labour</span>
                         <span>{formatCurrency({ number: totals.labourCost })}</span>
                       </Box>
                     </Box>
-                    <Box className="flex justify-between text-sm font-semibold pt-1 border-t border-border">
+                    <Box className='flex justify-between text-sm font-semibold pt-1 border-t border-border'>
                       <span>Total Cost</span>
                       <span>{formatCurrency({ number: totals.totalCost })}</span>
                     </Box>
                   </Box>
 
                   {/* Retail Section */}
-                  <Box className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Box className='space-y-2'>
+                    <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
                       Retail
                     </p>
-                    <Box className="space-y-1.5">
-                      <Box className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Materials (marked up)</span>
+                    <Box className='space-y-1.5'>
+                      <Box className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>Materials (marked up)</span>
                         <span>{formatCurrency({ number: totals.totalRetailPrice })}</span>
                       </Box>
-                      <Box className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Labour</span>
+                      <Box className='flex justify-between text-sm'>
+                        <span className='text-muted-foreground'>Labour</span>
                         <span>{formatCurrency({ number: totals.labourCost })}</span>
                       </Box>
                     </Box>
                   </Box>
 
                   {/* Profit */}
-                  <Box className="flex justify-between items-center pt-3 border-t border-border">
-                    <span className="text-sm font-semibold text-emerald-600">Profit</span>
-                    <span className="text-sm font-bold text-emerald-600">
+                  <Box className='flex justify-between items-center pt-3 border-t border-border'>
+                    <span className='text-sm font-semibold text-emerald-600'>Profit</span>
+                    <span className='text-sm font-bold text-emerald-600'>
                       {formatCurrency({ number: totals.profit })} (
                       {totals.profitPercentage.toFixed(1)}
                       %)
@@ -484,21 +484,21 @@ export function RecipeForm({
               </Box>
 
               {/* Pricing Options Panel */}
-              <Box className="mt-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <Box className="p-4 space-y-4 bg-white dark:bg-gray-900">
-                  <Box className="flex items-center justify-between">
+              <Box className='mt-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden'>
+                <Box className='p-4 space-y-4 bg-white dark:bg-gray-900'>
+                  <Box className='flex items-center justify-between'>
                     <FieldLabel
-                      htmlFor="form-rhf-round-price"
-                      className="text-sm font-semibold cursor-pointer"
+                      htmlFor='form-rhf-round-price'
+                      className='text-sm font-semibold cursor-pointer'
                     >
                       Round Price
                     </FieldLabel>
                     <Controller
                       control={form.control}
-                      name="roundPrice"
+                      name='roundPrice'
                       render={({ field }) => (
                         <Switch
-                          id="form-rhf-round-price"
+                          id='form-rhf-round-price'
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
@@ -510,15 +510,15 @@ export function RecipeForm({
                     <FieldGroup>
                       <Controller
                         control={form.control}
-                        name="roundingMethod"
+                        name='roundingMethod'
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <SelectTrigger
-                                id="form-rhf-rounding-method"
+                                id='form-rhf-rounding-method'
                                 aria-invalid={fieldState.invalid}
                               >
-                                <SelectValue placeholder="Select method" />
+                                <SelectValue placeholder='Select method' />
                               </SelectTrigger>
                               <SelectContent>
                                 {ROUNDING_METHOD_OPTIONS.map((option) => (

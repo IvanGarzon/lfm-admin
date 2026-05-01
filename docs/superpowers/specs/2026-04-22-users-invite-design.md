@@ -31,7 +31,7 @@ Adds an "Invite User" flow to the tenant `/users` page. An ADMIN clicks a button
 ```ts
 export const InviteUserSchema = z.object({
   email: commonValidators.email(),
-  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER'),
+  role: z.enum(['USER', 'MANAGER', 'ADMIN']).default('USER')
 });
 
 export type InviteUserInput = z.infer<typeof InviteUserSchema>;

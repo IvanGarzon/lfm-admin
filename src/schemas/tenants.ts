@@ -11,11 +11,11 @@ const slugField = z
 
 const BaseTenantSchema = z.object({
   name: commonValidators.name('Name'),
-  slug: slugField,
+  slug: slugField
 });
 
 export const CreateTenantSchema = BaseTenantSchema.extend({
-  adminEmail: commonValidators.email(),
+  adminEmail: commonValidators.email()
 });
 
 export const UpdateTenantSchema = BaseTenantSchema.partial();
@@ -35,7 +35,7 @@ export const UpdateTenantSettingsSchema = z.object({
   city: z.string().trim().max(100).optional().nullable(),
   state: StatesSchema.optional().nullable(),
   postcode: z.string().trim().max(10).optional().nullable(),
-  country: z.string().trim().max(100).optional().nullable(),
+  country: z.string().trim().max(100).optional().nullable()
 });
 
 export type CreateTenantInput = z.infer<typeof CreateTenantSchema>;

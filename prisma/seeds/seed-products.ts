@@ -26,8 +26,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Sunflowers - Large', priceRange: [50, 120], stock: [20, 40] },
       { name: 'Hydrangeas - Premium', priceRange: [70, 180], stock: [15, 35] },
       { name: 'Gerberas - Mixed', priceRange: [40, 100], stock: [25, 50] },
-      { name: 'Carnations - Standard', priceRange: [30, 80], stock: [30, 60] },
-    ],
+      { name: 'Carnations - Standard', priceRange: [30, 80], stock: [30, 60] }
+    ]
   },
   {
     category: 'Bouquets',
@@ -39,8 +39,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Seasonal Mixed Bouquet', priceRange: [100, 280], stock: null },
       { name: 'Sympathy Bouquet', priceRange: [120, 350], stock: null },
       { name: 'Birthday Celebration Bouquet', priceRange: [90, 220], stock: null },
-      { name: 'Get Well Soon Bouquet', priceRange: [80, 180], stock: null },
-    ],
+      { name: 'Get Well Soon Bouquet', priceRange: [80, 180], stock: null }
+    ]
   },
   {
     category: 'Wedding Services',
@@ -50,8 +50,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Reception Table Centrepieces (per table)', priceRange: [80, 250], stock: null },
       { name: 'Bridal Party Flowers Package', priceRange: [600, 1800], stock: null },
       { name: 'Church Pew Decorations (per pew)', priceRange: [40, 120], stock: null },
-      { name: 'Wedding Car Decoration', priceRange: [150, 400], stock: null },
-    ],
+      { name: 'Wedding Car Decoration', priceRange: [150, 400], stock: null }
+    ]
   },
   {
     category: 'Corporate Services',
@@ -60,8 +60,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Office Weekly Flower Service', priceRange: [200, 600], stock: null },
       { name: 'Conference Table Arrangement', priceRange: [150, 450], stock: null },
       { name: 'Corporate Gift Hamper with Flowers', priceRange: [120, 300], stock: null },
-      { name: 'Reception Desk Display', priceRange: [180, 500], stock: null },
-    ],
+      { name: 'Reception Desk Display', priceRange: [180, 500], stock: null }
+    ]
   },
   {
     category: 'Funeral Services',
@@ -70,8 +70,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Funeral Wreath - Premium', priceRange: [500, 1200], stock: null },
       { name: 'Casket Spray', priceRange: [400, 1000], stock: null },
       { name: 'Standing Spray', priceRange: [300, 800], stock: null },
-      { name: 'Sympathy Basket', priceRange: [150, 400], stock: null },
-    ],
+      { name: 'Sympathy Basket', priceRange: [150, 400], stock: null }
+    ]
   },
   {
     category: 'Specialty Arrangements',
@@ -81,8 +81,8 @@ const FLORIST_CATALOGUE = [
       { name: 'Succulent Garden Arrangement', priceRange: [80, 200], stock: [15, 30] },
       { name: 'Orchid Plant - Potted', priceRange: [100, 250], stock: [10, 25] },
       { name: 'Tropical Arrangement - Large', priceRange: [200, 500], stock: null },
-      { name: 'Seasonal Flower Subscription (Monthly)', priceRange: [400, 1200], stock: null },
-    ],
+      { name: 'Seasonal Flower Subscription (Monthly)', priceRange: [400, 1200], stock: null }
+    ]
   },
   {
     category: 'Add-ons & Extras',
@@ -94,9 +94,9 @@ const FLORIST_CATALOGUE = [
       { name: 'Flower Food & Care Kit', priceRange: [10, 25], stock: [50, 100] },
       { name: 'Balloon Bouquet Add-on', priceRange: [30, 80], stock: [30, 60] },
       { name: 'Chocolate Box Add-on', priceRange: [25, 80], stock: [40, 80] },
-      { name: 'Teddy Bear Add-on', priceRange: [20, 60], stock: [30, 60] },
-    ],
-  },
+      { name: 'Teddy Bear Add-on', priceRange: [20, 60], stock: [30, 60] }
+    ]
+  }
 ] as const;
 
 // -- Helpers -----------------------------------------------------------------
@@ -115,25 +115,25 @@ function buildProduct(item: CatalogueItem) {
       `Premium quality ${item.name.toLowerCase()} hand-selected by our expert florists.`,
       `Stunning ${item.name.toLowerCase()} to make your special day memorable.`,
       `Fresh ${item.name.toLowerCase()} delivered with care.`,
-      `Elegant ${item.name.toLowerCase()} designed to impress.`,
+      `Elegant ${item.name.toLowerCase()} designed to impress.`
     ]),
     price: faker.number.float({
       min: item.priceRange[0],
       max: item.priceRange[1],
-      multipleOf: 5,
+      multipleOf: 5
     }),
     stock: item.stock ? faker.number.int({ min: item.stock[0], max: item.stock[1] }) : 999,
     status: faker.helpers.weightedArrayElement([
       { value: 'ACTIVE' as const, weight: 0.9 },
       { value: 'INACTIVE' as const, weight: 0.05 },
-      { value: 'OUT_OF_STOCK' as const, weight: 0.05 },
+      { value: 'OUT_OF_STOCK' as const, weight: 0.05 }
     ]),
     imageUrl:
       faker.helpers.maybe(
         () => `https://picsum.photos/seed/${faker.string.alphanumeric(10)}/400/300`,
-        { probability: 0.7 },
+        { probability: 0.7 }
       ) ?? null,
-    availableAt: faker.date.recent({ days: 30 }),
+    availableAt: faker.date.recent({ days: 30 })
   };
 }
 
@@ -155,8 +155,8 @@ export async function seedProducts(options: SeedProductsOptions): Promise<number
     category.items.map((item) => ({
       ...item,
       priceRange: item.priceRange,
-      stock: item.stock as readonly [number, number] | null,
-    })),
+      stock: item.stock as readonly [number, number] | null
+    }))
   );
 
   let total = 0;
@@ -173,8 +173,8 @@ export async function seedProducts(options: SeedProductsOptions): Promise<number
           price: product.price,
           stock: product.stock,
           imageUrl: product.imageUrl,
-          availableAt: product.availableAt,
-        },
+          availableAt: product.availableAt
+        }
       });
     });
 
@@ -205,7 +205,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedProducts({ tenants: seededTenants });

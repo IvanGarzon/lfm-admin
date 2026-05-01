@@ -10,7 +10,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -29,28 +29,28 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
       table
         .getAllColumns()
         .filter((column) => typeof column.accessorFn !== 'undefined' && column.getCanHide()),
-    [table],
+    [table]
   );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          aria-label="Toggle columns"
-          role="combobox"
+          aria-label='Toggle columns'
+          role='combobox'
           aria-expanded={open}
           aria-controls={listboxId}
-          variant="outline"
-          className="ml-auto hidden py-0 px-2 lg:flex"
+          variant='outline'
+          className='ml-auto hidden py-0 px-2 lg:flex'
         >
-          <Settings2 className="h-4 w-4" />
+          <Settings2 className='h-4 w-4' />
           View
-          <CaretSortIcon className="ml-auto opacity-50" />
+          <CaretSortIcon className='ml-auto opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-44 p-0">
+      <PopoverContent align='end' className='w-44 p-0'>
         <Command id={listboxId}>
-          <CommandInput placeholder="Search columns..." />
+          <CommandInput placeholder='Search columns...' />
           <CommandList>
             <CommandEmpty>No columns found.</CommandEmpty>
             <CommandGroup>
@@ -59,11 +59,11 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
                   key={column.id}
                   onSelect={() => column.toggleVisibility(!column.getIsVisible())}
                 >
-                  <span className="truncate">{column.columnDef.meta?.label ?? column.id}</span>
+                  <span className='truncate'>{column.columnDef.meta?.label ?? column.id}</span>
                   <CheckIcon
                     className={cn(
                       'ml-auto size-4 shrink-0',
-                      column.getIsVisible() ? 'opacity-100' : 'opacity-0',
+                      column.getIsVisible() ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                 </CommandItem>

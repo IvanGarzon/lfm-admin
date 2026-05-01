@@ -9,8 +9,8 @@ const RecipeDrawer = dynamic(
     import('@/features/finances/recipes/components/recipe-drawer').then((mod) => mod.RecipeDrawer),
   {
     ssr: false,
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default function RecipeModalPage({ params }: { params: Promise<{ id: string }> }) {

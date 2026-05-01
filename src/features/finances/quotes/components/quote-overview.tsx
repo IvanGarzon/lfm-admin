@@ -14,32 +14,32 @@ interface QuoteOverviewProps {
 
 export function QuoteOverview({ stats, isLoading, comparisonLabel }: QuoteOverviewProps) {
   return (
-    <Box className="grid gap-4 md:grid-cols-3">
+    <Box className='grid gap-4 md:grid-cols-3'>
       <StatCard
-        title="Total Quoted"
+        title='Total Quoted'
         value={formatCurrency({ number: stats?.totalQuotedValue ?? 0, maxFractionDigits: 0 })}
-        description="Total value of all quotes"
+        description='Total value of all quotes'
         comparisonLabel={comparisonLabel}
         icon={DollarSign}
         isLoading={isLoading}
-        color="text-blue-500"
+        color='text-blue-500'
       />
       <StatCard
-        title="Accepted Value"
+        title='Accepted Value'
         value={formatCurrency({ number: stats?.totalAcceptedValue ?? 0, maxFractionDigits: 0 })}
-        description="Value of accepted quotes"
+        description='Value of accepted quotes'
         comparisonLabel={comparisonLabel}
         icon={CheckCircle}
         isLoading={isLoading}
-        color="text-emerald-500"
+        color='text-emerald-500'
       />
       <StatCard
-        title="Conversion Rate"
+        title='Conversion Rate'
         value={`${stats?.conversionRate.toFixed(1) ?? 0}%`}
-        description="Accepted / Sent"
+        description='Accepted / Sent'
         icon={Percent}
         isLoading={isLoading}
-        color="text-green-500"
+        color='text-green-500'
       />
     </Box>
   );

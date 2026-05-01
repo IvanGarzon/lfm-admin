@@ -1,6 +1,6 @@
 export const SESSION_LIMITS = {
   DEFAULT: 5,
-  ADMIN: 10,
+  ADMIN: 10
 } as const;
 
 export function getSessionLimit(role?: string | null): number {

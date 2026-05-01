@@ -12,7 +12,7 @@ import { PriceListRepository } from '../price-list-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createPriceListItemInput, createUpdatePriceListItemInput } from '@/lib/testing';
 
@@ -47,7 +47,7 @@ describe('PriceListRepository (integration)', () => {
     it('calculates retailPrice from costPerUnit × multiplier', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 2, multiplier: 3 }),
-        tenantId,
+        tenantId
       );
 
       const saved = await repository.findPriceListItemById(id, tenantId);
@@ -57,7 +57,7 @@ describe('PriceListRepository (integration)', () => {
     it('uses retailPriceOverride when set', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 2, multiplier: 3, retailPriceOverride: 10 }),
-        tenantId,
+        tenantId
       );
 
       const saved = await repository.findPriceListItemById(id, tenantId);
@@ -89,7 +89,7 @@ describe('PriceListRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Isolation Tenant' });
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput(),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.findPriceListItemById(id, tenantId);
@@ -100,7 +100,7 @@ describe('PriceListRepository (integration)', () => {
     it('converts Decimal fields to number', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 1.5, multiplier: 3 }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findPriceListItemById(id, tenantId);
@@ -117,11 +117,11 @@ describe('PriceListRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Tenant' });
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Red Roses' }),
-        tenantId,
+        tenantId
       );
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Other Item' }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.searchPriceListItems({ page: 1, perPage: 20 }, tenantId);
@@ -133,16 +133,16 @@ describe('PriceListRepository (integration)', () => {
     it('filters by search term', async () => {
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Red Roses' }),
-        tenantId,
+        tenantId
       );
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'White Lily' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchPriceListItems(
         { search: 'rose', page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -152,16 +152,16 @@ describe('PriceListRepository (integration)', () => {
     it('filters by category', async () => {
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Floral Item', category: 'FLORAL' }),
-        tenantId,
+        tenantId
       );
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Sundry Item', category: 'SUNDRY' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchPriceListItems(
         { category: ['SUNDRY'], page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -187,13 +187,13 @@ describe('PriceListRepository (integration)', () => {
     it('updates fields and returns updated item', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Old Name', costPerUnit: 1 }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updatePriceListItem(
         id,
         tenantId,
-        createUpdatePriceListItemInput({ id, name: 'New Name', costPerUnit: 1 }),
+        createUpdatePriceListItemInput({ id, name: 'New Name', costPerUnit: 1 })
       );
 
       expect(result!.name).toBe('New Name');
@@ -202,13 +202,13 @@ describe('PriceListRepository (integration)', () => {
     it('records cost history when costPerUnit changes', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 1 }),
-        tenantId,
+        tenantId
       );
 
       await repository.updatePriceListItem(
         id,
         tenantId,
-        createUpdatePriceListItemInput({ id, costPerUnit: 2 }),
+        createUpdatePriceListItemInput({ id, costPerUnit: 2 })
       );
 
       const history = await repository.getPriceListCostHistory(id);
@@ -220,13 +220,13 @@ describe('PriceListRepository (integration)', () => {
     it('does not record cost history when costPerUnit is unchanged', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 1.5 }),
-        tenantId,
+        tenantId
       );
 
       await repository.updatePriceListItem(
         id,
         tenantId,
-        createUpdatePriceListItemInput({ id, costPerUnit: 1.5 }),
+        createUpdatePriceListItemInput({ id, costPerUnit: 1.5 })
       );
 
       const history = await repository.getPriceListCostHistory(id);
@@ -237,7 +237,7 @@ describe('PriceListRepository (integration)', () => {
       const result = await repository.updatePriceListItem(
         'cltest000000000000none0001',
         tenantId,
-        createUpdatePriceListItemInput({ id: 'cltest000000000000none0001' }),
+        createUpdatePriceListItemInput({ id: 'cltest000000000000none0001' })
       );
 
       expect(result).toBeNull();
@@ -267,7 +267,7 @@ describe('PriceListRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Delete Isolation Tenant' });
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput(),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.deletePriceListItem(id, tenantId);
@@ -282,17 +282,17 @@ describe('PriceListRepository (integration)', () => {
     it('returns cost history entries ordered by most recent first', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ costPerUnit: 1 }),
-        tenantId,
+        tenantId
       );
       await repository.updatePriceListItem(
         id,
         tenantId,
-        createUpdatePriceListItemInput({ id, costPerUnit: 2 }),
+        createUpdatePriceListItemInput({ id, costPerUnit: 2 })
       );
       await repository.updatePriceListItem(
         id,
         tenantId,
-        createUpdatePriceListItemInput({ id, costPerUnit: 3 }),
+        createUpdatePriceListItemInput({ id, costPerUnit: 3 })
       );
 
       const history = await repository.getPriceListCostHistory(id);
@@ -317,11 +317,11 @@ describe('PriceListRepository (integration)', () => {
     it('returns non-deleted items sorted by name', async () => {
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Zebra Plant' }),
-        tenantId,
+        tenantId
       );
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Apple Blossom' }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.findActivePriceListItems(tenantId);
@@ -334,7 +334,7 @@ describe('PriceListRepository (integration)', () => {
     it('excludes soft-deleted items', async () => {
       const { id } = await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Deleted Item' }),
-        tenantId,
+        tenantId
       );
       await repository.deletePriceListItem(id, tenantId);
 
@@ -348,7 +348,7 @@ describe('PriceListRepository (integration)', () => {
       await repository.createPriceListItem(createPriceListItemInput({ name: 'My Item' }), tenantId);
       await repository.createPriceListItem(
         createPriceListItemInput({ name: 'Other Item' }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await repository.findActivePriceListItems(tenantId);

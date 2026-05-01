@@ -11,7 +11,7 @@ export function TransactionCategoryField({
   isDisabled,
   categories,
   isLoadingCategories,
-  onCategoryCreated,
+  onCategoryCreated
 }: {
   control: Control<TransactionFormInput>;
   isDisabled: boolean;
@@ -22,7 +22,7 @@ export function TransactionCategoryField({
   return (
     <FieldGroup>
       <Controller
-        name="categoryIds"
+        name='categoryIds'
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
@@ -30,9 +30,9 @@ export function TransactionCategoryField({
               <FieldLabel>Categories</FieldLabel>
             </FieldContent>
             {isLoadingCategories ? (
-              <Box className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                <span className="ml-2 text-sm text-muted-foreground">Loading categories...</span>
+              <Box className='flex items-center justify-center py-4'>
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+                <span className='ml-2 text-sm text-muted-foreground'>Loading categories...</span>
               </Box>
             ) : (
               <CategoryMultiSelect

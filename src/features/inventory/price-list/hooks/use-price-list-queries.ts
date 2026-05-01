@@ -6,16 +6,16 @@ import { toast } from 'sonner';
 import {
   getPriceListItemById,
   getPriceListCostHistory,
-  getActivePriceListItems,
+  getActivePriceListItems
 } from '@/actions/inventory/price-list/queries';
 import {
   createPriceListItem,
   updatePriceListItem,
-  deletePriceListItem,
+  deletePriceListItem
 } from '@/actions/inventory/price-list/mutations';
 import type {
   PriceListFilters,
-  PriceListItemWithDetails,
+  PriceListItemWithDetails
 } from '@/features/inventory/price-list/types';
 import type { CreatePriceListItemInput, UpdatePriceListItemInput } from '@/schemas/price-list';
 
@@ -30,7 +30,7 @@ export const PRICE_LIST_KEYS = {
   active: () => [...PRICE_LIST_KEYS.all, 'active'] as const,
   details: () => [...PRICE_LIST_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRICE_LIST_KEYS.details(), id] as const,
-  costHistory: (id: string) => [...PRICE_LIST_KEYS.all, 'costHistory', id] as const,
+  costHistory: (id: string) => [...PRICE_LIST_KEYS.all, 'costHistory', id] as const
 };
 
 // ============================================================================
@@ -54,7 +54,7 @@ export function usePriceListItem(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -75,7 +75,7 @@ export function usePriceListCostHistory(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -93,7 +93,7 @@ export function usePrefetchPriceListItem() {
         if (!result.success) throw new Error(result.error);
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }
@@ -111,7 +111,7 @@ export function useActivePriceListItems() {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 }
 
@@ -142,7 +142,7 @@ export function useCreatePriceListItem() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create price list item');
-    },
+    }
   });
 }
 
@@ -165,13 +165,13 @@ export function useUpdatePriceListItem() {
       await queryClient.cancelQueries({ queryKey: PRICE_LIST_KEYS.lists() });
 
       const previousItem = queryClient.getQueryData<PriceListItemWithDetails>(
-        PRICE_LIST_KEYS.detail(newData.id),
+        PRICE_LIST_KEYS.detail(newData.id)
       );
 
       if (previousItem) {
         queryClient.setQueryData(PRICE_LIST_KEYS.detail(newData.id), {
           ...previousItem,
-          ...newData,
+          ...newData
         });
       }
 
@@ -190,7 +190,7 @@ export function useUpdatePriceListItem() {
     },
     onSuccess: () => {
       toast.success('Price list item updated successfully');
-    },
+    }
   });
 }
 
@@ -214,6 +214,6 @@ export function useDeletePriceListItem() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete price list item');
-    },
+    }
   });
 }

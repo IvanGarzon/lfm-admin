@@ -9,7 +9,7 @@ interface FileListViewProps {
 
 export function FileListView({ files, onDownload, onDelete }: FileListViewProps) {
   return (
-    <div className="space-y-2">
+    <div className='space-y-2'>
       {files.map((file) => (
         <FileItem key={file.key} file={file} onDownload={onDownload} onDelete={onDelete} />
       ))}

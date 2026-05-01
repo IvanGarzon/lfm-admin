@@ -20,8 +20,8 @@ export function InvoiceStatusHistory({ history }: InvoiceStatusHistoryProps) {
     <StatusHistory
       history={history}
       renderStatusBadge={(status: InvoiceStatus) => <InvoiceStatusBadge status={status} />}
-      title="Status History"
-      emptyMessage="No status history available."
+      title='Status History'
+      emptyMessage='No status history available.'
     />
   );
 }

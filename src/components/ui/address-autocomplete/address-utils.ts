@@ -11,7 +11,7 @@ export function updateAndFormatAddress(
     locality: string;
     region: string;
     'postal-code': string;
-  },
+  }
 ) {
   let updatedAddressString = addressString;
 
@@ -31,7 +31,7 @@ export function updateAndFormatAddress(
     const address1Regex = new RegExp(`${addressComponents['street-address']}`);
     updatedAddressString = updatedAddressString.replace(
       address1Regex,
-      `${addressComponents['street-address']}, ${addressComponents.address2}`,
+      `${addressComponents['street-address']}, ${addressComponents.address2}`
     );
   }
 

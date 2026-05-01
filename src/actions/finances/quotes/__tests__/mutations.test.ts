@@ -17,7 +17,7 @@ import {
   createQuoteVersion,
   bulkUpdateQuoteStatus,
   bulkDeleteQuotes,
-  duplicateQuote,
+  duplicateQuote
 } from '../mutations';
 import { revalidatePath } from 'next/cache';
 import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
@@ -29,7 +29,7 @@ import {
   createQuoteItemInput,
   createQuoteResponse,
   createQuoteVersionResponse,
-  createQuoteItemAttachment,
+  createQuoteItemAttachment
 } from '@/lib/testing';
 
 const { mockQuoteRepo, mockInvoiceRepo, mockDeleteFileFromS3, mockAuth, mockHasPermission } =
@@ -55,55 +55,55 @@ const { mockQuoteRepo, mockInvoiceRepo, mockDeleteFileFromS3, mockAuth, mockHasP
       createQuoteVersion: vi.fn(),
       bulkUpdateQuoteStatus: vi.fn(),
       bulkSoftDeleteQuotes: vi.fn(),
-      duplicateQuote: vi.fn(),
+      duplicateQuote: vi.fn()
     },
     mockInvoiceRepo: {
       generateInvoiceNumber: vi.fn(),
-      findByIdWithDetails: vi.fn(),
+      findByIdWithDetails: vi.fn()
     },
     mockDeleteFileFromS3: vi.fn(),
     mockAuth: vi.fn(),
-    mockHasPermission: vi.fn().mockReturnValue(true),
+    mockHasPermission: vi.fn().mockReturnValue(true)
   }));
 
 // Mock QuoteRepository
 vi.mock('@/repositories/quote-repository', () => ({
   QuoteRepository: vi.fn().mockImplementation(function () {
     return mockQuoteRepo;
-  }),
+  })
 }));
 
 // Mock InvoiceRepository
 vi.mock('@/repositories/invoice-repository', () => ({
   InvoiceRepository: vi.fn().mockImplementation(function () {
     return mockInvoiceRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 vi.mock('@/lib/s3', () => ({
   uploadFileToS3: vi.fn().mockResolvedValue({
     s3Key: 'test-key',
-    s3Url: 'https://test.s3.amazonaws.com/test-key',
+    s3Url: 'https://test.s3.amazonaws.com/test-key'
   }),
   deleteFileFromS3: (...args: unknown[]) => mockDeleteFileFromS3(...args),
   getSignedUrlForDownload: vi.fn().mockResolvedValue('signed-url'),
-  ALLOWED_IMAGE_MIME_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  ALLOWED_IMAGE_MIME_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 // Generate test IDs using the centralized ID generator
@@ -128,7 +128,7 @@ describe('Quote Mutations', () => {
 
     it('creates a quote successfully when authorized', async () => {
       mockQuoteRepo.createQuoteWithItems.mockResolvedValue(
-        createQuoteResponse({ id: TEST_QUOTE_ID, quoteNumber: 'QUO-001' }),
+        createQuoteResponse({ id: TEST_QUOTE_ID, quoteNumber: 'QUO-001' })
       );
 
       const result = await createQuote(validData);
@@ -157,8 +157,8 @@ describe('Quote Mutations', () => {
       id: TEST_QUOTE_ID,
       ...createQuoteInput({
         customerId: TEST_CUSTOMER_ID,
-        items: [createQuoteItemInput({ description: 'Updated Item', quantity: 2, unitPrice: 150 })],
-      }),
+        items: [createQuoteItemInput({ description: 'Updated Item', quantity: 2, unitPrice: 150 })]
+      })
     };
 
     it('updates a quote successfully when authorized', async () => {
@@ -230,7 +230,7 @@ describe('Quote Mutations', () => {
 
       const result = await markQuoteAsRejected({
         id: TEST_QUOTE_ID,
-        rejectReason: 'Price too high',
+        rejectReason: 'Price too high'
       });
 
       expect(result.success).toBe(true);
@@ -238,7 +238,7 @@ describe('Quote Mutations', () => {
         TEST_QUOTE_ID,
         expect.any(String),
         'Price too high',
-        mockSession.user.id,
+        mockSession.user.id
       );
     });
   });
@@ -260,7 +260,7 @@ describe('Quote Mutations', () => {
 
       const result = await markQuoteAsOnHold({
         id: TEST_QUOTE_ID,
-        reason: 'Pending customer approval',
+        reason: 'Pending customer approval'
       });
 
       expect(result.success).toBe(true);
@@ -268,7 +268,7 @@ describe('Quote Mutations', () => {
         TEST_QUOTE_ID,
         expect.any(String),
         'Pending customer approval',
-        mockSession.user.id,
+        mockSession.user.id
       );
     });
   });
@@ -279,7 +279,7 @@ describe('Quote Mutations', () => {
 
       const result = await markQuoteAsCancelled({
         id: TEST_QUOTE_ID,
-        cancelReason: 'Customer cancelled',
+        cancelReason: 'Customer cancelled'
       });
 
       expect(result.success).toBe(true);
@@ -293,14 +293,14 @@ describe('Quote Mutations', () => {
       mockInvoiceRepo.generateInvoiceNumber.mockResolvedValue('INV-001');
       mockQuoteRepo.convertQuoteToInvoice.mockResolvedValue({
         invoiceId: 'invoice-123',
-        invoiceNumber: 'INV-001',
+        invoiceNumber: 'INV-001'
       });
 
       const result = await convertQuoteToInvoice({
         id: TEST_QUOTE_ID,
         dueDate: new Date(),
         gst: 10,
-        discount: 0,
+        discount: 0
       });
 
       expect(result.success).toBe(true);
@@ -372,8 +372,8 @@ describe('Quote Mutations', () => {
         createQuoteItemAttachment({
           id: TEST_ATTACHMENT_ID,
           quoteItemId: TEST_ITEM_ID,
-          uploadedBy: mockSession.user.id,
-        }),
+          uploadedBy: mockSession.user.id
+        })
       );
 
       const result = await uploadQuoteItemAttachment(formData);
@@ -390,7 +390,7 @@ describe('Quote Mutations', () => {
     it('deletes item attachment successfully', async () => {
       mockQuoteRepo.findQuoteItemAttachmentById.mockResolvedValue({
         id: TEST_ATTACHMENT_ID,
-        s3Key: 'test-key',
+        s3Key: 'test-key'
       });
       mockQuoteRepo.deleteQuoteItemAttachment.mockResolvedValue(true);
       mockQuoteRepo.countQuoteItemAttachmentsByS3Key.mockResolvedValue(0);
@@ -398,7 +398,7 @@ describe('Quote Mutations', () => {
 
       const result = await deleteQuoteItemAttachment({
         attachmentId: TEST_ATTACHMENT_ID,
-        quoteId: TEST_QUOTE_ID,
+        quoteId: TEST_QUOTE_ID
       });
 
       expect(result.success).toBe(true);
@@ -410,13 +410,13 @@ describe('Quote Mutations', () => {
     it('updates item notes successfully', async () => {
       mockQuoteRepo.updateQuoteItemNotes.mockResolvedValue({
         id: TEST_ITEM_ID,
-        notes: 'Updated notes',
+        notes: 'Updated notes'
       });
 
       const result = await updateQuoteItemNotes({
         quoteItemId: TEST_ITEM_ID,
         quoteId: TEST_QUOTE_ID,
-        notes: 'Updated notes',
+        notes: 'Updated notes'
       });
 
       expect(result.success).toBe(true);
@@ -432,13 +432,13 @@ describe('Quote Mutations', () => {
     it('updates item colors successfully', async () => {
       mockQuoteRepo.updateQuoteItemColors.mockResolvedValue({
         id: TEST_ITEM_ID,
-        colors: ['#FF5733', '#33FF57'],
+        colors: ['#FF5733', '#33FF57']
       });
 
       const result = await updateQuoteItemColors({
         quoteItemId: TEST_ITEM_ID,
         quoteId: TEST_QUOTE_ID,
-        colors: ['#FF5733', '#33FF57'],
+        colors: ['#FF5733', '#33FF57']
       });
 
       expect(result.success).toBe(true);
@@ -452,7 +452,7 @@ describe('Quote Mutations', () => {
       const result = await updateQuoteItemColors({
         quoteItemId: TEST_ITEM_ID,
         quoteId: TEST_QUOTE_ID,
-        colors: ['invalid-color'],
+        colors: ['invalid-color']
       });
 
       expect(result.success).toBe(false);
@@ -465,7 +465,7 @@ describe('Quote Mutations', () => {
       const result = await updateQuoteItemColors({
         quoteItemId: TEST_ITEM_ID,
         quoteId: TEST_QUOTE_ID,
-        colors: Array(11).fill('#FF5733'), // 11 colors exceeds limit of 10
+        colors: Array(11).fill('#FF5733') // 11 colors exceeds limit of 10
       });
 
       expect(result.success).toBe(false);
@@ -478,14 +478,14 @@ describe('Quote Mutations', () => {
   describe('createQuoteVersion', () => {
     it('creates a new quote version successfully', async () => {
       mockQuoteRepo.findQuoteById.mockResolvedValue(
-        createQuoteResponse({ id: TEST_QUOTE_ID, quoteNumber: 'QUO-001' }),
+        createQuoteResponse({ id: TEST_QUOTE_ID, quoteNumber: 'QUO-001' })
       );
       mockQuoteRepo.createQuoteVersion.mockResolvedValue(
         createQuoteVersionResponse({
           id: TEST_QUOTE_VERSION_ID,
           quoteNumber: 'QUO-001-v2',
-          versionNumber: 2,
-        }),
+          versionNumber: 2
+        })
       );
 
       const result = await createQuoteVersion({ quoteId: TEST_QUOTE_ID });
@@ -520,7 +520,7 @@ describe('Quote Mutations', () => {
       mockAuth.mockResolvedValueOnce(null);
       const result = await bulkUpdateQuoteStatus({
         ids: ['id-1'],
-        status: QuoteStatusSchema.enum.SENT,
+        status: QuoteStatusSchema.enum.SENT
       });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -533,7 +533,7 @@ describe('Quote Mutations', () => {
 
       const result = await bulkUpdateQuoteStatus({
         ids: ['id-1'],
-        status: QuoteStatusSchema.enum.SENT,
+        status: QuoteStatusSchema.enum.SENT
       });
       expect(result.success).toBe(false);
     });
@@ -541,19 +541,19 @@ describe('Quote Mutations', () => {
     it('should call repository bulkUpdateQuoteStatus', async () => {
       mockQuoteRepo.bulkUpdateQuoteStatus.mockResolvedValue([
         { id: 'id-1', success: true },
-        { id: 'id-2', success: true },
+        { id: 'id-2', success: true }
       ]);
 
       const result = await bulkUpdateQuoteStatus({
         ids: ['id-1', 'id-2'],
-        status: QuoteStatusSchema.enum.SENT,
+        status: QuoteStatusSchema.enum.SENT
       });
 
       expect(mockQuoteRepo.bulkUpdateQuoteStatus).toHaveBeenCalledWith(
         ['id-1', 'id-2'],
         QuoteStatusSchema.enum.SENT,
         expect.any(String),
-        mockSession.user.id,
+        mockSession.user.id
       );
       expect(result.success).toBe(true);
       if (result.success) {
@@ -565,12 +565,12 @@ describe('Quote Mutations', () => {
     it('should handle partial failures', async () => {
       mockQuoteRepo.bulkUpdateQuoteStatus.mockResolvedValue([
         { id: 'id-1', success: true },
-        { id: 'id-2', success: false, error: 'Failed' },
+        { id: 'id-2', success: false, error: 'Failed' }
       ]);
 
       const result = await bulkUpdateQuoteStatus({
         ids: ['id-1', 'id-2'],
-        status: QuoteStatusSchema.enum.SENT,
+        status: QuoteStatusSchema.enum.SENT
       });
 
       expect(result.success).toBe(true);
@@ -603,7 +603,7 @@ describe('Quote Mutations', () => {
 
     it('should handle partial failures', async () => {
       mockQuoteRepo.bulkSoftDeleteQuotes.mockResolvedValue([
-        { id: 'id-1', success: false, error: 'Not DRAFT' },
+        { id: 'id-1', success: false, error: 'Not DRAFT' }
       ]);
 
       const result = await bulkDeleteQuotes(['id-1']);
@@ -622,7 +622,7 @@ describe('Quote Mutations', () => {
         (user: { role?: string } | undefined, permission: string) => {
           if (permission === 'canManageQuotes' && user?.role === 'USER') return false;
           return true;
-        },
+        }
       );
 
       const result = await duplicateQuote(TEST_QUOTE_ID);
@@ -637,7 +637,7 @@ describe('Quote Mutations', () => {
     it('should allow MANAGER role', async () => {
       mockQuoteRepo.duplicateQuote.mockResolvedValue({
         id: 'new-quote-id',
-        quoteNumber: 'QUO-2025-0002',
+        quoteNumber: 'QUO-2025-0002'
       });
 
       const result = await duplicateQuote(TEST_QUOTE_ID);
@@ -665,12 +665,12 @@ describe('Quote Mutations', () => {
   describe('deleteQuoteItemAttachment (Shared File Safety)', () => {
     const attachmentData = {
       attachmentId: TEST_ATTACHMENT_ID,
-      quoteId: TEST_QUOTE_ID,
+      quoteId: TEST_QUOTE_ID
     };
 
     const mockAttachment = {
       id: TEST_ATTACHMENT_ID,
-      s3Key: 'shared-file-key.jpg',
+      s3Key: 'shared-file-key.jpg'
     };
 
     beforeEach(() => {
@@ -688,7 +688,7 @@ describe('Quote Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockQuoteRepo.countQuoteItemAttachmentsByS3Key).toHaveBeenCalledWith(
         'shared-file-key.jpg',
-        TEST_ATTACHMENT_ID,
+        TEST_ATTACHMENT_ID
       );
       expect(mockDeleteFileFromS3).toHaveBeenCalledWith('shared-file-key.jpg');
       expect(mockQuoteRepo.deleteQuoteItemAttachment).toHaveBeenCalledWith(TEST_ATTACHMENT_ID);
@@ -735,7 +735,7 @@ describe('Quote Mutations - Permission Tests', () => {
           return false;
         }
         return true;
-      },
+      }
     );
   };
 
@@ -762,7 +762,7 @@ describe('Quote Mutations - Permission Tests', () => {
       mockAuth.mockResolvedValue(mockManagerRole);
       mockQuoteRepo.createQuoteWithItems.mockResolvedValue({
         id: '1',
-        quoteNumber: 'QUO-2024-0001',
+        quoteNumber: 'QUO-2024-0001'
       });
 
       const result = await createQuote(validQuoteData);
@@ -774,7 +774,7 @@ describe('Quote Mutations - Permission Tests', () => {
       mockAuth.mockResolvedValue(mockAdminRole);
       mockQuoteRepo.createQuoteWithItems.mockResolvedValue({
         id: '1',
-        quoteNumber: 'QUO-2024-0001',
+        quoteNumber: 'QUO-2024-0001'
       });
 
       const result = await createQuote(validQuoteData);
@@ -788,8 +788,8 @@ describe('Quote Mutations - Permission Tests', () => {
       id: TEST_QUOTE_ID,
       ...createQuoteInput({
         customerId: TEST_CUSTOMER_ID,
-        items: [createQuoteItemInput({ description: 'Updated Item', quantity: 2, unitPrice: 150 })],
-      }),
+        items: [createQuoteItemInput({ description: 'Updated Item', quantity: 2, unitPrice: 150 })]
+      })
     };
 
     it('should DENY USER role from updating quotes', async () => {
@@ -864,7 +864,7 @@ describe('Quote Mutations - Permission Tests', () => {
       mockAuth.mockResolvedValue(mockManagerRole);
       mockQuoteRepo.markQuoteAsAccepted.mockResolvedValue({
         id: TEST_QUOTE_ID,
-        status: 'ACCEPTED',
+        status: 'ACCEPTED'
       });
 
       const result = await markQuoteAsAccepted({ id: TEST_QUOTE_ID });
@@ -878,7 +878,7 @@ describe('Quote Mutations - Permission Tests', () => {
       id: TEST_QUOTE_ID,
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       gst: 10,
-      discount: 0,
+      discount: 0
     };
 
     it('should DENY USER role from converting quotes', async () => {
@@ -898,7 +898,7 @@ describe('Quote Mutations - Permission Tests', () => {
       mockInvoiceRepo.generateInvoiceNumber.mockResolvedValue('INV-2024-0001');
       mockQuoteRepo.convertQuoteToInvoice.mockResolvedValue({
         invoiceId: '1',
-        invoiceNumber: 'INV-2024-0001',
+        invoiceNumber: 'INV-2024-0001'
       });
 
       const result = await convertQuoteToInvoice(conversionData);
@@ -924,8 +924,8 @@ describe('Quote Mutations - Permission Tests', () => {
         user: {
           id: 'test',
           email: 'test@example.com',
-          role: 'INVALID_ROLE' as const,
-        },
+          role: 'INVALID_ROLE' as const
+        }
       };
       mockAuth.mockResolvedValue(invalidSession);
       setupPermissionMock();

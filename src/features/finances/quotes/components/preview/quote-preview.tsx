@@ -22,9 +22,9 @@ export function QuotePreview({ quote, items }: QuoteHtmlPreviewProps) {
   const total = subtotal + gstAmount - quote.discount;
 
   return (
-    <Box className="h-full overflow-y-auto bg-gray-100 dark:bg-gray-950 p-8">
-      <Box className="bg-white dark:bg-gray-900 shadow-lg max-w-4xl mx-auto">
-        <Box className="p-12">
+    <Box className='h-full overflow-y-auto bg-gray-100 dark:bg-gray-950 p-8'>
+      <Box className='bg-white dark:bg-gray-900 shadow-lg max-w-4xl mx-auto'>
+        <Box className='p-12'>
           <QuotePreviewHeader quoteNumber={quote.quoteNumber} />
 
           <QuotePreviewBillingInfo customer={quote.customer} />

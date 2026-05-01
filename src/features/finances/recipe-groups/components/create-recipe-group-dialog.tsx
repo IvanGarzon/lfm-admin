@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,7 +48,7 @@ export function CreateRecipeGroupDialog({
   open,
   onOpenChange,
   onCreate,
-  isCreating,
+  isCreating
 }: CreateRecipeGroupDialogProps) {
   const [recipeSearchOpen, setRecipeSearchOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -58,13 +58,13 @@ export function CreateRecipeGroupDialog({
     defaultValues: {
       name: '',
       description: '',
-      items: [],
-    },
+      items: []
+    }
   });
 
   const fieldArray = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: 'items'
   });
 
   const items = form.watch('items');
@@ -90,7 +90,7 @@ export function CreateRecipeGroupDialog({
           recipeId: recipe.id,
           quantity: current.quantity,
           order: current.order,
-          recipe: recipe,
+          recipe: recipe
         });
       } else {
         // Add new item
@@ -98,13 +98,13 @@ export function CreateRecipeGroupDialog({
           recipeId: recipe.id,
           quantity: 1,
           order: fieldArray.fields.length,
-          recipe: recipe,
+          recipe: recipe
         });
       }
       setRecipeSearchOpen(false);
       setEditingIndex(null);
     },
-    [editingIndex, fieldArray],
+    [editingIndex, fieldArray]
   );
 
   const handleSubmit = useCallback(
@@ -116,12 +116,12 @@ export function CreateRecipeGroupDialog({
         items: data.items.map((item) => ({
           recipeId: item.recipeId,
           quantity: item.quantity,
-          order: item.order,
-        })),
+          order: item.order
+        }))
       };
       onCreate(cleanedData);
     },
-    [onCreate],
+    [onCreate]
   );
 
   const handleClose = useCallback(() => {
@@ -132,7 +132,7 @@ export function CreateRecipeGroupDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className='sm:max-w-[700px]'>
           <DialogHeader>
             <DialogTitle>Create Recipe Group</DialogTitle>
             <DialogDescription>
@@ -141,24 +141,24 @@ export function CreateRecipeGroupDialog({
           </DialogHeader>
 
           <form
-            id="form-rhf-recipe-group"
+            id='form-rhf-recipe-group'
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className='space-y-6'
           >
-            <Box className="space-y-4">
+            <Box className='space-y-4'>
               <FieldGroup>
                 <Controller
-                  name="name"
+                  name='name'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-group-name">Group Name</FieldLabel>
+                        <FieldLabel htmlFor='form-rhf-group-name'>Group Name</FieldLabel>
                       </FieldContent>
                       <Input
                         {...field}
-                        id="form-rhf-group-name"
-                        placeholder="e.g., Wedding Package Standard"
+                        id='form-rhf-group-name'
+                        placeholder='e.g., Wedding Package Standard'
                         aria-invalid={fieldState.invalid}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -169,22 +169,22 @@ export function CreateRecipeGroupDialog({
 
               <FieldGroup>
                 <Controller
-                  name="description"
+                  name='description'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel htmlFor="form-rhf-group-description">
+                        <FieldLabel htmlFor='form-rhf-group-description'>
                           Description (Optional)
                         </FieldLabel>
                       </FieldContent>
                       <Textarea
                         {...field}
-                        id="form-rhf-group-description"
+                        id='form-rhf-group-description'
                         value={field.value ?? ''}
                         placeholder="Describe what's included in this group..."
                         rows={2}
-                        className="resize-none"
+                        className='resize-none'
                         aria-invalid={fieldState.invalid}
                       />
                       {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -194,89 +194,89 @@ export function CreateRecipeGroupDialog({
               </FieldGroup>
             </Box>
 
-            <Box className="space-y-3">
-              <Box className="flex items-center justify-between">
+            <Box className='space-y-3'>
+              <Box className='flex items-center justify-between'>
                 <FieldLabel>Recipes in Group</FieldLabel>
                 <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                  type='button'
+                  variant='outline'
+                  size='sm'
                   onClick={handleAddRecipe}
-                  className="h-8"
+                  className='h-8'
                 >
-                  <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
+                  <Plus aria-hidden='true' className='h-4 w-4 mr-1' />
                   Add Recipe
                 </Button>
               </Box>
 
               {form.formState.errors.items?.message ? (
-                <p className="text-sm text-destructive">{form.formState.errors.items.message}</p>
+                <p className='text-sm text-destructive'>{form.formState.errors.items.message}</p>
               ) : null}
 
               {fieldArray.fields.length === 0 ? (
-                <Box className="border border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                  <Layers aria-hidden="true" className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No recipes added yet</p>
-                  <p className="text-xs mt-1">Click "Add Recipe" to get started</p>
+                <Box className='border border-dashed rounded-lg p-8 text-center text-muted-foreground'>
+                  <Layers aria-hidden='true' className='h-12 w-12 mx-auto mb-2 opacity-50' />
+                  <p className='text-sm'>No recipes added yet</p>
+                  <p className='text-xs mt-1'>Click "Add Recipe" to get started</p>
                 </Box>
               ) : (
-                <Box className="border rounded-lg divide-y">
+                <Box className='border rounded-lg divide-y'>
                   {fieldArray.fields.map((field, index) => {
                     const recipe = field.recipe;
                     if (!recipe) return null;
 
                     return (
-                      <Box key={field.id} className="flex items-center gap-3 p-3">
-                        <Box className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{recipe.name}</p>
+                      <Box key={field.id} className='flex items-center gap-3 p-3'>
+                        <Box className='flex-1 min-w-0'>
+                          <p className='font-medium text-sm truncate'>{recipe.name}</p>
                           {recipe.description ? (
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className='text-xs text-muted-foreground truncate'>
                               {recipe.description}
                             </p>
                           ) : null}
                         </Box>
 
-                        <Box className="flex items-center gap-2">
+                        <Box className='flex items-center gap-2'>
                           <Controller
                             control={form.control}
                             name={`items.${index}.quantity`}
                             render={({ field }) => (
                               <Input
                                 {...field}
-                                type="number"
-                                min="1"
-                                step="1"
-                                className="w-20 h-9"
+                                type='number'
+                                min='1'
+                                step='1'
+                                className='w-20 h-9'
                                 onChange={(e) => field.onChange(e.target.valueAsNumber)}
                               />
                             )}
                           />
 
-                          <Box className="w-24 text-right text-sm font-medium">
+                          <Box className='w-24 text-right text-sm font-medium'>
                             {formatCurrency({
-                              number: (recipe.sellingPrice || 0) * (field.quantity || 1),
+                              number: (recipe.sellingPrice || 0) * (field.quantity || 1)
                             })}
                           </Box>
 
                           <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Remove recipe"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            aria-label='Remove recipe'
+                            className='h-8 w-8 text-destructive hover:text-destructive'
                             onClick={() => fieldArray.remove(index)}
                           >
-                            <Trash2 aria-hidden="true" className="h-4 w-4" />
+                            <Trash2 aria-hidden='true' className='h-4 w-4' />
                           </Button>
                         </Box>
                       </Box>
                     );
                   })}
 
-                  <Box className="p-3 bg-muted/50">
-                    <Box className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Total Group Value</span>
-                      <span className="text-lg font-bold text-primary">
+                  <Box className='p-3 bg-muted/50'>
+                    <Box className='flex items-center justify-between'>
+                      <span className='text-sm font-medium'>Total Group Value</span>
+                      <span className='text-lg font-bold text-primary'>
                         {formatCurrency({ number: totalCost })}
                       </span>
                     </Box>
@@ -286,10 +286,10 @@ export function CreateRecipeGroupDialog({
             </Box>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose} disabled={isCreating}>
+              <Button type='button' variant='outline' onClick={handleClose} disabled={isCreating}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating || fieldArray.fields.length === 0}>
+              <Button type='submit' disabled={isCreating || fieldArray.fields.length === 0}>
                 {isCreating ? 'Creating...' : 'Create Group'}
               </Button>
             </DialogFooter>

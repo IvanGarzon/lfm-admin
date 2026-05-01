@@ -9,12 +9,12 @@ import { USER_KEYS } from '@/features/users/constants/query-keys';
 
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
-  { loading: () => null },
+  { loading: () => null }
 );
 
 export default async function UserSecurityPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;
@@ -30,7 +30,7 @@ export default async function UserSecurityPage({
         const result = await getTenantUserById(id);
         if (!result.success) throw new Error(result.error);
         return result.data;
-      },
+      }
     }),
     queryClient.prefetchQuery({
       queryKey: USER_KEYS.list(JSON.stringify(searchParamsResolved)),
@@ -38,15 +38,15 @@ export default async function UserSecurityPage({
         const result = await getTenantUsers(searchParamsResolved);
         if (!result.success) throw new Error(result.error);
         return result.data;
-      },
-    }),
+      }
+    })
   ]);
 
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <UsersList searchParams={searchParamsResolved} />
-        <UserDrawer id={id} open={true} tab="security" />
+        <UserDrawer id={id} open={true} tab='security' />
       </HydrationBoundary>
     </Shell>
   );

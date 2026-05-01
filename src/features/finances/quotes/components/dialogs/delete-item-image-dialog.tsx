@@ -9,7 +9,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface DeleteItemImageDialogProps {
@@ -23,7 +23,7 @@ export function DeleteItemImageDialog({
   open,
   onOpenChange,
   onConfirm,
-  isPending = false,
+  isPending = false
 }: DeleteItemImageDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -42,11 +42,11 @@ export function DeleteItemImageDialog({
               onConfirm();
             }}
             disabled={isPending}
-            className="bg-destructive hover:bg-destructive/90"
+            className='bg-destructive hover:bg-destructive/90'
           >
             {isPending ? (
               <>
-                <Loader2 aria-hidden="true" className="mr-2 size-4 animate-spin" />
+                <Loader2 aria-hidden='true' className='mr-2 size-4 animate-spin' />
                 Deleting...
               </>
             ) : (

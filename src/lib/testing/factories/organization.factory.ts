@@ -9,7 +9,7 @@ import type { CreateOrganizationInput } from '@/schemas/organizations';
 import type { OrganizationListItem } from '@/features/crm/organizations/types';
 
 export function createOrganizationInput(
-  overrides: Partial<CreateOrganizationInput> = {},
+  overrides: Partial<CreateOrganizationInput> = {}
 ): CreateOrganizationInput {
   return {
     name: 'Acme Florals',
@@ -23,7 +23,7 @@ export function createOrganizationInput(
     country: 'Australia',
     abn: null,
     status: 'ACTIVE',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -31,7 +31,7 @@ export function createOrganizationInput(
  * Creates a mock OrganizationListItem as returned by the repository.
  */
 export function createOrganizationResponse(
-  overrides: Partial<OrganizationListItem> = {},
+  overrides: Partial<OrganizationListItem> = {}
 ): OrganizationListItem {
   return {
     id: overrides.id ?? testIds.organization(),
@@ -50,6 +50,6 @@ export function createOrganizationResponse(
     updatedAt: new Date('2024-01-01'),
     deletedAt: null,
     customersCount: 0,
-    ...overrides,
+    ...overrides
   };
 }

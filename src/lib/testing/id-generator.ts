@@ -61,7 +61,7 @@ export const testIds = {
   vendor: () => generateTestId('vndr'),
   tenant: () => generateTestId('tnnt'),
   priceListItem: () => generateTestId('plit'),
-  nonExistent: () => generateTestId('none'),
+  nonExistent: () => generateTestId('none')
 } as const;
 
 /**
@@ -92,6 +92,6 @@ export function createTestIdSet() {
     recipeId: testIds.recipe(),
     recipeItemId: testIds.recipeItem(),
     priceListItemId: testIds.priceListItem(),
-    nonExistentId: testIds.nonExistent(),
+    nonExistentId: testIds.nonExistent()
   };
 }

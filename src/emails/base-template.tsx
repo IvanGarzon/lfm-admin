@@ -6,7 +6,7 @@ import { styles as emailStyles } from './styles';
 
 export function BaseTemplateEmail({
   children,
-  previewText,
+  previewText
 }: {
   children: React.ReactNode;
   previewText: string;
@@ -35,11 +35,11 @@ export function BaseTemplateEmail({
             background: 'transparent !important',
             padding: '30px',
             maxWidth: '600px',
-            margin: '0 auto',
+            margin: '0 auto'
           }}
         ></Container>
         <Container style={{ ...container }}>
-          <Img src={logoUrl} width="150" height="150" alt="Logo" style={{ ...logo }} />
+          <Img src={logoUrl} width='150' height='150' alt='Logo' style={{ ...logo }} />
           {children}
         </Container>
         {/* <Container>

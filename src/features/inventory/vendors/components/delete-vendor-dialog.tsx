@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface DeleteVendorDialogProps {
@@ -26,7 +26,7 @@ export function DeleteVendorDialog({
   onConfirm,
   vendorCode,
   vendorName,
-  isPending,
+  isPending
 }: DeleteVendorDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -35,7 +35,7 @@ export function DeleteVendorDialog({
           <AlertDialogTitle>Delete Vendor</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{' '}
-            <span className="font-semibold">
+            <span className='font-semibold'>
               {vendorCode} - {vendorName || 'this vendor'}
             </span>
             ? This action cannot be undone.

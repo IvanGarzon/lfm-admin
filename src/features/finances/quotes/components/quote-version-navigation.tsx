@@ -18,7 +18,7 @@ export function QuoteVersionNavigation({
   versions,
   currentVersionIndex,
   hasUnsavedChanges,
-  onNavigateToVersion,
+  onNavigateToVersion
 }: QuoteVersionNavigationProps) {
   const hasPreviousVersion = currentVersionIndex > 0;
   const hasNextVersion = currentVersionIndex >= 0 && currentVersionIndex < versions.length - 1;
@@ -30,29 +30,29 @@ export function QuoteVersionNavigation({
   }
 
   return (
-    <Box className="flex items-center gap-1 ml-2">
+    <Box className='flex items-center gap-1 ml-2'>
       <Button
-        variant="outline"
-        size="icon"
-        className="h-6 w-6"
+        variant='outline'
+        size='icon'
+        className='h-6 w-6'
         onClick={() => previousVersionId && onNavigateToVersion(previousVersionId)}
         disabled={!hasPreviousVersion || hasUnsavedChanges}
-        aria-label="Previous version"
+        aria-label='Previous version'
       >
-        <ChevronLeft className="h-3 w-3" aria-hidden="true" />
+        <ChevronLeft className='h-3 w-3' aria-hidden='true' />
       </Button>
-      <span className="text-xs text-muted-foreground px-1">
+      <span className='text-xs text-muted-foreground px-1'>
         {currentVersionIndex + 1} / {versions.length}
       </span>
       <Button
-        variant="outline"
-        size="icon"
-        className="h-6 w-6"
+        variant='outline'
+        size='icon'
+        className='h-6 w-6'
         onClick={() => nextVersionId && onNavigateToVersion(nextVersionId)}
         disabled={!hasNextVersion || hasUnsavedChanges}
-        aria-label="Next version"
+        aria-label='Next version'
       >
-        <ChevronRight className="h-3 w-3" aria-hidden="true" />
+        <ChevronRight className='h-3 w-3' aria-hidden='true' />
       </Button>
     </Box>
   );

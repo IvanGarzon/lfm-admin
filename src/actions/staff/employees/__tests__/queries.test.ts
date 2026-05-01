@@ -5,23 +5,23 @@ import { testIds, mockSessions, createEmployeeListItem } from '@/lib/testing';
 const { mockEmployeeRepo, mockAuth } = vi.hoisted(() => ({
   mockEmployeeRepo: {
     searchEmployees: vi.fn(),
-    findEmployeeById: vi.fn(),
+    findEmployeeById: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/employee-repository', () => ({
   EmployeeRepository: vi.fn().mockImplementation(function () {
     return mockEmployeeRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 const TEST_EMPLOYEE_ID = testIds.employee();
@@ -39,7 +39,7 @@ describe('Employee Queries', () => {
     it('returns paginated employees when authorised', async () => {
       const mockResult = {
         items: [createEmployeeListItem({ id: 'e1' }), createEmployeeListItem({ id: 'e2' })],
-        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 },
+        pagination: { page: 1, perPage: 20, totalItems: 2, totalPages: 1 }
       };
       mockEmployeeRepo.searchEmployees.mockResolvedValue(mockResult);
 
@@ -51,7 +51,7 @@ describe('Employee Queries', () => {
       }
       expect(mockEmployeeRepo.searchEmployees).toHaveBeenCalledWith(
         expect.objectContaining({ page: 1, perPage: 20 }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -84,7 +84,7 @@ describe('Employee Queries', () => {
       }
       expect(mockEmployeeRepo.findEmployeeById).toHaveBeenCalledWith(
         TEST_EMPLOYEE_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

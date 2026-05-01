@@ -24,12 +24,12 @@ export const sendEmailFunction = inngest.createFunction(
     name: 'Send Email',
     retries: 3,
     concurrency: {
-      limit: 10,
+      limit: 10
     },
     timeouts: {
-      finish: '5m',
+      finish: '5m'
     },
-    triggers: [{ event: 'email/send' }, { event: 'send-email/manual' }],
+    triggers: [{ event: 'email/send' }, { event: 'send-email/manual' }]
   },
   async ({ event, step }) => {
     const { auditId, email } = event.data as { auditId: string; email: QueueEmailPayload };
@@ -41,8 +41,8 @@ export const sendEmailFunction = inngest.createFunction(
         emailType: email.emailType,
         entityType: email.entityType,
         entityId: email.entityId,
-        recipient: email.recipient,
-      },
+        recipient: email.recipient
+      }
     });
 
     // Idempotency check: Skip if email was already sent
@@ -55,8 +55,8 @@ export const sendEmailFunction = inngest.createFunction(
         context: 'inngest-send-email',
         metadata: {
           auditId,
-          sentAt: existingAudit.sentAt,
-        },
+          sentAt: existingAudit.sentAt
+        }
       });
       return { success: true, skipped: true, reason: 'already_sent' };
     }
@@ -93,8 +93,8 @@ export const sendEmailFunction = inngest.createFunction(
         metadata: {
           auditId,
           emailType: email.emailType,
-          emailId: result.emailId,
-        },
+          emailId: result.emailId
+        }
       });
 
       return { success: true, emailId: result.emailId };
@@ -102,7 +102,7 @@ export const sendEmailFunction = inngest.createFunction(
       await step.run('update-status-failed', async () => {
         await emailAuditRepo.markAsFailed(
           auditId,
-          error instanceof Error ? error.message : 'Unknown error',
+          error instanceof Error ? error.message : 'Unknown error'
         );
       });
 
@@ -110,13 +110,13 @@ export const sendEmailFunction = inngest.createFunction(
         context: 'inngest-send-email',
         metadata: {
           auditId,
-          emailType: email.emailType,
-        },
+          emailType: email.emailType
+        }
       });
 
       throw error;
     }
-  },
+  }
 );
 
 type InvoiceEmailType =
@@ -135,7 +135,7 @@ const invoiceEmailTypes: readonly InvoiceEmailType[] = [
   'invoice.pending',
   'invoice.reminder',
   'invoice.receipt',
-  'invoice.overdue',
+  'invoice.overdue'
 ];
 
 const quoteEmailTypes: readonly QuoteEmailType[] = [
@@ -143,7 +143,7 @@ const quoteEmailTypes: readonly QuoteEmailType[] = [
   'quote.reminder',
   'quote.accepted',
   'quote.rejected',
-  'quote.expired',
+  'quote.expired'
 ];
 
 function isInvoiceEmailType(type: string): type is InvoiceEmailType {
@@ -160,13 +160,13 @@ function isQuoteEmailType(type: string): type is QuoteEmailType {
 async function processInvoiceEmailHandler(
   entityId: string,
   emailType: InvoiceEmailType,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ emailId?: string }> {
   const typeMapping: Record<InvoiceEmailType, 'pending_notification' | 'receipt' | 'reminder'> = {
     'invoice.pending': 'pending_notification',
     'invoice.receipt': 'receipt',
     'invoice.reminder': 'reminder',
-    'invoice.overdue': 'reminder',
+    'invoice.overdue': 'reminder'
   };
 
   return await processInvoiceEmail(entityId, typeMapping[emailType], tenantId);
@@ -178,7 +178,7 @@ async function processInvoiceEmailHandler(
 async function processQuoteEmailHandler(
   entityId: string,
   emailType: QuoteEmailType,
-  tenantId: string,
+  tenantId: string
 ): Promise<{ emailId?: string }> {
   const typeMapping: Record<
     QuoteEmailType,
@@ -188,7 +188,7 @@ async function processQuoteEmailHandler(
     'quote.reminder': 'reminder',
     'quote.accepted': 'accepted',
     'quote.rejected': 'rejected',
-    'quote.expired': 'expired',
+    'quote.expired': 'expired'
   };
 
   return await processQuoteEmail(entityId, typeMapping[emailType], tenantId);

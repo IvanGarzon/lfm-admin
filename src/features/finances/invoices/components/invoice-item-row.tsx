@@ -15,7 +15,7 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupButton,
+  InputGroupButton
 } from '@/components/ui/input-group';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { ProductSearchDialog } from '@/components/shared/product-search-dialog';
@@ -41,7 +41,7 @@ export function InvoiceItemRow({
   isLoadingProducts,
   canRemove,
   onRemove,
-  isLocked,
+  isLocked
 }: InvoiceItemRowProps) {
   const prefersReducedMotion = useReducedMotion();
   const y = useMotionValue(0);
@@ -65,12 +65,12 @@ export function InvoiceItemRow({
         ...current,
         productId,
         description: product.name ?? '',
-        unitPrice: Number(product.price),
+        unitPrice: Number(product.price)
       },
       {
         shouldValidate: true,
-        shouldDirty: true,
-      },
+        shouldDirty: true
+      }
     );
 
     setProductSearchOpen(false);
@@ -83,19 +83,19 @@ export function InvoiceItemRow({
         ...form.getValues(`items.${index}`),
         productId: null,
         description: '',
-        unitPrice: 0,
+        unitPrice: 0
       },
       {
         shouldDirty: true,
-        shouldValidate: true,
-      },
+        shouldValidate: true
+      }
     );
   };
 
   // Single subscription for all watched item values
   const [selectedProductId, watchedQuantity, watchedUnitPrice] = useWatch({
     control: form.control,
-    name: [`items.${index}.productId`, `items.${index}.quantity`, `items.${index}.unitPrice`],
+    name: [`items.${index}.productId`, `items.${index}.quantity`, `items.${index}.unitPrice`]
   });
   const quantity = watchedQuantity || 0;
   const unitPrice = watchedUnitPrice || 0;
@@ -108,76 +108,76 @@ export function InvoiceItemRow({
 
   return (
     <Reorder.Item
-      as="div"
+      as='div'
       value={field}
       dragListener={false}
       dragControls={dragControls}
       style={{ y }}
-      layout="position"
+      layout='position'
       transition={
         prefersReducedMotion
           ? { duration: 0 }
           : { type: 'spring', stiffness: 500, damping: 50, mass: 1 }
       }
-      className="border-b border-border last:border-b-0 relative"
+      className='border-b border-border last:border-b-0 relative'
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}
     >
       <Box
         className={cn(
           'flex items-center gap-2 px-4 py-3 transition-colors',
-          isDragging ? 'bg-muted shadow-lg cursor-grabbing' : 'hover:bg-muted/50',
+          isDragging ? 'bg-muted shadow-lg cursor-grabbing' : 'hover:bg-muted/50'
         )}
       >
         <Box
-          className="w-4 shrink-0 flex items-center justify-center"
+          className='w-4 shrink-0 flex items-center justify-center'
           onPointerDown={(e) => dragControls.start(e)}
         >
           <GripVertical
-            aria-hidden="true"
-            className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing"
+            aria-hidden='true'
+            className='h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing'
           />
         </Box>
 
         {/* Item Description with Product Selector */}
-        <Box className="flex-1 min-w-0">
+        <Box className='flex-1 min-w-0'>
           <FormField
             control={form.control}
             name={`items.${index}.description`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <InputGroup
                     className={cn(
-                      descriptionError && 'border-destructive focus-within:ring-destructive/20',
+                      descriptionError && 'border-destructive focus-within:ring-destructive/20'
                     )}
                   >
                     <InputGroupInput
                       {...field}
-                      placeholder="Enter item name"
+                      placeholder='Enter item name'
                       disabled={!!selectedProductId || isLocked}
                     />
-                    <InputGroupAddon align="inline-end">
+                    <InputGroupAddon align='inline-end'>
                       {selectedProductId ? (
                         <InputGroupButton
-                          type="button"
+                          type='button'
                           onClick={handleClearProduct}
-                          aria-label="Clear product"
-                          title="Clear product selection"
-                          size="icon-xs"
-                          className="cursor-pointer hover:text-destructive"
+                          aria-label='Clear product'
+                          title='Clear product selection'
+                          size='icon-xs'
+                          className='cursor-pointer hover:text-destructive'
                           disabled={isLocked}
                         >
                           <X />
                         </InputGroupButton>
                       ) : products && products.length > 0 ? (
                         <InputGroupButton
-                          type="button"
+                          type='button'
                           onClick={() => setProductSearchOpen(true)}
-                          aria-label="Browse products"
-                          title="Browse products"
-                          size="icon-xs"
-                          className="cursor-pointer hover:text-primary"
+                          aria-label='Browse products'
+                          title='Browse products'
+                          size='icon-xs'
+                          className='cursor-pointer hover:text-primary'
                           disabled={isLocked}
                         >
                           <Package />
@@ -192,22 +192,22 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Quantity */}
-        <Box className="w-18 shrink-0">
+        <Box className='w-18 shrink-0'>
           <FormField
             control={form.control}
             name={`items.${index}.quantity`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <Input
                     {...field}
-                    type="number"
-                    step="1"
-                    min="1"
+                    type='number'
+                    step='1'
+                    min='1'
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                     className={cn(
                       'text-left border-border h-9 py-0',
-                      quantityError && 'border-destructive focus:ring-destructive/20',
+                      quantityError && 'border-destructive focus:ring-destructive/20'
                     )}
                     disabled={isLocked}
                   />
@@ -218,36 +218,36 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Unit Price */}
-        <Box className="w-30 shrink-0">
+        <Box className='w-30 shrink-0'>
           <FormField
             control={form.control}
             name={`items.${index}.unitPrice`}
             render={({ field }) => (
-              <FormItem className="space-y-0 mb-0">
+              <FormItem className='space-y-0 mb-0'>
                 <FormControl>
                   <InputGroup
                     className={cn(
-                      unitPriceError && 'border-destructive focus-within:ring-destructive/20',
+                      unitPriceError && 'border-destructive focus-within:ring-destructive/20'
                     )}
                   >
                     <InputGroupInput
                       {...field}
-                      type="number"
-                      step="0.5"
+                      type='number'
+                      step='0.5'
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                      min="0"
-                      className="text-left"
+                      min='0'
+                      className='text-left'
                       disabled={(!!selectedProductId && isPriceLocked) || isLocked}
                     />
                     {selectedProductId ? (
-                      <InputGroupAddon align="inline-end">
+                      <InputGroupAddon align='inline-end'>
                         <InputGroupButton
-                          type="button"
+                          type='button'
                           onClick={() => setIsPriceLocked(!isPriceLocked)}
                           aria-label={isPriceLocked ? 'Unlock price' : 'Lock price'}
                           title={isPriceLocked ? 'Unlock to edit price' : 'Lock price'}
-                          size="icon-xs"
-                          className="cursor-pointer"
+                          size='icon-xs'
+                          className='cursor-pointer'
                           disabled={isLocked}
                         >
                           {isPriceLocked ? <Lock /> : <Unlock />}
@@ -262,27 +262,27 @@ export function InvoiceItemRow({
         </Box>
 
         {/* Total */}
-        <Box className="w-30 shrink-0">
-          <Box className="h-9 px-3 bg-muted rounded border border-border font-semibold text-sm text-muted-foreground w-full flex items-center">
+        <Box className='w-30 shrink-0'>
+          <Box className='h-9 px-3 bg-muted rounded border border-border font-semibold text-sm text-muted-foreground w-full flex items-center'>
             {formatCurrency({
               number: total,
-              maxFractionDigits: 0,
+              maxFractionDigits: 0
             })}
           </Box>
         </Box>
 
         {/* Delete Button */}
-        <Box className="w-4 shrink-0 flex items-center justify-center">
+        <Box className='w-4 shrink-0 flex items-center justify-center'>
           {canRemove ? (
             <Button
-              type="button"
-              variant="ghost"
-              aria-label="Remove item"
+              type='button'
+              variant='ghost'
+              aria-label='Remove item'
               onClick={onRemove}
-              className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer"
+              className='h-9 w-9 p-0 text-muted-foreground hover:text-destructive hover:bg-transparent cursor-pointer'
               disabled={isLocked}
             >
-              <Trash2 aria-hidden="true" className="h-4 w-4" />
+              <Trash2 aria-hidden='true' className='h-4 w-4' />
             </Button>
           ) : null}
         </Box>

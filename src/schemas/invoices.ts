@@ -10,7 +10,7 @@ export const InvoiceItemSchema = z.object({
     .trim()
     .min(1, { error: 'Description is required' })
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Description must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     }),
   quantity: z
     .number()
@@ -21,7 +21,7 @@ export const InvoiceItemSchema = z.object({
     .number()
     .nonnegative({ error: 'Unit price must be non-negative' })
     .max(1000000, { error: 'Unit price must be less than 1,000,000' }),
-  productId: z.cuid().nullable(),
+  productId: z.cuid().nullable()
 });
 
 const InvoiceSchema = z
@@ -34,10 +34,10 @@ const InvoiceSchema = z
     gst: z
       .number()
       .min(VALIDATION_LIMITS.GST_MIN, {
-        error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`,
+        error: `GST percentage must be at least ${VALIDATION_LIMITS.GST_MIN}%`
       })
       .max(VALIDATION_LIMITS.GST_MAX, {
-        error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`,
+        error: `GST percentage cannot exceed ${VALIDATION_LIMITS.GST_MAX}%`
       }),
     discount: z
       .number()
@@ -46,22 +46,22 @@ const InvoiceSchema = z
     notes: z
       .string()
       .max(VALIDATION_LIMITS.NOTES_MAX, {
-        error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`,
+        error: `Notes must be less than ${VALIDATION_LIMITS.NOTES_MAX} characters`
       })
       .optional(),
     items: z
       .array(InvoiceItemSchema)
       .min(1, { error: 'At least one item is required' })
-      .max(100, { error: 'Maximum 100 items allowed' }),
+      .max(100, { error: 'Maximum 100 items allowed' })
   })
   .refine((data) => data.dueDate >= data.issuedDate, {
     error: 'Due date must be on or after issued date',
-    path: ['dueDate'],
+    path: ['dueDate']
   });
 
 export const CreateInvoiceSchema = InvoiceSchema;
 export const UpdateInvoiceSchema = InvoiceSchema.safeExtend({
-  id: z.cuid({ error: 'Invalid invoice ID' }),
+  id: z.cuid({ error: 'Invalid invoice ID' })
 });
 
 /**
@@ -79,9 +79,9 @@ export const RecordPaymentSchema = z.object({
   notes: z
     .string()
     .max(VALIDATION_LIMITS.DESCRIPTION_MAX, {
-      error: `Notes must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`,
+      error: `Notes must be less than ${VALIDATION_LIMITS.DESCRIPTION_MAX} characters`
     })
-    .optional(),
+    .optional()
 });
 
 /**
@@ -89,7 +89,7 @@ export const RecordPaymentSchema = z.object({
  */
 export const MarkInvoiceAsPendingSchema = z.object({
   id: z.cuid({ error: 'Invoice ID is required' }),
-  sendEmail: z.boolean().optional(),
+  sendEmail: z.boolean().optional()
 });
 
 /**
@@ -102,8 +102,8 @@ export const CancelInvoiceSchema = z.object({
     .trim()
     .min(1, { error: 'Cancellation reason is required' })
     .max(VALIDATION_LIMITS.REASON_MAX, {
-      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`,
-    }),
+      error: `Reason must be less than ${VALIDATION_LIMITS.REASON_MAX} characters`
+    })
 });
 
 /**
@@ -113,11 +113,11 @@ export const BulkUpdateInvoiceStatusSchema = z.object({
   ids: z
     .array(z.cuid({ error: 'Invalid invoice ID' }))
     .min(1, { error: 'At least one invoice ID is required' }),
-  status: InvoiceStatusSchema,
+  status: InvoiceStatusSchema
 });
 
 export const InvoiceFiltersSchema = baseFiltersSchema.extend({
-  status: createEnumArrayFilter(InvoiceStatusSchema),
+  status: createEnumArrayFilter(InvoiceStatusSchema)
 });
 
 export const SendInvoiceEmailSchema = z.object({
@@ -129,9 +129,9 @@ export const SendInvoiceEmailSchema = z.object({
     amount: z.number().positive({ error: 'Amount must be positive' }),
     currency: z.string({ error: 'Currency is required' }),
     dueDate: z.coerce.date({ error: 'Due date is required' }),
-    issuedDate: z.coerce.date({ error: 'Issued date is required' }),
+    issuedDate: z.coerce.date({ error: 'Issued date is required' })
   }),
-  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional(),
+  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional()
 });
 
 export const SendReminderEmailSchema = z.object({
@@ -145,9 +145,9 @@ export const SendReminderEmailSchema = z.object({
     dueDate: z.coerce.date({ error: 'Due date is required' }),
     daysOverdue: z.number().int().positive({ error: 'Days overdue must be positive' }),
     amountPaid: z.number().nonnegative().optional(),
-    amountDue: z.number().nonnegative().optional(),
+    amountDue: z.number().nonnegative().optional()
   }),
-  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional(),
+  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional()
 });
 
 export const SendReceiptEmailSchema = z.object({
@@ -160,9 +160,9 @@ export const SendReceiptEmailSchema = z.object({
     amount: z.number().positive({ error: 'Amount must be positive' }),
     currency: z.string({ error: 'Currency is required' }),
     paidDate: z.coerce.date({ error: 'Paid date is required' }),
-    paymentMethod: z.string({ error: 'Payment method is required' }),
+    paymentMethod: z.string({ error: 'Payment method is required' })
   }),
-  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional(),
+  pdfUrl: z.string().trim().max(VALIDATION_LIMITS.URL_MAX).pipe(z.url()).optional()
 });
 
 export type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>;

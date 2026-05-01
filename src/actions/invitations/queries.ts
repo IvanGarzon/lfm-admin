@@ -14,7 +14,7 @@ const userRepo = new UserRepository(prisma);
 const tenantRepo = new TenantRepository(prisma);
 
 export async function getInvitationByToken(
-  token: string,
+  token: string
 ): Promise<ActionResult<InvitationWithTenant>> {
   try {
     const invitation = await invitationRepo.findByToken(token);
@@ -43,7 +43,7 @@ export async function getInvitationByToken(
 
 export async function acceptInvitation(
   token: string,
-  data: { firstName: string; lastName: string; password: string },
+  data: { firstName: string; lastName: string; password: string }
 ): Promise<ActionResult<{ tenantSlug: string }>> {
   try {
     const invitation = await invitationRepo.findByToken(token);
@@ -70,7 +70,7 @@ export async function acceptInvitation(
       email: invitation.email,
       role: invitation.role,
       tenantId: invitation.tenantId,
-      password: hashedPassword,
+      password: hashedPassword
     });
 
     await invitationRepo.accept(token);

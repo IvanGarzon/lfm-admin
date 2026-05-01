@@ -10,7 +10,7 @@ import { BulkActionsBar } from '@/features/inventory/products/components/bulk-ac
 import { createProductColumns } from '@/features/inventory/products/components/product-columns';
 import {
   useBulkDeleteProducts,
-  useBulkUpdateProductStatus,
+  useBulkUpdateProductStatus
 } from '@/features/inventory/products/hooks/use-products-queries';
 import { useProductActions } from '@/features/inventory/products/context/product-action-context';
 import type { ProductPagination, ProductListItem } from '@/features/inventory/products/types';
@@ -28,9 +28,9 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
   const columns = useMemo(
     () =>
       createProductColumns({
-        onDelete: (id: string, name: string) => openDelete(id, name),
+        onDelete: (id: string, name: string) => openDelete(id, name)
       }),
-    [openDelete],
+    [openDelete]
   );
 
   const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;
@@ -40,7 +40,7 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
     columns,
     pageCount: Math.ceil(initialData.pagination.totalItems / perPage),
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   const bulkDelete = useBulkDeleteProducts();
@@ -50,8 +50,8 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
     bulkDelete.mutate(
       rows.map((r) => r.id),
       {
-        onSuccess: () => table.toggleAllPageRowsSelected(false),
-      },
+        onSuccess: () => table.toggleAllPageRowsSelected(false)
+      }
     );
   };
 
@@ -59,13 +59,13 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
     bulkUpdateStatus.mutate(
       { ids: rows.map((r) => r.id), status },
       {
-        onSuccess: () => table.toggleAllPageRowsSelected(false),
-      },
+        onSuccess: () => table.toggleAllPageRowsSelected(false)
+      }
     );
   };
 
   return (
-    <Box className="space-y-4">
+    <Box className='space-y-4'>
       <BulkActionsBar
         table={table}
         onUpdateStatus={handleBulkUpdateStatus}

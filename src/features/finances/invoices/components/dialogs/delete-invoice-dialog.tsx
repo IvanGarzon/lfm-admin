@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface DeleteInvoiceDialogProps {
@@ -24,7 +24,7 @@ export function DeleteInvoiceDialog({
   onOpenChange,
   onConfirm,
   invoiceNumber,
-  isPending = false,
+  isPending = false
 }: DeleteInvoiceDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

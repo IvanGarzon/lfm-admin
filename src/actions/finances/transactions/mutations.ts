@@ -11,7 +11,7 @@ import {
   CreateTransactionSchema,
   UpdateTransactionSchema,
   type CreateTransactionInput,
-  type UpdateTransactionInput,
+  type UpdateTransactionInput
 } from '@/schemas/transactions';
 import type { TransactionListItem } from '@/features/finances/transactions/types';
 import { ALLOWED_MIME_TYPES } from '@/lib/file-constants';
@@ -34,8 +34,8 @@ export const createTransaction = withTenantPermission<CreateTransactionInput, Tr
         context: 'createTransaction',
         metadata: {
           type: transaction.type,
-          amount: transaction.amount.toString(),
-        },
+          amount: transaction.amount.toString()
+        }
       });
 
       revalidatePath('/finances/transactions');
@@ -44,7 +44,7 @@ export const createTransaction = withTenantPermission<CreateTransactionInput, Tr
     } catch (error) {
       return handleActionError(error, 'Failed to create transaction');
     }
-  },
+  }
 );
 
 /**
@@ -65,7 +65,7 @@ export const updateTransaction = withTenantPermission<UpdateTransactionInput, { 
       const transaction = await transactionRepo.updateTransaction(
         validatedData.id,
         ctx.tenantId,
-        validatedData,
+        validatedData
       );
       if (!transaction) {
         return { success: false, error: 'Failed to update transaction' };
@@ -73,7 +73,7 @@ export const updateTransaction = withTenantPermission<UpdateTransactionInput, { 
 
       logger.info('Transaction updated', {
         context: 'updateTransaction',
-        metadata: { transactionId: transaction.id },
+        metadata: { transactionId: transaction.id }
       });
 
       revalidatePath('/finances/transactions');
@@ -83,7 +83,7 @@ export const updateTransaction = withTenantPermission<UpdateTransactionInput, { 
     } catch (error) {
       return handleActionError(error, 'Failed to update transaction');
     }
-  },
+  }
 );
 
 /**
@@ -104,7 +104,7 @@ export const deleteTransaction = withTenantPermission<string, { success: true }>
 
       logger.info('Transaction deleted', {
         context: 'deleteTransaction',
-        metadata: { transactionId: id },
+        metadata: { transactionId: id }
       });
 
       revalidatePath('/finances/transactions');
@@ -113,7 +113,7 @@ export const deleteTransaction = withTenantPermission<string, { success: true }>
     } catch (error) {
       return handleActionError(error, 'Failed to delete transaction');
     }
-  },
+  }
 );
 
 /**
@@ -137,7 +137,7 @@ export const createTransactionCategory = withTenantPermission<
 
     logger.info('Transaction category created', {
       context: 'createTransactionCategory',
-      metadata: { categoryName: category.name },
+      metadata: { categoryName: category.name }
     });
 
     revalidatePath('/finances/transactions');
@@ -183,7 +183,7 @@ export const uploadTransactionAttachment = withTenantPermission<
       mimeType: file.type,
       resourceType: 'transactions',
       resourceId: transactionId,
-      subPath: 'attachments',
+      subPath: 'attachments'
     });
 
     const attachment = await transactionRepo.createAttachment({
@@ -193,12 +193,12 @@ export const uploadTransactionAttachment = withTenantPermission<
       mimeType: file.type,
       s3Key,
       s3Url,
-      uploadedBy: ctx.userId,
+      uploadedBy: ctx.userId
     });
 
     logger.info('Transaction attachment uploaded', {
       context: 'uploadTransactionAttachment',
-      metadata: { transactionId, fileName: file.name },
+      metadata: { transactionId, fileName: file.name }
     });
 
     revalidatePath('/finances/transactions');
@@ -230,7 +230,7 @@ export const deleteTransactionAttachment = withTenantPermission<string, { succes
 
       logger.info('Transaction attachment deleted', {
         context: 'deleteTransactionAttachment',
-        metadata: { attachmentId, fileName: attachment.fileName },
+        metadata: { attachmentId, fileName: attachment.fileName }
       });
 
       revalidatePath('/finances/transactions');
@@ -239,5 +239,5 @@ export const deleteTransactionAttachment = withTenantPermission<string, { succes
     } catch (error) {
       return handleActionError(error, 'Failed to delete attachment');
     }
-  },
+  }
 );

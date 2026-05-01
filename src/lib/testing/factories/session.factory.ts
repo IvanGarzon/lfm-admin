@@ -11,7 +11,7 @@ import type {
   DeleteSessionsInput,
   UpdateSessionNameInput,
   DeleteOtherSessionsInput,
-  ExtendSessionInput,
+  ExtendSessionInput
 } from '@/schemas/sessions';
 import type { SessionWithUser } from '@/features/sessions/types';
 
@@ -63,7 +63,7 @@ export function createMockSession(options: CreateSessionOptions = {}): MockSessi
     lastName = role.charAt(0) + role.slice(1).toLowerCase(),
     tenantId = testIds.tenant(),
     tenantSlug = 'test-tenant',
-    sessionToken = `token-${testIds.session()}`,
+    sessionToken = `token-${testIds.session()}`
   } = options;
 
   return {
@@ -76,9 +76,9 @@ export function createMockSession(options: CreateSessionOptions = {}): MockSessi
       lastName,
       role,
       tenantId,
-      tenantSlug,
+      tenantSlug
     },
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   };
 }
 
@@ -102,7 +102,7 @@ export const mockSessions = {
   unauthenticated: () => null,
 
   /** Returns a session with null user to simulate invalid session. */
-  invalidSession: () => ({ user: null }),
+  invalidSession: () => ({ user: null })
 } as const;
 
 // -- Session action input factories ------------------------------------------
@@ -111,11 +111,11 @@ export const mockSessions = {
  * Creates valid input for deleteSession.
  */
 export function createDeleteSessionInput(
-  overrides: Partial<DeleteSessionInput> = {},
+  overrides: Partial<DeleteSessionInput> = {}
 ): DeleteSessionInput {
   return {
     sessionId: testIds.session(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -123,11 +123,11 @@ export function createDeleteSessionInput(
  * Creates valid input for deleteSessions (bulk).
  */
 export function createDeleteSessionsInput(
-  overrides: Partial<DeleteSessionsInput> = {},
+  overrides: Partial<DeleteSessionsInput> = {}
 ): DeleteSessionsInput {
   return {
     sessionIds: [testIds.session()],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -135,12 +135,12 @@ export function createDeleteSessionsInput(
  * Creates valid input for updateSessionName.
  */
 export function createUpdateSessionNameInput(
-  overrides: Partial<UpdateSessionNameInput> = {},
+  overrides: Partial<UpdateSessionNameInput> = {}
 ): UpdateSessionNameInput {
   return {
     sessionId: testIds.session(),
     deviceName: 'MacBook Pro',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -148,11 +148,11 @@ export function createUpdateSessionNameInput(
  * Creates valid input for deleteOtherSessions.
  */
 export function createDeleteOtherSessionsInput(
-  overrides: Partial<DeleteOtherSessionsInput> = {},
+  overrides: Partial<DeleteOtherSessionsInput> = {}
 ): DeleteOtherSessionsInput {
   return {
     currentSessionId: testIds.session(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -160,11 +160,11 @@ export function createDeleteOtherSessionsInput(
  * Creates valid input for extendSession.
  */
 export function createExtendSessionInput(
-  overrides: Partial<ExtendSessionInput> = {},
+  overrides: Partial<ExtendSessionInput> = {}
 ): ExtendSessionInput {
   return {
     sessionId: testIds.session(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -201,6 +201,6 @@ export function createSessionWithUser(overrides: Partial<SessionWithUser> = {}):
     timezone: null,
     user: { firstName: 'Test', lastName: 'User' },
     isCurrent: false,
-    ...overrides,
+    ...overrides
   };
 }

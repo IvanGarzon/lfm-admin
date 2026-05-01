@@ -22,19 +22,19 @@ function QuoteFollowUpContent({ quoteData, pdfUrl }: QuoteFollowUpEmailProps): R
 
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency
   }).format(amount);
 
   const formattedIssuedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(issuedDate));
 
   const formattedValidUntil = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(validUntil));
 
   return (
@@ -127,9 +127,9 @@ QuoteFollowUpEmail.PreviewProps = {
     currency: 'AUD',
     issuedDate: new Date('2025-01-15'),
     validUntil: new Date('2025-02-15'),
-    itemCount: 3,
+    itemCount: 3
   },
-  pdfUrl: 'https://example.com/quote.pdf',
+  pdfUrl: 'https://example.com/quote.pdf'
 } satisfies QuoteFollowUpEmailProps;
 
 export default QuoteFollowUpEmail;

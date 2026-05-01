@@ -23,35 +23,35 @@ export function TenantsList({ initialData }: { initialData: TenantListItem[] }) 
     columns,
     pageCount: 1,
     shallow: true,
-    debounceMs: 300,
+    debounceMs: 300
   });
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
-      <Box className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-        <Box className="min-w-0">
-          <h1 className="text-3xl font-bold tracking-tight">Tenants</h1>
-          <p className="text-muted-foreground text-sm">Manage all tenants on the platform</p>
+    <Box className='space-y-4 min-w-0 w-full'>
+      <Box className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4'>
+        <Box className='min-w-0'>
+          <h1 className='text-3xl font-bold tracking-tight'>Tenants</h1>
+          <p className='text-muted-foreground text-sm'>Manage all tenants on the platform</p>
         </Box>
-        <Button onClick={() => setShowCreate(true)} className="w-full sm:w-auto">
-          <Plus aria-hidden="true" className="h-4 w-4" />
+        <Button onClick={() => setShowCreate(true)} className='w-full sm:w-auto'>
+          <Plus aria-hidden='true' className='h-4 w-4' />
           New Tenant
         </Button>
       </Box>
 
       {initialData.length ? (
-        <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+        <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
           <DataTableToolbar table={table} />
           <DataTable table={table} totalItems={initialData.length} />
         </Card>
       ) : (
         <EmptyState
           icon={Building2}
-          title="No tenants yet"
-          description="Create your first tenant to start onboarding customers to the platform."
+          title='No tenants yet'
+          description='Create your first tenant to start onboarding customers to the platform.'
           action={
             <Button onClick={() => setShowCreate(true)}>
-              <Plus aria-hidden="true" className="h-4 w-4" />
+              <Plus aria-hidden='true' className='h-4 w-4' />
               New Tenant
             </Button>
           }

@@ -5,9 +5,10 @@ import {
   useMutation,
   useQueryClient,
   keepPreviousData,
-  skipToken,
+  skipToken
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { SearchParams } from 'nuqs/server';
 import {
   getTransactions,
   getTransactionById,
@@ -15,18 +16,18 @@ import {
   getTransactionTrend,
   getTransactionCategoryBreakdown,
   getTopTransactionCategories,
-  getTransactionCategories,
+  getTransactionCategories
 } from '@/actions/finances/transactions/queries';
 import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
   uploadTransactionAttachment,
-  deleteTransactionAttachment,
+  deleteTransactionAttachment
 } from '@/actions/finances/transactions/mutations';
 import {
   TransactionFilters,
-  type TransactionListItem,
+  type TransactionListItem
 } from '@/features/finances/transactions/types';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { formatDateNormalizer } from '@/lib/utils';
@@ -52,7 +53,7 @@ export const TRANSACTION_KEYS = {
     startDate?: Date | string | null;
     endDate?: Date | string | null;
   }) => [...TRANSACTION_KEYS.analytics(), 'breakdown', { dateFilter }] as const,
-  topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const,
+  topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const
 };
 
 // -- QUERY HOOKS (Data Fetching) --------------------------------------------
@@ -68,6 +69,18 @@ export const TRANSACTION_KEYS = {
  * - Query automatically refetches when filters change
  * - Cache is invalidated when transactions are created, updated, or deleted
  */
+export function useTransactionList(searchParams: SearchParams) {
+  return useQuery({
+    queryKey: [...TRANSACTION_KEYS.lists(), JSON.stringify(searchParams)],
+    queryFn: async () => {
+      const result = await getTransactions(searchParams);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
+
 export function useTransactions(filters: Partial<TransactionFilters> = {}) {
   return useQuery({
     queryKey: TRANSACTION_KEYS.list(filters),
@@ -87,7 +100,7 @@ export function useTransactions(filters: Partial<TransactionFilters> = {}) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -115,7 +128,7 @@ export function useTransaction(id: string | undefined) {
           return result.data;
         }
       : skipToken,
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -138,7 +151,7 @@ export function useTransactionCategories() {
       }
       return result.data ?? [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 }
 
@@ -157,12 +170,12 @@ export function useTransactionCategories() {
  */
 export function useTransactionStatistics(
   dateFilter?: { startDate?: Date; endDate?: Date },
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean }
 ) {
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null
       }
     : undefined;
 
@@ -178,7 +191,7 @@ export function useTransactionStatistics(
     },
     staleTime: 60 * 1000,
     placeholderData: keepPreviousData,
-    enabled: options?.enabled,
+    enabled: options?.enabled
   });
 }
 
@@ -201,7 +214,7 @@ export function useTransactionTrend(limit: number = 12) {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 }
 
@@ -220,7 +233,7 @@ export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: 
   const normalizedDateFilter = dateFilter
     ? {
         startDate: dateFilter.startDate ? formatDateNormalizer(dateFilter.startDate) : null,
-        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null,
+        endDate: dateFilter.endDate ? formatDateNormalizer(dateFilter.endDate) : null
       }
     : undefined;
 
@@ -234,7 +247,7 @@ export function useCategoryBreakdown(dateFilter?: { startDate?: Date; endDate?: 
       return result.data;
     },
     staleTime: 5 * 60 * 1000,
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData
   });
 }
 
@@ -257,7 +270,7 @@ export function useTopCategories(limit: number = 5) {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 }
 
@@ -294,12 +307,12 @@ export function useCreateTransaction() {
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: TRANSACTION_KEYS.statistics() });
       toast.success(
-        `Transaction ${data?.referenceNumber != null ? data?.referenceNumber : ''} created successfully`,
+        `Transaction ${data?.referenceNumber != null ? data?.referenceNumber : ''} created successfully`
       );
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create transaction');
-    },
+    }
   });
 }
 
@@ -343,9 +356,9 @@ export function useUpdateTransaction() {
 
           return {
             ...old,
-            ...newData,
+            ...newData
           };
-        },
+        }
       );
 
       return { previousTransaction };
@@ -363,7 +376,7 @@ export function useUpdateTransaction() {
     },
     onSuccess: () => {
       toast.success('Transaction updated successfully');
-    },
+    }
   });
 }
 
@@ -420,7 +433,7 @@ export function useDeleteTransaction() {
     },
     onSuccess: () => {
       toast.success('Transaction deleted successfully');
-    },
+    }
   });
 }
 
@@ -458,7 +471,7 @@ export function useUploadTransactionAttachment() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to upload attachment');
-    },
+    }
   });
 }
 
@@ -482,7 +495,7 @@ export function useDeleteTransactionAttachment() {
   return useMutation({
     mutationFn: async ({
       attachmentId,
-      transactionId,
+      transactionId
     }: {
       attachmentId: string;
       transactionId: string;
@@ -498,7 +511,7 @@ export function useDeleteTransactionAttachment() {
       await queryClient.cancelQueries({ queryKey: TRANSACTION_KEYS.lists() });
 
       const previousTransaction = queryClient.getQueryData(
-        TRANSACTION_KEYS.detail(data.transactionId),
+        TRANSACTION_KEYS.detail(data.transactionId)
       );
 
       queryClient.setQueryData(
@@ -507,9 +520,9 @@ export function useDeleteTransactionAttachment() {
           if (!old) return old;
           return {
             ...old,
-            attachments: old.attachments?.filter((att) => att.id !== data.attachmentId) ?? [],
+            attachments: old.attachments?.filter((att) => att.id !== data.attachmentId) ?? []
           };
-        },
+        }
       );
 
       return { previousTransaction };
@@ -518,7 +531,7 @@ export function useDeleteTransactionAttachment() {
       if (context?.previousTransaction) {
         queryClient.setQueryData(
           TRANSACTION_KEYS.detail(data.transactionId),
-          context.previousTransaction,
+          context.previousTransaction
         );
       }
       toast.error(error.message || 'Failed to delete attachment');
@@ -529,7 +542,7 @@ export function useDeleteTransactionAttachment() {
     },
     onSuccess: () => {
       toast.success('Attachment deleted successfully');
-    },
+    }
   });
 }
 
@@ -559,7 +572,7 @@ export function usePrefetchTransaction() {
 
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }

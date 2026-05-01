@@ -14,7 +14,7 @@ import {
   type CreateVendorInput,
   type UpdateVendorInput,
   type UpdateVendorStatusInput,
-  type DeleteVendorInput,
+  type DeleteVendorInput
 } from '@/schemas/vendors';
 
 const vendorRepo = new VendorRepository(prisma);
@@ -39,15 +39,15 @@ export const createVendor = withTenantPermission<
       metadata: {
         vendorId: vendor.id,
         vendorCode: vendor.vendorCode,
-        userId: ctx.userId,
-      },
+        userId: ctx.userId
+      }
     });
 
     revalidatePath('/inventory/vendors');
 
     return {
       success: true,
-      data: { id: vendor.id, vendorCode: vendor.vendorCode },
+      data: { id: vendor.id, vendorCode: vendor.vendorCode }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create vendor');
@@ -76,8 +76,8 @@ export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string
         metadata: {
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
-          userId: ctx.userId,
-        },
+          userId: ctx.userId
+        }
       });
 
       revalidatePath('/inventory/vendors');
@@ -87,7 +87,7 @@ export const updateVendor = withTenantPermission<UpdateVendorInput, { id: string
     } catch (error) {
       return handleActionError(error, 'Failed to update vendor');
     }
-  },
+  }
 );
 
 /**
@@ -104,7 +104,7 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
       const vendor = await vendorRepo.updateVendorStatus(
         validatedData.id,
         ctx.tenantId,
-        validatedData.status,
+        validatedData.status
       );
 
       logger.info(`Vendor status updated: ${vendor.vendorCode} -> ${vendor.status}`, {
@@ -113,8 +113,8 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
           status: vendor.status,
-          userId: ctx.userId,
-        },
+          userId: ctx.userId
+        }
       });
 
       revalidatePath('/inventory/vendors');
@@ -124,7 +124,7 @@ export const updateVendorStatus = withTenantPermission<UpdateVendorStatusInput, 
     } catch (error) {
       return handleActionError(error, 'Failed to update vendor status');
     }
-  },
+  }
 );
 
 /**
@@ -146,8 +146,8 @@ export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string
         metadata: {
           vendorId: vendor.id,
           vendorCode: vendor.vendorCode,
-          userId: ctx.userId,
-        },
+          userId: ctx.userId
+        }
       });
 
       revalidatePath('/inventory/vendors');
@@ -156,5 +156,5 @@ export const deleteVendor = withTenantPermission<DeleteVendorInput, { id: string
     } catch (error) {
       return handleActionError(error, 'Failed to delete vendor');
     }
-  },
+  }
 );

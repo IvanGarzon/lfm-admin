@@ -11,7 +11,7 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ import {
   useUser,
   useUpdateUser,
   useUpdateUserRole,
-  useUploadUserAvatar,
+  useUploadUserAvatar
 } from '@/features/users/hooks/use-user-queries';
 import { UserForm } from './user-form';
 import { UserPermissionsForm } from './user-permissions-form';
@@ -40,7 +40,7 @@ export function UserDrawer({
   id,
   open,
   onClose,
-  tab = 'details',
+  tab = 'details'
 }: {
   id?: string;
   open?: boolean;
@@ -81,7 +81,7 @@ export function UserDrawer({
         window.history.replaceState(null, '', queryString ? `${target}?${queryString}` : target);
       }
     },
-    [id, queryString],
+    [id, queryString]
   );
 
   const handleOpenChange = useCallback(
@@ -98,16 +98,16 @@ export function UserDrawer({
         }
       }
     },
-    [id, onClose, router, queryString],
+    [id, onClose, router, queryString]
   );
 
   const handleUpdate = useCallback(
     (data: UpdateUserInput) => {
       updateUser.mutate(data, {
-        onSuccess: () => setHasUnsavedChanges(false),
+        onSuccess: () => setHasUnsavedChanges(false)
       });
     },
-    [updateUser],
+    [updateUser]
   );
 
   const handleUpdateRole = useCallback(
@@ -116,15 +116,15 @@ export function UserDrawer({
         onSuccess: () => {
           setIsPermissionsDirty(false);
           onClose?.();
-        },
+        }
       });
     },
-    [updateUserRole, onClose],
+    [updateUserRole, onClose]
   );
 
   return (
     <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
-      <DrawerContent className="overflow-x-hidden pb-0!">
+      <DrawerContent className='overflow-x-hidden pb-0!'>
         <VisuallyHidden>
           <DrawerDescription>
             User profile details, permissions and security settings.
@@ -135,7 +135,7 @@ export function UserDrawer({
             <DrawerHeader>
               <DrawerTitle>User Details</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6">Loading...</Box>
+            <Box className='p-6'>Loading...</Box>
           </>
         ) : null}
 
@@ -144,7 +144,7 @@ export function UserDrawer({
             <DrawerHeader>
               <DrawerTitle>Error</DrawerTitle>
             </DrawerHeader>
-            <Box className="p-6 text-destructive">
+            <Box className='p-6 text-destructive'>
               Could not load user details: {error?.message}
             </Box>
           </>
@@ -152,34 +152,34 @@ export function UserDrawer({
 
         {user && !isLoading && !isError ? (
           <>
-            <Box className="-mx-6 border-b border-border px-6 pb-4">
-              <Box className="flex items-start justify-between gap-x-4">
-                <Box className="mt-1 flex flex-row items-start gap-4 flex-1">
-                  <Box className="relative shrink-0">
+            <Box className='-mx-6 border-b border-border px-6 pb-4'>
+              <Box className='flex items-start justify-between gap-x-4'>
+                <Box className='mt-1 flex flex-row items-start gap-4 flex-1'>
+                  <Box className='relative shrink-0'>
                     <UserAvatar
                       user={{ name: `${user.firstName} ${user.lastName}`, image: user.avatarUrl }}
-                      className="size-16 text-lg"
+                      className='size-16 text-lg'
                     />
                     {isOwnProfile ? (
                       <>
                         <label
-                          htmlFor="avatar-upload"
-                          className="absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-card border border-border shadow-sm hover:bg-muted"
+                          htmlFor='avatar-upload'
+                          className='absolute bottom-0 right-0 flex size-6 cursor-pointer items-center justify-center rounded-full bg-card border border-border shadow-sm hover:bg-muted'
                         >
                           {uploadAvatar.isPending ? (
                             <Loader2
-                              className="size-3 animate-spin text-muted-foreground"
-                              aria-hidden="true"
+                              className='size-3 animate-spin text-muted-foreground'
+                              aria-hidden='true'
                             />
                           ) : (
-                            <Camera className="size-3 text-muted-foreground" aria-hidden="true" />
+                            <Camera className='size-3 text-muted-foreground' aria-hidden='true' />
                           )}
                         </label>
                         <input
-                          id="avatar-upload"
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/webp"
-                          className="sr-only"
+                          id='avatar-upload'
+                          type='file'
+                          accept='image/jpeg,image/jpg,image/png,image/webp'
+                          className='sr-only'
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
@@ -191,28 +191,28 @@ export function UserDrawer({
                       </>
                     ) : null}
                   </Box>
-                  <Box className="flex flex-col gap-1 min-w-0">
-                    <Box className="flex items-center gap-2 flex-wrap">
-                      <DrawerTitle className="text-xl font-semibold tracking-tight">
+                  <Box className='flex flex-col gap-1 min-w-0'>
+                    <Box className='flex items-center gap-2 flex-wrap'>
+                      <DrawerTitle className='text-xl font-semibold tracking-tight'>
                         {user.firstName} {user.lastName}
                       </DrawerTitle>
                       <UserRoleBadge role={user.role} />
                       {hasUnsavedChanges ? (
-                        <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-                          <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                        <span className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20'>
+                          <AlertCircle className='h-3 w-3' aria-hidden='true' />
                           Unsaved changes
                         </span>
                       ) : null}
                     </Box>
                     {user.title ? (
-                      <p className="text-sm text-muted-foreground">{user.title}</p>
+                      <p className='text-sm text-muted-foreground'>{user.title}</p>
                     ) : null}
-                    <Box className="flex items-center gap-3 flex-wrap mt-0.5">
+                    <Box className='flex items-center gap-3 flex-wrap mt-0.5'>
                       <UserStatusBadge status={user.status} />
                       {user.email ? (
-                        <Box className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Mail className="size-3 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{user.email}</span>
+                        <Box className='flex items-center gap-1 text-xs text-muted-foreground'>
+                          <Mail className='size-3 shrink-0' aria-hidden='true' />
+                          <span className='truncate'>{user.email}</span>
                         </Box>
                       ) : null}
                     </Box>
@@ -220,29 +220,29 @@ export function UserDrawer({
                 </Box>
 
                 <Button
-                  variant="ghost"
-                  className="aspect-square p-1 text-muted-foreground hover:bg-muted shrink-0"
+                  variant='ghost'
+                  className='aspect-square p-1 text-muted-foreground hover:bg-muted shrink-0'
                   onClick={() => handleOpenChange(false)}
                 >
-                  <X className="size-5" aria-hidden="true" />
-                  <span className="sr-only">Close</span>
+                  <X className='size-5' aria-hidden='true' />
+                  <span className='sr-only'>Close</span>
                 </Button>
               </Box>
             </Box>
 
-            <DrawerBody className="py-0! -mx-6 h-full overflow-hidden">
+            <DrawerBody className='py-0! -mx-6 h-full overflow-hidden'>
               <Tabs
                 value={activeTab}
                 onValueChange={handleTabChange}
-                className="flex flex-col h-full"
+                className='flex flex-col h-full'
               >
-                <TabsList className="mx-6 mt-4 mb-2 w-fit">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="permissions">Permissions</TabsTrigger>
-                  <TabsTrigger value="security">Security</TabsTrigger>
+                <TabsList className='mx-6 mt-4 mb-2 w-fit'>
+                  <TabsTrigger value='details'>Details</TabsTrigger>
+                  <TabsTrigger value='permissions'>Permissions</TabsTrigger>
+                  <TabsTrigger value='security'>Security</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="details" className="flex-1 overflow-hidden mt-0">
+                <TabsContent value='details' className='flex-1 overflow-hidden mt-0'>
                   <UserForm
                     user={user}
                     onUpdate={handleUpdate}
@@ -250,7 +250,7 @@ export function UserDrawer({
                   />
                 </TabsContent>
 
-                <TabsContent value="permissions" className="flex-1 overflow-hidden mt-0">
+                <TabsContent value='permissions' className='flex-1 overflow-hidden mt-0'>
                   <UserPermissionsForm
                     user={user}
                     onUpdate={handleUpdateRole}
@@ -258,15 +258,15 @@ export function UserDrawer({
                   />
                 </TabsContent>
 
-                <TabsContent value="security" className="flex-1 overflow-hidden mt-0">
+                <TabsContent value='security' className='flex-1 overflow-hidden mt-0'>
                   <UserSecurityForm user={user} />
                 </TabsContent>
               </Tabs>
             </DrawerBody>
 
-            <DrawerFooter className="-mx-6 border-t px-6 py-4">
+            <DrawerFooter className='-mx-6 border-t px-6 py-4'>
               <Button
-                type="submit"
+                type='submit'
                 form={activeTab === 'details' ? 'form-rhf-user' : 'form-permissions'}
                 disabled={
                   activeTab === 'details'
@@ -275,7 +275,7 @@ export function UserDrawer({
                 }
               >
                 {updateUser.isPending || updateUserRole.isPending ? (
-                  <Loader2 className="size-4 animate-spin mr-2" aria-hidden="true" />
+                  <Loader2 className='size-4 animate-spin mr-2' aria-hidden='true' />
                 ) : null}
                 Update user
               </Button>

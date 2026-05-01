@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 
 interface RevokeAllSessionsDialogProps {
@@ -24,7 +24,7 @@ export function RevokeAllSessionsDialog({
   onOpenChange,
   onConfirm,
   isAdminAction = false,
-  isPending = false,
+  isPending = false
 }: RevokeAllSessionsDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -45,7 +45,7 @@ export function RevokeAllSessionsDialog({
               onConfirm();
             }}
             disabled={isPending}
-            className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
+            className='bg-destructive hover:bg-destructive/90 focus:ring-destructive'
           >
             {isPending ? 'Revoking...' : 'Revoke all'}
           </AlertDialogAction>
@@ -72,10 +72,10 @@ export function DeleteSessionDialog({
   deviceName,
   isCurrentSession = false,
   isAdminAction = false,
-  isPending = false,
+  isPending = false
 }: DeleteSessionDialogProps) {
   const device = deviceName ? (
-    <span className="font-semibold text-foreground">{deviceName}</span>
+    <span className='font-semibold text-foreground'>{deviceName}</span>
   ) : (
     'this session'
   );
@@ -105,7 +105,7 @@ export function DeleteSessionDialog({
               onConfirm();
             }}
             disabled={isPending}
-            className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
+            className='bg-destructive hover:bg-destructive/90 focus:ring-destructive'
           >
             {isPending
               ? isAdminAction

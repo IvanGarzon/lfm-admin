@@ -9,7 +9,7 @@ export const AddressSchema = z.object({
   postalCode: z.string().optional().nullable(),
   country: z.string().optional().nullable(),
   lat: z.number(),
-  lng: z.number(),
+  lng: z.number()
 });
 
 // Schema for validating editable fields in the address dialog
@@ -19,7 +19,7 @@ export const AddressDialogSchema = z.object({
   address2: z.string().optional(),
   city: z.string().optional(),
   region: z.string().optional(),
-  postalCode: z.string().optional(),
+  postalCode: z.string().optional()
 });
 
 export type AddressInput = z.infer<typeof AddressSchema>;
@@ -34,5 +34,5 @@ export const emptyAddress: AddressInput = {
   postalCode: '',
   country: '',
   lat: 0,
-  lng: 0,
+  lng: 0
 };

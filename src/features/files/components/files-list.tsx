@@ -7,7 +7,7 @@ import {
   useFiles,
   useUploadFile,
   useDownloadFile,
-  useDeleteFile,
+  useDeleteFile
 } from '@/features/files/hooks/use-files';
 import { FileStatsCards } from '@/features/files/components/file-stats-cards';
 import { FileUploadZone } from '@/features/files/components/file-upload-zone';
@@ -29,7 +29,7 @@ export function FilesList() {
     return {
       totalFiles: files.length,
       totalSize,
-      fileTypes,
+      fileTypes
     };
   }, [files]);
 
@@ -51,18 +51,18 @@ export function FilesList() {
   };
 
   return (
-    <Box className="space-y-6">
+    <Box className='space-y-6'>
       {/* Header */}
-      <Box className="flex items-center justify-between">
+      <Box className='flex items-center justify-between'>
         <Box>
-          <h1 className="text-3xl font-bold tracking-tight">File Storage</h1>
-          <p className="text-muted-foreground mt-1">Manage and organise files stored in S3</p>
+          <h1 className='text-3xl font-bold tracking-tight'>File Storage</h1>
+          <p className='text-muted-foreground mt-1'>Manage and organise files stored in S3</p>
         </Box>
-        <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
+        <Button onClick={() => refetch()} variant='outline' disabled={isLoading}>
           {isLoading ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
+            <RefreshCw className='h-4 w-4 animate-spin' />
           ) : (
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className='h-4 w-4' />
           )}
           Refresh
         </Button>

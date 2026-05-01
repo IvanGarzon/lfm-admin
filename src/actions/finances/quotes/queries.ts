@@ -19,7 +19,7 @@ import type {
   TopCustomerByQuotedValue,
   ConversionFunnelData,
   AverageTimeToDecision,
-  StatsDateFilter,
+  StatsDateFilter
 } from '@/features/finances/quotes/types';
 import { getSignedDownloadUrl } from '@/lib/s3';
 
@@ -41,7 +41,7 @@ export const getQuotes = withTenantPermission<SearchParams, QuotePagination>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch quotes');
     }
-  },
+  }
 );
 
 /**
@@ -63,7 +63,7 @@ export const getQuoteById = withTenantPermission<string, QuoteWithDetails>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch quote');
     }
-  },
+  }
 );
 
 /**
@@ -88,7 +88,7 @@ export const getQuoteMetadata = withTenantPermission<string, QuoteMetadata>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch quote metadata');
     }
-  },
+  }
 );
 
 /**
@@ -107,7 +107,7 @@ export const getQuoteItems = withTenantPermission<string, QuoteItem[]>(
     } catch (error) {
       return handleActionError(error, 'Failed to fetch quote items');
     }
-  },
+  }
 );
 
 /**
@@ -125,7 +125,7 @@ export const getQuoteStatusHistory = withTenantPermission<string, QuoteStatusHis
     } catch (error) {
       return handleActionError(error, 'Failed to fetch quote status history');
     }
-  },
+  }
 );
 
 /**
@@ -168,13 +168,13 @@ export const getQuoteItemAttachments = withTenantPermission<string, QuoteItemAtt
           s3Key: attachment.s3Key,
           s3Url: attachment.s3Url,
           uploadedBy: attachment.uploadedBy,
-          uploadedAt: attachment.uploadedAt,
-        })),
+          uploadedAt: attachment.uploadedAt
+        }))
       };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch item attachments');
     }
-  },
+  }
 );
 
 /**
@@ -201,8 +201,8 @@ export const getItemAttachmentDownloadUrl = withTenantPermission<
       success: true,
       data: {
         url,
-        fileName: attachment.fileName,
-      },
+        fileName: attachment.fileName
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to generate download URL');
@@ -232,7 +232,7 @@ export const getQuoteVersions = withTenantPermission<
 
     const normalizedVersions = versions.map((v) => ({
       ...v,
-      amount: Number(v.amount),
+      amount: Number(v.amount)
     }));
 
     return { success: true, data: normalizedVersions };
@@ -261,7 +261,7 @@ export const getQuotePdfUrl = withTenantPermission<string, { url: string; filena
         await import('@/features/finances/quotes/services/quote-pdf.service');
       const result = await getOrGenerateQuotePdf(quote, {
         context: 'getQuotePdfUrl',
-        skipDownload: true,
+        skipDownload: true
       });
 
       const { pdfUrl, pdfFilename } = result;
@@ -270,7 +270,7 @@ export const getQuotePdfUrl = withTenantPermission<string, { url: string; filena
     } catch (error) {
       return handleActionError(error, 'Failed to get quote PDF URL');
     }
-  },
+  }
 );
 
 /**
@@ -337,5 +337,5 @@ export const getAverageTimeToDecision = withTenantPermission<void, AverageTimeTo
     } catch (error) {
       return handleActionError(error, 'Failed to fetch average time to decision');
     }
-  },
+  }
 );

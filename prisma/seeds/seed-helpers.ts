@@ -34,8 +34,8 @@ export function fakeAuPhone(): string {
     { value: () => `04${faker.string.numeric(8)}`, weight: 0.7 },
     {
       value: () => `0${faker.helpers.arrayElement(['2', '3', '7', '8'])}${faker.string.numeric(8)}`,
-      weight: 0.3,
-    },
+      weight: 0.3
+    }
   ])();
 }
 
@@ -87,7 +87,7 @@ export function hasFlag(flag: string): boolean {
  */
 export async function batchAll<T>(
   fns: Array<() => Promise<T>>,
-  batchSize = 20,
+  batchSize = 20
 ): Promise<{ results: T[]; failed: number }> {
   const results: T[] = [];
   let failed = 0;

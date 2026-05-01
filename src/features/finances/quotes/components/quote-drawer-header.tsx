@@ -61,21 +61,21 @@ export function QuoteDrawerHeader({
   isUpdating,
   actionsMenuHandlers,
   showFollowUp,
-  onClose,
+  onClose
 }: QuoteDrawerHeaderProps) {
   return (
-    <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4">
-      <Box className="mt-1 flex flex-col flex-1">
-        <Box className="flex items-center gap-2">
+    <Box className='-mx-6 flex items-center justify-between gap-x-4 border-b border-border px-6 pb-4'>
+      <Box className='mt-1 flex flex-col flex-1'>
+        <Box className='flex items-center gap-2'>
           <DrawerTitle>{title}</DrawerTitle>
           {mode === 'edit' && hasUnsavedChanges ? (
-            <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20">
-              <AlertCircle className="h-3 w-3" aria-hidden="true" />
+            <span className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20'>
+              <AlertCircle className='h-3 w-3' aria-hidden='true' />
               Unsaved changes
             </span>
           ) : null}
         </Box>
-        <Box className="flex items-center gap-2">
+        <Box className='flex items-center gap-2'>
           {status ? (
             <DrawerDescription>
               <QuoteStatusBadge status={status} />
@@ -93,17 +93,17 @@ export function QuoteDrawerHeader({
         </Box>
       </Box>
 
-      <Box className="flex items-center gap-2">
+      <Box className='flex items-center gap-2'>
         {mode === 'edit' ? (
-          <Button type="button" variant="outline" size="sm" onClick={onPreviewToggle}>
+          <Button type='button' variant='outline' size='sm' onClick={onPreviewToggle}>
             {showPreview ? (
               <>
-                <EyeOff className="h-4 w-4 mr-1" aria-hidden="true" />
+                <EyeOff className='h-4 w-4 mr-1' aria-hidden='true' />
                 Hide Preview
               </>
             ) : (
               <>
-                <Eye className="h-4 w-4 mr-1" aria-hidden="true" />
+                <Eye className='h-4 w-4 mr-1' aria-hidden='true' />
                 Show Preview
               </>
             )}
@@ -111,8 +111,8 @@ export function QuoteDrawerHeader({
         ) : null}
 
         {mode === 'create' ? (
-          <Button type="submit" form="form-rhf-quote" size="sm" disabled={isCreating}>
-            <Save className="h-4 w-4 mr-1" aria-hidden="true" />
+          <Button type='submit' form='form-rhf-quote' size='sm' disabled={isCreating}>
+            <Save className='h-4 w-4 mr-1' aria-hidden='true' />
             Save as Draft
           </Button>
         ) : null}
@@ -123,12 +123,12 @@ export function QuoteDrawerHeader({
             quote.status !== QuoteStatusSchema.enum.CONVERTED &&
             quote.status !== QuoteStatusSchema.enum.ON_HOLD ? (
               <Button
-                type="submit"
-                form="form-rhf-quote"
-                size="sm"
+                type='submit'
+                form='form-rhf-quote'
+                size='sm'
                 disabled={isUpdating || !hasUnsavedChanges}
               >
-                <Save className="h-4 w-4 mr-1" aria-hidden="true" />
+                <Save className='h-4 w-4 mr-1' aria-hidden='true' />
                 {mode === 'edit' ? 'Update' : 'Save'}
               </Button>
             ) : null}
@@ -143,12 +143,12 @@ export function QuoteDrawerHeader({
         ) : null}
 
         <Button
-          variant="ghost"
-          className="aspect-square p-1 text-muted-foreground hover:bg-muted"
+          variant='ghost'
+          className='aspect-square p-1 text-muted-foreground hover:bg-muted'
           onClick={onClose}
         >
-          <X className="size-5" aria-hidden="true" />
-          <span className="sr-only">Close</span>
+          <X className='size-5' aria-hidden='true' />
+          <span className='sr-only'>Close</span>
         </Button>
       </Box>
     </Box>

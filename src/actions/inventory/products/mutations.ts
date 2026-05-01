@@ -18,7 +18,7 @@ import {
   type UpdateProductStatusInput,
   type UpdateProductStockInput,
   type BulkUpdateProductStatusInput,
-  type BulkDeleteProductsInput,
+  type BulkDeleteProductsInput
 } from '@/schemas/products';
 import { ProductRepository } from '@/repositories/product-repository';
 
@@ -46,7 +46,7 @@ export const createProduct = withTenantPermission<CreateProductInput, { id: stri
     } catch (error) {
       return handleActionError(error, 'Failed to create product');
     }
-  },
+  }
 );
 
 /**
@@ -71,7 +71,7 @@ export const updateProduct = withTenantPermission<UpdateProductInput, { id: stri
     } catch (error) {
       return handleActionError(error, 'Failed to update product');
     }
-  },
+  }
 );
 
 /**
@@ -96,7 +96,7 @@ export const deleteProduct = withTenantPermission<DeleteProductInput, { success:
     } catch (error) {
       return handleActionError(error, 'Failed to delete product');
     }
-  },
+  }
 );
 
 /**
@@ -112,7 +112,7 @@ export const updateProductStatus = withTenantPermission<UpdateProductStatusInput
       const result = await productRepo.updateProductStatus(
         validatedData.id,
         ctx.tenantId,
-        validatedData.status,
+        validatedData.status
       );
 
       if (!result) {
@@ -125,7 +125,7 @@ export const updateProductStatus = withTenantPermission<UpdateProductStatusInput
     } catch (error) {
       return handleActionError(error, 'Failed to update product status');
     }
-  },
+  }
 );
 
 /**
@@ -144,7 +144,7 @@ export const updateProductStock = withTenantPermission<
     const result = await productRepo.updateProductStock(
       validatedData.id,
       ctx.tenantId,
-      validatedData.quantity,
+      validatedData.quantity
     );
 
     if (!result) {
@@ -173,7 +173,7 @@ export const bulkUpdateProductStatus = withTenantPermission<
     const count = await productRepo.bulkUpdateProductStatus(
       validatedData.ids,
       ctx.tenantId,
-      validatedData.status,
+      validatedData.status
     );
 
     revalidatePath(PRODUCTS_PATH);
@@ -202,5 +202,5 @@ export const bulkDeleteProducts = withTenantPermission<BulkDeleteProductsInput, 
     } catch (error) {
       return handleActionError(error, 'Failed to delete products');
     }
-  },
+  }
 );

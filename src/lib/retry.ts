@@ -50,7 +50,7 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
     baseDelay = 100,
     maxDelay = 5000,
     exponentialBackoff = true,
-    shouldRetry = defaultShouldRetry,
+    shouldRetry = defaultShouldRetry
   } = options;
 
   let lastError: Error;
@@ -91,13 +91,13 @@ export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions =
  */
 export async function withDatabaseRetry<T>(
   fn: () => Promise<T>,
-  options: Omit<RetryOptions, 'shouldRetry'> = {},
+  options: Omit<RetryOptions, 'shouldRetry'> = {}
 ): Promise<T> {
   return withRetry(fn, {
     maxRetries: 3,
     baseDelay: 100,
     maxDelay: 2000,
     ...options,
-    shouldRetry: defaultShouldRetry,
+    shouldRetry: defaultShouldRetry
   });
 }

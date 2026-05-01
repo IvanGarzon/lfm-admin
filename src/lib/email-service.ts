@@ -35,7 +35,7 @@ const EMAIL_CONFIG = {
   from: env.NEXT_PUBLIC_APP_URL.includes('localhost')
     ? 'onboarding@resend.dev' // Resend test email for development
     : 'noreply@yourdomain.com', // Replace with your actual domain
-  replyTo: 'support@yourdomain.com', // Replace with your support email
+  replyTo: 'support@yourdomain.com' // Replace with your support email
 } as const;
 
 /**
@@ -65,7 +65,7 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
   template,
   props,
   replyTo,
-  attachments,
+  attachments
 }: {
   to: string | string[];
   subject: string;
@@ -91,7 +91,7 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
     const resendAttachments = attachments?.map((att) => ({
       filename: att.filename,
       content: att.content,
-      ...(att.contentType && { type: att.contentType }),
+      ...(att.contentType && { type: att.contentType })
     }));
 
     // DRY RUN MODE: Log email details instead of sending
@@ -108,8 +108,8 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
           attachmentCount: attachments?.length || 0,
           attachmentNames: attachments?.map((a) => a.filename),
           props: JSON.stringify(props, null, 2),
-          htmlPreview: html.substring(0, 500) + (html.length > 500 ? '...' : ''),
-        },
+          htmlPreview: html.substring(0, 500) + (html.length > 500 ? '...' : '')
+        }
       });
 
       // Return a mock email ID for dry run
@@ -123,8 +123,8 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
         context: 'email-service',
         metadata: {
           originalRecipient: to,
-          testRecipient: finalRecipient,
-        },
+          testRecipient: finalRecipient
+        }
       });
     }
 
@@ -135,7 +135,7 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
       subject,
       html,
       replyTo: replyTo || EMAIL_CONFIG.replyTo,
-      ...(resendAttachments && { attachments: resendAttachments }),
+      ...(resendAttachments && { attachments: resendAttachments })
     });
 
     if (error) {
@@ -145,8 +145,8 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
           to: finalRecipient,
           subject,
           template,
-          attachmentCount: attachments?.length || 0,
-        },
+          attachmentCount: attachments?.length || 0
+        }
       });
 
       throw new Error(`Email sending failed: ${error.message}`);
@@ -160,15 +160,15 @@ export async function sendEmailNotification<T extends EmailTemplateName>({
         subject,
         template,
         emailId: data?.id,
-        attachmentCount: attachments?.length || 0,
-      },
+        attachmentCount: attachments?.length || 0
+      }
     });
 
     return { success: true, emailId: data?.id };
   } catch (error) {
     logger.error('Unexpected error sending email', error, {
       context: 'email-service',
-      metadata: { template },
+      metadata: { template }
     });
 
     throw error;

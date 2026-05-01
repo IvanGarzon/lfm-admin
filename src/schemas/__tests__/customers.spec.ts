@@ -8,7 +8,7 @@ const validAddress = {
   address1: '1 Test St',
   formattedAddress: '1 Test St, Melbourne VIC 3000',
   lat: 0,
-  lng: 0,
+  lng: 0
 };
 
 const validCustomer = {
@@ -21,7 +21,7 @@ const validCustomer = {
   organizationId: null,
   organizationName: null,
   useOrganizationAddress: false,
-  address: validAddress,
+  address: validAddress
 };
 
 describe('Customer Schemas', () => {
@@ -36,7 +36,7 @@ describe('Customer Schemas', () => {
         ...validCustomer,
         organizationId: testIds.organization(),
         useOrganizationAddress: true,
-        address: null,
+        address: null
       });
       expect(result.success).toBe(true);
     });
@@ -50,7 +50,7 @@ describe('Customer Schemas', () => {
     it('fails when email is invalid', () => {
       const result = CreateCustomerSchema.safeParse({
         ...validCustomer,
-        email: 'not-an-email',
+        email: 'not-an-email'
       });
       expect(result.success).toBe(false);
     });
@@ -58,7 +58,7 @@ describe('Customer Schemas', () => {
     it('fails when gender is not a valid enum value', () => {
       const result = CreateCustomerSchema.safeParse({
         ...validCustomer,
-        gender: 'UNKNOWN',
+        gender: 'UNKNOWN'
       });
       expect(result.success).toBe(false);
     });
@@ -67,7 +67,7 @@ describe('Customer Schemas', () => {
       const result = CreateCustomerSchema.safeParse({
         ...validCustomer,
         organizationId: null,
-        address: null,
+        address: null
       });
       expect(result.success).toBe(false);
     });

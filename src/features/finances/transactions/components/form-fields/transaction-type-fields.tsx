@@ -7,42 +7,42 @@ import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupText,
+  InputGroupText
 } from '@/components/ui/input-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import type { TransactionFormInput } from '@/features/finances/transactions/types';
 
 export function TransactionTypeFields({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<TransactionFormInput>;
   isDisabled: boolean;
 }) {
   return (
-    <Box className="grid grid-cols-3 gap-4">
+    <Box className='grid grid-cols-3 gap-4'>
       <FieldGroup>
         <Controller
-          name="type"
+          name='type'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-type">Transaction Type</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-type'>Transaction Type</FieldLabel>
               </FieldContent>
               <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                <SelectTrigger id="form-rhf-select-type" aria-invalid={fieldState.invalid}>
+                <SelectTrigger id='form-rhf-select-type' aria-invalid={fieldState.invalid}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="INCOME">Income</SelectItem>
-                  <SelectItem value="EXPENSE">Expense</SelectItem>
+                  <SelectItem value='INCOME'>Income</SelectItem>
+                  <SelectItem value='EXPENSE'>Expense</SelectItem>
                 </SelectContent>
               </Select>
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -53,22 +53,22 @@ export function TransactionTypeFields({
 
       <FieldGroup>
         <Controller
-          name="currency"
+          name='currency'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-currency'>Currency</FieldLabel>
               </FieldContent>
               <Select onValueChange={field.onChange} value={field.value} disabled={isDisabled}>
-                <SelectTrigger id="form-rhf-select-currency" aria-invalid={fieldState.invalid}>
+                <SelectTrigger id='form-rhf-select-currency' aria-invalid={fieldState.invalid}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                  <SelectItem value='USD'>USD - US Dollar</SelectItem>
+                  <SelectItem value='AUD'>AUD - Australian Dollar</SelectItem>
+                  <SelectItem value='EUR'>EUR - Euro</SelectItem>
+                  <SelectItem value='GBP'>GBP - British Pound</SelectItem>
                 </SelectContent>
               </Select>
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -79,29 +79,29 @@ export function TransactionTypeFields({
 
       <FieldGroup>
         <Controller
-          name="amount"
+          name='amount'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-amount">Amount</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-amount'>Amount</FieldLabel>
               </FieldContent>
               <InputGroup>
-                <InputGroupAddon align="inline-start">
+                <InputGroupAddon align='inline-start'>
                   <InputGroupText>
-                    <DollarSign className="h-4 w-4" aria-hidden="true" />
+                    <DollarSign className='h-4 w-4' aria-hidden='true' />
                   </InputGroupText>
                 </InputGroupAddon>
                 <InputGroupInput
                   {...field}
-                  id="form-rhf-input-amount"
+                  id='form-rhf-input-amount'
                   aria-invalid={fieldState.invalid}
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type='number'
+                  step='0.01'
+                  min='0'
                   value={field.value}
                   onChange={(e) => field.onChange(Number(e.target.value))}
-                  placeholder="Enter amount"
+                  placeholder='Enter amount'
                   disabled={isDisabled}
                 />
               </InputGroup>

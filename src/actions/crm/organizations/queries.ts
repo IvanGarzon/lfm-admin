@@ -7,11 +7,11 @@ import { withTenantPermission } from '@/lib/action-auth';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 import type {
   OrganizationListItem,
-  OrganizationPagination,
+  OrganizationPagination
 } from '@/features/crm/organizations/types';
 import {
   searchParamsCache,
-  validateOrganizationSearchParams,
+  validateOrganizationSearchParams
 } from '@/filters/organizations/organizations-filters';
 
 const organizationRepo = new OrganizationRepository(prisma);
@@ -30,7 +30,7 @@ export const getActiveOrganizations = withTenantPermission<void, OrganizationLis
     } catch (error) {
       return handleActionError(error, 'Failed to fetch organisations');
     }
-  },
+  }
 );
 
 /**
@@ -51,7 +51,7 @@ export const getOrganizations = withTenantPermission<SearchParams, OrganizationP
     } catch (error) {
       return handleActionError(error, 'Failed to fetch organisations');
     }
-  },
+  }
 );
 
 /**
@@ -75,5 +75,5 @@ export const getOrganizationById = withTenantPermission<string, OrganizationList
     } catch (error) {
       return handleActionError(error, 'Failed to fetch organisation');
     }
-  },
+  }
 );

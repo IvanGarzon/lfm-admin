@@ -8,20 +8,20 @@ import dynamic from 'next/dynamic';
 const EmployeeDrawer = dynamic(
   () =>
     import('@/features/staff/employees/components/employee-drawer').then(
-      (mod) => mod.EmployeeDrawer,
+      (mod) => mod.EmployeeDrawer
     ),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export const metadata = {
-  title: 'Dashboard : Employee View',
+  title: 'Dashboard : Employee View'
 };
 
 export default async function EmployeePage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

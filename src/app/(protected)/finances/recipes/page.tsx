@@ -6,11 +6,11 @@ import { RecipesView } from '@/features/finances/recipes/components/recipes-view
 
 export const metadata = constructMetadata({
   title: 'Recipes – lfm dashboard',
-  description: 'Manage your floral, craft and recipe cost calculations.',
+  description: 'Manage your floral, craft and recipe cost calculations.'
 });
 
 export default async function RecipesPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 
@@ -23,7 +23,7 @@ export function UnsavedChangesDialog({
   open,
   onOpenChange,
   onDiscard,
-  onSave,
+  onSave
 }: UnsavedChangesDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -36,7 +36,7 @@ export function UnsavedChangesDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button variant="outline" onClick={onDiscard}>
+          <Button variant='outline' onClick={onDiscard}>
             Discard changes
           </Button>
           <AlertDialogAction onClick={onSave}>Save changes</AlertDialogAction>

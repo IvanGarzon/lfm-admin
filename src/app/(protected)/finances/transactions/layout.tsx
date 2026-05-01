@@ -1,6 +1,6 @@
 export default function TransactionsLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

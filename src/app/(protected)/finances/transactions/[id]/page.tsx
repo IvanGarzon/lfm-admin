@@ -7,16 +7,16 @@ import dynamic from 'next/dynamic';
 const TransactionDrawer = dynamic(
   () =>
     import('@/features/finances/transactions/components/transaction-drawer').then(
-      (mod) => mod.TransactionDrawer,
+      (mod) => mod.TransactionDrawer
     ),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function TransactionIdPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

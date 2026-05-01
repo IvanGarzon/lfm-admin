@@ -45,7 +45,7 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
         expires,
         userAgent,
         requestedIpAddress,
-        numberOfAttempts: 0,
+        numberOfAttempts: 0
       },
       update: {
         otpCode: hashedCode,
@@ -54,8 +54,8 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
         userAgent,
         requestedIpAddress,
         numberOfAttempts: 0,
-        usedAt: null,
-      },
+        usedAt: null
+      }
     });
   }
 
@@ -66,7 +66,7 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
    */
   async findByChallengeToken(challengeToken: string): Promise<TwoFactorToken | null> {
     return await this.prisma.twoFactorToken.findUnique({
-      where: { challengeToken },
+      where: { challengeToken }
     });
   }
 
@@ -78,7 +78,7 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
   async incrementAttempts(id: string): Promise<TwoFactorToken> {
     return await this.prisma.twoFactorToken.update({
       where: { id },
-      data: { numberOfAttempts: { increment: 1 } },
+      data: { numberOfAttempts: { increment: 1 } }
     });
   }
 
@@ -94,8 +94,8 @@ export class TwoFactorTokenRepository extends BaseRepository<TwoFactorToken> {
       where: { id },
       data: {
         usedAt: new Date(),
-        loggedInIpAddress: loggedInIpAddress ?? null,
-      },
+        loggedInIpAddress: loggedInIpAddress ?? null
+      }
     });
   }
 }

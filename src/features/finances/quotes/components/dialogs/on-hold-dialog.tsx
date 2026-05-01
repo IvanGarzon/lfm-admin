@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -34,14 +34,14 @@ export function OnHoldDialog({
   onConfirm,
   quoteId,
   quoteNumber,
-  isPending = false,
+  isPending = false
 }: OnHoldDialogProps) {
   const form = useForm<MarkQuoteAsOnHoldInput>({
     resolver: zodResolver(MarkQuoteAsOnHoldSchema),
     defaultValues: {
       id: quoteId,
-      reason: '',
-    },
+      reason: ''
+    }
   });
 
   const handleSubmit = useCallback(
@@ -50,7 +50,7 @@ export function OnHoldDialog({
       form.reset();
       onOpenChange(false);
     },
-    [onConfirm, form, onOpenChange],
+    [onConfirm, form, onOpenChange]
   );
 
   const handleCancel = useCallback(() => {
@@ -60,7 +60,7 @@ export function OnHoldDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Put Quote on Hold</DialogTitle>
           <DialogDescription>
@@ -68,22 +68,22 @@ export function OnHoldDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form id="on-hold-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form id='on-hold-form' onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
             <FieldGroup>
               <Controller
-                name="reason"
+                name='reason'
                 control={form.control}
                 render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid} className="flex flex-col">
+                  <Field data-invalid={fieldState.invalid} className='flex flex-col'>
                     <FieldContent>
-                      <FieldLabel htmlFor="on-hold-form-reason">Reason (Optional)</FieldLabel>
+                      <FieldLabel htmlFor='on-hold-form-reason'>Reason (Optional)</FieldLabel>
                     </FieldContent>
                     <Textarea
                       {...field}
-                      id="on-hold-form-reason"
-                      placeholder="Enter reason for putting this quote on hold..."
+                      id='on-hold-form-reason'
+                      placeholder='Enter reason for putting this quote on hold...'
                       rows={3}
-                      className="resize-none"
+                      className='resize-none'
                     />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
@@ -92,10 +92,10 @@ export function OnHoldDialog({
             </FieldGroup>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+              <Button type='button' variant='outline' onClick={handleCancel} disabled={isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type='submit' disabled={isPending}>
                 {isPending ? 'Putting on Hold...' : 'Put on Hold'}
               </Button>
             </DialogFooter>

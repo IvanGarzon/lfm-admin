@@ -8,27 +8,27 @@ import type { EmployeeFormInput } from '@/features/staff/employees/types';
 
 export function EmployeeContactFields({
   control,
-  isDisabled,
+  isDisabled
 }: {
   control: Control<EmployeeFormInput>;
   isDisabled: boolean;
 }) {
   return (
-    <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       <FieldGroup>
         <Controller
-          name="email"
+          name='email'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-email">Email</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-email'>Email</FieldLabel>
               </FieldContent>
               <Input
                 {...field}
-                id="form-rhf-input-email"
+                id='form-rhf-input-email'
                 aria-invalid={fieldState.invalid}
-                placeholder="john.doe@example.com"
+                placeholder='john.doe@example.com'
                 disabled={isDisabled}
               />
               {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -39,15 +39,15 @@ export function EmployeeContactFields({
 
       <FieldGroup>
         <Controller
-          name="phone"
+          name='phone'
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-phone">Phone</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-phone'>Phone</FieldLabel>
               </FieldContent>
               <PhoneInputField
-                defaultCountry="AU"
+                defaultCountry='AU'
                 name={field.name}
                 value={field.value}
                 onChange={field.onChange}

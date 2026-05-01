@@ -26,16 +26,16 @@ export function FinancialHealth({ metrics = EMPTY_METRICS, isLoading }: Financia
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-40" />
+          <Skeleton className='h-6 w-40' />
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className='space-y-6'>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="space-y-2">
-              <div className="flex justify-between">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-16" />
+            <div key={`skeleton-${i}`} className='space-y-2'>
+              <div className='flex justify-between'>
+                <Skeleton className='h-4 w-32' />
+                <Skeleton className='h-4 w-16' />
               </div>
-              <Skeleton className="h-2 w-full" />
+              <Skeleton className='h-2 w-full' />
             </div>
           ))}
         </CardContent>
@@ -73,22 +73,22 @@ export function FinancialHealth({ metrics = EMPTY_METRICS, isLoading }: Financia
       <CardHeader>
         <CardTitle>Financial Health</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className='space-y-6'>
         {metrics.length === 0 ? (
-          <div className="text-center py-8 text-sm text-muted-foreground">
+          <div className='text-center py-8 text-sm text-muted-foreground'>
             No health metrics available
           </div>
         ) : (
           metrics.map((metric, index) => (
-            <div key={metric.label} className="space-y-2">
-              <div className="flex justify-between items-center">
+            <div key={metric.label} className='space-y-2'>
+              <div className='flex justify-between items-center'>
                 <div>
-                  <p className="text-sm font-medium">{metric.label}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className='text-sm font-medium'>{metric.label}</p>
+                  <p className='text-xs text-muted-foreground'>
                     {formatValue(metric)} {metric.format !== 'percentage' && `of ${metric.max}`}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className='text-right'>
                   <span
                     className={cn(
                       'text-xs font-medium px-2 py-1 rounded',
@@ -99,15 +99,15 @@ export function FinancialHealth({ metrics = EMPTY_METRICS, isLoading }: Financia
                       metric.percentage >= 40 &&
                         metric.percentage < 60 &&
                         'bg-orange-100 text-orange-700',
-                      metric.percentage < 40 && 'bg-red-100 text-red-700',
+                      metric.percentage < 40 && 'bg-red-100 text-red-700'
                     )}
                   >
-                    <span className="sr-only">{metric.label} status: </span>
+                    <span className='sr-only'>{metric.label} status: </span>
                     {getHealthStatus(metric.percentage)}
                   </span>
                 </div>
               </div>
-              <Progress value={metric.percentage} className="h-2" />
+              <Progress value={metric.percentage} className='h-2' />
             </div>
           ))
         )}

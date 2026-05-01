@@ -23,10 +23,10 @@ const CashFlowChart = dynamic(() => import('./cash-flow-chart'), {
         <CardDescription>Loading chart...</CardDescription>
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+        <Skeleton className='h-[300px] w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });
 
 interface TransactionAnalyticsProps {
@@ -42,7 +42,7 @@ export function TransactionAnalytics({
   isLoading,
   dateRange,
   onDateRangeChange,
-  comparisonLabel,
+  comparisonLabel
 }: TransactionAnalyticsProps) {
   const { data: trend, isLoading: trendLoading } = useTransactionTrend(12);
 
@@ -53,41 +53,41 @@ export function TransactionAnalytics({
   };
 
   return (
-    <Box className="space-y-6">
+    <Box className='space-y-6'>
       {/* Controls */}
-      <Box className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <Box className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <Box>
-          <h2 className="text-2xl font-bold tracking-tight">Detailed Analytics</h2>
-          <p className="text-muted-foreground">
+          <h2 className='text-2xl font-bold tracking-tight'>Detailed Analytics</h2>
+          <p className='text-muted-foreground'>
             Comprehensive overview of your income and expenses
           </p>
         </Box>
-        <Box className="flex flex-wrap items-center gap-2">
+        <Box className='flex flex-wrap items-center gap-2'>
           <CalendarDateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4" aria-hidden="true" />
+          <Button variant='outline' size='sm' onClick={handleExport}>
+            <Download className='h-4 w-4' aria-hidden='true' />
             Export
           </Button>
         </Box>
       </Box>
 
       {/* Additional Metrics */}
-      <Box className="grid gap-4 md:grid-cols-2">
+      <Box className='grid gap-4 md:grid-cols-2'>
         <StatCard
-          title="Pending"
+          title='Pending'
           value={stats?.pendingTransactions ?? 0}
-          description="Awaiting completion"
+          description='Awaiting completion'
           icon={Clock}
           isLoading={isLoading}
-          color="text-yellow-500"
+          color='text-yellow-500'
         />
         <StatCard
-          title="Avg Transaction"
+          title='Avg Transaction'
           value={formatCurrency({ number: stats?.avgTransactionSize ?? 0, maxFractionDigits: 0 })}
-          description="Average amount"
+          description='Average amount'
           icon={CheckCircle}
           isLoading={isLoading}
-          color="text-indigo-500"
+          color='text-indigo-500'
         />
       </Box>
 
@@ -95,7 +95,7 @@ export function TransactionAnalytics({
       <CashFlowChart data={trend} isLoading={trendLoading} />
 
       {/* Top Categories Table */}
-      <Box className="grid gap-4 md:grid-cols-1">
+      <Box className='grid gap-4 md:grid-cols-1'>
         <TopCategoriesTable categories={topCategories} isLoading={topCategoriesLoading} />
       </Box>
     </Box>

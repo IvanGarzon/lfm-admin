@@ -35,7 +35,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
 
     logger.info('Function execution starting', {
       context: 'task-interceptor',
-      metadata: { functionId, runId },
+      metadata: { functionId, runId }
     });
 
     const task = await taskRepo.findByFunctionId(functionId);
@@ -43,7 +43,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
     if (!task) {
       logger.info('Function not registered as task, allowing execution', {
         context: 'task-interceptor',
-        metadata: { functionId },
+        metadata: { functionId }
       });
       return;
     }
@@ -51,7 +51,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
     if (!task.isEnabled) {
       logger.warn('Task is disabled, blocking execution', {
         context: 'task-interceptor',
-        metadata: { functionId, taskId: task.id },
+        metadata: { functionId, taskId: task.id }
       });
       throw new Error(`Task '${functionId}' is currently disabled`);
     }
@@ -65,12 +65,12 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
         await executionRepo.update(providedExecutionId, {
           status: 'RUNNING',
           inngestRunId: runId,
-          inngestEventId: ctx.event.id,
+          inngestEventId: ctx.event.id
         });
 
         logger.info('Using existing execution record, status set to RUNNING', {
           context: 'task-interceptor',
-          metadata: { functionId, taskId: task.id, executionId: providedExecutionId },
+          metadata: { functionId, taskId: task.id, executionId: providedExecutionId }
         });
       } else {
         const existingExecution = await executionRepo.findByInngestRunId(runId);
@@ -80,7 +80,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
 
           logger.info('Found existing execution record (step replay)', {
             context: 'task-interceptor',
-            metadata: { functionId, taskId: task.id, executionId: existingExecution.id, runId },
+            metadata: { functionId, taskId: task.id, executionId: existingExecution.id, runId }
           });
         } else {
           const execution = await executionRepo.create({
@@ -88,21 +88,21 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
             inngestRunId: runId,
             inngestEventId: ctx.event.id,
             triggeredBy: ctx.event.name.includes('/manual') ? 'MANUAL' : 'SCHEDULE',
-            triggeredByUser: ctx.event.data?.triggeredBy,
+            triggeredByUser: ctx.event.data?.triggeredBy
           });
 
           this.executionId = execution.id;
 
           logger.info('Execution record created', {
             context: 'task-interceptor',
-            metadata: { functionId, taskId: task.id, executionId: execution.id },
+            metadata: { functionId, taskId: task.id, executionId: execution.id }
           });
         }
       }
     } catch (error) {
       logger.error('Failed to create/update execution record', error, {
         context: 'task-interceptor',
-        metadata: { functionId, taskId: task.id },
+        metadata: { functionId, taskId: task.id }
       });
       // Continue execution even if tracking fails
     }
@@ -114,7 +114,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
 
     logger.info('onRunComplete called', {
       context: 'task-interceptor',
-      metadata: { functionId, runId, hasExecutionId: Boolean(this.executionId) },
+      metadata: { functionId, runId, hasExecutionId: Boolean(this.executionId) }
     });
 
     if (this.executionId) {
@@ -123,18 +123,18 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
       executionRepo.markCompleted(executionId, output).catch((err) => {
         logger.error('Failed to mark execution as completed', err, {
           context: 'task-interceptor',
-          metadata: { executionId },
+          metadata: { executionId }
         });
       });
 
       logger.info('Execution completed successfully', {
         context: 'task-interceptor',
-        metadata: { functionId, executionId, runId },
+        metadata: { functionId, executionId, runId }
       });
     } else {
       logger.warn('onRunComplete called but executionId is null', {
         context: 'task-interceptor',
-        metadata: { functionId, runId },
+        metadata: { functionId, runId }
       });
     }
   }
@@ -145,7 +145,7 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
 
     logger.info('onRunError hook called', {
       context: 'task-interceptor',
-      metadata: { functionId, runId, hasExecutionId: Boolean(this.executionId) },
+      metadata: { functionId, runId, hasExecutionId: Boolean(this.executionId) }
     });
 
     if (this.executionId) {
@@ -156,18 +156,18 @@ export class TaskInterceptorMiddleware extends Middleware.BaseMiddleware {
       executionRepo.markFailed(executionId, errorMessage, stackTrace).catch((err) => {
         logger.error('Failed to mark execution as failed', err, {
           context: 'task-interceptor',
-          metadata: { executionId },
+          metadata: { executionId }
         });
       });
 
       logger.error('Execution failed', error, {
         context: 'task-interceptor',
-        metadata: { functionId, executionId, runId },
+        metadata: { functionId, executionId, runId }
       });
     } else {
       logger.warn('onRunError called but executionId is null', {
         context: 'task-interceptor',
-        metadata: { functionId, runId },
+        metadata: { functionId, runId }
       });
     }
   }

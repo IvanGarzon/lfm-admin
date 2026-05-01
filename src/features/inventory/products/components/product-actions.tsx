@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ProductListItem } from '@/features/inventory/products/types';
@@ -16,7 +16,7 @@ import { useProductHref } from '@/features/inventory/products/hooks/use-product-
 
 export function ProductActions({
   product,
-  onDelete,
+  onDelete
 }: {
   product: ProductListItem;
   onDelete: (id: string, name: string) => void;
@@ -26,25 +26,25 @@ export function ProductActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" className="h-8 w-8 p-0" aria-label="Open menu">
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <Button variant='secondary' className='h-8 w-8 p-0' aria-label='Open menu'>
+          <MoreHorizontal className='h-4 w-4' aria-hidden='true' />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align='end'>
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={href} className="flex items-center">
-            <Pencil className="h-4 w-4" aria-hidden="true" />
+          <Link href={href} className='flex items-center'>
+            <Pencil className='h-4 w-4' aria-hidden='true' />
             Edit product
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30"
+          className='text-destructive focus:text-destructive hover:text-destructive bg-red-50/50 hover:bg-red-100/50 dark:bg-red-900/20 hover:dark:bg-red-900/30'
           onClick={() => onDelete(product.id, product.name)}
         >
-          <Trash className="h-4 w-4" aria-hidden="true" />
+          <Trash className='h-4 w-4' aria-hidden='true' />
           Delete product
         </DropdownMenuItem>
       </DropdownMenuContent>

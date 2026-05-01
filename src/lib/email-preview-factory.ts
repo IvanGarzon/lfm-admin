@@ -60,7 +60,7 @@ interface EmailPreviewFactoryConfig<TEntity, TEmailType extends string> {
   buildEmailConfig: (
     entity: TEntity,
     emailType: TEmailType,
-    tenantName: string,
+    tenantName: string
   ) => EmailTypeConfig | { error: string };
 }
 
@@ -98,13 +98,13 @@ interface EmailPreviewFactoryConfig<TEntity, TEmailType extends string> {
  * ```
  */
 export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
-  config: EmailPreviewFactoryConfig<TEntity, TEmailType>,
+  config: EmailPreviewFactoryConfig<TEntity, TEmailType>
 ) {
   const { entityName, fetchEntity, getCustomerEmail, buildEmailConfig } = config;
 
   return async function previewEmail(
     entityId: string,
-    emailType: TEmailType,
+    emailType: TEmailType
   ): Promise<EmailPreviewResult> {
     try {
       // Step 1: Resolve tenant from session and fetch branding in parallel
@@ -120,7 +120,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
       if (!entity) {
         return {
           success: false,
-          error: `${entityName} not found`,
+          error: `${entityName} not found`
         };
       }
 
@@ -135,7 +135,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
       if ('error' in emailConfig) {
         return {
           success: false,
-          error: emailConfig.error,
+          error: emailConfig.error
         };
       }
 
@@ -147,7 +147,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
         template: emailConfig.template,
         props: emailConfig.props as never,
         hasAttachment: emailConfig.hasAttachment,
-        attachmentName: emailConfig.attachmentName,
+        attachmentName: emailConfig.attachmentName
       });
     } catch (error) {
       // Step 7: Handle errors
@@ -156,7 +156,7 @@ export function createEmailPreviewFunction<TEntity, TEmailType extends string>(
         error:
           error instanceof Error
             ? error.message
-            : `Failed to preview ${entityName.toLowerCase()} email`,
+            : `Failed to preview ${entityName.toLowerCase()} email`
       };
     }
   };

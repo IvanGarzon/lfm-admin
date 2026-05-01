@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { Box } from '@/components/ui/box';
 import { useAdminSendInvitation } from '@/features/admin/invitations/hooks/use-invitation-queries';
@@ -25,13 +25,13 @@ import { useAdminSendInvitation } from '@/features/admin/invitations/hooks/use-i
 const INVITABLE_ROLES = [
   UserRoleSchema.enum.ADMIN,
   UserRoleSchema.enum.MANAGER,
-  UserRoleSchema.enum.USER,
+  UserRoleSchema.enum.USER
 ] as const;
 
 export function InviteUserDialog({
   tenantId,
   open,
-  onOpenChange,
+  onOpenChange
 }: {
   tenantId: string;
   open: boolean;
@@ -52,35 +52,35 @@ export function InviteUserDialog({
             setRole(UserRoleSchema.enum.USER);
             onOpenChange(false);
           }
-        },
-      },
+        }
+      }
     );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px]">
+      <DialogContent className='sm:max-w-[420px]'>
         <DialogHeader>
           <DialogTitle>Invite User</DialogTitle>
           <DialogDescription>Send an invitation to add a user to this tenant.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <Box className="space-y-4 py-2">
-            <Box className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+          <Box className='space-y-4 py-2'>
+            <Box className='space-y-2'>
+              <Label htmlFor='email'>Email</Label>
               <Input
-                id="email"
-                type="email"
+                id='email'
+                type='email'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com"
+                placeholder='user@example.com'
                 required
               />
             </Box>
-            <Box className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+            <Box className='space-y-2'>
+              <Label htmlFor='role'>Role</Label>
               <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-                <SelectTrigger id="role">
+                <SelectTrigger id='role'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,11 +93,11 @@ export function InviteUserDialog({
               </Select>
             </Box>
           </Box>
-          <Box className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Box className='flex justify-end gap-2 pt-4'>
+            <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={sendInvitation.isPending}>
+            <Button type='submit' disabled={sendInvitation.isPending}>
               {sendInvitation.isPending ? 'Sending...' : 'Send Invitation'}
             </Button>
           </Box>

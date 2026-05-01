@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes';
 import { hasPermission } from '@/lib/permissions';
@@ -25,7 +25,7 @@ import type { UserDetail } from '@/features/users/types';
 
 const StatusOptions = UserStatusSchema.options.map((s) => ({
   value: s,
-  label: s.charAt(0) + s.slice(1).toLowerCase(),
+  label: s.charAt(0) + s.slice(1).toLowerCase()
 }));
 
 function mapUserToFormValues(user: UserDetail): UpdateUserInput {
@@ -38,14 +38,14 @@ function mapUserToFormValues(user: UserDetail): UpdateUserInput {
     status: user.status,
     username: user.username ?? null,
     title: user.title ?? null,
-    bio: user.bio ?? null,
+    bio: user.bio ?? null
   };
 }
 
 export function UserForm({
   user,
   onUpdate,
-  onDirtyStateChange,
+  onDirtyStateChange
 }: {
   user: UserDetail;
   onUpdate: (data: UpdateUserInput) => void;
@@ -56,7 +56,7 @@ export function UserForm({
 
   const form = useForm<UpdateUserInput>({
     resolver: zodResolver(UpdateUserSchema),
-    defaultValues: mapUserToFormValues(user),
+    defaultValues: mapUserToFormValues(user)
   });
 
   useUnsavedChanges(form.formState.isDirty);
@@ -75,29 +75,29 @@ export function UserForm({
     (data: UpdateUserInput) => {
       onUpdate(data);
     },
-    [onUpdate],
+    [onUpdate]
   );
 
   return (
     <Form {...form}>
       <form
-        id="form-rhf-user"
+        id='form-rhf-user'
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="flex flex-col h-full"
+        className='flex flex-col h-full'
       >
-        <Box className="flex-1 overflow-y-auto p-6 space-y-4">
+        <Box className='flex-1 overflow-y-auto p-6 space-y-4'>
           <Card>
-            <CardHeader className="px-6 pt-4 pb-4">
-              <CardTitle className="text-sm font-medium">Personal Information</CardTitle>
-              <p className="text-xs text-muted-foreground">
+            <CardHeader className='px-6 pt-4 pb-4'>
+              <CardTitle className='text-sm font-medium'>Personal Information</CardTitle>
+              <p className='text-xs text-muted-foreground'>
                 Update your personal details and profile information.
               </p>
             </CardHeader>
-            <CardContent className="px-6 pt-0 pb-4 space-y-4">
-              <Box className="grid grid-cols-2 gap-4">
+            <CardContent className='px-6 pt-0 pb-4 space-y-4'>
+              <Box className='grid grid-cols-2 gap-4'>
                 <FieldGroup>
                   <Controller
-                    name="firstName"
+                    name='firstName'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -113,7 +113,7 @@ export function UserForm({
 
                 <FieldGroup>
                   <Controller
-                    name="lastName"
+                    name='lastName'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -128,10 +128,10 @@ export function UserForm({
                 </FieldGroup>
               </Box>
 
-              <Box className="grid grid-cols-1 gap-4">
+              <Box className='grid grid-cols-1 gap-4'>
                 <FieldGroup>
                   <Controller
-                    name="username"
+                    name='username'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -142,10 +142,10 @@ export function UserForm({
                           {...field}
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value || null)}
-                          placeholder="e.g. john.doe"
+                          placeholder='e.g. john.doe'
                           aria-invalid={fieldState.invalid}
                         />
-                        <p className="text-xs text-muted-foreground">
+                        <p className='text-xs text-muted-foreground'>
                           This is your public display name. It can be your real name or a pseudonym.
                           You can only change this once every 30 days.
                         </p>
@@ -156,17 +156,17 @@ export function UserForm({
                 </FieldGroup>
               </Box>
 
-              <Box className="grid grid-cols-2 gap-4">
+              <Box className='grid grid-cols-2 gap-4'>
                 <FieldGroup>
                   <Controller
-                    name="email"
+                    name='email'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
                           <FieldLabel>Email</FieldLabel>
                         </FieldContent>
-                        <Input type="email" {...field} aria-invalid={fieldState.invalid} />
+                        <Input type='email' {...field} aria-invalid={fieldState.invalid} />
                         {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                       </Field>
                     )}
@@ -175,7 +175,7 @@ export function UserForm({
 
                 <FieldGroup>
                   <Controller
-                    name="phone"
+                    name='phone'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -195,10 +195,10 @@ export function UserForm({
                 </FieldGroup>
               </Box>
 
-              <Box className="grid grid-cols-2 gap-4">
+              <Box className='grid grid-cols-2 gap-4'>
                 <FieldGroup>
                   <Controller
-                    name="title"
+                    name='title'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -209,7 +209,7 @@ export function UserForm({
                           {...field}
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value || null)}
-                          placeholder="e.g. Senior Barista"
+                          placeholder='e.g. Senior Barista'
                           aria-invalid={fieldState.invalid}
                         />
                         {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
@@ -220,7 +220,7 @@ export function UserForm({
 
                 <FieldGroup>
                   <Controller
-                    name="status"
+                    name='status'
                     control={form.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -233,7 +233,7 @@ export function UserForm({
                           disabled={!canManageUsers}
                         >
                           <SelectTrigger aria-invalid={fieldState.invalid}>
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder='Select status' />
                           </SelectTrigger>
                           <SelectContent>
                             {StatusOptions.map((opt) => (
@@ -252,7 +252,7 @@ export function UserForm({
 
               <FieldGroup>
                 <Controller
-                  name="bio"
+                  name='bio'
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
@@ -263,7 +263,7 @@ export function UserForm({
                         {...field}
                         value={field.value ?? ''}
                         onChange={(e) => field.onChange(e.target.value || null)}
-                        placeholder="A short bio visible to your team"
+                        placeholder='A short bio visible to your team'
                         rows={3}
                         aria-invalid={fieldState.invalid}
                       />

@@ -7,7 +7,7 @@ import type {
   RecipeGroupWithItems,
   RecipeGroupSearchParams,
   RecipeGroupCreateData,
-  RecipeGroupUpdateData,
+  RecipeGroupUpdateData
 } from '@/features/finances/recipe-groups/types';
 
 // -- Repository ------------------------------------------------------------
@@ -33,11 +33,11 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         _count: { select: { items: true } };
         items: { include: { recipe: { select: { sellingPrice: true } } } };
       };
-    }>,
+    }>
   ): RecipeGroupListItem {
     const totalSellingPrice = row.items.reduce(
       (sum, item) => sum + Number(item.recipe.sellingPrice) * item.quantity,
-      0,
+      0
     );
 
     return {
@@ -48,7 +48,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
       totalSellingPrice,
       itemCount: row._count.items,
       createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      updatedAt: row.updatedAt
     };
   }
 
@@ -58,7 +58,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
    */
   async searchRecipeGroups(
     params: RecipeGroupSearchParams,
-    tenantId: string,
+    tenantId: string
   ): Promise<RecipeGroupPagination> {
     const page = Math.max(1, Number(params.page) || 1);
     const perPage = Math.min(100, Math.max(1, Number(params.perPage) || 10));
@@ -68,7 +68,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
     if (params.search?.trim()) {
       where.OR = [
         { name: { contains: params.search.trim(), mode: 'insensitive' } },
-        { description: { contains: params.search.trim(), mode: 'insensitive' } },
+        { description: { contains: params.search.trim(), mode: 'insensitive' } }
       ];
     }
 
@@ -79,7 +79,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         const sortArray = JSON.parse(params.sort);
         if (Array.isArray(sortArray) && sortArray.length > 0) {
           orderBy = sortArray.map((s: { id: string; desc: boolean }) => ({
-            [s.id]: s.desc ? 'desc' : 'asc',
+            [s.id]: s.desc ? 'desc' : 'asc'
           }));
         }
       } catch {
@@ -97,15 +97,15 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         take: perPage,
         include: {
           _count: { select: { items: true } },
-          items: { include: { recipe: { select: { sellingPrice: true } } } },
-        },
+          items: { include: { recipe: { select: { sellingPrice: true } } } }
+        }
       }),
-      this.prisma.recipeGroup.count({ where }),
+      this.prisma.recipeGroup.count({ where })
     ]);
 
     return {
       items: rows.map((row) => this.toListItem(row)),
-      pagination: getPaginationMetadata(total, perPage, page),
+      pagination: getPaginationMetadata(total, perPage, page)
     };
   }
 
@@ -119,8 +119,8 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
       orderBy: { name: 'asc' },
       include: {
         _count: { select: { items: true } },
-        items: { include: { recipe: { select: { sellingPrice: true } } } },
-      },
+        items: { include: { recipe: { select: { sellingPrice: true } } } }
+      }
     });
 
     return rows.map((row) => this.toListItem(row));
@@ -142,13 +142,13 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
                 name: true,
                 totalRetailPrice: true,
                 totalCost: true,
-                sellingPrice: true,
-              },
-            },
+                sellingPrice: true
+              }
+            }
           },
-          orderBy: { order: 'asc' },
-        },
-      },
+          orderBy: { order: 'asc' }
+        }
+      }
     });
 
     if (!row) {
@@ -169,13 +169,13 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         name: item.recipe.name,
         totalRetailPrice: Number(item.recipe.totalRetailPrice),
         totalCost: Number(item.recipe.totalCost),
-        sellingPrice: Number(item.recipe.sellingPrice),
-      },
+        sellingPrice: Number(item.recipe.sellingPrice)
+      }
     }));
 
     const totalSellingPrice = items.reduce(
       (sum, item) => sum + item.recipe.sellingPrice * item.quantity,
-      0,
+      0
     );
 
     return {
@@ -188,7 +188,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,
-      items,
+      items
     };
   }
 
@@ -198,12 +198,12 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
    */
   async createRecipeGroup(
     data: RecipeGroupCreateData,
-    tenantId: string,
+    tenantId: string
   ): Promise<RecipeGroup & { totalSellingPrice: number }> {
     const recipeIds = data.items.map((item) => item.recipeId);
     const recipes = await this.prisma.recipe.findMany({
       where: { id: { in: recipeIds } },
-      select: { id: true, totalRetailPrice: true, sellingPrice: true },
+      select: { id: true, totalRetailPrice: true, sellingPrice: true }
     });
 
     const retailMap = new Map(recipes.map((r) => [r.id, Number(r.totalRetailPrice)]));
@@ -213,13 +213,13 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
       recipeId: item.recipeId,
       quantity: item.quantity,
       subtotal: (retailMap.get(item.recipeId) ?? 0) * item.quantity,
-      order: item.order,
+      order: item.order
     }));
 
     const totalCost = itemsWithSubtotals.reduce((sum, item) => sum + item.subtotal, 0);
     const totalSellingPrice = data.items.reduce(
       (sum, item) => sum + (sellingMap.get(item.recipeId) ?? 0) * item.quantity,
-      0,
+      0
     );
 
     const recipeGroup = await this.prisma.recipeGroup.create({
@@ -228,8 +228,8 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         name: data.name,
         description: data.description,
         totalCost,
-        items: { create: itemsWithSubtotals },
-      },
+        items: { create: itemsWithSubtotals }
+      }
     });
 
     return { ...recipeGroup, totalSellingPrice };
@@ -242,13 +242,13 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
    */
   async updateRecipeGroup(
     id: string,
-    data: RecipeGroupUpdateData,
+    data: RecipeGroupUpdateData
   ): Promise<RecipeGroup & { totalSellingPrice: number }> {
     if (data.items) {
       const recipeIds = data.items.map((item) => item.recipeId);
       const recipes = await this.prisma.recipe.findMany({
         where: { id: { in: recipeIds } },
-        select: { id: true, totalRetailPrice: true, sellingPrice: true },
+        select: { id: true, totalRetailPrice: true, sellingPrice: true }
       });
 
       const retailMap = new Map(recipes.map((r) => [r.id, Number(r.totalRetailPrice)]));
@@ -258,13 +258,13 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
         recipeId: item.recipeId,
         quantity: item.quantity,
         subtotal: (retailMap.get(item.recipeId) ?? 0) * item.quantity,
-        order: item.order,
+        order: item.order
       }));
 
       const totalCost = itemsWithSubtotals.reduce((sum, item) => sum + item.subtotal, 0);
       const totalSellingPrice = data.items.reduce(
         (sum, item) => sum + (sellingMap.get(item.recipeId) ?? 0) * item.quantity,
-        0,
+        0
       );
 
       const recipeGroup = await this.prisma.recipeGroup.update({
@@ -273,8 +273,8 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
           name: data.name,
           description: data.description,
           totalCost,
-          items: { deleteMany: {}, create: itemsWithSubtotals },
-        },
+          items: { deleteMany: {}, create: itemsWithSubtotals }
+        }
       });
 
       return { ...recipeGroup, totalSellingPrice };
@@ -283,17 +283,17 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
     // Items unchanged — derive totalSellingPrice from existing item records
     const existingItems = await this.prisma.recipeGroupItem.findMany({
       where: { recipeGroupId: id },
-      select: { quantity: true, recipe: { select: { sellingPrice: true } } },
+      select: { quantity: true, recipe: { select: { sellingPrice: true } } }
     });
 
     const totalSellingPrice = existingItems.reduce(
       (sum, item) => sum + Number(item.recipe.sellingPrice) * item.quantity,
-      0,
+      0
     );
 
     const recipeGroup = await this.prisma.recipeGroup.update({
       where: { id },
-      data: { name: data.name, description: data.description },
+      data: { name: data.name, description: data.description }
     });
 
     return { ...recipeGroup, totalSellingPrice };
@@ -305,7 +305,7 @@ export class RecipeGroupRepository extends BaseRepository<Prisma.RecipeGroupGetP
   async softDeleteRecipeGroup(id: string): Promise<RecipeGroup> {
     return this.prisma.recipeGroup.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date() }
     });
   }
 }

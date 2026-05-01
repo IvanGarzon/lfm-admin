@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
-  DeleteOrganizationSchema,
+  DeleteOrganizationSchema
 } from '../organizations';
 import { testIds } from '@/lib/testing';
 
@@ -19,7 +19,7 @@ const validOrganization = {
   postcode: null,
   country: 'Australia',
   abn: null,
-  status: 'ACTIVE',
+  status: 'ACTIVE'
 };
 
 describe('Organisation Schemas', () => {
@@ -39,7 +39,7 @@ describe('Organisation Schemas', () => {
         city: 'Melbourne',
         state: 'VIC',
         postcode: '3000',
-        abn: '12 345 678 901',
+        abn: '12 345 678 901'
       });
       expect(result.success).toBe(true);
     });
@@ -53,7 +53,7 @@ describe('Organisation Schemas', () => {
     it('fails when email is invalid', () => {
       const result = CreateOrganizationSchema.safeParse({
         ...validOrganization,
-        email: 'not-an-email',
+        email: 'not-an-email'
       });
       expect(result.success).toBe(false);
     });
@@ -61,7 +61,7 @@ describe('Organisation Schemas', () => {
     it('fails when website is not a valid URL', () => {
       const result = CreateOrganizationSchema.safeParse({
         ...validOrganization,
-        website: 'not-a-url',
+        website: 'not-a-url'
       });
       expect(result.success).toBe(false);
     });
@@ -69,7 +69,7 @@ describe('Organisation Schemas', () => {
     it('fails when status is not a valid enum value', () => {
       const result = CreateOrganizationSchema.safeParse({
         ...validOrganization,
-        status: 'ARCHIVED',
+        status: 'ARCHIVED'
       });
       expect(result.success).toBe(false);
     });

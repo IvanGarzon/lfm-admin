@@ -6,13 +6,13 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
 import { TenantForm } from '@/features/admin/tenants/components/tenant-form';
 
 export function CreateTenantDialog({
   open,
-  onOpenChange,
+  onOpenChange
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,7 +27,7 @@ export function CreateTenantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className='sm:max-w-[480px]'>
         <DialogHeader>
           <DialogTitle>Create Tenant</DialogTitle>
           <DialogDescription>

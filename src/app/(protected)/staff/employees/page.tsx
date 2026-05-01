@@ -6,11 +6,11 @@ import { getEmployees } from '@/actions/staff/employees/queries';
 
 export const metadata = constructMetadata({
   title: 'Employees – lfm dashboard',
-  description: 'Admin page to manage employees.',
+  description: 'Admin page to manage employees.'
 });
 
 export default async function EmployeesPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {

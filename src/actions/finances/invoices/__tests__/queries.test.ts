@@ -47,13 +47,13 @@ import {
   getInvoiceStatusHistory,
   getInvoiceStatistics,
   getMonthlyRevenueTrend,
-  getTopDebtors,
+  getTopDebtors
 } from '../queries';
 import {
   testIds,
   mockSessions,
   createInvoiceStatistics,
-  createInvoiceDetails,
+  createInvoiceDetails
 } from '@/lib/testing';
 
 const { mockRepoInstance, mockAuth, mockRequirePermission, mockHasPermission } = vi.hoisted(() => ({
@@ -66,11 +66,11 @@ const { mockRepoInstance, mockAuth, mockRequirePermission, mockHasPermission } =
     findInvoiceStatusHistory: vi.fn(),
     getInvoiceStatistics: vi.fn(),
     getInvoiceMonthlyRevenueTrend: vi.fn(),
-    getInvoiceTopDebtors: vi.fn(),
+    getInvoiceTopDebtors: vi.fn()
   },
   mockAuth: vi.fn(),
   mockRequirePermission: vi.fn(),
-  mockHasPermission: vi.fn().mockReturnValue(true),
+  mockHasPermission: vi.fn().mockReturnValue(true)
 }));
 
 // Mock InvoiceRepository
@@ -78,17 +78,17 @@ vi.mock('@/repositories/invoice-repository', () => {
   return {
     InvoiceRepository: vi.fn().mockImplementation(function () {
       return mockRepoInstance;
-    }),
+    })
   };
 });
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/permissions', () => ({
   requirePermission: mockRequirePermission,
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 // Generate test IDs
@@ -108,9 +108,9 @@ describe('Invoice Queries', () => {
       const mockResult = {
         items: [
           { id: '1', invoiceNumber: 'INV-001', status: 'DRAFT' },
-          { id: '2', invoiceNumber: 'INV-002', status: 'PENDING' },
+          { id: '2', invoiceNumber: 'INV-002', status: 'PENDING' }
         ],
-        pagination: { page: 1, perPage: 10, total: 2 },
+        pagination: { page: 1, perPage: 10, total: 2 }
       };
 
       mockRepoInstance.searchInvoices.mockResolvedValue(mockResult);
@@ -134,17 +134,137 @@ describe('Invoice Queries', () => {
       }
     });
 
-    it('applies filters correctly', async () => {
-      const mockResult = {
-        items: [{ id: '1', invoiceNumber: 'INV-001', status: 'DRAFT' }],
-        pagination: { page: 1, perPage: 10, total: 1 },
-      };
+    it('passes defaults to repository when no search params are given', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
 
-      mockRepoInstance.searchInvoices.mockResolvedValue(mockResult);
+      await getInvoices({});
 
-      await getInvoices({ status: 'DRAFT', search: 'test' });
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ search: '', page: 1, perPage: 20, status: [], sort: [] }),
+        mockSession.user.tenantId
+      );
+    });
 
-      expect(mockRepoInstance.searchInvoices).toHaveBeenCalled();
+    it('parses search param and forwards to repository', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ search: 'INV-2024-0001' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ search: 'INV-2024-0001' }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('parses a single status value as a one-element array', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ status: 'DRAFT' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ['DRAFT'] }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('parses comma-separated status values as an array', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ status: 'DRAFT,PENDING' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ['DRAFT', 'PENDING'] }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('parses page param as an integer', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ page: '3' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 3 }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('parses perPage param as an integer', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ perPage: '10' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ perPage: 10 }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('parses sort param into an array of sort objects', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ sort: '[{"id":"dueDate","desc":true}]' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: [{ id: 'dueDate', desc: true }] }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('defaults sort to empty array when sort param is invalid JSON', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ sort: 'not-valid-json' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: [] }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('defaults sort to empty array when sort column is not in the allowed set', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ sort: '[{"id":"notAColumn","desc":false}]' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: [] }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('defaults page to 1 when page param is non-numeric', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({ page: 'abc' });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1 }),
+        mockSession.user.tenantId
+      );
+    });
+
+    it('forwards combined search, status, page, perPage, and sort to repository', async () => {
+      mockRepoInstance.searchInvoices.mockResolvedValue({ items: [], pagination: {} });
+
+      await getInvoices({
+        search: 'Alice',
+        status: 'PENDING,OVERDUE',
+        page: '2',
+        perPage: '10',
+        sort: '[{"id":"dueDate","desc":true}]'
+      });
+
+      expect(mockRepoInstance.searchInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({
+          search: 'Alice',
+          status: ['PENDING', 'OVERDUE'],
+          page: 2,
+          perPage: 10,
+          sort: [{ id: 'dueDate', desc: true }]
+        }),
+        mockSession.user.tenantId
+      );
     });
   });
 
@@ -190,7 +310,7 @@ describe('Invoice Queries', () => {
         id: TEST_INVOICE_ID,
         invoiceNumber: 'INV-001',
         status: 'DRAFT',
-        _count: { items: 3, payments: 1 },
+        _count: { items: 3, payments: 1 }
       };
 
       mockRepoInstance.findInvoiceMetadataById.mockResolvedValue(mockInvoice);
@@ -219,7 +339,7 @@ describe('Invoice Queries', () => {
     it('returns invoice items successfully', async () => {
       const mockItems = [
         { id: 'item-1', description: 'Item 1', quantity: 2, unitPrice: 100 },
-        { id: 'item-2', description: 'Item 2', quantity: 1, unitPrice: 200 },
+        { id: 'item-2', description: 'Item 2', quantity: 1, unitPrice: 200 }
       ];
 
       mockRepoInstance.findInvoiceItems.mockResolvedValue(mockItems);
@@ -240,8 +360,8 @@ describe('Invoice Queries', () => {
           id: 'payment-1',
           amount: 50,
           paidDate: new Date(),
-          paymentMethod: 'Credit Card',
-        },
+          paymentMethod: 'Credit Card'
+        }
       ];
 
       mockRepoInstance.findInvoicePayments.mockResolvedValue(mockPayments);
@@ -259,7 +379,7 @@ describe('Invoice Queries', () => {
     it('returns status history successfully', async () => {
       const mockHistory = [
         { id: '1', status: 'DRAFT', changedAt: new Date() },
-        { id: '2', status: 'PENDING', changedAt: new Date() },
+        { id: '2', status: 'PENDING', changedAt: new Date() }
       ];
 
       mockRepoInstance.findInvoiceStatusHistory.mockResolvedValue(mockHistory);
@@ -279,7 +399,7 @@ describe('Invoice Queries', () => {
 
       mockRepoInstance.getInvoiceStatistics.mockResolvedValue(mockStats);
 
-      const result = await getInvoiceStatistics();
+      const result = await getInvoiceStatistics({});
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -293,7 +413,7 @@ describe('Invoice Queries', () => {
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
+        endDate: new Date('2024-12-31')
       };
 
       const result = await getInvoiceStatistics(dateFilter);
@@ -301,13 +421,13 @@ describe('Invoice Queries', () => {
       expect(result.success).toBe(true);
       expect(mockRepoInstance.getInvoiceStatistics).toHaveBeenCalledWith(
         mockSession.user.tenantId,
-        dateFilter,
+        dateFilter
       );
     });
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getInvoiceStatistics();
+      const result = await getInvoiceStatistics({});
       expect(result.success).toBe(false);
     });
   });
@@ -316,7 +436,7 @@ describe('Invoice Queries', () => {
     it('returns monthly revenue trend successfully', async () => {
       const mockTrend = [
         { month: '2024-01', revenue: 10000, invoiceCount: 15 },
-        { month: '2024-02', revenue: 12000, invoiceCount: 18 },
+        { month: '2024-02', revenue: 12000, invoiceCount: 18 }
       ];
 
       mockRepoInstance.getInvoiceMonthlyRevenueTrend.mockResolvedValue(mockTrend);
@@ -331,7 +451,7 @@ describe('Invoice Queries', () => {
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getMonthlyRevenueTrend();
+      const result = await getMonthlyRevenueTrend(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -340,7 +460,7 @@ describe('Invoice Queries', () => {
     it('returns top debtors successfully', async () => {
       const mockDebtors = [
         { customerId: 'cust-1', customerName: 'John Doe', outstandingAmount: 5000 },
-        { customerId: 'cust-2', customerName: 'Jane Smith', outstandingAmount: 3000 },
+        { customerId: 'cust-2', customerName: 'Jane Smith', outstandingAmount: 3000 }
       ];
 
       mockRepoInstance.getInvoiceTopDebtors.mockResolvedValue(mockDebtors);
@@ -355,7 +475,7 @@ describe('Invoice Queries', () => {
 
     it('returns unauthorized when no session', async () => {
       mockAuth.mockResolvedValue(null);
-      const result = await getTopDebtors();
+      const result = await getTopDebtors(undefined);
       expect(result.success).toBe(false);
     });
   });
@@ -371,7 +491,7 @@ describe('Invoice Queries - Permission Tests', () => {
     mockHasPermission.mockReturnValue(true);
     mockRepoInstance.searchInvoices.mockResolvedValue({
       items: [],
-      pagination: {},
+      pagination: {}
     });
     mockRepoInstance.findInvoiceByIdWithDetails.mockResolvedValue(createInvoiceDetails());
   });

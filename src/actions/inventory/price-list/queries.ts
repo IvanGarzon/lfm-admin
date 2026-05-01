@@ -9,7 +9,7 @@ import type {
   PriceListPagination,
   PriceListItemWithDetails,
   PriceListCostHistoryItem,
-  PriceListItemListItem,
+  PriceListItemListItem
 } from '@/features/inventory/price-list/types';
 import { searchParamsCache } from '@/filters/price-list/price-list-filters';
 
@@ -32,7 +32,7 @@ export const getPriceListItems = withTenantPermission<SearchParams, PriceListPag
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');
     }
-  },
+  }
 );
 
 /**
@@ -54,7 +54,7 @@ export const getPriceListItemById = withTenantPermission<string, PriceListItemWi
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list item');
     }
-  },
+  }
 );
 
 /**
@@ -71,7 +71,7 @@ export const getPriceListCostHistory = withTenantPermission<string, PriceListCos
     } catch (error) {
       return handleActionError(error, 'Failed to fetch cost history');
     }
-  },
+  }
 );
 
 /**
@@ -87,5 +87,5 @@ export const getActivePriceListItems = withTenantPermission<void, PriceListItemL
     } catch (error) {
       return handleActionError(error, 'Failed to fetch price list items');
     }
-  },
+  }
 );

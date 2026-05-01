@@ -50,5 +50,5 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   USER: 'Staff',
   MANAGER: 'Manager',
   ADMIN: 'Admin',
-  SUPER_ADMIN: 'Super Admin',
+  SUPER_ADMIN: 'Super Admin'
 };

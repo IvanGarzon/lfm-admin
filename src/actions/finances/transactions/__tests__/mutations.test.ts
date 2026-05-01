@@ -5,7 +5,7 @@ import {
   deleteTransaction,
   createTransactionCategory,
   uploadTransactionAttachment,
-  deleteTransactionAttachment,
+  deleteTransactionAttachment
 } from '../mutations';
 import {
   testIds,
@@ -13,7 +13,7 @@ import {
   createTransactionInput,
   createTransactionResponse,
   createTransactionWithDetails,
-  createTransactionCategory as createCategoryFactory,
+  createTransactionCategory as createCategoryFactory
 } from '@/lib/testing';
 
 const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
@@ -25,29 +25,29 @@ const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
     findOrCreateCategory: vi.fn(),
     createAttachment: vi.fn(),
     findAttachmentById: vi.fn(),
-    deleteAttachment: vi.fn(),
+    deleteAttachment: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/transaction-repository', () => {
   return {
     TransactionRepository: vi.fn().mockImplementation(function () {
       return mockTransactionRepo;
-    }),
+    })
   };
 });
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const TEST_TRANSACTION_ID = testIds.transaction();
@@ -115,7 +115,7 @@ describe('Transaction Mutations', () => {
     it('returns validation error for invalid input', async () => {
       const invalidInput = {
         ...createTransactionInput(),
-        amount: -100,
+        amount: -100
       };
 
       const result = await createTransaction(invalidInput);
@@ -128,12 +128,12 @@ describe('Transaction Mutations', () => {
     it('updates a transaction successfully when authorized', async () => {
       const input = {
         id: TEST_TRANSACTION_ID,
-        ...createTransactionInput(),
+        ...createTransactionInput()
       };
 
       mockTransactionRepo.findByIdWithDetails.mockResolvedValue(createTransactionWithDetails());
       mockTransactionRepo.updateTransaction.mockResolvedValue(
-        createTransactionResponse({ id: TEST_TRANSACTION_ID }),
+        createTransactionResponse({ id: TEST_TRANSACTION_ID })
       );
 
       const result = await updateTransaction(input);
@@ -147,7 +147,7 @@ describe('Transaction Mutations', () => {
     it('returns error when transaction not found', async () => {
       const input = {
         id: testIds.nonExistent(),
-        ...createTransactionInput(),
+        ...createTransactionInput()
       };
 
       mockTransactionRepo.findByIdWithDetails.mockResolvedValue(null);
@@ -164,7 +164,7 @@ describe('Transaction Mutations', () => {
       mockAuth.mockResolvedValue(null);
       const input = {
         id: TEST_TRANSACTION_ID,
-        ...createTransactionInput(),
+        ...createTransactionInput()
       };
       const result = await updateTransaction(input);
       expect(result.success).toBe(false);
@@ -184,7 +184,7 @@ describe('Transaction Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockTransactionRepo.deleteTransaction).toHaveBeenCalledWith(
         TEST_TRANSACTION_ID,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -212,7 +212,7 @@ describe('Transaction Mutations', () => {
   describe('createTransactionCategory', () => {
     it('creates a new category successfully', async () => {
       mockTransactionRepo.findOrCreateCategory.mockResolvedValue(
-        createCategoryFactory({ id: TEST_CATEGORY_ID, name: 'New Category' }),
+        createCategoryFactory({ id: TEST_CATEGORY_ID, name: 'New Category' })
       );
 
       const result = await createTransactionCategory('New Category');
@@ -223,14 +223,14 @@ describe('Transaction Mutations', () => {
       }
       expect(mockTransactionRepo.findOrCreateCategory).toHaveBeenCalledWith(
         'New Category',
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
     it('returns existing category if name already exists', async () => {
       const existingCategory = createCategoryFactory({
         id: TEST_CATEGORY_ID,
-        name: 'Existing Category',
+        name: 'Existing Category'
       });
       mockTransactionRepo.findOrCreateCategory.mockResolvedValue(existingCategory);
 
@@ -268,7 +268,7 @@ describe('Transaction Mutations', () => {
   describe('uploadTransactionAttachment', () => {
     it('uploads attachment successfully', async () => {
       const mockFile = new File(['test content'], 'test.pdf', {
-        type: 'application/pdf',
+        type: 'application/pdf'
       });
       const formData = new FormData();
       formData.append('transactionId', TEST_TRANSACTION_ID);
@@ -277,7 +277,7 @@ describe('Transaction Mutations', () => {
       const { uploadFileToS3 } = await import('@/lib/s3');
       vi.mocked(uploadFileToS3).mockResolvedValue({
         s3Key: 'test-key',
-        s3Url: 'https://test.s3.amazonaws.com/test-key',
+        s3Url: 'https://test.s3.amazonaws.com/test-key'
       });
 
       mockTransactionRepo.createAttachment.mockResolvedValue({
@@ -285,7 +285,7 @@ describe('Transaction Mutations', () => {
         fileName: 'test.pdf',
         fileSize: 12,
         mimeType: 'application/pdf',
-        s3Url: 'https://test.s3.amazonaws.com/test-key',
+        s3Url: 'https://test.s3.amazonaws.com/test-key'
       });
 
       const result = await uploadTransactionAttachment(formData);
@@ -326,7 +326,7 @@ describe('Transaction Mutations', () => {
       mockTransactionRepo.findAttachmentById.mockResolvedValue({
         s3Key: 'test-key',
         transactionId: TEST_TRANSACTION_ID,
-        fileName: 'test.pdf',
+        fileName: 'test.pdf'
       });
 
       const { deleteFileFromS3 } = await import('@/lib/s3');
@@ -420,7 +420,7 @@ describe('Transaction Mutations - Permission Tests', () => {
       mockAuth.mockResolvedValue(mockUserRole);
       const input = {
         id: testIds.transaction(),
-        ...createTransactionInput(),
+        ...createTransactionInput()
       };
 
       const result = await updateTransaction(input);
@@ -432,7 +432,7 @@ describe('Transaction Mutations - Permission Tests', () => {
       mockAuth.mockResolvedValue(mockManagerRole);
       const input = {
         id: testIds.transaction(),
-        ...createTransactionInput(),
+        ...createTransactionInput()
       };
 
       const result = await updateTransaction(input);

@@ -14,14 +14,14 @@ export const focusInput = [
   // ring color
   'focus:ring-blue-200 focus:dark:ring-blue-700/30',
   // border color
-  'focus:border-blue-500 focus:dark:border-blue-700',
+  'focus:border-blue-500 focus:dark:border-blue-700'
 ];
 
 export const focusRing = [
   // base
   'outline outline-offset-2 outline-0 focus-visible:outline-2',
   // outline color
-  'outline-blue-500 dark:outline-blue-500',
+  'outline-blue-500 dark:outline-blue-500'
 ];
 
 export const hasErrorInput = [
@@ -30,7 +30,7 @@ export const hasErrorInput = [
   // border color
   'border-red-500 dark:border-red-700',
   // ring color
-  'ring-red-200 dark:ring-red-700/30',
+  'ring-red-200 dark:ring-red-700/30'
 ];
 
 export const getPaginationMetadata = (totalItems: number, take: number, currentPage: number) => {
@@ -45,7 +45,7 @@ export const getPaginationMetadata = (totalItems: number, take: number, currentP
     hasNextPage,
     hasPreviousPage,
     nextPage: hasNextPage ? currentPage + 1 : null,
-    previousPage: hasPreviousPage ? currentPage - 1 : null,
+    previousPage: hasPreviousPage ? currentPage - 1 : null
   };
 };
 
@@ -53,7 +53,7 @@ export function constructMetadata({
   title = site.name,
   description = site.description,
   image = site.image,
-  noIndex = false,
+  noIndex = false
 }: {
   title?: string;
   description?: string;
@@ -67,8 +67,8 @@ export function constructMetadata({
     authors: [
       {
         name: site.author,
-        url: site.url,
-      },
+        url: site.url
+      }
     ],
     creator: site.author,
     openGraph: {
@@ -77,14 +77,14 @@ export function constructMetadata({
       url: site.url,
       title,
       description,
-      siteName: site.name,
+      siteName: site.name
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [image],
-      creator: site.author,
+      creator: site.author
     },
     manifest: `${site.url}/static/faviconx/site.webmanifest`,
     icons: {
@@ -94,19 +94,19 @@ export function constructMetadata({
           rel: 'icon',
           type: 'image/png',
           sizes: '16x16',
-          url: '/static/faviconx/favicon-16x16.png',
+          url: '/static/faviconx/favicon-16x16.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '32x32',
-          url: '/static/faviconx/favicon-32x32.png',
+          url: '/static/faviconx/favicon-32x32.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '96x96',
-          url: '/static/faviconx/favicon-96x96.png',
+          url: '/static/faviconx/favicon-96x96.png'
         },
 
         //! Android Icons
@@ -114,141 +114,141 @@ export function constructMetadata({
           rel: 'icon',
           type: 'image/png',
           sizes: '36x36',
-          url: '/static/faviconx/android-icon-36x36.png',
+          url: '/static/faviconx/android-icon-36x36.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '48x48',
-          url: '/static/faviconx/android-icon-48x48.png',
+          url: '/static/faviconx/android-icon-48x48.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '72x72',
-          url: '/static/faviconx/android-icon-72x72.png',
+          url: '/static/faviconx/android-icon-72x72.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '96x96',
-          url: '/static/faviconx/android-icon-96x96.png',
+          url: '/static/faviconx/android-icon-96x96.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '144x144',
-          url: '/static/faviconx/android-icon-144x144.png',
+          url: '/static/faviconx/android-icon-144x144.png'
         },
         {
           rel: 'icon',
           type: 'image/png',
           sizes: '192x192',
-          url: '/android-icon-192x192.png',
+          url: '/android-icon-192x192.png'
         },
 
         //! Apple Icons
         {
           rel: 'apple-touch-icon',
           type: 'image/ico',
-          url: '/static/faviconx/apple-icon.png',
+          url: '/static/faviconx/apple-icon.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '57x57',
-          url: '/static/faviconx/apple-icon-57x57.png',
+          url: '/static/faviconx/apple-icon-57x57.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '60x60',
-          url: '/static/faviconx/apple-icon-60x60.png',
+          url: '/static/faviconx/apple-icon-60x60.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '72x72',
-          url: '/static/faviconx/apple-icon-72x72.png',
+          url: '/static/faviconx/apple-icon-72x72.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '76x76',
-          url: '/static/faviconx/apple-icon-76x76.png',
+          url: '/static/faviconx/apple-icon-76x76.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '114x114',
-          url: '/static/faviconx/apple-icon-114x114.png',
+          url: '/static/faviconx/apple-icon-114x114.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '120x120',
-          url: '/static/faviconx/apple-icon-120x120.png',
+          url: '/static/faviconx/apple-icon-120x120.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '144x144',
-          url: '/static/faviconx/apple-icon-144x144.png',
+          url: '/static/faviconx/apple-icon-144x144.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '152x152',
-          url: '/static/faviconx/apple-icon-152x152.png',
+          url: '/static/faviconx/apple-icon-152x152.png'
         },
         {
           rel: 'apple-touch-icon',
           sizes: '180x180',
-          url: '/static/faviconx/apple-icon-180x180.png',
+          url: '/static/faviconx/apple-icon-180x180.png'
         },
 
         //! Other Icons
         {
           rel: 'apple-touch-icon-precomposed',
-          url: '/static/faviconx/apple-icon-precomposed.png',
+          url: '/static/faviconx/apple-icon-precomposed.png'
         },
         {
           rel: 'msapplication-TileImage',
           url: '/static/favicons/mstile-150x150.png',
-          sizes: '150x150',
+          sizes: '150x150'
         },
 
         //! MS Tile
         {
           rel: 'msapplication-TileImage',
           sizes: '150x150',
-          url: '/static/faviconx/mstile-150x150.png',
-        },
+          url: '/static/faviconx/mstile-150x150.png'
+        }
       ],
       apple: [{ url: '/static/faviconx/apple-icon-180x180.png' }],
       shortcut: [{ url: '/static/faviconx/favicon.ico' }],
       other: [
         {
           rel: 'manifest',
-          url: '/site.webmanifest',
+          url: '/site.webmanifest'
         },
         {
           rel: 'mask-icon',
           url: '/static/favicons/safari-pinned-tab.svg',
-          color: '#5bbad5',
+          color: '#5bbad5'
         },
         {
           rel: 'msapplication-TileImage',
-          url: '/static/favicons/mstile-150x150.png',
-        },
-      ],
+          url: '/static/favicons/mstile-150x150.png'
+        }
+      ]
     },
     metadataBase: new URL(site.url),
     ...(noIndex && {
       robots: {
         index: false,
-        follow: false,
-      },
-    }),
+        follow: false
+      }
+    })
   };
 }
 
 export const formatCurrency = ({
   number,
   currency = 'AUD',
-  maxFractionDigits = 2,
+  maxFractionDigits = 2
 }: {
   number: number;
   currency?: string;
@@ -257,17 +257,17 @@ export const formatCurrency = ({
   new Intl.NumberFormat('en-AU', {
     style: 'currency',
     currency: currency,
-    maximumFractionDigits: maxFractionDigits,
+    maximumFractionDigits: maxFractionDigits
   }).format(number);
 
 export const formatNumber = (number: number) =>
   new Intl.NumberFormat('en-AU', {
-    style: 'decimal',
+    style: 'decimal'
   }).format(number);
 
 export const formatPercentage = ({
   number,
-  decimals = 1,
+  decimals = 1
 }: {
   number: number;
   decimals?: number;
@@ -275,7 +275,7 @@ export const formatPercentage = ({
   const formattedNumber = new Intl.NumberFormat('en-AU', {
     style: 'percent',
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   }).format(number);
   const symbol = number > 0 && number !== Infinity ? '+' : '';
 
@@ -286,7 +286,7 @@ export const formatMillion = ({ number, decimals = 1 }: { number: number; decima
   const formattedNumber = new Intl.NumberFormat('en-AU', {
     style: 'decimal',
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   }).format(number);
   return `${formattedNumber}M`;
 };
@@ -294,12 +294,12 @@ export const formatMillion = ({ number, decimals = 1 }: { number: number; decima
 export const formatters: { [key: string]: any } = {
   toDateOnlyUTC: (date: Date) => {
     return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  },
+  }
 };
 
 export function formatDate(
   date: Date | string | number | undefined,
-  opts: Intl.DateTimeFormatOptions = {},
+  opts: Intl.DateTimeFormatOptions = {}
 ) {
   if (!date) return '';
 
@@ -308,7 +308,7 @@ export function formatDate(
       month: opts.month ?? 'long',
       day: opts.day ?? 'numeric',
       year: opts.year ?? 'numeric',
-      ...opts,
+      ...opts
     }).format(new Date(date));
   } catch (_err) {
     return '';
@@ -319,7 +319,7 @@ export function formatDateNormalizer(date: Date | string | number | undefined) {
   return formatDate(date, {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
+    day: '2-digit'
   });
 }
 
@@ -334,7 +334,7 @@ export function enumToOptions<T extends Record<string, string>>(enumObj: T) {
 
   return Object.entries(enumObj).map(([key, value]) => ({
     value,
-    label: formatLabel(key),
+    label: formatLabel(key)
   }));
 }
 
@@ -358,7 +358,7 @@ export function nFormatter(num: number, digits?: number) {
     { value: 1e9, symbol: 'G' },
     { value: 1e12, symbol: 'T' },
     { value: 1e15, symbol: 'P' },
-    { value: 1e18, symbol: 'E' },
+    { value: 1e18, symbol: 'E' }
   ];
   const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
   const item = lookup
@@ -424,7 +424,7 @@ const PAGINATION_KEYS = new Set(['page', 'perPage', 'sort']);
  */
 export function hasActiveSearchFilters(
   rawParams: Record<string, string | string[] | undefined>,
-  filterDefs: Record<string, { defaultValue: unknown }>,
+  filterDefs: Record<string, { defaultValue: unknown }>
 ): boolean {
   return Object.keys(filterDefs)
     .filter((key) => !PAGINATION_KEYS.has(key))

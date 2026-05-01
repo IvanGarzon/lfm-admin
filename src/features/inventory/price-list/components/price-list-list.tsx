@@ -22,9 +22,9 @@ export function PriceListList({ initialData, searchParams }: PriceListListProps)
     () =>
       createPriceListColumns({
         onDelete: (id: string, name: string) => openDelete(id, name),
-        onViewCostHistory: (id: string, name: string) => openCostHistory(id, name),
+        onViewCostHistory: (id: string, name: string) => openCostHistory(id, name)
       }),
-    [openDelete, openCostHistory],
+    [openDelete, openCostHistory]
   );
 
   const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;
@@ -34,11 +34,11 @@ export function PriceListList({ initialData, searchParams }: PriceListListProps)
     columns,
     pageCount: Math.ceil(initialData.pagination.totalItems / perPage),
     shallow: false,
-    debounceMs: 500,
+    debounceMs: 500
   });
 
   return (
-    <Box className="space-y-4">
+    <Box className='space-y-4'>
       <PriceListTable
         table={table}
         items={initialData.items}

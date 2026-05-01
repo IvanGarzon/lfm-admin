@@ -12,7 +12,7 @@ import {
   CircleDashed,
   Timer,
   Bell,
-  SquareDashedTopSolid,
+  SquareDashedTopSolid
 } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
@@ -30,7 +30,7 @@ import {
   getOverdueDays,
   getUrgency,
   isOverdue,
-  needsReminder,
+  needsReminder
 } from '@/features/finances/invoices/utils/invoice-helpers';
 
 const StatusOptions: {
@@ -41,33 +41,33 @@ const StatusOptions: {
   {
     label: 'Draft',
     value: InvoiceStatusSchema.enum.DRAFT,
-    icon: CircleDashed,
+    icon: CircleDashed
   },
   {
     label: 'Pending',
     value: InvoiceStatusSchema.enum.PENDING,
-    icon: Hourglass,
+    icon: Hourglass
   },
   {
     label: 'Paid',
     value: InvoiceStatusSchema.enum.PAID,
-    icon: CircleCheckBig,
+    icon: CircleCheckBig
   },
   {
     label: 'Partially Paid',
     value: InvoiceStatusSchema.enum.PARTIALLY_PAID,
-    icon: SquareDashedTopSolid,
+    icon: SquareDashedTopSolid
   },
   {
     label: 'Overdue',
     value: InvoiceStatusSchema.enum.OVERDUE,
-    icon: Timer,
+    icon: Timer
   },
   {
     label: 'Cancelled',
     value: InvoiceStatusSchema.enum.CANCELLED,
-    icon: Ban,
-  },
+    icon: Ban
+  }
 ];
 
 function InvoiceLink({ invoiceId, invoiceNumber }: { invoiceId: string; invoiceNumber: string }) {
@@ -76,7 +76,7 @@ function InvoiceLink({ invoiceId, invoiceNumber }: { invoiceId: string; invoiceN
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {invoiceNumber}
     </Link>
   );
@@ -91,7 +91,7 @@ export const createInvoiceColumns = (
   onDownloadPdf: (id: string) => void,
   onMarkAsDraft: (id: string) => void,
   onSendReceipt?: (id: string) => void,
-  onDuplicate?: (id: string) => void,
+  onDuplicate?: (id: string) => void
 ): ColumnDef<InvoiceListItem>[] => [
   {
     id: 'select',
@@ -101,25 +101,25 @@ export const createInvoiceColumns = (
           table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label='Select all'
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label='Select row'
       />
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: false
   },
   {
     id: 'search',
     accessorKey: 'invoiceNumber',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Invoice #" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Invoice #' />,
     cell: ({ row }) => (
-      <Box className="flex flex-col">
+      <Box className='flex flex-col'>
         <InvoiceLink invoiceId={row.original.id} invoiceNumber={row.original.invoiceNumber} />
       </Box>
     ),
@@ -129,13 +129,13 @@ export const createInvoiceColumns = (
       label: 'Invoice #',
       placeholder: 'Search by Invoice number or by customer...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'status',
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ row }) => <InvoiceStatusBadge status={row.getValue('status')} />,
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
@@ -146,35 +146,35 @@ export const createInvoiceColumns = (
       label: 'Status',
       variant: 'multiSelect',
       className: 'text-left',
-      options: StatusOptions,
-    },
+      options: StatusOptions
+    }
   },
   {
     id: 'customer',
     accessorKey: 'customerName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Customer" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Customer' />,
     cell: ({ row }) => (
-      <Box className="flex flex-col">
-        <Box className="flex items-center gap-3">
+      <Box className='flex flex-col'>
+        <Box className='flex items-center gap-3'>
           <UserAvatar
-            fontSize="0.7rem"
-            className="h-7 w-7 font-medium rounded-full"
+            fontSize='0.7rem'
+            className='h-7 w-7 font-medium rounded-full'
             user={{ name: row.original.customerName, image: null }}
           />
           <Box>
-            <Box className="font-medium">{row.original.customerName}</Box>
-            <Box className="text-xs text-muted-foreground">{row.original.customerEmail}</Box>
+            <Box className='font-medium'>{row.original.customerName}</Box>
+            <Box className='text-xs text-muted-foreground'>{row.original.customerEmail}</Box>
           </Box>
         </Box>
       </Box>
     ),
     meta: {
-      label: 'Customer',
-    },
+      label: 'Customer'
+    }
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Amount' />,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       // We can also show amountDue if it differs
@@ -182,10 +182,10 @@ export const createInvoiceColumns = (
       const amountPaid = row.original.amountPaid;
 
       return (
-        <Box className="flex flex-col">
-          <span className="font-semibold">{formatCurrency({ number: amount })}</span>
+        <Box className='flex flex-col'>
+          <span className='font-semibold'>{formatCurrency({ number: amount })}</span>
           {amountDue > 0 && amountPaid > 0 && amountDue < amount ? (
-            <span className="text-xs text-muted-foreground font-medium">
+            <span className='text-xs text-muted-foreground font-medium'>
               Due: {formatCurrency({ number: amountDue })}
             </span>
           ) : null}
@@ -193,22 +193,22 @@ export const createInvoiceColumns = (
       );
     },
     meta: {
-      label: 'Amount',
-    },
+      label: 'Amount'
+    }
   },
   {
     accessorKey: 'issuedDate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Issued" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Issued' />,
     cell: ({ row }) => {
       return <Box>{format(row.getValue('issuedDate'), 'MMM dd, yyyy')}</Box>;
     },
     meta: {
-      label: 'Issued',
-    },
+      label: 'Issued'
+    }
   },
   {
     accessorKey: 'dueDate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Due Date" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Due Date' />,
     cell: ({ row }) => {
       const dueDate: Date = row.getValue('dueDate');
       const invoice = row.original;
@@ -245,8 +245,8 @@ export const createInvoiceColumns = (
         invoice.status === InvoiceStatusSchema.enum.CANCELLED
       ) {
         return (
-          <Box className="flex flex-col">
-            <span className="text-muted-foreground">{format(dueDate, 'MMM dd, yyyy')}</span>
+          <Box className='flex flex-col'>
+            <span className='text-muted-foreground'>{format(dueDate, 'MMM dd, yyyy')}</span>
           </Box>
         );
       }
@@ -258,18 +258,18 @@ export const createInvoiceColumns = (
           : colorClass;
 
       return (
-        <Box className="flex flex-col">
-          <Box className="flex items-center gap-2">
+        <Box className='flex flex-col'>
+          <Box className='flex items-center gap-2'>
             <span className={`${dateColorClass} ${statusText ? 'font-semibold' : ''}`}>
               {format(dueDate, 'MMM dd, yyyy')}
             </span>
             {showReminder ? (
-              <Bell aria-hidden="true" className="h-3 w-3 text-primary animate-pulse" />
+              <Bell aria-hidden='true' className='h-3 w-3 text-primary animate-pulse' />
             ) : null}
           </Box>
           {statusText ? (
             <div className={`flex items-center text-xs ${colorClass}`}>
-              {Icon ? <Icon aria-hidden="true" className="mr-1 h-3 w-3" /> : null}
+              {Icon ? <Icon aria-hidden='true' className='mr-1 h-3 w-3' /> : null}
               <span>{statusText}</span>
             </div>
           ) : null}
@@ -277,8 +277,8 @@ export const createInvoiceColumns = (
       );
     },
     meta: {
-      label: 'Due',
-    },
+      label: 'Due'
+    }
   },
   {
     id: 'actions',
@@ -298,7 +298,7 @@ export const createInvoiceColumns = (
     ),
     enableHiding: false,
     meta: {
-      className: 'text-right',
-    },
-  },
+      className: 'text-right'
+    }
+  }
 ];

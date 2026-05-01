@@ -43,7 +43,7 @@ export function getEmailRecipient(originalRecipient: string): string {
  * Generic utility that can be used across features (quotes, invoices, etc.)
  */
 export async function generateEmailPreview<T extends EmailTemplateName>(
-  emailData: EmailPreviewData<T>,
+  emailData: EmailPreviewData<T>
 ): Promise<EmailPreviewResult> {
   try {
     const isTestMode = Boolean(env.EMAIL_TEST_MODE && env.EMAIL_TEST_RECIPIENT);
@@ -61,13 +61,13 @@ export async function generateEmailPreview<T extends EmailTemplateName>(
         hasAttachment: emailData.hasAttachment ?? false,
         attachmentName: emailData.attachmentName,
         isTestMode,
-        testRecipient: isTestMode ? env.EMAIL_TEST_RECIPIENT : undefined,
-      },
+        testRecipient: isTestMode ? env.EMAIL_TEST_RECIPIENT : undefined
+      }
     };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to generate email preview',
+      error: error instanceof Error ? error.message : 'Failed to generate email preview'
     };
   }
 }

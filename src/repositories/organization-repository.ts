@@ -4,7 +4,7 @@ import type { CreateOrganizationInput, UpdateOrganizationInput } from '@/schemas
 import type {
   OrganizationListItem,
   OrganizationPagination,
-  OrganizationFilters,
+  OrganizationFilters
 } from '@/features/crm/organizations/types';
 import { OrganizationStatus } from '@/prisma/client';
 import { getPaginationMetadata } from '@/lib/utils';
@@ -44,19 +44,19 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    */
   async searchOrganizations(
     params: OrganizationFilters,
-    tenantId: string,
+    tenantId: string
   ): Promise<OrganizationPagination> {
     const { name, status, page, perPage, sort } = params;
 
     const whereClause: Prisma.OrganizationWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     // Status filter
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
@@ -64,14 +64,14 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
     if (name) {
       const searchFilter: Prisma.StringFilter = {
         contains: name,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { name: searchFilter },
         { phone: searchFilter },
         { email: searchFilter },
-        { abn: searchFilter },
+        { abn: searchFilter }
       ];
     }
 
@@ -110,13 +110,13 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         deletedAt: true,
         _count: {
           select: {
-            customers: true,
-          },
-        },
+            customers: true
+          }
+        }
       },
       orderBy,
       skip,
-      take: perPage,
+      take: perPage
     });
 
     // Run count and query in parallel
@@ -138,14 +138,14 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
       createdAt: organization.createdAt,
       updatedAt: organization.updatedAt,
       deletedAt: organization.deletedAt,
-      customersCount: organization._count.customers ?? 0,
+      customersCount: organization._count.customers ?? 0
     }));
 
     const pagination = getPaginationMetadata(totalItems, perPage, page);
 
     return {
       items,
-      pagination,
+      pagination
     };
   }
 
@@ -176,10 +176,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         deletedAt: true,
         _count: {
           select: {
-            customers: true,
-          },
-        },
-      },
+            customers: true
+          }
+        }
+      }
     });
 
     if (!organization) {
@@ -202,7 +202,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
       createdAt: organization.createdAt,
       updatedAt: organization.updatedAt,
       deletedAt: organization.deletedAt,
-      customersCount: organization._count.customers ?? 0,
+      customersCount: organization._count.customers ?? 0
     };
   }
 
@@ -230,14 +230,14 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         createdAt: true,
         updatedAt: true,
         deletedAt: true,
-        _count: { select: { customers: true } },
+        _count: { select: { customers: true } }
       },
-      orderBy: { name: 'asc' },
+      orderBy: { name: 'asc' }
     });
 
     return rows.map((row) => ({
       ...row,
-      customersCount: row._count.customers,
+      customersCount: row._count.customers
     }));
   }
 
@@ -252,9 +252,9 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         tenantId,
         name: {
           equals: name,
-          mode: Prisma.QueryMode.insensitive,
-        },
-      },
+          mode: Prisma.QueryMode.insensitive
+        }
+      }
     });
   }
 
@@ -277,8 +277,8 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         email: data.email,
         website: data.website,
         abn: data.abn,
-        status: data.status,
-      },
+        status: data.status
+      }
     });
   }
 
@@ -295,7 +295,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
     }
 
     return this.prisma.organization.create({
-      data: { tenantId, name },
+      data: { tenantId, name }
     });
   }
 
@@ -309,7 +309,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   async updateOrganization(
     id: string,
     tenantId: string,
-    data: UpdateOrganizationInput,
+    data: UpdateOrganizationInput
   ): Promise<OrganizationListItem | null> {
     const updatedOrganization = await this.prisma.organization.update({
       where: { id, tenantId },
@@ -324,8 +324,8 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
         email: data.email,
         website: data.website,
         abn: data.abn,
-        status: data.status,
-      },
+        status: data.status
+      }
     });
 
     if (!updatedOrganization) {
@@ -344,7 +344,7 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    */
   async deleteOrganization(id: string, tenantId: string) {
     return this.prisma.organization.delete({
-      where: { id, tenantId },
+      where: { id, tenantId }
     });
   }
 }

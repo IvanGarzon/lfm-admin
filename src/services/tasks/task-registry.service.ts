@@ -29,7 +29,7 @@ export async function syncTasksToDatabase(tasks: Record<string, TaskDefinition>)
 
     logger.info('Starting task registry sync', {
       context: 'task-registry',
-      metadata: { taskCount: taskArray.length },
+      metadata: { taskCount: taskArray.length }
     });
 
     let created = 0;
@@ -58,7 +58,7 @@ export async function syncTasksToDatabase(tasks: Record<string, TaskDefinition>)
         concurrencyLimit: task.concurrencyLimit || 1,
         timeout: task.timeout ? task.timeout * 1000 : 300000, // Convert to ms
         metadata: task.metadata,
-        codeVersion: process.env.npm_package_version || '1.0.0',
+        codeVersion: process.env.npm_package_version || '1.0.0'
       });
 
       if (existing) {
@@ -72,24 +72,24 @@ export async function syncTasksToDatabase(tasks: Record<string, TaskDefinition>)
         metadata: {
           taskId: task.id,
           category: task.category,
-          action: existing ? 'updated' : 'created',
-        },
+          action: existing ? 'updated' : 'created'
+        }
       });
     }
 
     logger.info('Task registry sync completed', {
       context: 'task-registry',
-      metadata: { synced: taskArray.length, created, updated },
+      metadata: { synced: taskArray.length, created, updated }
     });
 
     return {
       synced: taskArray.length,
       created,
-      updated,
+      updated
     };
   } catch (error) {
     logger.error('Task registry sync failed', error, {
-      context: 'task-registry',
+      context: 'task-registry'
     });
     throw error;
   }

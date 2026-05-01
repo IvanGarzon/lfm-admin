@@ -48,32 +48,32 @@ function EmployeeLink({ employeeId, name }: { employeeId: string; name: string }
   const href = queryString ? `${basePath}?${queryString}` : basePath;
 
   return (
-    <Link href={href} className="font-medium hover:text-primary transition-colors hover:underline">
+    <Link href={href} className='font-medium hover:text-primary transition-colors hover:underline'>
       {name}
     </Link>
   );
 }
 
 export const createEmployeeColumns = (
-  onDelete: (id: string) => void,
+  onDelete: (id: string) => void
 ): ColumnDef<EmployeeListItem>[] => [
   {
     id: 'search',
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Name' />,
     cell: ({ row }) => {
       const { firstName, lastName, email, avatarUrl, id } = row.original;
       const fullName = `${firstName || ''} ${lastName || ''}`.trim();
 
       return (
-        <Box className="flex items-center gap-3">
+        <Box className='flex items-center gap-3'>
           <UserAvatar
-            className="h-10 w-10 rounded-full"
+            className='h-10 w-10 rounded-full'
             user={{ name: fullName, image: avatarUrl ?? null }}
           />
-          <Box className="flex flex-col">
+          <Box className='flex flex-col'>
             <EmployeeLink employeeId={id} name={fullName} />
-            <div className="text-[0.8rem] text-muted-foreground">{email}</div>
+            <div className='text-[0.8rem] text-muted-foreground'>{email}</div>
           </Box>
         </Box>
       );
@@ -84,28 +84,28 @@ export const createEmployeeColumns = (
       label: 'Name',
       placeholder: 'Search by name...',
       variant: 'text',
-      icon: Text,
-    },
+      icon: Text
+    }
   },
   {
     id: 'Phone',
     accessorKey: 'phone',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Phone' />,
     cell: ({ cell }) => `${formatPhoneDisplay(cell.getValue<EmployeeListItem['phone']>())}`,
     enableSorting: true,
     enableColumnFilter: true,
     meta: {
       className: 'tabular-nums',
-      displayName: 'Phone',
-    },
+      displayName: 'Phone'
+    }
   },
   {
     id: 'Rate',
     accessorKey: 'rate',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Rate" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Rate' />,
     cell: ({ cell }) => {
       return (
-        <Box className="font-medium">
+        <Box className='font-medium'>
           {formatCurrency({ number: cell.getValue<EmployeeListItem['rate']>() })}
         </Box>
       );
@@ -113,13 +113,13 @@ export const createEmployeeColumns = (
     enableSorting: true,
     enableColumnFilter: true,
     meta: {
-      displayName: 'Rate',
-    },
+      displayName: 'Rate'
+    }
   },
   {
     id: 'gender',
     accessorKey: 'gender',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Gender' />,
     cell: ({ cell }) => {
       const genderValue = cell.getValue<EmployeeListItem['gender']>();
       return genderValue ? <GenderBadge gender={genderValue} /> : null;
@@ -130,13 +130,13 @@ export const createEmployeeColumns = (
       label: 'Gender',
       variant: 'multiSelect',
       className: 'text-left',
-      options: GENDER_OPTIONS,
-    },
+      options: GENDER_OPTIONS
+    }
   },
   {
     id: 'status',
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
     cell: ({ cell }) => (
       <EmployeeStatusBadge status={cell.getValue<EmployeeListItem['status']>()} />
     ),
@@ -147,15 +147,15 @@ export const createEmployeeColumns = (
       label: 'Status',
       variant: 'multiSelect',
       className: 'text-left',
-      options: EMPLOYEE_STATUS_OPTIONS,
-    },
+      options: EMPLOYEE_STATUS_OPTIONS
+    }
   },
   {
     id: 'actions',
     cell: ({ row }) => <EmployeeActions employee={row.original} onDelete={onDelete} />,
     enableHiding: false,
     meta: {
-      className: 'text-right',
-    },
-  },
+      className: 'text-right'
+    }
+  }
 ];

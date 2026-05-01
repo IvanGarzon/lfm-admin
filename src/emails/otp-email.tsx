@@ -12,7 +12,7 @@ type OtpEmailProps = {
 function OtpEmailContent({
   userName,
   otpCode,
-  expiresInMinutes,
+  expiresInMinutes
 }: OtpEmailProps): React.ReactElement {
   return (
     <>
@@ -39,7 +39,7 @@ function OtpEmailContent({
 
 function OtpEmail(props: OtpEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText="Your sign-in verification code">
+    <BaseTemplateEmail previewText='Your sign-in verification code'>
       <OtpEmailContent {...props} />
     </BaseTemplateEmail>
   );
@@ -48,7 +48,7 @@ function OtpEmail(props: OtpEmailProps): React.ReactElement {
 OtpEmail.PreviewProps = {
   userName: 'Alex Taylor',
   otpCode: '482951',
-  expiresInMinutes: 15,
+  expiresInMinutes: 15
 } satisfies OtpEmailProps;
 
 export default OtpEmail;

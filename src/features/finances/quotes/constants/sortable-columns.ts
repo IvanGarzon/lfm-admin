@@ -9,7 +9,7 @@ export const SORTABLE_QUOTE_COLUMNS = [
   'amount',
   'issuedDate',
   'validUntil',
-  'versionNumber',
+  'versionNumber'
 ] as const;
 
 export type SortableQuoteColumn = (typeof SORTABLE_QUOTE_COLUMNS)[number];

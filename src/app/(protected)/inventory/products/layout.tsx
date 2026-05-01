@@ -2,7 +2,7 @@ import { ProductActionProvider } from '@/features/inventory/products/context/pro
 
 export default function ProductsLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

@@ -26,7 +26,7 @@ import {
   type MarkQuoteAsOnHoldInput,
   type MarkQuoteAsCancelledInput,
   type ConvertQuoteToInvoiceInput,
-  type CreateVersionInput,
+  type CreateVersionInput
 } from '@/schemas/quotes';
 import type { QuoteItemAttachment } from '@/features/finances/quotes/types';
 import type { ActionResult } from '@/types/actions';
@@ -57,7 +57,7 @@ export const createQuote = withTenantPermission<
 
     return {
       success: true,
-      data: { id: quote.id, quoteNumber: quote.quoteNumber },
+      data: { id: quote.id, quoteNumber: quote.quoteNumber }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create quote');
@@ -84,7 +84,7 @@ export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }
         validatedData.id,
         validatedData,
         ctx.tenantId,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!quote) {
@@ -98,7 +98,7 @@ export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }
     } catch (error) {
       return handleActionError(error, 'Failed to update quote');
     }
-  },
+  }
 );
 
 /**
@@ -125,7 +125,7 @@ export const markQuoteAsAccepted = withTenantPermission<MarkQuoteAsAcceptedInput
     } catch (error) {
       return handleActionError(error, 'Failed to mark quote as accepted');
     }
-  },
+  }
 );
 
 /**
@@ -143,7 +143,7 @@ export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput
         validatedData.id,
         ctx.tenantId,
         validatedData.rejectReason,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!quote) {
@@ -157,7 +157,7 @@ export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput
     } catch (error) {
       return handleActionError(error, 'Failed to mark quote as rejected');
     }
-  },
+  }
 );
 
 /**
@@ -200,7 +200,7 @@ export const markQuoteAsSent = withTenantPermission<
     return {
       success: true,
       data: { id: quote.id },
-      message: shouldSendEmail ? emailWarning : 'Quote marked as sent (no email sent)',
+      message: shouldSendEmail ? emailWarning : 'Quote marked as sent (no email sent)'
     };
   } catch (error) {
     return handleActionError(error, 'Failed to mark quote as sent');
@@ -222,7 +222,7 @@ export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { 
         validatedData.id,
         ctx.tenantId,
         validatedData.reason,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!quote) {
@@ -236,7 +236,7 @@ export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { 
     } catch (error) {
       return handleActionError(error, 'Failed to mark quote as on hold');
     }
-  },
+  }
 );
 
 /**
@@ -254,7 +254,7 @@ export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInp
         validatedData.id,
         ctx.tenantId,
         validatedData.cancelReason,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!quote) {
@@ -268,7 +268,7 @@ export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInp
     } catch (error) {
       return handleActionError(error, 'Failed to cancel quote');
     }
-  },
+  }
 );
 
 /**
@@ -295,9 +295,9 @@ export const convertQuoteToInvoice = withTenantPermission<
         tenantId: ctx.tenantId,
         gst: validatedData.gst,
         discount: validatedData.discount,
-        dueDate: validatedData.dueDate,
+        dueDate: validatedData.dueDate
       },
-      ctx.userId,
+      ctx.userId
     );
 
     // Auto-send invoice email to customer
@@ -316,8 +316,8 @@ export const convertQuoteToInvoice = withTenantPermission<
             amount: invoice.amount,
             currency: invoice.currency,
             dueDate: invoice.dueDate,
-            issuedDate: invoice.issuedDate,
-          },
+            issuedDate: invoice.issuedDate
+          }
         });
       }
     } catch (emailError) {
@@ -372,7 +372,7 @@ export const deleteQuote = withTenantPermission<string, { id: string }>(
     } catch (error) {
       return handleActionError(error, 'Failed to delete quote');
     }
-  },
+  }
 );
 
 /**
@@ -404,7 +404,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
         quoteItemId,
         fileName: file.name,
         fileSize: file.size,
-        mimeType: file.type,
+        mimeType: file.type
       });
 
       // Convert file to buffer
@@ -415,7 +415,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
         file: buffer,
         fileName: validatedData.fileName,
         mimeType: validatedData.mimeType,
-        quoteId,
+        quoteId
       };
 
       const { s3Key, s3Url } = await uploadFileToS3({
@@ -426,8 +426,8 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
         allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
         metadata: {
           quoteId: params.quoteId,
-          itemId: validatedData.quoteItemId,
-        },
+          itemId: validatedData.quoteItemId
+        }
       });
 
       // Create database record
@@ -438,7 +438,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
         mimeType: validatedData.mimeType,
         s3Key,
         s3Url,
-        uploadedBy: ctx.userId,
+        uploadedBy: ctx.userId
       });
 
       revalidatePath(`/finances/quotes/${quoteId}`);
@@ -454,13 +454,13 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
           s3Key: attachment.s3Key,
           s3Url: attachment.s3Url,
           uploadedBy: attachment.uploadedBy,
-          uploadedAt: attachment.uploadedAt,
-        },
+          uploadedAt: attachment.uploadedAt
+        }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to upload item attachment');
     }
-  },
+  }
 );
 
 /**
@@ -486,7 +486,7 @@ export const deleteQuoteItemAttachment = withTenantPermission<
     // Check if other attachments use the same S3 key (e.g. from duplicated quotes)
     const usageCount = await quoteRepo.countQuoteItemAttachmentsByS3Key(
       attachment.s3Key,
-      attachment.id,
+      attachment.id
     );
 
     // Only delete from S3 if no other records reference this file
@@ -529,8 +529,8 @@ export const updateQuoteItemNotes = withTenantPermission<
       success: true,
       data: {
         id: quoteItem.id,
-        notes: quoteItem.notes ?? '',
-      },
+        notes: quoteItem.notes ?? ''
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update quote item notes');
@@ -570,8 +570,8 @@ export const updateQuoteItemColors = withTenantPermission<
       success: true,
       data: {
         id: quoteItem.id,
-        colors: quoteItem.colors,
-      },
+        colors: quoteItem.colors
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update quote item colors');
@@ -605,7 +605,7 @@ export const createQuoteVersion = withTenantPermission<
     const newVersion = await quoteRepo.createQuoteVersion(
       validatedData.quoteId,
       ctx.tenantId,
-      ctx.userId,
+      ctx.userId
     );
 
     revalidatePath('/finances/quotes');
@@ -618,8 +618,8 @@ export const createQuoteVersion = withTenantPermission<
         id: newVersion.id,
         quoteNumber: newVersion.quoteNumber,
         versionNumber: newVersion.versionNumber,
-        parentQuoteNumber: parentQuote.quoteNumber,
-      },
+        parentQuoteNumber: parentQuote.quoteNumber
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create quote version');
@@ -650,7 +650,7 @@ export const sendQuoteEmail = withTenantPermission<
       currency: quote.currency,
       issuedDate: quote.issuedDate,
       validUntil: quote.validUntil,
-      itemCount: quote.items.length,
+      itemCount: quote.items.length
     };
 
     const branding = await getTenantBranding();
@@ -662,7 +662,7 @@ export const sendQuoteEmail = withTenantPermission<
       reminder: `Reminder: Quote ${quote.quoteNumber} expiring soon`,
       accepted: `Quote ${quote.quoteNumber} Accepted - Thank You!`,
       rejected: `Quote ${quote.quoteNumber} - We Value Your Feedback`,
-      followup: `Following up: Quote ${quote.quoteNumber} from ${tenantName}`,
+      followup: `Following up: Quote ${quote.quoteNumber} from ${tenantName}`
     };
 
     // Queue email via Inngest
@@ -673,7 +673,7 @@ export const sendQuoteEmail = withTenantPermission<
       type: data.type,
       recipient: quote.customer.email,
       subject: subjects[data.type],
-      emailData,
+      emailData
     });
 
     revalidatePath(`/finances/quotes/${data.quoteId}`);
@@ -706,18 +706,18 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
       const recentFollowUp = await emailAuditRepo.findLastSentByQuote(
         quoteId,
         'quote.followup',
-        twentyFourHoursAgo,
+        twentyFourHoursAgo
       );
 
       if (recentFollowUp) {
         const hoursSinceLastFollowUp = Math.floor(
-          (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60),
+          (Date.now() - new Date(recentFollowUp.sentAt!).getTime()) / (1000 * 60 * 60)
         );
         const hoursRemaining = 24 - hoursSinceLastFollowUp;
 
         return {
           success: false,
-          error: `Please wait ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} before sending another follow-up`,
+          error: `Please wait ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} before sending another follow-up`
         };
       }
 
@@ -729,7 +729,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
         currency: quote.currency,
         issuedDate: quote.issuedDate,
         validUntil: quote.validUntil,
-        itemCount: quote.items.length,
+        itemCount: quote.items.length
       };
 
       const branding = await getTenantBranding();
@@ -743,7 +743,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
         type: 'followup',
         recipient: quote.customer.email,
         subject: `Following up: Quote ${quote.quoteNumber} from ${tenantName}`,
-        emailData,
+        emailData
       });
 
       revalidatePath(`/finances/quotes/${quoteId}`);
@@ -752,7 +752,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
     } catch (error) {
       return handleActionError(error, 'Failed to send quote follow-up');
     }
-  },
+  }
 );
 
 /**
@@ -779,12 +779,12 @@ export const duplicateQuote = withTenantPermission<string, { id: string; quoteNu
 
       return {
         success: true,
-        data: { id: result.id, quoteNumber: result.quoteNumber },
+        data: { id: result.id, quoteNumber: result.quoteNumber }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to duplicate quote');
     }
-  },
+  }
 );
 
 /**
@@ -806,7 +806,7 @@ export const bulkUpdateQuoteStatus = withTenantPermission<
       data.ids,
       data.status,
       ctx.tenantId,
-      ctx.userId,
+      ctx.userId
     );
 
     const successCount = results.filter((r) => r.success).length;
@@ -819,8 +819,8 @@ export const bulkUpdateQuoteStatus = withTenantPermission<
       data: {
         successCount,
         failureCount,
-        results,
-      },
+        results
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update quotes');
@@ -854,8 +854,8 @@ export const bulkDeleteQuotes = withTenantPermission<
       data: {
         successCount,
         failureCount,
-        results,
-      },
+        results
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to delete quotes');
@@ -884,7 +884,7 @@ export const toggleQuoteFavourite = withTenantPermission<
     return {
       success: true,
       data: result,
-      message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites',
+      message: result.isFavourite ? 'Quote added to favourites' : 'Quote removed from favourites'
     };
   } catch (error) {
     return handleActionError(error, 'Failed to toggle quote favourite');

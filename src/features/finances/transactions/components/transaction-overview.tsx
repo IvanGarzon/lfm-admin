@@ -15,39 +15,39 @@ interface TransactionOverviewProps {
 export function TransactionOverview({
   stats,
   isLoading,
-  comparisonLabel,
+  comparisonLabel
 }: TransactionOverviewProps) {
   return (
-    <Box className="grid gap-4 md:grid-cols-3">
+    <Box className='grid gap-4 md:grid-cols-3'>
       <StatCard
-        title="Total Income"
+        title='Total Income'
         value={formatCurrency({ number: stats?.totalIncome ?? 0, maxFractionDigits: 0 })}
-        description="Income received"
+        description='Income received'
         comparisonLabel={comparisonLabel}
         icon={TrendingUp}
         growth={stats?.totalIncomeGrowth}
         isLoading={isLoading}
-        color="text-emerald-500"
+        color='text-emerald-500'
       />
       <StatCard
-        title="Total Expenses"
+        title='Total Expenses'
         value={formatCurrency({ number: stats?.totalExpense ?? 0, maxFractionDigits: 0 })}
-        description="Money spent"
+        description='Money spent'
         comparisonLabel={comparisonLabel}
         icon={TrendingDown}
         growth={stats?.totalExpenseGrowth}
         isLoading={isLoading}
-        color="text-red-500"
+        color='text-red-500'
       />
       <StatCard
-        title="Net Cash Flow"
+        title='Net Cash Flow'
         value={formatCurrency({ number: stats?.netCashFlow ?? 0, maxFractionDigits: 0 })}
-        description="Income - Expenses"
+        description='Income - Expenses'
         comparisonLabel={comparisonLabel}
         icon={DollarSign}
         growth={stats?.netCashFlowGrowth}
         isLoading={isLoading}
-        color="text-blue-500"
+        color='text-blue-500'
       />
     </Box>
   );

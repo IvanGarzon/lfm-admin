@@ -10,10 +10,10 @@ export default async function TenantSettingsPage() {
   }
 
   return (
-    <Box className="space-y-4 min-w-0 w-full">
+    <Box className='space-y-4 min-w-0 w-full'>
       <Box>
-        <h2 className="text-xl font-semibold tracking-tight">Profile</h2>
-        <p className="text-muted-foreground text-sm">Update your profile and account settings</p>
+        <h2 className='text-xl font-semibold tracking-tight'>Profile</h2>
+        <p className='text-muted-foreground text-sm'>Update your profile and account settings</p>
       </Box>
       <TenantSettingsForm tenant={result.data} />
     </Box>

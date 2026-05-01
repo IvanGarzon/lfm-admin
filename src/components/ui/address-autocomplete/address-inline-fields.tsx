@@ -33,7 +33,7 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
     placeholder,
     showMapIcon = true,
     mapIconClass,
-    disabled = false,
+    disabled = false
   } = props;
 
   const [selectedPlaceId, setSelectedPlaceId] = useState('');
@@ -65,7 +65,7 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
 
           const getComponent = (
             type: string,
-            nameType: 'longText' | 'shortText' = 'longText',
+            nameType: 'longText' | 'shortText' = 'longText'
           ): string => {
             const component = addressComponents.find((c) => c.types.includes(type));
             return component?.[nameType] || '';
@@ -90,7 +90,7 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
             postalCode: getComponent('postal_code'),
             country: getComponent('country'),
             lat,
-            lng,
+            lng
           });
 
           setAdrAddress(place.adrFormatAddress || '');
@@ -102,7 +102,7 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
         setIsLoading(false);
       }
     },
-    [isLoaded, getPlaceDetails, setAddress],
+    [isLoaded, getPlaceDetails, setAddress]
   );
 
   const handleClear = useCallback(() => {
@@ -124,14 +124,14 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
           address2: newAddress.address2 || '',
           locality: newAddress.city || '',
           region: newAddress.region || '',
-          'postal-code': newAddress.postalCode || '',
+          'postal-code': newAddress.postalCode || ''
         });
         newAddress.formattedAddress = newFormattedAddress;
       }
 
       setAddress(newAddress);
     },
-    [address, adrAddress, setAddress],
+    [address, adrAddress, setAddress]
   );
 
   const handleSearchAgain = useCallback(() => {
@@ -141,9 +141,9 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
 
   if (isLoading) {
     return (
-      <Box className="flex items-center justify-center py-8">
-        <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-sm text-muted-foreground">Loading address details...</span>
+      <Box className='flex items-center justify-center py-8'>
+        <Loader2 className='size-6 animate-spin text-muted-foreground' />
+        <span className='ml-2 text-sm text-muted-foreground'>Loading address details...</span>
       </Box>
     );
   }
@@ -166,36 +166,36 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
 
   // Show inline address fields after selection
   return (
-    <Box className="space-y-4 w-full overflow-hidden">
+    <Box className='space-y-4 w-full overflow-hidden'>
       {/* Header with formatted address and actions */}
-      <Box className="flex items-center gap-1 p-3 bg-muted/50 rounded-md border min-w-0">
-        <Box className="flex-1 min-w-0 overflow-hidden">
-          <p className="text-sm font-medium truncate">{address.formattedAddress}</p>
-          <p className="text-xs text-muted-foreground truncate">
+      <Box className='flex items-center gap-1 p-3 bg-muted/50 rounded-md border min-w-0'>
+        <Box className='flex-1 min-w-0 overflow-hidden'>
+          <p className='text-sm font-medium truncate'>{address.formattedAddress}</p>
+          <p className='text-xs text-muted-foreground truncate'>
             Edit the fields below to correct any details
           </p>
         </Box>
         <Button
-          type="button"
+          type='button'
           onClick={handleSearchAgain}
-          size="icon"
-          variant="outline"
-          className="shrink-0"
+          size='icon'
+          variant='outline'
+          className='shrink-0'
           disabled={disabled}
-          title="Search again"
+          title='Search again'
         >
-          <Search className="size-4" />
+          <Search className='size-4' />
         </Button>
         <Button
-          type="button"
+          type='button'
           onClick={handleClear}
-          size="icon"
-          variant="outline"
-          className="shrink-0"
+          size='icon'
+          variant='outline'
+          className='shrink-0'
           disabled={disabled}
-          title="Clear address"
+          title='Clear address'
         >
-          <Delete className="size-4" />
+          <Delete className='size-4' />
         </Button>
       </Box>
 
@@ -203,13 +203,13 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
       <FieldGroup>
         <Field>
           <FieldContent>
-            <FieldLabel htmlFor="inline-address1">Address line 1 *</FieldLabel>
+            <FieldLabel htmlFor='inline-address1'>Address line 1 *</FieldLabel>
           </FieldContent>
           <Input
-            id="inline-address1"
+            id='inline-address1'
             value={address.address1}
             onChange={(e) => handleFieldChange('address1', e.target.value)}
-            placeholder="Street address"
+            placeholder='Street address'
             disabled={disabled}
           />
           {!address.address1 && <FieldError errors={[{ message: 'Address line 1 is required' }]} />}
@@ -219,31 +219,31 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
       <FieldGroup>
         <Field>
           <FieldContent>
-            <FieldLabel htmlFor="inline-address2">
-              Address line 2 <span className="text-xs text-muted-foreground">(Optional)</span>
+            <FieldLabel htmlFor='inline-address2'>
+              Address line 2 <span className='text-xs text-muted-foreground'>(Optional)</span>
             </FieldLabel>
           </FieldContent>
           <Input
-            id="inline-address2"
+            id='inline-address2'
             value={address.address2 ?? ''}
             onChange={(e) => handleFieldChange('address2', e.target.value)}
-            placeholder="Apartment, suite, unit, etc."
+            placeholder='Apartment, suite, unit, etc.'
             disabled={disabled}
           />
         </Field>
       </FieldGroup>
 
-      <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FieldGroup>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="inline-city">City *</FieldLabel>
+              <FieldLabel htmlFor='inline-city'>City *</FieldLabel>
             </FieldContent>
             <Input
-              id="inline-city"
+              id='inline-city'
               value={address.city ?? ''}
               onChange={(e) => handleFieldChange('city', e.target.value)}
-              placeholder="City"
+              placeholder='City'
               disabled={disabled}
             />
             {!address.city && <FieldError errors={[{ message: 'City is required' }]} />}
@@ -253,13 +253,13 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
         <FieldGroup>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="inline-region">State / Region *</FieldLabel>
+              <FieldLabel htmlFor='inline-region'>State / Region *</FieldLabel>
             </FieldContent>
             <Input
-              id="inline-region"
+              id='inline-region'
               value={address.region ?? ''}
               onChange={(e) => handleFieldChange('region', e.target.value)}
-              placeholder="State or region"
+              placeholder='State or region'
               disabled={disabled}
             />
             {!address.region && <FieldError errors={[{ message: 'State/Region is required' }]} />}
@@ -267,17 +267,17 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
         </FieldGroup>
       </Box>
 
-      <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Box className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FieldGroup>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="inline-postalCode">Postal Code *</FieldLabel>
+              <FieldLabel htmlFor='inline-postalCode'>Postal Code *</FieldLabel>
             </FieldContent>
             <Input
-              id="inline-postalCode"
+              id='inline-postalCode'
               value={address.postalCode ?? ''}
               onChange={(e) => handleFieldChange('postalCode', e.target.value)}
-              placeholder="Postal code"
+              placeholder='Postal code'
               disabled={disabled}
             />
             {!address.postalCode && (
@@ -289,13 +289,13 @@ export function AddressInlineFields(props: AddressInlineFieldsProps) {
         <FieldGroup>
           <Field>
             <FieldContent>
-              <FieldLabel htmlFor="inline-country">Country</FieldLabel>
+              <FieldLabel htmlFor='inline-country'>Country</FieldLabel>
             </FieldContent>
             <Input
-              id="inline-country"
+              id='inline-country'
               value={address.country ?? ''}
               disabled
-              placeholder="Country"
+              placeholder='Country'
             />
           </Field>
         </FieldGroup>

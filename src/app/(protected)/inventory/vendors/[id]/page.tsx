@@ -8,13 +8,13 @@ const VendorDrawer = dynamic(
   () =>
     import('@/features/inventory/vendors/components/vendor-drawer').then((mod) => mod.VendorDrawer),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function VendorPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

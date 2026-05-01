@@ -19,7 +19,7 @@ import {
   type RecordPaymentInput,
   type MarkInvoiceAsPendingInput,
   type CancelInvoiceInput,
-  type BulkUpdateInvoiceStatusInput,
+  type BulkUpdateInvoiceStatusInput
 } from '@/schemas/invoices';
 
 const invoiceRepo = new InvoiceRepository(prisma);
@@ -41,14 +41,14 @@ export const createInvoice = withTenantPermission<
     const invoice = await invoiceRepo.createInvoiceWithItems(
       validatedData,
       ctx.tenantId,
-      ctx.userId,
+      ctx.userId
     );
 
     revalidatePath('/finances/invoices');
 
     return {
       success: true,
-      data: { id: invoice.id, invoiceNumber: invoice.invoiceNumber },
+      data: { id: invoice.id, invoiceNumber: invoice.invoiceNumber }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to create invoice');
@@ -70,7 +70,7 @@ export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: stri
       const invoice = await invoiceRepo.updateInvoiceWithItems(
         validatedData.id,
         validatedData,
-        ctx.tenantId,
+        ctx.tenantId
       );
 
       if (!invoice) {
@@ -84,7 +84,7 @@ export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: stri
     } catch (error) {
       return handleActionError(error, 'Failed to update invoice');
     }
-  },
+  }
 );
 
 /**
@@ -101,7 +101,7 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
       const invoice = await invoiceRepo.markInvoiceAsPending(
         validatedInvoice.id,
         ctx.tenantId,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!invoice) {
@@ -126,26 +126,26 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
               amount: Number(invoice.amount),
               currency: invoice.currency,
               dueDate: invoice.dueDate,
-              issuedDate: invoice.issuedDate,
-            },
+              issuedDate: invoice.issuedDate
+            }
           });
 
           logger.info('Invoice marked as pending, email queued', {
             context: 'markInvoiceAsPending',
             metadata: {
               invoiceId: invoice.id,
-              invoiceNumber: invoice.invoiceNumber,
-            },
+              invoiceNumber: invoice.invoiceNumber
+            }
           });
         } catch (err) {
           logger.error('Failed to queue invoice email', err, {
             context: 'markInvoiceAsPending',
-            metadata: { invoiceId: invoice.id },
+            metadata: { invoiceId: invoice.id }
           });
 
           return {
             success: false,
-            error: err instanceof Error ? err.message : 'Failed to queue invoice email',
+            error: err instanceof Error ? err.message : 'Failed to queue invoice email'
           };
         }
       }
@@ -157,7 +157,7 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
     } catch (error) {
       return handleActionError(error, 'Failed to mark invoice as pending');
     }
-  },
+  }
 );
 
 /**
@@ -182,7 +182,7 @@ export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
     } catch (error) {
       return handleActionError(error, 'Failed to revert invoice to draft');
     }
-  },
+  }
 );
 
 /**
@@ -204,7 +204,7 @@ export const recordPayment = withTenantPermission<
       validatedData.paymentMethod,
       validatedData.paidDate,
       validatedData.notes,
-      ctx.userId,
+      ctx.userId
     );
 
     if (!invoice) {
@@ -216,8 +216,8 @@ export const recordPayment = withTenantPermission<
       context: 'recordPayment',
       metadata: {
         invoiceId: invoice.id,
-        amount: validatedData.amount.toString(),
-      },
+        amount: validatedData.amount.toString()
+      }
     });
 
     revalidatePath('/finances/invoices');
@@ -229,15 +229,15 @@ export const recordPayment = withTenantPermission<
       data: {
         id: invoice.id,
         status: invoice.status,
-        receiptNumber: invoice.receiptNumber,
-      },
+        receiptNumber: invoice.receiptNumber
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to record payment', {
       action: 'recordPayment',
       userId: ctx.userId,
       invoiceId: data.id,
-      amount: data.amount,
+      amount: data.amount
     });
   }
 });
@@ -258,7 +258,7 @@ export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: stri
         validatedData.id,
         ctx.tenantId,
         validatedData.cancelReason,
-        ctx.userId,
+        ctx.userId
       );
 
       if (!invoice) {
@@ -272,7 +272,7 @@ export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: stri
     } catch (error) {
       return handleActionError(error, 'Failed to cancel invoice');
     }
-  },
+  }
 );
 
 /**
@@ -300,7 +300,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
       if (!invoice.receiptNumber) {
         logger.warn('Receipt number missing, generating now', {
           context: 'sendInvoiceReceipt',
-          metadata: { invoiceId: id },
+          metadata: { invoiceId: id }
         });
 
         // Generate receipt number if missing
@@ -334,8 +334,8 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
             amount: Number(invoice.amount),
             currency: invoice.currency,
             paidDate: invoice.paidDate || new Date(),
-            paymentMethod: invoice.paymentMethod || 'Not specified',
-          },
+            paymentMethod: invoice.paymentMethod || 'Not specified'
+          }
         });
 
         logger.info('Receipt email queued', {
@@ -343,18 +343,18 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
           metadata: {
             invoiceId: id,
             invoiceNumber: invoice.invoiceNumber,
-            receiptNumber: invoice.receiptNumber,
-          },
+            receiptNumber: invoice.receiptNumber
+          }
         });
       } catch (err) {
         logger.error('Failed to queue receipt email', err, {
           context: 'sendInvoiceReceipt',
-          metadata: { invoiceId: invoice.id },
+          metadata: { invoiceId: invoice.id }
         });
 
         return {
           success: false,
-          error: err instanceof Error ? err.message : 'Failed to queue receipt email',
+          error: err instanceof Error ? err.message : 'Failed to queue receipt email'
         };
       }
 
@@ -362,12 +362,12 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
     } catch (error) {
       logger.error('Failed to send receipt email', error, {
         context: 'sendInvoiceReceipt',
-        metadata: { invoiceId: id },
+        metadata: { invoiceId: id }
       });
 
       return handleActionError(error, 'Failed to send receipt');
     }
-  },
+  }
 );
 
 /**
@@ -390,7 +390,7 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
       validatedData.ids,
       ctx.tenantId,
       validatedData.status,
-      ctx.userId,
+      ctx.userId
     );
 
     const successCount = results.filter((r) => r.success).length;
@@ -403,8 +403,8 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
       data: {
         successCount,
         failureCount,
-        results,
-      },
+        results
+      }
     };
   } catch (error) {
     return handleActionError(error, 'Failed to update invoices');
@@ -432,7 +432,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
       const today = new Date();
       const daysOverdue = Math.max(
         0,
-        Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
+        Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
       );
 
       // Only send reminder if invoice is actually overdue
@@ -444,13 +444,13 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
       const lastInvoiceReminder = await emailAuditRepo.findLastSentByInvoice(
         id,
         'invoice.reminder',
-        new Date(Date.now() - 24 * 60 * 60 * 1000),
+        new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       if (lastInvoiceReminder) {
         return {
           success: false,
-          error: `A reminder was already sent for this invoice today (at ${lastInvoiceReminder.sentAt?.toLocaleTimeString()}).`,
+          error: `A reminder was already sent for this invoice today (at ${lastInvoiceReminder.sentAt?.toLocaleTimeString()}).`
         };
       }
 
@@ -458,14 +458,14 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
       const lastCustomerReminder = await emailAuditRepo.findLastSentByCustomer(
         invoice.customer.id,
         'invoice.reminder',
-        new Date(Date.now() - 60 * 60 * 1000),
+        new Date(Date.now() - 60 * 60 * 1000)
       );
 
       if (lastCustomerReminder) {
         return {
           success: false,
           error:
-            'A reminder was recently sent to this customer for another invoice. Please wait at least an hour before sending another one.',
+            'A reminder was recently sent to this customer for another invoice. Please wait at least an hour before sending another one.'
         };
       }
 
@@ -488,8 +488,8 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
             dueDate: invoice.dueDate,
             daysOverdue,
             amountPaid: Number(invoice.amountPaid),
-            amountDue: Number(invoice.amountDue),
-          },
+            amountDue: Number(invoice.amountDue)
+          }
         });
 
         logger.info('Reminder email queued', {
@@ -497,18 +497,18 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
           metadata: {
             invoiceId: id,
             invoiceNumber: invoice.invoiceNumber,
-            daysOverdue,
-          },
+            daysOverdue
+          }
         });
       } catch (err) {
         logger.error('Failed to queue reminder email', err, {
           context: 'sendInvoiceReminder',
-          metadata: { invoiceId: invoice.id },
+          metadata: { invoiceId: invoice.id }
         });
 
         return {
           success: false,
-          error: err instanceof Error ? err.message : 'Failed to queue reminder email',
+          error: err instanceof Error ? err.message : 'Failed to queue reminder email'
         };
       }
 
@@ -524,12 +524,12 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
     } catch (error) {
       logger.error('Failed to send reminder email', error, {
         context: 'sendInvoiceReminder',
-        metadata: { invoiceId: id },
+        metadata: { invoiceId: id }
       });
 
       return handleActionError(error, 'Failed to send reminder');
     }
-  },
+  }
 );
 
 /**
@@ -552,7 +552,7 @@ export const deleteInvoice = withTenantPermission<string, { id: string }>(
     } catch (error) {
       return handleActionError(error, 'Failed to delete invoice');
     }
-  },
+  }
 );
 
 /**
@@ -572,10 +572,10 @@ export const duplicateInvoice = withTenantPermission<string, { id: string; invoi
 
       return {
         success: true,
-        data: { id: result.id, invoiceNumber: result.invoiceNumber },
+        data: { id: result.id, invoiceNumber: result.invoiceNumber }
       };
     } catch (error) {
       return handleActionError(error, 'Failed to duplicate invoice');
     }
-  },
+  }
 );

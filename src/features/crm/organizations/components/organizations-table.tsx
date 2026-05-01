@@ -15,15 +15,15 @@ interface OrganizationsTableProps<TData> {
 export function OrganizationsTable<TData>({
   table,
   items,
-  totalItems,
+  totalItems
 }: OrganizationsTableProps<TData>) {
   return (
-    <Card className="flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0">
+    <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
       <DataTableToolbar table={table} />
       {items.length ? (
         <DataTable table={table} totalItems={totalItems} />
       ) : (
-        <Box className="text-center py-12 text-muted-foreground">
+        <Box className='text-center py-12 text-muted-foreground'>
           No organizations found. Try adjusting your filters.
         </Box>
       )}

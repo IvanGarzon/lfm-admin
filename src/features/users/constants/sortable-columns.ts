@@ -5,7 +5,7 @@ export const SORTABLE_USER_COLUMNS = [
   'phone',
   'role',
   'status',
-  'lastLoginAt',
+  'lastLoginAt'
 ] as const;
 
 export type SortableUserColumn = (typeof SORTABLE_USER_COLUMNS)[number];

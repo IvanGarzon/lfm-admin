@@ -16,7 +16,7 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,7 +35,7 @@ import {
   useDownloadQuotePdf,
   useSendQuoteEmail,
   useSendQuoteFollowUp,
-  useDuplicateQuote,
+  useDuplicateQuote
 } from '@/features/finances/quotes/hooks/use-quote-queries';
 import { QuoteForm } from '@/features/finances/quotes/components/quote-form';
 import { QuoteDrawerSkeleton } from '@/features/finances/quotes/components/quote-drawer-skeleton';
@@ -54,7 +54,7 @@ type DrawerMode = 'edit' | 'create';
 export function QuoteDrawer({
   id,
   open,
-  onClose,
+  onClose
 }: {
   id?: string;
   open?: boolean;
@@ -76,17 +76,17 @@ export function QuoteDrawer({
 
   const needsItems = activeTab === 'details' || showPreview;
   const { data: items, isLoading: isLoadingItems } = useQuoteItems(id, {
-    enabled: needsItems,
+    enabled: needsItems
   });
 
   const isLoading = isLoadingQuote || (needsItems && isLoadingItems);
 
   const { data: versions, isLoading: isLoadingVersions } = useQuoteVersions(id, {
-    enabled: mode === 'edit' && activeTab === 'versions',
+    enabled: mode === 'edit' && activeTab === 'versions'
   });
 
   const { data: history, isLoading: isLoadingHistory } = useQuoteHistory(id, {
-    enabled: mode === 'edit' && activeTab === 'history',
+    enabled: mode === 'edit' && activeTab === 'history'
   });
 
   const { openDelete, openReject, openOnHold, openCancel, openConvert } = useQuoteActions();
@@ -105,7 +105,7 @@ export function QuoteDrawer({
   const queryString = useQueryString(searchParams, quoteSearchParamsDefaults);
 
   const checkUnsavedChanges = useUnsavedChangesWarning(hasUnsavedChanges, {
-    formId: 'form-rhf-quote',
+    formId: 'form-rhf-quote'
   });
 
   const currentVersionIndex = versions?.findIndex((v) => v.id === id) ?? -1;
@@ -129,7 +129,7 @@ export function QuoteDrawer({
         }
       }
     },
-    [id, onClose, router, queryString, hasUnsavedChanges],
+    [id, onClose, router, queryString, hasUnsavedChanges]
   );
 
   const handleDiscardChanges = useCallback(() => {
@@ -158,10 +158,10 @@ export function QuoteDrawer({
       createQuote.mutate(data, {
         onSuccess: () => {
           onClose?.();
-        },
+        }
       });
     },
-    [createQuote, onClose],
+    [createQuote, onClose]
   );
 
   const handleUpdate = useCallback(
@@ -169,10 +169,10 @@ export function QuoteDrawer({
       updateQuote.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-        },
+        }
       });
     },
-    [updateQuote],
+    [updateQuote]
   );
 
   const handleAccept = useCallback(() => {
@@ -203,7 +203,7 @@ export function QuoteDrawer({
 
         if (!result.success) {
           toast.error('Failed to load email preview', {
-            description: result.error,
+            description: result.error
           });
           setShowEmailPreview(false);
           return;
@@ -212,14 +212,14 @@ export function QuoteDrawer({
         setEmailPreviewData(result.data);
       } catch (error) {
         toast.error('Failed to load email preview', {
-          description: error instanceof Error ? error.message : 'An error occurred',
+          description: error instanceof Error ? error.message : 'An error occurred'
         });
         setShowEmailPreview(false);
       } finally {
         setIsLoadingEmailPreview(false);
       }
     },
-    [quote],
+    [quote]
   );
 
   const handleSend = useCallback(() => {
@@ -229,7 +229,7 @@ export function QuoteDrawer({
 
     checkUnsavedChanges(
       () => handleLoadEmailPreview('sent'),
-      'Please save your changes before sending the quote to ensure it reflects the latest data.',
+      'Please save your changes before sending the quote to ensure it reflects the latest data.'
     );
   }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);
 
@@ -264,7 +264,7 @@ export function QuoteDrawer({
         const basePath = `/finances/quotes/${data.id}`;
         const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
         router.push(targetPath);
-      },
+      }
     });
   }, [quote, createVersion, router, queryString]);
 
@@ -280,7 +280,7 @@ export function QuoteDrawer({
           const basePath = `/finances/quotes/${data.id}`;
           const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
           router.push(targetPath);
-        },
+        }
       });
     }, 'Please save your changes before duplicating to ensure the copy reflects the latest data.');
   }, [quote, duplicateQuote, router, checkUnsavedChanges, queryString]);
@@ -290,7 +290,7 @@ export function QuoteDrawer({
       if (hasUnsavedChanges) {
         toast.warning('You have unsaved changes', {
           description: 'Please save or discard your changes before navigating to another version.',
-          duration: 5000,
+          duration: 5000
         });
         return;
       }
@@ -298,7 +298,7 @@ export function QuoteDrawer({
       const targetPath = queryString ? `${basePath}?${queryString}` : basePath;
       router.push(targetPath);
     },
-    [router, hasUnsavedChanges, queryString],
+    [router, hasUnsavedChanges, queryString]
   );
 
   const handleDownloadPdf = useCallback(() => {
@@ -308,7 +308,7 @@ export function QuoteDrawer({
 
     checkUnsavedChanges(
       () => downloadPdf.mutate(quote.id),
-      'Please save your changes before downloading the PDF to ensure it reflects the latest data.',
+      'Please save your changes before downloading the PDF to ensure it reflects the latest data.'
     );
   }, [quote, checkUnsavedChanges, downloadPdf]);
 
@@ -336,7 +336,7 @@ export function QuoteDrawer({
     ) {
       sendEmail.mutate(
         { quoteId: quote.id, type: pendingEmailType },
-        { onSuccess: onSuccessCallback },
+        { onSuccess: onSuccessCallback }
       );
     }
   }, [quote, pendingEmailType, sendEmail, sendFollowUp, markAsSent]);
@@ -379,7 +379,7 @@ export function QuoteDrawer({
 
     checkUnsavedChanges(
       () => handleLoadEmailPreview('followup'),
-      'Please save your changes before sending the follow-up to ensure it reflects the latest data.',
+      'Please save your changes before sending the follow-up to ensure it reflects the latest data.'
     );
   }, [quote, checkUnsavedChanges, handleLoadEmailPreview]);
 
@@ -390,7 +390,7 @@ export function QuoteDrawer({
 
     return needsAttention({
       status: quote.status,
-      validUntil: quote.validUntil,
+      validUntil: quote.validUntil
     });
   }, [quote?.status, quote?.validUntil]);
 
@@ -398,7 +398,7 @@ export function QuoteDrawer({
     if (mode === 'create') {
       return {
         title: 'New Quote',
-        status: null,
+        status: null
       };
     }
 
@@ -407,7 +407,7 @@ export function QuoteDrawer({
 
     return {
       title: `${quote?.quoteNumber || 'Update Quote'}${versionIndicator}`,
-      status: quote?.status ?? null,
+      status: quote?.status ?? null
     };
   }, [mode, quote?.quoteNumber, quote?.versionNumber, quote?.status]);
 
@@ -424,7 +424,7 @@ export function QuoteDrawer({
       onDownloadPdf: handleDownloadPdf,
       onSendEmail: handleSendEmail,
       onSendFollowUp: handleSendFollowUp,
-      onDelete: handleDelete,
+      onDelete: handleDelete
     }),
     [
       handleSend,
@@ -438,17 +438,17 @@ export function QuoteDrawer({
       handleDownloadPdf,
       handleSendEmail,
       handleSendFollowUp,
-      handleDelete,
-    ],
+      handleDelete
+    ]
   );
 
   return (
     <>
       <Drawer open={isOpen} modal={true} onOpenChange={handleOpenChange}>
         <DrawerContent
-          className="overflow-x-hidden dark:bg-gray-925 pb-0!"
+          className='overflow-x-hidden dark:bg-gray-925 pb-0!'
           style={{
-            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px',
+            maxWidth: mode === 'edit' && showPreview ? '90vw' : '850px'
           }}
         >
           <VisuallyHidden>
@@ -459,11 +459,11 @@ export function QuoteDrawer({
           {isLoading ? <QuoteDrawerSkeleton /> : null}
 
           {isError ? (
-            <Box className="p-6 text-destructive">
+            <Box className='p-6 text-destructive'>
               <DrawerHeader>
                 <DrawerTitle>Error</DrawerTitle>
               </DrawerHeader>
-              <p className="mt-4">Could not load quote details: {error?.message}</p>
+              <p className='mt-4'>Could not load quote details: {error?.message}</p>
             </Box>
           ) : null}
 
@@ -487,12 +487,12 @@ export function QuoteDrawer({
                 onClose={() => handleOpenChange(false)}
               />
 
-              <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent">
-                <Box className="flex h-full">
+              <DrawerBody className='py-0! -mx-6 h-full overflow-y-auto bg-gray-50/30 dark:bg-transparent'>
+                <Box className='flex h-full'>
                   <Box
-                    className="h-full"
+                    className='h-full'
                     style={{
-                      width: mode === 'edit' && showPreview ? '50%' : '100%',
+                      width: mode === 'edit' && showPreview ? '50%' : '100%'
                     }}
                   >
                     {mode === 'create' ? (
@@ -505,33 +505,33 @@ export function QuoteDrawer({
                       <Tabs
                         value={activeTab}
                         onValueChange={setActiveTab}
-                        className="w-full h-full flex flex-col"
+                        className='w-full h-full flex flex-col'
                       >
-                        <TabsList className="w-full justify-start border-b rounded-none h-12 bg-transparent px-6">
-                          <TabsTrigger value="details" className="relative">
+                        <TabsList className='w-full justify-start border-b rounded-none h-12 bg-transparent px-6'>
+                          <TabsTrigger value='details' className='relative'>
                             Quote Details
                           </TabsTrigger>
-                          <TabsTrigger value="versions" className="relative">
+                          <TabsTrigger value='versions' className='relative'>
                             Versions
                             {quote && quote.versionsCount > 1 ? (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              <Badge variant='secondary' className='ml-2 h-5 min-w-5 px-1.5'>
                                 {quote.versionsCount}
                               </Badge>
                             ) : null}
                           </TabsTrigger>
-                          <TabsTrigger value="history" className="relative">
+                          <TabsTrigger value='history' className='relative'>
                             History
                             {quote &&
                             quote._count?.statusHistory &&
                             quote._count.statusHistory > 0 ? (
-                              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5">
+                              <Badge variant='secondary' className='ml-2 h-5 min-w-5 px-1.5'>
                                 {quote._count.statusHistory}
                               </Badge>
                             ) : null}
                           </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="details" className="mt-0 h-full flex flex-col">
+                        <TabsContent value='details' className='mt-0 h-full flex flex-col'>
                           <QuoteForm
                             quote={quote}
                             items={items}
@@ -542,9 +542,9 @@ export function QuoteDrawer({
                           />
                         </TabsContent>
 
-                        <TabsContent value="versions" className="mt-0 p-6">
+                        <TabsContent value='versions' className='mt-0 p-6'>
                           {isLoadingVersions ? (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               Loading versions...
                             </Box>
                           ) : versions && versions.length > 1 && quote ? (
@@ -554,21 +554,21 @@ export function QuoteDrawer({
                               isLoading={isLoadingVersions}
                             />
                           ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               No versions available
                             </Box>
                           )}
                         </TabsContent>
 
-                        <TabsContent value="history" className="mt-0 p-6">
+                        <TabsContent value='history' className='mt-0 p-6'>
                           {isLoadingHistory ? (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               Loading history...
                             </Box>
                           ) : history && history.length > 0 ? (
                             <QuoteStatusHistory history={history} />
                           ) : (
-                            <Box className="text-center py-12 text-muted-foreground">
+                            <Box className='text-center py-12 text-muted-foreground'>
                               No history available
                             </Box>
                           )}

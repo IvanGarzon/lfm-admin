@@ -4,34 +4,34 @@ import {
   testIds,
   mockSessions,
   createPriceListItemInput,
-  createUpdatePriceListItemInput,
+  createUpdatePriceListItemInput
 } from '@/lib/testing';
 
 const { mockPriceListRepo, mockAuth } = vi.hoisted(() => ({
   mockPriceListRepo: {
     createPriceListItem: vi.fn(),
     updatePriceListItem: vi.fn(),
-    deletePriceListItem: vi.fn(),
+    deletePriceListItem: vi.fn()
   },
-  mockAuth: vi.fn(),
+  mockAuth: vi.fn()
 }));
 
 vi.mock('@/repositories/price-list-repository', () => ({
   PriceListRepository: vi.fn().mockImplementation(function () {
     return mockPriceListRepo;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('next/cache', () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: vi.fn()
 }));
 
 const unauthorizedError = 'You must be signed in to perform this action';
@@ -60,7 +60,7 @@ describe('Price List Mutations', () => {
       }
       expect(mockPriceListRepo.createPriceListItem).toHaveBeenCalledWith(
         expect.objectContaining({ name: input.name }),
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 
@@ -100,7 +100,7 @@ describe('Price List Mutations', () => {
       expect(mockPriceListRepo.updatePriceListItem).toHaveBeenCalledWith(
         input.id,
         mockSession.user.tenantId,
-        expect.objectContaining({ name: input.name }),
+        expect.objectContaining({ name: input.name })
       );
     });
 
@@ -129,7 +129,7 @@ describe('Price List Mutations', () => {
       expect(result.success).toBe(true);
       expect(mockPriceListRepo.deletePriceListItem).toHaveBeenCalledWith(
         id,
-        mockSession.user.tenantId,
+        mockSession.user.tenantId
       );
     });
 

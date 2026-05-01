@@ -12,7 +12,7 @@ import { SessionRepository } from '../session-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 
 // Prevent the module-level singleton from running before the container is ready.
@@ -29,15 +29,15 @@ async function createTestUser(overrides: { tenantId?: string; email?: string } =
       firstName: 'Test',
       lastName: 'User',
       email: overrides.email ?? `test-${Date.now()}-${Math.random()}@example.com`,
-      tenantId: overrides.tenantId,
+      tenantId: overrides.tenantId
     },
-    select: { id: true },
+    select: { id: true }
   });
 }
 
 async function createTestSession(
   userId: string,
-  overrides: { sessionToken?: string; isActive?: boolean; expires?: Date } = {},
+  overrides: { sessionToken?: string; isActive?: boolean; expires?: Date } = {}
 ) {
   const db = getTestPrisma();
   return db.session.create({
@@ -45,9 +45,9 @@ async function createTestSession(
       userId,
       sessionToken: overrides.sessionToken ?? `tok-${Date.now()}-${Math.random()}`,
       expires: overrides.expires ?? new Date(Date.now() + 24 * 60 * 60 * 1000),
-      isActive: overrides.isActive ?? true,
+      isActive: overrides.isActive ?? true
     },
-    select: { id: true, sessionToken: true },
+    select: { id: true, sessionToken: true }
   });
 }
 
@@ -77,7 +77,7 @@ describe('SessionRepository (integration)', () => {
       const result = await repository.createSession({
         userId,
         sessionToken: token,
-        expires,
+        expires
       });
 
       expect(result.id).toBeDefined();
@@ -181,7 +181,7 @@ describe('SessionRepository (integration)', () => {
       const db = getTestPrisma();
       const remaining = await db.session.findMany({
         where: { userId, isActive: true },
-        select: { id: true },
+        select: { id: true }
       });
       expect(remaining).toHaveLength(1);
       expect(remaining[0].id).toBe(s3.id);
@@ -326,7 +326,7 @@ describe('SessionRepository (integration)', () => {
 
     it('returns false for an expired session', async () => {
       const { sessionToken } = await createTestSession(userId, {
-        expires: new Date(Date.now() - 1000),
+        expires: new Date(Date.now() - 1000)
       });
 
       const result = await repository.isSessionActive(sessionToken);

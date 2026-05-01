@@ -38,7 +38,7 @@ export type FinancePagination<T> = PaginatedResult<T>;
  * Extends global PaginationParams for consistency
  */
 export interface FinanceFilters<
-  TStatus extends FinanceStatus = FinanceStatus,
+  TStatus extends FinanceStatus = FinanceStatus
 > extends PaginationParams {
   search?: string;
   status?: TStatus;

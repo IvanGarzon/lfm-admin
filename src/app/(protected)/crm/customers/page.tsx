@@ -9,11 +9,11 @@ import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
 
 export const metadata = constructMetadata({
   title: 'Customers – lfm dashboard',
-  description: 'Manage your customers and view their details.',
+  description: 'Manage your customers and view their details.'
 });
 
 export default async function CustomersPage({
-  searchParams,
+  searchParams
 }: {
   searchParams: Promise<SearchParams>;
 }) {
@@ -28,7 +28,7 @@ export default async function CustomersPage({
         throw new Error(result.error);
       }
       return result.data;
-    },
+    }
   });
 
   return (

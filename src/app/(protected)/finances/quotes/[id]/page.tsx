@@ -5,19 +5,19 @@ import { QuotesView } from '@/features/finances/quotes/components/quotes-view';
 import { getQuotes } from '@/actions/finances/quotes/queries';
 
 export const metadata = {
-  title: 'Quote Detail | Finance',
+  title: 'Quote Detail | Finance'
 };
 
 const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function QuotePage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

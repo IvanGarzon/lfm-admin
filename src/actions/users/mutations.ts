@@ -23,7 +23,7 @@ import {
   type UpdateUserRoleInput,
   type SoftDeleteUserInput,
   type InviteUserInput,
-  type ChangePasswordInput,
+  type ChangePasswordInput
 } from '@/schemas/users';
 import bcrypt from 'bcryptjs';
 import { PasswordResetTokenRepository } from '@/repositories/password-reset-token-repository';
@@ -58,7 +58,7 @@ export const updateUser = withTenantPermission<UpdateUserInput, UserDetail>(
     } catch (error) {
       return handleActionError(error, 'Failed to update user');
     }
-  },
+  }
 );
 
 /**
@@ -79,7 +79,7 @@ export const updateUserSecurity = withTenantPermission<UpdateUserSecurityInput, 
     } catch (error) {
       return handleActionError(error, 'Failed to update security settings');
     }
-  },
+  }
 );
 
 /**
@@ -106,15 +106,15 @@ export const updateUserRole = withTenantPermission<UpdateUserRoleInput, User>(
           targetUserId: id,
           fromRole: existing.role,
           toRole: role,
-          changedByName,
-        },
+          changedByName
+        }
       });
 
       return { success: true, data: user };
     } catch (error) {
       return handleActionError(error, 'Failed to update user role');
     }
-  },
+  }
 );
 
 /**
@@ -136,7 +136,7 @@ export const softDeleteUser = withTenantPermission<SoftDeleteUserInput, { id: st
     } catch (error) {
       return handleActionError(error, 'Failed to delete user');
     }
-  },
+  }
 );
 
 /**
@@ -162,7 +162,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
 
       const [tenant, inviter] = await Promise.all([
         tenantRepo.findTenantById(ctx.tenantId),
-        userRepo.findById(ctx.userId),
+        userRepo.findById(ctx.userId)
       ]);
 
       if (!tenant || !inviter) {
@@ -176,7 +176,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
         role,
         tenantId: ctx.tenantId,
         invitedBy: ctx.userId,
-        expiresAt,
+        expiresAt
       });
 
       try {
@@ -189,8 +189,8 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
             tenantName: tenant.name,
             role: invitation.role,
             acceptUrl: absoluteUrl(`/invite/accept?token=${invitation.token}`),
-            expiresAt: invitation.expiresAt,
-          },
+            expiresAt: invitation.expiresAt
+          }
         });
       } catch (emailError) {
         await invitationRepo.revoke(invitation.id);
@@ -202,7 +202,7 @@ export const inviteUser = withTenantPermission<InviteUserInput, void>(
     } catch (error) {
       return handleActionError(error, 'Failed to send invitation');
     }
-  },
+  }
 );
 
 /**
@@ -254,7 +254,7 @@ export const sendPasswordResetEmail = withTenantPermission<string, void>(
     try {
       const [targetUser, requester] = await Promise.all([
         userRepo.findTenantUserById(userId, ctx.tenantId),
-        userRepo.findById(ctx.userId),
+        userRepo.findById(ctx.userId)
       ]);
 
       if (!targetUser || !targetUser.email) {
@@ -279,15 +279,15 @@ export const sendPasswordResetEmail = withTenantPermission<string, void>(
           userName: [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' '),
           requestedByName: requesterName,
           resetUrl: absoluteUrl(`/reset-password?token=${resetToken.token}`),
-          expiresAt,
-        },
+          expiresAt
+        }
       });
 
       return { success: true, data: undefined };
     } catch (error) {
       return handleActionError(error, 'Failed to send password reset email');
     }
-  },
+  }
 );
 
 /**
@@ -296,7 +296,7 @@ export const sendPasswordResetEmail = withTenantPermission<string, void>(
  */
 export async function resetPassword(
   token: string,
-  newPassword: string,
+  newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const record = await passwordResetTokenRepo.findValid(token);
@@ -308,7 +308,7 @@ export async function resetPassword(
 
     await Promise.all([
       userRepo.updatePassword(record.userId, hashed),
-      passwordResetTokenRepo.invalidateAllForUser(record.userId),
+      passwordResetTokenRepo.invalidateAllForUser(record.userId)
     ]);
 
     return { success: true };
@@ -338,7 +338,7 @@ export const uploadUserAvatar = withTenantPermission<FormData, { avatarUrl: stri
 
       if (
         !ALLOWED_IMAGE_MIME_TYPES.includes(
-          fileEntry.type as (typeof ALLOWED_IMAGE_MIME_TYPES)[number],
+          fileEntry.type as (typeof ALLOWED_IMAGE_MIME_TYPES)[number]
         )
       ) {
         return { success: false, error: 'Only image files are allowed' };
@@ -359,7 +359,7 @@ export const uploadUserAvatar = withTenantPermission<FormData, { avatarUrl: stri
         resourceType: 'users',
         resourceId: userId,
         subPath: 'avatar',
-        allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
+        allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES
       });
 
       await userRepo.updateUserAvatar(userId, ctx.tenantId, s3Url);
@@ -368,5 +368,5 @@ export const uploadUserAvatar = withTenantPermission<FormData, { avatarUrl: stri
     } catch (error) {
       return handleActionError(error, 'Failed to upload avatar');
     }
-  },
+  }
 );

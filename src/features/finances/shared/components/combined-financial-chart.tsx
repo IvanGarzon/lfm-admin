@@ -12,7 +12,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
-  ChartLegendContent,
+  ChartLegendContent
 } from '@/components/ui/chart';
 import { formatCurrency } from '@/lib/utils';
 import { useInvoiceStatistics } from '@/features/finances/invoices/hooks/use-invoice-queries';
@@ -22,16 +22,16 @@ import { useTransactionTrend } from '@/features/finances/transactions/hooks/use-
 const chartConfig = {
   revenue: {
     label: 'Revenue',
-    color: 'var(--color-emerald-500)',
+    color: 'var(--color-emerald-500)'
   },
   quotes: {
     label: 'Quoted Value',
-    color: 'var(--color-blue-500)',
+    color: 'var(--color-blue-500)'
   },
   income: {
     label: 'Income',
-    color: 'var(--color-violet-500)',
-  },
+    color: 'var(--color-violet-500)'
+  }
 } satisfies ChartConfig;
 
 function CombinedFinancialChart() {
@@ -54,7 +54,7 @@ function CombinedFinancialChart() {
     invoiceStats.revenueTrend?.forEach((item) => {
       monthsMap.set(item.month, {
         month: item.month,
-        revenue: item.paid || 0,
+        revenue: item.paid || 0
       });
     });
 
@@ -62,7 +62,7 @@ function CombinedFinancialChart() {
       const existing = monthsMap.get(item.month) || { month: item.month };
       monthsMap.set(item.month, {
         ...existing,
-        quotes: item.totalValue || 0,
+        quotes: item.totalValue || 0
       });
     });
 
@@ -70,7 +70,7 @@ function CombinedFinancialChart() {
       const existing = monthsMap.get(item.month) || { month: item.month };
       monthsMap.set(item.month, {
         ...existing,
-        income: item.income || 0,
+        income: item.income || 0
       });
     });
 
@@ -81,11 +81,11 @@ function CombinedFinancialChart() {
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-72 mt-2" />
+          <Skeleton className='h-6 w-48' />
+          <Skeleton className='h-4 w-72 mt-2' />
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <Skeleton className="h-full w-full" />
+        <CardContent className='h-[300px] flex items-center justify-center'>
+          <Skeleton className='h-full w-full' />
         </CardContent>
       </Card>
     );
@@ -97,13 +97,13 @@ function CombinedFinancialChart() {
         <CardTitle>Financial Overview</CardTitle>
         <CardDescription>Combined view of revenue, quotes, and income over time</CardDescription>
       </CardHeader>
-      <CardContent className="h-[350px] w-full pt-4">
-        <ChartContainer config={chartConfig} className="h-full w-full">
-          <ResponsiveContainer width="100%" height="100%">
+      <CardContent className='h-[350px] w-full pt-4'>
+        <ChartContainer config={chartConfig} className='h-full w-full'>
+          <ResponsiveContainer width='100%' height='100%'>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.4} />
+              <CartesianGrid vertical={false} strokeDasharray='3 3' opacity={0.4} />
               <XAxis
-                dataKey="month"
+                dataKey='month'
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
@@ -120,26 +120,26 @@ function CombinedFinancialChart() {
               <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Line
-                type="monotone"
-                dataKey="revenue"
-                name="Revenue"
-                stroke="var(--color-revenue)"
+                type='monotone'
+                dataKey='revenue'
+                name='Revenue'
+                stroke='var(--color-revenue)'
                 strokeWidth={2}
                 dot={false}
               />
               <Line
-                type="monotone"
-                dataKey="quotes"
-                name="Quoted Value"
-                stroke="var(--color-quotes)"
+                type='monotone'
+                dataKey='quotes'
+                name='Quoted Value'
+                stroke='var(--color-quotes)'
                 strokeWidth={2}
                 dot={false}
               />
               <Line
-                type="monotone"
-                dataKey="income"
-                name="Income"
-                stroke="var(--color-income)"
+                type='monotone'
+                dataKey='income'
+                name='Income'
+                stroke='var(--color-income)'
                 strokeWidth={2}
                 dot={false}
               />
@@ -156,12 +156,12 @@ export default dynamic(() => Promise.resolve(CombinedFinancialChart), {
   loading: () => (
     <Card>
       <CardHeader>
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-4 w-72 mt-2" />
+        <Skeleton className='h-6 w-48' />
+        <Skeleton className='h-4 w-72 mt-2' />
       </CardHeader>
-      <CardContent className="h-[300px] flex items-center justify-center">
-        <Skeleton className="h-full w-full" />
+      <CardContent className='h-[300px] flex items-center justify-center'>
+        <Skeleton className='h-full w-full' />
       </CardContent>
     </Card>
-  ),
+  )
 });

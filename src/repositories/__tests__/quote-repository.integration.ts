@@ -14,7 +14,7 @@ import { CustomerRepository } from '@/repositories/customer-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createQuoteInput, createQuoteItemInput, createCustomerInput } from '@/lib/testing';
 
@@ -26,7 +26,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: {} }));
 vi.mock('@/features/finances/quotes/services/quote-pdf.service', () => ({
   getOrGenerateQuotePdf: vi
     .fn()
-    .mockResolvedValue({ pdfBuffer: null, s3Key: '', s3Url: '', pdfUrl: '', pdfFilename: '' }),
+    .mockResolvedValue({ pdfBuffer: null, s3Key: '', s3Url: '', pdfUrl: '', pdfFilename: '' })
 }));
 
 setupTestDatabaseLifecycle();
@@ -52,7 +52,7 @@ describe('QuoteRepository (integration)', () => {
     it('creates a quote and returns id and quoteNumber', async () => {
       const result = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       expect(result.id).toBeDefined();
@@ -62,11 +62,11 @@ describe('QuoteRepository (integration)', () => {
     it('generates sequential quote numbers within the same tenant', async () => {
       const first = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const second = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const firstSeq = parseInt(first.quoteNumber.split('-')[2], 10);
@@ -79,17 +79,17 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Other Quote Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
 
       const main = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
       const other = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const mainSeq = parseInt(main.quoteNumber.split('-')[2], 10);
@@ -103,7 +103,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns full quote details', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await quoteRepository.findQuoteById(id, tenantId);
@@ -118,7 +118,7 @@ describe('QuoteRepository (integration)', () => {
     it('converts Decimal fields to number', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await quoteRepository.findQuoteById(id, tenantId);
@@ -139,11 +139,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Isolation Tenant A' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await quoteRepository.findQuoteById(id, tenantId);
@@ -156,13 +156,13 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Search Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
 
       await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await quoteRepository.searchQuotes({ page: 1, perPage: 20 }, tenantId);
@@ -187,7 +187,7 @@ describe('QuoteRepository (integration)', () => {
     it('soft-deletes a quote and hides it from subsequent finds', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       await quoteRepository.softDeleteQuote(id, tenantId);
@@ -198,7 +198,7 @@ describe('QuoteRepository (integration)', () => {
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.softDeleteQuote('cltest000000000000none0001', tenantId),
+        quoteRepository.softDeleteQuote('cltest000000000000none0001', tenantId)
       ).rejects.toThrow();
     });
 
@@ -206,11 +206,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Delete Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       await expect(quoteRepository.softDeleteQuote(id, tenantId)).rejects.toThrow();
@@ -221,7 +221,7 @@ describe('QuoteRepository (integration)', () => {
     it('transitions status from SENT to ACCEPTED', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
 
@@ -235,7 +235,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns null when quote not found', async () => {
       const result = await quoteRepository.markQuoteAsAccepted(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
       expect(result).toBeNull();
     });
@@ -244,11 +244,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Accept Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
-        otherTenantId,
+        otherTenantId
       );
       await quoteRepository.markQuoteAsSent(id, otherTenantId);
 
@@ -261,7 +261,7 @@ describe('QuoteRepository (integration)', () => {
     it('transitions status from DRAFT to SENT', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const result = await quoteRepository.markQuoteAsSent(id, tenantId);
@@ -281,7 +281,7 @@ describe('QuoteRepository (integration)', () => {
     it('transitions status from SENT to REJECTED', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
 
@@ -296,7 +296,7 @@ describe('QuoteRepository (integration)', () => {
       const result = await quoteRepository.markQuoteAsRejected(
         'cltest000000000000none0001',
         tenantId,
-        'reason',
+        'reason'
       );
       expect(result).toBeNull();
     });
@@ -307,9 +307,9 @@ describe('QuoteRepository (integration)', () => {
       const { id, quoteNumber } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({
           customerId,
-          items: [createQuoteItemInput({ description: 'Original item', quantity: 2 })],
+          items: [createQuoteItemInput({ description: 'Original item', quantity: 2 })]
         }),
-        tenantId,
+        tenantId
       );
 
       const duplicate = await quoteRepository.duplicateQuote(id, tenantId);
@@ -324,7 +324,7 @@ describe('QuoteRepository (integration)', () => {
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.duplicateQuote('cltest000000000000none0001', tenantId),
+        quoteRepository.duplicateQuote('cltest000000000000none0001', tenantId)
       ).rejects.toThrow('Quote not found');
     });
   });
@@ -333,7 +333,7 @@ describe('QuoteRepository (integration)', () => {
     it('creates a new version linked to the parent and starts as DRAFT', async () => {
       const { id: parentId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const newVersion = await quoteRepository.createQuoteVersion(parentId, tenantId);
@@ -348,7 +348,7 @@ describe('QuoteRepository (integration)', () => {
 
     it('throws when parent quote not found', async () => {
       await expect(
-        quoteRepository.createQuoteVersion('cltest000000000000none0001', tenantId),
+        quoteRepository.createQuoteVersion('cltest000000000000none0001', tenantId)
       ).rejects.toThrow('Parent quote not found');
     });
   });
@@ -357,7 +357,7 @@ describe('QuoteRepository (integration)', () => {
     it('toggles isFavourite on and off', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const toggled = await quoteRepository.toggleQuoteFavourite(id, tenantId);
@@ -370,22 +370,22 @@ describe('QuoteRepository (integration)', () => {
     it('returns null when quote not found', async () => {
       const result = await quoteRepository.toggleQuoteFavourite(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
       expect(result).toBeNull();
     });
 
     it('cannot toggle a quote belonging to another tenant', async () => {
       const { id: otherTenantId } = await createTestTenant({
-        name: 'Favourite Isolation Tenant',
+        name: 'Favourite Isolation Tenant'
       });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await quoteRepository.toggleQuoteFavourite(id, tenantId);
@@ -397,7 +397,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns lightweight metadata with numeric fields but no items array', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const result = await quoteRepository.findQuoteMetadata(id, tenantId);
@@ -413,7 +413,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns null for a non-existent ID', async () => {
       const result = await quoteRepository.findQuoteMetadata(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
       expect(result).toBeNull();
     });
@@ -422,11 +422,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Metadata Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await quoteRepository.findQuoteMetadata(id, tenantId);
@@ -441,10 +441,10 @@ describe('QuoteRepository (integration)', () => {
           customerId,
           items: [
             createQuoteItemInput({ description: 'Item A', quantity: 2, unitPrice: 50 }),
-            createQuoteItemInput({ description: 'Item B', quantity: 1, unitPrice: 200 }),
-          ],
+            createQuoteItemInput({ description: 'Item B', quantity: 1, unitPrice: 200 })
+          ]
         }),
-        tenantId,
+        tenantId
       );
 
       const items = await quoteRepository.findQuoteItems(id);
@@ -467,7 +467,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns history entries in ascending order after status changes', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
       await quoteRepository.markQuoteAsAccepted(id, tenantId);
@@ -504,7 +504,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns true when the quote number exists', async () => {
       const { quoteNumber } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const exists = await quoteRepository.quoteNumberExists(quoteNumber);
@@ -519,7 +519,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns false for own quote when excludeId is provided', async () => {
       const { id, quoteNumber } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const exists = await quoteRepository.quoteNumberExists(quoteNumber, id);
@@ -531,7 +531,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns 1 for a quote with no child versions', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
 
       const count = await quoteRepository.countQuoteVersions(id);
@@ -541,7 +541,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns 2 after creating a new version', async () => {
       const { id: parentId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const newVersion = await quoteRepository.createQuoteVersion(parentId, tenantId);
 
@@ -559,7 +559,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns all versions in the chain ordered by version number', async () => {
       const { id: parentId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.createQuoteVersion(parentId, tenantId);
 
@@ -581,9 +581,9 @@ describe('QuoteRepository (integration)', () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({
           customerId,
-          items: [createQuoteItemInput({ description: 'Old item', unitPrice: 100 })],
+          items: [createQuoteItemInput({ description: 'Old item', unitPrice: 100 })]
         }),
-        tenantId,
+        tenantId
       );
 
       const updated = await quoteRepository.updateQuoteWithItems(
@@ -597,9 +597,9 @@ describe('QuoteRepository (integration)', () => {
           discount: 0,
           issuedDate: new Date(),
           validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          items: [createQuoteItemInput({ description: 'New item', unitPrice: 200 })],
+          items: [createQuoteItemInput({ description: 'New item', unitPrice: 200 })]
         },
-        tenantId,
+        tenantId
       );
 
       expect(updated).not.toBeNull();
@@ -612,7 +612,7 @@ describe('QuoteRepository (integration)', () => {
     it('creates a status history entry when status changes', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       await quoteRepository.updateQuoteWithItems(
@@ -626,9 +626,9 @@ describe('QuoteRepository (integration)', () => {
           discount: 0,
           issuedDate: new Date(),
           validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          items: [createQuoteItemInput()],
+          items: [createQuoteItemInput()]
         },
-        tenantId,
+        tenantId
       );
 
       const history = await quoteRepository.findQuoteStatusHistory(id);
@@ -648,10 +648,10 @@ describe('QuoteRepository (integration)', () => {
             discount: 0,
             issuedDate: new Date(),
             validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            items: [createQuoteItemInput()],
+            items: [createQuoteItemInput()]
           },
-          tenantId,
-        ),
+          tenantId
+        )
       ).rejects.toThrow('Quote not found');
     });
   });
@@ -660,7 +660,7 @@ describe('QuoteRepository (integration)', () => {
     it('transitions from SENT to ON_HOLD and records the reason', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
 
@@ -674,7 +674,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns null when quote not found', async () => {
       const result = await quoteRepository.markQuoteAsOnHold(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
       expect(result).toBeNull();
     });
@@ -683,11 +683,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'OnHold Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
-        otherTenantId,
+        otherTenantId
       );
       await quoteRepository.markQuoteAsSent(id, otherTenantId);
 
@@ -700,13 +700,13 @@ describe('QuoteRepository (integration)', () => {
     it('transitions from DRAFT to CANCELLED with a reason', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const result = await quoteRepository.markQuoteAsCancelled(
         id,
         tenantId,
-        'Customer changed mind',
+        'Customer changed mind'
       );
 
       expect(result).not.toBeNull();
@@ -717,7 +717,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns null when quote not found', async () => {
       const result = await quoteRepository.markQuoteAsCancelled(
         'cltest000000000000none0001',
-        tenantId,
+        tenantId
       );
       expect(result).toBeNull();
     });
@@ -726,11 +726,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Cancel Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
 
       const result = await quoteRepository.markQuoteAsCancelled(id, tenantId);
@@ -742,7 +742,7 @@ describe('QuoteRepository (integration)', () => {
     it('creates an invoice from an accepted quote and transitions it to CONVERTED', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
       await quoteRepository.markQuoteAsAccepted(id, tenantId);
@@ -752,7 +752,7 @@ describe('QuoteRepository (integration)', () => {
         tenantId,
         gst: 10,
         discount: 0,
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       });
 
       expect(result.invoiceId).toBeDefined();
@@ -770,15 +770,15 @@ describe('QuoteRepository (integration)', () => {
           tenantId,
           gst: 10,
           discount: 0,
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        }),
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        })
       ).rejects.toThrow('Quote not found');
     });
 
     it('throws when status transition is invalid (DRAFT → CONVERTED)', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       await expect(
@@ -787,8 +787,8 @@ describe('QuoteRepository (integration)', () => {
           tenantId,
           gst: 10,
           discount: 0,
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        }),
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        })
       ).rejects.toThrow();
     });
   });
@@ -799,11 +799,11 @@ describe('QuoteRepository (integration)', () => {
 
       const { id: draftId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: pastDate }),
-        tenantId,
+        tenantId
       );
       const { id: sentId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: pastDate }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(sentId, tenantId);
 
@@ -821,7 +821,7 @@ describe('QuoteRepository (integration)', () => {
       const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: futureDate }),
-        tenantId,
+        tenantId
       );
 
       await quoteRepository.checkAndExpireQuotes();
@@ -840,17 +840,17 @@ describe('QuoteRepository (integration)', () => {
     it('updates multiple quotes and returns success for each', async () => {
       const q1 = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       const q2 = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const results = await quoteRepository.bulkUpdateQuoteStatus(
         [q1.id, q2.id],
         QuoteStatus.SENT,
-        tenantId,
+        tenantId
       );
 
       expect(results).toHaveLength(2);
@@ -860,13 +860,13 @@ describe('QuoteRepository (integration)', () => {
     it('returns failure for a non-existent quote without failing the batch', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const results = await quoteRepository.bulkUpdateQuoteStatus(
         [id, 'cltest000000000000none0001'],
         QuoteStatus.SENT,
-        tenantId,
+        tenantId
       );
 
       expect(results.find((r) => r.id === id)?.success).toBe(true);
@@ -876,13 +876,13 @@ describe('QuoteRepository (integration)', () => {
     it('returns failure for an invalid status transition (DRAFT → ACCEPTED)', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const results = await quoteRepository.bulkUpdateQuoteStatus(
         [id],
         QuoteStatus.ACCEPTED,
-        tenantId,
+        tenantId
       );
 
       expect(results[0].success).toBe(false);
@@ -892,13 +892,13 @@ describe('QuoteRepository (integration)', () => {
     it('succeeds without error when quote is already at the target status', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const results = await quoteRepository.bulkUpdateQuoteStatus(
         [id],
         QuoteStatus.DRAFT,
-        tenantId,
+        tenantId
       );
 
       expect(results[0].success).toBe(true);
@@ -908,11 +908,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Bulk Status Isolation' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
-        otherTenantId,
+        otherTenantId
       );
 
       const results = await quoteRepository.bulkUpdateQuoteStatus([id], QuoteStatus.SENT, tenantId);
@@ -925,11 +925,11 @@ describe('QuoteRepository (integration)', () => {
     it('soft-deletes DRAFT quotes and returns success for each', async () => {
       const q1 = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       const q2 = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
 
       const results = await quoteRepository.bulkSoftDeleteQuotes([q1.id, q2.id], tenantId);
@@ -942,7 +942,7 @@ describe('QuoteRepository (integration)', () => {
     it('rejects non-DRAFT quotes and returns an error message', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
 
@@ -955,7 +955,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns failure for a non-existent quote without throwing', async () => {
       const results = await quoteRepository.bulkSoftDeleteQuotes(
         ['cltest000000000000none0001'],
-        tenantId,
+        tenantId
       );
 
       expect(results[0].success).toBe(false);
@@ -967,7 +967,7 @@ describe('QuoteRepository (integration)', () => {
     it('creates an attachment and retrieves it by item ID', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const itemId = items[0].id;
@@ -978,7 +978,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 12345,
         mimeType: 'image/png',
         s3Key: 'quotes/design.png',
-        s3Url: 'https://s3.example.com/quotes/design.png',
+        s3Url: 'https://s3.example.com/quotes/design.png'
       });
 
       const attachments = await quoteRepository.findQuoteItemAttachments(itemId);
@@ -989,7 +989,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns empty array when item has no attachments', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
 
@@ -1002,7 +1002,7 @@ describe('QuoteRepository (integration)', () => {
     it('updates the notes field and persists to the database', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const itemId = items[0].id;
@@ -1016,7 +1016,7 @@ describe('QuoteRepository (integration)', () => {
     it('clears notes when an empty string is provided', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       await quoteRepository.updateQuoteItemNotes(items[0].id, 'Some note');
@@ -1032,7 +1032,7 @@ describe('QuoteRepository (integration)', () => {
     it('persists an array of colour hex values', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
 
@@ -1045,7 +1045,7 @@ describe('QuoteRepository (integration)', () => {
     it('replaces existing colours when updated again', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       await quoteRepository.updateQuoteItemColors(items[0].id, ['#AAAAAA']);
@@ -1060,7 +1060,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns the attachment when found', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const attachment = await quoteRepository.createQuoteItemAttachment({
@@ -1069,7 +1069,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 99999,
         mimeType: 'application/pdf',
         s3Key: 'quotes/mockup.pdf',
-        s3Url: 'https://s3.example.com/quotes/mockup.pdf',
+        s3Url: 'https://s3.example.com/quotes/mockup.pdf'
       });
 
       const result = await quoteRepository.findQuoteItemAttachmentById(attachment.id);
@@ -1079,7 +1079,7 @@ describe('QuoteRepository (integration)', () => {
 
     it('returns null for a non-existent attachment', async () => {
       const result = await quoteRepository.findQuoteItemAttachmentById(
-        'cltest000000000000none0001',
+        'cltest000000000000none0001'
       );
       expect(result).toBeNull();
     });
@@ -1089,7 +1089,7 @@ describe('QuoteRepository (integration)', () => {
     it('deletes attachment and returns true', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const attachment = await quoteRepository.createQuoteItemAttachment({
@@ -1098,7 +1098,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 1000,
         mimeType: 'image/png',
         s3Key: 'quotes/delete-me.png',
-        s3Url: 'https://s3.example.com/quotes/delete-me.png',
+        s3Url: 'https://s3.example.com/quotes/delete-me.png'
       });
 
       const deleted = await quoteRepository.deleteQuoteItemAttachment(attachment.id);
@@ -1116,7 +1116,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns the correct count of attachments for an item', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const itemId = items[0].id;
@@ -1127,7 +1127,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 100,
         mimeType: 'image/png',
         s3Key: 'quotes/a.png',
-        s3Url: 'https://s3.example.com/quotes/a.png',
+        s3Url: 'https://s3.example.com/quotes/a.png'
       });
       await quoteRepository.createQuoteItemAttachment({
         quoteItemId: itemId,
@@ -1135,7 +1135,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 200,
         mimeType: 'image/png',
         s3Key: 'quotes/b.png',
-        s3Url: 'https://s3.example.com/quotes/b.png',
+        s3Url: 'https://s3.example.com/quotes/b.png'
       });
 
       const count = await quoteRepository.countQuoteItemAttachments(itemId);
@@ -1145,7 +1145,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns 0 when item has no attachments', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
 
@@ -1158,7 +1158,7 @@ describe('QuoteRepository (integration)', () => {
     it('counts other attachments sharing the same S3 key, excluding the given ID', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const itemId = items[0].id;
@@ -1170,7 +1170,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 500,
         mimeType: 'image/png',
         s3Key: sharedKey,
-        s3Url: 'https://s3.example.com/quotes/shared-asset.png',
+        s3Url: 'https://s3.example.com/quotes/shared-asset.png'
       });
       await quoteRepository.createQuoteItemAttachment({
         quoteItemId: itemId,
@@ -1178,7 +1178,7 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 500,
         mimeType: 'image/png',
         s3Key: sharedKey,
-        s3Url: 'https://s3.example.com/quotes/shared-asset.png',
+        s3Url: 'https://s3.example.com/quotes/shared-asset.png'
       });
 
       const count = await quoteRepository.countQuoteItemAttachmentsByS3Key(sharedKey, a1.id);
@@ -1188,7 +1188,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns 0 when no other attachments share the S3 key', async () => {
       const { id: quoteId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId }),
-        tenantId,
+        tenantId
       );
       const items = await quoteRepository.findQuoteItems(quoteId);
       const attachment = await quoteRepository.createQuoteItemAttachment({
@@ -1197,12 +1197,12 @@ describe('QuoteRepository (integration)', () => {
         fileSize: 100,
         mimeType: 'image/png',
         s3Key: 'quotes/unique-asset.png',
-        s3Url: 'https://s3.example.com/quotes/unique-asset.png',
+        s3Url: 'https://s3.example.com/quotes/unique-asset.png'
       });
 
       const count = await quoteRepository.countQuoteItemAttachmentsByS3Key(
         'quotes/unique-asset.png',
-        attachment.id,
+        attachment.id
       );
       expect(count).toBe(0);
     });
@@ -1212,11 +1212,11 @@ describe('QuoteRepository (integration)', () => {
     it('returns correct status counts for the tenant', async () => {
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       const { id: sentId } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(sentId, tenantId);
 
@@ -1232,11 +1232,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Stats Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id }),
-        otherTenantId,
+        otherTenantId
       );
       await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
 
@@ -1256,15 +1256,15 @@ describe('QuoteRepository (integration)', () => {
 
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, issuedDate: past, validUntil: new Date(2020, 1, 15) }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, issuedDate: recent }),
-        tenantId,
+        tenantId
       );
 
       const stats = await quoteRepository.getQuoteStatistics(tenantId, {
-        startDate: new Date(2021, 0, 1),
+        startDate: new Date(2021, 0, 1)
       });
 
       expect(stats.total).toBe(1);
@@ -1275,7 +1275,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns monthly aggregated data including the current month', async () => {
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, issuedDate: new Date() }),
-        tenantId,
+        tenantId
       );
 
       const trend = await quoteRepository.getMonthlyQuoteValueTrend(12, tenantId);
@@ -1300,7 +1300,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns funnel counts with correct accepted value', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
       await quoteRepository.markQuoteAsAccepted(id, tenantId);
@@ -1322,11 +1322,11 @@ describe('QuoteRepository (integration)', () => {
       const { id: otherTenantId } = await createTestTenant({ name: 'Funnel Isolation Tenant' });
       const otherCustomer = await customerRepository.createCustomer(
         createCustomerInput(),
-        otherTenantId,
+        otherTenantId
       );
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
-        otherTenantId,
+        otherTenantId
       );
       await quoteRepository.markQuoteAsSent(id, otherTenantId);
 
@@ -1339,19 +1339,19 @@ describe('QuoteRepository (integration)', () => {
     it('returns customers ordered by total quoted value descending', async () => {
       const bigSpender = await customerRepository.createCustomer(
         createCustomerInput({ email: 'bigspender@example.com' }),
-        tenantId,
+        tenantId
       );
 
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, items: [createQuoteItemInput({ unitPrice: 100 })] }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.createQuoteWithItems(
         createQuoteInput({
           customerId: bigSpender.id,
-          items: [createQuoteItemInput({ unitPrice: 5000 })],
+          items: [createQuoteItemInput({ unitPrice: 5000 })]
         }),
-        tenantId,
+        tenantId
       );
 
       const top = await quoteRepository.getTopCustomersByQuotedValue(5, tenantId);
@@ -1370,11 +1370,11 @@ describe('QuoteRepository (integration)', () => {
       for (let i = 0; i < 3; i++) {
         const c = await customerRepository.createCustomer(
           createCustomerInput({ email: `topcustomer${i}@example.com` }),
-          tenantId,
+          tenantId
         );
         await quoteRepository.createQuoteWithItems(
           createQuoteInput({ customerId: c.id }),
-          tenantId,
+          tenantId
         );
       }
 
@@ -1387,7 +1387,7 @@ describe('QuoteRepository (integration)', () => {
     it('returns numeric average fields after quotes reach a decision', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
       await quoteRepository.markQuoteAsAccepted(id, tenantId);
@@ -1411,7 +1411,7 @@ describe('QuoteRepository (integration)', () => {
     it('calculates rejection average independently from acceptance', async () => {
       const { id } = await quoteRepository.createQuoteWithItems(
         createQuoteInput({ customerId, status: 'DRAFT' }),
-        tenantId,
+        tenantId
       );
       await quoteRepository.markQuoteAsSent(id, tenantId);
       await quoteRepository.markQuoteAsRejected(id, tenantId, 'Too expensive');

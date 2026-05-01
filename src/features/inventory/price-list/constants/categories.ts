@@ -9,7 +9,7 @@ export const PRICE_LIST_CATEGORY_LABELS: Record<PriceListCategory, string> = {
   FOLIAGE: 'Foliage',
   SUNDRY: 'Sundry',
   SUPPLY: 'Supply',
-  OTHER: 'Other',
+  OTHER: 'Other'
 };
 
 export const PRICE_LIST_CATEGORY_ICONS: Record<PriceListCategory, React.FC> = {
@@ -17,5 +17,5 @@ export const PRICE_LIST_CATEGORY_ICONS: Record<PriceListCategory, React.FC> = {
   FOLIAGE: Leaf,
   SUNDRY: Package,
   SUPPLY: Wrench,
-  OTHER: CircleDot,
+  OTHER: CircleDot
 };

@@ -15,26 +15,26 @@ import { SessionCard } from '@/features/users/components/sessions/session-card';
 import { SessionCardSkeleton } from '@/features/users/components/sessions/session-card-skeleton';
 import {
   DeleteSessionDialog,
-  RevokeAllSessionsDialog,
+  RevokeAllSessionsDialog
 } from '@/features/users/components/sessions/delete-session-dialog';
 import { hasPermission } from '@/lib/permissions';
 import { ChangePasswordSchema, type ChangePasswordInput } from '@/schemas/users';
 import {
   useChangePassword,
   useSendPasswordResetEmail,
-  useUpdateUserSecurity,
+  useUpdateUserSecurity
 } from '@/features/users/hooks/use-user-queries';
 import {
   useUserSessions,
   useAdminRevokeUserSession,
   useAdminExtendUserSession,
-  useAdminRevokeAllUserSessions,
+  useAdminRevokeAllUserSessions
 } from '@/features/users/hooks/use-sessions';
 import {
   useDeleteSession,
   useDeleteOtherSessions,
   useExtendSession,
-  useSessions,
+  useSessions
 } from '@/features/users/hooks/use-sessions';
 import type { UserDetail } from '@/features/users/types';
 import type { SessionWithUser } from '@/features/sessions/types';
@@ -50,7 +50,7 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
 
   const selfForm = useForm<ChangePasswordInput>({
     resolver: zodResolver(ChangePasswordSchema),
-    defaultValues: { userId, currentPassword: '', newPassword: '', confirmPassword: '' },
+    defaultValues: { userId, currentPassword: '', newPassword: '', confirmPassword: '' }
   });
 
   const handleSelfSubmit = (data: ChangePasswordInput) => {
@@ -60,21 +60,21 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
   if (isAdmin) {
     return (
       <Card>
-        <CardHeader className="px-6 pt-4 pb-2">
-          <CardTitle className="text-sm font-medium">Reset Password</CardTitle>
-          <p className="text-xs text-muted-foreground">
+        <CardHeader className='px-6 pt-4 pb-2'>
+          <CardTitle className='text-sm font-medium'>Reset Password</CardTitle>
+          <p className='text-xs text-muted-foreground'>
             Send a password reset link to <strong>{userEmail ?? 'this user'}</strong>. They will
             receive an email to set a new password.
           </p>
         </CardHeader>
-        <CardContent className="px-6 pt-0 pb-4">
+        <CardContent className='px-6 pt-0 pb-4'>
           <Button
-            variant="outline"
+            variant='outline'
             onClick={() => sendReset.mutate(userId)}
             disabled={sendReset.isPending || !userEmail}
           >
             {sendReset.isPending ? (
-              <Loader2 aria-hidden="true" className="size-4 animate-spin mr-2" />
+              <Loader2 aria-hidden='true' className='size-4 animate-spin mr-2' />
             ) : null}
             Send reset email
           </Button>
@@ -87,25 +87,25 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
 
   return (
     <Card>
-      <CardHeader className="px-6 pt-4 pb-2">
-        <CardTitle className="text-sm font-medium">Change Password</CardTitle>
-        <p className="text-xs text-muted-foreground">
+      <CardHeader className='px-6 pt-4 pb-2'>
+        <CardTitle className='text-sm font-medium'>Change Password</CardTitle>
+        <p className='text-xs text-muted-foreground'>
           Update your password to keep your account secure. Choose a strong, unique password.
         </p>
       </CardHeader>
-      <CardContent className="px-6 pt-0 pb-4 space-y-4">
+      <CardContent className='px-6 pt-0 pb-4 space-y-4'>
         <Form {...selfForm}>
-          <form onSubmit={selfForm.handleSubmit(handleSelfSubmit)} className="space-y-4">
+          <form onSubmit={selfForm.handleSubmit(handleSelfSubmit)} className='space-y-4'>
             <FieldGroup>
               <Controller
-                name="currentPassword"
+                name='currentPassword'
                 control={selfForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
                       <FieldLabel>Current password</FieldLabel>
                     </FieldContent>
-                    <Input type="password" {...field} aria-invalid={fieldState.invalid} />
+                    <Input type='password' {...field} aria-invalid={fieldState.invalid} />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
@@ -113,14 +113,14 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
             </FieldGroup>
             <FieldGroup>
               <Controller
-                name="newPassword"
+                name='newPassword'
                 control={selfForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
                       <FieldLabel>New password</FieldLabel>
                     </FieldContent>
-                    <Input type="password" {...field} aria-invalid={fieldState.invalid} />
+                    <Input type='password' {...field} aria-invalid={fieldState.invalid} />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
@@ -128,23 +128,23 @@ function ChangePasswordBlock({ userId, userEmail }: { userId: string; userEmail:
             </FieldGroup>
             <FieldGroup>
               <Controller
-                name="confirmPassword"
+                name='confirmPassword'
                 control={selfForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
                       <FieldLabel>Confirm new password</FieldLabel>
                     </FieldContent>
-                    <Input type="password" {...field} aria-invalid={fieldState.invalid} />
+                    <Input type='password' {...field} aria-invalid={fieldState.invalid} />
                     {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                   </Field>
                 )}
               />
             </FieldGroup>
-            <Box className="flex justify-end">
-              <Button type="submit" disabled={changePassword.isPending}>
+            <Box className='flex justify-end'>
+              <Button type='submit' disabled={changePassword.isPending}>
                 {changePassword.isPending ? (
-                  <Loader2 aria-hidden="true" className="size-4 animate-spin mr-2" />
+                  <Loader2 aria-hidden='true' className='size-4 animate-spin mr-2' />
                 ) : null}
                 Update password
               </Button>
@@ -165,64 +165,64 @@ function SecuritySettingsBlock({ user }: { user: UserDetail }) {
 
   return (
     <Card>
-      <CardHeader className="px-6 pt-4 pb-2">
-        <CardTitle className="text-sm font-medium">Security Settings</CardTitle>
-        <p className="text-xs text-muted-foreground">
+      <CardHeader className='px-6 pt-4 pb-2'>
+        <CardTitle className='text-sm font-medium'>Security Settings</CardTitle>
+        <p className='text-xs text-muted-foreground'>
           Manage your account security and authentication.
         </p>
       </CardHeader>
-      <CardContent className="px-6 pt-0 pb-4 space-y-4">
-        <Box className="flex items-center justify-between">
-          <Box className="flex items-center gap-3">
-            <Box className="p-2 rounded-lg bg-primary/10">
-              <ShieldCheck aria-hidden="true" className="size-4 text-primary" />
+      <CardContent className='px-6 pt-0 pb-4 space-y-4'>
+        <Box className='flex items-center justify-between'>
+          <Box className='flex items-center gap-3'>
+            <Box className='p-2 rounded-lg bg-primary/10'>
+              <ShieldCheck aria-hidden='true' className='size-4 text-primary' />
             </Box>
             <Box>
-              <p className="text-sm font-medium">Two-Factor Authentication</p>
-              <p className="text-xs text-muted-foreground">
+              <p className='text-sm font-medium'>Two-Factor Authentication</p>
+              <p className='text-xs text-muted-foreground'>
                 Add an extra layer of security to your account
               </p>
             </Box>
           </Box>
           <Button
             variant={user.isTwoFactorEnabled ? 'secondary' : 'outline'}
-            size="sm"
+            size='sm'
             onClick={() => handleToggle('isTwoFactorEnabled')}
             disabled={isPending}
           >
             {user.isTwoFactorEnabled ? (
-              <ShieldOff aria-hidden="true" className="size-4" />
+              <ShieldOff aria-hidden='true' className='size-4' />
             ) : (
-              <ShieldCheck aria-hidden="true" className="size-4" />
+              <ShieldCheck aria-hidden='true' className='size-4' />
             )}
             {user.isTwoFactorEnabled ? 'Disable' : 'Enable'}
           </Button>
         </Box>
 
-        <Box className="border-t" />
+        <Box className='border-t' />
 
-        <Box className="flex items-center justify-between">
-          <Box className="flex items-center gap-3">
-            <Box className="p-2 rounded-lg bg-primary/10">
-              <Bell aria-hidden="true" className="size-4 text-primary" />
+        <Box className='flex items-center justify-between'>
+          <Box className='flex items-center gap-3'>
+            <Box className='p-2 rounded-lg bg-primary/10'>
+              <Bell aria-hidden='true' className='size-4 text-primary' />
             </Box>
             <Box>
-              <p className="text-sm font-medium">Login Notifications</p>
-              <p className="text-xs text-muted-foreground">
+              <p className='text-sm font-medium'>Login Notifications</p>
+              <p className='text-xs text-muted-foreground'>
                 Get notified when someone logs into your account
               </p>
             </Box>
           </Box>
           <Button
             variant={user.loginNotificationsEnabled ? 'secondary' : 'outline'}
-            size="sm"
+            size='sm'
             onClick={() => handleToggle('loginNotificationsEnabled')}
             disabled={isPending}
           >
             {user.loginNotificationsEnabled ? (
-              <X className="size-4" />
+              <X className='size-4' />
             ) : (
-              <Check className="size-4" />
+              <Check className='size-4' />
             )}
             {user.loginNotificationsEnabled ? 'Disable' : 'Enable'}
           </Button>
@@ -277,33 +277,33 @@ function ActiveSessionsBlock({ userId }: { userId: string }) {
   return (
     <>
       <Card>
-        <CardHeader className="px-6 pt-4 pb-2">
-          <Box className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+        <CardHeader className='px-6 pt-4 pb-2'>
+          <Box className='flex items-center justify-between'>
+            <CardTitle className='text-sm font-medium'>Active Sessions</CardTitle>
             {hasOtherSessions ? (
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={() => setConfirmRevokeAll(true)}
                 disabled={isRevokingAll || isDeletingOthers}
-                className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className='h-7 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive'
               >
                 {isRevokingAll || isDeletingOthers ? (
-                  <Loader2 aria-hidden="true" className="mr-1 h-3 w-3 animate-spin" />
+                  <Loader2 aria-hidden='true' className='mr-1 h-3 w-3 animate-spin' />
                 ) : null}
                 Revoke all
               </Button>
             ) : null}
           </Box>
-          <p className="text-xs text-muted-foreground">
+          <p className='text-xs text-muted-foreground'>
             Manage devices that are logged into this account.
           </p>
         </CardHeader>
-        <CardContent className="px-6 pt-0 pb-4 space-y-3">
+        <CardContent className='px-6 pt-0 pb-4 space-y-3'>
           {isLoading ? (
             <SessionCardSkeleton />
           ) : sessions.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-2">No active sessions.</p>
+            <p className='text-sm text-muted-foreground py-2'>No active sessions.</p>
           ) : (
             sessions.map((s) => (
               <SessionCard
@@ -345,7 +345,7 @@ function ActiveSessionsBlock({ userId }: { userId: string }) {
 
 export function UserSecurityForm({ user }: { user: UserDetail }) {
   return (
-    <Box className="h-full overflow-y-auto p-6 space-y-4">
+    <Box className='h-full overflow-y-auto p-6 space-y-4'>
       <ChangePasswordBlock userId={user.id} userEmail={user.email} />
       <SecuritySettingsBlock user={user} />
       <ActiveSessionsBlock userId={user.id} />

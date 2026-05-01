@@ -16,82 +16,82 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Helvetica'
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 40,
-    position: 'relative',
+    position: 'relative'
   },
   headerLeft: {
-    flex: 1,
+    flex: 1
   },
   headerRight: {
     position: 'absolute',
     top: -10,
     right: 0,
     width: 100,
-    height: 100,
+    height: 100
   },
   logo: {
     width: '100%',
     height: '100%',
-    objectFit: 'contain',
+    objectFit: 'contain'
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 5
   },
   invoiceNumber: {
     fontSize: 11,
-    color: '#666',
+    color: '#666'
   },
   billingSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 30
   },
   billingColumn: {
-    width: '48%',
+    width: '48%'
   },
   sectionTitle: {
     fontSize: 9,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#666',
+    color: '#666'
   },
   companyName: {
     fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 3,
+    marginBottom: 3
   },
   text: {
     fontSize: 10,
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 2
   },
   dateSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 30
   },
   dateColumn: {
-    width: '48%',
+    width: '48%'
   },
   dateLabel: {
     fontSize: 9,
     color: '#666',
-    marginBottom: 3,
+    marginBottom: 3
   },
   dateValue: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: 'bold'
   },
   table: {
-    marginBottom: 20,
+    marginBottom: 20
   },
   tableHeader: {
     flexDirection: 'row',
@@ -99,51 +99,51 @@ const styles = StyleSheet.create({
     padding: 10,
     fontWeight: 'bold',
     fontSize: 9,
-    color: '#666',
+    color: '#666'
   },
   tableRow: {
     flexDirection: 'row',
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#e5e7eb'
   },
   tableCol1: {
-    width: '50%',
+    width: '50%'
   },
   tableCol2: {
     width: '15%',
-    textAlign: 'center',
+    textAlign: 'center'
   },
   tableCol3: {
     width: '20%',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   tableCol4: {
     width: '15%',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   summarySection: {
     marginTop: 10,
-    alignItems: 'flex-end',
+    alignItems: 'flex-end'
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginBottom: 8,
-    width: '50%',
+    width: '50%'
   },
   summaryLabel: {
     fontSize: 10,
     color: '#666',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   summaryValue: {
     fontSize: 10,
     fontWeight: 'bold',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   totalRow: {
     flexDirection: 'row',
@@ -152,41 +152,41 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 2,
     borderTopColor: '#333',
-    width: '50%',
+    width: '50%'
   },
   totalLabel: {
     fontSize: 12,
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   totalValue: {
     fontSize: 12,
     fontWeight: 'bold',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   amountPaidRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginBottom: 8,
     width: '50%',
-    paddingTop: 10,
+    paddingTop: 10
   },
   amountPaidLabel: {
     fontSize: 10,
     color: '#16a34a',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   amountPaidValue: {
     fontSize: 10,
     fontWeight: 'bold',
     color: '#16a34a',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   amountDueRow: {
     flexDirection: 'row',
@@ -195,27 +195,27 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    width: '50%',
+    width: '50%'
   },
   amountDueLabel: {
     fontSize: 11,
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
-    marginRight: 20,
+    marginRight: 20
   },
   amountDueValue: {
     fontSize: 11,
     fontWeight: 'bold',
     width: 80,
-    textAlign: 'right',
+    textAlign: 'right'
   },
   paymentHistorySection: {
     marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 20
   },
   paymentHistoryTable: {
-    marginTop: 10,
+    marginTop: 10
   },
   paymentHistoryHeader: {
     flexDirection: 'row',
@@ -223,89 +223,89 @@ const styles = StyleSheet.create({
     padding: 8,
     fontWeight: 'bold',
     fontSize: 9,
-    color: '#666',
+    color: '#666'
   },
   paymentHistoryRow: {
     flexDirection: 'row',
     padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#e5e7eb'
   },
   paymentCol1: {
-    width: '25%',
+    width: '25%'
   },
   paymentCol2: {
-    width: '25%',
+    width: '25%'
   },
   paymentCol3: {
-    width: '30%',
+    width: '30%'
   },
   paymentCol4: {
     width: '20%',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   notes: {
     marginTop: 30,
     padding: 12,
     backgroundColor: '#f9fafb',
-    borderRadius: 4,
+    borderRadius: 4
   },
   notesTitle: {
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 5
   },
   notesText: {
     fontSize: 9,
     color: '#666',
-    lineHeight: 1.4,
+    lineHeight: 1.4
   },
   paymentDetails: {
     marginTop: 30,
-    width: '100%',
+    width: '100%'
   },
   termsSection: {
     marginTop: 30,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#e5e7eb'
   },
   paymentReference: {
     fontSize: 8,
     color: '#666',
     marginTop: 12,
-    textAlign: 'center',
+    textAlign: 'center'
   },
   footer: {
     position: 'absolute',
     bottom: 20,
     left: 40,
-    right: 40,
+    right: 40
   },
   footerLine: {
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    marginBottom: 8,
+    marginBottom: 8
   },
   footerContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between'
   },
   footerLeft: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'left',
+    textAlign: 'left'
   },
   footerRight: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'right',
+    textAlign: 'right'
   },
   pageNumber: {
     fontSize: 8,
     color: '#999',
-    textAlign: 'center',
-  },
+    textAlign: 'center'
+  }
 });
 
 export function InvoiceDocument({ invoice, settings, logoUrl }: InvoicePreviewProps) {
@@ -315,7 +315,7 @@ export function InvoiceDocument({ invoice, settings, logoUrl }: InvoicePreviewPr
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size='A4' style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>Invoice</Text>

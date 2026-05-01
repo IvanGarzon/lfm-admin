@@ -9,7 +9,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/shared/tableV3/data-table-pagination';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
@@ -36,18 +36,18 @@ export function DataTable<TData>({
   return (
     <Box className={cn('flex w-full flex-col space-y-4', className)} {...props}>
       {children}
-      <Box className="relative w-full rounded-md border">
-        <Box className="max-h-[60vh] overflow-auto w-full">
+      <Box className='relative w-full rounded-md border'>
+        <Box className='max-h-[60vh] overflow-auto w-full'>
           <Table containerless>
-            <TableHeader className="sticky top-0 z-10 bg-background">
+            <TableHeader className='sticky top-0 z-10 bg-background'>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-b bg-background">
+                <TableRow key={headerGroup.id} className='border-b bg-background'>
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
                       className={cn(
                         'whitespace-nowrap bg-background',
-                        header.column.columnDef.meta?.className,
+                        header.column.columnDef.meta?.className
                       )}
                       // style={{
                       //   ...getCommonPinningStyles({ column: header.column }),
@@ -67,7 +67,7 @@ export function DataTable<TData>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    className="group hover:bg-gray-50 hover:dark:bg-gray-900 cursor-pointer"
+                    className='group hover:bg-gray-50 hover:dark:bg-gray-900 cursor-pointer'
                     onMouseEnter={() => onRowHover?.(row.original)}
                   >
                     {row.getVisibleCells().map((cell, index) => (
@@ -76,7 +76,7 @@ export function DataTable<TData>({
                         className={cn(
                           row.getIsSelected() ? 'bg-gray-50 dark:bg-gray-900' : '',
                           'relative whitespace-nowrap py-2 text-gray-700 first:w-10 dark:text-gray-300',
-                          cell.column.columnDef.meta?.className,
+                          cell.column.columnDef.meta?.className
                         )}
                         // style={{
                         //   ...getCommonPinningStyles({
@@ -85,7 +85,7 @@ export function DataTable<TData>({
                         // }}
                       >
                         {index === 0 && row.getIsSelected() && (
-                          <div className="absolute inset-y-0 left-0 w-0.5 bg-primary dark:bg-primary" />
+                          <div className='absolute inset-y-0 left-0 w-0.5 bg-primary dark:bg-primary' />
                         )}
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
@@ -94,7 +94,7 @@ export function DataTable<TData>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
+                  <TableCell colSpan={table.getAllColumns().length} className='h-24 text-center'>
                     No results.
                   </TableCell>
                 </TableRow>
@@ -103,7 +103,7 @@ export function DataTable<TData>({
           </Table>
         </Box>
       </Box>
-      <Box className="flex flex-col gap-2.5">
+      <Box className='flex flex-col gap-2.5'>
         <DataTablePagination table={table} totalItems={totalItems} />
         {actionBar && table.getFilteredSelectedRowModel().rows.length > 0 && actionBar}
       </Box>

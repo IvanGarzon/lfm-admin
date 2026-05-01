@@ -8,7 +8,7 @@ import {
   generateReceiptFilename,
   calculateContentHash,
   generateInvoicePDF,
-  generateReceiptPDF,
+  generateReceiptPDF
 } from '../utils/invoice-helpers';
 
 export interface PdfResult {
@@ -50,7 +50,7 @@ export interface GetPdfOptions {
  */
 export async function getOrGenerateInvoicePdf(
   invoice: InvoiceWithDetails,
-  options: GetPdfOptions = {},
+  options: GetPdfOptions = {}
 ): Promise<PdfResult> {
   const { skipDownload = false, context = 'getOrGenerateInvoicePdf' } = options;
 
@@ -101,8 +101,8 @@ export async function getOrGenerateInvoicePdf(
           invoiceId: invoice.id,
           documentId: existingDoc.id,
           contentHash,
-          skipDownload,
-        },
+          skipDownload
+        }
       });
     } catch (error) {
       // If S3 file is missing, regenerate the PDF
@@ -111,8 +111,8 @@ export async function getOrGenerateInvoicePdf(
         metadata: {
           invoiceId: invoice.id,
           s3Key: existingDoc?.s3Key,
-          error: error instanceof Error ? error.message : String(error),
-        },
+          error: error instanceof Error ? error.message : String(error)
+        }
       });
     }
   }
@@ -126,8 +126,8 @@ export async function getOrGenerateInvoicePdf(
         invoiceId: invoice.id,
         reason: !existingDoc ? 'first_generation' : 'content_changed_or_missing',
         oldHash: existingDoc?.fileHash,
-        newHash: contentHash,
-      },
+        newHash: contentHash
+      }
     });
 
     const generatedPdfBuffer = await generateInvoicePDF(invoice);
@@ -142,8 +142,8 @@ export async function getOrGenerateInvoicePdf(
       fileHash: contentHash,
       metadata: {
         invoiceNumber: invoice.invoiceNumber,
-        status: invoice.status,
-      },
+        status: invoice.status
+      }
     });
 
     s3Key = newDoc.s3Key;
@@ -166,7 +166,7 @@ export async function getOrGenerateInvoicePdf(
     pdfUrl,
     pdfFilename,
     pdfFileSize,
-    wasRegenerated,
+    wasRegenerated
   };
 }
 
@@ -180,7 +180,7 @@ export async function getOrGenerateInvoicePdf(
  */
 export async function getOrGenerateReceiptPdf(
   invoice: InvoiceWithDetails,
-  options: GetPdfOptions = {},
+  options: GetPdfOptions = {}
 ): Promise<PdfResult> {
   const { skipDownload = false, context = 'getOrGenerateReceiptPdf' } = options;
 
@@ -225,8 +225,8 @@ export async function getOrGenerateReceiptPdf(
         metadata: {
           invoiceId: invoice.id,
           documentId: existingDoc.id,
-          skipDownload,
-        },
+          skipDownload
+        }
       });
     } catch (error) {
       // If S3 file is missing, regenerate the PDF
@@ -235,8 +235,8 @@ export async function getOrGenerateReceiptPdf(
         metadata: {
           invoiceId: invoice.id,
           s3Key: existingDoc.s3Key,
-          error: error instanceof Error ? error.message : String(error),
-        },
+          error: error instanceof Error ? error.message : String(error)
+        }
       });
       needsRegeneration = true;
     }
@@ -248,8 +248,8 @@ export async function getOrGenerateReceiptPdf(
       context,
       metadata: {
         invoiceId: invoice.id,
-        reason: !existingDoc ? 'first_generation' : 'content_changed',
-      },
+        reason: !existingDoc ? 'first_generation' : 'content_changed'
+      }
     });
 
     const generatedPdfBuffer = await generateReceiptPDF(invoice);
@@ -264,8 +264,8 @@ export async function getOrGenerateReceiptPdf(
       fileHash: contentHash,
       metadata: {
         invoiceNumber: invoice.invoiceNumber,
-        paidDate: invoice.paidDate,
-      },
+        paidDate: invoice.paidDate
+      }
     });
 
     s3Key = newDoc.s3Key;
@@ -293,6 +293,6 @@ export async function getOrGenerateReceiptPdf(
     pdfUrl,
     pdfFilename,
     pdfFileSize,
-    wasRegenerated,
+    wasRegenerated
   };
 }

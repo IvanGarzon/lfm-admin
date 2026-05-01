@@ -21,7 +21,7 @@ const VENDOR_TYPES = [
   { suffix: 'Logistics & Couriers', category: 'delivery' },
   { suffix: 'Premium Orchid Growers', category: 'wholesale' },
   { suffix: 'Event Equipment Hire', category: 'services' },
-  { suffix: 'Design Studio Supplies', category: 'supplies' },
+  { suffix: 'Design Studio Supplies', category: 'supplies' }
 ] as const;
 
 // -- Helpers -----------------------------------------------------------------
@@ -39,12 +39,12 @@ function buildVendor() {
     abn: faker.helpers.maybe(() => fakeAbn(), { probability: 0.8 }) ?? null,
     status: faker.helpers.weightedArrayElement([
       { value: 'ACTIVE' as const, weight: 0.9 },
-      { value: 'INACTIVE' as const, weight: 0.1 },
+      { value: 'INACTIVE' as const, weight: 0.1 }
     ]),
     address: null,
     website: faker.helpers.maybe(() => `https://www.${slug}.com.au`, { probability: 0.6 }) ?? null,
     paymentTerms: faker.helpers.arrayElement([7, 14, 30, 60]),
-    notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null,
+    notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null
   };
 }
 
@@ -70,7 +70,7 @@ export async function seedVendors(options: SeedVendorsOptions): Promise<number> 
     const lastVendor = await prisma.vendor.findFirst({
       where: { tenantId: tenant.id, vendorCode: { startsWith: `VEN-${year}-` } },
       orderBy: { vendorCode: 'desc' },
-      select: { vendorCode: true },
+      select: { vendorCode: true }
     });
     const startCounter = lastVendor ? parseInt(lastVendor.vendorCode.split('-')[2], 10) + 1 : 1;
 
@@ -88,8 +88,8 @@ export async function seedVendors(options: SeedVendorsOptions): Promise<number> 
           status: vendor.status,
           website: vendor.website,
           paymentTerms: vendor.paymentTerms,
-          notes: vendor.notes,
-        },
+          notes: vendor.notes
+        }
       });
     });
 
@@ -119,7 +119,7 @@ if (isMain) {
       ...t,
       adminEmail: '',
       managerEmail: '',
-      password: '',
+      password: ''
     }));
 
     await seedVendors({ tenants: seededTenants });

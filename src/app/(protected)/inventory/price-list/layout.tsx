@@ -2,7 +2,7 @@ import { PriceListActionProvider } from '@/features/inventory/price-list/context
 
 export default function PriceListLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;

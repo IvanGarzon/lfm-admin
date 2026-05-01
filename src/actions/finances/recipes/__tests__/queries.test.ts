@@ -5,24 +5,24 @@ import { testIds, mockSessions, createRecipeResponse, createRecipeDetails } from
 const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {
     searchRecipes: vi.fn(),
-    findRecipeById: vi.fn(),
+    findRecipeById: vi.fn()
   },
   mockAuth: vi.fn(),
-  mockHasPermission: vi.fn(),
+  mockHasPermission: vi.fn()
 }));
 
 vi.mock('@/repositories/recipe-repository', () => ({
   RecipeRepository: vi.fn().mockImplementation(function () {
     return mockRepoInstance;
-  }),
+  })
 }));
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 const TEST_RECIPE_ID = testIds.recipe();
@@ -40,7 +40,7 @@ describe('Recipe Queries', () => {
     it('returns paginated recipes successfully when authorised', async () => {
       const mockResult = {
         items: [createRecipeResponse({ id: '1' }), createRecipeResponse({ id: '2' })],
-        pagination: { page: 1, perPage: 10, total: 2 },
+        pagination: { page: 1, perPage: 10, total: 2 }
       };
 
       mockRepoInstance.searchRecipes.mockResolvedValue(mockResult);

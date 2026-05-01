@@ -5,7 +5,7 @@ import {
   getQuoteStatistics,
   getQuoteItemAttachments,
   getItemAttachmentDownloadUrl,
-  getQuoteVersions,
+  getQuoteVersions
 } from '../queries';
 import { QuoteStatus } from '@/prisma/client';
 import { mockSessions } from '@/lib/testing';
@@ -17,10 +17,10 @@ const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
     getQuoteStatistics: vi.fn(),
     findQuoteItemAttachments: vi.fn(),
     findQuoteItemAttachmentById: vi.fn(),
-    getQuoteVersions: vi.fn(),
+    getQuoteVersions: vi.fn()
   },
   mockAuth: vi.fn(),
-  mockHasPermission: vi.fn().mockReturnValue(true),
+  mockHasPermission: vi.fn().mockReturnValue(true)
 }));
 
 // Mock QuoteRepository
@@ -28,20 +28,20 @@ vi.mock('@/repositories/quote-repository', () => {
   return {
     QuoteRepository: vi.fn().mockImplementation(function () {
       return mockRepoInstance;
-    }),
+    })
   };
 });
 
 vi.mock('@/auth', () => ({
-  auth: mockAuth,
+  auth: mockAuth
 }));
 
 vi.mock('@/lib/permissions', () => ({
-  hasPermission: mockHasPermission,
+  hasPermission: mockHasPermission
 }));
 
 vi.mock('@/lib/s3', () => ({
-  getSignedDownloadUrl: vi.fn().mockResolvedValue('https://signed-url.com/file.pdf'),
+  getSignedDownloadUrl: vi.fn().mockResolvedValue('https://signed-url.com/file.pdf')
 }));
 
 describe('Quote Queries', () => {
@@ -57,9 +57,9 @@ describe('Quote Queries', () => {
       const mockResult = {
         items: [
           { id: '1', quoteNumber: 'QUO-001', status: 'DRAFT' },
-          { id: '2', quoteNumber: 'QUO-002', status: 'SENT' },
+          { id: '2', quoteNumber: 'QUO-002', status: 'SENT' }
         ],
-        pagination: { page: 1, perPage: 10, total: 2 },
+        pagination: { page: 1, perPage: 10, total: 2 }
       };
 
       mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
@@ -86,7 +86,7 @@ describe('Quote Queries', () => {
     it('coerces invalid query parameters to defaults', async () => {
       const mockResult = {
         items: [],
-        pagination: { page: 1, perPage: 20, total: 0 },
+        pagination: { page: 1, perPage: 20, total: 0 }
       };
 
       mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
@@ -101,7 +101,7 @@ describe('Quote Queries', () => {
     it('applies filters correctly', async () => {
       const mockResult = {
         items: [{ id: '1', quoteNumber: 'QUO-001', status: 'DRAFT' }],
-        pagination: { page: 1, perPage: 10, total: 1 },
+        pagination: { page: 1, perPage: 10, total: 1 }
       };
 
       mockRepoInstance.searchQuotes.mockResolvedValue(mockResult);
@@ -110,9 +110,9 @@ describe('Quote Queries', () => {
 
       expect(mockRepoInstance.searchQuotes).toHaveBeenCalledWith(
         expect.objectContaining({
-          search: 'test',
+          search: 'test'
         }),
-        expect.any(String),
+        expect.any(String)
       );
     });
   });
@@ -124,7 +124,7 @@ describe('Quote Queries', () => {
         quoteNumber: 'QUO-001',
         status: 'DRAFT',
         customer: { id: 'cust-1', firstName: 'John', lastName: 'Doe' },
-        items: [{ id: 'item-1', description: 'Test Item', quantity: 1, unitPrice: 100 }],
+        items: [{ id: 'item-1', description: 'Test Item', quantity: 1, unitPrice: 100 }]
       };
 
       mockRepoInstance.findQuoteById.mockResolvedValue(mockQuote);
@@ -167,7 +167,7 @@ describe('Quote Queries', () => {
         sent: 30,
         accepted: 25,
         rejected: 10,
-        expired: 15,
+        expired: 15
       };
 
       mockRepoInstance.getQuoteStatistics.mockResolvedValue(mockStats);
@@ -187,7 +187,7 @@ describe('Quote Queries', () => {
 
       const dateFilter = {
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
+        endDate: new Date('2024-12-31')
       };
 
       const result = await getQuoteStatistics(dateFilter);
@@ -195,7 +195,7 @@ describe('Quote Queries', () => {
       expect(result.success).toBe(true);
       expect(mockRepoInstance.getQuoteStatistics).toHaveBeenCalledWith(
         expect.any(String),
-        dateFilter,
+        dateFilter
       );
     });
 
@@ -218,8 +218,8 @@ describe('Quote Queries', () => {
           s3Key: 'key-1',
           s3Url: 'url-1',
           uploadedBy: 'user-1',
-          uploadedAt: new Date(),
-        },
+          uploadedAt: new Date()
+        }
       ];
 
       mockRepoInstance.findQuoteItemAttachments.mockResolvedValue(mockAttachments);
@@ -239,7 +239,7 @@ describe('Quote Queries', () => {
       const mockAttachment = {
         id: 'item-att-1',
         s3Key: 'quotes/items/item-1/image.jpg',
-        fileName: 'image.jpg',
+        fileName: 'image.jpg'
       };
 
       mockRepoInstance.findQuoteItemAttachmentById.mockResolvedValue(mockAttachment);
@@ -276,7 +276,7 @@ describe('Quote Queries', () => {
           amount: 1000.0,
           issuedDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date(),
+          updatedAt: new Date()
         },
         {
           id: '2',
@@ -286,8 +286,8 @@ describe('Quote Queries', () => {
           amount: 1200.0,
           issuedDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       ];
 
       mockRepoInstance.getQuoteVersions.mockResolvedValue(mockVersions);
@@ -324,8 +324,8 @@ describe('Quote Queries', () => {
           amount: { toNumber: () => 1500.5 }, // Simulate Prisma Decimal
           issuedDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date(),
-        },
+          updatedAt: new Date()
+        }
       ];
 
       mockRepoInstance.getQuoteVersions.mockResolvedValue(mockVersions);

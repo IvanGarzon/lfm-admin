@@ -7,16 +7,16 @@ import { ProductsView } from '@/features/inventory/products/components/product-v
 const ProductDrawer = dynamic(
   () =>
     import('@/features/inventory/products/components/product-drawer').then(
-      (mod) => mod.ProductDrawer,
+      (mod) => mod.ProductDrawer
     ),
   {
-    loading: () => null,
-  },
+    loading: () => null
+  }
 );
 
 export default async function ProductPage({
   params,
-  searchParams,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<SearchParams>;

@@ -15,7 +15,7 @@ export const switchActiveTenant = withSuperAdmin<string | null, void>(
           httpOnly: true,
           sameSite: 'lax',
           maxAge: 60 * 60 * 8, // 8 hours
-          path: '/',
+          path: '/'
         });
       } else {
         cookieStore.delete(SUPER_ADMIN_TENANT_COOKIE);
@@ -25,5 +25,5 @@ export const switchActiveTenant = withSuperAdmin<string | null, void>(
     } catch (error) {
       return handleActionError(error, 'Failed to switch tenant');
     }
-  },
+  }
 );

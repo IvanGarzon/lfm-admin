@@ -2,24 +2,25 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { SearchParams } from 'nuqs/server';
 
 import {
   getVendors,
   getVendorById,
   getVendorStatistics,
-  getActiveVendors,
+  getActiveVendors
 } from '@/actions/inventory/vendors/queries';
 import {
   createVendor,
   updateVendor,
   updateVendorStatus,
-  deleteVendor,
+  deleteVendor
 } from '@/actions/inventory/vendors/mutations';
 import type { VendorFilters, VendorWithDetails } from '@/features/inventory/vendors/types';
 import type {
   CreateVendorInput,
   UpdateVendorInput,
-  UpdateVendorStatusInput,
+  UpdateVendorStatusInput
 } from '@/schemas/vendors';
 
 export const VENDOR_KEYS = {
@@ -29,8 +30,20 @@ export const VENDOR_KEYS = {
   details: () => [...VENDOR_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...VENDOR_KEYS.details(), id] as const,
   statistics: () => [...VENDOR_KEYS.all, 'statistics'] as const,
-  active: () => [...VENDOR_KEYS.all, 'active'] as const,
+  active: () => [...VENDOR_KEYS.all, 'active'] as const
 };
+
+export function useVendorList(searchParams: SearchParams) {
+  return useQuery({
+    queryKey: [...VENDOR_KEYS.lists(), JSON.stringify(searchParams)],
+    queryFn: async () => {
+      const result = await getVendors(searchParams);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
 
 export function useVendors(filters: VendorFilters) {
   return useQuery({
@@ -53,7 +66,7 @@ export function useVendors(filters: VendorFilters) {
 
       return result.data;
     },
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -72,7 +85,7 @@ export function useVendor(id: string | undefined) {
       return result.data;
     },
     enabled: Boolean(id),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000
   });
 }
 
@@ -87,7 +100,7 @@ export function useVendorStatistics() {
 
       return result.data;
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000 // 1 minute
   });
 }
 
@@ -102,7 +115,7 @@ export function useActiveVendors() {
 
       return result.data;
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000 // 1 minute
   });
 }
 
@@ -128,7 +141,7 @@ export function useCreateVendor() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create vendor');
-    },
+    }
   });
 }
 
@@ -165,9 +178,9 @@ export function useUpdateVendor() {
             website: newData.website ?? null,
             paymentTerms: newData.paymentTerms ?? null,
             taxId: newData.taxId ?? null,
-            notes: newData.notes ?? null,
+            notes: newData.notes ?? null
           };
-        },
+        }
       );
 
       return { previousVendor };
@@ -186,7 +199,7 @@ export function useUpdateVendor() {
     },
     onSuccess: () => {
       toast.success('Vendor updated successfully');
-    },
+    }
   });
 }
 
@@ -210,7 +223,7 @@ export function useUpdateVendorStatus() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update vendor status');
-    },
+    }
   });
 }
 
@@ -233,7 +246,7 @@ export function useDeleteVendor() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete vendor');
-    },
+    }
   });
 }
 
@@ -250,7 +263,7 @@ export function usePrefetchVendor() {
         }
         return result.data;
       },
-      staleTime: 30 * 1000,
+      staleTime: 30 * 1000
     });
   };
 }

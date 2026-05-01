@@ -15,7 +15,7 @@ import { testIds } from '../id-generator';
 export function createUserData(
   overrides: Partial<
     Pick<UserListItem, 'firstName' | 'lastName' | 'email' | 'role' | 'status'>
-  > = {},
+  > = {}
 ): Pick<UserListItem, 'firstName' | 'lastName' | 'email' | 'role' | 'status'> {
   return {
     firstName: 'Alex',
@@ -23,7 +23,7 @@ export function createUserData(
     email: `alex-${Date.now()}@example.com`,
     role: 'USER',
     status: 'ACTIVE',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -36,6 +36,6 @@ export function createUpdateUserInput(overrides: Partial<UpdateUserInput> = {}):
     phone: null,
     status: 'ACTIVE',
     isTwoFactorEnabled: false,
-    ...overrides,
+    ...overrides
   };
 }

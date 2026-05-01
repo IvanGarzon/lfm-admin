@@ -30,17 +30,17 @@ export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivit
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-6 w-32" />
+          <Skeleton className='h-6 w-32' />
         </CardHeader>
         <CardContent>
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 py-3 border-b last:border-0">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
+            <div key={i} className='flex items-center gap-4 py-3 border-b last:border-0'>
+              <Skeleton className='h-10 w-10 rounded-full' />
+              <div className='flex-1 space-y-2'>
+                <Skeleton className='h-4 w-48' />
+                <Skeleton className='h-3 w-32' />
               </div>
-              <Skeleton className="h-4 w-20" />
+              <Skeleton className='h-4 w-20' />
             </div>
           ))}
         </CardContent>
@@ -76,20 +76,20 @@ export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivit
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className='flex flex-row items-center justify-between'>
         <CardTitle>Recent Activity</CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/finances/invoices">
+        <Button variant='ghost' size='sm' asChild>
+          <Link href='/finances/invoices'>
             View All
-            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            <ArrowRight className='ml-2 h-4 w-4' aria-hidden='true' />
           </Link>
         </Button>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <div className="text-center py-8 text-sm text-muted-foreground">No recent activity</div>
+          <div className='text-center py-8 text-sm text-muted-foreground'>No recent activity</div>
         ) : (
-          <div className="space-y-0">
+          <div className='space-y-0'>
             {items.slice(0, 5).map((item) => {
               const Icon = getIcon(item.type);
               const iconColor = getIconColor(item.type);
@@ -97,20 +97,20 @@ export function RecentActivity({ items = EMPTY_ITEMS, isLoading }: RecentActivit
               return (
                 <div
                   key={item.id}
-                  className="flex items-center gap-4 py-3 border-b last:border-0 hover:bg-accent/50 px-2 -mx-2 rounded-sm transition-colors"
+                  className='flex items-center gap-4 py-3 border-b last:border-0 hover:bg-accent/50 px-2 -mx-2 rounded-sm transition-colors'
                 >
                   <div className={`rounded-full p-2 ${iconColor}`}>
-                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <Icon className='h-4 w-4' aria-hidden='true' />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-medium truncate'>{item.title}</p>
+                    <p className='text-xs text-muted-foreground truncate'>{item.subtitle}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold">
+                  <div className='text-right'>
+                    <p className='text-sm font-semibold'>
                       {formatCurrency({ number: item.amount })}
                     </p>
-                    <p className="text-xs text-muted-foreground">{format(item.date, 'MMM d')}</p>
+                    <p className='text-xs text-muted-foreground'>{format(item.date, 'MMM d')}</p>
                   </div>
                 </div>
               );

@@ -30,7 +30,7 @@ export const EmailTypeEnum = z.enum([
 
   // Customer-related
   'customer.welcome',
-  'customer.notification',
+  'customer.notification'
 ]);
 
 export type EmailType = z.infer<typeof EmailTypeEnum>;
@@ -44,7 +44,7 @@ export const EmailTemplateEnum = z.enum([
   'reminder',
   'quote',
   'report',
-  'notification',
+  'notification'
 ]);
 
 export type EmailTemplate = z.infer<typeof EmailTemplateEnum>;
@@ -87,8 +87,8 @@ export const QueueEmailSchema = z.object({
       z.object({
         filename: z.string(),
         url: z.string().optional(),
-        generatePdf: z.boolean().optional(), // If true, generate PDF from entity
-      }),
+        generatePdf: z.boolean().optional() // If true, generate PDF from entity
+      })
     )
     .optional(),
 
@@ -96,7 +96,7 @@ export const QueueEmailSchema = z.object({
   priority: z.enum(['high', 'normal', 'low']).default('normal'),
 
   // Metadata
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).optional()
 });
 
 export type QueueEmailPayload = z.infer<typeof QueueEmailSchema>;
@@ -109,7 +109,7 @@ export const EmailEventPayloadSchema = z.object({
   eventId: z.string().optional(),
 
   // Email payload
-  email: QueueEmailSchema,
+  email: QueueEmailSchema
 });
 
 export type EmailEventPayload = z.infer<typeof EmailEventPayloadSchema>;
@@ -133,7 +133,7 @@ export const CreateEmailAuditSchema = z.object({
   inngestRunId: z.string().optional(),
 
   // Additional metadata
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.any()).optional()
 });
 
 export type CreateEmailAuditInput = z.infer<typeof CreateEmailAuditSchema>;
@@ -147,7 +147,7 @@ export const UpdateEmailAuditSchema = z.object({
   failedAt: z.date().optional(),
   errorMessage: z.string().optional(),
   retryCount: z.number().optional(),
-  inngestRunId: z.string().optional(),
+  inngestRunId: z.string().optional()
 });
 
 export type UpdateEmailAuditInput = z.infer<typeof UpdateEmailAuditSchema>;

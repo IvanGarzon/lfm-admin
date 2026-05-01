@@ -13,7 +13,7 @@ const validInput = {
   rate: 35,
   gender: 'FEMALE',
   dob: new Date('1990-06-15'),
-  avatarUrl: null,
+  avatarUrl: null
 };
 
 describe('Employee Schemas', () => {
@@ -109,7 +109,7 @@ describe('Employee Schemas', () => {
 
     it('accepts a past date of birth', () => {
       expect(() =>
-        CreateEmployeeSchema.parse({ ...validInput, dob: new Date('1990-06-15') }),
+        CreateEmployeeSchema.parse({ ...validInput, dob: new Date('1990-06-15') })
       ).not.toThrow();
     });
 
@@ -122,8 +122,8 @@ describe('Employee Schemas', () => {
       expect(() =>
         CreateEmployeeSchema.parse({
           ...validInput,
-          avatarUrl: 'https://example.com/avatar.jpg',
-        }),
+          avatarUrl: 'https://example.com/avatar.jpg'
+        })
       ).not.toThrow();
     });
 
@@ -139,7 +139,7 @@ describe('Employee Schemas', () => {
   describe('UpdateEmployeeSchema', () => {
     const validUpdateInput = {
       ...validInput,
-      id: TEST_EMPLOYEE_ID,
+      id: TEST_EMPLOYEE_ID
     };
 
     it('accepts a valid update payload', () => {

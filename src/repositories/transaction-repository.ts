@@ -9,7 +9,7 @@ import {
   TransactionListItem,
   TransactionTrend,
   TransactionCategoryBreakdown,
-  TopTransactionCategory,
+  TopTransactionCategory
 } from '@/features/finances/transactions/types';
 
 /**
@@ -43,7 +43,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async searchAndPaginate(
     params: TransactionFilters,
-    tenantId: string,
+    tenantId: string
   ): Promise<TransactionPagination> {
     const { search, type, status, page, perPage, sort } = params;
 
@@ -57,7 +57,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     // Status filter
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
@@ -65,13 +65,13 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { description: searchFilter },
         { payee: searchFilter },
-        { referenceId: searchFilter },
+        { referenceId: searchFilter }
       ];
     }
 
@@ -94,10 +94,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             category: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         attachments: {
           select: {
@@ -108,11 +108,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             s3Key: true,
             s3Url: true,
             uploadedBy: true,
-            uploadedAt: true,
+            uploadedAt: true
           },
           orderBy: {
-            uploadedAt: 'desc',
-          },
+            uploadedAt: 'desc'
+          }
         },
         invoice: {
           select: {
@@ -121,43 +121,43 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             customer: {
               select: {
                 firstName: true,
-                lastName: true,
-              },
-            },
-          },
+                lastName: true
+              }
+            }
+          }
         },
         vendor: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
         customer: {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
-          },
-        },
+            lastName: true
+          }
+        }
       },
       orderBy,
       skip,
-      take: perPage,
+      take: perPage
     });
 
     const [totalItems, transactions] = await this.prisma.$transaction([
       countOperation,
-      findManyOperation,
+      findManyOperation
     ]);
 
     const items: TransactionListItem[] = transactions.map((transaction) => ({
       ...transaction,
-      amount: Number(transaction.amount),
+      amount: Number(transaction.amount)
     }));
 
     return {
       items,
-      pagination: getPaginationMetadata(totalItems, perPage, page),
+      pagination: getPaginationMetadata(totalItems, perPage, page)
     };
   }
 
@@ -176,10 +176,10 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             category: {
               select: {
                 id: true,
-                name: true,
-              },
-            },
-          },
+                name: true
+              }
+            }
+          }
         },
         attachments: {
           select: {
@@ -190,11 +190,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             s3Key: true,
             s3Url: true,
             uploadedBy: true,
-            uploadedAt: true,
+            uploadedAt: true
           },
           orderBy: {
-            uploadedAt: 'desc',
-          },
+            uploadedAt: 'desc'
+          }
         },
         invoice: {
           select: {
@@ -203,25 +203,25 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
             customer: {
               select: {
                 firstName: true,
-                lastName: true,
-              },
-            },
-          },
+                lastName: true
+              }
+            }
+          }
         },
         vendor: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
         customer: {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
-          },
-        },
-      },
+            lastName: true
+          }
+        }
+      }
     });
 
     if (!transaction) {
@@ -230,7 +230,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
 
     return {
       ...transaction,
-      amount: Number(transaction.amount),
+      amount: Number(transaction.amount)
     };
   }
 
@@ -256,7 +256,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async createTransaction(
     data: CreateTransactionInput,
-    tenantId: string,
+    tenantId: string
   ): Promise<TransactionListItem> {
     const referenceNumber = await TransactionRepository.generateReferenceNumber();
 
@@ -278,14 +278,14 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         categories: data.categoryIds
           ? {
               create: data.categoryIds.map((categoryId) => ({
-                categoryId,
-              })),
+                categoryId
+              }))
             }
-          : undefined,
+          : undefined
       },
       select: {
-        id: true,
-      },
+        id: true
+      }
     });
 
     const createdTransaction = await this.findByIdWithDetails(transaction.id, tenantId);
@@ -307,12 +307,12 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   async updateTransaction(
     id: string,
     tenantId: string,
-    data: Partial<CreateTransactionInput>,
+    data: Partial<CreateTransactionInput>
   ): Promise<TransactionListItem | null> {
     const updatedTransition = await this.prisma.$transaction(async (tx) => {
       if (data.categoryIds) {
         await tx.transactionCategoryOnTransaction.deleteMany({
-          where: { transactionId: id },
+          where: { transactionId: id }
         });
       }
 
@@ -333,25 +333,25 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
           categories: data.categoryIds
             ? {
                 create: data.categoryIds.map((categoryId) => ({
-                  categoryId,
-                })),
+                  categoryId
+                }))
               }
-            : undefined,
+            : undefined
         },
         include: {
           categories: {
             include: {
-              category: true,
-            },
+              category: true
+            }
           },
           invoice: {
             include: {
-              customer: true,
-            },
+              customer: true
+            }
           },
           vendor: true,
-          attachments: true,
-        },
+          attachments: true
+        }
       });
 
       return transaction;
@@ -372,7 +372,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   async deleteTransaction(id: string, tenantId: string): Promise<{ id: string }> {
     const deleted = await this.prisma.transaction.delete({
       where: { id, tenantId },
-      select: { id: true },
+      select: { id: true }
     });
 
     return deleted;
@@ -391,11 +391,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     dateFilter?: {
       startDate?: Date;
       endDate?: Date;
-    },
+    }
   ): Promise<TransactionStatistics> {
     const whereClause: Prisma.TransactionWhereInput = {
       tenantId,
-      status: TransactionStatus.COMPLETED,
+      status: TransactionStatus.COMPLETED
     };
 
     if (dateFilter?.startDate || dateFilter?.endDate) {
@@ -411,24 +411,24 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     const [incomeSum, expenseSum, pendingCount, completedCount] = await Promise.all([
       this.prisma.transaction.aggregate({
         where: { ...whereClause, type: TransactionType.INCOME },
-        _sum: { amount: true },
+        _sum: { amount: true }
       }),
       this.prisma.transaction.aggregate({
         where: { ...whereClause, type: TransactionType.EXPENSE },
-        _sum: { amount: true },
+        _sum: { amount: true }
       }),
       this.prisma.transaction.count({
         where: {
           ...whereClause,
-          status: TransactionStatus.PENDING,
-        },
+          status: TransactionStatus.PENDING
+        }
       }),
       this.prisma.transaction.count({
         where: {
           ...whereClause,
-          status: TransactionStatus.COMPLETED,
-        },
-      }),
+          status: TransactionStatus.COMPLETED
+        }
+      })
     ]);
 
     const totalIncome = Number(incomeSum._sum.amount || 0);
@@ -439,7 +439,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       totalExpense,
       netCashFlow: totalIncome - totalExpense,
       pendingTransactions: pendingCount,
-      completedTransactions: completedCount,
+      completedTransactions: completedCount
     };
   }
 
@@ -450,7 +450,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async getMonthlyTransactionTrend(
     limit: number = 12,
-    tenantId: string,
+    tenantId: string
   ): Promise<TransactionTrend[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       SELECT
@@ -473,7 +473,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
         month: `${item.month} ${item.year}`,
         income: item.income,
         expense: item.expense,
-        net: item.income - item.expense,
+        net: item.income - item.expense
       }))
       .reverse();
   }
@@ -489,7 +489,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
     dateFilter?: {
       startDate?: Date;
       endDate?: Date;
-    },
+    }
   ): Promise<TransactionCategoryBreakdown[]> {
     const data = await this.prisma.$queryRaw<any[]>(Prisma.sql`
       WITH category_totals AS (
@@ -522,7 +522,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       category: item.category,
       amount: item.amount || 0,
       percentage: item.percentage || 0,
-      transactionCount: item.transactionCount || 0,
+      transactionCount: item.transactionCount || 0
     }));
   }
 
@@ -555,7 +555,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
       categoryName: item.categoryName,
       totalAmount: item.totalAmount || 0,
       transactionCount: item.transactionCount || 0,
-      avgTransactionAmount: item.avgTransactionAmount || 0,
+      avgTransactionAmount: item.avgTransactionAmount || 0
     }));
   }
 
@@ -564,12 +564,12 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @returns A promise resolving to an array of active categories.
    */
   async getActiveCategories(
-    tenantId: string,
+    tenantId: string
   ): Promise<Array<{ id: string; name: string; description: string | null }>> {
     return this.prisma.transactionCategory.findMany({
       where: { tenantId, isActive: true },
       select: { id: true, name: true, description: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: 'asc' }
     });
   }
 
@@ -580,11 +580,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    */
   async findOrCreateCategory(
     name: string,
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string; name: string; description: string | null }> {
     const existing = await this.prisma.transactionCategory.findFirst({
       where: { tenantId, name: { equals: name, mode: 'insensitive' } },
-      select: { id: true, name: true, description: true },
+      select: { id: true, name: true, description: true }
     });
 
     if (existing) {
@@ -593,7 +593,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
 
     return this.prisma.transactionCategory.create({
       data: { tenantId, name, isActive: true },
-      select: { id: true, name: true, description: true },
+      select: { id: true, name: true, description: true }
     });
   }
 
@@ -603,11 +603,11 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
    * @returns A promise resolving to the attachment or undefined if not found.
    */
   async findAttachmentById(
-    id: string,
+    id: string
   ): Promise<{ s3Key: string; transactionId: string; fileName: string } | undefined> {
     const result = await this.prisma.transactionAttachment.findUnique({
       where: { id },
-      select: { s3Key: true, transactionId: true, fileName: true },
+      select: { s3Key: true, transactionId: true, fileName: true }
     });
 
     return result ?? undefined;
@@ -629,7 +629,7 @@ export class TransactionRepository extends BaseRepository<Prisma.TransactionGetP
   }): Promise<{ id: string; fileName: string; fileSize: number; mimeType: string; s3Url: string }> {
     return this.prisma.transactionAttachment.create({
       data,
-      select: { id: true, fileName: true, fileSize: true, mimeType: true, s3Url: true },
+      select: { id: true, fileName: true, fileSize: true, mimeType: true, s3Url: true }
     });
   }
 

@@ -16,7 +16,7 @@ export function InvoiceItemsList({
   fieldArray,
   products,
   isLoadingProducts,
-  isLocked,
+  isLocked
 }: {
   form: UseFormReturn<InvoiceFormInput>;
   fieldArray: UseFieldArrayReturn<InvoiceFormInput, 'items', 'id'>;
@@ -32,28 +32,28 @@ export function InvoiceItemsList({
         description: '',
         quantity: 1,
         unitPrice: 0,
-        productId: null,
+        productId: null
       },
-      { shouldFocus: false },
+      { shouldFocus: false }
     );
   }, [append]);
 
   return (
-    <Box className="py-6">
-      <Box className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold">Items details</h3>
+    <Box className='py-6'>
+      <Box className='flex items-center justify-between mb-4'>
+        <h3 className='text-base font-semibold'>Items details</h3>
       </Box>
 
-      <Box className="border border-border rounded-lg overflow-hidden">
+      <Box className='border border-border rounded-lg overflow-hidden'>
         {/* Table Header */}
-        <Box className="bg-muted/50 px-4 py-3 border-b border-border">
-          <Box className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            <Box className="w-4 shrink-0"></Box>
-            <Box className="flex-1 min-w-0">Item</Box>
-            <Box className="w-18 shrink-0">QTY</Box>
-            <Box className="w-30 shrink-0">Cost</Box>
-            <Box className="w-30 shrink-0">Total</Box>
-            <Box className="w-4 shrink-0"></Box>
+        <Box className='bg-muted/50 px-4 py-3 border-b border-border'>
+          <Box className='flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide'>
+            <Box className='w-4 shrink-0'></Box>
+            <Box className='flex-1 min-w-0'>Item</Box>
+            <Box className='w-18 shrink-0'>QTY</Box>
+            <Box className='w-30 shrink-0'>Cost</Box>
+            <Box className='w-30 shrink-0'>Total</Box>
+            <Box className='w-4 shrink-0'></Box>
           </Box>
         </Box>
 
@@ -73,7 +73,7 @@ export function InvoiceItemsList({
               move(from, to);
             }
           }}
-          as="div"
+          as='div'
         >
           {fields.map((field, index) => (
             <InvoiceItemRow
@@ -97,16 +97,16 @@ export function InvoiceItemsList({
         </Reorder.Group>
 
         {/* Add Item Button */}
-        <Box className="px-4 py-3 bg-card border-t border-border">
+        <Box className='px-4 py-3 bg-card border-t border-border'>
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
+            type='button'
+            variant='ghost'
+            size='sm'
             onClick={handleAddItem}
             disabled={isLocked}
-            className="text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer"
+            className='text-sm text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer'
           >
-            <Plus aria-hidden="true" className="h-4 w-4 mr-1" />
+            <Plus aria-hidden='true' className='h-4 w-4 mr-1' />
             Add Item
           </Button>
         </Box>

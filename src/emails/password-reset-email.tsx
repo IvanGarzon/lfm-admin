@@ -14,14 +14,14 @@ function PasswordResetEmailContent({
   userName,
   requestedByName,
   resetUrl,
-  expiresAt,
+  expiresAt
 }: PasswordResetEmailProps): React.ReactElement {
   const formattedExpiry = new Intl.DateTimeFormat('en-AU', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   }).format(new Date(expiresAt));
 
   return (
@@ -57,7 +57,7 @@ function PasswordResetEmailContent({
 
 function PasswordResetEmail(props: PasswordResetEmailProps): React.ReactElement {
   return (
-    <BaseTemplateEmail previewText="Reset your password">
+    <BaseTemplateEmail previewText='Reset your password'>
       <PasswordResetEmailContent {...props} />
     </BaseTemplateEmail>
   );
@@ -67,7 +67,7 @@ PasswordResetEmail.PreviewProps = {
   userName: 'Jane Smith',
   requestedByName: 'Ivan Garzon',
   resetUrl: 'http://localhost:3000/reset-password?token=example-token',
-  expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+  expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000)
 } satisfies PasswordResetEmailProps;
 
 export default PasswordResetEmail;

@@ -8,7 +8,7 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
-  DrawerTitle,
+  DrawerTitle
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { UnsavedChangesDialog } from '@/components/shared/unsaved-changes-dialog';
@@ -16,7 +16,7 @@ import { TransactionForm } from './transaction-form';
 import {
   useCreateTransaction,
   useUpdateTransaction,
-  useTransaction,
+  useTransaction
 } from '../hooks/use-transaction-queries';
 import type { CreateTransactionInput, UpdateTransactionInput } from '@/schemas/transactions';
 import { Loader2, X, AlertCircle } from 'lucide-react';
@@ -24,14 +24,14 @@ import { Box } from '@/components/ui/box';
 import { useQueryString } from '@/hooks/use-query-string';
 import {
   searchParams,
-  transactionSearchParamsDefaults,
+  transactionSearchParamsDefaults
 } from '@/filters/transactions/transactions-filters';
 import { TransactionDrawerSkeleton } from './transaction-drawer-skeleton';
 
 export function TransactionDrawer({
   id,
   open,
-  onClose,
+  onClose
 }: {
   id?: string;
   open?: boolean;
@@ -68,7 +68,7 @@ export function TransactionDrawer({
         }
       }
     },
-    [id, pathname, onClose, router, queryString, hasUnsavedChanges],
+    [id, pathname, onClose, router, queryString, hasUnsavedChanges]
   );
 
   const handleDiscardChanges = useCallback(() => {
@@ -97,10 +97,10 @@ export function TransactionDrawer({
       createTransaction.mutate(data, {
         onSuccess: () => {
           onClose?.();
-        },
+        }
       });
     },
-    [createTransaction, onClose],
+    [createTransaction, onClose]
   );
 
   const handleUpdate = useCallback(
@@ -112,16 +112,16 @@ export function TransactionDrawer({
       updateTransaction.mutate(data, {
         onSuccess: () => {
           setHasUnsavedChanges(false);
-        },
+        }
       });
     },
-    [id, updateTransaction],
+    [id, updateTransaction]
   );
 
   return (
     <>
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]">
+        <DrawerContent className='overflow-x-hidden dark:bg-gray-925 pb-0! w-[90vw]'>
           {isLoading ? <TransactionDrawerSkeleton /> : null}
 
           {isError ? (
@@ -129,21 +129,21 @@ export function TransactionDrawer({
               <DrawerHeader>
                 <DrawerTitle>Error</DrawerTitle>
               </DrawerHeader>
-              <Box className="p-6 text-destructive">
-                <p className="mt-4">Could not load transaction details: {error?.message}</p>
+              <Box className='p-6 text-destructive'>
+                <p className='mt-4'>Could not load transaction details: {error?.message}</p>
               </Box>
             </>
           ) : null}
 
-          <Box className="-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900">
-            <Box className="mt-1 flex flex-col flex-1">
-              <Box className="flex items-center gap-2 flex-wrap">
+          <Box className='-mx-6 flex items-center justify-between gap-x-4 border-b border-gray-200 px-6 pb-4 dark:border-gray-900'>
+            <Box className='mt-1 flex flex-col flex-1'>
+              <Box className='flex items-center gap-2 flex-wrap'>
                 <DrawerTitle>
                   {mode === 'create' ? 'New Transaction' : 'Edit Transaction'}
                 </DrawerTitle>
                 {mode === 'edit' && hasUnsavedChanges ? (
-                  <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1">
-                    <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                  <span className='text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-0.5 rounded-md border border-amber-500 bg-amber-50 dark:bg-amber-900/20 whitespace-nowrap shadow-sm animate-in fade-in slide-in-from-left-1'>
+                    <AlertCircle className='h-3 w-3' aria-hidden='true' />
                     Unsaved changes
                   </span>
                 ) : null}
@@ -155,22 +155,22 @@ export function TransactionDrawer({
               </DrawerDescription>
             </Box>
             <Button
-              variant="ghost"
-              className="aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10"
+              variant='ghost'
+              className='aspect-square p-1 text-gray-500 hover:bg-gray-100 hover:dark:bg-gray-400/10'
               onClick={() => handleOpenChange(false)}
             >
-              <X className="size-5" aria-hidden="true" />
-              <span className="sr-only">Close</span>
+              <X className='size-5' aria-hidden='true' />
+              <span className='sr-only'>Close</span>
             </Button>
           </Box>
 
-          <DrawerBody className="py-0! -mx-6 h-full overflow-y-auto">
-            <Box className="flex h-full">
-              <Box className="overflow-y-auto w-full">
+          <DrawerBody className='py-0! -mx-6 h-full overflow-y-auto'>
+            <Box className='flex h-full'>
+              <Box className='overflow-y-auto w-full'>
                 {isLoading && mode === 'edit' ? (
-                  <Box className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
-                    <span className="ml-2 text-sm text-muted-foreground">
+                  <Box className='flex items-center justify-center py-12'>
+                    <Loader2 className='h-6 w-6 animate-spin text-primary' aria-hidden='true' />
+                    <span className='ml-2 text-sm text-muted-foreground'>
                       Loading transaction...
                     </span>
                   </Box>

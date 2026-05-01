@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   useDeleteTransactionAttachment,
-  useUploadTransactionAttachment,
+  useUploadTransactionAttachment
 } from '@/features/finances/transactions/hooks/use-transaction-queries';
 import { formatFileSize, isImageFile } from '@/lib/file-constants';
 import type { TransactionAttachment } from '@/features/finances/transactions/types';
@@ -28,7 +28,7 @@ export function TransactionAttachments({
   attachments = EMPTY_ATTACHMENTS,
   onAttachmentsChange,
   disabled = false,
-  mode = 'edit',
+  mode = 'edit'
 }: TransactionAttachmentsProps) {
   const uploadMutation = useUploadTransactionAttachment();
   const deleteMutation = useDeleteTransactionAttachment();
@@ -46,11 +46,11 @@ export function TransactionAttachments({
             if (fileInputRef.current) {
               fileInputRef.current.value = '';
             }
-          },
-        },
+          }
+        }
       );
     },
-    [transactionId, uploadMutation],
+    [transactionId, uploadMutation]
   );
 
   const handleDelete = useCallback(
@@ -60,7 +60,7 @@ export function TransactionAttachments({
 
       deleteMutation.mutate({ attachmentId, transactionId });
     },
-    [deleteMutation, transactionId],
+    [deleteMutation, transactionId]
   );
 
   const handleUploadClick = () => {
@@ -70,13 +70,13 @@ export function TransactionAttachments({
   const canUpload = mode === 'edit' && transactionId;
 
   return (
-    <Box className="space-y-3">
-      <Box className="flex items-center justify-between">
-        <Box className="flex items-center gap-2">
-          <Paperclip className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <span className="text-sm font-medium">Attachments</span>
+    <Box className='space-y-3'>
+      <Box className='flex items-center justify-between'>
+        <Box className='flex items-center gap-2'>
+          <Paperclip className='h-4 w-4 text-muted-foreground' aria-hidden='true' />
+          <span className='text-sm font-medium'>Attachments</span>
           {attachments.length > 0 ? (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant='secondary' className='text-xs'>
               {attachments.length}
             </Badge>
           ) : null}
@@ -84,20 +84,20 @@ export function TransactionAttachments({
 
         {canUpload ? (
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
+            type='button'
+            variant='outline'
+            size='sm'
             onClick={handleUploadClick}
             disabled={disabled || uploadMutation.isPending}
           >
             {uploadMutation.isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                 Uploading...
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4" aria-hidden="true" />
+                <Upload className='h-4 w-4' aria-hidden='true' />
                 Upload
               </>
             )}
@@ -107,71 +107,71 @@ export function TransactionAttachments({
 
       <input
         ref={fileInputRef}
-        type="file"
-        className="hidden"
+        type='file'
+        className='hidden'
         onChange={handleFileSelect}
-        accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv"
+        accept='.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt,.csv'
         disabled={disabled || uploadMutation.isPending || !canUpload}
       />
 
       {!canUpload ? (
-        <Box className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 border border-dashed">
+        <Box className='text-sm text-muted-foreground bg-muted/50 rounded-md p-3 border border-dashed'>
           Save the transaction first to add attachments
         </Box>
       ) : null}
 
       {attachments.length > 0 ? (
-        <Box className="space-y-2">
+        <Box className='space-y-2'>
           {attachments.map((attachment) => {
             const isDeleting =
               deleteMutation.isPending && deleteMutation.variables?.attachmentId === attachment.id;
             const icon = isImageFile(attachment.mimeType) ? (
-              <Image className="h-4 w-4" aria-hidden="true" />
+              <Image className='h-4 w-4' aria-hidden='true' />
             ) : (
-              <FileText className="h-4 w-4" aria-hidden="true" />
+              <FileText className='h-4 w-4' aria-hidden='true' />
             );
 
             return (
               <Box
                 key={attachment.id}
-                className="flex items-center justify-between p-3 bg-muted/30 rounded-md border"
+                className='flex items-center justify-between p-3 bg-muted/30 rounded-md border'
               >
-                <Box className="flex items-center gap-3 flex-1 min-w-0">
-                  <Box className="text-muted-foreground">{icon}</Box>
-                  <Box className="flex-1 min-w-0">
-                    <Box className="font-medium text-sm truncate">{attachment.fileName}</Box>
-                    <Box className="text-xs text-muted-foreground">
+                <Box className='flex items-center gap-3 flex-1 min-w-0'>
+                  <Box className='text-muted-foreground'>{icon}</Box>
+                  <Box className='flex-1 min-w-0'>
+                    <Box className='font-medium text-sm truncate'>{attachment.fileName}</Box>
+                    <Box className='text-xs text-muted-foreground'>
                       {formatFileSize(attachment.fileSize)}
                     </Box>
                   </Box>
                 </Box>
 
-                <Box className="flex items-center gap-2">
+                <Box className='flex items-center gap-2'>
                   <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
+                    type='button'
+                    variant='ghost'
+                    size='sm'
                     onClick={() => window.open(attachment.s3Url, '_blank')}
                     disabled={isDeleting}
-                    className="h-8 px-2"
+                    className='h-8 px-2'
                   >
                     View
                   </Button>
 
                   {canUpload && (
                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
+                      type='button'
+                      variant='ghost'
+                      size='sm'
                       onClick={() => handleDelete(attachment.id)}
                       disabled={disabled || isDeleting}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      aria-label="Delete attachment"
+                      className='h-8 w-8 p-0 text-destructive hover:text-destructive'
+                      aria-label='Delete attachment'
                     >
                       {isDeleting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
                       ) : (
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        <Trash2 className='h-4 w-4' aria-hidden='true' />
                       )}
                     </Button>
                   )}

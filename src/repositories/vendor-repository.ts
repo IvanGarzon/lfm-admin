@@ -8,7 +8,7 @@ import type {
   VendorStatistics,
   VendorWithDetails,
   VendorFilters,
-  VendorPagination,
+  VendorPagination
 } from '@/features/inventory/vendors/types';
 import { getPaginationMetadata } from '@/lib/utils';
 
@@ -47,25 +47,25 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
 
     const whereClause: Prisma.VendorWhereInput = {
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     };
 
     if (status && status.length > 0) {
       whereClause.status = {
-        in: status,
+        in: status
       };
     }
 
     if (search) {
       const searchFilter: Prisma.StringFilter = {
         contains: search,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma.QueryMode.insensitive
       };
 
       whereClause.OR = [
         { vendorCode: searchFilter },
         { name: searchFilter },
-        { email: searchFilter },
+        { email: searchFilter }
       ];
     }
 
@@ -89,8 +89,8 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
         } else if (sortItem.id === 'transactionCount') {
           orderBy.push({
             transactions: {
-              _count: sortItem.desc ? 'desc' : 'asc',
-            },
+              _count: sortItem.desc ? 'desc' : 'asc'
+            }
           });
         }
       }
@@ -116,12 +116,12 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
           createdAt: true,
           _count: {
             select: {
-              transactions: true,
-            },
-          },
-        },
+              transactions: true
+            }
+          }
+        }
       }),
-      this.prisma.vendor.count({ where: whereClause }),
+      this.prisma.vendor.count({ where: whereClause })
     ]);
 
     const vendorItems: VendorListItem[] = items.map((vendor) => ({
@@ -132,14 +132,14 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
       phone: vendor.phone,
       status: vendor.status,
       paymentTerms: vendor.paymentTerms,
-      transactionCount: vendor._count.transactions,
+      transactionCount: vendor._count.transactions
     }));
 
     const pagination = getPaginationMetadata(totalItems, page, perPage);
 
     return {
       items: vendorItems,
-      pagination,
+      pagination
     };
   }
 
@@ -176,10 +176,10 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
         updatedAt: true,
         _count: {
           select: {
-            transactions: true,
-          },
-        },
-      },
+            transactions: true
+          }
+        }
+      }
     });
 
     if (!vendor) {
@@ -198,7 +198,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
             postalCode: vendor.postalCode ?? null,
             country: vendor.country ?? null,
             lat: vendor.lat,
-            lng: vendor.lng,
+            lng: vendor.lng
           }
         : null;
 
@@ -217,7 +217,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
       notes: vendor.notes,
       transactionCount: vendor._count.transactions,
       createdAt: vendor.createdAt,
-      updatedAt: vendor.updatedAt,
+      updatedAt: vendor.updatedAt
     };
   }
 
@@ -235,15 +235,15 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
       where: {
         tenantId,
         vendorCode: {
-          startsWith: prefix,
-        },
+          startsWith: prefix
+        }
       },
       orderBy: {
-        vendorCode: 'desc',
+        vendorCode: 'desc'
       },
       select: {
-        vendorCode: true,
-      },
+        vendorCode: true
+      }
     });
 
     if (!lastVendor) {
@@ -265,7 +265,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    */
   async createVendor(
     data: CreateVendorInput,
-    tenantId: string,
+    tenantId: string
   ): Promise<{ id: string; vendorCode: string }> {
     let attempts = 0;
     const maxAttempts = 3;
@@ -296,12 +296,12 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
             website: data.website ?? null,
             paymentTerms: data.paymentTerms ?? null,
             taxId: data.taxId ?? null,
-            notes: data.notes ?? null,
+            notes: data.notes ?? null
           },
           select: {
             id: true,
-            vendorCode: true,
-          },
+            vendorCode: true
+          }
         });
 
         return vendor;
@@ -333,7 +333,7 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   async updateVendor(
     id: string,
     tenantId: string,
-    data: UpdateVendorInput,
+    data: UpdateVendorInput
   ): Promise<VendorWithDetails | null> {
     const existing = await this.findByIdWithDetails(id, tenantId);
     if (!existing) {
@@ -361,9 +361,9 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
           website: data.website ?? null,
           paymentTerms: data.paymentTerms ?? null,
           taxId: data.taxId ?? null,
-          notes: data.notes ?? null,
-        },
-      }),
+          notes: data.notes ?? null
+        }
+      })
     );
 
     if (!updatedVendor) {
@@ -384,8 +384,8 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
     return await withDatabaseRetry(() =>
       this.prisma.vendor.update({
         where: { id, tenantId, deletedAt: null },
-        data: { status },
-      }),
+        data: { status }
+      })
     );
   }
 
@@ -400,20 +400,20 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
   async softDeleteVendor(id: string, tenantId: string): Promise<Vendor> {
     // Check if vendor has transactions
     const transactionCount = await this.prisma.transaction.count({
-      where: { vendorId: id },
+      where: { vendorId: id }
     });
 
     if (transactionCount > 0) {
       throw new Error(
-        'Cannot delete vendor with associated transactions. Please set status to INACTIVE instead.',
+        'Cannot delete vendor with associated transactions. Please set status to INACTIVE instead.'
       );
     }
 
     return await withDatabaseRetry(() =>
       this.prisma.vendor.update({
         where: { id, tenantId, deletedAt: null },
-        data: { deletedAt: new Date() },
-      }),
+        data: { deletedAt: new Date() }
+      })
     );
   }
 
@@ -426,21 +426,21 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
     const [total, active, inactive, suspended] = await Promise.all([
       this.prisma.vendor.count({ where: { tenantId, deletedAt: null } }),
       this.prisma.vendor.count({
-        where: { tenantId, status: VendorStatus.ACTIVE, deletedAt: null },
+        where: { tenantId, status: VendorStatus.ACTIVE, deletedAt: null }
       }),
       this.prisma.vendor.count({
-        where: { tenantId, status: VendorStatus.INACTIVE, deletedAt: null },
+        where: { tenantId, status: VendorStatus.INACTIVE, deletedAt: null }
       }),
       this.prisma.vendor.count({
-        where: { tenantId, status: VendorStatus.SUSPENDED, deletedAt: null },
-      }),
+        where: { tenantId, status: VendorStatus.SUSPENDED, deletedAt: null }
+      })
     ]);
 
     return {
       total,
       active,
       inactive,
-      suspended,
+      suspended
     };
   }
 
@@ -449,20 +449,20 @@ export class VendorRepository extends BaseRepository<Prisma.VendorGetPayload<obj
    * @returns A promise that resolves to an array of vendor identifiers and names
    */
   async getActiveVendors(
-    tenantId: string,
+    tenantId: string
   ): Promise<Array<{ id: string; vendorCode: string; name: string }>> {
     return await this.prisma.vendor.findMany({
       where: {
         tenantId,
         status: VendorStatus.ACTIVE,
-        deletedAt: null,
+        deletedAt: null
       },
       orderBy: { name: 'asc' },
       select: {
         id: true,
         vendorCode: true,
-        name: true,
-      },
+        name: true
+      }
     });
   }
 }

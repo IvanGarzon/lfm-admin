@@ -6,7 +6,7 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsArrayOf,
-  parseAsStringEnum,
+  parseAsStringEnum
 } from 'nuqs/server';
 import type { ProductStatus } from '@/prisma/client';
 
@@ -17,10 +17,10 @@ type ExtractDefaults<T extends Record<string, { defaultValue: unknown }>> = {
 };
 
 function getSearchParamsDefaults<T extends Record<string, { defaultValue: unknown }>>(
-  params: T,
+  params: T
 ): ExtractDefaults<T> {
   return Object.fromEntries(
-    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue]),
+    Object.entries(params).map(([key, parser]) => [key, parser.defaultValue])
   ) as ExtractDefaults<T>;
 }
 
@@ -29,9 +29,9 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(20),
   status: parseAsArrayOf(parseAsStringEnum<ProductStatus>(ProductStatusSchema.options)).withDefault(
-    [],
+    []
   ),
-  sort: getSortingStateParser(sortableColumnIds).withDefault([]),
+  sort: getSortingStateParser(sortableColumnIds).withDefault([])
 };
 
 export const searchParamsCache = createSearchParamsCache(searchParams);

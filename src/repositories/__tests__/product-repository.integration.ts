@@ -13,7 +13,7 @@ import { ProductRepository } from '../product-repository';
 import {
   setupTestDatabaseLifecycle,
   getTestPrisma,
-  createTestTenant,
+  createTestTenant
 } from '@/lib/testing/integration/database';
 import { createProductInput } from '@/lib/testing';
 
@@ -100,7 +100,7 @@ describe('ProductRepository (integration)', () => {
 
       const result = await repository.searchProducts(
         { search: 'rose', page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -110,16 +110,16 @@ describe('ProductRepository (integration)', () => {
     it('filters by status', async () => {
       await repository.createProduct(
         createProductInput({ name: 'Active', status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
       await repository.createProduct(
         createProductInput({ name: 'Inactive', status: ProductStatus.INACTIVE }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.searchProducts(
         { status: [ProductStatus.INACTIVE], page: 1, perPage: 20 },
-        tenantId,
+        tenantId
       );
 
       expect(result.items).toHaveLength(1);
@@ -154,7 +154,7 @@ describe('ProductRepository (integration)', () => {
     it('updates product fields and returns the updated product', async () => {
       const { id } = await repository.createProduct(
         createProductInput({ name: 'Old Name', price: 10 }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updateProduct(id, tenantId, {
@@ -165,7 +165,7 @@ describe('ProductRepository (integration)', () => {
         stock: 5,
         description: 'Updated',
         imageUrl: null,
-        availableAt: null,
+        availableAt: null
       });
 
       expect(result!.name).toBe('New Name');
@@ -185,7 +185,7 @@ describe('ProductRepository (integration)', () => {
         stock: 0,
         description: null,
         imageUrl: null,
-        availableAt: null,
+        availableAt: null
       });
 
       expect(result).toBeNull();
@@ -228,7 +228,7 @@ describe('ProductRepository (integration)', () => {
     it('updates the status and returns the updated product', async () => {
       const { id } = await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updateProductStatus(id, tenantId, ProductStatus.INACTIVE);
@@ -240,7 +240,7 @@ describe('ProductRepository (integration)', () => {
       const result = await repository.updateProductStatus(
         'cltest000000000000none0001',
         tenantId,
-        ProductStatus.INACTIVE,
+        ProductStatus.INACTIVE
       );
       expect(result).toBeNull();
     });
@@ -268,7 +268,7 @@ describe('ProductRepository (integration)', () => {
     it('transitions to OUT_OF_STOCK when stock reaches zero', async () => {
       const { id } = await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE, stock: 5 }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updateProductStock(id, tenantId, -5);
@@ -280,7 +280,7 @@ describe('ProductRepository (integration)', () => {
     it('transitions back to ACTIVE when stock increases from zero', async () => {
       const { id } = await repository.createProduct(
         createProductInput({ status: ProductStatus.OUT_OF_STOCK, stock: 0 }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.updateProductStock(id, tenantId, 10);
@@ -293,7 +293,7 @@ describe('ProductRepository (integration)', () => {
       const { id } = await repository.createProduct(createProductInput({ stock: 5 }), tenantId);
 
       await expect(repository.updateProductStock(id, tenantId, -10)).rejects.toThrow(
-        'Insufficient stock',
+        'Insufficient stock'
       );
     });
 
@@ -312,17 +312,17 @@ describe('ProductRepository (integration)', () => {
     it('updates all matching products for the tenant', async () => {
       const p1 = await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
       const p2 = await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
 
       const count = await repository.bulkUpdateProductStatus(
         [p1.id, p2.id],
         tenantId,
-        ProductStatus.INACTIVE,
+        ProductStatus.INACTIVE
       );
 
       expect(count).toBe(2);
@@ -340,7 +340,7 @@ describe('ProductRepository (integration)', () => {
       const count = await repository.bulkUpdateProductStatus(
         [id],
         tenantId,
-        ProductStatus.INACTIVE,
+        ProductStatus.INACTIVE
       );
       expect(count).toBe(0);
 
@@ -381,19 +381,19 @@ describe('ProductRepository (integration)', () => {
     it('returns correct counts per status', async () => {
       await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
       await repository.createProduct(
         createProductInput({ status: ProductStatus.ACTIVE }),
-        tenantId,
+        tenantId
       );
       await repository.createProduct(
         createProductInput({ status: ProductStatus.INACTIVE }),
-        tenantId,
+        tenantId
       );
       await repository.createProduct(
         createProductInput({ status: ProductStatus.OUT_OF_STOCK }),
-        tenantId,
+        tenantId
       );
 
       const stats = await repository.getProductStatistics(tenantId);
@@ -426,11 +426,11 @@ describe('ProductRepository (integration)', () => {
     it('returns only active products for the tenant', async () => {
       await repository.createProduct(
         createProductInput({ name: 'Active', status: ProductStatus.ACTIVE, price: 25 }),
-        tenantId,
+        tenantId
       );
       await repository.createProduct(
         createProductInput({ name: 'Inactive', status: ProductStatus.INACTIVE }),
-        tenantId,
+        tenantId
       );
 
       const result = await repository.getActiveProducts(tenantId);

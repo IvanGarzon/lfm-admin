@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 // Credentials for a user with MANAGER or ADMIN role
 const TEST_USER = {
   email: 'test@example.com',
-  password: 'password',
+  password: 'password'
 };
 
 test.describe('Quote Management Flow', () => {

@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
 import { CustomerSelect } from '@/components/shared/customer-select';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
@@ -29,13 +29,13 @@ export function QuoteHeaderFields({
   isLoadingCustomers,
   isLocked,
   mode,
-  quoteNumber,
+  quoteNumber
 }: QuoteHeaderFieldsProps) {
   return (
     <>
       <FieldGroup>
         <Controller
-          name="customerId"
+          name='customerId'
           control={control}
           render={({ field, fieldState }) => (
             <Box>
@@ -45,7 +45,7 @@ export function QuoteHeaderFields({
                 onValueChange={field.onChange}
                 isLoading={isLoadingCustomers}
                 disabled={isLoadingCustomers || isLocked}
-                label="Quote for"
+                label='Quote for'
                 showAddCustomerLink={true}
                 isLocked={isLocked}
               />
@@ -55,19 +55,19 @@ export function QuoteHeaderFields({
         />
       </FieldGroup>
 
-      <Box className="grid grid-cols-2 gap-4">
+      <Box className='grid grid-cols-2 gap-4'>
         {mode === 'update' && quoteNumber ? (
           <FieldGroup>
             <Field>
               <FieldContent>
-                <FieldLabel htmlFor="form-rhf-quote-number">Quote Number</FieldLabel>
+                <FieldLabel htmlFor='form-rhf-quote-number'>Quote Number</FieldLabel>
               </FieldContent>
               <Input
-                id="form-rhf-quote-number"
+                id='form-rhf-quote-number'
                 value={quoteNumber}
                 disabled
                 readOnly
-                className="bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                className='bg-gray-50 dark:bg-gray-800 cursor-not-allowed'
               />
             </Field>
           </FieldGroup>
@@ -75,22 +75,22 @@ export function QuoteHeaderFields({
 
         <FieldGroup className={mode === 'create' ? 'col-span-2' : ''}>
           <Controller
-            name="currency"
+            name='currency'
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor="form-rhf-currency">Currency</FieldLabel>
+                  <FieldLabel htmlFor='form-rhf-currency'>Currency</FieldLabel>
                 </FieldContent>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
-                  <SelectTrigger id="form-rhf-select-currency" aria-invalid={fieldState.invalid}>
+                  <SelectTrigger id='form-rhf-select-currency' aria-invalid={fieldState.invalid}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value='AUD'>AUD - Australian Dollar</SelectItem>
+                    <SelectItem value='USD'>USD - US Dollar</SelectItem>
+                    <SelectItem value='EUR'>EUR - Euro</SelectItem>
+                    <SelectItem value='GBP'>GBP - British Pound</SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}

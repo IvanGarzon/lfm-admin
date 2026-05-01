@@ -13,29 +13,29 @@ vi.mock('@/lib/logger', () => ({
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
-    debug: vi.fn(),
-  },
+    debug: vi.fn()
+  }
 }));
 
 // Mock external services that would cause real side effects
 vi.mock('@/lib/s3', () => ({
   uploadFileToS3: vi.fn().mockResolvedValue({
     s3Key: 'test-key',
-    s3Url: 'https://test.s3.amazonaws.com/test-key',
+    s3Url: 'https://test.s3.amazonaws.com/test-key'
   }),
   deleteFileFromS3: vi.fn().mockResolvedValue(true),
   getSignedUrlForDownload: vi.fn().mockResolvedValue('https://signed-url.com/file'),
-  getSignedDownloadUrl: vi.fn().mockResolvedValue('https://signed-url.com/file'),
+  getSignedDownloadUrl: vi.fn().mockResolvedValue('https://signed-url.com/file')
 }));
 
 vi.mock('@/lib/pdf', () => ({
-  generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test')),
+  generatePdfBuffer: vi.fn().mockResolvedValue(Buffer.from('test'))
 }));
 
 vi.mock('@/services/email-queue.service', () => ({
   queueEmail: vi.fn().mockResolvedValue({}),
   queueInvoiceEmail: vi.fn().mockResolvedValue({}),
-  queueQuoteEmail: vi.fn().mockResolvedValue({}),
+  queueQuoteEmail: vi.fn().mockResolvedValue({})
 }));
 
 // next-auth cannot resolve `next/server` in Node/Vitest — mock the auth
@@ -46,9 +46,9 @@ vi.mock('next-auth', () => ({
     auth: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
-    handlers: { GET: vi.fn(), POST: vi.fn() },
+    handlers: { GET: vi.fn(), POST: vi.fn() }
   })),
-  getServerSession: vi.fn(),
+  getServerSession: vi.fn()
 }));
 
 vi.mock('@/auth', () => ({
@@ -56,13 +56,13 @@ vi.mock('@/auth', () => ({
   signIn: vi.fn(),
   signOut: vi.fn(),
   GET: vi.fn(),
-  POST: vi.fn(),
+  POST: vi.fn()
 }));
 
 // Prevent module-level singleton instantiation in repositories that import
 // prisma directly. Integration tests pass getTestPrisma() via the constructor.
 vi.mock('@/lib/prisma', () => ({
-  prisma: {},
+  prisma: {}
 }));
 
 vi.mock('@/env', () => ({
@@ -78,6 +78,6 @@ vi.mock('@/env', () => ({
     RESEND_API_KEY: 're_test',
     CRON_SECRET: 'test',
     INNGEST_APP_ID: 'test',
-    AUTH_TRUST_HOST: true,
-  },
+    AUTH_TRUST_HOST: true
+  }
 }));

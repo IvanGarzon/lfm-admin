@@ -7,5 +7,5 @@ export const PRICE_LIST_UNIT_TYPE_LABELS: Record<PriceListUnitType, string> = {
   bunch: 'Bunch',
   box: 'Box',
   pack: 'Pack',
-  kg: 'Kilogram',
+  kg: 'Kilogram'
 };
