@@ -2,14 +2,10 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 
-const TEST_TENANT_SLUG = 'e2e-test-tenant';
-const TEST_ORG_NAME = 'E2E Test Organisation';
-
 /**
- * Seed E2E Test User
- * Creates a tenant and MANAGER user for Playwright e2e tests.
- * Credentials are read from E2E_EMAIL and E2E_PASSWORD env vars.
- * Safe to run repeatedly — skips creation if already exists.
+ * One-time bootstrap: creates the E2E auth user without a tenant.
+ * Tenant assignment happens per test run in seed-e2e-environment.ts.
+ * Safe to run repeatedly — updates password if user already exists.
  */
 export async function seedE2EUser() {
   const email = process.env.E2E_EMAIL;
@@ -20,32 +16,6 @@ export async function seedE2EUser() {
     return;
   }
 
-  // -- Tenant ----------------------------------------------------------------
-
-  let tenant = await prisma.tenant.findUnique({ where: { slug: TEST_TENANT_SLUG } });
-
-  if (!tenant) {
-    tenant = await prisma.tenant.create({
-      data: { name: 'E2E Test Tenant', slug: TEST_TENANT_SLUG, settings: { create: {} } },
-    });
-    console.log(`   Created tenant: ${tenant.name}`);
-  }
-
-  // -- Organisation ----------------------------------------------------------
-
-  const existingOrg = await prisma.organization.findFirst({
-    where: { name: TEST_ORG_NAME, tenantId: tenant.id },
-  });
-
-  if (!existingOrg) {
-    await prisma.organization.create({
-      data: { name: TEST_ORG_NAME, tenantId: tenant.id },
-    });
-    console.log(`   Created organisation: ${TEST_ORG_NAME}`);
-  }
-
-  // -- User ------------------------------------------------------------------
-
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (!existing) {
@@ -55,21 +25,18 @@ export async function seedE2EUser() {
         lastName: 'Test',
         email,
         password: await bcrypt.hash(password, 10),
-        role: 'MANAGER',
-        tenantId: tenant.id,
-      },
+        role: 'MANAGER'
+        // tenantId intentionally omitted — assigned per run by seed-e2e-environment.ts
+      }
     });
     console.log(`   Created e2e user: ${email}`);
   } else {
+    // Keep password in sync with .env in case it changed.
     await prisma.user.update({
       where: { id: existing.id },
-      data: {
-        tenantId: existing.tenantId ?? tenant.id,
-        role: 'MANAGER',
-        password: await bcrypt.hash(password, 10),
-      },
+      data: { password: await bcrypt.hash(password, 10) }
     });
-    console.log(`   Updated e2e user: ${email}`);
+    console.log(`   Updated e2e user password: ${email}`);
   }
 }
 

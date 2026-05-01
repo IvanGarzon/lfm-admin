@@ -16,6 +16,7 @@ const BASE_URL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
+  globalTeardown: './e2e/global-teardown.ts',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
@@ -23,7 +24,7 @@ export default defineConfig({
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 5000,
+    timeout: 5000
   },
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -39,15 +40,15 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',
-    storageState: 'e2e/.auth/session.json',
+    storageState: 'e2e/.auth/session.json'
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
+      use: { ...devices['Desktop Chrome'] }
+    }
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },
@@ -63,5 +64,6 @@ export default defineConfig({
     command: 'pnpm run webpack',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-  },
+    timeout: 120 * 1000
+  }
 });
