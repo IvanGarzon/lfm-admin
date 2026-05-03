@@ -21,7 +21,7 @@ export default async function OrganizationsPage({
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ORGANIZATION_KEYS.list(JSON.stringify(searchParamsResolved)),
+    queryKey: ORGANIZATION_KEYS.list(searchParamsResolved),
     queryFn: async () => {
       const result = await getOrganizations(searchParamsResolved);
       if (!result.success) {

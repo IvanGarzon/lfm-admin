@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Plus, Landmark } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
-
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';

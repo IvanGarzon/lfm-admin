@@ -17,12 +17,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: USER_KEYS.list(JSON.stringify(searchParamsResolved)),
+    queryKey: USER_KEYS.list(searchParamsResolved),
     queryFn: async () => {
       const result = await getTenantUsers(searchParamsResolved);
       if (!result.success) {
         throw new Error(result.error);
       }
+
       return result.data;
     }
   });
