@@ -10,6 +10,7 @@ import { Box } from '@/components/ui/box';
 import { EmptyState } from '@/components/shared/empty-state';
 import { CustomersTable } from '@/features/crm/customers/components/customers-table';
 import { createCustomerColumns } from '@/features/crm/customers/components/customer-columns';
+import { DeleteCustomerDialog } from '@/features/crm/customers/components/delete-customer-dialog';
 import {
   useDeleteCustomer,
   useCustomers
@@ -34,6 +35,9 @@ export function CustomersList({
   searchParams: SearchParams;
 }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [deletingCustomer, setDeletingCustomer] = useState<{ id: string; name: string } | null>(
+    null
+  );
   const deleteCustomer = useDeleteCustomer();
 
   const { data } = useCustomers(serverSearchParams);
@@ -41,16 +45,20 @@ export function CustomersList({
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
 
-  const columns = useMemo(
-    () =>
-      createCustomerColumns((id, name) => {
-        // TODO: add modal dialog instead
-        if (confirm(`Are you sure you want to delete ${name}?`)) {
-          deleteCustomer.mutate({ id });
-        }
-      }),
-    [deleteCustomer]
-  );
+  const handleDelete = useCallback((id: string, name: string) => {
+    setDeletingCustomer({ id, name });
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deletingCustomer) {
+      deleteCustomer.mutate(
+        { id: deletingCustomer.id },
+        { onSuccess: () => setDeletingCustomer(null) }
+      );
+    }
+  }, [deletingCustomer, deleteCustomer]);
+
+  const columns = useMemo(() => createCustomerColumns(handleDelete), [handleDelete]);
 
   const handleShowCreateModal = useCallback(() => {
     setShowCreateModal((prev) => !prev);
@@ -108,6 +116,14 @@ export function CustomersList({
       {showCreateModal ? (
         <CustomerDrawer open={showCreateModal} onClose={handleShowCreateModal} />
       ) : null}
+
+      <DeleteCustomerDialog
+        open={!!deletingCustomer}
+        onOpenChange={(open) => !open && setDeletingCustomer(null)}
+        onConfirm={handleConfirmDelete}
+        customerName={deletingCustomer?.name}
+        isPending={deleteCustomer.isPending}
+      />
     </Box>
   );
 }

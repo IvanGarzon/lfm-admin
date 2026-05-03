@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 import { CustomersList } from '../customers-list';
 
@@ -39,6 +39,26 @@ vi.mock('next/dynamic', () => ({
       open ? <div data-testid='customer-drawer' onClick={onClose} /> : null
 }));
 
+vi.mock('@/features/crm/customers/components/delete-customer-dialog', () => ({
+  DeleteCustomerDialog: ({
+    open,
+    onConfirm,
+    onOpenChange
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    onOpenChange: (open: boolean) => void;
+    customerName?: string;
+    isPending?: boolean;
+  }) =>
+    open ? (
+      <div data-testid='delete-customer-dialog'>
+        <button onClick={onConfirm}>Confirm delete</button>
+        <button onClick={() => onOpenChange(false)}>Cancel</button>
+      </div>
+    ) : null
+}));
+
 vi.mock('@/hooks/use-data-table', async () => {
   const { useDataTableMock } = await import('@/lib/testing/mocks/use-data-table.mock');
   return useDataTableMock;
@@ -74,7 +94,6 @@ const activeSearchParams = { search: 'Alice' };
 describe('CustomersList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('confirm', vi.fn());
   });
 
   // -- Zero state -----------------------------------------------------------
@@ -188,51 +207,55 @@ describe('CustomersList', () => {
   // -- Delete confirmation --------------------------------------------------
 
   describe('delete confirmation', () => {
-    beforeEach(() => {
+    let capturedDeleteFn: ((id: string, name: string) => void) | undefined;
+
+    beforeEach(async () => {
       mockUseCustomers.mockReturnValue({ data: makeData(3) });
-    });
-
-    it('calls deleteCustomer.mutate when confirm is accepted', async () => {
-      vi.mocked(window.confirm).mockReturnValue(true);
 
       const { createCustomerColumns } = vi.mocked(
         await import('@/features/crm/customers/components/customer-columns')
       );
-
-      let capturedDeleteFn: ((id: string, name: string) => void) | undefined;
       (createCustomerColumns as ReturnType<typeof vi.fn>).mockImplementation(
         (onDelete: (id: string, name: string) => void) => {
           capturedDeleteFn = onDelete;
           return [];
         }
       );
-
-      render(<CustomersList searchParams={emptySearchParams} />);
-      capturedDeleteFn?.('customer-0', 'Jane Smith-0');
-
-      expect(window.confirm).toHaveBeenCalledWith('Are you sure you want to delete Jane Smith-0?');
-      expect(mockMutate).toHaveBeenCalledWith({ id: 'customer-0' });
     });
 
-    it('does not call deleteCustomer.mutate when confirm is cancelled', async () => {
-      vi.mocked(window.confirm).mockReturnValue(false);
-
-      const { createCustomerColumns } = vi.mocked(
-        await import('@/features/crm/customers/components/customer-columns')
-      );
-
-      let capturedDeleteFn: ((id: string, name: string) => void) | undefined;
-      (createCustomerColumns as ReturnType<typeof vi.fn>).mockImplementation(
-        (onDelete: (id: string, name: string) => void) => {
-          capturedDeleteFn = onDelete;
-          return [];
-        }
-      );
-
+    it('does not show delete dialog initially', () => {
       render(<CustomersList searchParams={emptySearchParams} />);
-      capturedDeleteFn?.('customer-0', 'Jane Smith-0');
+      expect(screen.queryByTestId('delete-customer-dialog')).not.toBeInTheDocument();
+    });
 
+    it('opens delete dialog when onDelete is called from columns', () => {
+      render(<CustomersList searchParams={emptySearchParams} />);
+      act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
+      expect(screen.getByTestId('delete-customer-dialog')).toBeInTheDocument();
+    });
+
+    it('calls deleteCustomer.mutate when dialog confirm is clicked', () => {
+      render(<CustomersList searchParams={emptySearchParams} />);
+      act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
+      fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
+      expect(mockMutate).toHaveBeenCalledWith(
+        { id: 'customer-0' },
+        expect.objectContaining({ onSuccess: expect.any(Function) })
+      );
+    });
+
+    it('does not call deleteCustomer.mutate when dialog is cancelled', () => {
+      render(<CustomersList searchParams={emptySearchParams} />);
+      act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
+      fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       expect(mockMutate).not.toHaveBeenCalled();
+    });
+
+    it('closes delete dialog when cancelled', () => {
+      render(<CustomersList searchParams={emptySearchParams} />);
+      act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
+      fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+      expect(screen.queryByTestId('delete-customer-dialog')).not.toBeInTheDocument();
     });
   });
 });

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { CreateCustomerDialog } from '../create-customer-dialog';
 import type { CreateCustomerInput } from '@/schemas/customers';
@@ -18,37 +18,21 @@ vi.mock('@/features/crm/customers/hooks/use-customer-queries', () => ({
   useCreateCustomer: mockUseCreateCustomer
 }));
 
-const { MockCustomerForm } = vi.hoisted(() => ({
-  MockCustomerForm: vi.fn(
-    (_props: { onCreate?: (data: CreateCustomerInput) => void; isCreating?: boolean }) => null
+vi.mock('@/features/crm/customers/components/customer-form', () => ({
+  CustomerForm: ({
+    onCreate,
+    isCreating
+  }: {
+    onCreate?: (data: CreateCustomerInput) => void;
+    isCreating?: boolean;
+  }) => (
+    <div data-testid='customer-form' data-creating={String(isCreating)}>
+      <button onClick={() => onCreate?.({ firstName: 'Jane' } as CreateCustomerInput)}>
+        Submit
+      </button>
+    </div>
   )
 }));
-
-vi.mock('@/features/crm/customers/components/customer-form', () => ({
-  CustomerForm: MockCustomerForm
-}));
-
-vi.mock('@/components/ui/dialog', () => ({
-  Dialog: ({
-    open,
-    children
-  }: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    children: React.ReactNode;
-  }) => (open ? <div role='dialog'>{children}</div> : null),
-  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>
-}));
-
-// -- Helpers ----------------------------------------------------------------
-
-function lastFormProps() {
-  const calls = MockCustomerForm.mock.calls;
-  return calls[calls.length - 1][0];
-}
 
 // -- Tests ------------------------------------------------------------------
 
@@ -56,7 +40,6 @@ describe('CreateCustomerDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseCreateCustomer.mockReturnValue({ mutate: mockMutate, isPending: false });
-    MockCustomerForm.mockImplementation(() => null);
   });
 
   describe('when open', () => {
@@ -72,13 +55,13 @@ describe('CreateCustomerDialog', () => {
 
     it('renders CustomerForm', () => {
       render(<CreateCustomerDialog open={true} onOpenChange={vi.fn()} />);
-      expect(MockCustomerForm).toHaveBeenCalled();
+      expect(screen.getByTestId('customer-form')).toBeInTheDocument();
     });
 
     it('passes isPending as isCreating to CustomerForm', () => {
       mockUseCreateCustomer.mockReturnValueOnce({ mutate: mockMutate, isPending: true });
       render(<CreateCustomerDialog open={true} onOpenChange={vi.fn()} />);
-      expect(lastFormProps().isCreating).toBe(true);
+      expect(screen.getByTestId('customer-form')).toHaveAttribute('data-creating', 'true');
     });
   });
 
@@ -92,11 +75,8 @@ describe('CreateCustomerDialog', () => {
   describe('onCreate callback', () => {
     it('calls createCustomer.mutate with the form data', () => {
       render(<CreateCustomerDialog open={true} onOpenChange={vi.fn()} />);
-
-      const formData = { firstName: 'Jane' } as CreateCustomerInput;
-      lastFormProps().onCreate(formData);
-
-      expect(mockMutate).toHaveBeenCalledWith(formData, expect.any(Object));
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      expect(mockMutate).toHaveBeenCalledWith({ firstName: 'Jane' }, expect.any(Object));
     });
 
     it('calls onOpenChange(false) on successful creation', () => {
@@ -106,10 +86,8 @@ describe('CreateCustomerDialog', () => {
           onSuccess({ id: 'new-cust' });
         }
       );
-
       render(<CreateCustomerDialog open={true} onOpenChange={onOpenChange} />);
-      lastFormProps().onCreate({ firstName: 'Jane' } as CreateCustomerInput);
-
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
@@ -120,10 +98,8 @@ describe('CreateCustomerDialog', () => {
           onSuccess({ id: 'new-cust-42' });
         }
       );
-
       render(<CreateCustomerDialog open={true} onOpenChange={vi.fn()} onCreate={onCreate} />);
-      lastFormProps().onCreate({ firstName: 'Jane' } as CreateCustomerInput);
-
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
       expect(onCreate).toHaveBeenCalledWith('new-cust-42');
     });
   });
