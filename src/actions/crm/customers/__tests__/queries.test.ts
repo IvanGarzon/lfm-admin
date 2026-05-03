@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getCustomers, getCustomerById, getActiveCustomers } from '../queries';
-import { testIds, mockSessions } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import type { CustomerListItem, CustomerPagination } from '@/features/crm/customers/types';
 
 const { mockCustomerRepo, mockAuth } = vi.hoisted(() => ({

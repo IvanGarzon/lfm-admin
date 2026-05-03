@@ -7,14 +7,14 @@ import {
   uploadTransactionAttachment,
   deleteTransactionAttachment
 } from '../mutations';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createTransactionInput,
   createTransactionResponse,
   createTransactionWithDetails,
   createTransactionCategory as createCategoryFactory
-} from '@/lib/testing';
+} from '@/lib/testing/factories/transaction.factory';
 
 const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
   mockTransactionRepo: {

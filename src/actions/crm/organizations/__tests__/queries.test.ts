@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getOrganizations, getOrganizationById, getActiveOrganizations } from '../queries';
-import { testIds, mockSessions, createOrganizationResponse } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createOrganizationResponse } from '@/lib/testing/factories/organization.factory';
 import type { OrganizationPagination } from '@/features/crm/organizations/types';
 
 const { mockOrgRepo, mockAuth } = vi.hoisted(() => ({

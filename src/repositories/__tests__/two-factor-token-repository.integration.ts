@@ -12,7 +12,7 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createUserData } from '@/lib/testing';
+import { createUserData } from '@/lib/testing/factories/user.factory';
 import crypto from 'node:crypto';
 
 vi.mock('@/lib/prisma', () => ({ prisma: {} }));

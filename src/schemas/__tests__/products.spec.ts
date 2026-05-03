@@ -5,7 +5,7 @@ import {
   DeleteProductSchema,
   ProductFiltersSchema
 } from '../products';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_PRODUCT_ID = testIds.product();
 

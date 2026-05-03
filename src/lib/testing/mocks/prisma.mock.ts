@@ -1,55 +1,19 @@
 /**
  * Prisma Client Mock
  *
- * Provides mock implementations for Prisma client, enums, and classes.
- * Used both as a module alias and in test setup.
+ * Re-exports all generated enums (zero runtime dependencies) and provides
+ * minimal stubs for the Prisma namespace and PrismaClient class.
+ *
+ * Used as a module alias in vitest.config.ts to replace @/prisma/client
+ * without loading the Prisma runtime.
  */
 
 import { vi } from 'vitest';
 
-// Prisma Enums
-export const InvoiceStatus = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  PAID: 'PAID',
-  PARTIALLY_PAID: 'PARTIALLY_PAID',
-  OVERDUE: 'OVERDUE',
-  CANCELLED: 'CANCELLED'
-} as const;
+// All generated enums — no import changes needed when schema evolves.
+export * from '../../../../prisma/generated/client/enums';
 
-export const UserRole = {
-  USER: 'USER',
-  MANAGER: 'MANAGER',
-  ADMIN: 'ADMIN'
-} as const;
-
-export const TransactionType = {
-  INCOME: 'INCOME',
-  EXPENSE: 'EXPENSE'
-} as const;
-
-export const TransactionStatus = {
-  PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED'
-} as const;
-
-export const DocumentKind = {
-  INVOICE: 'INVOICE',
-  RECEIPT: 'RECEIPT',
-  QUOTE: 'QUOTE',
-  OTHER: 'OTHER'
-} as const;
-
-export const RecipeItemType = {
-  FLORAL: 'FLORAL',
-  FOLIAGE: 'FOLIAGE',
-  SUPPLY: 'SUPPLY',
-  INGREDIENT: 'INGREDIENT',
-  OTHER: 'OTHER'
-} as const;
-
-// Prisma Decimal class mock
+// Prisma Decimal class stub
 class DecimalMock {
   public value: unknown;
   constructor(v: unknown) {
@@ -63,13 +27,10 @@ class DecimalMock {
   }
 }
 
-// Prisma namespace mock
+// Prisma namespace stub
 export const Prisma = {
   Decimal: DecimalMock,
-  sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
-    strings,
-    values
-  })),
+  sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values })),
   QueryMode: {
     insensitive: 'insensitive',
     default: 'default'
@@ -83,6 +44,5 @@ export const Prisma = {
   PrismaClientInitializationError: class extends Error {}
 } as const;
 
-// PrismaClient class mock - exported for type imports
-// Tests that need prisma create their own local mock
+// PrismaClient stub — never instantiated in unit tests
 export class PrismaClient {}

@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createEmployee, updateEmployee, deleteEmployee } from '../mutations';
-import { testIds, mockSessions, createEmployeeInput, createEmployeeListItem } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import {
+  createEmployeeInput,
+  createEmployeeListItem
+} from '@/lib/testing/factories/employee.factory';
 
 const { mockEmployeeRepo, mockAuth } = vi.hoisted(() => ({
   mockEmployeeRepo: {

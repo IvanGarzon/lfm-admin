@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 import { TransactionForm } from '../transaction-form';
-import { createTransactionWithDetails } from '@/lib/testing';
+import { createTransactionWithDetails } from '@/lib/testing/factories/transaction.factory';
 
 // -- Mocks ----------------------------------------------------------------
 

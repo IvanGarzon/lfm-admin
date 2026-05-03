@@ -8,7 +8,12 @@ import {
   bulkUpdateProductStatus,
   bulkDeleteProducts
 } from '../mutations';
-import { testIds, mockSessions, createProductInput, createProductWithDetails } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import {
+  createProductInput,
+  createProductWithDetails
+} from '@/lib/testing/factories/product.factory';
 
 const { mockProductRepo, mockAuth } = vi.hoisted(() => ({
   mockProductRepo: {

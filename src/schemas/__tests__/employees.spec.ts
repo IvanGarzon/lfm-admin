@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CreateEmployeeSchema, UpdateEmployeeSchema, DeleteEmployeeSchema } from '../employees';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_EMPLOYEE_ID = testIds.employee();
 

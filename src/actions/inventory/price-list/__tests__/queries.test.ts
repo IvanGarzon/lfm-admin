@@ -5,12 +5,12 @@ import {
   getPriceListCostHistory,
   getActivePriceListItems
 } from '../queries';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createPriceListItemListItem,
   createPriceListItemWithDetails
-} from '@/lib/testing';
+} from '@/lib/testing/factories/price-list.factory';
 
 const { mockPriceListRepo, mockAuth } = vi.hoisted(() => ({
   mockPriceListRepo: {

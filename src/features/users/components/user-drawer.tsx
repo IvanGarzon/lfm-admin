@@ -130,6 +130,7 @@ export function UserDrawer({
             User profile details, permissions and security settings.
           </DrawerDescription>
         </VisuallyHidden>
+
         {isLoading ? (
           <>
             <DrawerHeader>

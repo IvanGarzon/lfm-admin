@@ -16,7 +16,8 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createQuoteInput, createQuoteItemInput, createCustomerInput } from '@/lib/testing';
+import { createQuoteInput, createQuoteItemInput } from '@/lib/testing/factories/quote.factory';
+import { createCustomerInput } from '@/lib/testing/factories/customer.factory';
 
 // Prevent the module-level singleton from running before the container is ready.
 vi.mock('@/lib/prisma', () => ({ prisma: {} }));

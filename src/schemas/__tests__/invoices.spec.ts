@@ -11,7 +11,7 @@ import {
   SendReminderEmailSchema,
   SendReceiptEmailSchema
 } from '../invoices';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_INVOICE_ID = testIds.invoice();
 const TEST_PRODUCT_ID = testIds.product();

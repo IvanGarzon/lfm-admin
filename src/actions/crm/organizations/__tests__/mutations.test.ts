@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createOrganization, updateOrganization, deleteOrganization } from '../mutations';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createOrganizationInput,
   createOrganizationResponse
-} from '@/lib/testing';
+} from '@/lib/testing/factories/organization.factory';
 import { revalidatePath } from 'next/cache';
 import type { UpdateOrganizationInput } from '@/schemas/organizations';
 

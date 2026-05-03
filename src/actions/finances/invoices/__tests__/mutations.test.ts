@@ -51,10 +51,9 @@ import {
 } from '../mutations';
 import { revalidatePath } from 'next/cache';
 import { InvoiceStatus } from '@/prisma/client';
+import { testIds, resetIdCounter } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  resetIdCounter,
-  mockSessions,
   createInvoiceInput,
   createInvoiceItemInput,
   createInvoiceResponse,
@@ -62,7 +61,7 @@ import {
   createInvoiceDetails,
   createRecordPaymentInput,
   createCancelInvoiceInput
-} from '@/lib/testing';
+} from '@/lib/testing/factories/invoice.factory';
 
 const { mockInvoiceRepo, mockAuth, mockHasPermission, mockPrisma } = vi.hoisted(() => ({
   mockInvoiceRepo: {

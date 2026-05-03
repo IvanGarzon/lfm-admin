@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createPriceListItem, updatePriceListItem, deletePriceListItem } from '../mutations';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createPriceListItemInput,
   createUpdatePriceListItemInput
-} from '@/lib/testing';
+} from '@/lib/testing/factories/price-list.factory';
 
 const { mockPriceListRepo, mockAuth } = vi.hoisted(() => ({
   mockPriceListRepo: {

@@ -4,7 +4,7 @@ import {
   UpdateOrganizationSchema,
   DeleteOrganizationSchema
 } from '../organizations';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_ORG_ID = testIds.organization();
 

@@ -14,7 +14,7 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createCustomerInput } from '@/lib/testing';
+import { createCustomerInput } from '@/lib/testing/factories/customer.factory';
 
 setupTestDatabaseLifecycle();
 

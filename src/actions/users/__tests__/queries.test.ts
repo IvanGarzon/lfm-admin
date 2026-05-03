@@ -1,12 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getTenantUsers, getTenantUserById } from '../queries';
-import { testIds, mockSessions } from '@/lib/testing';
+import {
+  getTenantUsers,
+  getTenantUserById,
+  getPasswordResetToken,
+  getUserRoleChanges
+} from '../queries';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import type { UserPagination, UserDetail } from '@/features/users/types';
 
-const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
+const { mockUserRepo, mockPasswordResetTokenRepo, mockAuditService, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
     searchAndPaginateTenantUsers: vi.fn(),
-    findTenantUserById: vi.fn()
+    findTenantUserById: vi.fn(),
+    getUserByIdWithSelect: vi.fn()
+  },
+  mockPasswordResetTokenRepo: {
+    findValid: vi.fn()
+  },
+  mockAuditService: {
+    findRoleChangesForUser: vi.fn()
   },
   mockAuth: vi.fn()
 }));
@@ -14,6 +27,18 @@ const { mockUserRepo, mockAuth } = vi.hoisted(() => ({
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
     return mockUserRepo;
+  })
+}));
+
+vi.mock('@/repositories/password-reset-token-repository', () => ({
+  PasswordResetTokenRepository: vi.fn().mockImplementation(function () {
+    return mockPasswordResetTokenRepo;
+  })
+}));
+
+vi.mock('@/services/audit.service', () => ({
+  AuditService: vi.fn().mockImplementation(function () {
+    return mockAuditService;
   })
 }));
 
@@ -129,6 +154,109 @@ describe('User Queries', () => {
       if (!result.success) {
         expect(result.error).toMatch(/not found/i);
       }
+    });
+  });
+
+  describe('getPasswordResetToken', () => {
+    const mockTokenRecord = { id: 'pt-1', userId: TEST_USER_ID };
+
+    beforeEach(() => {
+      mockPasswordResetTokenRepo.findValid.mockResolvedValue(mockTokenRecord);
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue({ email: 'alex@example.com' });
+    });
+
+    it('returns email when token is valid', async () => {
+      const result = await getPasswordResetToken('valid-token');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data?.email).toBe('alex@example.com');
+      }
+    });
+
+    it('returns error when token is invalid or expired', async () => {
+      mockPasswordResetTokenRepo.findValid.mockResolvedValue(null);
+
+      const result = await getPasswordResetToken('expired-token');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/invalid or has expired/i);
+      }
+    });
+
+    it('returns error when linked user has no email', async () => {
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue({ email: null });
+
+      const result = await getPasswordResetToken('valid-token');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/user not found/i);
+      }
+    });
+
+    it('returns error when linked user record is null', async () => {
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue(null);
+
+      const result = await getPasswordResetToken('valid-token');
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('getUserRoleChanges', () => {
+    const mockChanges = [
+      {
+        id: 'ac-1',
+        userId: TEST_USER_ID,
+        fromRole: 'USER',
+        toRole: 'ADMIN',
+        changedByName: 'Jane Admin',
+        changedAt: new Date('2024-01-15')
+      }
+    ];
+
+    beforeEach(() => {
+      mockAuditService.findRoleChangesForUser.mockResolvedValue(mockChanges);
+    });
+
+    it('returns role change history for a user', async () => {
+      const result = await getUserRoleChanges(TEST_USER_ID);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].toRole).toBe('ADMIN');
+      }
+      expect(mockAuditService.findRoleChangesForUser).toHaveBeenCalledWith(TEST_USER_ID);
+    });
+
+    it('returns empty array when user has no role changes', async () => {
+      mockAuditService.findRoleChangesForUser.mockResolvedValue([]);
+
+      const result = await getUserRoleChanges(TEST_USER_ID);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(0);
+      }
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await getUserRoleChanges(TEST_USER_ID);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('returns error when user lacks canManageUsers permission', async () => {
+      mockAuth.mockResolvedValue(mockSessions.user());
+
+      const result = await getUserRoleChanges(TEST_USER_ID);
+
+      expect(result.success).toBe(false);
     });
   });
 });

@@ -15,7 +15,8 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createInvoiceInput, createCustomerInput } from '@/lib/testing';
+import { createInvoiceInput } from '@/lib/testing/factories/invoice.factory';
+import { createCustomerInput } from '@/lib/testing/factories/customer.factory';
 import { InvoiceStatus } from '@/prisma/client';
 
 // Prevent the module-level singleton from running before the container is ready.
@@ -113,7 +114,10 @@ describe('InvoiceRepository (integration)', () => {
       const result = await invoiceRepository.findInvoiceByIdWithDetails(id, tenantId);
 
       expect(result).not.toBeNull();
-      if (!result) throw new Error('Expected result to not be null');
+      if (!result) {
+        throw new Error('Expected result to not be null');
+      }
+
       expect(result.id).toBe(id);
       expect(result.customer.id).toBe(customerId);
       expect(Array.isArray(result.items)).toBe(true);
@@ -130,7 +134,10 @@ describe('InvoiceRepository (integration)', () => {
       const result = await invoiceRepository.findInvoiceByIdWithDetails(id, tenantId);
 
       expect(result).not.toBeNull();
-      if (!result) throw new Error('Expected result to not be null');
+      if (!result) {
+        throw new Error('Expected result to not be null');
+      }
+
       expect(typeof result.amount).toBe('number');
       expect(typeof result.gst).toBe('number');
       expect(typeof result.discount).toBe('number');

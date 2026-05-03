@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createRecipe, updateRecipe, deleteRecipe } from '../mutations';
-import { testIds, mockSessions, createRecipeDetails } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createRecipeDetails } from '@/lib/testing/factories/recipe.factory';
 import { revalidatePath } from 'next/cache';
 import type { CreateRecipeInput, UpdateRecipeInput } from '@/schemas/recipes';
 

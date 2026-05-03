@@ -4,7 +4,7 @@ import {
   UpdateTransactionSchema,
   DeleteTransactionSchema
 } from '../transactions';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_TRANSACTION_ID = testIds.transaction();
 

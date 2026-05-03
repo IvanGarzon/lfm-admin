@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createCustomer, updateCustomer, deleteCustomer } from '../mutations';
-import { testIds, mockSessions, createCustomerInput } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createCustomerInput } from '@/lib/testing/factories/customer.factory';
 import { revalidatePath } from 'next/cache';
 import type { UpdateCustomerInput } from '@/schemas/customers';
 

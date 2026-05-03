@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { handleSignIn, initiateSignIn, verifyTwoFactorCode } from '@/actions/auth/mutations';
 import { sendEmailNotification } from '@/lib/email-service';
 import bcrypt from 'bcryptjs';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const {
   mockUserRepo,

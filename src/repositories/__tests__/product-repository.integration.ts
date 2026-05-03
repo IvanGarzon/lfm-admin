@@ -15,7 +15,7 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createProductInput } from '@/lib/testing';
+import { createProductInput } from '@/lib/testing/factories/product.factory';
 
 // Prevent the module-level singleton from running before the container is ready.
 // The test creates its own repository instance via getTestPrisma().

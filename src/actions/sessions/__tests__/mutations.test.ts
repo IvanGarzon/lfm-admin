@@ -7,15 +7,15 @@ import {
   updateSessionHeartbeat,
   extendSession
 } from '../mutations';
+import { testIds } from '@/lib/testing/id-generator';
 import {
-  testIds,
   mockSessions,
   createDeleteSessionInput,
   createDeleteSessionsInput,
   createUpdateSessionNameInput,
   createDeleteOtherSessionsInput,
   createExtendSessionInput
-} from '@/lib/testing';
+} from '@/lib/testing/factories/session.factory';
 
 const { mockSessionRepo, mockAuth } = vi.hoisted(() => ({
   mockSessionRepo: {

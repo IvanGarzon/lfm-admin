@@ -49,12 +49,12 @@ import {
   getMonthlyRevenueTrend,
   getTopDebtors
 } from '../queries';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createInvoiceStatistics,
   createInvoiceDetails
-} from '@/lib/testing';
+} from '@/lib/testing/factories/invoice.factory';
 
 const { mockRepoInstance, mockAuth, mockRequirePermission, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {

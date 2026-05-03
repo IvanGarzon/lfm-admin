@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRecipes, getRecipeById } from '../queries';
-import { testIds, mockSessions, createRecipeResponse, createRecipeDetails } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createRecipeResponse, createRecipeDetails } from '@/lib/testing/factories/recipe.factory';
 
 const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {

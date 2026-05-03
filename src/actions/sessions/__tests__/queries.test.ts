@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getSessions } from '../queries';
-import { mockSessions, createSessionWithUser } from '@/lib/testing';
+import { mockSessions, createSessionWithUser } from '@/lib/testing/factories/session.factory';
 
 const { mockSessionRepo, mockAuth } = vi.hoisted(() => ({
   mockSessionRepo: {

@@ -8,7 +8,7 @@ import {
   getQuoteVersions
 } from '../queries';
 import { QuoteStatus } from '@/prisma/client';
-import { mockSessions } from '@/lib/testing';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 
 const { mockRepoInstance, mockAuth, mockHasPermission } = vi.hoisted(() => ({
   mockRepoInstance: {

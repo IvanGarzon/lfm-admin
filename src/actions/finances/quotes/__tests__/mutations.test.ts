@@ -21,16 +21,15 @@ import {
 } from '../mutations';
 import { revalidatePath } from 'next/cache';
 import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
+import { testIds, resetIdCounter } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  resetIdCounter,
-  mockSessions,
   createQuoteInput,
   createQuoteItemInput,
   createQuoteResponse,
   createQuoteVersionResponse,
   createQuoteItemAttachment
-} from '@/lib/testing';
+} from '@/lib/testing/factories/quote.factory';
 
 const { mockQuoteRepo, mockInvoiceRepo, mockDeleteFileFromS3, mockAuth, mockHasPermission } =
   vi.hoisted(() => ({

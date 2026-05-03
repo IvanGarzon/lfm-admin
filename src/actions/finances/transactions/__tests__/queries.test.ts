@@ -8,16 +8,16 @@ import {
   getTransactionCategoryBreakdown,
   getTopTransactionCategories
 } from '../queries';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
 import {
-  testIds,
-  mockSessions,
   createTransactionWithDetails,
   createTransactionStatistics,
   createTransactionTrend,
   createCategoryBreakdown,
   createTopCategory,
   createTransactionCategory
-} from '@/lib/testing';
+} from '@/lib/testing/factories/transaction.factory';
 
 const { mockTransactionRepo, mockAuth } = vi.hoisted(() => ({
   mockTransactionRepo: {

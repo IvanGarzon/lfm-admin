@@ -19,7 +19,6 @@ import {
   useInvoices,
   useInvoiceStatistics
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
-// import type { InvoicePagination } from '@/features/finances/invoices/types';
 
 interface InvoicesViewProps {
   searchParams: SearchParams;
@@ -36,11 +35,11 @@ const InvoiceDrawer = dynamic(
   }
 );
 
-export function InvoicesView({ searchParams }: InvoicesViewProps) {
+export function InvoicesView({ searchParams: serverSearchParams }: InvoicesViewProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
 
-  const { data } = useInvoices(searchParams);
+  const { data } = useInvoices(serverSearchParams);
 
   // Use useMemo to ensure stable date between server and client renders
   const today = useMemo(() => new Date(), []);
@@ -90,7 +89,8 @@ export function InvoicesView({ searchParams }: InvoicesViewProps) {
   }, []);
 
   const isZeroState =
-    data?.pagination.totalItems === 0 && !hasActiveSearchFilters(searchParams, invoiceSearchParams);
+    data?.pagination.totalItems === 0 &&
+    !hasActiveSearchFilters(serverSearchParams, invoiceSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>
@@ -135,7 +135,7 @@ export function InvoicesView({ searchParams }: InvoicesViewProps) {
             value='list'
             className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
-            <InvoiceList data={data} searchParams={searchParams} />
+            <InvoiceList data={data} searchParams={serverSearchParams} />
           </TabsContent>
 
           <TabsContent

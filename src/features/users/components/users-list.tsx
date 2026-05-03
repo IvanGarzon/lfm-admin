@@ -16,6 +16,10 @@ import { useUsers } from '@/features/users/hooks/use-user-queries';
 
 const DEFAULT_PAGE_SIZE = 20;
 
+interface UsersListProps {
+  searchParams: SearchParams;
+}
+
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
   {
@@ -32,7 +36,7 @@ const UserInviteModal = dynamic(
   }
 );
 
-export function UsersList({ searchParams: serverSearchParams }: { searchParams: SearchParams }) {
+export function UsersList({ searchParams: serverSearchParams }: UsersListProps) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
 

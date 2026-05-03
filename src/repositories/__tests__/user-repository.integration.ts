@@ -14,7 +14,7 @@ import {
   getTestPrisma,
   createTestTenant
 } from '@/lib/testing/integration/database';
-import { createUserData } from '@/lib/testing';
+import { createUserData } from '@/lib/testing/factories/user.factory';
 
 setupTestDatabaseLifecycle();
 
@@ -391,6 +391,76 @@ describe('UserRepository (integration)', () => {
       const result = await repository.softDeleteTenantUser(otherUser.id, tenantId);
 
       expect(result).toBe(false);
+    });
+  });
+
+  // -- updatePassword --------------------------------------------------------
+
+  describe('updatePassword', () => {
+    it('persists the new hashed password', async () => {
+      const user = await createUser();
+      const newHash = 'new-bcrypt-hash-value';
+
+      await repository.updatePassword(user.id, newHash);
+
+      const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
+      expect(updated?.password).toBe(newHash);
+    });
+
+    it('does not affect other users', async () => {
+      const userA = await createUser({ email: 'a@test.com' });
+      const userB = await createUser({ email: 'b@test.com' });
+
+      await repository.updatePassword(userA.id, 'hash-for-a');
+
+      const unchanged = await getTestPrisma().user.findUnique({ where: { id: userB.id } });
+      expect(unchanged?.password).not.toBe('hash-for-a');
+    });
+  });
+
+  // -- getUserByEmail --------------------------------------------------------
+
+  describe('getUserByEmail', () => {
+    it('returns user by email', async () => {
+      const user = await createUser({ email: 'find-me@test.com' });
+
+      const result = await repository.getUserByEmail('find-me@test.com');
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(user.id);
+    });
+
+    it('returns null when email does not exist', async () => {
+      const result = await repository.getUserByEmail('nobody@test.com');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  // -- updateLastLoginAt -----------------------------------------------------
+
+  describe('updateLastLoginAt', () => {
+    it('sets lastLoginAt to a recent timestamp', async () => {
+      const user = await createUser();
+      expect(user.lastLoginAt).toBeNull();
+
+      const before = new Date();
+      await repository.updateLastLoginAt(user.id);
+      const after = new Date();
+
+      const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
+      expect(updated?.lastLoginAt).not.toBeNull();
+      expect(updated?.lastLoginAt!.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(updated?.lastLoginAt!.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('does not affect other fields', async () => {
+      const user = await createUser({ firstName: 'Original' });
+
+      await repository.updateLastLoginAt(user.id);
+
+      const updated = await getTestPrisma().user.findUnique({ where: { id: user.id } });
+      expect(updated?.firstName).toBe('Original');
     });
   });
 });

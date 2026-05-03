@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createVendor, updateVendor, updateVendorStatus, deleteVendor } from '../mutations';
-import { testIds, mockSessions, createVendorInput, createVendorWithDetails } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createVendorInput, createVendorWithDetails } from '@/lib/testing/factories/vendor.factory';
 
 const { mockVendorRepo, mockAuth } = vi.hoisted(() => ({
   mockVendorRepo: {

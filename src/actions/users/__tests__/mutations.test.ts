@@ -1,39 +1,53 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest';
+import bcrypt from 'bcryptjs';
 import {
   updateUser,
   updateUserSecurity,
   updateUserRole,
   softDeleteUser,
   inviteUser,
-  uploadUserAvatar
+  uploadUserAvatar,
+  changePassword,
+  sendPasswordResetEmail,
+  resetPassword
 } from '../mutations';
-import { testIds, mockSessions, createUpdateUserInput } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
+import { mockSessions } from '@/lib/testing/factories/session.factory';
+import { createUpdateUserInput } from '@/lib/testing/factories/user.factory';
 import { revalidatePath } from 'next/cache';
 import { sendEmailNotification } from '@/lib/email-service';
 import { uploadFileToS3 } from '@/lib/s3';
 import type { UserDetail } from '@/features/users/types';
 
-const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockAuth } = vi.hoisted(() => ({
-  mockUserRepo: {
-    findTenantUserById: vi.fn(),
-    updateTenantUser: vi.fn(),
-    updateUserSecurity: vi.fn(),
-    updateTenantUserRole: vi.fn(),
-    softDeleteTenantUser: vi.fn(),
-    updateUserAvatar: vi.fn(),
-    getUserByEmail: vi.fn(),
-    findById: vi.fn()
-  },
-  mockInvitationRepo: {
-    findPendingByEmail: vi.fn(),
-    create: vi.fn(),
-    revoke: vi.fn()
-  },
-  mockTenantRepo: {
-    findTenantById: vi.fn()
-  },
-  mockAuth: vi.fn()
-}));
+const { mockUserRepo, mockInvitationRepo, mockTenantRepo, mockPasswordResetTokenRepo, mockAuth } =
+  vi.hoisted(() => ({
+    mockUserRepo: {
+      findTenantUserById: vi.fn(),
+      updateTenantUser: vi.fn(),
+      updateUserSecurity: vi.fn(),
+      updateTenantUserRole: vi.fn(),
+      softDeleteTenantUser: vi.fn(),
+      updateUserAvatar: vi.fn(),
+      getUserByEmail: vi.fn(),
+      getUserByIdWithSelect: vi.fn(),
+      updatePassword: vi.fn(),
+      findById: vi.fn()
+    },
+    mockPasswordResetTokenRepo: {
+      create: vi.fn(),
+      findValid: vi.fn(),
+      invalidateAllForUser: vi.fn()
+    },
+    mockInvitationRepo: {
+      findPendingByEmail: vi.fn(),
+      create: vi.fn(),
+      revoke: vi.fn()
+    },
+    mockTenantRepo: {
+      findTenantById: vi.fn()
+    },
+    mockAuth: vi.fn()
+  }));
 
 vi.mock('@/repositories/user-repository', () => ({
   UserRepository: vi.fn().mockImplementation(function () {
@@ -51,6 +65,19 @@ vi.mock('@/repositories/tenant-repository', () => ({
   TenantRepository: vi.fn().mockImplementation(function () {
     return mockTenantRepo;
   })
+}));
+
+vi.mock('@/repositories/password-reset-token-repository', () => ({
+  PasswordResetTokenRepository: vi.fn().mockImplementation(function () {
+    return mockPasswordResetTokenRepo;
+  })
+}));
+
+vi.mock('bcryptjs', () => ({
+  default: {
+    compare: vi.fn(),
+    hash: vi.fn()
+  }
 }));
 
 vi.mock('@/lib/email-service', () => ({
@@ -439,6 +466,192 @@ describe('User Mutations', () => {
       const result = await uploadUserAvatar(formData);
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('changePassword', () => {
+    const mockBcryptCompare = bcrypt.compare as unknown as MockInstance;
+    const mockBcryptHash = bcrypt.hash as unknown as MockInstance;
+
+    // changePassword uses withAuth and compares session.user.id === userId
+    // so the userId in input must match the session's user id
+    const SESSION_USER_ID = mockSession.user.id;
+
+    const validInput = {
+      userId: SESSION_USER_ID,
+      currentPassword: 'current-pass',
+      newPassword: 'NewSecurePass1!',
+      confirmPassword: 'NewSecurePass1!'
+    };
+
+    beforeEach(() => {
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue({
+        id: SESSION_USER_ID,
+        password: 'hashed-current-password'
+      });
+      mockBcryptCompare.mockResolvedValue(true);
+      mockBcryptHash.mockResolvedValue('hashed-new-password');
+      mockUserRepo.updatePassword.mockResolvedValue(undefined);
+    });
+
+    it('changes password when current password is correct', async () => {
+      const result = await changePassword(validInput);
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepo.updatePassword).toHaveBeenCalledWith(
+        SESSION_USER_ID,
+        'hashed-new-password'
+      );
+    });
+
+    it('returns error when session userId does not match input userId', async () => {
+      const result = await changePassword({
+        ...validInput,
+        userId: TEST_USER_ID
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/unauthorised/i);
+      }
+      expect(mockUserRepo.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('returns error when user not found', async () => {
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue(null);
+
+      const result = await changePassword(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/not found/i);
+      }
+    });
+
+    it('returns error when account has no password set', async () => {
+      mockUserRepo.getUserByIdWithSelect.mockResolvedValue({
+        id: SESSION_USER_ID,
+        password: null
+      });
+
+      const result = await changePassword(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/no password set/i);
+      }
+    });
+
+    it('returns error when current password is incorrect', async () => {
+      mockBcryptCompare.mockResolvedValue(false);
+
+      const result = await changePassword(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/incorrect/i);
+      }
+      expect(mockUserRepo.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await changePassword(validInput);
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('sendPasswordResetEmail', () => {
+    const mockResetToken = {
+      id: 'token-1',
+      token: 'reset-token-abc',
+      userId: TEST_USER_ID,
+      expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000)
+    };
+
+    beforeEach(() => {
+      mockUserRepo.findById.mockResolvedValue({
+        id: mockSession.user.id,
+        firstName: 'Jane',
+        lastName: 'Admin'
+      });
+      mockPasswordResetTokenRepo.create.mockResolvedValue(mockResetToken);
+    });
+
+    it('sends reset email and returns success', async () => {
+      const result = await sendPasswordResetEmail(TEST_USER_ID);
+
+      expect(result.success).toBe(true);
+      expect(mockPasswordResetTokenRepo.create).toHaveBeenCalled();
+      expect(vi.mocked(sendEmailNotification)).toHaveBeenCalledWith(
+        expect.objectContaining({ to: mockUser.email })
+      );
+    });
+
+    it('returns error when target user not found', async () => {
+      mockUserRepo.findTenantUserById.mockResolvedValue(null);
+
+      const result = await sendPasswordResetEmail(TEST_USER_ID);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/not found/i);
+      }
+      expect(mockPasswordResetTokenRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('returns error when requester not found', async () => {
+      mockUserRepo.findById.mockResolvedValue(null);
+
+      const result = await sendPasswordResetEmail(TEST_USER_ID);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/requester not found/i);
+      }
+    });
+
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValue(null);
+
+      const result = await sendPasswordResetEmail(TEST_USER_ID);
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('resetPassword', () => {
+    const mockBcryptHash = bcrypt.hash as unknown as MockInstance;
+
+    const mockResetRecord = { id: 'token-1', userId: TEST_USER_ID };
+
+    beforeEach(() => {
+      mockPasswordResetTokenRepo.findValid.mockResolvedValue(mockResetRecord);
+      mockBcryptHash.mockResolvedValue('hashed-new-password');
+      mockUserRepo.updatePassword.mockResolvedValue(undefined);
+      mockPasswordResetTokenRepo.invalidateAllForUser.mockResolvedValue(undefined);
+    });
+
+    it('resets password and invalidates all tokens on success', async () => {
+      const result = await resetPassword('valid-token', 'new-secure-pass');
+
+      expect(result.success).toBe(true);
+      expect(mockUserRepo.updatePassword).toHaveBeenCalledWith(TEST_USER_ID, 'hashed-new-password');
+      expect(mockPasswordResetTokenRepo.invalidateAllForUser).toHaveBeenCalledWith(TEST_USER_ID);
+    });
+
+    it('returns error when token is invalid or expired', async () => {
+      mockPasswordResetTokenRepo.findValid.mockResolvedValue(null);
+
+      const result = await resetPassword('expired-token', 'new-secure-pass');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toMatch(/invalid or has expired/i);
+      }
+      expect(mockUserRepo.updatePassword).not.toHaveBeenCalled();
     });
   });
 });

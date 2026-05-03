@@ -5,7 +5,7 @@ import {
   UpdateVendorStatusSchema,
   DeleteVendorSchema
 } from '../vendors';
-import { testIds } from '@/lib/testing';
+import { testIds } from '@/lib/testing/id-generator';
 
 const TEST_VENDOR_ID = testIds.vendor();
 
