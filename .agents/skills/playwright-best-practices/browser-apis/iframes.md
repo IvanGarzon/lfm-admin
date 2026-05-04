@@ -93,7 +93,7 @@ test('Stripe payment iframe', async ({ page }) => {
 
   // Wait for Stripe to initialize
   await expect(cardFrame.locator('[placeholder="Card number"]')).toBeVisible({
-    timeout: 15000,
+    timeout: 15000
   });
 
   // Fill card details
@@ -285,7 +285,7 @@ export const test = base.extend<{ paymentFrame: FrameLocator }>({
     await expect(frame.locator('body')).toBeVisible({ timeout: 15000 });
 
     await use(frame);
-  },
+  }
 });
 
 // test file
@@ -363,7 +363,7 @@ test('mock iframe response', async ({ page }) => {
             <button>Mocked Button</button>
           </body>
         </html>
-      `,
+      `
     });
   });
 

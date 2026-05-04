@@ -86,12 +86,12 @@ test('shape snapshot', () => {
   const data = {
     id: Math.random(),
     created: new Date(),
-    name: 'test',
+    name: 'test'
   };
 
   expect(data).toMatchSnapshot({
     id: expect.any(Number),
-    created: expect.any(Date),
+    created: expect.any(Date)
   });
 });
 ```
@@ -133,7 +133,7 @@ expect.addSnapshotSerializer({
   },
   serialize(val, config, indentation, depth, refs, printer) {
     return printer(val.toJSON(), config, indentation, depth, refs);
-  },
+  }
 });
 ```
 
@@ -143,8 +143,8 @@ Or via config:
 // vitest.config.ts
 defineConfig({
   test: {
-    snapshotSerializers: ['./my-serializer.ts'],
-  },
+    snapshotSerializers: ['./my-serializer.ts']
+  }
 });
 ```
 
@@ -155,9 +155,9 @@ defineConfig({
   test: {
     snapshotFormat: {
       printBasicPrototype: false, // Don't print Array/Object prototypes
-      escapeString: false,
-    },
-  },
+      escapeString: false
+    }
+  }
 });
 ```
 
@@ -186,8 +186,8 @@ defineConfig({
   test: {
     resolveSnapshotPath: (testPath, snapExtension) => {
       return testPath.replace('__tests__', '__snapshots__') + snapExtension;
-    },
-  },
+    }
+  }
 });
 ```
 

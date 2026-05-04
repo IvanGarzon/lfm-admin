@@ -58,18 +58,18 @@ export default {
         primary: {
           50: '#f0f9ff',
           500: '#3b82f6',
-          900: '#1e3a8a',
-        },
+          900: '#1e3a8a'
+        }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif']
       },
       spacing: {
-        128: '32rem',
-      },
-    },
+        128: '32rem'
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
 ```
 
@@ -83,7 +83,7 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss()]
 });
 ```
 
@@ -141,8 +141,8 @@ module.exports = {
       // Add custom utilities
       addUtilities({
         '.content-auto': {
-          contentVisibility: 'auto',
-        },
+          contentVisibility: 'auto'
+        }
       });
 
       // Add custom components
@@ -150,11 +150,11 @@ module.exports = {
         '.btn': {
           padding: '.5rem 1rem',
           borderRadius: '.25rem',
-          fontWeight: '600',
-        },
+          fontWeight: '600'
+        }
       });
-    }),
-  ],
+    })
+  ]
 };
 ```
 
@@ -173,12 +173,12 @@ module.exports = {
         brand: {
           DEFAULT: '#3b82f6',
           light: '#60a5fa',
-          dark: '#1d4ed8',
-        },
-      },
-    },
+          dark: '#1d4ed8'
+        }
+      }
+    }
   },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')]
 };
 ```
 
@@ -187,6 +187,6 @@ module.exports = {
 ```javascript
 // tailwind.config.js
 module.exports = {
-  presets: [require('./tailwind-preset.js')],
+  presets: [require('./tailwind-preset.js')]
 };
 ```

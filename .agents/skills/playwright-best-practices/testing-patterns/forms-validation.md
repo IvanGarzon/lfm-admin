@@ -242,7 +242,7 @@ test('form shows loading state during submission', async ({ page }) => {
   await page.getByLabel('Details').fill('Found an issue');
 
   const submit = page.getByRole('button', {
-    name: /Submit feedback|Submitting/,
+    name: /Submit feedback|Submitting/
   });
   await submit.click();
 
@@ -359,7 +359,7 @@ test('native HTML5 validation with required attribute', async ({ page }) => {
 
   const emailInput = page.getByLabel('Email');
   const validationMessage = await emailInput.evaluate(
-    (el: HTMLInputElement) => el.validationMessage,
+    (el: HTMLInputElement) => el.validationMessage
   );
   expect(validationMessage).toBeTruthy();
 });

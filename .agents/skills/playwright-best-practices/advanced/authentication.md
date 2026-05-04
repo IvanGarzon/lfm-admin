@@ -31,7 +31,7 @@ await page.context().storageState({ path: '.auth/session.json' });
 // API login — skip the UI entirely
 const context = await browser.newContext();
 const response = await context.request.post('/api/auth/login', {
-  data: { email: 'testuser@example.com', password: 'secretPass123' },
+  data: { email: 'testuser@example.com', password: 'secretPass123' }
 });
 await context.storageState({ path: '.auth/session.json' });
 ```
@@ -74,8 +74,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   use: {
     baseURL: 'http://localhost:4000',
-    storageState: '.auth/session.json',
-  },
+    storageState: '.auth/session.json'
+  }
 });
 ```
 
@@ -125,8 +125,8 @@ export default defineConfig({
   globalSetup: require.resolve('./global-setup'),
   use: {
     baseURL: 'http://localhost:4000',
-    storageState: '.auth/session.json',
-  },
+    storageState: '.auth/session.json'
+  }
 });
 ```
 
@@ -163,8 +163,8 @@ export const test = base.extend<{}, AuthFixtures>({
       await use(context);
       await context.close();
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 
 export { expect } from '@playwright/test';
@@ -196,18 +196,18 @@ const accounts = [
   {
     role: 'admin',
     email: 'admin@example.com',
-    password: process.env.ADMIN_PASSWORD!,
+    password: process.env.ADMIN_PASSWORD!
   },
   {
     role: 'member',
     email: 'member@example.com',
-    password: process.env.MEMBER_PASSWORD!,
+    password: process.env.MEMBER_PASSWORD!
   },
   {
     role: 'guest',
     email: 'guest@example.com',
-    password: process.env.GUEST_PASSWORD!,
-  },
+    password: process.env.GUEST_PASSWORD!
+  }
 ];
 
 async function globalSetup(config: FullConfig) {
@@ -242,24 +242,24 @@ export default defineConfig({
     {
       name: 'admin',
       use: { storageState: '.auth/admin.json' },
-      testMatch: '**/*.admin.spec.ts',
+      testMatch: '**/*.admin.spec.ts'
     },
     {
       name: 'member',
       use: { storageState: '.auth/member.json' },
-      testMatch: '**/*.member.spec.ts',
+      testMatch: '**/*.member.spec.ts'
     },
     {
       name: 'guest',
       use: { storageState: '.auth/guest.json' },
-      testMatch: '**/*.guest.spec.ts',
+      testMatch: '**/*.guest.spec.ts'
     },
     {
       name: 'anonymous',
       use: { storageState: { cookies: [], origins: [] } },
-      testMatch: '**/*.anon.spec.ts',
-    },
-  ],
+      testMatch: '**/*.anon.spec.ts'
+    }
+  ]
 });
 ```
 
@@ -313,7 +313,7 @@ export const test = base.extend<RoleFixtures>({
     for (const page of pages) {
       await page.context().close();
     }
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -360,7 +360,7 @@ test('login via mocked OAuth flow', async ({ page }) => {
     callbackUrl.searchParams.set('state', 'expected-state-value');
     await route.fulfill({
       status: 302,
-      headers: { location: callbackUrl.toString() },
+      headers: { location: callbackUrl.toString() }
     });
   });
 
@@ -382,8 +382,8 @@ test('bypass OAuth entirely via API session injection', async ({ page }) => {
     data: {
       email: 'oauth-user@example.com',
       provider: 'provider',
-      role: 'member',
-    },
+      role: 'member'
+    }
   });
   expect(response.ok()).toBeTruthy();
 
@@ -411,7 +411,7 @@ export function generateTOTP(secret: string): string {
     secret: OTPAuth.Secret.fromBase32(secret),
     digits: 6,
     period: 30,
-    algorithm: 'SHA1',
+    algorithm: 'SHA1'
   });
   return totp.generate();
 }
@@ -487,7 +487,7 @@ export const test = base.extend<AuthFixtures>({
 
     await use(page);
     await context.close();
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -517,7 +517,7 @@ export class LoginPage {
     this.loginButton = page.getByRole('button', { name: 'Log in' });
     this.errorMessage = page.getByRole('alert');
     this.forgotPasswordLink = page.getByRole('link', {
-      name: 'Forgot password',
+      name: 'Forgot password'
     });
   }
 
@@ -609,8 +609,8 @@ async function globalSetup(config: FullConfig) {
   const response = await requestContext.post('/api/auth/login', {
     data: {
       email: process.env.TEST_USER_EMAIL!,
-      password: process.env.TEST_USER_PASSWORD!,
-    },
+      password: process.env.TEST_USER_PASSWORD!
+    }
   });
 
   if (!response.ok()) {
@@ -631,14 +631,14 @@ import { test as base } from '@playwright/test';
 export const test = base.extend({
   authenticatedPage: async ({ browser, playwright }, use) => {
     const apiContext = await playwright.request.newContext({
-      baseURL: 'http://localhost:4000',
+      baseURL: 'http://localhost:4000'
     });
 
     await apiContext.post('/api/auth/login', {
       data: {
         email: 'testuser@example.com',
-        password: 'secretPass123',
-      },
+        password: 'secretPass123'
+      }
     });
 
     const state = await apiContext.storageState();
@@ -649,7 +649,7 @@ export const test = base.extend({
 
     await context.close();
     await apiContext.dispose();
-  },
+  }
 });
 
 export { expect } from '@playwright/test';

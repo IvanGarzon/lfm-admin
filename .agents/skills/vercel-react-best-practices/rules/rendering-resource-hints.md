@@ -63,7 +63,7 @@ function Navigation() {
 
   return (
     <nav>
-      <a href="/dashboard" onMouseEnter={preloadDashboard}>
+      <a href='/dashboard' onMouseEnter={preloadDashboard}>
         Dashboard
       </a>
     </nav>

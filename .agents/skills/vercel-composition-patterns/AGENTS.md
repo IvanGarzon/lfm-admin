@@ -62,7 +62,7 @@ function Composer({
   isDMThread,
   dmId,
   isEditing,
-  isForwarding,
+  isForwarding
 }: Props) {
   return (
     <form>
@@ -154,7 +154,7 @@ function Composer({
   renderActions,
   showAttachments,
   showFormatting,
-  showEmojis,
+  showEmojis
 }: Props) {
   return (
     <form>
@@ -192,7 +192,7 @@ function ComposerInput() {
   const {
     state,
     actions: { update },
-    meta: { inputRef },
+    meta: { inputRef }
   } = use(ComposerContext);
   return (
     <TextInput
@@ -205,7 +205,7 @@ function ComposerInput() {
 
 function ComposerSubmit() {
   const {
-    actions: { submit },
+    actions: { submit }
   } = use(ComposerContext);
   return <Button onPress={submit}>Send</Button>;
 }
@@ -220,7 +220,7 @@ const Composer = {
   Footer: ComposerFooter,
   Attachments: ComposerAttachments,
   Formatting: ComposerFormatting,
-  Emojis: ComposerEmojis,
+  Emojis: ComposerEmojis
 };
 ```
 
@@ -283,7 +283,7 @@ function ChannelComposer({ channelId }: { channelId: string }) {
 // Provider handles all state management details
 function ChannelProvider({
   channelId,
-  children,
+  children
 }: {
   channelId: string;
   children: React.ReactNode;
@@ -413,7 +413,7 @@ function ComposerInput() {
   const {
     state,
     actions: { update },
-    meta,
+    meta
   } = use(ComposerContext);
 
   // This component works with ANY provider that implements the interface
@@ -441,7 +441,7 @@ function ForwardMessageProvider({ children }: { children: React.ReactNode }) {
       value={{
         state,
         actions: { update: setState, submit },
-        meta: { inputRef },
+        meta: { inputRef }
       }}
     >
       {children}
@@ -459,7 +459,7 @@ function ChannelProvider({ channelId, children }: Props) {
       value={{
         state,
         actions: { update, submit },
-        meta: { inputRef },
+        meta: { inputRef }
       }}
     >
       {children}
@@ -520,7 +520,7 @@ function ForwardMessageDialog() {
 // This button lives OUTSIDE Composer.Frame but can still submit based on its context!
 function ForwardButton() {
   const {
-    actions: { submit },
+    actions: { submit }
   } = use(ComposerContext);
   return <Button onPress={submit}>Forward</Button>;
 }
@@ -698,7 +698,7 @@ itself.
 
 ```tsx
 // What does this component actually render?
-<Composer isThread isEditing={false} channelId="abc" showAttachments showFormatting={false} />
+<Composer isThread isEditing={false} channelId='abc' showAttachments showFormatting={false} />
 ```
 
 **Correct: explicit variants**
@@ -795,7 +795,7 @@ signatures.
 function Composer({
   renderHeader,
   renderFooter,
-  renderActions,
+  renderActions
 }: {
   renderHeader?: () => React.ReactNode;
   renderFooter?: () => React.ReactNode;
@@ -834,7 +834,7 @@ function ComposerFrame({ children }: { children: React.ReactNode }) {
 }
 
 function ComposerFooter({ children }: { children: React.ReactNode }) {
-  return <footer className="flex">{children}</footer>;
+  return <footer className='flex'>{children}</footer>;
 }
 
 // Usage is flexible

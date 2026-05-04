@@ -21,7 +21,7 @@ export async function teardownE2EData(): Promise<void> {
     where: { email: { endsWith: '@e2e.test' } }
   });
 
-  console.log('E2E test data removed.');
+  console.log('Removed E2E seed invoices');
 }
 
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);

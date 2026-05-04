@@ -9,7 +9,7 @@ import { PrismaClient } from '../generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -25,7 +25,7 @@ Driver adapter instance:
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -37,7 +37,7 @@ const prisma = new PrismaClient({ adapter });
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 const prisma = new PrismaClient({
-  accelerateUrl: process.env.DATABASE_URL, // prisma:// URL
+  accelerateUrl: process.env.DATABASE_URL // prisma:// URL
 }).$extends(withAccelerate());
 ```
 
@@ -48,7 +48,7 @@ Configure logging:
 ```typescript
 const prisma = new PrismaClient({
   adapter,
-  log: ['query', 'info', 'warn', 'error'],
+  log: ['query', 'info', 'warn', 'error']
 });
 ```
 
@@ -68,8 +68,8 @@ const prisma = new PrismaClient({
   adapter,
   log: [
     { level: 'query', emit: 'event' },
-    { level: 'error', emit: 'stdout' },
-  ],
+    { level: 'error', emit: 'stdout' }
+  ]
 });
 
 prisma.$on('query', (e) => {
@@ -85,7 +85,7 @@ Control error formatting:
 ```typescript
 const prisma = new PrismaClient({
   adapter,
-  errorFormat: 'pretty', // 'pretty' | 'colorless' | 'minimal'
+  errorFormat: 'pretty' // 'pretty' | 'colorless' | 'minimal'
 });
 ```
 
@@ -102,7 +102,7 @@ import { traceContext } from '@prisma/sqlcommenter-trace-context';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL!),
-  comments: [prismaQueryInsights(), traceContext(), queryTags()],
+  comments: [prismaQueryInsights(), traceContext(), queryTags()]
 });
 
 await withQueryTags({ route: '/api/users', requestId: 'req-123' }, () => prisma.user.findMany());
@@ -120,8 +120,8 @@ const prisma = new PrismaClient({
   transactionOptions: {
     maxWait: 5000, // Max wait to acquire transaction (ms)
     timeout: 10000, // Max transaction duration (ms)
-    isolationLevel: 'Serializable',
-  },
+    isolationLevel: 'Serializable'
+  }
 });
 ```
 
@@ -140,7 +140,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString: process.env.DATABASE_URL!
   });
   return new PrismaClient({ adapter });
 }
@@ -161,7 +161,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 const createAdapter = () =>
   new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString: process.env.DATABASE_URL!
   });
 
 const prismaClientSingleton = () => {
@@ -188,7 +188,7 @@ Listen to query events:
 ```typescript
 const prisma = new PrismaClient({
   adapter,
-  log: [{ level: 'query', emit: 'event' }],
+  log: [{ level: 'query', emit: 'event' }]
 });
 
 prisma.$on('query', (e) => {

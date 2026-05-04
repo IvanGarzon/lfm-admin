@@ -86,13 +86,13 @@ This guide helps you migrate from hardcoded Tailwind colors (`bg-blue-600`) to s
 ❌ **Before:**
 
 ```tsx
-<AlertCircle className="text-yellow-500" />
+<AlertCircle className='text-yellow-500' />
 ```
 
 ✅ **After:**
 
 ```tsx
-<AlertCircle className="text-warning" />
+<AlertCircle className='text-warning' />
 ```
 
 ---
@@ -197,18 +197,18 @@ const severityConfig = {
   critical: {
     color: 'text-red-500',
     bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
+    border: 'border-red-500/20'
   },
   warning: {
     color: 'text-yellow-500',
     bg: 'bg-yellow-500/10',
-    border: 'border-yellow-500/20',
+    border: 'border-yellow-500/20'
   },
   info: {
     color: 'text-blue-500',
     bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-  },
+    border: 'border-blue-500/20'
+  }
 };
 ```
 
@@ -219,18 +219,18 @@ const severityConfig = {
   critical: {
     color: 'text-destructive',
     bg: 'bg-destructive/10',
-    border: 'border-destructive/20',
+    border: 'border-destructive/20'
   },
   warning: {
     color: 'text-warning',
     bg: 'bg-warning/10',
-    border: 'border-warning/20',
+    border: 'border-warning/20'
   },
   info: {
     color: 'text-info',
     bg: 'bg-info/10',
-    border: 'border-info/20',
-  },
+    border: 'border-info/20'
+  }
 };
 ```
 

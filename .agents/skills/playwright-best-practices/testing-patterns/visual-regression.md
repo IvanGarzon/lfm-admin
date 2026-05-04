@@ -51,9 +51,9 @@ test('analytics panel with masked dynamic elements', async ({ page }) => {
       page.getByTestId('last-updated'),
       page.getByTestId('profile-avatar'),
       page.getByTestId('active-users'),
-      page.locator('.promo-banner'),
+      page.locator('.promo-banner')
     ],
-    maskColor: '#FF00FF',
+    maskColor: '#FF00FF'
   });
 });
 
@@ -61,7 +61,7 @@ test('activity stream with relative times', async ({ page }) => {
   await page.goto('/activity');
 
   await expect(page).toHaveScreenshot('activity.png', {
-    mask: [page.locator('time[datetime]')],
+    mask: [page.locator('time[datetime]')]
   });
 });
 ```
@@ -91,7 +91,7 @@ test('renders without animation interference', async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveScreenshot('home.png', {
-    animations: 'disabled',
+    animations: 'disabled'
   });
 });
 ```
@@ -103,9 +103,9 @@ test('renders without animation interference', async ({ page }) => {
 export default defineConfig({
   expect: {
     toHaveScreenshot: {
-      animations: 'disabled',
-    },
-  },
+      animations: 'disabled'
+    }
+  }
 });
 ```
 
@@ -124,7 +124,7 @@ test('page with JS animations', async ({ page }) => {
   await expect(heroBanner).not.toHaveClass(/animating/);
 
   await expect(page).toHaveScreenshot('hero.png', {
-    animations: 'disabled',
+    animations: 'disabled'
   });
 });
 ```
@@ -144,7 +144,7 @@ test('control panel allows minor variance', async ({ page }) => {
   await page.goto('/control-panel');
 
   await expect(page).toHaveScreenshot('control-panel.png', {
-    maxDiffPixelRatio: 0.01,
+    maxDiffPixelRatio: 0.01
   });
 });
 
@@ -153,7 +153,7 @@ test('brand logo renders pixel-perfect', async ({ page }) => {
 
   await expect(page.getByTestId('brand-logo')).toHaveScreenshot('brand-logo.png', {
     maxDiffPixels: 0,
-    threshold: 0,
+    threshold: 0
   });
 });
 
@@ -162,7 +162,7 @@ test('graph allows anti-aliasing differences', async ({ page }) => {
 
   await expect(page.getByTestId('sales-graph')).toHaveScreenshot('sales-graph.png', {
     threshold: 0.3,
-    maxDiffPixels: 200,
+    maxDiffPixels: 200
   });
 });
 ```
@@ -176,9 +176,9 @@ export default defineConfig({
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.01,
       threshold: 0.2,
-      animations: 'disabled',
-    },
-  },
+      animations: 'disabled'
+    }
+  }
 });
 ```
 
@@ -254,9 +254,9 @@ export default defineConfig({
     {
       name: 'visual',
       testMatch: '**/*.visual.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
 });
 ```
 
@@ -273,7 +273,7 @@ test('full page captures layout shifts', async ({ page }) => {
 
   // Entire scrollable page
   await expect(page).toHaveScreenshot('home-full.png', {
-    fullPage: true,
+    fullPage: true
   });
 });
 
@@ -295,7 +295,7 @@ test('element screenshot isolates component', async ({ page }) => {
 const breakpoints = [
   { name: 'phone', width: 375, height: 812 },
   { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1440, height: 900 },
+  { name: 'desktop', width: 1440, height: 900 }
 ];
 
 for (const bp of breakpoints) {
@@ -305,7 +305,7 @@ for (const bp of breakpoints) {
 
     await expect(page).toHaveScreenshot(`landing-${bp.name}.png`, {
       animations: 'disabled',
-      fullPage: true,
+      fullPage: true
     });
   });
 }
@@ -322,20 +322,20 @@ export default defineConfig({
       testMatch: '**/*.visual.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1440, height: 900 },
-      },
+        viewport: { width: 1440, height: 900 }
+      }
     },
     {
       name: 'tablet',
       testMatch: '**/*.visual.spec.ts',
-      use: { ...devices['iPad (gen 7)'] },
+      use: { ...devices['iPad (gen 7)'] }
     },
     {
       name: 'mobile',
       testMatch: '**/*.visual.spec.ts',
-      use: { ...devices['iPhone 14'] },
-    },
-  ],
+      use: { ...devices['iPhone 14'] }
+    }
+  ]
 });
 ```
 
@@ -349,7 +349,7 @@ test.describe('Button visual states', () => {
     await page.goto('/storybook/iframe.html?id=button--primary');
     const btn = page.getByRole('button');
     await expect(btn).toHaveScreenshot('btn-primary.png', {
-      animations: 'disabled',
+      animations: 'disabled'
     });
   });
 
@@ -358,7 +358,7 @@ test.describe('Button visual states', () => {
     const btn = page.getByRole('button');
     await btn.hover();
     await expect(btn).toHaveScreenshot('btn-primary-hover.png', {
-      animations: 'disabled',
+      animations: 'disabled'
     });
   });
 
@@ -367,7 +367,7 @@ test.describe('Button visual states', () => {
       await page.goto(`/storybook/iframe.html?id=button--${size}`);
       const btn = page.getByRole('button');
       await expect(btn).toHaveScreenshot(`btn-${size}.png`, {
-        animations: 'disabled',
+        animations: 'disabled'
       });
     }
   });
@@ -384,14 +384,14 @@ test.describe('Card component', () => {
 
   test('default state', async ({ page }) => {
     await expect(page.getByTestId('card')).toHaveScreenshot('card-default.png', {
-      animations: 'disabled',
+      animations: 'disabled'
     });
   });
 
   test('truncates long content', async ({ page }) => {
     await page.goto('/test-harness/card?content=long');
     await expect(page.getByTestId('card')).toHaveScreenshot('card-long.png', {
-      animations: 'disabled',
+      animations: 'disabled'
     });
   });
 });
@@ -440,7 +440,7 @@ npx playwright test --project=chromium --update-snapshots
 test('landing visual @visual', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveScreenshot('landing.png', {
-    animations: 'disabled',
+    animations: 'disabled'
   });
 });
 ```
@@ -461,23 +461,23 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: {
       animations: 'disabled',
-      maxDiffPixelRatio: 0.01,
-    },
+      maxDiffPixelRatio: 0.01
+    }
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'] }
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-  ],
+      use: { ...devices['Desktop Safari'] }
+    }
+  ]
 });
 ```
 
@@ -490,19 +490,19 @@ export default defineConfig({
     {
       name: 'visual',
       testMatch: '**/*.visual.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'chromium',
       testIgnore: '**/*.visual.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'firefox',
       testIgnore: '**/*.visual.spec.ts',
-      use: { ...devices['Desktop Firefox'] },
-    },
-  ],
+      use: { ...devices['Desktop Firefox'] }
+    }
+  ]
 });
 ```
 
@@ -561,7 +561,7 @@ Commit Linux-generated snapshots.
 ```typescript
 await expect(page).toHaveScreenshot('page.png', {
   maxDiffPixelRatio: 0.01,
-  threshold: 0.2,
+  threshold: 0.2
 });
 ```
 
@@ -597,9 +597,9 @@ container:
 export default defineConfig({
   expect: {
     toHaveScreenshot: {
-      animations: 'disabled',
-    },
-  },
+      animations: 'disabled'
+    }
+  }
 });
 ```
 
@@ -620,7 +620,7 @@ Or customize snapshot path template:
 
 ```typescript
 export default defineConfig({
-  snapshotPathTemplate: '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{-projectName}{ext}',
+  snapshotPathTemplate: '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{-projectName}{ext}'
 });
 ```
 

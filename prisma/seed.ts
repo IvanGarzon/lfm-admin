@@ -187,7 +187,7 @@ async function main() {
     const tenants = await seedTenants({ count: config.tenantCount, password: config.password });
 
     await seedSuperAdmin();
-    await seedE2EUser();
+    // await seedE2EUser();
 
     await seedOrganizations({ tenants });
     await seedCustomers({ tenants, countPerTenant: config.customersPerTenant });

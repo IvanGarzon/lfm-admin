@@ -32,8 +32,8 @@ import { defineConfig, env } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DATABASE_URL'),
-  },
+    url: env('DATABASE_URL')
+  }
 });
 ```
 
@@ -80,7 +80,7 @@ Use a driver adapter for the standard SQL workflow.
      connectionLimit: 5,
      user: process.env.MYSQL_USER,
      password: process.env.MYSQL_PASSWORD,
-     database: process.env.MYSQL_DATABASE,
+     database: process.env.MYSQL_DATABASE
    });
 
    const prisma = new PrismaClient({ adapter });
@@ -95,7 +95,7 @@ import { PrismaClient } from '../generated/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const adapter = new PrismaMariaDb(process.env.DATABASE_URL!, {
-  useTextProtocol: true,
+  useTextProtocol: true
 });
 
 const prisma = new PrismaClient({ adapter });

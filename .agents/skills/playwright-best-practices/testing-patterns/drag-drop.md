@@ -48,7 +48,7 @@ test('progresses card through workflow stages', async ({ page }) => {
     backlog: page.locator('[data-column="backlog"]'),
     active: page.locator('[data-column="active"]'),
     review: page.locator('[data-column="review"]'),
-    complete: page.locator('[data-column="complete"]'),
+    complete: page.locator('[data-column="complete"]')
   };
 
   await cols.backlog.getByText('Update API docs').dragTo(cols.active);
@@ -86,7 +86,7 @@ test('verifies drag persists via API', async ({ page }) => {
   const active = page.locator('[data-column="active"]');
 
   const responsePromise = page.waitForResponse(
-    (r) => r.url().includes('/api/tickets') && r.request().method() === 'PATCH',
+    (r) => r.url().includes('/api/tickets') && r.request().method() === 'PATCH'
   );
 
   await backlog.getByText('Update API docs').dragTo(active);
@@ -159,7 +159,7 @@ test('reorder persists after reload', async ({ page }) => {
   await priorityC.dragTo(priorityA);
 
   await page.waitForResponse(
-    (response) => response.url().includes('/api/priorities/reorder') && response.status() === 200,
+    (response) => response.url().includes('/api/priorities/reorder') && response.status() === 200
   );
 
   await page.reload();
@@ -194,7 +194,7 @@ test('reorders with incremental mouse movements', async ({ page }) => {
     await page.mouse.move(
       sourceBox!.x + sourceBox!.width / 2,
       sourceBox!.y + (targetBox!.y - sourceBox!.y) * (i / steps),
-      { steps: 1 },
+      { steps: 1 }
     );
   }
 
@@ -296,7 +296,7 @@ test('simulates drag-over visual feedback', async ({ page }) => {
   const dropZone = page.locator('[data-testid="file-drop-zone"]');
 
   await dropZone.dispatchEvent('dragenter', {
-    dataTransfer: { types: ['Files'] },
+    dataTransfer: { types: ['Files'] }
   });
 
   await expect(dropZone).toHaveClass(/drag-active|drop-highlight/);
@@ -315,7 +315,7 @@ test('rejects invalid file types', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'script.exe',
     mimeType: 'application/x-msdownload',
-    buffer: Buffer.from('fake-content'),
+    buffer: Buffer.from('fake-content')
   });
 
   await expect(page.getByRole('alert')).toContainText(/not allowed|invalid file type/i);
@@ -379,7 +379,7 @@ test('constrains drag within boundaries', async ({ page }) => {
   await shape.hover();
   await page.mouse.down();
   await page.mouse.move(containerBox!.x + containerBox!.width + 500, containerBox!.y - 200, {
-    steps: 10,
+    steps: 10
   });
   await page.mouse.up();
 
@@ -389,7 +389,7 @@ test('constrains drag within boundaries', async ({ page }) => {
   expect(shapeBox!.y).toBeGreaterThanOrEqual(containerBox!.y);
   expect(shapeBox!.x + shapeBox!.width).toBeLessThanOrEqual(containerBox!.x + containerBox!.width);
   expect(shapeBox!.y + shapeBox!.height).toBeLessThanOrEqual(
-    containerBox!.y + containerBox!.height,
+    containerBox!.y + containerBox!.height
   );
 });
 
@@ -442,7 +442,7 @@ test('shows custom drag preview', async ({ page }) => {
   await expect(card).toHaveClass(/dragging|placeholder/);
 
   await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + targetBox!.height / 2, {
-    steps: 5,
+    steps: 5
   });
   await page.mouse.up();
 
@@ -540,13 +540,13 @@ test('drags via touch events', async ({ page }) => {
   const targetBox = await target.boundingBox();
 
   await source.dispatchEvent('touchstart', {
-    touches: [{ clientX: sourceBox!.x + 10, clientY: sourceBox!.y + 10 }],
+    touches: [{ clientX: sourceBox!.x + 10, clientY: sourceBox!.y + 10 }]
   });
 
   for (let i = 1; i <= 5; i++) {
     const y = sourceBox!.y + (targetBox!.y - sourceBox!.y) * (i / 5);
     await source.dispatchEvent('touchmove', {
-      touches: [{ clientX: sourceBox!.x + 10, clientY: y }],
+      touches: [{ clientX: sourceBox!.x + 10, clientY: y }]
     });
   }
 

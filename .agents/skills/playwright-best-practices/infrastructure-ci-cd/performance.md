@@ -21,7 +21,7 @@ export default defineConfig({
   fullyParallel: true,
 
   // Number of worker processes
-  workers: process.env.CI ? 1 : undefined, // undefined = half CPU cores
+  workers: process.env.CI ? 1 : undefined // undefined = half CPU cores
 
   // Or explicit count
   // workers: 4,
@@ -67,8 +67,8 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-  ],
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } }
+  ]
 });
 ```
 
@@ -143,7 +143,7 @@ test.describe('Dashboard', () => {
 
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({
-      storageState: '.auth/user.json',
+      storageState: '.auth/user.json'
     });
     page = await context.newPage();
     await page.goto('/dashboard');
@@ -325,9 +325,9 @@ export default defineConfig({
   use: {
     // Lower memory usage
     launchOptions: {
-      args: ['--disable-dev-shm-usage'],
-    },
-  },
+      args: ['--disable-dev-shm-usage']
+    }
+  }
 });
 ```
 
@@ -341,14 +341,14 @@ export default defineConfig({
 
   // Assertion timeout
   expect: {
-    timeout: 5000,
+    timeout: 5000
   },
 
   // Navigation timeout
   use: {
     navigationTimeout: 15000,
-    actionTimeout: 10000,
-  },
+    actionTimeout: 10000
+  }
 });
 ```
 
@@ -368,7 +368,7 @@ test('performance test', async ({ page }, testInfo) => {
   // Add to test report
   testInfo.annotations.push({
     type: 'performance',
-    description: `Load time: ${loadTime}ms`,
+    description: `Load time: ${loadTime}ms`
   });
 });
 ```
@@ -390,7 +390,7 @@ test('collect metrics', async ({ page }) => {
 
     // Memory (Chrome only)
     // @ts-ignore
-    memory: performance.memory?.usedJSHeapSize,
+    memory: performance.memory?.usedJSHeapSize
   }));
 
   console.log('Metrics:', metrics);
@@ -412,9 +412,9 @@ test('lighthouse audit', async ({ page }) => {
       performance: 80,
       accessibility: 90,
       'best-practices': 80,
-      seo: 80,
+      seo: 80
     },
-    port: 9222,
+    port: 9222
   });
 
   expect(audit.lhr.categories.performance.score * 100).toBeGreaterThanOrEqual(80);

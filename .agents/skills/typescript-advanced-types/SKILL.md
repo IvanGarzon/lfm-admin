@@ -335,7 +335,7 @@ class APIClient<Config extends Record<string, Record<HTTPMethod, any>>> {
           {
             params: ExtractParams<Config[Path][Method]>;
             body?: ExtractBody<Config[Path][Method]>;
-          },
+          }
         ]
   ): Promise<ExtractResponse<Config[Path][Method]>> {
     // Implementation here
@@ -350,12 +350,12 @@ const users = await api.request('/users', 'GET');
 // Type: User[]
 
 const newUser = await api.request('/users', 'POST', {
-  body: { name: 'John', email: 'john@example.com' },
+  body: { name: 'John', email: 'john@example.com' }
 });
 // Type: User
 
 const user = await api.request('/users/:id', 'GET', {
-  params: { id: '123' },
+  params: { id: '123' }
 });
 // Type: User
 ```
@@ -507,24 +507,24 @@ const validator = new FormValidator<LoginForm>({
   email: [
     {
       validate: (v) => v.includes('@'),
-      message: 'Email must contain @',
+      message: 'Email must contain @'
     },
     {
       validate: (v) => v.length > 0,
-      message: 'Email is required',
-    },
+      message: 'Email is required'
+    }
   ],
   password: [
     {
       validate: (v) => v.length >= 8,
-      message: 'Password must be at least 8 characters',
-    },
-  ],
+      message: 'Password must be at least 8 characters'
+    }
+  ]
 });
 
 const errors = validator.validate({
   email: 'invalid',
-  password: 'short',
+  password: 'short'
 });
 // Type: { email?: string[]; password?: string[]; } | null
 ```

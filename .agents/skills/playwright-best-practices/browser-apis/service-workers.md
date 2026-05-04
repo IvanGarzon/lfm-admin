@@ -43,7 +43,7 @@ test('check SW state', async ({ page }) => {
       installing: !!registration.installing,
       waiting: !!registration.waiting,
       active: !!registration.active,
-      scope: registration.scope,
+      scope: registration.scope
     };
   });
 
@@ -235,7 +235,7 @@ test('cache updates on new version', async ({ page }) => {
           e.waitUntil(caches.open('app-cache-v2'));
           self.skipWaiting();
         });
-      `,
+      `
     });
   });
 
@@ -352,7 +352,7 @@ test('handles push subscription', async ({ page, context }) => {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: 'test-key',
+      applicationServerKey: 'test-key'
     });
     return sub.toJSON();
   });
@@ -376,7 +376,7 @@ test('handles push notification', async ({ context, page }) => {
   await sw.evaluate(async () => {
     // Dispatch push event
     const pushEvent = new PushEvent('push', {
-      data: new PushMessageData(JSON.stringify({ title: 'Test', body: 'Push message' })),
+      data: new PushMessageData(JSON.stringify({ title: 'Test', body: 'Push message' }))
     });
     self.dispatchEvent(pushEvent);
   });
@@ -406,7 +406,7 @@ test('notification click opens page', async ({ context, page }) => {
     const reg = await navigator.serviceWorker.ready;
     await reg.showNotification('Test', {
       body: 'Click me',
-      data: { url: '/notification-target' },
+      data: { url: '/notification-target' }
     });
   });
 
@@ -415,8 +415,8 @@ test('notification click opens page', async ({ context, page }) => {
   await sw.evaluate(() => {
     self.dispatchEvent(
       new NotificationEvent('notificationclick', {
-        notification: { data: { url: '/notification-target' } } as any,
-      }),
+        notification: { data: { url: '/notification-target' } } as any
+      })
     );
   });
 

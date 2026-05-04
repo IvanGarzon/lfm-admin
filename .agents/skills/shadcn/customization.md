@@ -54,7 +54,7 @@ Class-based toggle via `.dark` on the root element. In Next.js, use `next-themes
 ```tsx
 import { ThemeProvider } from 'next-themes';
 
-<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+<ThemeProvider attribute='class' defaultTheme='system' enableSystem>
   {children}
 </ThemeProvider>;
 ```
@@ -117,16 +117,16 @@ module.exports = {
     extend: {
       colors: {
         warning: 'oklch(var(--warning) / <alpha-value>)',
-        'warning-foreground': 'oklch(var(--warning-foreground) / <alpha-value>)',
-      },
-    },
-  },
+        'warning-foreground': 'oklch(var(--warning-foreground) / <alpha-value>)'
+      }
+    }
+  }
 };
 ```
 
 ```tsx
 // 3. Use in components.
-<div className="bg-warning text-warning-foreground">Warning</div>
+<div className='bg-warning text-warning-foreground'>Warning</div>
 ```
 
 ---
@@ -146,7 +146,7 @@ Prefer these approaches in order:
 ### 1. Built-in variants
 
 ```tsx
-<Button variant="outline" size="sm">
+<Button variant='outline' size='sm'>
   Click
 </Button>
 ```
@@ -154,7 +154,7 @@ Prefer these approaches in order:
 ### 2. Tailwind classes via `className`
 
 ```tsx
-<Card className="mx-auto max-w-md">...</Card>
+<Card className='mx-auto max-w-md'>...</Card>
 ```
 
 ### 3. Add a new variant

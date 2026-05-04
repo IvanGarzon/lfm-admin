@@ -104,10 +104,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: 'hsl(var(--primary))',
-      },
-    },
-  },
+        primary: 'hsl(var(--primary))'
+      }
+    }
+  }
 };
 ```
 
@@ -193,8 +193,8 @@ Result: `bg-background` class doesn't exist
 // vite.config.ts
 export default defineConfig({
   css: {
-    postcss: './postcss.config.js', // Old v3 way
-  },
+    postcss: './postcss.config.js' // Old v3 way
+  }
 });
 ```
 
@@ -204,7 +204,7 @@ export default defineConfig({
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()], // v4 way
+  plugins: [react(), tailwindcss()] // v4 way
 });
 ```
 
@@ -246,13 +246,13 @@ import { Button } from '@/components/ui/button';
 ❌ **WRONG:**
 
 ```tsx
-<div className="bg-primary dark:bg-primary-dark" />
+<div className='bg-primary dark:bg-primary-dark' />
 ```
 
 ✅ **CORRECT:**
 
 ```tsx
-<div className="bg-primary" />
+<div className='bg-primary' />
 ```
 
 **Why:** With proper CSS variable setup, `bg-primary` automatically responds to theme.
@@ -264,7 +264,7 @@ import { Button } from '@/components/ui/button';
 ❌ **WRONG:**
 
 ```tsx
-<div className="bg-blue-600 dark:bg-blue-400" />
+<div className='bg-blue-600 dark:bg-blue-400' />
 ```
 
 ✅ **CORRECT:**
@@ -303,13 +303,13 @@ import { cn } from '@/lib/utils';
 ❌ **WRONG:**
 
 ```tsx
-<SelectItem value="">Select an option</SelectItem>
+<SelectItem value=''>Select an option</SelectItem>
 ```
 
 ✅ **CORRECT:**
 
 ```tsx
-<SelectItem value="placeholder">Select an option</SelectItem>
+<SelectItem value='placeholder'>Select an option</SelectItem>
 ```
 
 **Why:** Radix UI Select doesn't allow empty string values.

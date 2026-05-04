@@ -30,16 +30,16 @@ export default defineConfig({
   testDir: './tests',
   use: {
     // Extensions require non-headless Chromium
-    headless: false,
+    headless: false
   },
   projects: [
     {
       name: 'chromium-extension',
       use: {
-        browserName: 'chromium',
-      },
-    },
-  ],
+        browserName: 'chromium'
+      }
+    }
+  ]
 });
 ```
 
@@ -64,8 +64,8 @@ export const test = base.extend<ExtensionFixtures>({
       headless: false,
       args: [
         `--disable-extensions-except=${pathToExtension}`,
-        `--load-extension=${pathToExtension}`,
-      ],
+        `--load-extension=${pathToExtension}`
+      ]
     });
 
     await use(context);
@@ -91,7 +91,7 @@ export const test = base.extend<ExtensionFixtures>({
       context.backgroundPages()[0] || (await context.waitForEvent('backgroundpage'));
 
     await use(backgroundPage);
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -107,7 +107,7 @@ test('load MV3 extension', async () => {
 
   const context = await chromium.launchPersistentContext('', {
     headless: false,
-    args: [`--disable-extensions-except=${pathToExtension}`, `--load-extension=${pathToExtension}`],
+    args: [`--disable-extensions-except=${pathToExtension}`, `--load-extension=${pathToExtension}`]
   });
 
   // Wait for service worker
@@ -126,7 +126,7 @@ test('load MV2 extension', async () => {
 
   const context = await chromium.launchPersistentContext('', {
     headless: false,
-    args: [`--disable-extensions-except=${pathToExtension}`, `--load-extension=${pathToExtension}`],
+    args: [`--disable-extensions-except=${pathToExtension}`, `--load-extension=${pathToExtension}`]
   });
 
   // Wait for background page
@@ -148,8 +148,8 @@ test('load multiple extensions', async () => {
     headless: false,
     args: [
       `--disable-extensions-except=${extension1},${extension2}`,
-      `--load-extension=${extension1},${extension2}`,
-    ],
+      `--load-extension=${extension1},${extension2}`
+    ]
   });
 
   // Both service workers should be available
@@ -415,7 +415,7 @@ test('context menu actions', async ({ context, extensionId }) => {
     await chrome.contextMenus.create({
       id: 'test-menu',
       title: 'Test Action',
-      contexts: ['selection'],
+      contexts: ['selection']
     });
   });
 
@@ -435,7 +435,7 @@ test('context menu actions', async ({ context, extensionId }) => {
     // Simulate the click handler
     chrome.contextMenus.onClicked.dispatch(
       { menuItemId: 'test-menu', selectionText: 'selected text' },
-      { id: 1, url: 'https://example.com' },
+      { id: 1, url: 'https://example.com' }
     );
   });
 });
@@ -451,7 +451,7 @@ test('request permissions', async ({ context, extensionId }) => {
   // Check current permissions
   const hasPermission = await popup.evaluate(async () => {
     return await chrome.permissions.contains({
-      origins: ['https://*.github.com/*'],
+      origins: ['https://*.github.com/*']
     });
   });
 
@@ -460,7 +460,7 @@ test('request permissions', async ({ context, extensionId }) => {
   const permissionRequest = popup.evaluate(async () => {
     try {
       return await chrome.permissions.request({
-        origins: ['https://*.github.com/*'],
+        origins: ['https://*.github.com/*']
       });
     } catch (e) {
       return false;

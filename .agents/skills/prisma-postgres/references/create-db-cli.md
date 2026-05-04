@@ -78,7 +78,7 @@ import { create, isDatabaseSuccess, isDatabaseError } from 'create-db';
 
 const result = await create({
   region: 'us-east-1',
-  userAgent: 'my-app/1.0.0',
+  userAgent: 'my-app/1.0.0'
 });
 
 if (isDatabaseSuccess(result)) {

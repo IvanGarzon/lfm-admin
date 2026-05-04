@@ -47,9 +47,9 @@ You can also set `slowMo` to add an `N` ms delay per action, making test executi
 export default defineConfig({
   use: {
     launchOptions: {
-      slowMo: 500,
-    },
-  },
+      slowMo: 500
+    }
+  }
 });
 ```
 
@@ -90,10 +90,10 @@ test('debug example', async ({ page }) => {
 // playwright.config.ts
 export default defineConfig({
   use: {
-    trace: 'on-first-retry', // Record on retry
+    trace: 'on-first-retry' // Record on retry
     // trace: 'on',                 // Always record
     // trace: 'retain-on-failure',  // Keep only failures
-  },
+  }
 });
 ```
 
@@ -176,7 +176,7 @@ When debugging network-dependent issues, wait for specific API responses instead
 ```typescript
 // Start waiting BEFORE triggering the request
 const responsePromise = page.waitForResponse(
-  (resp) => resp.url().includes('/api/data') && resp.status() === 200,
+  (resp) => resp.url().includes('/api/data') && resp.status() === 200
 );
 await page.getByRole('button', { name: 'Load' }).click();
 const response = await responsePromise;
@@ -227,11 +227,11 @@ export default defineConfig({
   use: {
     trace: process.env.CI ? 'on-first-retry' : 'off',
     video: process.env.CI ? 'retain-on-failure' : 'off',
-    screenshot: process.env.CI ? 'only-on-failure' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off'
   },
 
   // More retries in CI (but investigate failures!)
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 0
 });
 ```
 
@@ -259,7 +259,7 @@ test('debug auth', async ({ page, context }) => {
   const storage = await context.storageState();
   console.log(
     'Cookies:',
-    storage.cookies.map((c) => c.name),
+    storage.cookies.map((c) => c.name)
   );
 
   // Check if auth cookies are present
@@ -289,7 +289,7 @@ test('visual debug', async ({ page }, testInfo) => {
   // Screenshot before action
   await page.screenshot({
     path: testInfo.outputPath('before.png'),
-    fullPage: true,
+    fullPage: true
   });
 
   await page.getByRole('button', { name: 'Open Menu' }).click();
@@ -297,13 +297,13 @@ test('visual debug', async ({ page }, testInfo) => {
   // Screenshot after action
   await page.screenshot({
     path: testInfo.outputPath('after.png'),
-    fullPage: true,
+    fullPage: true
   });
 
   // Attach to report
   await testInfo.attach('before', {
     path: testInfo.outputPath('before.png'),
-    contentType: 'image/png',
+    contentType: 'image/png'
   });
 });
 ```
@@ -415,13 +415,13 @@ test('with attachments', async ({ page }, testInfo) => {
   const screenshot = await page.screenshot();
   await testInfo.attach('screenshot', {
     body: screenshot,
-    contentType: 'image/png',
+    contentType: 'image/png'
   });
 
   // Attach logs or data
   await testInfo.attach('logs', {
     body: 'Custom log data',
-    contentType: 'text/plain',
+    contentType: 'text/plain'
   });
 
   // Use testInfo for output paths

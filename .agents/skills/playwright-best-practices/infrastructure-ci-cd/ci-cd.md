@@ -231,8 +231,8 @@ export default defineConfig({
     ['json', { outputFile: 'results.json' }],
 
     // Blob for merging shards
-    ['blob', { outputDir: 'blob-report' }],
-  ],
+    ['blob', { outputDir: 'blob-report' }]
+  ]
 });
 ```
 
@@ -240,7 +240,7 @@ export default defineConfig({
 
 ```typescript
 export default defineConfig({
-  reporter: process.env.CI ? [['github'], ['blob'], ['html']] : [['list'], ['html']],
+  reporter: process.env.CI ? [['github'], ['blob'], ['html']] : [['list'], ['html']]
 });
 ```
 
@@ -265,7 +265,7 @@ export default defineConfig({
   fullyParallel: true,
 
   // For blob reporter to merge later
-  reporter: process.env.CI ? [['blob']] : [['html']],
+  reporter: process.env.CI ? [['blob']] : [['html']]
 });
 ```
 
@@ -290,8 +290,8 @@ dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
 export default defineConfig({
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
-  },
+    baseURL: process.env.BASE_URL || 'http://localhost:3000'
+  }
 });
 ```
 
@@ -400,7 +400,7 @@ test('login', async ({ page }) => {
 // playwright.config.ts
 export default defineConfig({
   grep: process.env.CI ? /@smoke|@critical/ : undefined,
-  grepInvert: process.env.CI ? /@flaky/ : undefined,
+  grepInvert: process.env.CI ? /@flaky/ : undefined
 });
 ```
 
@@ -412,13 +412,13 @@ export default defineConfig({
   projects: [
     {
       name: 'smoke',
-      grep: /@smoke/,
+      grep: /@smoke/
     },
     {
       name: 'regression',
-      grepInvert: /@smoke/,
-    },
-  ],
+      grepInvert: /@smoke/
+    }
+  ]
 });
 ```
 
@@ -451,8 +451,8 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'on-first-retry',
-  },
+    video: 'on-first-retry'
+  }
 });
 ```
 

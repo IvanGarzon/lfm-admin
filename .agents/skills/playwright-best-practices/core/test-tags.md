@@ -22,23 +22,23 @@ import { test, expect } from '@playwright/test';
 test(
   'test login page',
   {
-    tag: '@fast',
+    tag: '@fast'
   },
   async ({ page }) => {
     await page.goto('/login');
     await expect(page.getByRole('heading')).toBeVisible();
-  },
+  }
 );
 
 test(
   'test dashboard',
   {
-    tag: '@slow',
+    tag: '@slow'
   },
   async ({ page }) => {
     await page.goto('/dashboard');
     await expect(page.getByTestId('charts')).toBeVisible();
-  },
+  }
 );
 ```
 
@@ -64,7 +64,7 @@ test('quick validation @fast @smoke', async ({ page }) => {
 test.describe(
   'report tests',
   {
-    tag: '@report',
+    tag: '@report'
   },
   () => {
     test('test report header', async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe(
     test('test report footer', async ({ page }) => {
       // Inherits @report tag
     });
-  },
+  }
 );
 ```
 
@@ -84,7 +84,7 @@ test.describe(
 test.describe(
   'admin features',
   {
-    tag: '@admin',
+    tag: '@admin'
   },
   () => {
     test('admin dashboard', async ({ page }) => {
@@ -94,13 +94,13 @@ test.describe(
     test(
       'admin settings',
       {
-        tag: ['@slow', '@critical'],
+        tag: ['@slow', '@critical']
       },
       async ({ page }) => {
         // Has @admin, @slow, @critical tags
-      },
+      }
     );
-  },
+  }
 );
 ```
 
@@ -155,7 +155,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   grep: /@smoke/,
-  grepInvert: /@flaky/,
+  grepInvert: /@flaky/
 });
 ```
 
@@ -168,17 +168,17 @@ export default defineConfig({
   projects: [
     {
       name: 'smoke',
-      grep: /@smoke/,
+      grep: /@smoke/
     },
     {
       name: 'regression',
-      grepInvert: /@smoke/,
+      grepInvert: /@smoke/
     },
     {
       name: 'critical-only',
-      grep: /@critical/,
-    },
-  ],
+      grep: /@critical/
+    }
+  ]
 });
 ```
 
@@ -191,7 +191,7 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   grep: isCI ? /@smoke|@critical/ : undefined,
-  grepInvert: isCI ? /@flaky/ : undefined,
+  grepInvert: isCI ? /@flaky/ : undefined
 });
 ```
 
@@ -218,25 +218,25 @@ test('complete user journey', { tag: '@e2e' }, async ({ page }) => {});
 test(
   'payment processing',
   {
-    tag: ['@critical', '@p0'],
+    tag: ['@critical', '@p0']
   },
-  async ({ page }) => {},
+  async ({ page }) => {}
 );
 
 test(
   'user preferences',
   {
-    tag: ['@p1'],
+    tag: ['@p1']
   },
-  async ({ page }) => {},
+  async ({ page }) => {}
 );
 
 test(
   'theme customization',
   {
-    tag: ['@p2'],
+    tag: ['@p2']
   },
-  async ({ page }) => {},
+  async ({ page }) => {}
 );
 ```
 
@@ -246,24 +246,24 @@ test(
 test.describe(
   'authentication',
   {
-    tag: '@auth',
+    tag: '@auth'
   },
   () => {
     test('login @smoke', async ({ page }) => {});
     test('logout', async ({ page }) => {});
     test('password reset @slow', async ({ page }) => {});
-  },
+  }
 );
 
 test.describe(
   'payments',
   {
-    tag: '@payments',
+    tag: '@payments'
   },
   () => {
     test('credit card @critical', async ({ page }) => {});
     test('paypal @critical', async ({ page }) => {});
-  },
+  }
 );
 ```
 

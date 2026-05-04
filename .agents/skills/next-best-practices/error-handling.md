@@ -15,7 +15,7 @@ Catches errors in a route segment and its children:
 
 export default function Error({
   error,
-  reset,
+  reset
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -40,7 +40,7 @@ Catches errors in root layout:
 
 export default function GlobalError({
   error,
-  reset,
+  reset
 }: {
   error: Error & { digest?: string };
   reset: () => void;

@@ -34,21 +34,21 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
   projects: [
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
-    },
+      dependencies: ['setup']
+    }
   ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+    reuseExistingServer: !process.env.CI
+  }
 });
 ```
 
@@ -132,8 +132,8 @@ test('displays mocked users', async ({ page }) => {
   await page.route('**/api/users', (route) =>
     route.fulfill({
       status: 200,
-      json: [{ id: 1, name: 'Test User' }],
-    }),
+      json: [{ id: 1, name: 'Test User' }]
+    })
   );
 
   await page.goto('/users');
@@ -145,8 +145,8 @@ test('handles API errors', async ({ page }) => {
   await page.route('**/api/users', (route) =>
     route.fulfill({
       status: 500,
-      json: { error: 'Server error' },
-    }),
+      json: { error: 'Server error' }
+    })
   );
 
   await page.goto('/users');
@@ -169,8 +169,8 @@ test('handles slow API', async ({ page }) => {
   await page.route('**/api/data', (route) =>
     route.fulfill({
       json: { data: 'test' },
-      delay: 2000, // 2 second delay
-    }),
+      delay: 2000 // 2 second delay
+    })
   );
 
   await page.goto('/dashboard');
@@ -216,7 +216,7 @@ test('dashboard visual', async ({ page }) => {
     maxDiffPixelRatio: 0.01, // Or 1% difference
     threshold: 0.2, // Pixel comparison threshold
     animations: 'disabled', // Disable animations
-    mask: [page.getByTestId('date')], // Mask dynamic content
+    mask: [page.getByTestId('date')] // Mask dynamic content
   });
 });
 ```
@@ -229,7 +229,7 @@ test('page with dynamic content', async ({ page }) => {
 
   // Mask elements that change
   await expect(page).toHaveScreenshot('profile.png', {
-    mask: [page.getByTestId('timestamp'), page.getByTestId('avatar'), page.getByRole('img')],
+    mask: [page.getByTestId('timestamp'), page.getByTestId('avatar'), page.getByRole('img')]
   });
 });
 
@@ -241,7 +241,7 @@ test('page hiding dynamic elements', async ({ page }) => {
     content: `
       .dynamic-content { visibility: hidden !important; }
       [data-testid="ad-banner"] { display: none !important; }
-    `,
+    `
   });
 
   await expect(page).toHaveScreenshot('profile-stable.png');
@@ -256,19 +256,19 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: {
       maxDiffPixels: 50,
-      animations: 'disabled',
-    },
+      animations: 'disabled'
+    }
   },
   projects: [
     {
       name: 'visual-chrome',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
+        viewport: { width: 1280, height: 720 }
       },
-      testMatch: /.*visual.*\.spec\.ts/,
-    },
-  ],
+      testMatch: /.*visual.*\.spec\.ts/
+    }
+  ]
 });
 ```
 

@@ -65,8 +65,8 @@ export default defineConfig({
   use: {
     trace: 'on-first-retry', // Capture trace on retry
     video: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-  },
+    screenshot: 'only-on-failure'
+  }
 });
 ```
 
@@ -185,7 +185,7 @@ await expect(page.locator('.data-row')).toHaveCount(10, { timeout: 10000 });
 
 // ✅ BETTER: Wait for network response, then assert
 const responsePromise = page.waitForResponse(
-  (r) => r.url().includes('/api/data') && r.request().method() === 'GET' && r.ok(),
+  (r) => r.url().includes('/api/data') && r.request().method() === 'GET' && r.ok()
 );
 await page.click('#load-data');
 await responsePromise;
@@ -207,7 +207,7 @@ await page.waitForFunction(() => {
 await Promise.all([
   page.waitForResponse('**/api/user'),
   page.waitForResponse('**/api/settings'),
-  page.getByRole('button', { name: 'Load' }).click(),
+  page.getByRole('button', { name: 'Load' }).click()
 ]);
 ```
 
@@ -230,8 +230,8 @@ export const test = base.extend<{}, { testUser: { email: string; id: string } }>
       await use(user);
       await deleteTestUser(user.id);
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 ```
 
@@ -301,7 +301,7 @@ export const test = base.extend<{ tempFile: string }>({
     if (fs.existsSync(file)) {
       fs.unlinkSync(file);
     }
-  },
+  }
 });
 ```
 
@@ -341,8 +341,8 @@ docker run -it --rm \
 export default defineConfig({
   use: {
     viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1,
-  },
+    deviceScaleFactor: 1
+  }
 });
 ```
 
@@ -354,14 +354,14 @@ test.beforeEach(async ({ page }) => {
   // Stub unstable third-party APIs
   await page.route('**/api.analytics.com/**', (route) => route.fulfill({ body: '' }));
   await page.route('**/api.payment-provider.com/**', (route) =>
-    route.fulfill({ json: { status: 'ok' } }),
+    route.fulfill({ json: { status: 'ok' } })
   );
 });
 
 // Test-specific stub
 test('checkout with payment', async ({ page }) => {
   await page.route('**/api/payment', (route) =>
-    route.fulfill({ json: { success: true, transactionId: 'test-123' } }),
+    route.fulfill({ json: { success: true, transactionId: 'test-123' } })
   );
   // Test proceeds with deterministic response
 });
@@ -377,14 +377,14 @@ export default defineConfig({
   projects: [
     {
       name: 'stable',
-      testIgnore: ['**/*.flaky.spec.ts'],
+      testIgnore: ['**/*.flaky.spec.ts']
     },
     {
       name: 'quarantine',
       testMatch: ['**/*.flaky.spec.ts'],
-      retries: 3,
-    },
-  ],
+      retries: 3
+    }
+  ]
 });
 ```
 
@@ -395,7 +395,7 @@ export default defineConfig({
 test('intermittent checkout issue', async ({ page }, testInfo) => {
   testInfo.annotations.push({
     type: 'flaky',
-    description: 'Investigating payment API timing - JIRA-1234',
+    description: 'Investigating payment API timing - JIRA-1234'
   });
 
   // Test implementation
@@ -457,9 +457,9 @@ await expect(page.locator('.items')).toHaveCount(5);
 export default defineConfig({
   retries: process.env.CI ? 2 : 0, // Only retry in CI
   expect: {
-    timeout: 10000, // Reasonable assertion timeout
+    timeout: 10000 // Reasonable assertion timeout
   },
-  timeout: 60000, // Test timeout
+  timeout: 60000 // Test timeout
 });
 ```
 

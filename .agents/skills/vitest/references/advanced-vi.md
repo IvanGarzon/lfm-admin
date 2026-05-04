@@ -57,13 +57,13 @@ vi.spyOn(obj, 'prop', 'get').mockReturnValue('value');
 ```ts
 // Hoisted to top of file
 vi.mock('./module', () => ({
-  fn: vi.fn(),
+  fn: vi.fn()
 }));
 
 // Partial mock
 vi.mock('./module', async (importOriginal) => ({
   ...(await importOriginal()),
-  specificFn: vi.fn(),
+  specificFn: vi.fn()
 }));
 
 // Spy mode - keep implementation
@@ -158,7 +158,7 @@ Run code before imports:
 const mock = vi.hoisted(() => vi.fn());
 
 vi.mock('./module', () => ({
-  fn: mock, // Can reference hoisted variable
+  fn: mock // Can reference hoisted variable
 }));
 ```
 
@@ -171,7 +171,7 @@ await vi.waitFor(
     const el = document.querySelector('.loaded');
     expect(el).toBeTruthy();
   },
-  { timeout: 5000, interval: 100 },
+  { timeout: 5000, interval: 100 }
 );
 
 // Wait for truthy value
@@ -185,7 +185,7 @@ Mock all methods of an object:
 ```ts
 const original = {
   method: () => 'real',
-  nested: { fn: () => 'nested' },
+  nested: { fn: () => 'nested' }
 };
 
 const mocked = vi.mockObject(original);
@@ -203,7 +203,7 @@ expect(spied.method).toHaveBeenCalled();
 ```ts
 vi.setConfig({
   testTimeout: 10_000,
-  hookTimeout: 10_000,
+  hookTimeout: 10_000
 });
 
 vi.resetConfig();

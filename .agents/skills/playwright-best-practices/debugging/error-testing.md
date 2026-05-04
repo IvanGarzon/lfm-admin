@@ -17,7 +17,7 @@ test('error boundary catches component error', async ({ page }) => {
   // Trigger error via mock
   await page.route('**/api/user', (route) => {
     route.fulfill({
-      json: null, // Will cause component to throw
+      json: null // Will cause component to throw
     });
   });
 
@@ -41,7 +41,7 @@ test('recover from error state', async ({ page }) => {
       return route.fulfill({ status: 500 });
     }
     return route.fulfill({
-      json: { data: 'success' },
+      json: { data: 'success' }
     });
   });
 
@@ -91,8 +91,8 @@ test.describe('API error handling', () => {
       await page.route('**/api/data', (route) =>
         route.fulfill({
           status,
-          json: { error: `Error ${status}` },
-        }),
+          json: { error: `Error ${status}` }
+        })
       );
 
       await page.goto('/dashboard');
@@ -117,7 +117,7 @@ test('handles request timeout', async ({ page }) => {
 
   // Should show timeout message (app should have its own timeout)
   await expect(page.getByText('Request timed out')).toBeVisible({
-    timeout: 15000,
+    timeout: 15000
   });
 });
 ```
@@ -220,7 +220,7 @@ test('shows skeleton during load', async ({ page }) => {
   await page.route('**/api/posts', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     route.fulfill({
-      json: [{ id: 1, title: 'Post 1' }],
+      json: [{ id: 1, title: 'Post 1' }]
     });
   });
 
@@ -322,10 +322,10 @@ test('handles server validation errors', async ({ page }) => {
       json: {
         errors: {
           email: 'Email already exists',
-          username: 'Username is taken',
-        },
-      },
-    }),
+          username: 'Username is taken'
+        }
+      }
+    })
   );
 
   await page.goto('/signup');

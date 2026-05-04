@@ -21,8 +21,8 @@ export default defineConfig({
     { name: 'Desktop Chrome', use: { ...devices['Desktop Chrome'] } },
     { name: 'Mobile Safari', use: { ...devices['iPhone 14'] } },
     { name: 'Mobile Chrome', use: { ...devices['Pixel 7'] } },
-    { name: 'Tablet', use: { ...devices['iPad Pro 11'] } },
-  ],
+    { name: 'Tablet', use: { ...devices['iPad Pro 11'] } }
+  ]
 });
 ```
 
@@ -34,7 +34,7 @@ test.use({
   deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
-  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15'
 });
 
 test('custom mobile device', async ({ page }) => {
@@ -96,7 +96,7 @@ test('swipe carousel', async ({ page }) => {
     // Or use drag
     await carousel.dragTo(carousel, {
       sourcePosition: { x: box.width - 50, y: box.height / 2 },
-      targetPosition: { x: 50, y: box.height / 2 },
+      targetPosition: { x: 50, y: box.height / 2 }
     });
   }
 
@@ -128,25 +128,25 @@ export const test = base.extend<TouchFixtures>({
         left: {
           startX: centerX + distance,
           endX: centerX - distance,
-          y: centerY,
+          y: centerY
         },
         right: {
           startX: centerX - distance,
           endX: centerX + distance,
-          y: centerY,
+          y: centerY
         },
         up: {
           startX: centerX,
           endX: centerX,
           startY: centerY + distance,
-          endY: centerY - distance,
+          endY: centerY - distance
         },
         down: {
           startX: centerX,
           endX: centerX,
           startY: centerY - distance,
-          endY: centerY + distance,
-        },
+          endY: centerY + distance
+        }
       };
 
       const move = moves[direction];
@@ -154,7 +154,7 @@ export const test = base.extend<TouchFixtures>({
       await page.mouse.move(move.endX, move.endY ?? move.y, { steps: 10 });
       await page.mouse.up();
     });
-  },
+  }
 });
 
 // Usage
@@ -205,8 +205,8 @@ test('pinch to zoom image', async ({ page }) => {
       element.dispatchEvent(
         new WheelEvent('wheel', {
           deltaY: -100, // Negative = zoom in
-          ctrlKey: true, // Ctrl+wheel = pinch on many apps
-        }),
+          ctrlKey: true // Ctrl+wheel = pinch on many apps
+        })
       );
     }
   });
@@ -226,7 +226,7 @@ test('pinch to zoom image', async ({ page }) => {
 const viewports = [
   { name: 'mobile', width: 375, height: 667 },
   { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1920, height: 1080 },
+  { name: 'desktop', width: 1920, height: 1080 }
 ];
 
 for (const { name, width, height } of viewports) {
@@ -346,7 +346,7 @@ const breakpoints = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536,
+  '2xl': 1536
 };
 
 test.describe('responsive header', () => {
@@ -374,7 +374,7 @@ test.describe('visual regression', () => {
   const sizes = [
     { width: 375, height: 667, name: 'mobile' },
     { width: 768, height: 1024, name: 'tablet' },
-    { width: 1440, height: 900, name: 'desktop' },
+    { width: 1440, height: 900, name: 'desktop' }
   ];
 
   for (const { width, height, name } of sizes) {

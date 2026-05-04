@@ -138,7 +138,7 @@ combine-reports:
 ```typescript
 // playwright.config.ts
 export default defineConfig({
-  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]],
+  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]]
 });
 ```
 
@@ -348,8 +348,8 @@ image: mcr.microsoft.com/playwright:v1.48.0-noble
 export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   use: {
-    navigationTimeout: process.env.CI ? 30_000 : 15_000,
-  },
+    navigationTimeout: process.env.CI ? 30_000 : 15_000
+  }
 });
 ```
 
@@ -388,6 +388,6 @@ variables:
 
 ```typescript
 export default defineConfig({
-  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]],
+  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]]
 });
 ```

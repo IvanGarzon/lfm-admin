@@ -40,7 +40,7 @@ export const test = base.extend<ClockFixtures>({
       const time = typeof date === 'string' ? new Date(date) : date;
       await page.clock.install({ time });
     });
-  },
+  }
 });
 
 // Usage
@@ -87,9 +87,9 @@ test('shows relative time correctly', async ({ page }) => {
       json: {
         id: 1,
         title: 'Test Post',
-        createdAt: '2025-06-15T12:00:00Z', // 2 hours before mock time
-      },
-    }),
+        createdAt: '2025-06-15T12:00:00Z' // 2 hours before mock time
+      }
+    })
   );
 
   await page.goto('/posts/1');
@@ -189,7 +189,7 @@ test('debounced search', async ({ page }) => {
 test.describe('timezone display', () => {
   test('shows correct time in PST', async ({ browser }) => {
     const context = await browser.newContext({
-      timezoneId: 'America/Los_Angeles',
+      timezoneId: 'America/Los_Angeles'
     });
     const page = await context.newPage();
 
@@ -205,7 +205,7 @@ test.describe('timezone display', () => {
 
   test('shows correct time in JST', async ({ browser }) => {
     const context = await browser.newContext({
-      timezoneId: 'Asia/Tokyo',
+      timezoneId: 'Asia/Tokyo'
     });
     const page = await context.newPage();
 
@@ -246,7 +246,7 @@ export const test = base.extend<TimezoneFixtures>({
     for (const page of pages) {
       await page.context().close();
     }
-  },
+  }
 });
 ```
 

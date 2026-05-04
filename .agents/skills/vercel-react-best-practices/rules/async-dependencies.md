@@ -30,7 +30,7 @@ const { user, config, profile } = await all({
   },
   async profile() {
     return fetchProfile((await this.$.user).id);
-  },
+  }
 });
 ```
 

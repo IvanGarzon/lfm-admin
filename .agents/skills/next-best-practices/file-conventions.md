@@ -106,7 +106,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/:path*'],
+  matcher: ['/dashboard/:path*', '/api/:path*']
 };
 ```
 
@@ -125,7 +125,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const proxyConfig = {
-  matcher: ['/dashboard/:path*', '/api/:path*'],
+  matcher: ['/dashboard/:path*', '/api/:path*']
 };
 ```
 

@@ -49,9 +49,9 @@ export default defineConfig({
         ['dot'],
         ['html', { open: 'never' }],
         ['junit', { outputFile: 'results/junit.xml' }],
-        ['github'],
+        ['github']
       ]
-    : [['list'], ['html', { open: 'on-failure' }]],
+    : [['list'], ['html', { open: 'on-failure' }]]
 });
 ```
 
@@ -74,7 +74,7 @@ export default defineConfig({
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  reporter: [['json', { outputFile: 'results/output.json' }]],
+  reporter: [['json', { outputFile: 'results/output.json' }]]
 });
 ```
 
@@ -90,10 +90,10 @@ export default defineConfig({
       {
         outputFile: 'results/junit.xml',
         stripANSIControlSequences: true,
-        includeProjectInTestName: true,
-      },
-    ],
-  ],
+        includeProjectInTestName: true
+      }
+    ]
+  ]
 });
 ```
 
@@ -133,7 +133,7 @@ class NotificationReporter implements Reporter {
     const message = [
       `Tests ${status}`,
       `Passed: ${this.passed} | Failed: ${this.failed} | Skipped: ${this.skipped}`,
-      `Duration: ${(result.duration / 1000).toFixed(1)}s`,
+      `Duration: ${(result.duration / 1000).toFixed(1)}s`
     ];
 
     if (this.failures.length > 0) {
@@ -153,7 +153,7 @@ class NotificationReporter implements Reporter {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: message.join('\n') }),
-          signal: controller.signal,
+          signal: controller.signal
         });
       } catch (error) {
         // Intentionally swallow notifier failures to avoid blocking test completion
@@ -174,7 +174,7 @@ export default NotificationReporter;
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  reporter: [['dot'], ['html', { open: 'never' }], ['./reporters/notification-reporter.ts']],
+  reporter: [['dot'], ['html', { open: 'never' }], ['./reporters/notification-reporter.ts']]
 });
 ```
 
@@ -188,8 +188,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   use: {
-    trace: 'on-first-retry',
-  },
+    trace: 'on-first-retry'
+  }
 });
 ```
 
@@ -223,8 +223,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   use: {
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-  },
+    video: 'retain-on-failure'
+  }
 });
 ```
 
@@ -343,7 +343,7 @@ Check reporter config. HTML report defaults to `playwright-report/`:
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
+  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]]
 });
 ```
 
@@ -357,8 +357,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   use: {
-    trace: 'on-first-retry',
-  },
+    trace: 'on-first-retry'
+  }
 });
 ```
 
@@ -394,7 +394,7 @@ Use `blob` reporter for sharded runs (not `html`):
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]],
+  reporter: process.env.CI ? [['blob'], ['dot']] : [['html', { open: 'on-failure' }]]
 });
 ```
 

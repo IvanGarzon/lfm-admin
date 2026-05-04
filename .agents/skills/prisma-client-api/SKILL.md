@@ -53,7 +53,7 @@ import { PrismaClient } from '../generated/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -114,14 +114,14 @@ const prisma = new PrismaClient({ adapter });
 ```typescript
 // Find by unique field
 const user = await prisma.user.findUnique({
-  where: { email: 'alice@prisma.io' },
+  where: { email: 'alice@prisma.io' }
 });
 
 // Find with filter
 const users = await prisma.user.findMany({
   where: { role: 'ADMIN' },
   orderBy: { createdAt: 'desc' },
-  take: 10,
+  take: 10
 });
 ```
 
@@ -133,10 +133,10 @@ const user = await prisma.user.create({
     email: 'alice@prisma.io',
     name: 'Alice',
     posts: {
-      create: { title: 'Hello World' },
-    },
+      create: { title: 'Hello World' }
+    }
   },
-  include: { posts: true },
+  include: { posts: true }
 });
 ```
 
@@ -145,7 +145,7 @@ const user = await prisma.user.create({
 ```typescript
 const user = await prisma.user.update({
   where: { id: 1 },
-  data: { name: 'Alice Smith' },
+  data: { name: 'Alice Smith' }
 });
 ```
 
@@ -153,7 +153,7 @@ const user = await prisma.user.update({
 
 ```typescript
 await prisma.user.delete({
-  where: { id: 1 },
+  where: { id: 1 }
 });
 ```
 
@@ -162,7 +162,7 @@ await prisma.user.delete({
 ```typescript
 const [user, post] = await prisma.$transaction([
   prisma.user.create({ data: { email: 'alice@prisma.io' } }),
-  prisma.post.create({ data: { title: 'Hello', authorId: 1 } }),
+  prisma.post.create({ data: { title: 'Hello', authorId: 1 } })
 ]);
 ```
 

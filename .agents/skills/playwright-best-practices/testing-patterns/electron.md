@@ -28,8 +28,8 @@ export default defineConfig({
   testDir: './tests',
   timeout: 30000,
   use: {
-    trace: 'on-first-retry',
-  },
+    trace: 'on-first-retry'
+  }
 });
 ```
 
@@ -51,8 +51,8 @@ export const test = base.extend<ElectronFixtures>({
       args: ['.', '--no-sandbox'],
       env: {
         ...process.env,
-        NODE_ENV: 'test',
-      },
+        NODE_ENV: 'test'
+      }
     });
 
     await use(electronApp);
@@ -69,7 +69,7 @@ export const test = base.extend<ElectronFixtures>({
     await window.waitForLoadState('domcontentloaded');
 
     await use(window);
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -85,11 +85,11 @@ const electronApp = await electron.launch({
   env: {
     ...process.env,
     ELECTRON_ENABLE_LOGGING: '1',
-    NODE_ENV: 'test',
+    NODE_ENV: 'test'
   },
   timeout: 30000,
   // For packaged apps
-  executablePath: '/path/to/MyApp.app/Contents/MacOS/MyApp',
+  executablePath: '/path/to/MyApp.app/Contents/MacOS/MyApp'
 });
 ```
 
@@ -100,7 +100,7 @@ const electronApp = await electron.launch({
 ```typescript
 test('launch in dev mode', async () => {
   const electronApp = await electron.launch({
-    args: ['.'], // Points to package.json main
+    args: ['.'] // Points to package.json main
   });
 
   const window = await electronApp.firstWindow();
@@ -122,7 +122,7 @@ test('launch packaged app', async () => {
         : '/usr/bin/myapp';
 
   const electronApp = await electron.launch({
-    executablePath: appPath,
+    executablePath: appPath
   });
 
   const window = await electronApp.firstWindow();
@@ -350,7 +350,7 @@ test('file dialog', async ({ electronApp, window }) => {
   await electronApp.evaluate(async ({ dialog }) => {
     dialog.showOpenDialog = async () => ({
       canceled: false,
-      filePaths: ['/mock/path/file.txt'],
+      filePaths: ['/mock/path/file.txt']
     });
   });
 
@@ -365,7 +365,7 @@ test('save dialog', async ({ electronApp, window }) => {
   await electronApp.evaluate(async ({ dialog }) => {
     dialog.showSaveDialog = async () => ({
       canceled: false,
-      filePath: '/mock/path/saved-file.txt',
+      filePath: '/mock/path/saved-file.txt'
     });
   });
 
@@ -474,7 +474,7 @@ export const test = base.extend({
     const electronApp = await electron.launch({ executablePath });
     await use(electronApp);
     await electronApp.close();
-  },
+  }
 });
 ```
 

@@ -21,7 +21,7 @@ function Composer({
   isDMThread,
   dmId,
   isEditing,
-  isForwarding,
+  isForwarding
 }: Props) {
   return (
     <form>

@@ -265,12 +265,12 @@ test('important feature', async ({ page }, testInfo) => {
   // Add custom annotation
   testInfo.annotations.push({
     type: 'priority',
-    description: 'high',
+    description: 'high'
   });
 
   testInfo.annotations.push({
     type: 'ticket',
-    description: 'JIRA-123',
+    description: 'JIRA-123'
   });
 
   await page.goto('/feature');
@@ -302,9 +302,9 @@ export const test = base.extend<AnnotationFixtures>({
       },
       owner: (name) => {
         testInfo.annotations.push({ type: 'owner', description: name });
-      },
+      }
     });
-  },
+  }
 });
 
 // Usage

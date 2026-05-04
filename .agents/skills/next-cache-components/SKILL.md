@@ -14,7 +14,7 @@ Cache Components enable Partial Prerendering (PPR) - mix static, cached, and dyn
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  cacheComponents: true
 };
 
 export default nextConfig;
@@ -156,7 +156,7 @@ async function getData() {
   cacheLife({
     stale: 3600, // 1 hour - serve stale while revalidating
     revalidate: 7200, // 2 hours - background revalidation interval
-    expire: 86400, // 1 day - hard expiration
+    expire: 86400 // 1 day - hard expiration
   });
   return fetch('/api/data');
 }
@@ -319,7 +319,7 @@ async function Stats() {
 async function Notifications() {
   const userId = (await cookies()).get('userId')?.value;
   const notifications = await db.notifications.findMany({
-    where: { userId, read: false },
+    where: { userId, read: false }
   });
   return <NotificationList items={notifications} />;
 }
@@ -348,7 +348,7 @@ import { unstable_cache } from 'next/cache';
 
 const getCachedUser = unstable_cache(async (id) => getUser(id), ['my-app-user'], {
   tags: ['users'],
-  revalidate: 60,
+  revalidate: 60
 });
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

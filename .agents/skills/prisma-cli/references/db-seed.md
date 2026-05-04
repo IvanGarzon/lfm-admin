@@ -33,11 +33,11 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
-    seed: 'tsx prisma/seed.ts', // Your seed command
+    seed: 'tsx prisma/seed.ts' // Your seed command
   },
   datasource: {
-    url: env('DATABASE_URL'),
-  },
+    url: env('DATABASE_URL')
+  }
 });
 ```
 
@@ -73,10 +73,10 @@ async function main() {
       posts: {
         create: {
           title: 'Hello World',
-          published: true,
-        },
-      },
-    },
+          published: true
+        }
+      }
+    }
   });
 
   const bob = await prisma.user.upsert({
@@ -84,8 +84,8 @@ async function main() {
     update: {},
     create: {
       email: 'bob@prisma.io',
-      name: 'Bob',
-    },
+      name: 'Bob'
+    }
   });
 
   console.log({ alice, bob });
@@ -137,12 +137,12 @@ Use `upsert` to make seeds re-runnable:
 await prisma.user.upsert({
   where: { email: 'alice@prisma.io' },
   update: {}, // Don't change existing
-  create: { email: 'alice@prisma.io', name: 'Alice' },
+  create: { email: 'alice@prisma.io', name: 'Alice' }
 });
 
 // Bad: Fails on second run
 await prisma.user.create({
-  data: { email: 'alice@prisma.io', name: 'Alice' },
+  data: { email: 'alice@prisma.io', name: 'Alice' }
 });
 ```
 

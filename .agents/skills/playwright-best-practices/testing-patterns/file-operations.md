@@ -132,7 +132,7 @@ export const test = base.extend<DownloadFixtures>({
       await download.saveAs(filePath);
       return filePath;
     });
-  },
+  }
 });
 ```
 
@@ -226,7 +226,7 @@ test('upload generated file', async ({ page }) => {
   await page.getByLabel('CSV File').setInputFiles({
     name: 'users.csv',
     mimeType: 'text/csv',
-    buffer: Buffer.from(content),
+    buffer: Buffer.from(content)
   });
 
   await expect(page.getByText('users.csv')).toBeVisible();
@@ -251,11 +251,11 @@ test('drag and drop file upload', async ({ page }) => {
   await page.evaluate(
     async ([dataTransfer, data]) => {
       const file = new File([new Uint8Array(data)], 'image.png', {
-        type: 'image/png',
+        type: 'image/png'
       });
       dataTransfer.items.add(file);
     },
-    [dataTransfer, [...buffer]] as const,
+    [dataTransfer, [...buffer]] as const
   );
 
   // Dispatch drop event

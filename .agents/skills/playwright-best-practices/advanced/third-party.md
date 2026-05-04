@@ -21,8 +21,8 @@ test('Google OAuth login', async ({ page }) => {
     route.fulfill({
       status: 302,
       headers: {
-        Location: '/dashboard?token=mock-jwt-token',
-      },
+        Location: '/dashboard?token=mock-jwt-token'
+      }
     });
   });
 
@@ -34,10 +34,10 @@ test('Google OAuth login', async ({ page }) => {
         user: {
           id: '123',
           email: 'test@gmail.com',
-          name: 'Test User',
-        },
-      },
-    }),
+          name: 'Test User'
+        }
+      }
+    })
   );
 
   await page.goto('/login');
@@ -71,21 +71,21 @@ export const test = base.extend<OAuthFixtures>({
       await page.route(`**/auth/${provider}/callback**`, (route) =>
         route.fulfill({
           status: 302,
-          headers: { Location: `/auth/success?provider=${provider}` },
-        }),
+          headers: { Location: `/auth/success?provider=${provider}` }
+        })
       );
 
       // Mock session/user endpoint
       await page.route('**/api/auth/session', (route) =>
         route.fulfill({
-          json: { user, provider, authenticated: true },
-        }),
+          json: { user, provider, authenticated: true }
+        })
       );
 
       // Mock user info endpoint
       await page.route('**/api/me', (route) => route.fulfill({ json: user }));
     });
-  },
+  }
 });
 
 // Usage
@@ -93,7 +93,7 @@ test('login with GitHub', async ({ page, mockOAuth }) => {
   await mockOAuth('github', {
     id: 'gh-123',
     email: 'dev@github.com',
-    name: 'GitHub User',
+    name: 'GitHub User'
   });
 
   await page.goto('/login');
@@ -113,8 +113,8 @@ test('SAML SSO login', async ({ page }) => {
       status: 302,
       headers: {
         Location: '/dashboard',
-        'Set-Cookie': 'session=mock-saml-session; Path=/; HttpOnly',
-      },
+        'Set-Cookie': 'session=mock-saml-session; Path=/; HttpOnly'
+      }
     });
   });
 
@@ -123,9 +123,9 @@ test('SAML SSO login', async ({ page }) => {
     route.fulfill({
       json: {
         user: { email: 'user@company.com', name: 'SSO User' },
-        provider: 'saml',
-      },
-    }),
+        provider: 'saml'
+      }
+    })
   );
 
   await page.goto('/login');
@@ -148,29 +148,29 @@ test('Stripe checkout', async ({ page }) => {
         create: () => ({
           mount: () => {},
           on: () => {},
-          destroy: () => {},
-        }),
+          destroy: () => {}
+        })
       }),
       confirmCardPayment: async () => ({
-        paymentIntent: { status: 'succeeded', id: 'pi_mock_123' },
+        paymentIntent: { status: 'succeeded', id: 'pi_mock_123' }
       }),
       createPaymentMethod: async () => ({
-        paymentMethod: { id: 'pm_mock_123' },
-      }),
+        paymentMethod: { id: 'pm_mock_123' }
+      })
     });
   });
 
   // Mock backend payment endpoint
   await page.route('**/api/create-payment-intent', (route) =>
     route.fulfill({
-      json: { clientSecret: 'pi_mock_123_secret_mock' },
-    }),
+      json: { clientSecret: 'pi_mock_123_secret_mock' }
+    })
   );
 
   await page.route('**/api/confirm-payment', (route) =>
     route.fulfill({
-      json: { success: true, orderId: 'order-123' },
-    }),
+      json: { success: true, orderId: 'order-123' }
+    })
   );
 
   await page.goto('/checkout');
@@ -189,24 +189,24 @@ test('PayPal checkout', async ({ page }) => {
     (window as any).paypal = {
       Buttons: () => ({
         render: () => Promise.resolve(),
-        isEligible: () => true,
+        isEligible: () => true
       }),
-      FUNDING: { PAYPAL: 'paypal', CARD: 'card' },
+      FUNDING: { PAYPAL: 'paypal', CARD: 'card' }
     };
   });
 
   // Mock PayPal order creation
   await page.route('**/api/paypal/create-order', (route) =>
     route.fulfill({
-      json: { orderId: 'PAYPAL-ORDER-123' },
-    }),
+      json: { orderId: 'PAYPAL-ORDER-123' }
+    })
   );
 
   // Mock PayPal capture
   await page.route('**/api/paypal/capture', (route) =>
     route.fulfill({
-      json: { success: true, transactionId: 'TXN-123' },
-    }),
+      json: { success: true, transactionId: 'TXN-123' }
+    })
   );
 
   await page.goto('/checkout');
@@ -240,21 +240,21 @@ export const test = base.extend<PaymentFixtures>({
                 on: (event: string, handler: Function) => {
                   if (event === 'ready') setTimeout(handler, 100);
                 },
-                destroy: () => {},
-              }),
+                destroy: () => {}
+              })
             }),
             confirmCardPayment: async () => {
               if (shouldFail) {
                 return { error: { message: 'Card declined' } };
               }
               return { paymentIntent: { status: 'succeeded' } };
-            },
+            }
           });
         },
-        [options.failPayment],
+        [options.failPayment]
       );
     });
-  },
+  }
 });
 
 // Usage
@@ -283,7 +283,7 @@ test('email verification flow', async ({ page, request }) => {
 
     // Don't actually send email, just store token
     route.fulfill({
-      json: { sent: true, messageId: 'msg-123' },
+      json: { sent: true, messageId: 'msg-123' }
     });
   });
 
@@ -328,9 +328,9 @@ export const test = base.extend<EmailFixtures>({
         `https://api.mailinator.com/v2/domains/public/inboxes/${inbox}`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.MAILINATOR_API_KEY}`,
-          },
-        },
+            Authorization: `Bearer ${process.env.MAILINATOR_API_KEY}`
+          }
+        }
       );
 
       const messages = await response.json();
@@ -341,9 +341,9 @@ export const test = base.extend<EmailFixtures>({
         `https://api.mailinator.com/v2/domains/public/inboxes/${inbox}/messages/${latest.id}`,
         {
           headers: {
-            Authorization: `Bearer ${process.env.MAILINATOR_API_KEY}`,
-          },
-        },
+            Authorization: `Bearer ${process.env.MAILINATOR_API_KEY}`
+          }
+        }
       );
 
       const message = await msgResponse.json();
@@ -352,7 +352,7 @@ export const test = base.extend<EmailFixtures>({
       const linkMatch = message.parts[0].body.match(/href="([^"]*verify[^"]*)"/);
       return { link: linkMatch?.[1] || '' };
     });
-  },
+  }
 });
 ```
 
@@ -369,7 +369,7 @@ test('SMS verification', async ({ page }) => {
     smsCode = Math.random().toString().slice(2, 8); // 6-digit code
 
     route.fulfill({
-      json: { sent: true, messageId: 'sms-123' },
+      json: { sent: true, messageId: 'sms-123' }
     });
   });
 
@@ -405,7 +405,7 @@ test.beforeEach(async ({ page }) => {
   // Block all analytics/tracking
   await page.route(
     /google-analytics|googletagmanager|facebook|hotjar|segment|mixpanel|amplitude/,
-    (route) => route.abort(),
+    (route) => route.abort()
   );
 });
 ```
@@ -428,9 +428,9 @@ test('tracks purchase event', async ({ page }) => {
       track: (event: string, props: any) => {
         fetch('/api/analytics/track', {
           method: 'POST',
-          body: JSON.stringify({ event, props }),
+          body: JSON.stringify({ event, props })
         });
-      },
+      }
     };
   });
 
@@ -441,8 +441,8 @@ test('tracks purchase event', async ({ page }) => {
   expect(analyticsEvents).toContainEqual(
     expect.objectContaining({
       event: 'Purchase Completed',
-      props: expect.objectContaining({ amount: expect.any(Number) }),
-    }),
+      props: expect.objectContaining({ amount: expect.any(Number) })
+    })
   );
 });
 ```

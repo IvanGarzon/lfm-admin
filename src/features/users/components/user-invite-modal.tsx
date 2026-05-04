@@ -69,7 +69,7 @@ export function UserInviteModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4' noValidate>
             <FieldGroup>
               <Controller
                 name='email'
@@ -77,9 +77,14 @@ export function UserInviteModal({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel>Email</FieldLabel>
+                      <FieldLabel htmlFor='invite-email'>Email</FieldLabel>
                     </FieldContent>
-                    <Input type='email' {...field} aria-invalid={fieldState.invalid} />
+                    <Input
+                      id='invite-email'
+                      type='email'
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                    />
                     {fieldState.invalid ? (
                       <FieldError errors={fieldState.error ? [fieldState.error] : []} />
                     ) : null}
@@ -95,10 +100,10 @@ export function UserInviteModal({
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldContent>
-                      <FieldLabel>Role</FieldLabel>
+                      <FieldLabel htmlFor='invite-role'>Role</FieldLabel>
                     </FieldContent>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger aria-invalid={fieldState.invalid}>
+                      <SelectTrigger id='invite-role' aria-invalid={fieldState.invalid}>
                         <SelectValue placeholder='Select role' />
                       </SelectTrigger>
                       <SelectContent>

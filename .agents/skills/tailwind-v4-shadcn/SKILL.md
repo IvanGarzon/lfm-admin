@@ -115,9 +115,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+      '@': path.resolve(__dirname, './src')
+    }
+  }
 });
 ```
 
@@ -207,7 +207,7 @@ This pattern is **mandatory** - skipping steps will break your theme.
 ### Step 4: Result - Automatic Dark Mode
 
 ```tsx
-<div className="bg-background text-foreground">
+<div className='bg-background text-foreground'>
   {/* No dark: variants needed - theme switches automatically */}
 </div>
 ```
@@ -323,9 +323,9 @@ See `reference/dark-mode.md` for ModeToggle component code.
    export default {
      theme: {
        extend: {
-         colors: { primary: 'hsl(var(--primary))' },
-       },
-     },
+         colors: { primary: 'hsl(var(--primary))' }
+       }
+     }
    };
    ```
 

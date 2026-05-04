@@ -34,7 +34,7 @@ function ChannelComposer({ channelId }: { channelId: string }) {
 // Provider handles all state management details
 function ChannelProvider({
   channelId,
-  children,
+  children
 }: {
   channelId: string;
   children: React.ReactNode;

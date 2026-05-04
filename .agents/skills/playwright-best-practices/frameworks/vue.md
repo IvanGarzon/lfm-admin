@@ -41,21 +41,21 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } }
   ],
 
   webServer: {
     command: process.env.CI ? 'npm run build && npx vite preview --port 5173' : 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+    timeout: 120_000
+  }
 });
 ```
 
@@ -77,7 +77,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
@@ -88,9 +88,9 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      NUXT_PUBLIC_API_BASE: 'http://localhost:3000/api',
-    },
-  },
+      NUXT_PUBLIC_API_BASE: 'http://localhost:3000/api'
+    }
+  }
 });
 ```
 
@@ -106,10 +106,10 @@ export default defineConfig({
 
   use: {
     trace: 'on-first-retry',
-    ctPort: 3100,
+    ctPort: 3100
   },
 
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }]
 });
 ```
 
@@ -128,7 +128,7 @@ import Stepper from '../../src/components/Stepper.vue';
 
 test('increments value on button click', async ({ mount }) => {
   const component = await mount(Stepper, {
-    props: { value: 0 },
+    props: { value: 0 }
   });
 
   await expect(component.getByText('Value: 0')).toBeVisible();
@@ -141,8 +141,8 @@ test('emits change event', async ({ mount }) => {
   const component = await mount(Stepper, {
     props: { value: 10 },
     on: {
-      change: (val: number) => changes.push(val),
-    },
+      change: (val: number) => changes.push(val)
+    }
   });
 
   await component.getByRole('button', { name: '+' }).click();
@@ -155,8 +155,8 @@ test('renders slot content', async ({ mount }) => {
   const component = await mount(Stepper, {
     props: { value: 0 },
     slots: {
-      default: '<span class="label">Quantity</span>',
-    },
+      default: '<span class="label">Quantity</span>'
+    }
   });
 
   await expect(component.getByText('Quantity')).toBeVisible();
@@ -374,7 +374,7 @@ test.describe('transitions', () => {
           transition-duration: 0s !important;
           transition-delay: 0s !important;
         }
-      `,
+      `
     });
 
     await page.goto('/tasks');
@@ -521,7 +521,7 @@ beforeMount(async ({ app, hooksConfig }) => {
   if (hooksConfig?.routes) {
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: hooksConfig.routes,
+      routes: hooksConfig.routes
     });
     app.use(router);
   }

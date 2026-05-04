@@ -21,17 +21,17 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'] }
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-  ],
+      use: { ...devices['Desktop Safari'] }
+    }
+  ]
 });
 ```
 
@@ -43,22 +43,22 @@ export default defineConfig({
     {
       name: 'staging',
       use: {
-        baseURL: 'https://staging.example.com',
-      },
+        baseURL: 'https://staging.example.com'
+      }
     },
     {
       name: 'production',
       use: {
-        baseURL: 'https://example.com',
-      },
+        baseURL: 'https://example.com'
+      }
     },
     {
       name: 'local',
       use: {
-        baseURL: 'http://localhost:3000',
-      },
-    },
-  ],
+        baseURL: 'http://localhost:3000'
+      }
+    }
+  ]
 });
 ```
 
@@ -70,22 +70,22 @@ export default defineConfig({
     {
       name: 'e2e',
       testDir: './tests/e2e',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'api',
       testDir: './tests/api',
-      use: { baseURL: 'http://localhost:3000' },
+      use: { baseURL: 'http://localhost:3000' }
     },
     {
       name: 'visual',
       testDir: './tests/visual',
       use: {
         ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
-      },
-    },
-  ],
+        viewport: { width: 1280, height: 720 }
+      }
+    }
+  ]
 });
 ```
 
@@ -99,7 +99,7 @@ export default defineConfig({
     // Setup project runs first
     {
       name: 'setup',
-      testMatch: /.*\.setup\.ts/,
+      testMatch: /.*\.setup\.ts/
     },
 
     // Browser projects depend on setup
@@ -107,19 +107,19 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
+        storageState: '.auth/user.json'
       },
-      dependencies: ['setup'],
+      dependencies: ['setup']
     },
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        storageState: '.auth/user.json',
+        storageState: '.auth/user.json'
       },
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 
@@ -131,11 +131,11 @@ export default defineConfig({
     // Auth setup projects
     {
       name: 'setup-admin',
-      testMatch: /admin\.setup\.ts/,
+      testMatch: /admin\.setup\.ts/
     },
     {
       name: 'setup-user',
-      testMatch: /user\.setup\.ts/,
+      testMatch: /user\.setup\.ts/
     },
 
     // Admin tests
@@ -143,7 +143,7 @@ export default defineConfig({
       name: 'admin-tests',
       testDir: './tests/admin',
       use: { storageState: '.auth/admin.json' },
-      dependencies: ['setup-admin'],
+      dependencies: ['setup-admin']
     },
 
     // User tests
@@ -151,16 +151,16 @@ export default defineConfig({
       name: 'user-tests',
       testDir: './tests/user',
       use: { storageState: '.auth/user.json' },
-      dependencies: ['setup-user'],
+      dependencies: ['setup-user']
     },
 
     // Tests that need both
     {
       name: 'integration-tests',
       testDir: './tests/integration',
-      dependencies: ['setup-admin', 'setup-user'],
-    },
-  ],
+      dependencies: ['setup-admin', 'setup-user']
+    }
+  ]
 });
 ```
 
@@ -172,30 +172,30 @@ export default defineConfig({
     // Step 1: Database setup
     {
       name: 'db-setup',
-      testMatch: /db\.setup\.ts/,
+      testMatch: /db\.setup\.ts/
     },
 
     // Step 2: Auth setup (needs DB)
     {
       name: 'auth-setup',
       testMatch: /auth\.setup\.ts/,
-      dependencies: ['db-setup'],
+      dependencies: ['db-setup']
     },
 
     // Step 3: Seed data (needs auth)
     {
       name: 'seed-setup',
       testMatch: /seed\.setup\.ts/,
-      dependencies: ['auth-setup'],
+      dependencies: ['auth-setup']
     },
 
     // Tests (need everything)
     {
       name: 'tests',
       testDir: './tests',
-      dependencies: ['seed-setup'],
-    },
-  ],
+      dependencies: ['seed-setup']
+    }
+  ]
 });
 ```
 
@@ -219,8 +219,8 @@ setup('seed test data', async ({ request }) => {
     data: {
       users: 10,
       products: 50,
-      orders: 100,
-    },
+      orders: 100
+    }
   });
 });
 ```
@@ -270,14 +270,14 @@ export default defineConfig({
     {
       name: 'smoke',
       grep: /@smoke/,
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'regression',
       grepInvert: /@smoke/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
 });
 ```
 
@@ -292,8 +292,8 @@ const baseConfig = {
   expect: { timeout: 5000 },
   use: {
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  },
+    screenshot: 'only-on-failure'
+  }
 };
 
 export default defineConfig({
@@ -303,17 +303,17 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...baseConfig.use,
-        ...devices['Desktop Chrome'],
-      },
+        ...devices['Desktop Chrome']
+      }
     },
     {
       name: 'firefox',
       use: {
         ...baseConfig.use,
-        ...devices['Desktop Firefox'],
-      },
-    },
-  ],
+        ...devices['Desktop Firefox']
+      }
+    }
+  ]
 });
 ```
 
@@ -325,8 +325,8 @@ const sharedBrowserConfig = {
   retries: 2,
   use: {
     video: 'on-first-retry',
-    trace: 'on-first-retry',
-  },
+    trace: 'on-first-retry'
+  }
 };
 
 export default defineConfig({
@@ -336,18 +336,18 @@ export default defineConfig({
       ...sharedBrowserConfig,
       use: {
         ...sharedBrowserConfig.use,
-        ...devices['Desktop Chrome'],
-      },
+        ...devices['Desktop Chrome']
+      }
     },
     {
       name: 'firefox',
       ...sharedBrowserConfig,
       use: {
         ...sharedBrowserConfig.use,
-        ...devices['Desktop Firefox'],
-      },
-    },
-  ],
+        ...devices['Desktop Firefox']
+      }
+    }
+  ]
 });
 ```
 
@@ -359,15 +359,15 @@ export default defineConfig({
 const projects = [
   {
     name: 'chromium',
-    use: { ...devices['Desktop Chrome'] },
-  },
+    use: { ...devices['Desktop Chrome'] }
+  }
 ];
 
 // Add Firefox only in CI
 if (process.env.CI) {
   projects.push({
     name: 'firefox',
-    use: { ...devices['Desktop Firefox'] },
+    use: { ...devices['Desktop Firefox'] }
   });
 }
 
@@ -375,7 +375,7 @@ if (process.env.CI) {
 if (process.env.TEST_MOBILE) {
   projects.push({
     name: 'mobile',
-    use: { ...devices['iPhone 14'] },
+    use: { ...devices['iPhone 14'] }
   });
 }
 
@@ -393,10 +393,10 @@ export default defineConfig({
       metadata: {
         platform: 'desktop',
         browser: 'chromium',
-        priority: 'high',
-      },
-    },
-  ],
+        priority: 'high'
+      }
+    }
+  ]
 });
 
 // Access in test
@@ -414,17 +414,17 @@ export default defineConfig({
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
-      teardown: 'teardown', // Run teardown after this completes
+      teardown: 'teardown' // Run teardown after this completes
     },
     {
       name: 'teardown',
-      testMatch: /.*\.teardown\.ts/,
+      testMatch: /.*\.teardown\.ts/
     },
     {
       name: 'tests',
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 

@@ -84,8 +84,8 @@ import { createPost } from '@/app/actions';
 export default function NewPost() {
   return (
     <form action={createPost}>
-      <input name="title" required />
-      <button type="submit">Create</button>
+      <input name='title' required />
+      <button type='submit'>Create</button>
     </form>
   );
 }

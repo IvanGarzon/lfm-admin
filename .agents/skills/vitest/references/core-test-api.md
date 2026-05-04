@@ -127,7 +127,7 @@ test.sequential('must run alone', async () => {});
 test.each([
   [1, 1, 2],
   [1, 2, 3],
-  [2, 1, 3],
+  [2, 1, 3]
 ])('add(%i, %i) = %i', (a, b, expected) => {
   expect(a + b).toBe(expected);
 });
@@ -135,7 +135,7 @@ test.each([
 // With objects
 test.each([
   { a: 1, b: 1, expected: 2 },
-  { a: 1, b: 2, expected: 3 },
+  { a: 1, b: 2, expected: 3 }
 ])('add($a, $b) = $expected', ({ a, b, expected }) => {
   expect(a + b).toBe(expected);
 });
@@ -157,7 +157,7 @@ Preferred over `.each` - doesn't spread arrays:
 ```ts
 test.for([
   [1, 1, 2],
-  [1, 2, 3],
+  [1, 2, 3]
 ])('add(%i, %i) = %i', ([a, b, expected], { expect }) => {
   // Second arg is TestContext
   expect(a + b).toBe(expected);
@@ -186,7 +186,7 @@ const test = base.extend({
     const db = await createDb();
     await use(db);
     await db.close();
-  },
+  }
 });
 
 test('query', async ({ db }) => {
@@ -209,10 +209,10 @@ test(
     retry: {
       count: 3,
       delay: 1000,
-      condition: /timeout/i, // Only retry on timeout errors
-    },
+      condition: /timeout/i // Only retry on timeout errors
+    }
   },
-  async () => {},
+  async () => {}
 );
 ```
 

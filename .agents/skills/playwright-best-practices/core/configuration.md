@@ -99,7 +99,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     locale: 'en-US',
-    timezoneId: 'America/Los_Angeles',
+    timezoneId: 'America/Los_Angeles'
   },
 
   projects: [
@@ -107,7 +107,7 @@ export default defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } }
   ],
 
   webServer: {
@@ -116,8 +116,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stdout: 'pipe',
-    stderr: 'pipe',
-  },
+    stderr: 'pipe'
+  }
 });
 ```
 
@@ -139,13 +139,13 @@ dotenv.config({ path: path.resolve(__dirname, `.env.${ENV}`) });
 const envConfig: Record<string, { baseURL: string; retries: number }> = {
   local: { baseURL: 'http://localhost:4000', retries: 0 },
   staging: { baseURL: 'https://staging.myapp.com', retries: 2 },
-  prod: { baseURL: 'https://myapp.com', retries: 2 },
+  prod: { baseURL: 'https://myapp.com', retries: 2 }
 };
 
 export default defineConfig({
   testDir: './e2e',
   retries: envConfig[ENV].retries,
-  use: { baseURL: envConfig[ENV].baseURL },
+  use: { baseURL: envConfig[ENV].baseURL }
 });
 ```
 
@@ -167,25 +167,25 @@ export default defineConfig({
   projects: [
     {
       name: 'setup',
-      testMatch: /auth\.setup\.ts/,
+      testMatch: /auth\.setup\.ts/
     },
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/session.json',
+        storageState: 'playwright/.auth/session.json'
       },
-      dependencies: ['setup'],
+      dependencies: ['setup']
     },
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        storageState: 'playwright/.auth/session.json',
+        storageState: 'playwright/.auth/session.json'
       },
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 
@@ -223,9 +223,9 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       NODE_ENV: 'test',
-      DB_URL: process.env.DB_URL || 'postgresql://localhost:5432/testdb',
-    },
-  },
+      DB_URL: process.env.DB_URL || 'postgresql://localhost:5432/testdb'
+    }
+  }
 });
 ```
 
@@ -240,7 +240,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/setup.ts',
-  globalTeardown: './e2e/teardown.ts',
+  globalTeardown: './e2e/teardown.ts'
 });
 ```
 
@@ -314,7 +314,7 @@ export default defineConfig({
 
   // Filter by tags in CI
   grep: process.env.CI ? /@smoke|@critical/ : undefined,
-  grepInvert: process.env.CI ? /@flaky/ : undefined,
+  grepInvert: process.env.CI ? /@flaky/ : undefined
 });
 ```
 
@@ -330,19 +330,19 @@ export default defineConfig({
     {
       name: 'smoke',
       grep: /@smoke/,
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'regression',
       grepInvert: /@smoke/,
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] }
     },
     {
       name: 'critical-only',
       grep: /@critical/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
 });
 ```
 
@@ -369,8 +369,8 @@ export default defineConfig({
   use: {
     trace: process.env.CI ? 'on-first-retry' : 'off',
     screenshot: process.env.CI ? 'only-on-failure' : 'off',
-    video: process.env.CI ? 'retain-on-failure' : 'off',
-  },
+    video: process.env.CI ? 'retain-on-failure' : 'off'
+  }
 });
 ```
 
@@ -425,8 +425,8 @@ export default defineConfig({
   workers: process.env.CI ? '50%' : undefined,
   use: {
     navigationTimeout: process.env.CI ? 30_000 : 15_000,
-    actionTimeout: process.env.CI ? 15_000 : 10_000,
-  },
+    actionTimeout: process.env.CI ? 15_000 : 10_000
+  }
 });
 ```
 

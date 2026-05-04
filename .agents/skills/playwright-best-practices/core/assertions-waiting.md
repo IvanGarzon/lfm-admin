@@ -227,7 +227,7 @@ await page.waitForFunction(() => {
 // With arguments
 await page.waitForFunction(
   (selector) => document.querySelector(selector)?.textContent === 'Ready',
-  '.status',
+  '.status'
 );
 ```
 
@@ -246,7 +246,7 @@ await expect(async () => {
   expect(data.ready).toBe(true);
 }).toPass({
   intervals: [1000, 2000, 5000], // Retry intervals
-  timeout: 30000,
+  timeout: 30000
 });
 ```
 
@@ -264,8 +264,8 @@ await expect
     },
     {
       intervals: [1000, 2000, 5000],
-      timeout: 30000,
-    },
+      timeout: 30000
+    }
   )
   .toBe('completed');
 
@@ -294,7 +294,7 @@ expect.extend({
     }
 
     return { pass, message: () => message };
-  },
+  }
 });
 
 // Extend TypeScript types
@@ -319,8 +319,8 @@ await expect(page).toHaveDataLoaded();
 export default defineConfig({
   timeout: 30000, // Test timeout
   expect: {
-    timeout: 5000, // Assertion timeout
-  },
+    timeout: 5000 // Assertion timeout
+  }
 });
 
 // Per-test timeout

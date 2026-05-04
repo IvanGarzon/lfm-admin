@@ -245,7 +245,7 @@ const { user, config, profile } = await all({
   },
   async profile() {
     return fetchProfile((await this.$.user).id);
-  },
+  }
 });
 ```
 
@@ -477,7 +477,7 @@ Load large data or modules only when a feature is activated.
 ```tsx
 function AnimationPlayer({
   enabled,
-  setEnabled,
+  setEnabled
 }: {
   enabled: boolean;
   setEnabled: React.Dispatch<React.SetStateAction<boolean>>;
@@ -528,7 +528,7 @@ export default function RootLayout({ children }) {
 import dynamic from 'next/dynamic';
 
 const Analytics = dynamic(() => import('@vercel/analytics/react').then((m) => m.Analytics), {
-  ssr: false,
+  ssr: false
 });
 
 export default function RootLayout({ children }) {
@@ -565,7 +565,7 @@ function CodePanel({ code }: { code: string }) {
 import dynamic from 'next/dynamic';
 
 const MonacoEditor = dynamic(() => import('./monaco-editor').then((m) => m.MonacoEditor), {
-  ssr: false,
+  ssr: false
 });
 
 function CodePanel({ code }: { code: string }) {
@@ -596,7 +596,7 @@ When analysis becomes too broad, the cost is real:
 ```ts
 const PAGE_MODULES = {
   home: './pages/home',
-  settings: './pages/settings',
+  settings: './pages/settings'
 } as const;
 
 const Page = await import(PAGE_MODULES[pageName]);
@@ -607,7 +607,7 @@ const Page = await import(PAGE_MODULES[pageName]);
 ```ts
 const PAGE_MODULES = {
   home: () => import('./pages/home'),
-  settings: () => import('./pages/settings'),
+  settings: () => import('./pages/settings')
 } as const;
 
 const Page = await PAGE_MODULES[pageName]();
@@ -737,7 +737,7 @@ import { z } from 'zod';
 const updateProfileSchema = z.object({
   userId: z.string().uuid(),
   name: z.string().min(1).max(100),
-  email: z.string().email(),
+  email: z.string().email()
 });
 
 export async function updateProfile(data: unknown) {
@@ -760,8 +760,8 @@ export async function updateProfile(data: unknown) {
     where: { id: validated.userId },
     data: {
       name: validated.name,
-      email: validated.email,
-    },
+      email: validated.email
+    }
   });
 
   return { success: true };
@@ -892,7 +892,7 @@ import { LRUCache } from 'lru-cache';
 
 const cache = new LRUCache<string, any>({
   max: 1000,
-  ttl: 5 * 60 * 1000, // 5 minutes
+  ttl: 5 * 60 * 1000 // 5 minutes
 });
 
 export async function getUser(id: string) {
@@ -1192,7 +1192,7 @@ If one `getChat(id)` out of 100 is extremely slow, the authors of the other 99 c
 
 ```tsx
 const chatAuthors = await Promise.all(
-  chatIds.map((id) => getChat(id).then((chat) => getUser(chat.author))),
+  chatIds.map((id) => getChat(id).then((chat) => getUser(chat.author)))
 );
 ```
 
@@ -1213,7 +1213,7 @@ export const getCurrentUser = cache(async () => {
   const session = await auth();
   if (!session?.user?.id) return null;
   return await db.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: session.user.id }
   });
 });
 ```
@@ -1285,7 +1285,7 @@ export async function POST(request: Request) {
 
   return new Response(JSON.stringify({ status: 'success' }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 ```
@@ -1311,7 +1311,7 @@ export async function POST(request: Request) {
 
   return new Response(JSON.stringify({ status: 'success' }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 ```
@@ -1575,8 +1575,8 @@ function cachePrefs(user: FullUser) {
       'prefs:v1',
       JSON.stringify({
         theme: user.preferences.theme,
-        notifications: user.preferences.notifications,
-      }),
+        notifications: user.preferences.notifications
+      })
     );
   } catch {}
 }
@@ -1935,7 +1935,7 @@ When a hook contains multiple independent tasks with different dependencies, spl
 const sortedProducts = useMemo(() => {
   const filtered = products.filter((p) => p.category === category);
   const sorted = filtered.toSorted((a, b) =>
-    sortOrder === 'asc' ? a.price - b.price : b.price - a.price,
+    sortOrder === 'asc' ? a.price - b.price : b.price - a.price
   );
   return sorted;
 }, [products, category, sortOrder]);
@@ -1946,15 +1946,15 @@ const sortedProducts = useMemo(() => {
 ```tsx
 const filteredProducts = useMemo(
   () => products.filter((p) => p.category === category),
-  [products, category],
+  [products, category]
 );
 
 const sortedProducts = useMemo(
   () =>
     filteredProducts.toSorted((a, b) =>
-      sortOrder === 'asc' ? a.price - b.price : b.price - a.price,
+      sortOrder === 'asc' ? a.price - b.price : b.price - a.price
     ),
-  [filteredProducts, sortOrder],
+  [filteredProducts, sortOrder]
 );
 ```
 
@@ -2025,7 +2025,7 @@ function TodoList() {
     (newItems: Item[]) => {
       setItems([...items, ...newItems]);
     },
-    [items],
+    [items]
   ); // ❌ items dependency causes recreations
 
   // Risk of stale closure if dependency is forgotten
@@ -2207,7 +2207,7 @@ function Search({ items }: { items: Item[] }) {
   const deferredQuery = useDeferredValue(query);
   const filtered = useMemo(
     () => items.filter((item) => fuzzyMatch(item, deferredQuery)),
-    [items, deferredQuery],
+    [items, deferredQuery]
   );
   const isStale = query !== deferredQuery;
 
@@ -2260,7 +2260,7 @@ function Tracker() {
         left: lastX,
         width: 8,
         height: 8,
-        background: 'black',
+        background: 'black'
       }}
     />
   );
@@ -2296,7 +2296,7 @@ function Tracker() {
         width: 8,
         height: 8,
         background: 'black',
-        transform: 'translateX(0px)',
+        transform: 'translateX(0px)'
       }}
     />
   );
@@ -2322,8 +2322,8 @@ Many browsers don't have hardware acceleration for CSS3 animations on SVG elemen
 ```tsx
 function LoadingSpinner() {
   return (
-    <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" />
+    <svg className='animate-spin' width='24' height='24' viewBox='0 0 24 24'>
+      <circle cx='12' cy='12' r='10' stroke='currentColor' />
     </svg>
   );
 }
@@ -2334,9 +2334,9 @@ function LoadingSpinner() {
 ```tsx
 function LoadingSpinner() {
   return (
-    <div className="animate-spin">
-      <svg width="24" height="24" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" />
+    <div className='animate-spin'>
+      <svg width='24' height='24' viewBox='0 0 24 24'>
+        <circle cx='12' cy='12' r='10' stroke='currentColor' />
       </svg>
     </div>
   );
@@ -2365,9 +2365,9 @@ Apply `content-visibility: auto` to defer off-screen rendering.
 ```tsx
 function MessageList({ messages }: { messages: Message[] }) {
   return (
-    <div className="overflow-y-auto h-screen">
+    <div className='overflow-y-auto h-screen'>
       {messages.map((msg) => (
-        <div key={msg.id} className="message-item">
+        <div key={msg.id} className='message-item'>
           <Avatar user={msg.author} />
           <div>{msg.content}</div>
         </div>
@@ -2389,7 +2389,7 @@ Extract static JSX outside components to avoid re-creation.
 
 ```tsx
 function LoadingSkeleton() {
-  return <div className="animate-pulse h-20 bg-gray-200" />;
+  return <div className='animate-pulse h-20 bg-gray-200' />;
 }
 
 function Container() {
@@ -2400,7 +2400,7 @@ function Container() {
 **Correct: reuses same element**
 
 ```tsx
-const loadingSkeleton = <div className="animate-pulse h-20 bg-gray-200" />;
+const loadingSkeleton = <div className='animate-pulse h-20 bg-gray-200' />;
 
 function Container() {
   return <div>{loading && loadingSkeleton}</div>;
@@ -2480,7 +2480,7 @@ Component first renders with default value (`light`), then updates after hydrati
 function ThemeWrapper({ children }: { children: ReactNode }) {
   return (
     <>
-      <div id="theme-wrapper">{children}</div>
+      <div id='theme-wrapper'>{children}</div>
       <script
         dangerouslySetInnerHTML={{
           __html: `
@@ -2491,7 +2491,7 @@ function ThemeWrapper({ children }: { children: ReactNode }) {
                 if (el) el.className = theme;
               } catch (e) {}
             })();
-          `,
+          `
         }}
       />
     </>
@@ -2566,8 +2566,8 @@ export default function Document() {
   return (
     <html>
       <head>
-        <script src="https://example.com/analytics.js" />
-        <script src="/scripts/utils.js" />
+        <script src='https://example.com/analytics.js' />
+        <script src='/scripts/utils.js' />
       </head>
       <body>{/* content */}</body>
     </html>
@@ -2583,8 +2583,8 @@ import Script from 'next/script';
 export default function Page() {
   return (
     <>
-      <Script src="https://example.com/analytics.js" strategy="afterInteractive" />
-      <Script src="/scripts/utils.js" strategy="beforeInteractive" />
+      <Script src='https://example.com/analytics.js' strategy='afterInteractive' />
+      <Script src='/scripts/utils.js' strategy='beforeInteractive' />
     </>
   );
 }
@@ -2604,7 +2604,7 @@ Use explicit ternary operators (`? :`) instead of `&&` for conditional rendering
 
 ```tsx
 function Badge({ count }: { count: number }) {
-  return <div>{count && <span className="badge">{count}</span>}</div>;
+  return <div>{count && <span className='badge'>{count}</span>}</div>;
 }
 
 // When count = 0, renders: <div>0</div>
@@ -2615,7 +2615,7 @@ function Badge({ count }: { count: number }) {
 
 ```tsx
 function Badge({ count }: { count: number }) {
-  return <div>{count > 0 ? <span className="badge">{count}</span> : null}</div>;
+  return <div>{count > 0 ? <span className='badge'>{count}</span> : null}</div>;
 }
 
 // When count = 0, renders: <div></div>
@@ -2685,7 +2685,7 @@ function Navigation() {
 
   return (
     <nav>
-      <a href="/dashboard" onMouseEnter={preloadDashboard}>
+      <a href='/dashboard' onMouseEnter={preloadDashboard}>
         Dashboard
       </a>
     </nav>
@@ -2891,7 +2891,7 @@ Multiple `.find()` calls by the same key should use a Map.
 function processOrders(orders: Order[], users: User[]) {
   return orders.map((order) => ({
     ...order,
-    user: users.find((u) => u.id === order.userId),
+    user: users.find((u) => u.id === order.userId)
   }));
 }
 ```
@@ -2904,7 +2904,7 @@ function processOrders(orders: Order[], users: User[]) {
 
   return orders.map((order) => ({
     ...order,
-    user: userById.get(order.userId),
+    user: userById.get(order.userId)
   }));
 }
 ```
@@ -3152,7 +3152,7 @@ function handleSearch(query: string) {
 ```typescript
 // Ensure analytics fires within 2 seconds even if browser stays busy
 requestIdleCallback(() => analytics.track('page_view', { path: location.pathname }), {
-  timeout: 2000,
+  timeout: 2000
 });
 ```
 

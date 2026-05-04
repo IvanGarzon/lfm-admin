@@ -9,7 +9,7 @@ For Docker or any containerized deployment, use standalone output:
 ```js
 // next.config.js
 module.exports = {
-  output: 'standalone',
+  output: 'standalone'
 };
 ```
 
@@ -103,10 +103,10 @@ module.exports = {
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
-      },
-    },
-  ],
+        PORT: 3000
+      }
+    }
+  ]
 };
 ```
 
@@ -133,7 +133,7 @@ Next.js 14+ supports custom cache handlers for shared storage:
 // next.config.js
 module.exports = {
   cacheHandler: require.resolve('./cache-handler.js'),
-  cacheMaxMemorySize: 0, // Disable in-memory cache
+  cacheMaxMemorySize: 0 // Disable in-memory cache
 };
 ```
 
@@ -158,14 +158,14 @@ module.exports = class CacheHandler {
     const parsed = JSON.parse(data);
     return {
       value: parsed.value,
-      lastModified: parsed.lastModified,
+      lastModified: parsed.lastModified
     };
   }
 
   async set(key, data, ctx) {
     const cacheData = {
       value: data,
-      lastModified: Date.now(),
+      lastModified: Date.now()
     };
 
     // Set TTL based on revalidate option
@@ -198,8 +198,8 @@ module.exports = class CacheHandler {
       const response = await s3.send(
         new GetObjectCommand({
           Bucket: BUCKET,
-          Key: `cache/${key}`,
-        }),
+          Key: `cache/${key}`
+        })
       );
       const body = await response.Body.transformToString();
       return JSON.parse(body);
@@ -216,10 +216,10 @@ module.exports = class CacheHandler {
         Key: `cache/${key}`,
         Body: JSON.stringify({
           value: data,
-          lastModified: Date.now(),
+          lastModified: Date.now()
         }),
-        ContentType: 'application/json',
-      }),
+        ContentType: 'application/json'
+      })
     );
   }
 };
@@ -255,8 +255,8 @@ Works automatically, but consider:
 module.exports = {
   images: {
     minimumCacheTTL: 60 * 60 * 24, // 24 hours
-    deviceSizes: [640, 750, 1080, 1920], // Limit sizes
-  },
+    deviceSizes: [640, 750, 1080, 1920] // Limit sizes
+  }
 };
 ```
 
@@ -269,8 +269,8 @@ Offload to Cloudinary, Imgix, or similar:
 module.exports = {
   images: {
     loader: 'custom',
-    loaderFile: './lib/image-loader.js',
-  },
+    loaderFile: './lib/image-loader.js'
+  }
 };
 ```
 
@@ -304,7 +304,7 @@ For truly dynamic config, don't use `NEXT_PUBLIC_*`. Instead:
 export async function GET() {
   return Response.json({
     apiUrl: process.env.API_URL,
-    features: process.env.FEATURES?.split(','),
+    features: process.env.FEATURES?.split(',')
   });
 }
 ```

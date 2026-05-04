@@ -65,7 +65,7 @@ test('web vitals with library', async ({ page }) => {
   await page.goto('/');
 
   await page.addScriptTag({
-    url: 'https://unpkg.com/web-vitals@3/dist/web-vitals.iife.js',
+    url: 'https://unpkg.com/web-vitals@3/dist/web-vitals.iife.js'
   });
 
   await page.evaluate(() => {
@@ -120,7 +120,7 @@ test('page load performance', async ({ page }) => {
       // Download time
       download: nav.responseEnd - nav.responseStart,
       // DOM processing
-      domProcessing: nav.domComplete - nav.domInteractive,
+      domProcessing: nav.domComplete - nav.domInteractive
     };
   });
 
@@ -144,7 +144,7 @@ test('resource loading performance', async ({ page }) => {
       name: entry.name.split('/').pop(),
       type: (entry as PerformanceResourceTiming).initiatorType,
       duration: entry.duration,
-      size: (entry as PerformanceResourceTiming).transferSize,
+      size: (entry as PerformanceResourceTiming).transferSize
     }));
   });
 
@@ -173,7 +173,7 @@ test('memory usage is reasonable', async ({ page }) => {
     if ((performance as any).memory) {
       return {
         usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-        totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+        totalJSHeapSize: (performance as any).memory.totalJSHeapSize
       };
     }
     return null;
@@ -203,7 +203,7 @@ export const budgets = {
     ttfb: 600,
     totalSize: 1500000, // 1.5MB
     jsSize: 500000, // 500KB
-    imageCount: 20,
+    imageCount: 20
   },
   dashboard: {
     lcp: 3000,
@@ -211,8 +211,8 @@ export const budgets = {
     fcp: 2000,
     ttfb: 800,
     totalSize: 2000000,
-    jsSize: 800000,
-  },
+    jsSize: 800000
+  }
 };
 ```
 
@@ -245,7 +245,7 @@ test('homepage meets performance budget', async ({ page }) => {
       jsSize: entries
         .filter((e) => e.initiatorType === 'script')
         .reduce((sum, e) => sum + (e.transferSize || 0), 0),
-      imageCount: entries.filter((e) => e.initiatorType === 'img').length,
+      imageCount: entries.filter((e) => e.initiatorType === 'img').length
     };
   });
 
@@ -281,13 +281,13 @@ export const test = base.extend<PerformanceFixtures>({
 
         return {
           ttfb: nav.responseStart - nav.requestStart,
-          totalSize: resources.reduce((sum, r) => sum + (r.transferSize || 0), 0),
+          totalSize: resources.reduce((sum, r) => sum + (r.transferSize || 0), 0)
         };
       });
 
       if (budget.ttfb) {
         expect(metrics.ttfb, `TTFB ${metrics.ttfb}ms exceeds budget ${budget.ttfb}ms`).toBeLessThan(
-          budget.ttfb,
+          budget.ttfb
         );
       }
 
@@ -295,7 +295,7 @@ export const test = base.extend<PerformanceFixtures>({
         expect(metrics.totalSize, `Total size exceeds budget`).toBeLessThan(budget.totalSize);
       }
     });
-  },
+  }
 });
 ```
 
@@ -321,8 +321,8 @@ test('lighthouse audit', async ({ page }) => {
       performance: 80,
       accessibility: 90,
       'best-practices': 80,
-      seo: 80,
-    },
+      seo: 80
+    }
   });
 
   // Assertions
@@ -341,7 +341,7 @@ test('lighthouse with custom config', async ({ page }, testInfo) => {
     page,
     port: 9222,
     thresholds: {
-      performance: 70,
+      performance: 70
     },
     config: {
       extends: 'lighthouse:default',
@@ -350,10 +350,10 @@ test('lighthouse with custom config', async ({ page }, testInfo) => {
         throttling: {
           rttMs: 40,
           throughputKbps: 10240,
-          cpuSlowdownMultiplier: 1,
-        },
-      },
-    },
+          cpuSlowdownMultiplier: 1
+        }
+      }
+    }
   });
 
   // Save report
@@ -363,7 +363,7 @@ test('lighthouse with custom config', async ({ page }, testInfo) => {
   // Attach to test report
   await testInfo.attach('lighthouse', {
     body: JSON.stringify(audit.lhr),
-    contentType: 'application/json',
+    contentType: 'application/json'
   });
 });
 ```
@@ -386,7 +386,7 @@ class PerfReporter implements Reporter {
       this.metrics.push({
         test: test.title,
         ...JSON.parse(perfAnnotation.description),
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     }
   }
@@ -399,8 +399,8 @@ class PerfReporter implements Reporter {
         body: JSON.stringify({
           commit: process.env.GITHUB_SHA,
           branch: process.env.GITHUB_REF,
-          metrics: this.metrics,
-        }),
+          metrics: this.metrics
+        })
       });
     }
   }
@@ -418,7 +418,7 @@ test('no performance regression', async ({ page }) => {
   const metrics = await page.evaluate(() => {
     const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     return {
-      loadTime: nav.loadEventEnd - nav.startTime,
+      loadTime: nav.loadEventEnd - nav.startTime
     };
   });
 
@@ -428,7 +428,7 @@ test('no performance regression', async ({ page }) => {
 
   expect(
     metrics.loadTime,
-    `Load time ${metrics.loadTime}ms is ${((metrics.loadTime / baseline - 1) * 100).toFixed(1)}% slower than baseline`,
+    `Load time ${metrics.loadTime}ms is ${((metrics.loadTime / baseline - 1) * 100).toFixed(1)}% slower than baseline`
   ).toBeLessThan(baseline * threshold);
 });
 ```

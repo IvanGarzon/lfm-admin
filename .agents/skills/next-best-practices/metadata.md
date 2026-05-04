@@ -19,7 +19,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Page Title',
-  description: 'Page description for search engines',
+  description: 'Page description for search engines'
 };
 ```
 
@@ -59,7 +59,7 @@ import type { Viewport } from 'next';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#000000',
+  themeColor: '#000000'
 };
 
 // Or dynamic
@@ -74,7 +74,7 @@ In root layout for consistent naming:
 
 ```tsx
 export const metadata: Metadata = {
-  title: { default: 'Site Name', template: '%s | Site Name' },
+  title: { default: 'Site Name', template: '%s | Site Name' }
 };
 ```
 
@@ -155,12 +155,12 @@ export default function Image() {
         height: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'center'
       }}
     >
       Hello World
     </div>,
-    { ...size },
+    { ...size }
   );
 }
 ```
@@ -193,13 +193,13 @@ export default async function Image({ params }: Props) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 48,
+        padding: 48
       }}
     >
       <div style={{ fontSize: 64, fontWeight: 'bold' }}>{post.title}</div>
       <div style={{ marginTop: 24, opacity: 0.8 }}>{post.description}</div>
     </div>,
-    { ...size },
+    { ...size }
   );
 }
 ```
@@ -220,8 +220,8 @@ export default async function Image() {
     {
       width: 1200,
       height: 630,
-      fonts: [{ name: 'Inter', data: fontData, style: 'normal' }],
-    },
+      fonts: [{ name: 'Inter', data: fontData, style: 'normal' }]
+    }
   );
 }
 ```
@@ -253,7 +253,7 @@ export async function generateImageMetadata({ params }) {
     id: idx,
     alt: img.alt,
     size: { width: 1200, height: 630 },
-    contentType: 'image/png',
+    contentType: 'image/png'
   }));
 }
 
@@ -284,7 +284,7 @@ export default async function sitemap({ id }: { id: number }): Promise<MetadataR
 
   return products.map((product) => ({
     url: `https://example.com/product/${product.id}`,
-    lastModified: product.updatedAt,
+    lastModified: product.updatedAt
   }));
 }
 ```

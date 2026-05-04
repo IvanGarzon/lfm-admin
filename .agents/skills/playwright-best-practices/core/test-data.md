@@ -37,7 +37,7 @@ export function createUser(overrides: Partial<User> = {}): User {
     name: `Test User ${userIdCounter}`,
     role: 'user',
     createdAt: new Date(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -65,7 +65,7 @@ const traits: Record<ProductTrait, Partial<Product>> = {
   outOfStock: { stock: 0 },
   featured: { featured: true },
   expensive: { price: 999.99 },
-  sale: { price: 9.99 },
+  sale: { price: 9.99 }
 };
 
 let productIdCounter = 0;
@@ -86,7 +86,7 @@ export function createProduct(
     category: 'General',
     featured: false,
     ...appliedTraits,
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -132,7 +132,7 @@ export function createOrder(overrides: Partial<Order> = {}): Order {
     items,
     total,
     status: 'pending',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -141,8 +141,8 @@ const order = createOrder();
 const bigOrder = createOrder({
   items: [
     { product: createProduct({ price: 100 }), quantity: 5 },
-    { product: createProduct({ price: 50 }), quantity: 2 },
-  ],
+    { product: createProduct({ price: 50 }), quantity: 2 }
+  ]
 });
 ```
 
@@ -181,9 +181,9 @@ export function createFakeUser(overrides: Partial<User> = {}): User {
       street: faker.location.streetAddress(),
       city: faker.location.city(),
       country: faker.location.country(),
-      zipCode: faker.location.zipCode(),
+      zipCode: faker.location.zipCode()
     },
-    ...overrides,
+    ...overrides
   };
 }
 ```
@@ -200,7 +200,7 @@ export function createDeterministicUser(): User {
   return {
     id: faker.string.uuid(),
     email: faker.internet.email(),
-    name: faker.person.fullName(),
+    name: faker.person.fullName()
     // Same seed = same data every time
   };
 }
@@ -229,7 +229,7 @@ export const test = base.extend<FakerFixtures>({
     // Seed based on test name for reproducibility
     faker.seed(testInfo.title.length);
     await use(faker);
-  },
+  }
 });
 
 // Usage
@@ -255,8 +255,8 @@ const loginScenarios = [
   {
     email: 'invalid@example.com',
     password: 'wrong',
-    expected: 'Invalid credentials',
-  },
+    expected: 'Invalid credentials'
+  }
 ];
 
 for (const { email, password, expected } of loginScenarios) {
@@ -280,20 +280,20 @@ export const checkoutScenarios = [
     name: 'standard shipping',
     shipping: 'standard',
     expectedDays: '5-7 business days',
-    expectedCost: '$5.99',
+    expectedCost: '$5.99'
   },
   {
     name: 'express shipping',
     shipping: 'express',
     expectedDays: '2-3 business days',
-    expectedCost: '$14.99',
+    expectedCost: '$14.99'
   },
   {
     name: 'overnight shipping',
     shipping: 'overnight',
     expectedDays: 'Next business day',
-    expectedCost: '$29.99',
-  },
+    expectedCost: '$29.99'
+  }
 ];
 ```
 
@@ -365,10 +365,10 @@ export const test = base.extend<DataFixtures>({
     const products = [
       createProduct({ name: 'Test Product 1' }),
       createProduct({ name: 'Test Product 2' }),
-      createProduct({ name: 'Test Product 3' }),
+      createProduct({ name: 'Test Product 3' })
     ];
     await use(products);
-  },
+  }
 });
 
 // Usage
@@ -404,7 +404,7 @@ export const test = base.extend<SeedFixtures>({
       const userData = createUser(overrides);
 
       const response = await request.post('/api/test/users', {
-        data: userData,
+        data: userData
       });
       const user = await response.json();
 
@@ -422,7 +422,7 @@ export const test = base.extend<SeedFixtures>({
     for (const id of userIds) {
       await request.delete(`/api/test/users/${id}`);
     }
-  },
+  }
 });
 
 // Usage
@@ -453,17 +453,17 @@ export const test = base.extend<{}, { db: DbTransaction }>({
 
           const result = await client.query(
             `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`,
-            values,
+            values
           );
           return result.rows[0];
-        },
+        }
       });
 
       await client.query('ROLLBACK');
       client.release();
     },
-    { scope: 'test' },
-  ],
+    { scope: 'test' }
+  ]
 });
 ```
 

@@ -57,7 +57,7 @@ test('verifies email with mocked endpoints', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ message: 'Verification sent', verificationToken: mockToken }),
+      body: JSON.stringify({ message: 'Verification sent', verificationToken: mockToken })
     });
   });
 
@@ -65,7 +65,7 @@ test('verifies email with mocked endpoints', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ verified: true }),
+      body: JSON.stringify({ verified: true })
     });
   });
 
@@ -178,7 +178,7 @@ test('shows warning before session expires', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ valid: true, expiresIn: 60 }),
+      body: JSON.stringify({ valid: true, expiresIn: 60 })
     });
   });
 
@@ -199,7 +199,7 @@ test('extends session when user clicks extend', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ valid: true, expiresIn: 60 }),
+      body: JSON.stringify({ valid: true, expiresIn: 60 })
     });
   });
 
@@ -208,14 +208,14 @@ test('extends session when user clicks extend', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ valid: true, expiresIn: 3600 }),
+      body: JSON.stringify({ valid: true, expiresIn: 3600 })
     });
   });
 
   await page.goto('/home');
 
   await expect(page.getByRole('button', { name: /extend|stay signed in/i })).toBeVisible({
-    timeout: 10000,
+    timeout: 10000
   });
   await page.getByRole('button', { name: /extend|stay signed in/i }).click();
 
@@ -310,7 +310,7 @@ test('logs out and clears session', async ({ page, context }) => {
 
   const cookies = await context.cookies();
   const sessionCookies = cookies.filter(
-    (c) => c.name.includes('session') || c.name.includes('token'),
+    (c) => c.name.includes('session') || c.name.includes('token')
   );
   expect(sessionCookies).toHaveLength(0);
 
@@ -330,7 +330,7 @@ test('logs out from all devices', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ message: 'Logged out everywhere' }),
+      body: JSON.stringify({ message: 'Logged out everywhere' })
     });
   });
 

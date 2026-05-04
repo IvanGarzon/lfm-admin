@@ -35,13 +35,13 @@ const tokenStorage: TokenStorage = {
     return null;
   },
   async setTokens(tokens) {},
-  async clearTokens() {},
+  async clearTokens() {}
 };
 
 const api = createManagementApiSdk({
   clientId: process.env.PRISMA_CLIENT_ID!,
   redirectUri: 'https://your-app.com/auth/callback',
-  tokenStorage,
+  tokenStorage
 });
 ```
 

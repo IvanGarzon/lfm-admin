@@ -10,10 +10,10 @@ export default {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx,vue,svelte}',
-    './node_modules/@mycompany/ui-lib/**/*.{js,ts,jsx,tsx}',
+    './node_modules/@mycompany/ui-lib/**/*.{js,ts,jsx,tsx}'
   ],
   // Enable JIT for faster builds
-  jit: true,
+  jit: true
 };
 ```
 
@@ -77,11 +77,11 @@ module.exports = {
     options: {
       safelist: [
         'bg-red-500',
-        'text-center',
+        'text-center'
         // Classes that shouldn't be purged
-      ],
-    },
-  },
+      ]
+    }
+  }
 };
 ```
 

@@ -119,7 +119,7 @@ page.getByRole('listitem').filter({ hasNotText: 'Out of stock' });
 
 // Filter by child locator
 page.getByRole('listitem').filter({
-  has: page.getByRole('button', { name: 'Buy' }),
+  has: page.getByRole('button', { name: 'Buy' })
 });
 
 // Combine filters

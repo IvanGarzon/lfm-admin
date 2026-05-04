@@ -20,7 +20,7 @@ function Composer({
   renderActions,
   showAttachments,
   showFormatting,
-  showEmojis,
+  showEmojis
 }: Props) {
   return (
     <form>
@@ -58,7 +58,7 @@ function ComposerInput() {
   const {
     state,
     actions: { update },
-    meta: { inputRef },
+    meta: { inputRef }
   } = use(ComposerContext);
   return (
     <TextInput
@@ -71,7 +71,7 @@ function ComposerInput() {
 
 function ComposerSubmit() {
   const {
-    actions: { submit },
+    actions: { submit }
   } = use(ComposerContext);
   return <Button onPress={submit}>Send</Button>;
 }
@@ -86,7 +86,7 @@ const Composer = {
   Footer: ComposerFooter,
   Attachments: ComposerAttachments,
   Formatting: ComposerFormatting,
-  Emojis: ComposerEmojis,
+  Emojis: ComposerEmojis
 };
 ```
 

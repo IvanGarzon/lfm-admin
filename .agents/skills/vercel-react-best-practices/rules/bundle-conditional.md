@@ -14,7 +14,7 @@ Load large data or modules only when a feature is activated.
 ```tsx
 function AnimationPlayer({
   enabled,
-  setEnabled,
+  setEnabled
 }: {
   enabled: boolean;
   setEnabled: React.Dispatch<React.SetStateAction<boolean>>;

@@ -32,8 +32,8 @@ export default defineConfig({
     // Enable coverage collection
     contextOptions: {
       // V8 coverage is automatic with the API below
-    },
-  },
+    }
+  }
 });
 ```
 
@@ -61,7 +61,7 @@ export const test = base.extend<{}, { collectCoverage: void }>({
       // Collect coverage
       const [jsCoverage, cssCoverage] = await Promise.all([
         page.coverage.stopJSCoverage(),
-        page.coverage.stopCSSCoverage(),
+        page.coverage.stopCSSCoverage()
       ]);
 
       // Save coverage data
@@ -72,13 +72,13 @@ export const test = base.extend<{}, { collectCoverage: void }>({
 
       fs.writeFileSync(
         path.join(coverageDir, `coverage-${randomUUID()}.json`),
-        JSON.stringify([...jsCoverage, ...cssCoverage]),
+        JSON.stringify([...jsCoverage, ...cssCoverage])
       );
 
       await context.close();
     },
-    { scope: 'worker', auto: true },
-  ],
+    { scope: 'worker', auto: true }
+  ]
 });
 ```
 
@@ -90,7 +90,7 @@ export const test = base.extend<{}, { collectCoverage: void }>({
 test('collect coverage for single test', async ({ page }) => {
   // Start coverage collection
   await page.coverage.startJSCoverage({
-    resetOnNavigation: false,
+    resetOnNavigation: false
   });
 
   // Run test
@@ -126,7 +126,7 @@ test('track specific module coverage', async ({ page }) => {
     const totalBytes = checkoutCoverage.text?.length || 0;
     const coveredBytes = checkoutCoverage.ranges.reduce(
       (sum, range) => sum + (range.end - range.start),
-      0,
+      0
     );
     const percentage = (coveredBytes / totalBytes) * 100;
 
@@ -270,7 +270,7 @@ class CoverageReporter implements Reporter {
     return {
       totalFiles: files.size,
       byteCoverage: (coveredBytes / totalBytes) * 100,
-      lineCoverage: (coveredBytes / totalBytes) * 100, // Simplified
+      lineCoverage: (coveredBytes / totalBytes) * 100 // Simplified
     };
   }
 }
@@ -325,7 +325,7 @@ const thresholds: CoverageThreshold[] = [
   { pattern: /\/src\/core\//, minCoverage: 90 },
   { pattern: /\/src\/utils\//, minCoverage: 85 },
   { pattern: /\/src\/components\//, minCoverage: 70 },
-  { pattern: /\/src\/pages\//, minCoverage: 60 },
+  { pattern: /\/src\/pages\//, minCoverage: 60 }
 ];
 
 function checkThresholds(coverage: any[]): string[] {

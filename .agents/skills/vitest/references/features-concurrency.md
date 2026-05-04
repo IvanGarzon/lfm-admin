@@ -20,8 +20,8 @@ defineConfig({
     minWorkers: 1,
 
     // Pool type: 'threads', 'forks', 'vmThreads'
-    pool: 'threads',
-  },
+    pool: 'threads'
+  }
 });
 ```
 
@@ -75,8 +75,8 @@ Limit concurrent tests:
 ```ts
 defineConfig({
   test: {
-    maxConcurrency: 5, // Max concurrent tests per file
-  },
+    maxConcurrency: 5 // Max concurrent tests per file
+  }
 });
 ```
 
@@ -88,8 +88,8 @@ Each file runs in isolated environment by default:
 defineConfig({
   test: {
     // Disable isolation for faster runs (less safe)
-    isolate: false,
-  },
+    isolate: false
+  }
 });
 ```
 
@@ -154,9 +154,9 @@ defineConfig({
       hooks: 'stack', // 'stack', 'list', 'parallel'
 
       // All tests concurrent by default
-      concurrent: true,
-    },
-  },
+      concurrent: true
+    }
+  }
 });
 ```
 
@@ -188,10 +188,10 @@ defineConfig({
       threads: {
         maxThreads: 8,
         minThreads: 2,
-        isolate: true,
-      },
-    },
-  },
+        isolate: true
+      }
+    }
+  }
 });
 ```
 
@@ -206,10 +206,10 @@ defineConfig({
     poolOptions: {
       forks: {
         maxForks: 4,
-        isolate: true,
-      },
-    },
-  },
+        isolate: true
+      }
+    }
+  }
 });
 ```
 
@@ -220,8 +220,8 @@ Full VM isolation per file:
 ```ts
 defineConfig({
   test: {
-    pool: 'vmThreads',
-  },
+    pool: 'vmThreads'
+  }
 });
 ```
 

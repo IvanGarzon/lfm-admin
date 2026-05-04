@@ -232,7 +232,7 @@ export function createLoginPage(page: Page) {
     },
     emailInput,
     passwordInput,
-    submitButton,
+    submitButton
   };
 }
 
@@ -298,7 +298,7 @@ export const test = base.extend<Pages>({
   },
   dashboardPage: async ({ page }, use) => {
     await use(new DashboardPage(page));
-  },
+  }
 });
 
 // Usage in tests

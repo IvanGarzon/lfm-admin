@@ -7,10 +7,16 @@ import { getCustomers, getCustomerById } from '@/actions/crm/customers/queries';
 import { getQueryClient } from '@/lib/query-client';
 import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
 
+export const metadata = {
+  title: 'Customer Detail | CRM'
+};
+
 const CustomerDrawer = dynamic(
   () =>
     import('@/features/crm/customers/components/customer-drawer').then((mod) => mod.CustomerDrawer),
-  { loading: () => null }
+  {
+    loading: () => null
+  }
 );
 
 export default async function CustomerPage({
@@ -26,10 +32,13 @@ export default async function CustomerPage({
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: CUSTOMER_KEYS.list(JSON.stringify(searchParamsResolved)),
+      queryKey: CUSTOMER_KEYS.list(searchParamsResolved),
       queryFn: async () => {
         const result = await getCustomers(searchParamsResolved);
-        if (!result.success) throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       }
     }),
@@ -37,7 +46,10 @@ export default async function CustomerPage({
       queryKey: CUSTOMER_KEYS.detail(id),
       queryFn: async () => {
         const result = await getCustomerById(id);
-        if (!result.success) throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       }
     })

@@ -437,7 +437,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   reporter: process.env.CI
     ? [['dot'], ['html', { open: 'never' }], ['junit', { outputFile: 'results/junit.xml' }]]
-    : [['html', { open: 'on-failure' }]],
+    : [['html', { open: 'on-failure' }]]
 });
 ```
 

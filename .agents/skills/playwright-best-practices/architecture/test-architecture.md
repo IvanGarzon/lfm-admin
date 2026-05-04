@@ -60,7 +60,7 @@ test.describe('Products API', () => {
 
   test.beforeAll(async ({ request }) => {
     const res = await request.post('/api/auth/token', {
-      data: { email: 'manager@shop.io', password: 'mgr-secret' },
+      data: { email: 'manager@shop.io', password: 'mgr-secret' }
     });
     token = (await res.json()).accessToken;
   });
@@ -68,7 +68,7 @@ test.describe('Products API', () => {
   test('creates product with valid payload', async ({ request }) => {
     const res = await request.post('/api/products', {
       headers: { Authorization: `Bearer ${token}` },
-      data: { name: 'Widget Pro', sku: 'WGT-100', price: 29.99 },
+      data: { name: 'Widget Pro', sku: 'WGT-100', price: 29.99 }
     });
 
     expect(res.status()).toBe(201);
@@ -80,7 +80,7 @@ test.describe('Products API', () => {
   test('rejects duplicate SKU with 409', async ({ request }) => {
     const res = await request.post('/api/products', {
       headers: { Authorization: `Bearer ${token}` },
-      data: { name: 'Duplicate', sku: 'WGT-100', price: 19.99 },
+      data: { name: 'Duplicate', sku: 'WGT-100', price: 19.99 }
     });
 
     expect(res.status()).toBe(409);
@@ -90,7 +90,7 @@ test.describe('Products API', () => {
   test('returns 422 for missing required fields', async ({ request }) => {
     const res = await request.post('/api/products', {
       headers: { Authorization: `Bearer ${token}` },
-      data: { name: 'Incomplete' },
+      data: { name: 'Incomplete' }
     });
 
     expect(res.status()).toBe(422);
@@ -100,12 +100,12 @@ test.describe('Products API', () => {
 
   test('staff role cannot delete products', async ({ request }) => {
     const staffLogin = await request.post('/api/auth/token', {
-      data: { email: 'staff@shop.io', password: 'staff-pass' },
+      data: { email: 'staff@shop.io', password: 'staff-pass' }
     });
     const staffToken = (await staffLogin.json()).accessToken;
 
     const res = await request.delete('/api/products/123', {
-      headers: { Authorization: `Bearer ${staffToken}` },
+      headers: { Authorization: `Bearer ${staffToken}` }
     });
 
     expect(res.status()).toBe(403);
@@ -114,7 +114,7 @@ test.describe('Products API', () => {
   test('lists products with pagination', async ({ request }) => {
     const res = await request.get('/api/products', {
       headers: { Authorization: `Bearer ${token}` },
-      params: { page: '1', limit: '20' },
+      params: { page: '1', limit: '20' }
     });
 
     expect(res.status()).toBe(200);
@@ -239,7 +239,7 @@ import { test, expect } from '@playwright/test';
 test.describe('subscription flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.request.post('/api/test/seed-account', {
-      data: { plan: 'free', email: 'subscriber@demo.io' },
+      data: { plan: 'free', email: 'subscriber@demo.io' }
     });
     await page.goto('/account/upgrade');
   });

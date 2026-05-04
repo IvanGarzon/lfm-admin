@@ -20,7 +20,7 @@ test('input is properly escaped', async ({ page }) => {
     '<img src="x" onerror="alert(1)">',
     '"><script>alert(1)</script>',
     'javascript:alert(1)',
-    '<svg onload="alert(1)">',
+    '<svg onload="alert(1)">'
   ];
 
   for (const payload of xssPayloads) {
@@ -126,8 +126,8 @@ test('rejects requests without CSRF token', async ({ page, request }) => {
   const response = await request.post('/api/settings', {
     data: { theme: 'dark' },
     headers: {
-      'Content-Type': 'application/json',
-    },
+      'Content-Type': 'application/json'
+    }
   });
 
   // Should be rejected
@@ -140,8 +140,8 @@ test('rejects requests with invalid CSRF token', async ({ page, request }) => {
   const response = await request.post('/api/settings', {
     data: { theme: 'dark' },
     headers: {
-      'X-CSRF-Token': 'invalid-token',
-    },
+      'X-CSRF-Token': 'invalid-token'
+    }
   });
 
   expect(response.status()).toBe(403);
@@ -257,7 +257,7 @@ test('password reset token is single-use', async ({ page, request }) => {
 test.describe('authorization', () => {
   test('cannot access admin routes as user', async ({ browser }) => {
     const context = await browser.newContext({
-      storageState: '.auth/user.json', // Regular user
+      storageState: '.auth/user.json' // Regular user
     });
     const page = await context.newPage();
 
@@ -269,7 +269,7 @@ test.describe('authorization', () => {
     expect(
       (await page.getByText('Access denied').isVisible()) ||
         (await page.url()).includes('/login') ||
-        (await page.url()).includes('/403'),
+        (await page.url()).includes('/403')
     ).toBe(true);
 
     await context.close();
@@ -310,7 +310,7 @@ test('SQL injection is prevented', async ({ page }) => {
     "'; DROP TABLE users; --",
     "1' OR '1'='1",
     '1; DELETE FROM orders',
-    "' UNION SELECT * FROM users --",
+    "' UNION SELECT * FROM users --"
   ];
 
   for (const payload of sqlPayloads) {

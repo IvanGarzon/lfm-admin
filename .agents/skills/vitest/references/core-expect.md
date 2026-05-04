@@ -107,7 +107,7 @@ Use inside `toEqual`, `toHaveBeenCalledWith`, etc:
 ```ts
 expect({ id: 1, name: 'test' }).toEqual({
   id: expect.any(Number),
-  name: expect.any(String),
+  name: expect.any(String)
 });
 
 expect({ a: 1, b: 2, c: 3 }).toEqual(expect.objectContaining({ a: 1 }));
@@ -119,7 +119,7 @@ expect('hello world').toEqual(expect.stringContaining('world'));
 expect('hello world').toEqual(expect.stringMatching(/world$/));
 
 expect({ value: null }).toEqual({
-  value: expect.anything(), // Matches anything except null/undefined
+  value: expect.anything() // Matches anything except null/undefined
 });
 
 // Negate with expect.not
@@ -173,9 +173,9 @@ expect.extend({
     const pass = received >= floor && received <= ceiling;
     return {
       pass,
-      message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
+      message: () => `expected ${received} to be within range ${floor} - ${ceiling}`
     };
-  },
+  }
 });
 
 test('custom matcher', () => {

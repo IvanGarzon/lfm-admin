@@ -122,7 +122,7 @@ test('shows error when download fails', async ({ page }) => {
     await route.fulfill({
       status: 500,
       contentType: 'application/json',
-      body: JSON.stringify({ error: 'Generation failed' }),
+      body: JSON.stringify({ error: 'Generation failed' })
     });
   });
 
@@ -166,7 +166,7 @@ test('uploads in-memory CSV', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'contacts.csv',
     mimeType: 'text/csv',
-    buffer: Buffer.from('name,email\nAlice,alice@acme.com\nBob,bob@acme.com'),
+    buffer: Buffer.from('name,email\nAlice,alice@acme.com\nBob,bob@acme.com')
   });
 
   await expect(page.getByText('contacts.csv')).toBeVisible();
@@ -185,7 +185,7 @@ test('clears selected file', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'draft.txt',
     mimeType: 'text/plain',
-    buffer: Buffer.from('draft content'),
+    buffer: Buffer.from('draft content')
   });
 
   await expect(page.getByText('draft.txt')).toBeVisible();
@@ -208,7 +208,7 @@ test('uploads multiple files at once', async ({ page }) => {
   await fileInput.setInputFiles([
     { name: 'doc1.pdf', mimeType: 'application/pdf', buffer: Buffer.from('pdf1') },
     { name: 'doc2.pdf', mimeType: 'application/pdf', buffer: Buffer.from('pdf2') },
-    { name: 'doc3.pdf', mimeType: 'application/pdf', buffer: Buffer.from('pdf3') },
+    { name: 'doc3.pdf', mimeType: 'application/pdf', buffer: Buffer.from('pdf3') }
   ]);
 
   await expect(page.getByText('doc1.pdf')).toBeVisible();
@@ -226,7 +226,7 @@ test('removes one file from selection', async ({ page }) => {
   const fileInput = page.locator('input[type="file"]');
   await fileInput.setInputFiles([
     { name: 'keep.txt', mimeType: 'text/plain', buffer: Buffer.from('keep') },
-    { name: 'discard.txt', mimeType: 'text/plain', buffer: Buffer.from('discard') },
+    { name: 'discard.txt', mimeType: 'text/plain', buffer: Buffer.from('discard') }
   ]);
 
   const discardRow = page.getByText('discard.txt').locator('..');
@@ -254,7 +254,7 @@ test('uploads via drop zone', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'dropped.pdf',
     mimeType: 'application/pdf',
-    buffer: Buffer.from('pdf-content'),
+    buffer: Buffer.from('pdf-content')
   });
 
   await expect(dropZone.getByText('dropped.pdf')).toBeVisible();
@@ -268,7 +268,7 @@ test('shows visual feedback on drag-over', async ({ page }) => {
   const dropZone = page.locator('[data-testid="drop-zone"]');
 
   await dropZone.dispatchEvent('dragenter', {
-    dataTransfer: { types: ['Files'], files: [] },
+    dataTransfer: { types: ['Files'], files: [] }
   });
 
   await expect(dropZone).toHaveClass(/active|highlight|drag-over/);
@@ -296,7 +296,7 @@ test('uploads via native file chooser', async ({ page }) => {
   await fileChooser.setFiles({
     name: 'selected.pdf',
     mimeType: 'application/pdf',
-    buffer: Buffer.from('pdf-content'),
+    buffer: Buffer.from('pdf-content')
   });
 
   await expect(page.getByText('selected.pdf')).toBeVisible();
@@ -317,7 +317,7 @@ test('displays upload progress for large file', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'dataset.bin',
     mimeType: 'application/octet-stream',
-    buffer: largeBuffer,
+    buffer: largeBuffer
   });
 
   await page.getByRole('button', { name: 'Upload' }).click();
@@ -346,7 +346,7 @@ test('cancels in-progress upload', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'large.bin',
     mimeType: 'application/octet-stream',
-    buffer: Buffer.alloc(5 * 1024 * 1024, 'x'),
+    buffer: Buffer.alloc(5 * 1024 * 1024, 'x')
   });
 
   await page.getByRole('button', { name: 'Upload' }).click();
@@ -374,13 +374,13 @@ test('retries failed upload', async ({ page }) => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'Server error' }),
+        body: JSON.stringify({ error: 'Server error' })
       });
     } else {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ id: 'abc', name: 'data.csv' }),
+        body: JSON.stringify({ id: 'abc', name: 'data.csv' })
       });
     }
   });
@@ -391,7 +391,7 @@ test('retries failed upload', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'data.csv',
     mimeType: 'text/csv',
-    buffer: Buffer.from('col1,col2\nval1,val2'),
+    buffer: Buffer.from('col1,col2\nval1,val2')
   });
 
   await page.getByRole('button', { name: 'Upload' }).click();
@@ -419,7 +419,7 @@ test('accepts allowed file types', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'report.pdf',
     mimeType: 'application/pdf',
-    buffer: Buffer.from('pdf-content'),
+    buffer: Buffer.from('pdf-content')
   });
 
   await expect(page.getByText('report.pdf')).toBeVisible();
@@ -434,11 +434,11 @@ test('rejects disallowed file types', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'malware.exe',
     mimeType: 'application/x-msdownload',
-    buffer: Buffer.from('exe-content'),
+    buffer: Buffer.from('exe-content')
   });
 
   await expect(page.getByRole('alert')).toContainText(
-    /not allowed|unsupported file type|only .pdf, .doc/i,
+    /not allowed|unsupported file type|only .pdf, .doc/i
   );
   await expect(page.getByText('malware.exe')).not.toBeVisible();
 });
@@ -456,7 +456,7 @@ test('rejects oversized file', async ({ page }) => {
   await fileInput.setInputFiles({
     name: 'huge.pdf',
     mimeType: 'application/pdf',
-    buffer: oversizedBuffer,
+    buffer: oversizedBuffer
   });
 
   await expect(page.getByRole('alert')).toContainText(/file.*too large|exceeds.*10 ?MB/i);
@@ -474,7 +474,7 @@ test('rejects too many files', async ({ page }) => {
   const files = Array.from({ length: 6 }, (_, i) => ({
     name: `file-${i + 1}.txt`,
     mimeType: 'text/plain' as const,
-    buffer: Buffer.from(`content ${i + 1}`),
+    buffer: Buffer.from(`content ${i + 1}`)
   }));
 
   await fileInput.setInputFiles(files);
@@ -493,13 +493,13 @@ test('rejects image below minimum dimensions', async ({ page }) => {
   // Minimal 1x1 PNG
   const tinyPng = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-    'base64',
+    'base64'
   );
 
   await fileInput.setInputFiles({
     name: 'tiny.png',
     mimeType: 'image/png',
-    buffer: tinyPng,
+    buffer: tinyPng
   });
 
   await expect(page.getByRole('alert')).toContainText(/minimum.*dimensions|too small/i);

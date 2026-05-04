@@ -1,8 +1,11 @@
+import dynamic from 'next/dynamic';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
-import { getInvoices } from '@/actions/finances/invoices/queries';
+import { getInvoices, getInvoiceById } from '@/actions/finances/invoices/queries';
+import { getQueryClient } from '@/lib/query-client';
 import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
-import dynamic from 'next/dynamic';
+import { INVOICE_KEYS } from '@/features/finances/invoices/constants/query-keys';
 
 export const metadata = {
   title: 'Invoice Detail | Finance'
@@ -27,16 +30,39 @@ export default async function InvoicePage({
 }) {
   const { id } = await params;
   const searchParamsResolved = await searchParams;
-  const result = await getInvoices(searchParamsResolved);
+  const queryClient = getQueryClient();
 
-  if (!result.success) {
-    throw new Error(result.error);
-  }
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: INVOICE_KEYS.list(searchParamsResolved),
+      queryFn: async () => {
+        const result = await getInvoices(searchParamsResolved);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
+      }
+    }),
+    queryClient.prefetchQuery({
+      queryKey: INVOICE_KEYS.detail(id),
+      queryFn: async () => {
+        const result = await getInvoiceById(id);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
+      }
+    })
+  ]);
 
   return (
     <Shell scrollable>
-      <InvoicesView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <InvoiceDrawer id={id} open={true} /> : null}
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <InvoicesView searchParams={searchParamsResolved} />
+        {id ? <InvoiceDrawer id={id} open={true} /> : null}
+      </HydrationBoundary>
     </Shell>
   );
 }

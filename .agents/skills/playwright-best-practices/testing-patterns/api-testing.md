@@ -32,8 +32,8 @@ export const test = base.extend<ApiFixtures>({
       baseURL: 'https://api.myapp.io',
       extraHTTPHeaders: {
         Authorization: `Bearer ${process.env.API_TOKEN}`,
-        Accept: 'application/json',
-      },
+        Accept: 'application/json'
+      }
     });
     await use(ctx);
     await ctx.dispose();
@@ -41,13 +41,13 @@ export const test = base.extend<ApiFixtures>({
 
   adminApi: async ({ playwright }, use) => {
     const loginCtx = await playwright.request.newContext({
-      baseURL: 'https://api.myapp.io',
+      baseURL: 'https://api.myapp.io'
     });
     const loginResp = await loginCtx.post('/auth/login', {
       data: {
         email: process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD,
-      },
+        password: process.env.ADMIN_PASSWORD
+      }
     });
     expect(loginResp.ok()).toBeTruthy();
     const { token } = await loginResp.json();
@@ -57,12 +57,12 @@ export const test = base.extend<ApiFixtures>({
       baseURL: 'https://api.myapp.io',
       extraHTTPHeaders: {
         Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
+        Accept: 'application/json'
+      }
     });
     await use(ctx);
     await ctx.dispose();
-  },
+  }
 });
 
 export { expect };
@@ -91,7 +91,7 @@ import { test, expect } from '@playwright/test';
 test('full CRUD cycle', async ({ request }) => {
   // GET with query params
   const listResp = await request.get('/api/items', {
-    params: { page: 1, limit: 10, category: 'tools' },
+    params: { page: 1, limit: 10, category: 'tools' }
   });
   expect(listResp.ok()).toBeTruthy();
 
@@ -100,8 +100,8 @@ test('full CRUD cycle', async ({ request }) => {
     data: {
       title: 'Hammer',
       price: 19.99,
-      category: 'tools',
-    },
+      category: 'tools'
+    }
   });
   expect(createResp.status()).toBe(201);
   const created = await createResp.json();
@@ -111,14 +111,14 @@ test('full CRUD cycle', async ({ request }) => {
     data: {
       title: 'Claw Hammer',
       price: 24.99,
-      category: 'tools',
-    },
+      category: 'tools'
+    }
   });
   expect(putResp.ok()).toBeTruthy();
 
   // PATCH — partial update
   const patchResp = await request.patch(`/api/items/${created.id}`, {
-    data: { price: 22.5 },
+    data: { price: 22.5 }
   });
   expect(patchResp.ok()).toBeTruthy();
   const patched = await patchResp.json();
@@ -138,8 +138,8 @@ test('form-urlencoded body', async ({ request }) => {
     form: {
       grant_type: 'client_credentials',
       client_id: 'my-client',
-      client_secret: 'secret-value',
-    },
+      client_secret: 'secret-value'
+    }
   });
   expect(resp.ok()).toBeTruthy();
   const token = await resp.json();
@@ -162,18 +162,18 @@ export default defineConfig({
       testDir: './tests/api',
       use: {
         baseURL: 'https://api.myapp.io',
-        extraHTTPHeaders: { Accept: 'application/json' },
-      },
+        extraHTTPHeaders: { Accept: 'application/json' }
+      }
     },
     {
       name: 'e2e',
       testDir: './tests/e2e',
       use: {
         baseURL: 'https://myapp.io',
-        browserName: 'chromium',
-      },
-    },
-  ],
+        browserName: 'chromium'
+      }
+    }
+  ]
 });
 ```
 
@@ -206,7 +206,7 @@ test('comprehensive response validation', async ({ request }) => {
   expect(item).toMatchObject({
     id: 101,
     title: 'Widget',
-    status: expect.stringMatching(/^(active|inactive|archived)$/),
+    status: expect.stringMatching(/^(active|inactive|archived)$/)
   });
 
   // Type checks
@@ -214,7 +214,7 @@ test('comprehensive response validation', async ({ request }) => {
     id: expect.any(Number),
     title: expect.any(String),
     createdAt: expect.any(String),
-    tags: expect.any(Array),
+    tags: expect.any(Array)
   });
 
   // Array content
@@ -224,7 +224,7 @@ test('comprehensive response validation', async ({ request }) => {
   // Nested object
   expect(item.metadata).toMatchObject({
     views: expect.any(Number),
-    rating: expect.any(Number),
+    rating: expect.any(Number)
   });
 
   // Date format
@@ -241,7 +241,7 @@ test('list response structure', async ({ request }) => {
     expect(item).toMatchObject({
       id: expect.any(Number),
       title: expect.any(String),
-      price: expect.any(Number),
+      price: expect.any(Number)
     });
   }
 
@@ -249,7 +249,7 @@ test('list response structure', async ({ request }) => {
     page: 1,
     limit: 10,
     total: expect.any(Number),
-    totalPages: expect.any(Number),
+    totalPages: expect.any(Number)
   });
 });
 ```
@@ -273,7 +273,7 @@ export const test = base.extend<SeedFixtures>({
     const password = 'SecurePass123!';
 
     const resp = await request.post('/api/accounts', {
-      data: { name: 'Test Account', email, password },
+      data: { name: 'Test Account', email, password }
     });
     expect(resp.ok()).toBeTruthy();
     const account = await resp.json();
@@ -286,7 +286,7 @@ export const test = base.extend<SeedFixtures>({
 
   seedWorkspace: async ({ request, seedAccount }, use) => {
     const resp = await request.post('/api/workspaces', {
-      data: { name: `Workspace ${Date.now()}`, ownerId: seedAccount.id },
+      data: { name: `Workspace ${Date.now()}`, ownerId: seedAccount.id }
     });
     expect(resp.ok()).toBeTruthy();
     const workspace = await resp.json();
@@ -294,7 +294,7 @@ export const test = base.extend<SeedFixtures>({
     await use({ id: workspace.id, name: workspace.name });
 
     await request.delete(`/api/workspaces/${workspace.id}`);
-  },
+  }
 });
 
 export { expect };
@@ -325,32 +325,32 @@ import { test, expect } from '@playwright/test';
 test.describe('Error responses', () => {
   test('400 — validation error with details', async ({ request }) => {
     const resp = await request.post('/api/items', {
-      data: { title: '', price: -5 },
+      data: { title: '', price: -5 }
     });
     expect(resp.status()).toBe(400);
 
     const body = await resp.json();
     expect(body).toMatchObject({
       error: 'Validation Error',
-      details: expect.any(Array),
+      details: expect.any(Array)
     });
     expect(body.details).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           field: 'title',
-          message: expect.any(String),
+          message: expect.any(String)
         }),
         expect.objectContaining({
           field: 'price',
-          message: expect.any(String),
-        }),
-      ]),
+          message: expect.any(String)
+        })
+      ])
     );
   });
 
   test('401 — missing authentication', async ({ request }) => {
     const resp = await request.get('/api/protected/resource', {
-      headers: { Authorization: '' },
+      headers: { Authorization: '' }
     });
     expect(resp.status()).toBe(401);
     const body = await resp.json();
@@ -376,14 +376,14 @@ test.describe('Error responses', () => {
     await request.post('/api/items', { data: { title: 'First', sku } });
 
     const resp = await request.post('/api/items', {
-      data: { title: 'Duplicate', sku },
+      data: { title: 'Duplicate', sku }
     });
     expect(resp.status()).toBe(409);
   });
 
   test('422 — unprocessable entity', async ({ request }) => {
     const resp = await request.post('/api/orders', {
-      data: { items: [] },
+      data: { items: [] }
     });
     expect(resp.status()).toBe(422);
     const body = await resp.json();
@@ -392,7 +392,7 @@ test.describe('Error responses', () => {
 
   test('429 — rate limiting', async ({ request }) => {
     const responses = await Promise.all(
-      Array.from({ length: 50 }, () => request.get('/api/search', { params: { q: 'test' } })),
+      Array.from({ length: 50 }, () => request.get('/api/search', { params: { q: 'test' } }))
     );
     const rateLimited = responses.filter((r) => r.status() === 429);
     expect(rateLimited.length).toBeGreaterThan(0);
@@ -419,11 +419,11 @@ test('upload file via multipart', async ({ request }) => {
       file: {
         name: 'report.pdf',
         mimeType: 'application/pdf',
-        buffer: fs.readFileSync(filePath),
+        buffer: fs.readFileSync(filePath)
       },
       description: 'Monthly report',
-      category: 'reports',
-    },
+      category: 'reports'
+    }
   });
 
   expect(resp.status()).toBe(201);
@@ -433,7 +433,7 @@ test('upload file via multipart', async ({ request }) => {
     filename: 'report.pdf',
     mimeType: 'application/pdf',
     size: expect.any(Number),
-    url: expect.stringMatching(/^https:\/\//),
+    url: expect.stringMatching(/^https:\/\//)
   });
 });
 
@@ -445,9 +445,9 @@ test('rejects oversized files', async ({ request }) => {
       file: {
         name: 'large-file.bin',
         mimeType: 'application/octet-stream',
-        buffer: largeBuffer,
-      },
-    },
+        buffer: largeBuffer
+      }
+    }
   });
 
   expect(resp.status()).toBe(413);
@@ -465,14 +465,14 @@ import { test, expect } from '@playwright/test';
 test('complete order workflow', async ({ request }) => {
   // Step 1: Create a product
   const productResp = await request.post('/api/products', {
-    data: { name: 'Gadget', price: 49.99, stock: 50 },
+    data: { name: 'Gadget', price: 49.99, stock: 50 }
   });
   expect(productResp.status()).toBe(201);
   const product = await productResp.json();
 
   // Step 2: Create a cart
   const cartResp = await request.post('/api/carts', {
-    data: { items: [{ productId: product.id, quantity: 3 }] },
+    data: { items: [{ productId: product.id, quantity: 3 }] }
   });
   expect(cartResp.status()).toBe(201);
   const cart = await cartResp.json();
@@ -485,9 +485,9 @@ test('complete order workflow', async ({ request }) => {
       shippingAddress: {
         street: '456 Main Ave',
         city: 'Metropolis',
-        zip: '54321',
-      },
-    },
+        zip: '54321'
+      }
+    }
   });
   expect(orderResp.status()).toBe(201);
   const order = await orderResp.json();
@@ -510,28 +510,28 @@ test('complete order workflow', async ({ request }) => {
 
 test('state machine transitions — publish workflow', async ({ request }) => {
   const createResp = await request.post('/api/articles', {
-    data: { title: 'Draft Article', body: 'Content here.' },
+    data: { title: 'Draft Article', body: 'Content here.' }
   });
   const article = await createResp.json();
   expect(article.status).toBe('draft');
 
   // Submit for review
   const reviewResp = await request.patch(`/api/articles/${article.id}/status`, {
-    data: { status: 'in_review' },
+    data: { status: 'in_review' }
   });
   expect(reviewResp.ok()).toBeTruthy();
   expect((await reviewResp.json()).status).toBe('in_review');
 
   // Approve
   const approveResp = await request.patch(`/api/articles/${article.id}/status`, {
-    data: { status: 'published' },
+    data: { status: 'published' }
   });
   expect(approveResp.ok()).toBeTruthy();
   expect((await approveResp.json()).status).toBe('published');
 
   // Cannot revert to draft from published
   const revertResp = await request.patch(`/api/articles/${article.id}/status`, {
-    data: { status: 'draft' },
+    data: { status: 'draft' }
   });
   expect(revertResp.status()).toBe(422);
 
@@ -543,8 +543,8 @@ test('API + E2E hybrid — seed via API, verify in browser', async ({ request, p
     data: {
       name: `Hybrid Product ${Date.now()}`,
       price: 35.0,
-      published: true,
-    },
+      published: true
+    }
   });
   const product = await resp.json();
 
@@ -573,8 +573,8 @@ const ItemSchema = z.object({
   createdAt: z.string().datetime(),
   metadata: z.object({
     views: z.number().int().nonnegative(),
-    rating: z.number().min(0).max(5).nullable(),
-  }),
+    rating: z.number().min(0).max(5).nullable()
+  })
 });
 
 const PaginatedItemsSchema = z.object({
@@ -582,8 +582,8 @@ const PaginatedItemsSchema = z.object({
   pagination: z.object({
     page: z.number().int().positive(),
     limit: z.number().int().positive(),
-    total: z.number().int().nonnegative(),
-  }),
+    total: z.number().int().nonnegative()
+  })
 });
 
 test('GET /api/items matches schema', async ({ request }) => {
@@ -597,7 +597,7 @@ test('GET /api/items matches schema', async ({ request }) => {
     throw new Error(
       `Schema validation failed:\n${result.error.issues
         .map((i) => `  ${i.path.join('.')}: ${i.message}`)
-        .join('\n')}`,
+        .join('\n')}`
     );
   }
 });
@@ -648,9 +648,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run start:api',
     url: 'http://localhost:3000/api/health',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI
   },
-  use: { baseURL: 'http://localhost:3000' },
+  use: { baseURL: 'http://localhost:3000' }
 });
 ```
 
@@ -678,13 +678,13 @@ const body = await resp.json();
 // Option A: config-level headers
 export default defineConfig({
   use: {
-    extraHTTPHeaders: { Authorization: `Bearer ${process.env.API_TOKEN}` },
-  },
+    extraHTTPHeaders: { Authorization: `Bearer ${process.env.API_TOKEN}` }
+  }
 });
 
 // Option B: per-request headers
 const resp = await request.get('/api/resource', {
-  headers: { Authorization: `Bearer ${token}` },
+  headers: { Authorization: `Bearer ${token}` }
 });
 
 // Option C: use page.request to inherit browser cookies

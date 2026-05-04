@@ -33,7 +33,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   globalSetup: require.resolve('./global-setup'),
-  globalTeardown: require.resolve('./global-teardown'),
+  globalTeardown: require.resolve('./global-teardown')
 });
 ```
 
@@ -214,7 +214,7 @@ async function globalSetup() {
   // Start backend server
   serverProcess = spawn('npm', ['run', 'start:test'], {
     stdio: 'pipe',
-    detached: true,
+    detached: true
   });
 
   // Wait for server to be ready
@@ -253,12 +253,12 @@ async function globalSetup() {
   console.log('Starting Docker services...');
 
   execSync('docker-compose -f docker-compose.test.yml up -d', {
-    stdio: 'inherit',
+    stdio: 'inherit'
   });
 
   // Wait for services to be healthy
   execSync('docker-compose -f docker-compose.test.yml exec -T db pg_isready', {
-    stdio: 'inherit',
+    stdio: 'inherit'
   });
 }
 
@@ -273,7 +273,7 @@ async function globalTeardown() {
   console.log('Stopping Docker services...');
 
   execSync('docker-compose -f docker-compose.test.yml down -v', {
-    stdio: 'inherit',
+    stdio: 'inherit'
   });
 }
 
@@ -324,20 +324,20 @@ export default defineConfig({
     // Setup project
     {
       name: 'setup',
-      testMatch: /.*\.setup\.ts/,
+      testMatch: /.*\.setup\.ts/
     },
     // Test projects depend on setup
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
+      dependencies: ['setup']
     },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 
@@ -359,11 +359,11 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
+        storageState: '.auth/user.json'
       },
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 

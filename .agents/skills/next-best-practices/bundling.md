@@ -31,7 +31,7 @@ export default function Page() {
 import dynamic from 'next/dynamic';
 
 const SomeChart = dynamic(() => import('some-chart-library'), {
-  ssr: false,
+  ssr: false
 });
 
 export default function Page() {
@@ -46,7 +46,7 @@ For packages that should run on server but have bundling issues:
 ```js
 // next.config.js
 module.exports = {
-  serverExternalPackages: ['problematic-package'],
+  serverExternalPackages: ['problematic-package']
 };
 ```
 
@@ -84,7 +84,7 @@ Import CSS files instead of using `<link>` tags. Next.js handles bundling and op
 
 ```tsx
 // Bad: Manual link tag
-<link rel="stylesheet" href="/styles.css" />;
+<link rel='stylesheet' href='/styles.css' />;
 
 // Good: Import CSS
 import './styles.css';
@@ -101,7 +101,7 @@ Already included: `Array.from`, `Object.assign`, `Promise`, `fetch`, `Map`, `Set
 
 ```tsx
 // Bad: Redundant polyfills
-<script src="https://polyfill.io/v3/polyfill.min.js?features=fetch,Promise,Array.from" />
+<script src='https://polyfill.io/v3/polyfill.min.js?features=fetch,Promise,Array.from' />
 
 // Good: Next.js includes these automatically
 ```
@@ -121,7 +121,7 @@ Module not found: ESM packages need to be imported
 ```js
 // next.config.js
 module.exports = {
-  transpilePackages: ['some-esm-package', 'another-package'],
+  transpilePackages: ['some-esm-package', 'another-package']
 };
 ```
 
@@ -175,7 +175,7 @@ module.exports = {
   // Bad: Webpack-only - migrate away from this
   webpack: (config) => {
     // custom webpack config
-  },
+  }
 };
 ```
 

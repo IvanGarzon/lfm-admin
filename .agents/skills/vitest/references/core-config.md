@@ -16,7 +16,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // test options
-  },
+  }
 });
 ```
 
@@ -32,8 +32,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'jsdom',
-  },
+    environment: 'jsdom'
+  }
 });
 ```
 
@@ -50,9 +50,9 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      environment: 'jsdom',
-    },
-  }),
+      environment: 'jsdom'
+    }
+  })
 );
 ```
 
@@ -89,7 +89,7 @@ defineConfig({
     coverage: {
       provider: 'v8', // or 'istanbul'
       reporter: ['text', 'html'],
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts']
     },
 
     // Run tests in isolation (each file in separate process)
@@ -102,8 +102,8 @@ defineConfig({
     poolOptions: {
       threads: {
         maxThreads: 4,
-        minThreads: 1,
-      },
+        minThreads: 1
+      }
     },
 
     // Automatically clear mocks between tests
@@ -116,8 +116,8 @@ defineConfig({
     retry: 0,
 
     // Stop after first failure
-    bail: 0,
-  },
+    bail: 0
+  }
 });
 ```
 
@@ -130,7 +130,7 @@ export default defineConfig(({ mode }) => ({
   plugins: mode === 'test' ? [] : [myPlugin()],
   test: {
     // test options
-  },
+  }
 }));
 ```
 
@@ -147,18 +147,18 @@ defineConfig({
         test: {
           name: 'unit',
           include: ['tests/unit/**/*.test.ts'],
-          environment: 'node',
-        },
+          environment: 'node'
+        }
       },
       {
         test: {
           name: 'integration',
           include: ['tests/integration/**/*.test.ts'],
-          environment: 'jsdom',
-        },
-      },
-    ],
-  },
+          environment: 'jsdom'
+        }
+      }
+    ]
+  }
 });
 ```
 

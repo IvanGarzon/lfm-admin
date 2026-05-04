@@ -36,7 +36,7 @@ fn.mockImplementationOnce(() => 'first call');
 
 ```ts
 const cart = {
-  getTotal: () => 100,
+  getTotal: () => 100
 };
 
 const spy = vi.spyOn(cart, 'getTotal');
@@ -57,7 +57,7 @@ spy.mockRestore();
 ```ts
 // vi.mock is hoisted to top of file
 vi.mock('./api', () => ({
-  fetchUser: vi.fn(() => ({ id: 1, name: 'Mock' })),
+  fetchUser: vi.fn(() => ({ id: 1, name: 'Mock' }))
 }));
 
 import { fetchUser } from './api';
@@ -74,7 +74,7 @@ vi.mock('./utils', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    specificFunction: vi.fn(),
+    specificFunction: vi.fn()
   };
 });
 ```
@@ -119,7 +119,7 @@ Not hoisted - use for dynamic imports:
 ```ts
 test('dynamic mock', async () => {
   vi.doMock('./config', () => ({
-    apiUrl: 'http://test.local',
+    apiUrl: 'http://test.local'
   }));
 
   const { apiUrl } = await import('./config');
@@ -170,7 +170,7 @@ test('async timers', async () => {
       Promise.resolve().then(() => {
         resolved = true;
       }),
-    100,
+    100
   );
 
   await vi.advanceTimersByTimeAsync(100);
@@ -192,7 +192,7 @@ vi.useRealTimers(); // Restore
 ```ts
 vi.stubGlobal(
   'fetch',
-  vi.fn(() => Promise.resolve({ json: () => ({ data: 'mock' }) })),
+  vi.fn(() => Promise.resolve({ json: () => ({ data: 'mock' }) }))
 );
 
 // Restore
@@ -235,8 +235,8 @@ defineConfig({
     mockReset: true, // Reset before each test
     restoreMocks: true, // Restore after each test
     unstubEnvs: true, // Restore env vars
-    unstubGlobals: true, // Restore globals
-  },
+    unstubGlobals: true // Restore globals
+  }
 });
 ```
 
@@ -246,7 +246,7 @@ defineConfig({
 const mockFn = vi.hoisted(() => vi.fn());
 
 vi.mock('./module', () => ({
-  getData: mockFn,
+  getData: mockFn
 }));
 
 import { getData } from './module';

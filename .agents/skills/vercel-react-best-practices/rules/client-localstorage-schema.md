@@ -62,8 +62,8 @@ function cachePrefs(user: FullUser) {
       'prefs:v1',
       JSON.stringify({
         theme: user.preferences.theme,
-        notifications: user.preferences.notifications,
-      }),
+        notifications: user.preferences.notifications
+      })
     );
   } catch {}
 }

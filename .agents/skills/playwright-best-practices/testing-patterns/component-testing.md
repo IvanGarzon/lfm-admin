@@ -43,17 +43,17 @@ export default defineConfig({
     ctViteConfig: {
       resolve: {
         alias: {
-          '@': '/src',
-        },
-      },
-    },
+          '@': '/src'
+        }
+      }
+    }
   },
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-  ],
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } }
+  ]
 });
 ```
 
@@ -95,9 +95,9 @@ test('renders button with text', async ({ mount }) => {
 ```tsx
 test('renders with all props', async ({ mount }) => {
   const component = await mount(
-    <Button variant="primary" size="large" disabled={false} icon="check">
+    <Button variant='primary' size='large' disabled={false} icon='check'>
       Submit
-    </Button>,
+    </Button>
   );
 
   await expect(component).toHaveClass(/primary/);
@@ -129,7 +129,7 @@ test('with custom provider', async ({ mount }) => {
   const component = await mount(
     <AuthProvider initialUser={{ name: 'Test' }}>
       <UserProfile />
-    </AuthProvider>,
+    </AuthProvider>
   );
 
   await expect(component.getByText('Test')).toBeVisible();
@@ -179,14 +179,14 @@ test('controlled input', async ({ mount }) => {
       onChange={(e) => {
         externalValue = e.target.value;
       }}
-    />,
+    />
   );
 
   await component.locator('input').fill('hello');
 
   // For controlled components, update with new value
   await component.update(
-    <Input value="hello" onChange={(e) => (externalValue = e.target.value)} />,
+    <Input value='hello' onChange={(e) => (externalValue = e.target.value)} />
   );
 
   await expect(component.locator('input')).toHaveValue('hello');
@@ -233,7 +233,7 @@ test('onChange provides correct value', async ({ mount }) => {
   const values: string[] = [];
 
   const component = await mount(
-    <Select options={['a', 'b', 'c']} onChange={(value) => values.push(value)} />,
+    <Select options={['a', 'b', 'c']} onChange={(value) => values.push(value)} />
   );
 
   await component.getByRole('combobox').click();
@@ -254,7 +254,7 @@ test('form submission', async ({ mount }) => {
       onSubmit={(data) => {
         submittedData = data;
       }}
-    />,
+    />
   );
 
   await component.getByLabel('Email').fill('test@example.com');
@@ -263,7 +263,7 @@ test('form submission', async ({ mount }) => {
 
   expect(submittedData).toEqual({
     email: 'test@example.com',
-    password: 'secret123',
+    password: 'secret123'
   });
 });
 ```
@@ -296,7 +296,7 @@ test('renders children', async ({ mount }) => {
     <Card>
       <h2>Title</h2>
       <p>Description</p>
-    </Card>,
+    </Card>
   );
 
   await expect(component.getByRole('heading')).toHaveText('Title');
@@ -313,8 +313,8 @@ test('renders named slots', async ({ mount }) => {
     slots: {
       header: '<h2>Modal Title</h2>',
       default: '<p>Modal content</p>',
-      footer: '<button>Close</button>',
-    },
+      footer: '<button>Close</button>'
+    }
   });
 
   await expect(component.getByRole('heading')).toHaveText('Modal Title');
@@ -327,9 +327,9 @@ test('renders named slots', async ({ mount }) => {
 ```tsx
 test('render prop pattern', async ({ mount }) => {
   const component = await mount(
-    <DataFetcher url="/api/users">
+    <DataFetcher url='/api/users'>
       {({ data, loading }) => (loading ? <span>Loading...</span> : <span>{data.name}</span>)}
-    </DataFetcher>,
+    </DataFetcher>
   );
 
   // Initially loading
@@ -352,7 +352,7 @@ beforeMount(async ({ hooksConfig }) => {
   // Mock analytics
   window.analytics = {
     track: () => {},
-    identify: () => {},
+    identify: () => {}
   };
 
   // Mock feature flags
@@ -367,8 +367,8 @@ beforeMount(async ({ hooksConfig }) => {
 test('with feature flag', async ({ mount }) => {
   const component = await mount(<FeatureComponent />, {
     hooksConfig: {
-      featureFlags: { newFeature: true },
-    },
+      featureFlags: { newFeature: true }
+    }
   });
 
   await expect(component.getByText('New Feature')).toBeVisible();
@@ -382,7 +382,7 @@ test('component with API', async ({ mount, page }) => {
   // Mock API before mounting
   await page.route('**/api/user', (route) => {
     route.fulfill({
-      json: { id: 1, name: 'Test User' },
+      json: { id: 1, name: 'Test User' }
     });
   });
 
@@ -399,8 +399,8 @@ test('component with API', async ({ mount, page }) => {
 test('with mocked hook', async ({ mount }) => {
   const component = await mount(<Dashboard />, {
     hooksConfig: {
-      mockAuth: { user: { name: 'Admin' }, isAdmin: true },
-    },
+      mockAuth: { user: { name: 'Admin' }, isAdmin: true }
+    }
   });
 
   await expect(component.getByText('Admin Panel')).toBeVisible();
@@ -427,7 +427,7 @@ test('uses context', async ({ mount }) => {
   const component = await mount(
     <UserContext.Provider value={{ name: 'Test' }}>
       <UserGreeting />
-    </UserContext.Provider>,
+    </UserContext.Provider>
   );
 
   await expect(component).toContainText('Hello, Test');
@@ -446,8 +446,8 @@ test('v-model binding', async ({ mount }) => {
   const component = await mount(MyInput, {
     props: {
       modelValue,
-      'onUpdate:modelValue': (v: string) => (modelValue = v),
-    },
+      'onUpdate:modelValue': (v: string) => (modelValue = v)
+    }
   });
 
   await component.locator('input').fill('test');

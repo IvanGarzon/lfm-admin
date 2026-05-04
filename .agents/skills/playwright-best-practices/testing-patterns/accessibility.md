@@ -69,9 +69,9 @@ type A11yFixtures = {
 export const test = base.extend<A11yFixtures>({
   makeAxeBuilder: async ({ page }, use) => {
     await use(() =>
-      new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']),
+      new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     );
-  },
+  }
 });
 
 // Usage
@@ -95,7 +95,7 @@ test('report a11y issues', async ({ page }) => {
     id: v.id,
     impact: v.impact,
     description: v.description,
-    nodes: v.nodes.map((n) => n.html),
+    nodes: v.nodes.map((n) => n.html)
   }));
 
   expect(violations, JSON.stringify(violations, null, 2)).toHaveLength(0);
@@ -250,7 +250,7 @@ test('focus trapped in modal', async ({ page }) => {
 
   // Get all focusable elements in modal
   const focusableElements = modal.locator(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
   const count = await focusableElements.count();
 
@@ -323,9 +323,9 @@ export default defineConfig({
     {
       name: 'a11y',
       testMatch: /.*\.a11y\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-  ],
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
 });
 ```
 

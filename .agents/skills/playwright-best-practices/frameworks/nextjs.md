@@ -36,12 +36,12 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } }
   ],
 
   webServer: {
@@ -50,9 +50,9 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      NODE_ENV: process.env.CI ? 'production' : 'test',
-    },
-  },
+      NODE_ENV: process.env.CI ? 'production' : 'test'
+    }
+  }
 });
 ```
 
@@ -204,7 +204,7 @@ test('GET /api/products returns list', async ({ request }) => {
 
 test('POST /api/products creates item', async ({ request }) => {
   const response = await request.post('/api/products', {
-    data: { name: 'Test Product', price: 29.99 },
+    data: { name: 'Test Product', price: 29.99 }
   });
 
   expect(response.status()).toBe(201);
@@ -214,7 +214,7 @@ test('POST /api/products creates item', async ({ request }) => {
 
 test('POST /api/products validates fields', async ({ request }) => {
   const response = await request.post('/api/products', {
-    data: { name: '' },
+    data: { name: '' }
   });
 
   expect(response.status()).toBe(400);
@@ -256,7 +256,7 @@ test('redirect preserves return URL', async ({ page }) => {
   const url = new URL(page.url());
   expect(url.pathname).toBe('/login');
   expect(url.searchParams.get('callbackUrl') || url.searchParams.get('returnTo')).toContain(
-    '/dashboard/settings',
+    '/dashboard/settings'
   );
 });
 ```
@@ -278,7 +278,7 @@ test('middleware sets security headers', async ({ page }) => {
 ```typescript
 test('middleware rewrites based on locale', async ({ page, context }) => {
   await context.setExtraHTTPHeaders({
-    'Accept-Language': 'fr-FR,fr;q=0.9',
+    'Accept-Language': 'fr-FR,fr;q=0.9'
   });
 
   await page.goto('/');
@@ -304,7 +304,7 @@ test('no hydration errors in console', async ({ page }) => {
   await page.getByRole('button', { name: 'Get started' }).click();
 
   const hydrationErrors = consoleErrors.filter(
-    (e) => e.includes('Hydration') || e.includes('hydration') || e.includes('did not match'),
+    (e) => e.includes('Hydration') || e.includes('hydration') || e.includes('did not match')
   );
   expect(hydrationErrors).toEqual([]);
 });
@@ -366,10 +366,10 @@ export default defineConfig({
     {
       name: 'authenticated',
       use: { storageState: 'playwright/.auth/user.json' },
-      dependencies: ['setup'],
+      dependencies: ['setup']
     },
-    { name: 'unauthenticated', testMatch: '**/*.unauth.spec.ts' },
-  ],
+    { name: 'unauthenticated', testMatch: '**/*.unauth.spec.ts' }
+  ]
 });
 ```
 

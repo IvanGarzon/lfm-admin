@@ -32,8 +32,8 @@ import { defineConfig, env } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DATABASE_URL'),
-  },
+    url: env('DATABASE_URL')
+  }
 });
 ```
 
@@ -79,8 +79,8 @@ Use a driver adapter for the standard SQL workflow.
      password: process.env.SQLSERVER_PASSWORD,
      options: {
        encrypt: true,
-       trustServerCertificate: true,
-     },
+       trustServerCertificate: true
+     }
    });
 
    const prisma = new PrismaClient({ adapter });

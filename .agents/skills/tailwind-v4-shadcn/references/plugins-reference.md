@@ -86,7 +86,7 @@ These errors happen when using v3 syntax in v4 projects:
 ```js
 // tailwind.config.js
 module.exports = {
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [require('@tailwindcss/typography')]
 };
 ```
 

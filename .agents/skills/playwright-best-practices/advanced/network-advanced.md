@@ -18,7 +18,7 @@ test('add auth header to requests', async ({ page }) => {
     const headers = {
       ...route.request().headers(),
       Authorization: 'Bearer test-token',
-      'X-Test-Header': 'test-value',
+      'X-Test-Header': 'test-value'
     };
     route.continue({ headers });
   });
@@ -39,11 +39,11 @@ test('modify POST body', async ({ page }) => {
       const modifiedData = {
         ...postData,
         testMode: true,
-        testTimestamp: Date.now(),
+        testTimestamp: Date.now()
       };
 
       await route.continue({
-        postData: JSON.stringify(modifiedData),
+        postData: JSON.stringify(modifiedData)
       });
     } else {
       await route.continue();
@@ -68,12 +68,12 @@ test('modify API response', async ({ page }) => {
     const modified = json.map((product: any) => ({
       ...product,
       price: product.price * 0.9, // 10% discount
-      testMode: true,
+      testMode: true
     }));
 
     await route.fulfill({
       response,
-      json: modified,
+      json: modified
     });
   });
 
@@ -97,10 +97,10 @@ test('mock GraphQL query', async ({ page }) => {
             user: {
               id: '1',
               name: 'Test User',
-              email: 'test@example.com',
-            },
-          },
-        },
+              email: 'test@example.com'
+            }
+          }
+        }
       });
     }
 
@@ -110,10 +110,10 @@ test('mock GraphQL query', async ({ page }) => {
           data: {
             products: [
               { id: '1', name: 'Product A', price: 29.99 },
-              { id: '2', name: 'Product B', price: 49.99 },
-            ],
-          },
-        },
+              { id: '2', name: 'Product B', price: 49.99 }
+            ]
+          }
+        }
       });
     }
 
@@ -162,7 +162,7 @@ export const test = base.extend<GraphQLFixtures>({
         return route.continue();
       });
     });
-  },
+  }
 });
 
 // Usage
@@ -171,16 +171,16 @@ test('dashboard with mocked GraphQL', async ({ page, mockGraphQL }) => {
     {
       operation: 'GetDashboardStats',
       response: {
-        data: { stats: { users: 100, revenue: 50000 } },
-      },
+        data: { stats: { users: 100, revenue: 50000 } }
+      }
     },
     {
       operation: 'GetUser',
       variables: { id: '1' },
       response: {
-        data: { user: { id: '1', name: 'John' } },
-      },
-    },
+        data: { user: { id: '1', name: 'John' } }
+      }
+    }
   ]);
 
   await page.goto('/dashboard');
@@ -207,11 +207,11 @@ test('mock GraphQL mutation', async ({ page }) => {
               items: input.items,
               total: input.items.reduce(
                 (sum: number, item: any) => sum + item.price * item.quantity,
-                0,
-              ),
-            },
-          },
-        },
+                0
+              )
+            }
+          }
+        }
       });
     }
 
@@ -235,7 +235,7 @@ test('record HAR', async ({ page, context }) => {
   // Start recording
   await context.routeFromHAR('./recordings/checkout.har', {
     update: true, // Create/update HAR file
-    url: '**/api/**',
+    url: '**/api/**'
   });
 
   await page.goto('/checkout');
@@ -252,7 +252,7 @@ test('record HAR', async ({ page, context }) => {
 test('playback HAR', async ({ page, context }) => {
   await context.routeFromHAR('./recordings/checkout.har', {
     url: '**/api/**',
-    update: false, // Don't update, just playback
+    update: false // Don't update, just playback
   });
 
   await page.goto('/checkout');
@@ -269,7 +269,7 @@ test('HAR with live fallback', async ({ page, context }) => {
   await context.routeFromHAR('./recordings/api.har', {
     url: '**/api/**',
     update: false,
-    notFound: 'fallback', // Use real network if not in HAR
+    notFound: 'fallback' // Use real network if not in HAR
   });
 
   await page.goto('/dashboard');
@@ -288,21 +288,21 @@ test('conditional mock by body', async ({ page }) => {
     if (body.query === 'error') {
       return route.fulfill({
         status: 500,
-        json: { error: 'Search failed' },
+        json: { error: 'Search failed' }
       });
     }
 
     if (body.query === 'empty') {
       return route.fulfill({
-        json: { results: [] },
+        json: { results: [] }
       });
     }
 
     // Default response
     return route.fulfill({
       json: {
-        results: [{ id: 1, title: `Result for: ${body.query}` }],
-      },
+        results: [{ id: 1, title: `Result for: ${body.query}` }]
+      }
     });
   });
 
@@ -327,13 +327,13 @@ test('different response on retry', async ({ page }) => {
     if (callCount < 3) {
       return route.fulfill({
         status: 503,
-        json: { error: 'Service unavailable' },
+        json: { error: 'Service unavailable' }
       });
     }
 
     // Succeed on 3rd attempt
     return route.fulfill({
-      json: { status: 'ok' },
+      json: { status: 'ok' }
     });
   });
 
@@ -353,7 +353,7 @@ test('slow network simulation', async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     return route.fulfill({
-      json: { data: 'loaded' },
+      json: { data: 'loaded' }
     });
   });
 
@@ -380,7 +380,7 @@ test('slow network experience', async ({ page, context }) => {
     offline: false,
     downloadThroughput: (500 * 1024) / 8, // 500 Kbps
     uploadThroughput: (500 * 1024) / 8,
-    latency: 400, // 400ms
+    latency: 400 // 400ms
   });
 
   await page.goto('/');
@@ -407,7 +407,7 @@ type NetworkCondition = 'slow3g' | 'fast3g' | 'offline';
 
 const conditions = {
   slow3g: { downloadThroughput: 50000, uploadThroughput: 50000, latency: 2000 },
-  fast3g: { downloadThroughput: 180000, uploadThroughput: 75000, latency: 150 },
+  fast3g: { downloadThroughput: 180000, uploadThroughput: 75000, latency: 150 }
 };
 
 type NetworkFixtures = {
@@ -424,14 +424,14 @@ export const test = base.extend<NetworkFixtures>({
       } else {
         await client.send('Network.emulateNetworkConditions', {
           offline: false,
-          ...conditions[condition],
+          ...conditions[condition]
         });
       }
     });
 
     // Reset
     await context.setOffline(false);
-  },
+  }
 });
 ```
 

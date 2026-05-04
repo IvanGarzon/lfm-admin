@@ -68,9 +68,9 @@ const fastify = Fastify({
     level: process.env.LOG_LEVEL || 'info',
     transport: {
       target: 'pino-pretty',
-      options: { colorize: true },
-    },
-  },
+      options: { colorize: true }
+    }
+  }
 });
 
 // Plugins
@@ -91,15 +91,15 @@ fastify.post<{
         required: ['name', 'email'],
         properties: {
           name: { type: 'string', minLength: 1 },
-          email: { type: 'string', format: 'email' },
-        },
-      },
-    },
+          email: { type: 'string', format: 'email' }
+        }
+      }
+    }
   },
   async (request, reply) => {
     const { name, email } = request.body;
     return { id: '123', name };
-  },
+  }
 );
 
 await fastify.listen({ port: 3000, host: '0.0.0.0' });
@@ -203,7 +203,7 @@ export class UserService {
     // Create user
     const user = await this.userRepository.create({
       ...userData,
-      password: hashedPassword,
+      password: hashedPassword
     });
 
     // Remove password from response
@@ -371,14 +371,14 @@ export const validate = (schema: AnyZodObject) => {
       await schema.parseAsync({
         body: req.body,
         query: req.query,
-        params: req.params,
+        params: req.params
       });
       next();
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.errors.map((err) => ({
           field: err.path.join('.'),
-          message: err.message,
+          message: err.message
         }));
         next(new ValidationError('Validation failed', errors));
       } else {
@@ -395,8 +395,8 @@ const createUserSchema = z.object({
   body: z.object({
     name: z.string().min(1),
     email: z.string().email(),
-    password: z.string().min(8),
-  }),
+    password: z.string().min(8)
+  })
 });
 
 router.post('/users', validate(createUserSchema), userController.createUser);
@@ -412,29 +412,29 @@ import Redis from 'ioredis';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  port: parseInt(process.env.REDIS_PORT || '6379')
 });
 
 export const apiLimiter = rateLimit({
   store: new RedisStore({
     client: redis,
-    prefix: 'rl:',
+    prefix: 'rl:'
   }),
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 
 export const authLimiter = rateLimit({
   store: new RedisStore({
     client: redis,
-    prefix: 'rl:auth:',
+    prefix: 'rl:auth:'
   }),
   windowMs: 15 * 60 * 1000,
   max: 5, // Stricter limit for auth endpoints
-  skipSuccessfulRequests: true,
+  skipSuccessfulRequests: true
 });
 ```
 
@@ -449,8 +449,8 @@ const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   transport: {
     target: 'pino-pretty',
-    options: { colorize: true },
-  },
+    options: { colorize: true }
+  }
 });
 
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
@@ -465,7 +465,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
       status: res.statusCode,
       duration: `${duration}ms`,
       userAgent: req.headers['user-agent'],
-      ip: req.ip,
+      ip: req.ip
     });
   });
 
@@ -485,7 +485,7 @@ export class AppError extends Error {
   constructor(
     public message: string,
     public statusCode: number = 500,
-    public isOperational: boolean = true,
+    public isOperational: boolean = true
   ) {
     super(message);
     Object.setPrototypeOf(this, AppError.prototype);
@@ -496,7 +496,7 @@ export class AppError extends Error {
 export class ValidationError extends AppError {
   constructor(
     message: string,
-    public errors?: any[],
+    public errors?: any[]
   ) {
     super(message, 400);
   }
@@ -540,7 +540,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     return res.status(err.statusCode).json({
       status: 'error',
       message: err.message,
-      ...(err instanceof ValidationError && { errors: err.errors }),
+      ...(err instanceof ValidationError && { errors: err.errors })
     });
   }
 
@@ -549,7 +549,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     error: err.message,
     stack: err.stack,
     url: req.url,
-    method: req.method,
+    method: req.method
   });
 
   // Don't leak error details in production
@@ -557,13 +557,13 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
   res.status(500).json({
     status: 'error',
-    message,
+    message
   });
 };
 
 // Async error wrapper
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>,
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);

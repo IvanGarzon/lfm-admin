@@ -46,10 +46,10 @@ export const test = base.extend<GeoFixtures>({
       await context.setGeolocation({
         latitude: coords.latitude,
         longitude: coords.longitude,
-        accuracy: coords.accuracy ?? 100,
+        accuracy: coords.accuracy ?? 100
       });
     });
-  },
+  }
 });
 
 // Usage
@@ -95,7 +95,7 @@ test('tracks location updates', async ({ context }) => {
 test('handles location denied', async ({ browser }) => {
   // Create context without geolocation permission
   const context = await browser.newContext({
-    permissions: [], // No permissions
+    permissions: [] // No permissions
   });
 
   const page = await context.newPage();
@@ -131,7 +131,7 @@ test('notifications with permission', async ({ context }) => {
 ```typescript
 test('handles notification permission denied', async ({ browser }) => {
   const context = await browser.newContext({
-    permissions: [], // Deny all
+    permissions: [] // Deny all
   });
 
   const page = await context.newPage();
@@ -157,11 +157,11 @@ test('video call with permissions', async ({ context }) => {
   // All permissions should be granted
   const permissions = await page.evaluate(async () => ({
     camera: await navigator.permissions.query({
-      name: 'camera' as PermissionName,
+      name: 'camera' as PermissionName
     }),
     microphone: await navigator.permissions.query({
-      name: 'microphone' as PermissionName,
-    }),
+      name: 'microphone' as PermissionName
+    })
   }));
 
   expect(permissions.camera.state).toBe('granted');
@@ -231,9 +231,9 @@ export const test = base.extend<ClipboardFixtures>({
       },
       read: async () => {
         return page.evaluate(() => navigator.clipboard.readText());
-      },
+      }
     });
-  },
+  }
 });
 ```
 
@@ -329,14 +329,14 @@ test('switch camera', async ({ page }) => {
           deviceId: 'cam1',
           kind: 'videoinput',
           label: 'Front Camera',
-          groupId: '1',
+          groupId: '1'
         },
         {
           deviceId: 'cam2',
           kind: 'videoinput',
           label: 'Back Camera',
-          groupId: '2',
-        },
+          groupId: '2'
+        }
       ] as MediaDeviceInfo[];
 
     navigator.mediaDevices.getUserMedia = async () => {

@@ -23,10 +23,10 @@ defineConfig({
     // Environment-specific options
     environmentOptions: {
       jsdom: {
-        url: 'http://localhost',
-      },
-    },
-  },
+        url: 'http://localhost'
+      }
+    }
+  }
 });
 ```
 
@@ -87,10 +87,10 @@ defineConfig({
         url: 'http://localhost:3000',
         html: '<!DOCTYPE html><html><body></body></html>',
         userAgent: 'custom-agent',
-        resources: 'usable',
-      },
-    },
-  },
+        resources: 'usable'
+      }
+    }
+  }
 });
 ```
 
@@ -120,18 +120,18 @@ defineConfig({
         test: {
           name: 'unit',
           include: ['tests/unit/**/*.test.ts'],
-          environment: 'node',
-        },
+          environment: 'node'
+        }
       },
       {
         test: {
           name: 'dom',
           include: ['tests/dom/**/*.test.ts'],
-          environment: 'jsdom',
-        },
-      },
-    ],
-  },
+          environment: 'jsdom'
+        }
+      }
+    ]
+  }
 });
 ```
 
@@ -154,9 +154,9 @@ export default <Environment>{
     return {
       teardown() {
         delete globalThis.myGlobal;
-      },
+      }
     };
-  },
+  }
 };
 ```
 
@@ -165,8 +165,8 @@ Use with:
 ```ts
 defineConfig({
   test: {
-    environment: 'custom',
-  },
+    environment: 'custom'
+  }
 });
 ```
 
@@ -187,13 +187,13 @@ export default <Environment>{
       getVmContext() {
         return context;
       },
-      teardown() {},
+      teardown() {}
     };
   },
 
   setup() {
     return { teardown() {} };
-  },
+  }
 };
 ```
 
@@ -207,9 +207,9 @@ defineConfig({
     browser: {
       enabled: true,
       name: 'chromium', // or 'firefox', 'webkit'
-      provider: 'playwright',
-    },
-  },
+      provider: 'playwright'
+    }
+  }
 });
 ```
 
@@ -226,10 +226,10 @@ defineConfig({
     css: {
       include: /\.module\.css$/,
       modules: {
-        classNameStrategy: 'non-scoped',
-      },
-    },
-  },
+        classNameStrategy: 'non-scoped'
+      }
+    }
+  }
 });
 ```
 
@@ -242,10 +242,10 @@ defineConfig({
   test: {
     server: {
       deps: {
-        inline: ['problematic-package'],
-      },
-    },
-  },
+        inline: ['problematic-package']
+      }
+    }
+  }
 });
 ```
 

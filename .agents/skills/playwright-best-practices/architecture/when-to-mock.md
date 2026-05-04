@@ -79,8 +79,8 @@ test('order flow with mocked payment service', async ({ page }) => {
       contentType: 'application/json',
       body: JSON.stringify({
         transactionId: 'txn_mock_abc',
-        status: 'completed',
-      }),
+        status: 'completed'
+      })
     });
   });
 
@@ -95,8 +95,8 @@ test('display error on payment decline', async ({ page }) => {
       status: 402,
       contentType: 'application/json',
       body: JSON.stringify({
-        error: { code: 'insufficient_funds', message: 'Card declined.' },
-      }),
+        error: { code: 'insufficient_funds', message: 'Card declined.' }
+      })
     });
   });
 
@@ -121,7 +121,7 @@ test('display low inventory warning', async ({ page }) => {
 
     await route.fulfill({
       response,
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
   });
 
@@ -137,12 +137,12 @@ test('inject test notification into real response', async ({ page }) => {
     data.items.push({
       id: 'test-alert',
       text: 'Report generated',
-      category: 'info',
+      category: 'info'
     });
 
     await route.fulfill({
       response,
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     });
   });
 
@@ -161,7 +161,7 @@ For complex API sequences (OAuth flows, multi-step wizards):
 test('capture API traffic for admin panel', async ({ page }) => {
   await page.routeFromHAR('tests/fixtures/admin-panel.har', {
     url: '**/api/**',
-    update: true,
+    update: true
   });
 
   await page.goto('/admin');
@@ -176,7 +176,7 @@ test('capture API traffic for admin panel', async ({ page }) => {
 test('admin panel loads with recorded data', async ({ page }) => {
   await page.routeFromHAR('tests/fixtures/admin-panel.har', {
     url: '**/api/**',
-    update: false,
+    update: false
   });
 
   await page.goto('/admin');
@@ -202,11 +202,11 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: 30_000
   },
   use: {
-    baseURL: 'http://localhost:3000',
-  },
+    baseURL: 'http://localhost:3000'
+  }
 });
 ```
 
@@ -216,8 +216,8 @@ export default defineConfig({
 // playwright.config.ts
 export default defineConfig({
   use: {
-    baseURL: process.env.CI ? 'https://staging.example.com' : 'http://localhost:3000',
-  },
+    baseURL: process.env.CI ? 'https://staging.example.com' : 'http://localhost:3000'
+  }
 });
 ```
 
@@ -230,9 +230,9 @@ export default defineConfig({
     command: 'docker compose -f docker-compose.test.yml up --wait',
     url: 'http://localhost:3000/health',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 120_000
   },
-  globalTeardown: './tests/global-teardown.ts',
+  globalTeardown: './tests/global-teardown.ts'
 });
 ```
 
@@ -272,7 +272,7 @@ export const test = base.extend<MockConfig>({
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ status: 'paid', id: 'inv_mock_789' }),
+          body: JSON.stringify({ status: 'paid', id: 'inv_mock_789' })
         });
       });
     }
@@ -282,7 +282,7 @@ export const test = base.extend<MockConfig>({
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ delivered: true }),
+          body: JSON.stringify({ delivered: true })
         });
       });
     }
@@ -294,7 +294,7 @@ export const test = base.extend<MockConfig>({
     }
 
     await use(page);
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -330,15 +330,15 @@ export default defineConfig({
     {
       name: 'ci-fast',
       testMatch: '**/*.spec.ts',
-      use: { baseURL: 'http://localhost:3000' },
+      use: { baseURL: 'http://localhost:3000' }
     },
     {
       name: 'nightly-full',
       testMatch: '**/*.integration.spec.ts',
       use: { baseURL: 'https://staging.example.com' },
-      timeout: 120_000,
-    },
-  ],
+      timeout: 120_000
+    }
+  ]
 });
 ```
 
@@ -350,13 +350,13 @@ Guard against mock drift from real APIs:
 test.describe('contract validation', () => {
   test('billing mock matches real API shape', async ({ request }) => {
     const realResponse = await request.post('/api/billing/charge', {
-      data: { amount: 5000, currency: 'usd' },
+      data: { amount: 5000, currency: 'usd' }
     });
     const realBody = await realResponse.json();
 
     const mockBody = {
       status: 'paid',
-      id: 'inv_mock_789',
+      id: 'inv_mock_789'
     };
 
     expect(Object.keys(mockBody).sort()).toEqual(Object.keys(realBody).sort());

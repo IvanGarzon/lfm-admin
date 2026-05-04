@@ -100,13 +100,13 @@ test('chart matches baseline', async ({ page }) => {
 
   // Full page screenshot
   await expect(page).toHaveScreenshot('dashboard.png', {
-    maxDiffPixels: 100, // Allow small differences
+    maxDiffPixels: 100 // Allow small differences
   });
 
   // Just the canvas
   const chart = page.locator('canvas#sales-chart');
   await expect(chart).toHaveScreenshot('sales-chart.png', {
-    maxDiffPixelRatio: 0.01, // 1% difference allowed
+    maxDiffPixelRatio: 0.01 // 1% difference allowed
   });
 });
 ```
@@ -157,9 +157,9 @@ export default defineConfig({
       // Increased threshold for canvas (anti-aliasing differences)
       maxDiffPixelRatio: 0.02,
       threshold: 0.3, // Per-pixel color threshold
-      animations: 'disabled',
-    },
-  },
+      animations: 'disabled'
+    }
+  }
 });
 ```
 
@@ -252,21 +252,21 @@ test('pinch zoom on canvas', async ({ page }) => {
         identifier: 1,
         target,
         clientX: x - 50,
-        clientY: y,
+        clientY: y
       });
       const touch2 = new Touch({
         identifier: 2,
         target,
         clientX: x + 50,
-        clientY: y,
+        clientY: y
       });
 
       target.dispatchEvent(
         new TouchEvent('touchstart', {
           touches: [touch1, touch2],
           targetTouches: [touch1, touch2],
-          bubbles: true,
-        }),
+          bubbles: true
+        })
       );
 
       // Simulate pinch out
@@ -274,26 +274,26 @@ test('pinch zoom on canvas', async ({ page }) => {
         identifier: 1,
         target,
         clientX: x - 100,
-        clientY: y,
+        clientY: y
       });
       const touch2End = new Touch({
         identifier: 2,
         target,
         clientX: x + 100,
-        clientY: y,
+        clientY: y
       });
 
       target.dispatchEvent(
         new TouchEvent('touchmove', {
           touches: [touch1End, touch2End],
           targetTouches: [touch1End, touch2End],
-          bubbles: true,
-        }),
+          bubbles: true
+        })
       );
 
       target.dispatchEvent(new TouchEvent('touchend', { bubbles: true }));
     },
-    { x: centerX, y: centerY },
+    { x: centerX, y: centerY }
   );
 
   // Verify zoom level changed
@@ -342,7 +342,7 @@ test('3D scene renders', async ({ page }) => {
 
   // Screenshot comparison (higher threshold for WebGL)
   await expect(page.locator('canvas')).toHaveScreenshot('3d-scene.png', {
-    maxDiffPixelRatio: 0.05, // WebGL can have more variation
+    maxDiffPixelRatio: 0.05 // WebGL can have more variation
   });
 });
 ```
@@ -364,7 +364,7 @@ test('Three.js scene interaction', async ({ page }) => {
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down();
   await page.mouse.move(box!.x + box!.width / 2 + 100, box!.y + box!.height / 2, {
-    steps: 10,
+    steps: 10
   });
   await page.mouse.up();
 

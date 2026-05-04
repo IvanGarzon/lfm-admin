@@ -196,7 +196,7 @@ const test = base.extend<{ db: Database }>({
     const db = await createDb();
     await use(db);
     await db.close();
-  },
+  }
 });
 
 // These hooks know about `db` fixture
@@ -225,9 +225,9 @@ Configure with `sequence.hooks`:
 defineConfig({
   test: {
     sequence: {
-      hooks: 'list', // 'stack' (default), 'list', 'parallel'
-    },
-  },
+      hooks: 'list' // 'stack' (default), 'list', 'parallel'
+    }
+  }
 });
 ```
 

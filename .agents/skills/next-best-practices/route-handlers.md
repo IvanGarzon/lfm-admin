@@ -115,8 +115,8 @@ return Response.json({ error: 'Not found' }, { status: 404 });
 // With headers
 return Response.json(data, {
   headers: {
-    'Cache-Control': 'max-age=3600',
-  },
+    'Cache-Control': 'max-age=3600'
+  }
 });
 
 // Redirect
@@ -124,7 +124,7 @@ return Response.redirect(new URL('/login', request.url));
 
 // Stream
 return new Response(stream, {
-  headers: { 'Content-Type': 'text/event-stream' },
+  headers: { 'Content-Type': 'text/event-stream' }
 });
 ```
 

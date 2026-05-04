@@ -19,7 +19,7 @@ test('example', async ({
   context, // Browser context (cookies, localStorage)
   browser, // Browser instance
   browserName, // 'chromium', 'firefox', or 'webkit'
-  request, // API request context
+  request // API request context
 }) => {
   // Each test gets fresh instances
 });
@@ -66,7 +66,7 @@ export const test = base.extend<MyFixtures>({
   // Simple fixture
   apiClient: async ({ request }, use) => {
     await use(new ApiClient(request));
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -94,14 +94,14 @@ export const test = base.extend<Options & Fixtures>({
     await page.getByLabel('Password').fill(defaultUser.password);
     await page.getByRole('button', { name: 'Sign in' }).click();
     await use(page);
-  },
+  }
 });
 
 // Override in config
 export default defineConfig({
   use: {
-    defaultUser: { email: 'admin@example.com', password: 'admin123' },
-  },
+    defaultUser: { email: 'admin@example.com', password: 'admin123' }
+  }
 });
 ```
 
@@ -116,8 +116,8 @@ export const test = base.extend<{}, { setupDb: void }>({
       await use();
       await cleanDatabase();
     },
-    { auto: true },
-  ],
+    { auto: true }
+  ]
 });
 ```
 
@@ -133,7 +133,7 @@ test.extend({
     const page = await browser.newPage();
     await use(page);
     await page.close();
-  },
+  }
 });
 ```
 
@@ -154,8 +154,8 @@ export const test = base.extend<{}, WorkerFixtures>({
       await use(account);
       await deleteTestAccount(account);
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 ```
 
@@ -178,8 +178,8 @@ export const test = baseTest.extend<{}, WorkerFixtures>({
       await use(userName);
       await deleteUserFromTestDatabase(userName);
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 ```
 
@@ -264,11 +264,11 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
+        storageState: '.auth/user.json'
       },
-      dependencies: ['setup'],
-    },
-  ],
+      dependencies: ['setup']
+    }
+  ]
 });
 ```
 
@@ -294,14 +294,14 @@ projects: [
     name: 'admin tests',
     testMatch: /.*admin.*\.spec\.ts/,
     use: { storageState: '.auth/admin.json' },
-    dependencies: ['setup'],
+    dependencies: ['setup']
   },
   {
     name: 'user tests',
     testMatch: /.*user.*\.spec\.ts/,
     use: { storageState: '.auth/user.json' },
-    dependencies: ['setup'],
-  },
+    dependencies: ['setup']
+  }
 ];
 ```
 
@@ -312,7 +312,7 @@ projects: [
 export const test = base.extend<{ adminPage: Page; userPage: Page }>({
   adminPage: async ({ browser }, use) => {
     const context = await browser.newContext({
-      storageState: '.auth/admin.json',
+      storageState: '.auth/admin.json'
     });
     const page = await context.newPage();
     await use(page);
@@ -321,12 +321,12 @@ export const test = base.extend<{ adminPage: Page; userPage: Page }>({
 
   userPage: async ({ browser }, use) => {
     const context = await browser.newContext({
-      storageState: '.auth/user.json',
+      storageState: '.auth/user.json'
     });
     const page = await context.newPage();
     await use(page);
     await context.close();
-  },
+  }
 });
 ```
 
@@ -350,7 +350,7 @@ export const test = base.extend<{ dbTransaction: Transaction }>({
     await use(transaction);
 
     await transaction.rollback(); // Clean slate for next test
-  },
+  }
 });
 ```
 
@@ -366,7 +366,7 @@ export const test = base.extend<TestData>({
   testUser: async ({}, use) => {
     const user = await db.users.create({
       email: `test-${Date.now()}@example.com`,
-      name: 'Test User',
+      name: 'Test User'
     });
 
     await use(user);
@@ -377,13 +377,13 @@ export const test = base.extend<TestData>({
   testProducts: async ({ testUser }, use) => {
     const products = await db.products.createMany([
       { name: 'Product A', ownerId: testUser.id },
-      { name: 'Product B', ownerId: testUser.id },
+      { name: 'Product B', ownerId: testUser.id }
     ]);
 
     await use(products);
 
     await db.products.deleteMany(products.map((p) => p.id));
-  },
+  }
 });
 ```
 

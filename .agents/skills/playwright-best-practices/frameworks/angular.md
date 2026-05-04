@@ -38,13 +38,13 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4200',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } }
   ],
 
   webServer: {
@@ -53,8 +53,8 @@ export default defineConfig({
       : 'npx ng serve',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+    timeout: 120_000
+  }
 });
 ```
 
@@ -108,7 +108,7 @@ test('use semantic locators for Angular apps', async ({ page }) => {
   // Scope locators within component boundaries
   const projectTable = page.getByRole('table', { name: 'Projects' });
   const activeRow = projectTable.getByRole('row').filter({
-    has: page.getByRole('cell', { name: 'Active' }),
+    has: page.getByRole('cell', { name: 'Active' })
   });
   await activeRow.getByRole('button', { name: 'Edit' }).click();
 });
@@ -365,7 +365,7 @@ test('lazy module loads without chunk errors', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Analytics' })).toBeVisible();
 
   const chunkErrors = consoleErrors.filter(
-    (e) => e.includes('ChunkLoadError') || e.includes('Loading chunk'),
+    (e) => e.includes('ChunkLoadError') || e.includes('Loading chunk')
   );
   expect(chunkErrors).toEqual([]);
 });
@@ -416,7 +416,7 @@ test.describe('observables through UI', () => {
     });
 
     await page.getByRole('textbox', { name: 'Search' }).pressSequentially('playwright', {
-      delay: 50,
+      delay: 50
     });
 
     await expect(page.getByRole('listitem')).toHaveCount(5);

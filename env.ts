@@ -42,8 +42,14 @@ export const env = createEnv({
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
 
     // E2E testing
+    E2E_TENANT: z.string().optional(),
+    E2E_SLUG: z.string().optional(),
     E2E_EMAIL: z.email().optional(),
-    E2E_PASSWORD: z.string().optional()
+    E2E_PASSWORD: z.string().optional(),
+    E2E_SKIP_OTP: z
+      .string()
+      .optional()
+      .transform((s) => s === 'true')
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -74,7 +80,10 @@ export const env = createEnv({
     EMAIL_TEST_MODE: process.env.EMAIL_TEST_MODE,
     EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
     EMAIL_DRY_RUN: process.env.EMAIL_DRY_RUN,
+    E2E_TENANT: process.env.E2E_TENANT,
+    E2E_SLUG: process.env.E2E_SLUG,
     E2E_EMAIL: process.env.E2E_EMAIL,
-    E2E_PASSWORD: process.env.E2E_PASSWORD
+    E2E_PASSWORD: process.env.E2E_PASSWORD,
+    E2E_SKIP_OTP: process.env.E2E_SKIP_OTP
   }
 });

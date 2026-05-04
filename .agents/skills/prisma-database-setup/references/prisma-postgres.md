@@ -55,8 +55,8 @@ import { defineConfig, env } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DATABASE_URL'),
-  },
+    url: env('DATABASE_URL')
+  }
 });
 ```
 
@@ -97,7 +97,7 @@ import { createHash } from 'node:crypto';
 
 const adapter = new PrismaPg(process.env.DATABASE_URL!, {
   statementNameGenerator: ({ sql }) =>
-    `prisma_${createHash('sha1').update(sql).digest('hex').slice(0, 16)}`,
+    `prisma_${createHash('sha1').update(sql).digest('hex').slice(0, 16)}`
 });
 ```
 
@@ -115,8 +115,8 @@ import { PrismaPostgresAdapter } from '@prisma/adapter-ppg';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPostgresAdapter({
-    connectionString: process.env.PRISMA_DIRECT_TCP_URL,
-  }),
+    connectionString: process.env.PRISMA_DIRECT_TCP_URL
+  })
 });
 ```
 

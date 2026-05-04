@@ -104,7 +104,7 @@ const users = await prisma.$queryRawUnsafe(`SELECT * FROM "${table}" WHERE id = 
 const result = await prisma.$executeRawUnsafe(
   'UPDATE "User" SET name = $1 WHERE id = $2',
   'Alice',
-  1,
+  1
 );
 ```
 

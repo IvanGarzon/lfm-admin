@@ -47,7 +47,7 @@ export default defineConfig({
   // - undefined: auto-detect (half CPU cores)
   // - number: fixed count
   // - string: percentage of cores
-  workers: process.env.CI ? '50%' : undefined,
+  workers: process.env.CI ? '50%' : undefined
 });
 ```
 
@@ -94,7 +94,7 @@ export default defineConfig({
   fullyParallel: true,
   workers: process.env.CI ? '50%' : undefined,
 
-  reporter: process.env.CI ? [['blob'], ['github']] : [['html', { open: 'on-failure' }]],
+  reporter: process.env.CI ? [['blob'], ['github']] : [['html', { open: 'on-failure' }]]
 });
 ```
 
@@ -159,7 +159,7 @@ export const test = base.extend<{}, WorkerFixtures>({
       await use(client);
       await client.disconnect();
     },
-    { scope: 'worker' },
+    { scope: 'worker' }
   ],
 
   apiToken: [
@@ -169,14 +169,14 @@ export const test = base.extend<{}, WorkerFixtures>({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user: `test-user-${workerInfo.workerIndex}`,
-          password: process.env.TEST_PASSWORD,
-        }),
+          password: process.env.TEST_PASSWORD
+        })
       });
       const { token } = await res.json();
       await use(token);
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 
 export { expect } from '@playwright/test';
@@ -199,7 +199,7 @@ test('edit settings', async ({ page }) => {
 // GOOD: Unique user per test
 test('edit settings', async ({ page, request }) => {
   const res = await request.post('/api/users', {
-    data: { name: `user-${Date.now()}`, email: `${Date.now()}@test.com` },
+    data: { name: `user-${Date.now()}`, email: `${Date.now()}@test.com` }
   });
   const user = await res.json();
 
@@ -313,7 +313,7 @@ jobs:
   ```ts
   test('create item', async ({ request }, ti) => {
     await request.post('/api/items', {
-      data: { name: `Item-${ti.workerIndex}-${Date.now()}` },
+      data: { name: `Item-${ti.workerIndex}-${Date.now()}` }
     });
   });
   ```
@@ -354,8 +354,8 @@ jobs:
         await use(r);
         await r.destroy();
       },
-      { scope: 'worker' },
-    ],
+      { scope: 'worker' }
+    ]
   });
   ```
 
@@ -364,6 +364,6 @@ jobs:
 - **Too many workers thrash**. Limit in CI:
   ```ts
   export default defineConfig({
-    workers: process.env.CI ? 2 : undefined,
+    workers: process.env.CI ? 2 : undefined
   });
   ```

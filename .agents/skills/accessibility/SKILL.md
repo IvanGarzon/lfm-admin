@@ -271,9 +271,9 @@ function showSessionWarning() {
     content: 'Your session will expire in 2 minutes.',
     actions: [
       { label: 'Extend session', action: extendSession },
-      { label: 'Log out', action: logout },
+      { label: 'Log out', action: logout }
     ],
-    timeout: 120000,
+    timeout: 120000
   });
 }
 ```

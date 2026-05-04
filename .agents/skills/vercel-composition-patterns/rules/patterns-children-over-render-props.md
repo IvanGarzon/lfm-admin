@@ -17,7 +17,7 @@ signatures.
 function Composer({
   renderHeader,
   renderFooter,
-  renderActions,
+  renderActions
 }: {
   renderHeader?: () => React.ReactNode;
   renderFooter?: () => React.ReactNode;
@@ -56,7 +56,7 @@ function ComposerFrame({ children }: { children: React.ReactNode }) {
 }
 
 function ComposerFooter({ children }: { children: React.ReactNode }) {
-  return <footer className="flex">{children}</footer>;
+  return <footer className='flex'>{children}</footer>;
 }
 
 // Usage is flexible

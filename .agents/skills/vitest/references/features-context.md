@@ -52,7 +52,7 @@ export const test = base.extend<Fixtures>({
     const user = await db.createUser({ name: 'Test' });
     await use(user);
     await db.deleteUser(user.id);
-  },
+  }
 });
 ```
 
@@ -74,7 +74,7 @@ const test = base.extend({
   expensive: async ({}, use) => {
     console.log('initializing'); // Only runs if test uses it
     await use('value');
-  },
+  }
 });
 
 test('no fixture', () => {}); // expensive not called
@@ -93,8 +93,8 @@ const test = base.extend({
       await use();
       await globalTeardown();
     },
-    { auto: true }, // Always run
-  ],
+    { auto: true } // Always run
+  ]
 });
 ```
 
@@ -112,8 +112,8 @@ const test = base.extend({
       await use(conn);
       await conn.close();
     },
-    { scope: 'file' },
-  ],
+    { scope: 'file' }
+  ]
 });
 ```
 
@@ -127,8 +127,8 @@ const test = base.extend({
     async ({}, use) => {
       await use(globalResource);
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 });
 ```
 
@@ -139,7 +139,7 @@ Override fixtures per project:
 ```ts
 // test file
 const test = base.extend({
-  apiUrl: ['/default', { injected: true }],
+  apiUrl: ['/default', { injected: true }]
 });
 
 // vitest.config.ts
@@ -149,11 +149,11 @@ defineConfig({
       {
         test: {
           name: 'prod',
-          provide: { apiUrl: 'https://api.prod.com' },
-        },
-      },
-    ],
-  },
+          provide: { apiUrl: 'https://api.prod.com' }
+        }
+      }
+    ]
+  }
 });
 ```
 
@@ -163,7 +163,7 @@ Override fixture for specific suite:
 
 ```ts
 const test = base.extend({
-  environment: 'development',
+  environment: 'development'
 });
 
 describe('production tests', () => {
@@ -189,7 +189,7 @@ const test = base.extend<{ db: Database }>({
     const db = await createDb();
     await use(db);
     await db.close();
-  },
+  }
 });
 
 // Hooks know about fixtures
@@ -211,7 +211,7 @@ Extend from another extended test:
 export const test = base.extend<{ db: Database }>({
   db: async ({}, use) => {
     /* ... */
-  },
+  }
 });
 
 // admin-test.ts
@@ -221,7 +221,7 @@ export const test = dbTest.extend<{ admin: User }>({
   admin: async ({ db }, use) => {
     const admin = await db.createAdmin();
     await use(admin);
-  },
+  }
 });
 ```
 

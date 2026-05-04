@@ -43,10 +43,10 @@ test("two users see each other's changes", async ({ browser }) => {
 test('admin and user interaction', async ({ browser }) => {
   // Load different auth states
   const adminContext = await browser.newContext({
-    storageState: '.auth/admin.json',
+    storageState: '.auth/admin.json'
   });
   const userContext = await browser.newContext({
-    storageState: '.auth/user.json',
+    storageState: '.auth/user.json'
   });
 
   const adminPage = await adminContext.newPage();
@@ -93,7 +93,7 @@ export const test = base.extend<MultiUserFixtures>({
 
     await use(async (authState) => {
       const context = await browser.newContext({
-        storageState: authState,
+        storageState: authState
       });
       const page = await context.newPage();
       sessions.push({ context, page });
@@ -104,7 +104,7 @@ export const test = base.extend<MultiUserFixtures>({
     for (const session of sessions) {
       await session.context.close();
     }
-  },
+  }
 });
 
 // Usage
@@ -172,7 +172,7 @@ test('shows other user cursors', async ({ browser }) => {
 
   // Mock to identify users
   await page1.route('**/api/me', (route) =>
-    route.fulfill({ json: { id: 'user-1', name: 'Alice' } }),
+    route.fulfill({ json: { id: 'user-1', name: 'Alice' } })
   );
   await page2.route('**/api/me', (route) => route.fulfill({ json: { id: 'user-2', name: 'Bob' } }));
 
@@ -199,13 +199,13 @@ test('shows other user cursors', async ({ browser }) => {
 const roles = [
   { role: 'admin', canDelete: true, canEdit: true, canView: true },
   { role: 'editor', canDelete: false, canEdit: true, canView: true },
-  { role: 'viewer', canDelete: false, canEdit: false, canView: true },
+  { role: 'viewer', canDelete: false, canEdit: false, canView: true }
 ];
 
 for (const { role, canDelete, canEdit, canView } of roles) {
   test(`${role} permissions`, async ({ browser }) => {
     const context = await browser.newContext({
-      storageState: `.auth/${role}.json`,
+      storageState: `.auth/${role}.json`
     });
     const page = await context.newPage();
 
@@ -244,7 +244,7 @@ for (const { role, canDelete, canEdit, canView } of roles) {
 ```typescript
 test('cannot access admin routes as user', async ({ browser }) => {
   const userContext = await browser.newContext({
-    storageState: '.auth/user.json',
+    storageState: '.auth/user.json'
   });
   const page = await userContext.newPage();
 
@@ -277,7 +277,7 @@ test('handles concurrent edits', async ({ browser }) => {
   // Both click edit at the same time
   await Promise.all([
     page1.getByRole('button', { name: 'Edit' }).click(),
-    page2.getByRole('button', { name: 'Edit' }).click(),
+    page2.getByRole('button', { name: 'Edit' }).click()
   ]);
 
   // Both try to save different values
@@ -286,7 +286,7 @@ test('handles concurrent edits', async ({ browser }) => {
 
   await Promise.all([
     page1.getByRole('button', { name: 'Save' }).click(),
-    page2.getByRole('button', { name: 'Save' }).click(),
+    page2.getByRole('button', { name: 'Save' }).click()
   ]);
 
   // One should succeed, one should get conflict error

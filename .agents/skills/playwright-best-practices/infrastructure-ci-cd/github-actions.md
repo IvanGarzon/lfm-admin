@@ -184,7 +184,7 @@ jobs:
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  reporter: process.env.CI ? [['blob'], ['github']] : [['html', { open: 'on-failure' }]],
+  reporter: process.env.CI ? [['blob'], ['github']] : [['html', { open: 'on-failure' }]]
 });
 ```
 
@@ -480,8 +480,8 @@ export default defineConfig({
   workers: process.env.CI ? '50%' : undefined,
   use: {
     actionTimeout: process.env.CI ? 15_000 : 10_000,
-    navigationTimeout: process.env.CI ? 30_000 : 15_000,
-  },
+    navigationTimeout: process.env.CI ? 30_000 : 15_000
+  }
 });
 ```
 
@@ -530,7 +530,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   reporter: process.env.CI
     ? [['html', { open: 'never' }], ['github']]
-    : [['html', { open: 'on-failure' }]],
+    : [['html', { open: 'on-failure' }]]
 });
 ```
 

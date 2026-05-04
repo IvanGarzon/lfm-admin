@@ -26,7 +26,7 @@ app/
 // app/layout.tsx
 export default function RootLayout({
   children,
-  modal,
+  modal
 }: {
   children: React.ReactNode;
   modal: React.ReactNode;
@@ -84,7 +84,7 @@ export default async function PhotoPage({ params }: { params: Promise<{ id: stri
   const photo = await getPhoto(id);
 
   return (
-    <div className="full-page">
+    <div className='full-page'>
       <img src={photo.url} alt={photo.title} />
       <h1>{photo.title}</h1>
     </div>
@@ -125,19 +125,19 @@ export function Modal({ children }: { children: React.ReactNode }) {
         router.back(); // Correct
       }
     },
-    [router],
+    [router]
   );
 
   return (
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'
     >
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+      <div className='bg-white rounded-lg p-6 max-w-2xl w-full mx-4'>
         <button
           onClick={() => router.back()} // Correct!
-          className="absolute top-4 right-4"
+          className='absolute top-4 right-4'
         >
           Close
         </button>
@@ -270,7 +270,7 @@ export default async function Gallery() {
   const photos = await getPhotos();
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className='grid grid-cols-3 gap-4'>
       {photos.map((photo) => (
         <Link key={photo.id} href={`/photos/${photo.id}`}>
           <img src={photo.thumbnail} alt={photo.title} />

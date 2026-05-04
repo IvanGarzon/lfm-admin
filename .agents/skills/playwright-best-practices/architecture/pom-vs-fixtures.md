@@ -162,7 +162,7 @@ export const test = base.extend<Fixtures>({
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL('/dashboard');
     await use(page);
-  },
+  }
 });
 
 export { expect } from '@playwright/test';
@@ -208,7 +208,7 @@ export function generateMember(overrides: Partial<Member> = {}): Member {
     email: generateEmail(),
     password: 'SecurePass456!',
     name: 'Test Member',
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -338,7 +338,7 @@ test.extend({
     await page.goto('/dashboard');
     await use({ user, products, page });
     // massive teardown...
-  },
+  }
 });
 ```
 

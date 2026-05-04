@@ -39,9 +39,9 @@ defineConfig({
       include: ['**/*.test-d.ts'],
 
       // tsconfig to use
-      tsconfig: './tsconfig.json',
-    },
-  },
+      tsconfig: './tsconfig.json'
+    }
+  }
 });
 ```
 

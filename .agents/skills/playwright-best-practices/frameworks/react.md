@@ -165,7 +165,7 @@ test.describe('useDebounce via SearchBox', () => {
     });
 
     await page.getByRole('textbox', { name: 'Search' }).pressSequentially('testing', {
-      delay: 40,
+      delay: 40
     });
 
     await expect(page.getByRole('listitem')).toHaveCount(3);
@@ -336,7 +336,7 @@ test.describe('error boundary', () => {
     await page.route('**/api/widgets', (route) => {
       route.fulfill({
         status: 200,
-        json: { widgets: null },
+        json: { widgets: null }
       });
     });
 
@@ -384,9 +384,9 @@ export default defineConfig({
   testMatch: '**/*.ct.ts',
   use: {
     trace: 'on-first-retry',
-    ctPort: 3100,
+    ctPort: 3100
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }]
 });
 ```
 
@@ -440,21 +440,21 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    screenshot: 'only-on-failure'
   },
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    { name: 'mobile', use: { ...devices['iPhone 14'] } }
   ],
 
   webServer: {
     command: process.env.CI ? 'npm run build && npx vite preview --port 5173' : 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+    timeout: 120_000
+  }
 });
 ```
 

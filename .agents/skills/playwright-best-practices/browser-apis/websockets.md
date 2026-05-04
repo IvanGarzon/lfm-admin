@@ -73,7 +73,7 @@ test('sends correct message format', async ({ page }) => {
   const sent = JSON.parse(sentMessages[sentMessages.length - 1]);
   expect(sent).toEqual({
     type: 'message',
-    content: 'Hello!',
+    content: 'Hello!'
   });
 });
 ```
@@ -95,8 +95,8 @@ test('displays incoming chat message', async ({ page }) => {
       data: JSON.stringify({
         type: 'message',
         from: 'Alice',
-        content: 'Hello there!',
-      }),
+        content: 'Hello there!'
+      })
     });
     (window as any).chatSocket.dispatchEvent(event);
   });
@@ -126,7 +126,7 @@ test('mock websocket entirely', async ({ page, context }) => {
         },
         close: () => {},
         addEventListener: () => {},
-        removeEventListener: () => {},
+        removeEventListener: () => {}
       };
       setTimeout(() => ws.onopen?.(), 100);
       return ws;
@@ -176,16 +176,16 @@ export const test = base.extend<WebSocketFixtures>({
       injectMessage: async (message) => {
         await page.evaluate((msg) => {
           const event = new MessageEvent('message', {
-            data: JSON.stringify(msg),
+            data: JSON.stringify(msg)
           });
           (window as any).__ws?.dispatchEvent(event);
         }, message);
       },
       getSentMessages: async () => {
         return page.evaluate(() => (window as any).__wsSent || []);
-      },
+      }
     });
-  },
+  }
 });
 
 // Usage
@@ -196,7 +196,7 @@ test('chat with mocked websocket', async ({ page, mockWebSocket }) => {
   await mockWebSocket.injectMessage({
     type: 'message',
     from: 'Bob',
-    content: 'Hi!',
+    content: 'Hi!'
   });
 
   await expect(page.getByText('Bob: Hi!')).toBeVisible();
@@ -225,8 +225,8 @@ test('displays live notification', async ({ page }) => {
       data: JSON.stringify({
         type: 'notification',
         title: 'New Order',
-        message: 'Order #123 received',
-      }),
+        message: 'Order #123 received'
+      })
     });
     (window as any).notificationSocket.dispatchEvent(event);
   });
@@ -250,8 +250,8 @@ test('updates stock price in real-time', async ({ page }) => {
       data: JSON.stringify({
         type: 'price_update',
         symbol: 'AAPL',
-        price: 150.25,
-      }),
+        price: 150.25
+      })
     });
     (window as any).stockSocket.dispatchEvent(event);
   });
@@ -274,8 +274,8 @@ test('shows collaborator cursor', async ({ page }) => {
         type: 'cursor',
         userId: 'user-456',
         userName: 'Alice',
-        position: { x: 100, y: 200 },
-      }),
+        position: { x: 100, y: 200 }
+      })
     });
     (window as any).docSocket.dispatchEvent(event);
   });
@@ -298,9 +298,9 @@ test('receives SSE updates', async ({ page }) => {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
+        Connection: 'keep-alive'
       },
-      body: `data: {"type":"update","value":42}\n\n`,
+      body: `data: {"type":"update","value":42}\n\n`
     });
   });
 
@@ -321,7 +321,7 @@ test('handles multiple SSE events', async ({ page }) => {
     route.fulfill({
       status: 200,
       headers: { 'Content-Type': 'text/event-stream' },
-      body: events.join(''),
+      body: events.join('')
     });
   });
 

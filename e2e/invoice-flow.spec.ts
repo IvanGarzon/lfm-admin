@@ -12,7 +12,9 @@ test.describe('Invoices page', () => {
   test.beforeAll(() => {
     // Teardown first to reset any mutations from a previous run (e.g. lifecycle test
     // leaves INV-E2E-0001 in PAID state). Then re-seed deterministic DRAFT invoices.
-    execSync('pnpm tsx --env-file=.env prisma/seeds/teardown-e2e-data.ts', { stdio: 'inherit' });
+    execSync('pnpm tsx --env-file=.env prisma/seeds/teardown-e2e-invoices.ts', {
+      stdio: 'inherit'
+    });
     execSync('pnpm tsx --env-file=.env prisma/seeds/seed-e2e-invoices.ts', { stdio: 'inherit' });
   });
 

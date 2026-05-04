@@ -9,7 +9,7 @@ Array of operations executed in order:
 ```typescript
 const [user, post] = await prisma.$transaction([
   prisma.user.create({ data: { email: 'alice@prisma.io' } }),
-  prisma.post.create({ data: { title: 'Hello', authorId: 1 } }),
+  prisma.post.create({ data: { title: 'Hello', authorId: 1 } })
 ]);
 ```
 
@@ -21,7 +21,7 @@ If any operation fails, all are rolled back:
 try {
   await prisma.$transaction([
     prisma.user.create({ data: { email: 'alice@prisma.io' } }),
-    prisma.user.create({ data: { email: 'alice@prisma.io' } }), // Duplicate!
+    prisma.user.create({ data: { email: 'alice@prisma.io' } }) // Duplicate!
   ]);
 } catch (e) {
   // Both operations rolled back
@@ -37,7 +37,7 @@ await prisma.$transaction(async (tx) => {
   // Decrement sender balance
   const sender = await tx.account.update({
     where: { id: senderId },
-    data: { balance: { decrement: amount } },
+    data: { balance: { decrement: amount } }
   });
 
   // Check balance
@@ -48,7 +48,7 @@ await prisma.$transaction(async (tx) => {
   // Increment recipient balance
   await tx.account.update({
     where: { id: recipientId },
-    data: { balance: { increment: amount } },
+    data: { balance: { increment: amount } }
   });
 });
 ```
@@ -63,8 +63,8 @@ await prisma.$transaction(
   {
     maxWait: 5000, // Max wait to acquire lock (ms)
     timeout: 10000, // Max transaction duration (ms)
-    isolationLevel: 'Serializable', // Isolation level
-  },
+    isolationLevel: 'Serializable' // Isolation level
+  }
 );
 ```
 
@@ -87,12 +87,12 @@ const user = await prisma.user.create({
   data: {
     email: 'alice@prisma.io',
     posts: {
-      create: [{ title: 'Post 1' }, { title: 'Post 2' }],
+      create: [{ title: 'Post 1' }, { title: 'Post 2' }]
     },
     profile: {
-      create: { bio: 'Hello!' },
-    },
-  },
+      create: { bio: 'Hello!' }
+    }
+  }
 });
 ```
 
@@ -119,11 +119,11 @@ Use with interactive transactions:
 await prisma.$transaction(async (tx) => {
   // If not found, throws and rolls back entire transaction
   const user = await tx.user.findUniqueOrThrow({
-    where: { id: 1 },
+    where: { id: 1 }
   });
 
   await tx.post.create({
-    data: { title: 'New Post', authorId: user.id },
+    data: { title: 'New Post', authorId: user.id }
   });
 });
 ```
@@ -168,7 +168,7 @@ await prisma.$transaction(
   async (tx) => {
     /* operations */
   },
-  { isolationLevel: 'Serializable' },
+  { isolationLevel: 'Serializable' }
 );
 ```
 

@@ -172,7 +172,7 @@ test('mock OAuth flow', async ({ page, context }) => {
     url.searchParams.set('code', 'mock-auth-code');
     await route.fulfill({
       status: 302,
-      headers: { Location: '/dashboard' },
+      headers: { Location: '/dashboard' }
     });
   });
 
@@ -181,9 +181,9 @@ test('mock OAuth flow', async ({ page, context }) => {
     route.fulfill({
       json: {
         access_token: 'mock-token',
-        user: { name: 'Test User', email: 'test@example.com' },
-      },
-    }),
+        user: { name: 'Test User', email: 'test@example.com' }
+      }
+    })
   );
 
   await page.goto('/login');

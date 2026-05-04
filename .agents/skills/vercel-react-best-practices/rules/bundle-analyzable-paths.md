@@ -25,7 +25,7 @@ When analysis becomes too broad, the cost is real:
 ```ts
 const PAGE_MODULES = {
   home: './pages/home',
-  settings: './pages/settings',
+  settings: './pages/settings'
 } as const;
 
 const Page = await import(PAGE_MODULES[pageName]);
@@ -36,7 +36,7 @@ const Page = await import(PAGE_MODULES[pageName]);
 ```ts
 const PAGE_MODULES = {
   home: () => import('./pages/home'),
-  settings: () => import('./pages/settings'),
+  settings: () => import('./pages/settings')
 } as const;
 
 const Page = await PAGE_MODULES[pageName]();

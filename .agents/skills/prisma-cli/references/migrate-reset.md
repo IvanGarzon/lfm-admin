@@ -64,8 +64,8 @@ Configure the seed script in `prisma.config.ts`, then run it explicitly after re
 ```typescript
 export default defineConfig({
   migrations: {
-    seed: 'tsx prisma/seed.ts',
-  },
+    seed: 'tsx prisma/seed.ts'
+  }
 });
 ```
 

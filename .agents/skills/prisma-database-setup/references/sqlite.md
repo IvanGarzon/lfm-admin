@@ -31,8 +31,8 @@ import { defineConfig, env } from 'prisma/config';
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DATABASE_URL'),
-  },
+    url: env('DATABASE_URL')
+  }
 });
 ```
 
@@ -69,7 +69,7 @@ Use a driver adapter for the standard SQL workflow.
    import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
    const adapter = new PrismaBetterSqlite3({
-     url: process.env.DATABASE_URL ?? 'file:./dev.db',
+     url: process.env.DATABASE_URL ?? 'file:./dev.db'
    });
 
    const prisma = new PrismaClient({ adapter });
@@ -93,7 +93,7 @@ For edge compatibility or Turso:
 
    const adapter = new PrismaLibSql({
      url: process.env.TURSO_DATABASE_URL,
-     authToken: process.env.TURSO_AUTH_TOKEN,
+     authToken: process.env.TURSO_AUTH_TOKEN
    });
    const prisma = new PrismaClient({ adapter });
    ```
