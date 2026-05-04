@@ -7,11 +7,16 @@
 
 import { prisma } from '@/lib/prisma';
 import { fileURLToPath } from 'url';
-
-const E2E_TENANT_SLUG = 'e2e-test-tenant';
+import { env } from '@/env';
 
 export async function teardownE2EEnvironment(): Promise<void> {
-  const tenant = await prisma.tenant.findUnique({ where: { slug: E2E_TENANT_SLUG } });
+  const slug = env.E2E_SLUG;
+
+  if (!slug) {
+    throw new Error('E2E_SLUG must be set in .env before running e2e tests');
+  }
+
+  const tenant = await prisma.tenant.findUnique({ where: { slug } });
 
   if (!tenant) {
     console.log('   E2E tenant not found — nothing to tear down');

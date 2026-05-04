@@ -11,20 +11,21 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import { deleteTenantData } from './teardown-e2e-environment';
+import { env } from '@/env';
 
-const E2E_TENANT_SLUG = 'e2e-test-tenant';
+const name = env.E2E_TENANT;
+const slug = env.E2E_SLUG;
+const email = env.E2E_EMAIL;
+const password = env.E2E_PASSWORD;
 
 export async function seedE2EEnvironment(): Promise<void> {
-  const email = process.env.E2E_EMAIL;
-  const password = process.env.E2E_PASSWORD;
-
-  if (!email || !password) {
-    throw new Error('E2E_EMAIL and E2E_PASSWORD must be set in .env before running e2e tests');
+  if (!slug || !name || !email || !password) {
+    throw new Error('E2E_SLUG and E2E_PASSWORD must be set in .env before running e2e tests');
   }
 
   // -- Remove stale environment from any previous interrupted run ------------
 
-  const stale = await prisma.tenant.findUnique({ where: { slug: E2E_TENANT_SLUG } });
+  const stale = await prisma.tenant.findUnique({ where: { slug } });
 
   if (stale) {
     await deleteTenantData(stale.id);
@@ -40,11 +41,10 @@ export async function seedE2EEnvironment(): Promise<void> {
   }
 
   // -- Create fresh tenant ---------------------------------------------------
-
   const tenant = await prisma.tenant.create({
     data: {
-      name: 'E2E Test Tenant',
-      slug: E2E_TENANT_SLUG,
+      name,
+      slug,
       settings: { create: {} }
     }
   });
@@ -59,7 +59,7 @@ export async function seedE2EEnvironment(): Promise<void> {
       lastName: 'Test',
       email,
       password: await bcrypt.hash(password, 10),
-      role: 'MANAGER',
+      role: 'ADMIN',
       tenantId: tenant.id
     }
   });

@@ -102,9 +102,9 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>First name</FieldLabel>
+                          <FieldLabel htmlFor='user-first-name'>First name</FieldLabel>
                         </FieldContent>
-                        <Input {...field} aria-invalid={fieldState.invalid} />
+                        <Input id='user-first-name' {...field} aria-invalid={fieldState.invalid} />
                         {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                       </Field>
                     )}
@@ -118,9 +118,9 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Last name</FieldLabel>
+                          <FieldLabel htmlFor='user-last-name'>Last name</FieldLabel>
                         </FieldContent>
-                        <Input {...field} aria-invalid={fieldState.invalid} />
+                        <Input id='user-last-name' {...field} aria-invalid={fieldState.invalid} />
                         {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                       </Field>
                     )}
@@ -136,9 +136,10 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Username</FieldLabel>
+                          <FieldLabel htmlFor='user-username'>Username</FieldLabel>
                         </FieldContent>
                         <Input
+                          id='user-username'
                           {...field}
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value || null)}
@@ -164,9 +165,14 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Email</FieldLabel>
+                          <FieldLabel htmlFor='user-email'>Email</FieldLabel>
                         </FieldContent>
-                        <Input type='email' {...field} aria-invalid={fieldState.invalid} />
+                        <Input
+                          id='user-email'
+                          type='email'
+                          {...field}
+                          aria-invalid={fieldState.invalid}
+                        />
                         {fieldState.invalid ? <FieldError errors={[fieldState.error]} /> : null}
                       </Field>
                     )}
@@ -180,9 +186,10 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Phone</FieldLabel>
+                          <FieldLabel htmlFor='user-phone'>Phone</FieldLabel>
                         </FieldContent>
                         <Input
+                          id='user-phone'
                           {...field}
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value || null)}
@@ -203,9 +210,10 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Job title</FieldLabel>
+                          <FieldLabel htmlFor='user-title'>Job title</FieldLabel>
                         </FieldContent>
                         <Input
+                          id='user-title'
                           {...field}
                           value={field.value ?? ''}
                           onChange={(e) => field.onChange(e.target.value || null)}
@@ -225,14 +233,14 @@ export function UserForm({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldContent>
-                          <FieldLabel>Status</FieldLabel>
+                          <FieldLabel htmlFor='user-status'>Status</FieldLabel>
                         </FieldContent>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                           disabled={!canManageUsers}
                         >
-                          <SelectTrigger aria-invalid={fieldState.invalid}>
+                          <SelectTrigger id='user-status' aria-invalid={fieldState.invalid}>
                             <SelectValue placeholder='Select status' />
                           </SelectTrigger>
                           <SelectContent>
@@ -257,9 +265,10 @@ export function UserForm({
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldContent>
-                        <FieldLabel>Bio</FieldLabel>
+                        <FieldLabel htmlFor='user-bio'>Bio</FieldLabel>
                       </FieldContent>
                       <Textarea
+                        id='user-bio'
                         {...field}
                         value={field.value ?? ''}
                         onChange={(e) => field.onChange(e.target.value || null)}
