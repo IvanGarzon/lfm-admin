@@ -1,8 +1,7 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 import {
   getActiveOrganizations,
   getOrganizationById,
@@ -18,22 +17,23 @@ import type {
   UpdateOrganizationInput,
   DeleteOrganizationInput
 } from '@/schemas/organizations';
-import type { OrganizationListItem } from '@/features/crm/organizations/types';
+import type { OrganizationFilters, OrganizationListItem } from '@/features/crm/organizations/types';
 import { ORGANIZATION_KEYS } from '@/features/crm/organizations/constants/query-keys';
 
 export { ORGANIZATION_KEYS };
 
-export function useOrganizationsList(searchParams: SearchParams) {
-  const filtersKey = JSON.stringify(searchParams);
+export function useOrganizationsList(filters: OrganizationFilters) {
   return useQuery({
-    queryKey: ORGANIZATION_KEYS.list(filtersKey),
+    queryKey: ORGANIZATION_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getOrganizations(searchParams);
+      const result = await getOrganizations(filters);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000
   });
 }
 

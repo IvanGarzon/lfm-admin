@@ -1,18 +1,14 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import { OrganizationRepository } from '@/repositories/organization-repository';
 import type {
+  OrganizationFilters,
   OrganizationListItem,
   OrganizationPagination
 } from '@/features/crm/organizations/types';
-import {
-  searchParamsCache,
-  validateOrganizationSearchParams
-} from '@/filters/organizations/organizations-filters';
 
 const organizationRepo = new OrganizationRepository(prisma);
 
@@ -39,13 +35,11 @@ export const getActiveOrganizations = withTenantPermission<void, OrganizationLis
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated organisation data.
  */
-export const getOrganizations = withTenantPermission<SearchParams, OrganizationPagination>(
+export const getOrganizations = withTenantPermission<OrganizationFilters, OrganizationPagination>(
   'canReadOrganisations',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const parsedParams = searchParamsCache.parse(searchParams);
-      const validatedFilters = validateOrganizationSearchParams(parsedParams);
-      const result = await organizationRepo.searchOrganizations(validatedFilters, ctx.tenantId);
+      const result = await organizationRepo.searchOrganizations(filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {

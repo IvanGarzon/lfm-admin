@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useMemo, useState, useCallback } from 'react';
 import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 import { Plus, Users } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
@@ -17,8 +18,6 @@ import {
 } from '@/features/crm/customers/hooks/use-customer-queries';
 import { searchParams as customerSearchParams } from '@/filters/customers/customers-filters';
 import { hasActiveSearchFilters } from '@/lib/utils';
-
-const DEFAULT_PAGE_SIZE = 20;
 
 const CustomerDrawer = dynamic(
   () =>
@@ -40,10 +39,10 @@ export function CustomersList({
   );
   const deleteCustomer = useDeleteCustomer();
 
-  const { data } = useCustomers(serverSearchParams);
+  const [currentParams] = useQueryStates(customerSearchParams);
+  const { data } = useCustomers(currentParams);
 
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
+  const pageCount = data?.pagination.totalPages ?? 0;
 
   const handleDelete = useCallback((id: string, name: string) => {
     setDeletingCustomer({ id, name });
@@ -68,7 +67,6 @@ export function CustomersList({
     data: data?.items ?? [],
     columns,
     pageCount,
-    shallow: false,
     debounceMs: 500
   });
 

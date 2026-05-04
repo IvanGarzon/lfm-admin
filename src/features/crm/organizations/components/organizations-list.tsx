@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Plus, Landmark } from 'lucide-react';
 import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Box } from '@/components/ui/box';
@@ -29,17 +30,15 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as organizationSearchParams } from '@/filters/organizations/organizations-filters';
 
-const DEFAULT_PAGE_SIZE = 20;
-
 export function OrganizationsList({
   searchParams: serverSearchParams
 }: {
   searchParams: SearchParams;
 }) {
-  const { data } = useOrganizationsList(serverSearchParams);
+  const [currentParams] = useQueryStates(organizationSearchParams);
+  const { data } = useOrganizationsList(currentParams);
 
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = data ? Math.ceil(data.pagination.totalItems / perPage) : 0;
+  const pageCount = data?.pagination.totalPages ?? 0;
 
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [editingOrganization, setEditingOrganization] = useState<OrganizationListItem | null>(null);
@@ -108,7 +107,6 @@ export function OrganizationsList({
     data: data?.items ?? [],
     columns,
     pageCount,
-    shallow: false,
     debounceMs: 500
   });
 

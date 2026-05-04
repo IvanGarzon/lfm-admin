@@ -1,8 +1,7 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 import { getCustomerById, getActiveCustomers, getCustomers } from '@/actions/crm/customers/queries';
 import { updateCustomer, deleteCustomer, createCustomer } from '@/actions/crm/customers/mutations';
 import type {
@@ -10,21 +9,22 @@ import type {
   CreateCustomerInput,
   DeleteCustomerInput
 } from '@/schemas/customers';
-import type { CustomerListItem } from '@/features/crm/customers/types';
+import type { CustomerFilters, CustomerListItem } from '@/features/crm/customers/types';
 import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
 
-export function useCustomers(searchParams: SearchParams) {
-  const filtersKey = JSON.stringify(searchParams);
+export function useCustomers(filters: CustomerFilters) {
   return useQuery({
-    queryKey: CUSTOMER_KEYS.list(filtersKey),
+    queryKey: CUSTOMER_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getCustomers(searchParams);
+      const result = await getCustomers(filters);
       if (!result.success) {
         throw new Error(result.error);
       }
 
       return result.data;
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000
   });
 }
 

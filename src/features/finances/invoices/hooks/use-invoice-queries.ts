@@ -9,8 +9,8 @@ import {
   type QueryClient
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 import { InvoiceStatusSchema, type InvoiceStatus } from '@/zod/schemas/enums/InvoiceStatus.schema';
+import type { InvoiceFilters } from '@/features/finances/invoices/types';
 import {
   getInvoices,
   getInvoiceById,
@@ -111,17 +111,18 @@ function invalidateInvoiceQueries(
  * - Query automatically refetches when filters change
  * - Cache is invalidated when invoices are created, updated, or deleted
  */
-export function useInvoices(searchParams: SearchParams) {
+export function useInvoices(filters: InvoiceFilters) {
   return useQuery({
-    queryKey: INVOICE_KEYS.list(searchParams),
+    queryKey: INVOICE_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getInvoices(searchParams);
+      const result = await getInvoices(filters);
       if (!result.success) {
         throw new Error(result.error);
       }
 
       return result.data;
     },
+    placeholderData: keepPreviousData,
     staleTime: 30 * 1000
   });
 }

@@ -6,6 +6,7 @@ import { OrganizationsList } from '@/features/crm/organizations/components/organ
 import { getOrganizations } from '@/actions/crm/organizations/queries';
 import { getQueryClient } from '@/lib/query-client';
 import { ORGANIZATION_KEYS } from '@/features/crm/organizations/constants/query-keys';
+import { searchParamsCache } from '@/filters/organizations/organizations-filters';
 
 export const metadata = constructMetadata({
   title: 'Organizations – lfm dashboard',
@@ -18,12 +19,13 @@ export default async function OrganizationsPage({
   searchParams: Promise<SearchParams>;
 }) {
   const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ORGANIZATION_KEYS.list(searchParamsResolved),
+    queryKey: ORGANIZATION_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getOrganizations(searchParamsResolved);
+      const result = await getOrganizations(filters);
       if (!result.success) {
         throw new Error(result.error);
       }

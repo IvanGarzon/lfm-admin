@@ -5,7 +5,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { Plus, Receipt } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { SearchParams } from 'nuqs/server';
+import type { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
@@ -39,7 +40,8 @@ export function InvoicesView({ searchParams: serverSearchParams }: InvoicesViewP
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
 
-  const { data } = useInvoices(serverSearchParams);
+  const [currentParams] = useQueryStates(invoiceSearchParams);
+  const { data } = useInvoices(currentParams);
 
   // Use useMemo to ensure stable date between server and client renders
   const today = useMemo(() => new Date(), []);
@@ -135,7 +137,7 @@ export function InvoicesView({ searchParams: serverSearchParams }: InvoicesViewP
             value='list'
             className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
-            <InvoiceList data={data} searchParams={serverSearchParams} />
+            <InvoiceList data={data} />
           </TabsContent>
 
           <TabsContent

@@ -6,6 +6,7 @@ import { getInvoices, getInvoiceById } from '@/actions/finances/invoices/queries
 import { getQueryClient } from '@/lib/query-client';
 import { InvoicesView } from '@/features/finances/invoices/components/invoices-view';
 import { INVOICE_KEYS } from '@/features/finances/invoices/constants/query-keys';
+import { searchParamsCache } from '@/filters/invoices/invoices-filters';
 
 export const metadata = {
   title: 'Invoice Detail | Finance'
@@ -30,13 +31,14 @@ export default async function InvoicePage({
 }) {
   const { id } = await params;
   const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: INVOICE_KEYS.list(searchParamsResolved),
+      queryKey: INVOICE_KEYS.list(filters),
       queryFn: async () => {
-        const result = await getInvoices(searchParamsResolved);
+        const result = await getInvoices(filters);
         if (!result.success) {
           throw new Error(result.error);
         }

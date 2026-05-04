@@ -1,11 +1,11 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
 import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import type {
+  InvoiceFilters,
   InvoiceStatistics,
   InvoiceWithDetails,
   InvoicePagination,
@@ -16,22 +16,18 @@ import type {
   RevenueTrend,
   TopCustomerDebtor
 } from '@/features/finances/invoices/types';
-import { searchParamsCache } from '@/filters/invoices/invoices-filters';
 
 const invoiceRepo = new InvoiceRepository(prisma);
 
 /**
  * Retrieves a paginated list of invoices based on specified search and filter criteria.
- * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * @param filters - The parsed filter parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated invoice data.
- * @throws Will throw an error if the user is not authenticated or if the search parameters are invalid.
- *
  */
-export const getInvoices = withTenantPermission<SearchParams, InvoicePagination>(
+export const getInvoices = withTenantPermission<InvoiceFilters, InvoicePagination>(
   'canReadInvoices',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await invoiceRepo.searchInvoices(filters, ctx.tenantId);
 
       return { success: true, data: result };

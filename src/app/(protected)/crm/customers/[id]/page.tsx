@@ -6,6 +6,7 @@ import { CustomersList } from '@/features/crm/customers/components/customers-lis
 import { getCustomers, getCustomerById } from '@/actions/crm/customers/queries';
 import { getQueryClient } from '@/lib/query-client';
 import { CUSTOMER_KEYS } from '@/features/crm/customers/constants/query-keys';
+import { searchParamsCache } from '@/filters/customers/customers-filters';
 
 export const metadata = {
   title: 'Customer Detail | CRM'
@@ -28,13 +29,14 @@ export default async function CustomerPage({
 }) {
   const { id } = await params;
   const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: CUSTOMER_KEYS.list(searchParamsResolved),
+      queryKey: CUSTOMER_KEYS.list(filters),
       queryFn: async () => {
-        const result = await getCustomers(searchParamsResolved);
+        const result = await getCustomers(filters);
         if (!result.success) {
           throw new Error(result.error);
         }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
-import { SearchParams } from 'nuqs/server';
 import { toast } from 'sonner';
 import {
   previewInvoiceEmail,
@@ -24,21 +23,11 @@ import type { InvoicePagination, InvoiceListItem } from '@/features/finances/inv
 import { createInvoiceColumns } from '@/features/finances/invoices/components/invoice-columns';
 import { useInvoiceActions } from '@/features/finances/invoices/context/invoice-action-context';
 
-const DEFAULT_PAGE_SIZE = 20;
-
-export function InvoiceList({
-  data,
-  searchParams: serverSearchParams
-}: {
-  data?: InvoicePagination;
-  searchParams: SearchParams;
-}) {
+export function InvoiceList({ data }: { data?: InvoicePagination }) {
   const { openDelete, openRecordPayment, openCancel, openSendReceipt, openMarkAsPending } =
     useInvoiceActions();
 
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const totalItems = data?.pagination.totalItems ?? 0;
-  const pageCount = Math.ceil(totalItems / perPage);
+  const pageCount = data?.pagination.totalPages ?? 0;
 
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [emailPreviewData, setEmailPreviewData] = useState<EmailPreviewData | null>(null);
@@ -170,7 +159,6 @@ export function InvoiceList({
     data: data?.items ?? [],
     columns,
     pageCount: pageCount,
-    shallow: false,
     debounceMs: 500
   });
 

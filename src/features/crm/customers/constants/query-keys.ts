@@ -1,9 +1,9 @@
-import { SearchParams } from 'nuqs/server';
+import type { CustomerFilters } from '@/features/crm/customers/types';
 
 export const CUSTOMER_KEYS = {
   all: ['customers'] as const,
   lists: () => [...CUSTOMER_KEYS.all, 'list'] as const,
-  list: (filters: SearchParams) => [...CUSTOMER_KEYS.lists(), { filters }] as const,
+  list: (filters: CustomerFilters) => [...CUSTOMER_KEYS.lists(), { filters }] as const,
   details: () => [...CUSTOMER_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...CUSTOMER_KEYS.details(), id] as const
 };

@@ -1,17 +1,16 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { SearchParams } from 'nuqs/server';
 
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import type {
+  CustomerFilters,
   CustomerPagination,
   CustomerListItem,
   CustomerSelectItem
 } from '@/features/crm/customers/types';
-import { searchParamsCache } from '@/filters/customers/customers-filters';
 
 const customerRepo = new CustomerRepository(prisma);
 
@@ -38,11 +37,10 @@ export const getActiveCustomers = withTenantPermission<void, CustomerSelectItem[
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated customer data.
  */
-export const getCustomers = withTenantPermission<SearchParams, CustomerPagination>(
+export const getCustomers = withTenantPermission<CustomerFilters, CustomerPagination>(
   'canReadCustomers',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await customerRepo.searchCustomers(filters, ctx.tenantId);
 
       return { success: true, data: result };

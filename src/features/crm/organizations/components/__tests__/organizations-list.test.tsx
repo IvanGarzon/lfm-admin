@@ -23,6 +23,10 @@ const {
   mockUseUpdateOrganization: vi.fn()
 }));
 
+vi.mock('nuqs', () => ({
+  useQueryStates: vi.fn(() => [{ name: '', page: 1, perPage: 20, status: [], sort: [] }, vi.fn()])
+}));
+
 vi.mock('@/features/crm/organizations/hooks/use-organization-queries', () => ({
   useOrganizationsList: mockUseOrganizationsList,
   useDeleteOrganization: mockUseDeleteOrganization,

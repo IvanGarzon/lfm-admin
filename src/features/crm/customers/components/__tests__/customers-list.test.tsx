@@ -14,6 +14,10 @@ const { mockUseCustomers } = vi.hoisted(() => ({
   mockUseCustomers: vi.fn()
 }));
 
+vi.mock('nuqs', () => ({
+  useQueryStates: vi.fn(() => [{ search: '', page: 1, perPage: 20, status: [], sort: [] }, vi.fn()])
+}));
+
 vi.mock('@/features/crm/customers/hooks/use-customer-queries', () => ({
   useCustomers: mockUseCustomers,
   useDeleteCustomer: () => mockDeleteCustomer

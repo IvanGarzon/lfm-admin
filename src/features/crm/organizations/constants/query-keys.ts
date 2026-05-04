@@ -1,9 +1,9 @@
-import type { SearchParams } from 'nuqs/server';
+import type { OrganizationFilters } from '@/features/crm/organizations/types';
 
 export const ORGANIZATION_KEYS = {
   all: ['organizations'] as const,
   lists: () => [...ORGANIZATION_KEYS.all, 'list'] as const,
-  list: (filters: SearchParams) => [...ORGANIZATION_KEYS.lists(), { filters }] as const,
+  list: (filters: OrganizationFilters) => [...ORGANIZATION_KEYS.lists(), { filters }] as const,
   details: () => [...ORGANIZATION_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...ORGANIZATION_KEYS.details(), id] as const
 };
