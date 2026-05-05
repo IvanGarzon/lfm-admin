@@ -15,16 +15,21 @@ const {
   mockUseOrganizationsList,
   mockUseDeleteOrganization,
   mockUseCreateOrganization,
-  mockUseUpdateOrganization
+  mockUseUpdateOrganization,
+  mockUseQueryStates
 } = vi.hoisted(() => ({
   mockUseOrganizationsList: vi.fn(),
   mockUseDeleteOrganization: vi.fn(),
   mockUseCreateOrganization: vi.fn(),
-  mockUseUpdateOrganization: vi.fn()
+  mockUseUpdateOrganization: vi.fn(),
+  mockUseQueryStates: vi.fn(() => [
+    { name: '', page: 1, perPage: 20, status: [], sort: [] },
+    vi.fn()
+  ])
 }));
 
 vi.mock('nuqs', () => ({
-  useQueryStates: vi.fn(() => [{ name: '', page: 1, perPage: 20, status: [], sort: [] }, vi.fn()])
+  useQueryStates: mockUseQueryStates
 }));
 
 vi.mock('@/features/crm/organizations/hooks/use-organization-queries', () => ({
@@ -104,9 +109,6 @@ vi.mock('@/filters/organizations/organizations-filters', () => ({
 
 import { createOrganizationResponse } from '@/lib/testing/factories/organization.factory';
 
-const emptySearchParams = {};
-const activeSearchParams = { name: 'Acme' };
-
 function makeData(totalItems: number) {
   return {
     items: Array.from({ length: totalItems }, (_, i) =>
@@ -138,27 +140,31 @@ describe('OrganizationsList', () => {
     });
 
     it('renders EmptyState when there are no organisations and no active filters', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
 
     it('does not render the page heading in zero state', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.queryByRole('heading', { name: 'Organizations' })).not.toBeInTheDocument();
     });
 
     it('does not render OrganizationsTable in zero state', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.queryByTestId('organizations-table')).not.toBeInTheDocument();
     });
 
     it('renders Add Organization button in empty state', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByRole('button', { name: /add organization/i })).toBeInTheDocument();
     });
 
     it('does not show EmptyState when a search filter is active even if results are empty', () => {
-      render(<OrganizationsList searchParams={activeSearchParams} />);
+      mockUseQueryStates.mockReturnValueOnce([
+        { name: 'Acme', page: 1, perPage: 20, status: [], sort: [] },
+        vi.fn()
+      ]);
+      render(<OrganizationsList />);
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
   });
@@ -171,22 +177,22 @@ describe('OrganizationsList', () => {
     });
 
     it('renders the Organizations page heading', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByRole('heading', { name: 'Organizations' })).toBeInTheDocument();
     });
 
     it('renders the OrganizationsTable', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByTestId('organizations-table')).toBeInTheDocument();
     });
 
     it('renders Add Organization button', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByRole('button', { name: /add organization/i })).toBeInTheDocument();
     });
 
     it('does not render EmptyState when organisations exist', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
   });
@@ -196,7 +202,7 @@ describe('OrganizationsList', () => {
   describe('when data is undefined (loading)', () => {
     it('renders zero state when data is not yet loaded', () => {
       mockUseOrganizationsList.mockReturnValue({ data: undefined });
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
   });
@@ -209,27 +215,27 @@ describe('OrganizationsList', () => {
     });
 
     it('does not render create dialog initially', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(
         screen.queryByRole('heading', { name: /create organization/i })
       ).not.toBeInTheDocument();
     });
 
     it('opens create dialog when Add Organization button is clicked', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       fireEvent.click(screen.getByRole('button', { name: /add organization/i }));
       expect(screen.getByRole('heading', { name: /create organization/i })).toBeInTheDocument();
     });
 
     it('opens create dialog from zero state Add Organization button', () => {
       mockUseOrganizationsList.mockReturnValue({ data: makeData(0) });
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       fireEvent.click(screen.getByRole('button', { name: /add organization/i }));
       expect(screen.getByRole('heading', { name: /create organization/i })).toBeInTheDocument();
     });
 
     it('calls createOrganization.mutate when form is submitted', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       fireEvent.click(screen.getByRole('button', { name: /add organization/i }));
       fireEvent.click(screen.getByRole('button', { name: /submit create/i }));
       expect(mockMutateCreate).toHaveBeenCalledWith(
@@ -259,18 +265,18 @@ describe('OrganizationsList', () => {
     });
 
     it('does not show delete dialog initially', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       expect(screen.queryByTestId('delete-organization-dialog')).not.toBeInTheDocument();
     });
 
     it('opens delete dialog when onDelete is triggered from columns', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       act(() => capturedDeleteFn?.('org-0', 'Org 0', 0));
       expect(screen.getByTestId('delete-organization-dialog')).toBeInTheDocument();
     });
 
     it('calls deleteOrganization.mutate when dialog confirm is clicked', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       act(() => capturedDeleteFn?.('org-0', 'Org 0', 0));
       fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
       expect(mockMutateDelete).toHaveBeenCalledWith(
@@ -280,14 +286,14 @@ describe('OrganizationsList', () => {
     });
 
     it('does not call deleteOrganization.mutate when dialog is cancelled', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       act(() => capturedDeleteFn?.('org-0', 'Org 0', 0));
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       expect(mockMutateDelete).not.toHaveBeenCalled();
     });
 
     it('closes delete dialog when cancelled', () => {
-      render(<OrganizationsList searchParams={emptySearchParams} />);
+      render(<OrganizationsList />);
       act(() => capturedDeleteFn?.('org-0', 'Org 0', 0));
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       expect(screen.queryByTestId('delete-organization-dialog')).not.toBeInTheDocument();

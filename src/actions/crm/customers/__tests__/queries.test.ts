@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getCustomers, getCustomerById, getActiveCustomers } from '../queries';
 import { testIds } from '@/lib/testing/id-generator';
 import { mockSessions } from '@/lib/testing/factories/session.factory';
-import type { CustomerListItem, CustomerPagination } from '@/features/crm/customers/types';
+import type {
+  CustomerFilters,
+  CustomerListItem,
+  CustomerPagination
+} from '@/features/crm/customers/types';
 
 const { mockCustomerRepo, mockAuth } = vi.hoisted(() => ({
   mockCustomerRepo: {
@@ -21,13 +25,8 @@ vi.mock('@/repositories/customer-repository', () => ({
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
-vi.mock('@/filters/customers/customers-filters', () => ({
-  searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 })
-  }
-}));
-
 const TEST_CUSTOMER_ID = testIds.customer();
+const DEFAULT_FILTERS: CustomerFilters = { page: 1, perPage: 10 };
 
 const mockCustomer: CustomerListItem = {
   id: TEST_CUSTOMER_ID,
@@ -72,7 +71,7 @@ describe('Customer Queries', () => {
     it('returns paginated customers', async () => {
       mockCustomerRepo.searchCustomers.mockResolvedValue(mockPagination);
 
-      const result = await getCustomers({});
+      const result = await getCustomers(DEFAULT_FILTERS);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -80,7 +79,7 @@ describe('Customer Queries', () => {
         expect(result.data.items[0].id).toBe(TEST_CUSTOMER_ID);
       }
       expect(mockCustomerRepo.searchCustomers).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 1, perPage: 10 }),
+        DEFAULT_FILTERS,
         mockSession.user.tenantId
       );
     });
@@ -88,7 +87,7 @@ describe('Customer Queries', () => {
     it('returns unauthorized when not signed in', async () => {
       mockAuth.mockResolvedValue(null);
 
-      const result = await getCustomers({});
+      const result = await getCustomers(DEFAULT_FILTERS);
 
       expect(result.success).toBe(false);
       if (!result.success) {

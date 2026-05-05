@@ -3,7 +3,10 @@ import { getOrganizations, getOrganizationById, getActiveOrganizations } from '.
 import { testIds } from '@/lib/testing/id-generator';
 import { mockSessions } from '@/lib/testing/factories/session.factory';
 import { createOrganizationResponse } from '@/lib/testing/factories/organization.factory';
-import type { OrganizationPagination } from '@/features/crm/organizations/types';
+import type {
+  OrganizationFilters,
+  OrganizationPagination
+} from '@/features/crm/organizations/types';
 
 const { mockOrgRepo, mockAuth } = vi.hoisted(() => ({
   mockOrgRepo: {
@@ -22,14 +25,8 @@ vi.mock('@/repositories/organization-repository', () => ({
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
-vi.mock('@/filters/organizations/organizations-filters', () => ({
-  searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 10 })
-  },
-  validateOrganizationSearchParams: vi.fn().mockImplementation((p) => p)
-}));
-
 const TEST_ORG_ID = testIds.organization();
+const DEFAULT_FILTERS: OrganizationFilters = { page: 1, perPage: 10 };
 const mockOrg = createOrganizationResponse({ id: TEST_ORG_ID });
 
 const mockPagination: OrganizationPagination = {
@@ -57,7 +54,7 @@ describe('Organisation Queries', () => {
     it('returns paginated organisations', async () => {
       mockOrgRepo.searchOrganizations.mockResolvedValue(mockPagination);
 
-      const result = await getOrganizations({});
+      const result = await getOrganizations(DEFAULT_FILTERS);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -65,7 +62,7 @@ describe('Organisation Queries', () => {
         expect(result.data.items[0].id).toBe(TEST_ORG_ID);
       }
       expect(mockOrgRepo.searchOrganizations).toHaveBeenCalledWith(
-        expect.objectContaining({ page: 1, perPage: 10 }),
+        DEFAULT_FILTERS,
         mockSession.user.tenantId
       );
     });
@@ -73,7 +70,7 @@ describe('Organisation Queries', () => {
     it('returns unauthorized when not signed in', async () => {
       mockAuth.mockResolvedValue(null);
 
-      const result = await getOrganizations({});
+      const result = await getOrganizations(DEFAULT_FILTERS);
 
       expect(result.success).toBe(false);
       if (!result.success) {

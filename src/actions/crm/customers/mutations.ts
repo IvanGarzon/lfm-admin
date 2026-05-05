@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import { OrganizationRepository } from '@/repositories/organization-repository';
@@ -58,6 +59,7 @@ export const createCustomer = withTenantPermission<CreateCustomerInput, { id: st
         ctx.tenantId
       );
 
+      revalidatePath('/crm/customers');
       return { success: true, data: { id: customer.id } };
     } catch (error) {
       return handleActionError(error, 'Failed to create customer');
@@ -105,6 +107,8 @@ export const updateCustomer = withTenantPermission<UpdateCustomerInput, { id: st
         return { success: false, error: 'Failed to update customer' };
       }
 
+      revalidatePath('/crm/customers');
+      revalidatePath(`/crm/customers/${validatedData.id}`);
       return { success: true, data: { id: customer.id } };
     } catch (error) {
       return handleActionError(error, 'Failed to update customer');

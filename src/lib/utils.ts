@@ -379,11 +379,6 @@ export const truncate = (str: string, length: number) => {
   return `${str.slice(0, length)}...`;
 };
 
-// export const timeAgo = (timestamp: Date, timeOnly?: boolean): string => {
-//   if (!timestamp) return 'never';
-//   return `${ms(Date.now() - new Date(timestamp).getTime())}${timeOnly ? '' : ' ago'}`;
-// };
-
 export const getBlurDataURL = async (url: string | null) => {
   if (!url) {
     return 'data:image/webp;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
@@ -423,7 +418,7 @@ const PAGINATION_KEYS = new Set(['page', 'perPage', 'sort']);
  * @returns Whether any filter is active
  */
 export function hasActiveSearchFilters(
-  rawParams: Record<string, string | string[] | undefined>,
+  rawParams: Record<string, unknown>,
   filterDefs: Record<string, { defaultValue: unknown }>
 ): boolean {
   return Object.keys(filterDefs)

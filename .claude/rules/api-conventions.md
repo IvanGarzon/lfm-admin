@@ -69,8 +69,11 @@ Every layer has a single responsibility. Do not skip layers.
 ## Filters (`src/filters/**/`)
 
 - Each entity with a data table has a `src/filters/ENTITY/ENTITY-filters.ts` file.
-- Exports a `searchParamsCache` singleton (for server components) and a `searchParams` object (for page props).
+- Exports a `searchParamsCache` singleton (for server components) and a `searchParams` object (for client `useQueryStates`).
 - Never parse search params manually — always use `searchParamsCache.parse()`.
+- Page components parse raw `SearchParams` into a typed `XFilters` object using `searchParamsCache.parse()` and pass it to `prefetchQuery`. They do **not** pass it as a prop to the list component.
+- List components take **no `searchParams` prop**. They read current filter state from the URL via `useQueryStates(entitySearchParams)`.
+- Actions receive a typed `XFilters` object. They never call `searchParamsCache.parse()` internally — parsing is the page's responsibility.
 
 ## Types (`src/features/**/types.ts`)
 

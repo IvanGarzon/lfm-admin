@@ -22,16 +22,19 @@ All list pages (and detail pages with server-fetchable data) must use the `Hydra
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '@/lib/query-client';
 import { ENTITY_KEYS } from '@/features/entity/constants/query-keys';
+import { searchParamsCache } from '@/filters/entity/entity-filters';
 import { getEntities } from '@/actions/entity/queries';
+import type { EntityFilters } from '@/features/entity/types';
 
-export default async function EntitiesPage({ searchParams }: { searchParams: Promise<SearchParamsType> }) {
-  const resolvedParams = await searchParams;
+export default async function EntitiesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const rawParams = await searchParams;
+  const filters: EntityFilters = searchParamsCache.parse(rawParams);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ENTITY_KEYS.list(resolvedParams),
+    queryKey: ENTITY_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getEntities(resolvedParams);
+      const result = await getEntities(filters);
       if (!result.success) throw new Error(result.error);
       return result.data;
     }
@@ -40,14 +43,37 @@ export default async function EntitiesPage({ searchParams }: { searchParams: Pro
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <EntityList searchParams={resolvedParams} />
+        <EntityList />
       </HydrationBoundary>
     </Shell>
   );
 }
 ```
 
+The page parses raw search params into a typed `EntityFilters` object using `searchParamsCache.parse()`. The list component takes **no props** — it reads current filter state directly from the URL via `useQueryStates`. The server-prefetched cache entry and the client hook's query key match because both derive filters from the same nuqs parser.
+
+```typescript
+// src/features/entity/components/entity-list.tsx
+export function EntityList() {
+  const [currentParams] = useQueryStates(entitySearchParams);
+  const { data } = useEntities(currentParams);
+  // ...
+}
+```
+
 The client component renders with data already in cache — no spinner on first load. After mutations, the existing invalidation logic in hooks refetches normally.
+
+### Action contract
+
+Actions receive the typed `EntityFilters` object directly — they do **not** call `searchParamsCache.parse()` internally. Parsing is the page's responsibility.
+
+```typescript
+// src/actions/entity/queries.ts
+export const getEntities = withTenantPermission<EntityFilters, EntityPagination>(
+  'canManageEntities',
+  async (ctx, filters) => { ... }
+);
+```
 
 ### Query client
 
@@ -87,11 +113,24 @@ The `list` key must accept the resolved search params object (or a serialised fo
 - Every new list page must follow this pattern. No new `initialData` props.
 - Existing pages using `initialData` must be migrated. See the migration checklist below.
 - Every feature that adds a list page must also add a `query-keys.ts` constants file and a `useEntityList` hook.
-- The `initialData` prop must be removed from list view components as they are migrated — do not leave dead props.
+- List view components must take **no `searchParams` prop** — they read filter state via `useQueryStates`. Do not add or leave dead props.
+- Actions must accept a typed `XFilters` object. Raw `SearchParams` parsing belongs in the page layer only.
 
 ## Migration Checklist
 
-Pages still using `initialData` that must be migrated:
+### Completed
+
+- [x] `crm/customers/page.tsx`
+- [x] `crm/customers/[id]/page.tsx`
+- [x] `crm/organizations/page.tsx`
+- [x] `finances/invoices/page.tsx`
+- [x] `finances/invoices/[id]/page.tsx`
+- [x] `users/page.tsx`
+- [x] `users/[id]/details/page.tsx`
+- [x] `users/[id]/permissions/page.tsx`
+- [x] `users/[id]/security/page.tsx`
+
+### Remaining
 
 - [ ] `finances/quotes/page.tsx`
 - [ ] `finances/quotes/[id]/page.tsx`
@@ -99,7 +138,6 @@ Pages still using `initialData` that must be migrated:
 - [ ] `finances/recipes/[id]/page.tsx`
 - [ ] `finances/transactions/page.tsx`
 - [ ] `finances/transactions/[id]/page.tsx`
-- [ ] `finances/invoices/[id]/page.tsx`
 - [ ] `inventory/products/page.tsx`
 - [ ] `inventory/products/[id]/page.tsx`
 - [ ] `inventory/vendors/page.tsx`

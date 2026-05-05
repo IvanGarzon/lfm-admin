@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { Plus, Landmark } from 'lucide-react';
-import { SearchParams } from 'nuqs/server';
 import { useQueryStates } from 'nuqs';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
@@ -30,11 +29,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as organizationSearchParams } from '@/filters/organizations/organizations-filters';
 
-export function OrganizationsList({
-  searchParams: serverSearchParams
-}: {
-  searchParams: SearchParams;
-}) {
+export function OrganizationsList() {
   const [currentParams] = useQueryStates(organizationSearchParams);
   const { data } = useOrganizationsList(currentParams);
 
@@ -112,7 +107,7 @@ export function OrganizationsList({
 
   const isZeroState =
     (data?.pagination.totalItems ?? 0) === 0 &&
-    !hasActiveSearchFilters(serverSearchParams, organizationSearchParams);
+    !hasActiveSearchFilters(currentParams, organizationSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>

@@ -62,7 +62,7 @@ export default async function InvoicePage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <InvoicesView searchParams={searchParamsResolved} />
+        <InvoicesView />
         {id ? <InvoiceDrawer id={id} open={true} /> : null}
       </HydrationBoundary>
     </Shell>

@@ -1,15 +1,13 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
 import { prisma } from '@/lib/prisma';
 import { UserRepository } from '@/repositories/user-repository';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import { AuditService } from '@/services/audit.service';
 import { PasswordResetTokenRepository } from '@/repositories/password-reset-token-repository';
-import type { UserPagination, UserDetail } from '@/features/users/types';
+import type { UserPagination, UserDetail, UserFilters } from '@/features/users/types';
 import type { AccessChange } from '@/features/users/types';
-import { searchParamsCache } from '@/filters/users/users-filters';
 
 const userRepo = new UserRepository(prisma);
 const auditService = new AuditService(prisma);
@@ -18,11 +16,10 @@ const passwordResetTokenRepo = new PasswordResetTokenRepository(prisma);
 /**
  * Retrieves a paginated, filtered list of users for the current tenant.
  */
-export const getTenantUsers = withTenantPermission<SearchParams, UserPagination>(
+export const getTenantUsers = withTenantPermission<UserFilters, UserPagination>(
   'canManageUsers',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await userRepo.searchAndPaginateTenantUsers(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {

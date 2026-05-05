@@ -5,7 +5,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { Plus, Receipt } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import type { SearchParams } from 'nuqs/server';
 import { useQueryStates } from 'nuqs';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,10 +20,6 @@ import {
   useInvoiceStatistics
 } from '@/features/finances/invoices/hooks/use-invoice-queries';
 
-interface InvoicesViewProps {
-  searchParams: SearchParams;
-}
-
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(
@@ -36,7 +31,7 @@ const InvoiceDrawer = dynamic(
   }
 );
 
-export function InvoicesView({ searchParams: serverSearchParams }: InvoicesViewProps) {
+export function InvoicesView() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
 
@@ -92,7 +87,7 @@ export function InvoicesView({ searchParams: serverSearchParams }: InvoicesViewP
 
   const isZeroState =
     data?.pagination.totalItems === 0 &&
-    !hasActiveSearchFilters(serverSearchParams, invoiceSearchParams);
+    !hasActiveSearchFilters(currentParams, invoiceSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>

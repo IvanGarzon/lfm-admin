@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
@@ -30,6 +31,8 @@ export const createOrganization = withTenantPermission<
 
     const organization = await organizationRepo.createOrganization(validatedData, tenantId);
 
+    revalidatePath('/crm/customers');
+    revalidatePath('/crm/organizations');
     return {
       success: true,
       data: {
@@ -69,6 +72,8 @@ export const updateOrganization = withTenantPermission<UpdateOrganizationInput, 
         return { success: false, error: 'Failed to update organisation' };
       }
 
+      revalidatePath('/crm/customers');
+      revalidatePath('/crm/organizations');
       return { success: true, data: { id: organization.id } };
     } catch (error) {
       return handleActionError(error, 'Failed to update organisation');

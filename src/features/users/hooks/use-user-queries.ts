@@ -1,8 +1,7 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 import { getTenantUserById, getUserRoleChanges, getTenantUsers } from '@/actions/users/queries';
 import {
   updateUser,
@@ -22,20 +21,21 @@ import type {
   InviteUserInput,
   ChangePasswordInput
 } from '@/schemas/users';
-import type { UserDetail, UserPagination } from '@/features/users/types';
+import type { UserDetail, UserFilters, UserPagination } from '@/features/users/types';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
 
-export function useUsers(searchParams: SearchParams) {
-  const filtersKey = JSON.stringify(searchParams);
+export function useUsers(filters: UserFilters) {
   return useQuery({
-    queryKey: USER_KEYS.list(filtersKey),
+    queryKey: USER_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getTenantUsers(searchParams);
+      const result = await getTenantUsers(filters);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000
   });
 }
 

@@ -63,7 +63,7 @@ describe('Customer Mutations', () => {
         expect.objectContaining({ email: 'jane@example.com' }),
         mockSession.user.tenantId
       );
-      expect(revalidatePath).toHaveBeenCalledWith('/customers');
+      expect(revalidatePath).toHaveBeenCalledWith('/crm/customers');
     });
 
     it('returns error when email already exists', async () => {

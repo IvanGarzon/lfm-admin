@@ -7,7 +7,7 @@ import {
 } from '../queries';
 import { testIds } from '@/lib/testing/id-generator';
 import { mockSessions } from '@/lib/testing/factories/session.factory';
-import type { UserPagination, UserDetail } from '@/features/users/types';
+import type { UserPagination, UserDetail, UserFilters } from '@/features/users/types';
 
 const { mockUserRepo, mockPasswordResetTokenRepo, mockAuditService, mockAuth } = vi.hoisted(() => ({
   mockUserRepo: {
@@ -44,13 +44,8 @@ vi.mock('@/services/audit.service', () => ({
 
 vi.mock('@/auth', () => ({ auth: mockAuth }));
 
-vi.mock('@/filters/users/users-filters', () => ({
-  searchParamsCache: {
-    parse: vi.fn().mockReturnValue({ page: 1, perPage: 20 })
-  }
-}));
-
 const TEST_USER_ID = testIds.user();
+const DEFAULT_FILTERS: UserFilters = { page: 1, perPage: 20 };
 
 const mockPagination: UserPagination = {
   items: [
@@ -108,18 +103,22 @@ describe('User Queries', () => {
     it('returns paginated users', async () => {
       mockUserRepo.searchAndPaginateTenantUsers.mockResolvedValue(mockPagination);
 
-      const result = await getTenantUsers({});
+      const result = await getTenantUsers(DEFAULT_FILTERS);
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.items).toHaveLength(1);
       }
+      expect(mockUserRepo.searchAndPaginateTenantUsers).toHaveBeenCalledWith(
+        DEFAULT_FILTERS,
+        mockSession.user.tenantId
+      );
     });
 
     it('returns error when unauthenticated', async () => {
       mockAuth.mockResolvedValue(null);
 
-      const result = await getTenantUsers({});
+      const result = await getTenantUsers(DEFAULT_FILTERS);
 
       expect(result.success).toBe(false);
     });
@@ -127,7 +126,7 @@ describe('User Queries', () => {
     it('returns error when user lacks canManageUsers permission', async () => {
       mockAuth.mockResolvedValue(mockSessions.user());
 
-      const result = await getTenantUsers({});
+      const result = await getTenantUsers(DEFAULT_FILTERS);
 
       expect(result.success).toBe(false);
     });

@@ -10,12 +10,16 @@ import { CustomersList } from '../customers-list';
 const mockMutate = vi.fn();
 const mockDeleteCustomer = { mutate: mockMutate, isPending: false };
 
-const { mockUseCustomers } = vi.hoisted(() => ({
-  mockUseCustomers: vi.fn()
+const { mockUseCustomers, mockUseQueryStates } = vi.hoisted(() => ({
+  mockUseCustomers: vi.fn(),
+  mockUseQueryStates: vi.fn(() => [
+    { search: '', page: 1, perPage: 20, status: [], sort: [] },
+    vi.fn()
+  ])
 }));
 
 vi.mock('nuqs', () => ({
-  useQueryStates: vi.fn(() => [{ search: '', page: 1, perPage: 20, status: [], sort: [] }, vi.fn()])
+  useQueryStates: mockUseQueryStates
 }));
 
 vi.mock('@/features/crm/customers/hooks/use-customer-queries', () => ({
@@ -90,9 +94,6 @@ function makeData(totalItems: number) {
   };
 }
 
-const emptySearchParams = {};
-const activeSearchParams = { search: 'Alice' };
-
 // -- Tests ------------------------------------------------------------------
 
 describe('CustomersList', () => {
@@ -108,33 +109,48 @@ describe('CustomersList', () => {
     });
 
     it('renders EmptyState when there are no customers and no active filters', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
 
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
 
     it('does not render the page heading in zero state', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
 
       expect(screen.queryByRole('heading', { name: 'Customers' })).not.toBeInTheDocument();
     });
 
     it('does not render CustomersTable in zero state', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
 
       expect(screen.queryByTestId('customers-table')).not.toBeInTheDocument();
     });
 
     it('renders EmptyState with Add Customer action button', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
 
       expect(screen.getByRole('button', { name: /add customer/i })).toBeInTheDocument();
     });
 
     it('does not show EmptyState when a search filter is active even if results are empty', () => {
-      render(<CustomersList searchParams={activeSearchParams} />);
+      mockUseQueryStates.mockReturnValueOnce([
+        { search: 'Alice', page: 1, perPage: 20, status: [], sort: [] },
+        vi.fn()
+      ]);
+      render(<CustomersList />);
 
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+    });
+
+    it('does not show EmptyState when both page and search params are present in the URL', () => {
+      mockUseQueryStates.mockReturnValueOnce([
+        { search: 'dsfdfsdf', page: 1, perPage: 20, status: [], sort: [] },
+        vi.fn()
+      ]);
+      render(<CustomersList />);
+
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+      expect(screen.getByTestId('customers-table')).toBeInTheDocument();
     });
   });
 
@@ -146,22 +162,22 @@ describe('CustomersList', () => {
     });
 
     it('renders the Customers page heading', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.getByRole('heading', { name: 'Customers' })).toBeInTheDocument();
     });
 
     it('renders the CustomersTable', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.getByTestId('customers-table')).toBeInTheDocument();
     });
 
     it('renders Add Customer button', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.getByRole('button', { name: /add customer/i })).toBeInTheDocument();
     });
 
     it('does not render EmptyState when customers exist', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
   });
@@ -171,7 +187,7 @@ describe('CustomersList', () => {
   describe('when data is undefined (loading)', () => {
     it('does not crash and renders zero state based on undefined data', () => {
       mockUseCustomers.mockReturnValue({ data: undefined });
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       // totalItems defaults to 0 — zero state renders
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
@@ -185,12 +201,12 @@ describe('CustomersList', () => {
     });
 
     it('does not render CustomerDrawer initially', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.queryByTestId('customer-drawer')).not.toBeInTheDocument();
     });
 
     it('opens CustomerDrawer when Add Customer button is clicked', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       fireEvent.click(screen.getByRole('button', { name: /add customer/i }));
       expect(screen.getByTestId('customer-drawer')).toBeInTheDocument();
     });
@@ -202,7 +218,7 @@ describe('CustomersList', () => {
     });
 
     it('opens CustomerDrawer from the EmptyState Add Customer button', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       fireEvent.click(screen.getByRole('button', { name: /add customer/i }));
       expect(screen.getByTestId('customer-drawer')).toBeInTheDocument();
     });
@@ -228,18 +244,18 @@ describe('CustomersList', () => {
     });
 
     it('does not show delete dialog initially', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       expect(screen.queryByTestId('delete-customer-dialog')).not.toBeInTheDocument();
     });
 
     it('opens delete dialog when onDelete is called from columns', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
       expect(screen.getByTestId('delete-customer-dialog')).toBeInTheDocument();
     });
 
     it('calls deleteCustomer.mutate when dialog confirm is clicked', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
       fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
       expect(mockMutate).toHaveBeenCalledWith(
@@ -249,14 +265,14 @@ describe('CustomersList', () => {
     });
 
     it('does not call deleteCustomer.mutate when dialog is cancelled', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       expect(mockMutate).not.toHaveBeenCalled();
     });
 
     it('closes delete dialog when cancelled', () => {
-      render(<CustomersList searchParams={emptySearchParams} />);
+      render(<CustomersList />);
       act(() => capturedDeleteFn?.('customer-0', 'Jane Smith-0'));
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       expect(screen.queryByTestId('delete-customer-dialog')).not.toBeInTheDocument();

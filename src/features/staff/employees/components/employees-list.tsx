@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 import { Plus, UserX2Icon } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export function EmployeesList({
 }) {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const deleteEmployee = useDeleteEmployee();
+  const [currentParams] = useQueryStates(employeeSearchParams);
 
   const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
   const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
@@ -65,7 +67,7 @@ export function EmployeesList({
 
   const isZeroState =
     (initialData?.pagination.totalItems ?? 0) === 0 &&
-    !hasActiveSearchFilters(serverSearchParams, employeeSearchParams);
+    !hasActiveSearchFilters(currentParams, employeeSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>

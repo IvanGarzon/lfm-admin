@@ -6,6 +6,7 @@ import { UsersList } from '@/features/users/components/users-list';
 import { getTenantUsers, getTenantUserById } from '@/actions/users/queries';
 import { getQueryClient } from '@/lib/query-client';
 import { USER_KEYS } from '@/features/users/constants/query-keys';
+import { searchParamsCache } from '@/filters/users/users-filters';
 
 const UserDrawer = dynamic(
   () => import('@/features/users/components/user-drawer').then((mod) => mod.UserDrawer),
@@ -21,14 +22,18 @@ export default async function UserPermissionsPage({
 }) {
   const { id } = await params;
   const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: USER_KEYS.list(JSON.stringify(searchParamsResolved)),
+      queryKey: USER_KEYS.list(filters),
       queryFn: async () => {
-        const result = await getTenantUsers(searchParamsResolved);
-        if (!result.success) throw new Error(result.error);
+        const result = await getTenantUsers(filters);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       }
     }),
@@ -36,7 +41,10 @@ export default async function UserPermissionsPage({
       queryKey: USER_KEYS.detail(id),
       queryFn: async () => {
         const result = await getTenantUserById(id);
-        if (!result.success) throw new Error(result.error);
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         return result.data;
       }
     })
@@ -45,8 +53,8 @@ export default async function UserPermissionsPage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <UsersList searchParams={searchParamsResolved} />
-        <UserDrawer id={id} open={true} tab='permissions' />
+        <UsersList />
+        {id ? <UserDrawer id={id} open={true} tab='permissions' /> : null}
       </HydrationBoundary>
     </Shell>
   );

@@ -7,8 +7,16 @@ import { UsersList } from '../users-list';
 
 // -- Mocks ------------------------------------------------------------------
 
-const { mockUseUsers } = vi.hoisted(() => ({
-  mockUseUsers: vi.fn()
+const { mockUseUsers, mockUseQueryStates } = vi.hoisted(() => ({
+  mockUseUsers: vi.fn(),
+  mockUseQueryStates: vi.fn(() => [
+    { search: '', page: 1, perPage: 20, role: [], status: [], sort: [] },
+    vi.fn()
+  ])
+}));
+
+vi.mock('nuqs', () => ({
+  useQueryStates: mockUseQueryStates
 }));
 
 vi.mock('@/features/users/hooks/use-user-queries', () => ({
@@ -53,9 +61,6 @@ vi.mock('next/dynamic', () => ({
 
 import { createUserListItem } from '@/lib/testing/factories/user.factory';
 
-const activeSearchParams = { search: 'Alice' };
-const emptySearchParams = {};
-
 function makeData(totalItems: number) {
   return {
     items: Array.from({ length: totalItems }, (_, i) => createUserListItem({ id: `u-${i}` })),
@@ -84,31 +89,35 @@ describe('UsersList', () => {
     });
 
     it('renders EmptyState when there are no users and no active filters', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
 
     it('does not render the page heading in zero state', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.queryByRole('heading', { name: 'Users' })).not.toBeInTheDocument();
     });
 
     it('does not render UsersTable in zero state', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.queryByTestId('users-table')).not.toBeInTheDocument();
     });
 
     it('renders EmptyState with Invite User action button', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.getByRole('button', { name: /invite user/i })).toBeInTheDocument();
     });
 
     it('does not show EmptyState when a search filter is active even if results are empty', () => {
-      render(<UsersList searchParams={activeSearchParams} />);
+      mockUseQueryStates.mockReturnValueOnce([
+        { search: 'Alice', page: 1, perPage: 20, role: [], status: [], sort: [] },
+        vi.fn()
+      ]);
+      render(<UsersList />);
 
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
@@ -120,13 +129,13 @@ describe('UsersList', () => {
     });
 
     it('renders the Users page heading', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.getByRole('heading', { name: 'Users' })).toBeInTheDocument();
     });
 
     it('renders UsersTable with totalItems', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       const table = screen.getByTestId('users-table');
       expect(table).toBeInTheDocument();
@@ -134,13 +143,13 @@ describe('UsersList', () => {
     });
 
     it('renders Invite User button', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.getByRole('button', { name: /invite user/i })).toBeInTheDocument();
     });
 
     it('does not render EmptyState when users exist', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
     });
@@ -150,7 +159,7 @@ describe('UsersList', () => {
     it('does not crash and renders zero state based on undefined data', () => {
       mockUseUsers.mockReturnValue({ data: undefined });
 
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
     });
@@ -162,13 +171,13 @@ describe('UsersList', () => {
     });
 
     it('does not render invite modal initially', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       expect(screen.queryByTestId('user-invite-modal')).not.toBeInTheDocument();
     });
 
     it('opens invite modal when the "Invite User" button is clicked', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       fireEvent.click(screen.getByRole('button', { name: /invite user/i }));
 
@@ -182,7 +191,7 @@ describe('UsersList', () => {
     });
 
     it('opens invite modal from the EmptyState Invite User button', () => {
-      render(<UsersList searchParams={emptySearchParams} />);
+      render(<UsersList />);
 
       fireEvent.click(screen.getByRole('button', { name: /invite user/i }));
 

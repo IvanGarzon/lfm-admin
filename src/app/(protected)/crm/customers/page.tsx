@@ -36,7 +36,7 @@ export default async function CustomersPage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <CustomersList searchParams={searchParamsResolved} />
+        <CustomersList />
       </HydrationBoundary>
     </Shell>
   );

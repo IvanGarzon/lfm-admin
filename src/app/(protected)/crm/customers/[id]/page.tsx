@@ -60,7 +60,7 @@ export default async function CustomerPage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <CustomersList searchParams={searchParamsResolved} />
+        <CustomersList />
         {id ? <CustomerDrawer id={id} open={true} /> : null}
       </HydrationBoundary>
     </Shell>

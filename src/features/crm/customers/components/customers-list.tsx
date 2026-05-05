@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useMemo, useState, useCallback } from 'react';
-import { SearchParams } from 'nuqs/server';
 import { useQueryStates } from 'nuqs';
 import { Plus, Users } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
@@ -28,11 +27,7 @@ const CustomerDrawer = dynamic(
   }
 );
 
-export function CustomersList({
-  searchParams: serverSearchParams
-}: {
-  searchParams: SearchParams;
-}) {
+export function CustomersList() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [deletingCustomer, setDeletingCustomer] = useState<{ id: string; name: string } | null>(
     null
@@ -72,7 +67,7 @@ export function CustomersList({
 
   const isZeroState =
     (data?.pagination.totalItems ?? 0) === 0 &&
-    !hasActiveSearchFilters(serverSearchParams, customerSearchParams);
+    !hasActiveSearchFilters(currentParams, customerSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>

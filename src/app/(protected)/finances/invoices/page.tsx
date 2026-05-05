@@ -37,7 +37,7 @@ export default async function InvoicesPage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <InvoicesView searchParams={searchParamsResolved} />
+        <InvoicesView />
       </HydrationBoundary>
     </Shell>
   );

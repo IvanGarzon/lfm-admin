@@ -36,7 +36,7 @@ export default async function OrganizationsPage({
   return (
     <Shell scrollable>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <OrganizationsList searchParams={searchParamsResolved} />
+        <OrganizationsList />
       </HydrationBoundary>
     </Shell>
   );

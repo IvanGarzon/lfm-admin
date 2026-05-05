@@ -56,8 +56,8 @@ describe('Organisation Mutations', () => {
         expect.objectContaining({ name: 'Acme Florals' }),
         mockSession.user.tenantId
       );
-      expect(revalidatePath).toHaveBeenCalledWith('/customers');
-      expect(revalidatePath).toHaveBeenCalledWith('/organizations');
+      expect(revalidatePath).toHaveBeenCalledWith('/crm/customers');
+      expect(revalidatePath).toHaveBeenCalledWith('/crm/organizations');
     });
 
     it('returns unauthorized when not signed in', async () => {
@@ -85,8 +85,8 @@ describe('Organisation Mutations', () => {
       if (result.success) {
         expect(result.data.id).toBe(TEST_ORG_ID);
       }
-      expect(revalidatePath).toHaveBeenCalledWith('/customers');
-      expect(revalidatePath).toHaveBeenCalledWith('/organizations');
+      expect(revalidatePath).toHaveBeenCalledWith('/crm/customers');
+      expect(revalidatePath).toHaveBeenCalledWith('/crm/organizations');
     });
 
     it('returns error when organisation does not exist', async () => {
