@@ -1,13 +1,12 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
 import { QuoteRepository } from '@/repositories/quote-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
-import { searchParamsCache } from '@/filters/quotes/quotes-filters';
 import type {
+  QuoteFilters,
   QuoteStatistics,
   QuoteStatusHistoryItem,
   QuoteWithDetails,
@@ -26,15 +25,14 @@ import { getSignedDownloadUrl } from '@/lib/s3';
 const quoteRepo = new QuoteRepository(prisma);
 
 /**
- * Retrieves a paginated list of quotes based on specified search and filter criteria.
- * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * Retrieves a paginated list of quotes based on specified filter criteria.
+ * @param filters - The parsed filter criteria for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated quote data.
  */
-export const getQuotes = withTenantPermission<SearchParams, QuotePagination>(
+export const getQuotes = withTenantPermission<QuoteFilters, QuotePagination>(
   'canReadQuotes',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await quoteRepo.searchQuotes(filters, ctx.tenantId);
 
       return { success: true, data: result };

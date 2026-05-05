@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { SearchParams } from 'nuqs/server';
 import { toast } from 'sonner';
 
 import { useDataTable } from '@/hooks/use-data-table';
@@ -26,19 +25,10 @@ import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quote
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 import type { QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 
-const DEFAULT_PAGE_SIZE = 20;
-
-export function QuoteList({
-  data,
-  searchParams: serverSearchParams
-}: {
-  data: QuotePagination;
-  searchParams: SearchParams;
-}) {
+export function QuoteList({ data }: { data?: QuotePagination }) {
   const { openDelete, openReject, openOnHold, openCancel, openConvert } = useQuoteActions();
 
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(data.pagination.totalItems / perPage);
+  const pageCount = data?.pagination.totalPages ?? 0;
 
   const markAsAcceptedMutation = useMarkQuoteAsAccepted();
   const markAsSentMutation = useMarkQuoteAsSent();
@@ -231,10 +221,9 @@ export function QuoteList({
   );
 
   const { table } = useDataTable({
-    data: data.items,
+    data: data?.items ?? [],
     columns,
     pageCount: pageCount,
-    shallow: false,
     debounceMs: 500
   });
 
@@ -243,8 +232,8 @@ export function QuoteList({
       <Box className='space-y-4 min-w-0 w-full'>
         <QuoteTable
           table={table}
-          items={data.items}
-          totalItems={data.pagination.totalItems}
+          items={data?.items ?? []}
+          totalItems={data?.pagination.totalItems ?? 0}
           onBulkUpdateStatus={handleBulkUpdateStatus}
           onBulkDelete={handleBulkDelete}
           isBulkPending={isBulkPending}

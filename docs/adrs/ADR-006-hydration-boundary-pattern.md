@@ -132,8 +132,8 @@ The `list` key must accept the resolved search params object (or a serialised fo
 
 ### Remaining
 
-- [ ] `finances/quotes/page.tsx`
-- [ ] `finances/quotes/[id]/page.tsx`
+- [x] `finances/quotes/page.tsx`
+- [x] `finances/quotes/[id]/page.tsx`
 - [ ] `finances/recipes/page.tsx`
 - [ ] `finances/recipes/[id]/page.tsx`
 - [ ] `finances/transactions/page.tsx`

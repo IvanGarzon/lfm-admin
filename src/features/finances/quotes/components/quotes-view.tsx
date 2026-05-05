@@ -4,8 +4,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { Plus, ScrollText } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { SearchParams } from 'nuqs/server';
 import dynamic from 'next/dynamic';
+import { useQueryStates } from 'nuqs';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Box } from '@/components/ui/box';
@@ -13,13 +13,9 @@ import { Button } from '@/components/ui/button';
 import { QuoteList } from '@/features/finances/quotes/components/quote-list';
 import { QuoteOverview } from '@/features/finances/quotes/components/quote-overview';
 import { QuoteAnalytics } from '@/features/finances/quotes/components/quote-analytics';
-import { useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-queries';
-import { QuotePagination } from '@/features/finances/quotes/types';
-
-interface QuotesViewProps {
-  initialData: QuotePagination;
-  searchParams: SearchParams;
-}
+import { useQuotes, useQuoteStatistics } from '@/features/finances/quotes/hooks/use-quote-queries';
+import { hasActiveSearchFilters } from '@/lib/utils';
+import { searchParams as quoteSearchParams } from '@/filters/quotes/quotes-filters';
 
 const QuoteDrawer = dynamic(
   () => import('@/features/finances/quotes/components/quote-drawer').then((mod) => mod.QuoteDrawer),
@@ -29,9 +25,12 @@ const QuoteDrawer = dynamic(
   }
 );
 
-export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
+export function QuotesView() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
+
+  const [currentParams] = useQueryStates(quoteSearchParams);
+  const { data } = useQuotes(currentParams);
 
   const today = useMemo(() => new Date(), []);
 
@@ -77,8 +76,9 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
     setShowCreateModal((prev) => !prev);
   }, []);
 
-  const hasActiveFilters = Boolean(searchParams.search) || Boolean(searchParams.status);
-  const isZeroState = initialData.pagination.totalItems === 0 && !hasActiveFilters;
+  const isZeroState =
+    (data?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(currentParams, quoteSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>
@@ -123,7 +123,7 @@ export function QuotesView({ initialData, searchParams }: QuotesViewProps) {
             value='list'
             className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
-            <QuoteList data={initialData} searchParams={searchParams} />
+            <QuoteList data={data} />
           </TabsContent>
 
           <TabsContent
