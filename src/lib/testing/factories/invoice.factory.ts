@@ -15,7 +15,11 @@ import type {
 import type {
   InvoiceWithDetails,
   InvoiceItemDetail,
-  InvoicePaymentItem
+  InvoiceListItem,
+  InvoiceMetadata,
+  InvoicePagination,
+  InvoicePaymentItem,
+  InvoiceStatistics
 } from '@/features/finances/invoices/types';
 
 // Derive item type from schema
@@ -220,19 +224,94 @@ export function createCancelInvoiceInput(
 /**
  * Creates mock invoice statistics.
  */
-export function createInvoiceStatistics(overrides: Partial<Record<string, number>> = {}) {
+export function createInvoiceStatistics(
+  overrides: Partial<InvoiceStatistics> = {}
+): InvoiceStatistics {
   return {
-    total: 100,
-    draft: 15,
-    pending: 25,
-    paid: 40,
-    partiallyPaid: 10,
-    overdue: 8,
-    cancelled: 2,
-    totalAmount: 50000,
-    paidAmount: 30000,
-    overdueAmount: 8000,
+    total: 10,
+    draft: 1,
+    pending: 2,
+    paid: 5,
+    cancelled: 1,
+    overdue: 1,
+    partiallyPaid: 0,
+    totalRevenue: 5000,
+    pendingRevenue: 2000,
+    avgInvoiceValue: 500,
     ...overrides
+  };
+}
+
+/**
+ * Creates mock invoice metadata (invoice without items, payments, or status history).
+ */
+export function createInvoiceMetadata(overrides: Partial<InvoiceMetadata> = {}): InvoiceMetadata {
+  return {
+    id: 'inv-001',
+    invoiceNumber: 'INV-2024-0001',
+    status: 'PENDING',
+    amount: 1000,
+    gst: 10,
+    discount: 0,
+    currency: 'AUD',
+    issuedDate: new Date('2024-01-01'),
+    dueDate: new Date('2024-01-31'),
+    amountPaid: 0,
+    amountDue: 1000,
+    customer: {
+      id: 'cust-001',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane@example.com',
+      phone: null,
+      organization: null
+    },
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    ...overrides
+  };
+}
+
+/**
+ * Creates a mock invoice list item as returned by paginated queries.
+ */
+export function createInvoiceListItem(overrides: Partial<InvoiceListItem> = {}): InvoiceListItem {
+  return {
+    id: 'inv-001',
+    invoiceNumber: 'INV-2024-0001',
+    customerId: 'cust-001',
+    customerName: 'Jane Smith',
+    customerEmail: 'jane@example.com',
+    status: 'PENDING',
+    amount: 1000,
+    currency: 'AUD',
+    issuedDate: new Date('2024-01-01'),
+    dueDate: new Date('2024-01-31'),
+    itemCount: 1,
+    amountPaid: 0,
+    amountDue: 1000,
+    ...overrides
+  };
+}
+
+/**
+ * Creates a mock paginated invoice result with an empty items array.
+ * @param totalItems - The total number of items across all pages
+ * @returns An InvoicePagination object with pagination metadata calculated for 20 items per page
+ */
+export function createInvoicePagination(totalItems: number): InvoicePagination {
+  const totalPages = Math.ceil(totalItems / 20);
+  return {
+    items: [],
+    pagination: {
+      totalItems,
+      totalPages,
+      currentPage: 1,
+      hasNextPage: totalPages > 1,
+      hasPreviousPage: false,
+      nextPage: totalPages > 1 ? 2 : null,
+      previousPage: null
+    }
   };
 }
 

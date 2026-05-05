@@ -27,8 +27,8 @@ export default async function QuotePage({
   searchParams: Promise<SearchParams>;
 }) {
   const { id } = await params;
-  const rawParams = await searchParams;
-  const filters = searchParamsCache.parse(rawParams);
+  const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({

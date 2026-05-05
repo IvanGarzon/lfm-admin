@@ -9,9 +9,7 @@ export default defineConfig({
   test: {
     silent: false,
     globals: true,
-    environment: 'node',
-    // environment: 'happy-dom',
-    // environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: ['./src/lib/testing/setup.ts'],
     deps: {
       interopDefault: true

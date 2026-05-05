@@ -38,10 +38,7 @@ export function InvoicesView() {
   const [currentParams] = useQueryStates(invoiceSearchParams);
   const { data } = useInvoices(currentParams);
 
-  // Use useMemo to ensure stable date between server and client renders
   const today = useMemo(() => new Date(), []);
-
-  // Date range for Analytics (default last 30 days)
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
     to: today

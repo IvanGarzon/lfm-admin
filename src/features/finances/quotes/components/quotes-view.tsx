@@ -33,12 +33,12 @@ export function QuotesView() {
   const { data } = useQuotes(currentParams);
 
   const today = useMemo(() => new Date(), []);
-
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subDays(today, 30),
     to: today
   }));
 
+  // Current month filter for Overview (1st of month to today)
   const currentMonthFilter = useMemo(
     () => ({
       startDate: startOfMonth(today),
@@ -47,9 +47,11 @@ export function QuotesView() {
     [today]
   );
 
+  // Stats for Overview (current month)
   const { data: overviewStats, isLoading: overviewLoading } =
     useQuoteStatistics(currentMonthFilter);
 
+  // Stats for Analytics (custom date range)
   const { data: analyticsStats, isLoading: analyticsLoading } = useQuoteStatistics({
     startDate: dateRange?.from,
     endDate: dateRange?.to
