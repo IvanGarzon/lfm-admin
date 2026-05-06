@@ -19,9 +19,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { getRecipeGroupById } from '@/actions/finances/recipe-groups/queries';
-import type { RecipeListItem } from '@/features/finances/recipes/types';
-import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
+import { getRecipeGroupById } from '@/actions/inventory/recipe-groups/queries';
+import type { RecipeListItem } from '@/features/inventory/recipes/types';
+import type { RecipeGroupListItem } from '@/features/inventory/recipe-groups/types';
 
 type SelectedItem = {
   id: string;

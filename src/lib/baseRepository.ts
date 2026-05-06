@@ -5,15 +5,15 @@ interface IRepositoryWriter<TModel> {
   create(data: Prisma.Args<TModel, 'create'>['data']): PrismaPromise<TModel>;
   createMany(
     data: Prisma.Args<TModel, 'createMany'>['data'],
-    skipDuplicates?: boolean,
+    skipDuplicates?: boolean
   ): PrismaPromise<Prisma.BatchPayload>;
   update(
     id: string | number,
-    data: Prisma.Args<TModel, 'update'>['data'],
+    data: Prisma.Args<TModel, 'update'>['data']
   ): PrismaPromise<TModel | null>;
   update(
     id: string | number,
-    data: Prisma.Args<TModel, 'update'>['data'],
+    data: Prisma.Args<TModel, 'update'>['data']
   ): PrismaPromise<TModel | null>;
   updateMany(args: Prisma.Args<TModel, 'updateMany'>): PrismaPromise<Prisma.BatchPayload>;
   delete(id: string | number): PrismaPromise<TModel | null>;
@@ -32,7 +32,7 @@ interface IRepositoryReader<TModel> {
       orderBy?: Prisma.Args<TModel, 'findMany'>['orderBy'];
       skip?: number;
       take?: number;
-    },
+    }
   ): PrismaPromise<TModel[]>;
   exists(where: Prisma.Args<TModel, 'findFirst'>['where']): PrismaPromise<boolean>;
 }
@@ -46,15 +46,15 @@ export type ModelDelegateOperations<TModel> = {
   count: (args?: Prisma.Args<TModel, 'count'>) => Prisma.PrismaPromise<number>;
   create: (args: Prisma.Args<TModel, 'create'>) => Prisma.PrismaPromise<TModel>;
   createMany: (
-    args: Prisma.Args<TModel, 'createMany'>,
+    args: Prisma.Args<TModel, 'createMany'>
   ) => Prisma.PrismaPromise<Prisma.BatchPayload>;
   update: (args: Prisma.Args<TModel, 'update'>) => Prisma.PrismaPromise<TModel>;
   updateMany: (
-    args: Prisma.Args<TModel, 'updateMany'>,
+    args: Prisma.Args<TModel, 'updateMany'>
   ) => Prisma.PrismaPromise<Prisma.BatchPayload>;
   delete: (args: Prisma.Args<TModel, 'delete'>) => Prisma.PrismaPromise<TModel>;
   deleteMany: (
-    args: Prisma.Args<TModel, 'deleteMany'>,
+    args: Prisma.Args<TModel, 'deleteMany'>
   ) => Prisma.PrismaPromise<Prisma.BatchPayload>;
   upsert: (args: Prisma.Args<TModel, 'upsert'>) => Prisma.PrismaPromise<TModel>;
 };
@@ -141,7 +141,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
     }
 
     const findArgs = {
-      where: { id },
+      where: { id }
     } as Prisma.Args<TModel, 'findUnique'>;
 
     return this.model.findUnique(findArgs);
@@ -178,8 +178,8 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
 
     const findArgs = {
       where: {
-        [field]: value,
-      } as Prisma.Args<TModel, 'findFirst'>['where'],
+        [field]: value
+      } as Prisma.Args<TModel, 'findFirst'>['where']
     } as Prisma.Args<TModel, 'findFirst'>;
 
     return this.model.findFirst(findArgs);
@@ -218,7 +218,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
       orderBy?: Prisma.Args<TModel, 'findMany'>['orderBy'];
       skip?: number;
       take?: number;
-    },
+    }
   ): PrismaPromise<TModel[]> {
     if (!this.model.findMany) {
       throw new Error(`The 'findMany' operation is not available on this model delegate.`);
@@ -286,7 +286,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
     // Prepare arguments for findFirst. We don't need to select any specific fields,
     // as Prisma's findFirst is optimized for existence checks.
     const findFirstArgs = {
-      where,
+      where
     } as Prisma.Args<TModel, 'findFirst'>;
 
     const item = this.model.findFirst(findFirstArgs);
@@ -355,7 +355,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
     // is compatible with the full Prisma.Args<T, 'create'> type,
     // given that other properties like 'select' and 'include' are optional.
     const createArgs = {
-      data: dataInput,
+      data: dataInput
     } as Prisma.Args<TModel, 'create'>;
 
     return this.model.create(createArgs);
@@ -389,7 +389,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
    */
   createMany(
     data: Prisma.Args<TModel, 'createMany'>['data'],
-    skipDuplicates?: boolean,
+    skipDuplicates?: boolean
   ): PrismaPromise<Prisma.BatchPayload> {
     if (!this.model.createMany) {
       throw new Error('createMany operation is not available on this model delegate.');
@@ -397,7 +397,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
 
     const createManyArgs = {
       data,
-      skipDuplicates,
+      skipDuplicates
     } as Prisma.Args<TModel, 'createMany'>;
 
     return this.model.createMany(createManyArgs);
@@ -423,7 +423,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
    */
   update(
     id: string | number,
-    data: Prisma.Args<TModel, 'update'>['data'],
+    data: Prisma.Args<TModel, 'update'>['data']
   ): PrismaPromise<TModel | null> {
     if (!this.model.update) {
       throw new Error(`The 'update' operation is not available on this model delegate.`);
@@ -432,7 +432,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
     try {
       const updateArgs = {
         where: { id } as Prisma.Args<TModel, 'update'>['where'], // Assumes 'id' is the unique field
-        data,
+        data
       } as Prisma.Args<TModel, 'update'>;
 
       return this.model.update(updateArgs);
@@ -503,7 +503,7 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
 
     try {
       const deleteArgs = {
-        where: { id } as Prisma.Args<TModel, 'delete'>['where'],
+        where: { id } as Prisma.Args<TModel, 'delete'>['where']
       } as Prisma.Args<TModel, 'delete'>;
 
       return this.model.delete(deleteArgs);
@@ -537,14 +537,14 @@ export abstract class BaseRepository<TModel> implements IBaseRepository<TModel> 
    * console.log(`Deleted ${oldItemsResult.count} old items.`);
    */
   deleteMany(
-    where: Prisma.Args<TModel, 'deleteMany'>['where'],
+    where: Prisma.Args<TModel, 'deleteMany'>['where']
   ): PrismaPromise<Prisma.BatchPayload> {
     if (!this.model.deleteMany) {
       throw new Error(`The 'deleteMany' operation is not available on this model delegate.`);
     }
 
     const deleteManyArgs = {
-      where,
+      where
     } as Prisma.Args<TModel, 'deleteMany'>;
 
     return this.model.deleteMany(deleteManyArgs);

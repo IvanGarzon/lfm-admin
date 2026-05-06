@@ -6,7 +6,7 @@ import type {
   RecipeWithDetails,
   RecipeFilters,
   RecipePagination
-} from '@/features/finances/recipes/types';
+} from '@/features/inventory/recipes/types';
 import type { CreateRecipeInput, UpdateRecipeInput } from '@/schemas/recipes';
 
 export class RecipeRepository extends BaseRepository<Prisma.RecipeGetPayload<object>> {

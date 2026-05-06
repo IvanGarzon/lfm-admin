@@ -9,8 +9,8 @@ import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import type { ActiveProduct } from '@/features/inventory/products/types';
 import type { QuoteFormInput } from '@/features/finances/quotes/types';
-import type { RecipeListItem } from '@/features/finances/recipes/types';
-import type { RecipeGroupListItem } from '@/features/finances/recipe-groups/types';
+import type { RecipeListItem } from '@/features/inventory/recipes/types';
+import type { RecipeGroupListItem } from '@/features/inventory/recipe-groups/types';
 import { QuoteItemRow } from '@/features/finances/quotes/components/quote-item-row';
 import { AddRecipesDialog } from '@/features/finances/quotes/components/dialogs/add-recipes-dialog';
 

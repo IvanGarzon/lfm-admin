@@ -83,13 +83,6 @@ export const tenantNavItems: NavItem[] = [
         icon: 'arrowLeftRight',
         shortcut: ['t', 't'],
         authorizeOnly: ['*']
-      },
-      {
-        title: 'Recipes',
-        href: '/finances/recipes',
-        icon: 'pizza',
-        shortcut: ['r', 'r'],
-        authorizeOnly: ['*']
       }
     ]
   },
@@ -98,6 +91,13 @@ export const tenantNavItems: NavItem[] = [
     href: '#',
     icon: 'product',
     items: [
+      {
+        title: 'Recipes',
+        href: '/inventory/recipes',
+        icon: 'pizza',
+        shortcut: ['r', 'r'],
+        authorizeOnly: ['*']
+      },
       {
         title: 'Products',
         href: '/inventory/products',

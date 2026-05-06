@@ -8,7 +8,7 @@ import type {
   RecipeGroupSearchParams,
   RecipeGroupCreateData,
   RecipeGroupUpdateData
-} from '@/features/finances/recipe-groups/types';
+} from '@/features/inventory/recipe-groups/types';
 
 // -- Repository ------------------------------------------------------------
 

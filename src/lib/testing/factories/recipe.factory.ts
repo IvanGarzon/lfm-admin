@@ -3,7 +3,7 @@ import type {
   RecipeListItem,
   RecipeWithDetails,
   RecipeItemListItem
-} from '@/features/finances/recipes/types';
+} from '@/features/inventory/recipes/types';
 
 export function createRecipeResponse(overrides: Partial<RecipeListItem> = {}): RecipeListItem {
   return {

@@ -25,8 +25,8 @@ import {
 } from '@/features/finances/quotes/utils/quote-helpers';
 import { useActiveCustomers } from '@/features/crm/customers/hooks/use-customer-queries';
 import { useActiveProducts } from '@/features/inventory/products/hooks/use-products-queries';
-import { useAllRecipes } from '@/features/finances/recipes/hooks/use-recipe-queries';
-import { useAllRecipeGroups } from '@/features/finances/recipe-groups/hooks/use-recipe-group-queries';
+import { useAllRecipes } from '@/features/inventory/recipes/hooks/use-recipe-queries';
+import { useAllRecipeGroups } from '@/features/inventory/recipe-groups/hooks/use-recipe-group-queries';
 import { QuoteItemsList } from '@/features/finances/quotes/components/quote-items-list';
 import {
   useDeleteQuoteItemAttachment,

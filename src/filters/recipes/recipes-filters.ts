@@ -1,5 +1,5 @@
 import { getSortingStateParser } from '@/lib/parsers';
-import { SORTABLE_RECIPE_COLUMNS } from '@/features/finances/recipes/constants/sortable-columns';
+import { SORTABLE_RECIPE_COLUMNS } from '@/features/inventory/recipes/constants/sortable-columns';
 
 import { createSearchParamsCache, parseAsInteger, parseAsString } from 'nuqs/server';
 
