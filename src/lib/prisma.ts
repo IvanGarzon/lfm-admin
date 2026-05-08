@@ -48,18 +48,14 @@ const prismaClientSingleton = () => {
         });
       }
 
-      // Log all queries with color coding based on performance
-      const durationColor = duration > 1000 ? '\x1b[31m' : duration > 100 ? '\x1b[33m' : '\x1b[32m';
-      const reset = '\x1b[0m';
-
-      console.log(
-        `${durationColor}[Prisma Query]${reset} ${duration}ms - ${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`
-      );
-
-      // Optionally log params for debugging
-      if (params && params !== '[]') {
-        console.log(`  └─ Params: ${params}`);
-      }
+      logger.debug('Prisma query', {
+        context: 'PrismaQueryMonitor',
+        metadata: {
+          duration: `${duration}ms`,
+          query: `${query.substring(0, 100)}${query.length > 100 ? '...' : ''}`,
+          ...(params && params !== '[]' ? { params } : {})
+        }
+      });
     });
   }
 
