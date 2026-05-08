@@ -18,8 +18,8 @@ export default async function TransactionsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const rawParams = await searchParams;
-  const filters = searchParamsCache.parse(rawParams);
+  const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({

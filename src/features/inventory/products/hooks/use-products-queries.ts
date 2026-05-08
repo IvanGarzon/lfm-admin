@@ -8,7 +8,6 @@ import {
   skipToken
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 
 import {
   getProducts,
@@ -29,31 +28,19 @@ import type { ProductFilters, ProductWithDetails } from '@/features/inventory/pr
 import type { CreateProductInput, UpdateProductInput } from '@/schemas/products';
 import type { ProductStatus } from '@/prisma/client';
 
-// -- Query key factory -------------------------------------------------------
-
-export const PRODUCT_KEYS = {
-  all: ['products'] as const,
-  lists: () => [...PRODUCT_KEYS.all, 'list'] as const,
-  list: (filters: ProductFilters) => [...PRODUCT_KEYS.lists(), { filters }] as const,
-  details: () => [...PRODUCT_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...PRODUCT_KEYS.details(), id] as const,
-  statistics: () => [...PRODUCT_KEYS.all, 'statistics'] as const,
-  active: () => [...PRODUCT_KEYS.all, 'active'] as const
-};
+import { PRODUCT_KEYS } from '@/features/inventory/products/constants/query-keys';
 
 // -- Query hooks -------------------------------------------------------------
 
-/**
- * Hook to fetch a single product by ID
- */
-export function useProductList(searchParams: SearchParams) {
+export function useProducts(filters: ProductFilters) {
   return useQuery({
-    queryKey: [...PRODUCT_KEYS.lists(), JSON.stringify(searchParams)],
+    queryKey: PRODUCT_KEYS.list(filters),
     queryFn: async () => {
-      const result = await getProducts(searchParams);
+      const result = await getProducts(filters);
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    placeholderData: keepPreviousData,
     staleTime: 30 * 1000
   });
 }

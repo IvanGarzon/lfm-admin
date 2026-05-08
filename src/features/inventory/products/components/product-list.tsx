@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { SearchParams } from 'nuqs/server';
 
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
@@ -16,12 +15,7 @@ import { useProductActions } from '@/features/inventory/products/context/product
 import type { ProductPagination, ProductListItem } from '@/features/inventory/products/types';
 import type { ProductStatus } from '@/prisma/client';
 
-interface ProductListProps {
-  initialData: ProductPagination;
-  searchParams: SearchParams;
-}
-
-export function ProductList({ initialData, searchParams }: ProductListProps) {
+export function ProductList({ data }: { data?: ProductPagination }) {
   const { openDelete } = useProductActions();
 
   // Create columns with action handlers
@@ -33,13 +27,10 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
     [openDelete]
   );
 
-  const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;
-
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: Math.ceil(initialData.pagination.totalItems / perPage),
-    shallow: false,
+    pageCount: data?.pagination.totalPages ?? 0,
     debounceMs: 500
   });
 
@@ -74,8 +65,8 @@ export function ProductList({ initialData, searchParams }: ProductListProps) {
       />
       <ProductTable
         table={table}
-        items={initialData.items}
-        totalItems={initialData.pagination.totalItems}
+        items={data?.items ?? []}
+        totalItems={data?.pagination.totalItems ?? 0}
       />
     </Box>
   );

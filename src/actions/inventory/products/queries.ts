@@ -1,30 +1,27 @@
 'use server';
 
-import type { SearchParams } from 'nuqs/server';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import { ProductRepository } from '@/repositories/product-repository';
 import type {
+  ProductFilters,
   ProductPagination,
   ProductWithDetails,
   ProductStatistics
 } from '@/features/inventory/products/types';
-import { searchParamsCache } from '@/filters/products/products-filters';
 
 const productRepo = new ProductRepository(prisma);
 
 /**
- * Retrieves a paginated list of products based on search and filter criteria.
- * Supports filtering by name, status, and other product attributes.
- * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * Retrieves a paginated list of products based on specified filter criteria.
+ * @param filters - The parsed filter criteria for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated product data.
  */
-export const getProducts = withTenantPermission<SearchParams, ProductPagination>(
+export const getProducts = withTenantPermission<ProductFilters, ProductPagination>(
   'canReadProducts',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await productRepo.searchProducts(filters, ctx.tenantId);
 
       return { success: true, data: result };

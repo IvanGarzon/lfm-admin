@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { Plus, Package } from 'lucide-react';
-import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Box } from '@/components/ui/box';
@@ -11,8 +11,10 @@ import { Button } from '@/components/ui/button';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as productSearchParams } from '@/filters/products/products-filters';
 import { ProductList } from '@/features/inventory/products/components/product-list';
-import { useProductStatistics } from '@/features/inventory/products/hooks/use-products-queries';
-import type { ProductPagination } from '@/features/inventory/products/types';
+import {
+  useProducts,
+  useProductStatistics
+} from '@/features/inventory/products/hooks/use-products-queries';
 
 const ProductDrawer = dynamic(
   () =>
@@ -25,13 +27,11 @@ const ProductDrawer = dynamic(
   }
 );
 
-interface ProductsViewProps {
-  initialData: ProductPagination;
-  searchParams: SearchParams;
-}
-
-export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
+export function ProductsView() {
   const [showCreateDrawer, setShowCreateDrawer] = useState(false);
+
+  const [currentParams] = useQueryStates(productSearchParams);
+  const { data } = useProducts(currentParams);
 
   const { data: stats, isLoading: statsLoading } = useProductStatistics({ enabled: true });
 
@@ -40,8 +40,8 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
   };
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
-    !hasActiveSearchFilters(searchParams, productSearchParams);
+    (data?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(currentParams, productSearchParams);
 
   return (
     <Box className='flex flex-col gap-6 min-w-0 w-full overflow-hidden'>
@@ -100,7 +100,7 @@ export function ProductsView({ initialData, searchParams }: ProductsViewProps) {
             </Box>
           ) : null}
 
-          <ProductList initialData={initialData} searchParams={searchParams} />
+          <ProductList data={data} />
         </>
       )}
 

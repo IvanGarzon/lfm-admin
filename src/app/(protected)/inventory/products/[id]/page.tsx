@@ -1,8 +1,12 @@
-import { SearchParams } from 'nuqs/server';
 import dynamic from 'next/dynamic';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { getProducts } from '@/actions/inventory/products/queries';
 import { ProductsView } from '@/features/inventory/products/components/product-view';
+import { getQueryClient } from '@/lib/query-client';
+import { PRODUCT_KEYS } from '@/features/inventory/products/constants/query-keys';
+import { searchParamsCache } from '@/filters/products/products-filters';
 
 const ProductDrawer = dynamic(
   () =>
@@ -22,17 +26,25 @@ export default async function ProductPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { id } = await params;
-  const searchParamsResolved = await searchParams;
-  const result = await getProducts(searchParamsResolved);
+  const rawParams = await searchParams;
+  const filters = searchParamsCache.parse(rawParams);
+  const queryClient = getQueryClient();
 
-  if (!result.success) {
-    throw new Error(result.error);
-  }
+  await queryClient.prefetchQuery({
+    queryKey: PRODUCT_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getProducts(filters);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    }
+  });
 
   return (
     <Shell scrollable>
-      <ProductsView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <ProductDrawer id={id} open={true} /> : null}
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <ProductsView />
+        {id ? <ProductDrawer id={id} open={true} /> : null}
+      </HydrationBoundary>
     </Shell>
   );
 }
