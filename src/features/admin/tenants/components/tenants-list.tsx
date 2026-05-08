@@ -11,15 +11,16 @@ import { DataTable } from '@/components/shared/tableV3/data-table';
 import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { tenantColumns } from '@/features/admin/tenants/components/tenant-columns';
 import { CreateTenantDialog } from '@/features/admin/tenants/components/create-tenant-dialog';
-import type { TenantListItem } from '@/features/admin/tenants/types';
+import { useAdminTenants } from '@/features/admin/tenants/hooks/use-tenant-queries';
 
-export function TenantsList({ initialData }: { initialData: TenantListItem[] }) {
+export function TenantsList() {
   const [showCreate, setShowCreate] = useState(false);
+  const { data: tenants = [] } = useAdminTenants();
 
   const columns = useMemo(() => tenantColumns, []);
 
   const { table } = useDataTable({
-    data: initialData,
+    data: tenants,
     columns,
     pageCount: 1,
     shallow: true,
@@ -39,10 +40,10 @@ export function TenantsList({ initialData }: { initialData: TenantListItem[] }) 
         </Button>
       </Box>
 
-      {initialData.length ? (
+      {tenants.length ? (
         <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
           <DataTableToolbar table={table} />
-          <DataTable table={table} totalItems={initialData.length} />
+          <DataTable table={table} totalItems={tenants.length} />
         </Card>
       ) : (
         <EmptyState

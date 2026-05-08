@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   createTenant,
@@ -8,6 +8,7 @@ import {
   suspendTenant,
   activateTenant
 } from '@/actions/admin/tenants/mutations';
+import { getAdminTenants } from '@/actions/admin/tenants/queries';
 import { switchActiveTenant } from '@/actions/admin/switch-tenant';
 import type { CreateTenantInput, UpdateTenantInput } from '@/schemas/tenants';
 
@@ -16,6 +17,18 @@ export const TENANT_KEYS = {
   lists: () => [...TENANT_KEYS.all, 'list'] as const,
   detail: (id: string) => [...TENANT_KEYS.all, 'detail', id] as const
 };
+
+export function useAdminTenants() {
+  return useQuery({
+    queryKey: TENANT_KEYS.lists(),
+    queryFn: async () => {
+      const result = await getAdminTenants();
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
 
 export function useCreateTenant() {
   const queryClient = useQueryClient();
