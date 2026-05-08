@@ -1174,25 +1174,24 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
    * @throws {Error} If invoice is not found or is not in DRAFT status
    */
   async deleteInvoice(id: string, tenantId: string): Promise<void> {
-    // First check if the invoice exists and is in DRAFT status
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id, tenantId, deletedAt: null },
-      select: { status: true }
-    });
+    await this.prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id, tenantId, deletedAt: null },
+        select: { status: true }
+      });
 
-    if (!invoice) {
-      throw new Error('Invoice not found');
-    }
-
-    if (invoice.status !== InvoiceStatus.DRAFT) {
-      throw new Error('Only DRAFT invoices can be deleted. Use cancel for other statuses.');
-    }
-
-    await this.prisma.invoice.update({
-      where: { id, tenantId, deletedAt: null },
-      data: {
-        deletedAt: new Date()
+      if (!invoice) {
+        throw new Error(`Invoice ${id} not found for tenant ${tenantId}`);
       }
+
+      if (invoice.status !== InvoiceStatus.DRAFT) {
+        throw new Error('Only DRAFT invoices can be deleted. Use cancel for other statuses.');
+      }
+
+      await tx.invoice.update({
+        where: { id, tenantId, deletedAt: null },
+        data: { deletedAt: new Date() }
+      });
     });
   }
 
