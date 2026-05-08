@@ -1,18 +1,23 @@
 'use server';
 
+import { z } from 'zod';
 import { uploadFileToS3, deleteFileFromS3, generateS3Key, getS3Url, s3Client } from '@/lib/s3';
-import { ALLOWED_MIME_TYPES } from '@/lib/file-constants';
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/prisma';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { revalidatePath } from 'next/cache';
 import { env } from '@/env';
-import { withAuth } from '@/lib/action-auth';
+import { withTenantPermission } from '@/lib/action-auth';
+import { QuoteRepository } from '@/repositories/quote-repository';
 
-export const uploadFile = withAuth<
+const quoteRepo = new QuoteRepository(prisma);
+
+export const uploadFile = withTenantPermission<
   FormData,
   { s3Key: string; s3Url: string; fileName: string; fileSize: number; mimeType: string }
->(async (session, formData) => {
+>('canManageQuotes', async (ctx, formData) => {
   try {
     const fileEntry = formData.get('file');
     const quoteIdEntry = formData.get('quoteId');
@@ -27,6 +32,21 @@ export const uploadFile = withAuth<
 
     const file = fileEntry;
     const quoteId = quoteIdEntry;
+
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        success: false,
+        error: `File exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB size limit`
+      };
+    }
+
+    // Validate ownership when quoteId is a real entity ID (not a generic folder identifier)
+    if (z.string().cuid().safeParse(quoteId).success) {
+      const quote = await quoteRepo.findQuoteById(quoteId, ctx.tenantId);
+      if (!quote) {
+        return { success: false, error: 'Quote not found' };
+      }
+    }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -67,7 +87,7 @@ export const uploadFile = withAuth<
     logger.info('File uploaded successfully', {
       context: 'file-upload',
       metadata: {
-        userId: session.user.id,
+        userId: ctx.userId,
         fileName: file.name,
         fileSize: file.size,
         s3Key: result.s3Key
@@ -90,44 +110,43 @@ export const uploadFile = withAuth<
   } catch (error) {
     return handleActionError(error, 'Failed to upload file', {
       action: 'uploadFile',
-      userId: session.user.id
+      userId: ctx.userId
     });
   }
 });
 
-export const deleteFile = withAuth<string, { message: string }>(async (session, s3Key) => {
-  if (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER') {
-    return { success: false, error: 'Forbidden: Insufficient permissions to delete files' };
-  }
-
-  try {
-    if (!s3Key) {
-      return { success: false, error: 'No s3Key provided' };
-    }
-
-    await deleteFileFromS3(s3Key);
-
-    logger.info('File deleted successfully', {
-      context: 'file-delete',
-      metadata: {
-        userId: session.user.id,
-        s3Key
+export const deleteFile = withTenantPermission<string, { message: string }>(
+  'canManageQuotes',
+  async (ctx, s3Key) => {
+    try {
+      if (!s3Key) {
+        return { success: false, error: 'No s3Key provided' };
       }
-    });
 
-    revalidatePath('/tools/files');
-    revalidatePath('/finances/quotes');
-    revalidatePath('/finances/invoices');
+      await deleteFileFromS3(s3Key);
 
-    return {
-      success: true,
-      data: { message: 'File deleted successfully' }
-    };
-  } catch (error) {
-    return handleActionError(error, 'Failed to delete file', {
-      action: 'deleteFile',
-      userId: session.user.id,
-      s3Key
-    });
+      logger.info('File deleted successfully', {
+        context: 'file-delete',
+        metadata: {
+          userId: ctx.userId,
+          s3Key
+        }
+      });
+
+      revalidatePath('/tools/files');
+      revalidatePath('/finances/quotes');
+      revalidatePath('/finances/invoices');
+
+      return {
+        success: true,
+        data: { message: 'File deleted successfully' }
+      };
+    } catch (error) {
+      return handleActionError(error, 'Failed to delete file', {
+        action: 'deleteFile',
+        userId: ctx.userId,
+        s3Key
+      });
+    }
   }
-});
+);
