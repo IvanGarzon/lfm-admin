@@ -1,9 +1,10 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
+  getPriceListItems,
   getPriceListItemById,
   getPriceListCostHistory,
   getActivePriceListItems
@@ -19,23 +20,26 @@ import type {
 } from '@/features/inventory/price-list/types';
 import type { CreatePriceListItemInput, UpdatePriceListItemInput } from '@/schemas/price-list';
 
-// ============================================================================
-// QUERY KEY FACTORY
-// ============================================================================
+import { PRICE_LIST_KEYS } from '@/features/inventory/price-list/constants/query-keys';
 
-export const PRICE_LIST_KEYS = {
-  all: ['priceList'] as const,
-  lists: () => [...PRICE_LIST_KEYS.all, 'list'] as const,
-  list: (filters: PriceListFilters) => [...PRICE_LIST_KEYS.lists(), { filters }] as const,
-  active: () => [...PRICE_LIST_KEYS.all, 'active'] as const,
-  details: () => [...PRICE_LIST_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...PRICE_LIST_KEYS.details(), id] as const,
-  costHistory: (id: string) => [...PRICE_LIST_KEYS.all, 'costHistory', id] as const
-};
+export { PRICE_LIST_KEYS };
 
 // ============================================================================
 // QUERY HOOKS
 // ============================================================================
+
+export function usePriceListItems(filters: PriceListFilters) {
+  return useQuery({
+    queryKey: PRICE_LIST_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getPriceListItems(filters);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000
+  });
+}
 
 /**
  * Hook to fetch a single price list item by ID

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { SearchParams } from 'nuqs/server';
 
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
@@ -10,12 +9,7 @@ import { createPriceListColumns } from '@/features/inventory/price-list/componen
 import type { PriceListPagination } from '@/features/inventory/price-list/types';
 import { usePriceListActions } from '@/features/inventory/price-list/context/price-list-action-context';
 
-interface PriceListListProps {
-  initialData: PriceListPagination;
-  searchParams: SearchParams;
-}
-
-export function PriceListList({ initialData, searchParams }: PriceListListProps) {
+export function PriceListList({ data }: { data?: PriceListPagination }) {
   const { openDelete, openCostHistory } = usePriceListActions();
 
   const columns = useMemo(
@@ -27,13 +21,10 @@ export function PriceListList({ initialData, searchParams }: PriceListListProps)
     [openDelete, openCostHistory]
   );
 
-  const perPage = searchParams.perPage ? Number(searchParams.perPage) : 20;
-
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: Math.ceil(initialData.pagination.totalItems / perPage),
-    shallow: false,
+    pageCount: data?.pagination.totalPages ?? 0,
     debounceMs: 500
   });
 
@@ -41,8 +32,8 @@ export function PriceListList({ initialData, searchParams }: PriceListListProps)
     <Box className='space-y-4'>
       <PriceListTable
         table={table}
-        items={initialData.items}
-        totalItems={initialData.pagination.totalItems}
+        items={data?.items ?? []}
+        totalItems={data?.pagination.totalItems ?? 0}
       />
     </Box>
   );

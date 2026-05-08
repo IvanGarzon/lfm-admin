@@ -4,14 +4,13 @@ import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import { PriceListRepository } from '@/repositories/price-list-repository';
-import type { SearchParams } from 'nuqs/server';
 import type {
+  PriceListFilters,
   PriceListPagination,
   PriceListItemWithDetails,
   PriceListCostHistoryItem,
   PriceListItemListItem
 } from '@/features/inventory/price-list/types';
-import { searchParamsCache } from '@/filters/price-list/price-list-filters';
 
 const priceListRepo = new PriceListRepository(prisma);
 
@@ -21,11 +20,10 @@ const priceListRepo = new PriceListRepository(prisma);
  * @param searchParams - The search parameters for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated data.
  */
-export const getPriceListItems = withTenantPermission<SearchParams, PriceListPagination>(
+export const getPriceListItems = withTenantPermission<PriceListFilters, PriceListPagination>(
   'canReadPriceList',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await priceListRepo.searchPriceListItems(filters, ctx.tenantId);
 
       return { success: true, data: result };

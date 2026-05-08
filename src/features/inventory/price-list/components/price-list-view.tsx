@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { Plus, Tag } from 'lucide-react';
-import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Box } from '@/components/ui/box';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as priceListSearchParams } from '@/filters/price-list/price-list-filters';
 import { PriceListList } from '@/features/inventory/price-list/components/price-list-list';
-import type { PriceListPagination } from '@/features/inventory/price-list/types';
+import { usePriceListItems } from '@/features/inventory/price-list/hooks/use-price-list-queries';
 
 const PriceListDrawer = dynamic(
   () =>
@@ -24,21 +24,19 @@ const PriceListDrawer = dynamic(
   }
 );
 
-interface PriceListViewProps {
-  initialData: PriceListPagination;
-  searchParams: SearchParams;
-}
-
-export function PriceListView({ initialData, searchParams }: PriceListViewProps) {
+export function PriceListView() {
   const [showCreateDrawer, setShowCreateDrawer] = useState(false);
+
+  const [currentParams] = useQueryStates(priceListSearchParams);
+  const { data } = usePriceListItems(currentParams);
 
   const handleShowCreateDrawer = () => {
     setShowCreateDrawer((prev) => !prev);
   };
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
-    !hasActiveSearchFilters(searchParams, priceListSearchParams);
+    (data?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(currentParams, priceListSearchParams);
 
   return (
     <Box className='flex flex-col gap-6 min-w-0 w-full overflow-hidden'>
@@ -69,7 +67,7 @@ export function PriceListView({ initialData, searchParams }: PriceListViewProps)
             </Button>
           </Box>
 
-          <PriceListList initialData={initialData} searchParams={searchParams} />
+          <PriceListList data={data} />
         </>
       )}
 
