@@ -2,16 +2,14 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { SearchParams } from 'nuqs/server';
 import { RefreshCw } from 'lucide-react';
 
 import { Box } from '@/components/ui/box';
 import { Button } from '@/components/ui/button';
 import { useDataTable } from '@/hooks/use-data-table';
-import { useSetTaskEnabled, useExecuteTask, useSyncTasks } from '../hooks/use-tasks';
+import { useTasks, useSetTaskEnabled, useExecuteTask, useSyncTasks } from '../hooks/use-tasks';
 import { createTaskColumns } from './task-columns';
 import { TaskTable } from './task-table';
-import type { TaskPagination } from '@/features/tasks/types';
 
 const TaskExecutionDrawer = dynamic(
   () =>
@@ -24,16 +22,8 @@ const TaskExecutionDrawer = dynamic(
   }
 );
 
-const DEFAULT_PAGE_SIZE = 20;
-
-interface TasksListProps {
-  initialData: TaskPagination;
-  searchParams: SearchParams;
-}
-
-export function TasksList({ initialData, searchParams: serverSearchParams }: TasksListProps) {
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+export function TasksList() {
+  const { data } = useTasks();
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [selectedTaskName, setSelectedTaskName] = useState<string | null>(null);
@@ -94,10 +84,9 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
   );
 
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: pageCount,
-    shallow: false,
+    pageCount: data?.pagination.totalPages ?? 0,
     debounceMs: 500
   });
 
@@ -128,8 +117,8 @@ export function TasksList({ initialData, searchParams: serverSearchParams }: Tas
 
         <TaskTable
           table={table}
-          items={initialData.items}
-          totalItems={initialData.pagination.totalItems}
+          items={data?.items ?? []}
+          totalItems={data?.pagination.totalItems ?? 0}
         />
       </Box>
 

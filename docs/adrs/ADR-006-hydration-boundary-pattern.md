@@ -148,4 +148,4 @@ The `list` key must accept the resolved search params object (or a serialised fo
 - [x] `staff/employees/[id]/page.tsx`
 - [x] `admin/tenants/page.tsx`
 - [x] `admin/users/page.tsx`
-- [ ] `tools/tasks/page.tsx`
+- [x] `tools/tasks/page.tsx`
