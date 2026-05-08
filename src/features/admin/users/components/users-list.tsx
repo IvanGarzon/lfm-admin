@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/shared/tableV3/data-table';
 import { DataTableToolbar } from '@/components/shared/tableV3/data-table-toolbar';
 import { userColumns } from '@/features/admin/users/components/user-columns';
-import type { UserListItem } from '@/features/admin/users/types';
+import { useAdminUsers } from '@/features/admin/users/hooks/use-user-queries';
 
-export function UsersList({ initialData }: { initialData: UserListItem[] }) {
+export function UsersList() {
+  const { data: users = [] } = useAdminUsers();
   const columns = useMemo(() => userColumns, []);
 
   const { table } = useDataTable({
-    data: initialData,
+    data: users,
     columns,
     pageCount: 1,
     shallow: true,
@@ -29,8 +30,8 @@ export function UsersList({ initialData }: { initialData: UserListItem[] }) {
 
       <Card className='flex w-full flex-col space-y-4 p-4 overflow-hidden min-w-0'>
         <DataTableToolbar table={table} />
-        {initialData.length ? (
-          <DataTable table={table} totalItems={initialData.length} />
+        {users.length ? (
+          <DataTable table={table} totalItems={users.length} />
         ) : (
           <Box className='text-center py-12 text-muted-foreground'>No users found.</Box>
         )}

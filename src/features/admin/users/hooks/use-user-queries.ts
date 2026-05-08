@@ -1,14 +1,27 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateUserRole } from '@/actions/admin/users/mutations';
+import { getAdminAllUsers } from '@/actions/admin/users/queries';
 import type { UserRole } from '@/zod/schemas/enums/UserRole.schema';
 
 export const USER_KEYS = {
   all: ['admin-users'] as const,
   lists: () => [...USER_KEYS.all, 'list'] as const
 };
+
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: USER_KEYS.lists(),
+    queryFn: async () => {
+      const result = await getAdminAllUsers();
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    staleTime: 30 * 1000
+  });
+}
 
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
