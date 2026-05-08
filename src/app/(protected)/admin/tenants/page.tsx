@@ -12,7 +12,10 @@ export default async function AdminTenantsPage() {
     queryKey: TENANT_KEYS.lists(),
     queryFn: async () => {
       const result = await getAdminTenants();
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       return result.data;
     }
   });

@@ -4,8 +4,6 @@ import { use } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-// Lazy load InvoiceDrawer to avoid bundling 11+ MB into the modal page chunk
-// This significantly improves initial page load performance
 const InvoiceDrawer = dynamic(
   () =>
     import('@/features/finances/invoices/components/invoice-drawer').then(

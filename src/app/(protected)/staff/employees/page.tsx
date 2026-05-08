@@ -18,15 +18,18 @@ export default async function EmployeesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const rawParams = await searchParams;
-  const filters = searchParamsCache.parse(rawParams);
+  const searchParamsResolved = await searchParams;
+  const filters = searchParamsCache.parse(searchParamsResolved);
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
     queryKey: EMPLOYEE_KEYS.list(filters),
     queryFn: async () => {
       const result = await getEmployees(filters);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       return result.data;
     }
   });

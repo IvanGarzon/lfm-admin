@@ -12,7 +12,10 @@ export default async function TasksPage() {
     queryKey: TASK_KEYS.list(undefined),
     queryFn: async () => {
       const result = await getTasks(undefined);
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       return result.data;
     }
   });

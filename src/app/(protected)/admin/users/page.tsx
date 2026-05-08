@@ -12,7 +12,10 @@ export default async function AdminUsersPage() {
     queryKey: USER_KEYS.lists(),
     queryFn: async () => {
       const result = await getAdminAllUsers();
-      if (!result.success) throw new Error(result.error);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       return result.data;
     }
   });
