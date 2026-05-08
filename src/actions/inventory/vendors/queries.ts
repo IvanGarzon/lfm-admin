@@ -1,29 +1,27 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
 import { VendorRepository } from '@/repositories/vendor-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import type {
+  VendorFilters,
   VendorStatistics,
   VendorWithDetails,
   VendorPagination
 } from '@/features/inventory/vendors/types';
-import { searchParamsCache } from '@/filters/vendors/vendors-filters';
 
 const vendorRepo = new VendorRepository(prisma);
 
 /**
- * Retrieves a paginated list of vendors based on specified search and filter criteria.
- * @param searchParams - The search parameters for filtering, sorting, and pagination
+ * Retrieves a paginated list of vendors based on specified filter criteria.
+ * @param filters - The parsed filter criteria for filtering, sorting, and pagination
  * @returns A promise that resolves to an ActionResult containing the paginated vendor data
  */
-export const getVendors = withTenantPermission<SearchParams, VendorPagination>(
+export const getVendors = withTenantPermission<VendorFilters, VendorPagination>(
   'canReadVendors',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await vendorRepo.searchAndPaginate(filters, ctx.tenantId);
 
       return { success: true, data: result };

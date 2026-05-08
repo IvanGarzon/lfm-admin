@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { Plus, Store } from 'lucide-react';
-import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Box } from '@/components/ui/box';
@@ -11,8 +11,10 @@ import { Button } from '@/components/ui/button';
 import { hasActiveSearchFilters } from '@/lib/utils';
 import { searchParams as vendorSearchParams } from '@/filters/vendors/vendors-filters';
 import { VendorList } from '@/features/inventory/vendors/components/vendor-list';
-import { useVendorStatistics } from '@/features/inventory/vendors/hooks/use-vendor-queries';
-import type { VendorPagination } from '@/features/inventory/vendors/types';
+import {
+  useVendors,
+  useVendorStatistics
+} from '@/features/inventory/vendors/hooks/use-vendor-queries';
 
 const VendorDrawer = dynamic(
   () =>
@@ -23,13 +25,11 @@ const VendorDrawer = dynamic(
   }
 );
 
-interface VendorsViewProps {
-  initialData: VendorPagination;
-  searchParams: SearchParams;
-}
-
-export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
+export function VendorsView() {
   const [showCreateDrawer, setShowCreateDrawer] = useState(false);
+
+  const [currentParams] = useQueryStates(vendorSearchParams);
+  const { data } = useVendors(currentParams);
 
   const { data: stats, isLoading: statsLoading } = useVendorStatistics();
 
@@ -38,8 +38,8 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
   };
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
-    !hasActiveSearchFilters(searchParams, vendorSearchParams);
+    (data?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(currentParams, vendorSearchParams);
 
   return (
     <Box className='flex flex-col gap-6 min-w-0 w-full overflow-hidden'>
@@ -89,7 +89,7 @@ export function VendorsView({ initialData, searchParams }: VendorsViewProps) {
             </Box>
           ) : null}
 
-          <VendorList initialData={initialData} searchParams={searchParams} />
+          <VendorList data={data} />
         </>
       )}
 

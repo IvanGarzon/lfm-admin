@@ -1,8 +1,7 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 
 import {
   getVendors,
@@ -23,49 +22,17 @@ import type {
   UpdateVendorStatusInput
 } from '@/schemas/vendors';
 
-export const VENDOR_KEYS = {
-  all: ['vendors'] as const,
-  lists: () => [...VENDOR_KEYS.all, 'list'] as const,
-  list: (filters: VendorFilters) => [...VENDOR_KEYS.lists(), { filters }] as const,
-  details: () => [...VENDOR_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...VENDOR_KEYS.details(), id] as const,
-  statistics: () => [...VENDOR_KEYS.all, 'statistics'] as const,
-  active: () => [...VENDOR_KEYS.all, 'active'] as const
-};
-
-export function useVendorList(searchParams: SearchParams) {
-  return useQuery({
-    queryKey: [...VENDOR_KEYS.lists(), JSON.stringify(searchParams)],
-    queryFn: async () => {
-      const result = await getVendors(searchParams);
-      if (!result.success) throw new Error(result.error);
-      return result.data;
-    },
-    staleTime: 30 * 1000
-  });
-}
+import { VENDOR_KEYS } from '@/features/inventory/vendors/constants/query-keys';
 
 export function useVendors(filters: VendorFilters) {
   return useQuery({
     queryKey: VENDOR_KEYS.list(filters),
     queryFn: async () => {
-      const searchParams: Record<string, string | string[]> = {};
-
-      if (filters.search) {
-        searchParams.search = filters.search;
-      }
-
-      if (filters.status && filters.status.length > 0) {
-        searchParams.status = filters.status;
-      }
-
-      const result = await getVendors(searchParams);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
+      const result = await getVendors(filters);
+      if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    placeholderData: keepPreviousData,
     staleTime: 30 * 1000
   });
 }
