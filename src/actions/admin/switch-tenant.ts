@@ -1,9 +1,13 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withSuperAdmin, SUPER_ADMIN_TENANT_COOKIE } from '@/lib/action-auth';
+import { TenantRepository } from '@/repositories/tenant-repository';
 import type { ActionResult } from '@/types/actions';
+
+const tenantRepo = new TenantRepository(prisma);
 
 export const switchActiveTenant = withSuperAdmin<string | null, void>(
   async (_session, tenantId) => {
@@ -11,6 +15,12 @@ export const switchActiveTenant = withSuperAdmin<string | null, void>(
       const cookieStore = await cookies();
 
       if (tenantId) {
+        const tenant = await tenantRepo.findTenantById(tenantId);
+
+        if (!tenant) {
+          return { success: false, error: 'Tenant not found' };
+        }
+
         cookieStore.set(SUPER_ADMIN_TENANT_COOKIE, tenantId, {
           httpOnly: true,
           sameSite: 'lax',
