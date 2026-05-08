@@ -126,7 +126,7 @@ export const adminSendInvitation = withSuperAdmin<
         invitedBy: ctx.userId,
         expiresAt
       }),
-      tenantRepo.findById(tenantId),
+      tenantRepo.findTenantById(tenantId),
       userRepo.findById(ctx.userId)
     ]);
 
