@@ -136,8 +136,8 @@ The `list` key must accept the resolved search params object (or a serialised fo
 - [x] `finances/quotes/[id]/page.tsx`
 - [x] `inventory/recipes/page.tsx`
 - [x] `inventory/recipes/[id]/page.tsx`
-- [ ] `finances/transactions/page.tsx`
-- [ ] `finances/transactions/[id]/page.tsx`
+- [x] `finances/transactions/page.tsx`
+- [x] `finances/transactions/[id]/page.tsx`
 - [ ] `inventory/products/page.tsx`
 - [ ] `inventory/products/[id]/page.tsx`
 - [ ] `inventory/vendors/page.tsx`
