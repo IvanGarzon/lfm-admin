@@ -4,7 +4,7 @@ import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repositor
 import { TaskExecutionRepository } from '@/repositories/task-execution-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
-import { withAuth } from '@/lib/action-auth';
+import { withSuperAdmin } from '@/lib/action-auth';
 import type { TaskPagination } from '@/features/tasks/types';
 import type {
   ScheduledTask,
@@ -38,7 +38,7 @@ type GetTaskExecutionsInput = {
 
 // -- Actions ---------------------------------------------------------------
 
-export const getTasks = withAuth<GetTasksInput, TaskPagination>(async (_session, filters) => {
+export const getTasks = withSuperAdmin<GetTasksInput, TaskPagination>(async (_session, filters) => {
   try {
     const tasks = await taskRepo.findAllWithStats(filters);
 
@@ -58,7 +58,7 @@ export const getTasks = withAuth<GetTasksInput, TaskPagination>(async (_session,
   }
 });
 
-export const getTaskById = withAuth<
+export const getTaskById = withSuperAdmin<
   string,
   ScheduledTask & {
     _count: { executions: number };
@@ -83,7 +83,7 @@ export const getTaskById = withAuth<
   }
 });
 
-export const getTaskExecutions = withAuth<
+export const getTaskExecutions = withSuperAdmin<
   GetTaskExecutionsInput,
   {
     executions: TaskExecution[];
@@ -109,24 +109,26 @@ export const getTaskExecutions = withAuth<
   }
 });
 
-export const getExecutionById = withAuth<string, TaskExecution>(async (_session, executionId) => {
-  try {
-    const execution = await executionRepo.findById(executionId);
+export const getExecutionById = withSuperAdmin<string, TaskExecution>(
+  async (_session, executionId) => {
+    try {
+      const execution = await executionRepo.findById(executionId);
 
-    if (!execution) {
-      return { success: false, error: 'Execution not found' };
+      if (!execution) {
+        return { success: false, error: 'Execution not found' };
+      }
+
+      return { success: true, data: execution };
+    } catch (error) {
+      return handleActionError(error, 'Failed to fetch execution', {
+        action: 'getExecutionById',
+        executionId
+      });
     }
-
-    return { success: true, data: execution };
-  } catch (error) {
-    return handleActionError(error, 'Failed to fetch execution', {
-      action: 'getExecutionById',
-      executionId
-    });
   }
-});
+);
 
-export const getRecentExecutions = withAuth<
+export const getRecentExecutions = withSuperAdmin<
   number | undefined,
   (TaskExecution & { task: { id: string; functionName: string; category: string } })[]
 >(async (_session, limit) => {
@@ -140,7 +142,7 @@ export const getRecentExecutions = withAuth<
   }
 });
 
-export const getTaskCountsByCategory = withAuth<void, Record<TaskCategory, number>>(
+export const getTaskCountsByCategory = withSuperAdmin<void, Record<TaskCategory, number>>(
   async (_session) => {
     try {
       const counts = await taskRepo.countByCategory();

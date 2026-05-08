@@ -7,7 +7,7 @@ import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
 import { revalidatePath } from 'next/cache';
 import { getTaskById } from '@/tasks';
-import { withAuth } from '@/lib/action-auth';
+import { withSuperAdmin } from '@/lib/action-auth';
 import type { ScheduledTask } from '@/prisma/client';
 import type { ActionResult } from '@/types/actions';
 
@@ -35,12 +35,8 @@ type SetTaskEnabledInput = {
 
 // -- Actions ---------------------------------------------------------------
 
-export const updateTask = withAuth<UpdateTaskInput, ScheduledTask>(
+export const updateTask = withSuperAdmin<UpdateTaskInput, ScheduledTask>(
   async (session, { taskId, data }) => {
-    if (session.user.role !== 'ADMIN') {
-      return { success: false, error: 'Forbidden: Only admins can modify tasks' };
-    }
-
     try {
       const task = await taskRepo.update(taskId, data);
 
@@ -58,12 +54,8 @@ export const updateTask = withAuth<UpdateTaskInput, ScheduledTask>(
   }
 );
 
-export const setTaskEnabled = withAuth<SetTaskEnabledInput, ScheduledTask>(
+export const setTaskEnabled = withSuperAdmin<SetTaskEnabledInput, ScheduledTask>(
   async (session, { taskId, isEnabled }) => {
-    if (session.user.role !== 'ADMIN') {
-      return { success: false, error: 'Forbidden: Only admins can modify tasks' };
-    }
-
     try {
       const task = await taskRepo.setEnabled(taskId, isEnabled);
 
@@ -82,12 +74,8 @@ export const setTaskEnabled = withAuth<SetTaskEnabledInput, ScheduledTask>(
   }
 );
 
-export const executeTask = withAuth<string, { executionId: string; taskId: string }>(
+export const executeTask = withSuperAdmin<string, { executionId: string; taskId: string }>(
   async (session, taskId) => {
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER') {
-      return { success: false, error: 'Forbidden: Insufficient permissions to trigger tasks' };
-    }
-
     try {
       const dbTask = await taskRepo.findById(taskId);
       if (!dbTask) {
@@ -138,12 +126,8 @@ export const executeTask = withAuth<string, { executionId: string; taskId: strin
   }
 );
 
-export const syncTasks = withAuth<void, { synced: number; created: number; updated: number }>(
+export const syncTasks = withSuperAdmin<void, { synced: number; created: number; updated: number }>(
   async (session) => {
-    if (session.user.role !== 'ADMIN') {
-      return { success: false, error: 'Forbidden: Only admins can sync tasks' };
-    }
-
     try {
       const { syncTasksToDatabase } = await import('@/services/tasks/task-registry.service');
       const { tasks } = await import('@/tasks');
@@ -172,12 +156,8 @@ export const syncTasks = withAuth<void, { synced: number; created: number; updat
   }
 );
 
-export const executeTaskDirect = withAuth<string, { executionId: string; taskId: string }>(
+export const executeTaskDirect = withSuperAdmin<string, { executionId: string; taskId: string }>(
   async (session, taskId) => {
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'MANAGER') {
-      return { success: false, error: 'Forbidden: Insufficient permissions to trigger tasks' };
-    }
-
     try {
       const dbTask = await taskRepo.findById(taskId);
       if (!dbTask) {
