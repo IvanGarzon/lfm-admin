@@ -1,8 +1,12 @@
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SearchParams } from 'nuqs/server';
-import { getTransactions } from '@/actions/finances/transactions/queries';
 import { constructMetadata } from '@/lib/utils';
 import { Shell } from '@/components/shared/shell';
 import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
+import { getTransactions } from '@/actions/finances/transactions/queries';
+import { getQueryClient } from '@/lib/query-client';
+import { TRANSACTION_KEYS } from '@/features/finances/transactions/constants/query-keys';
+import { searchParamsCache } from '@/filters/transactions/transactions-filters';
 
 export const metadata = constructMetadata({
   title: 'Transactions – lfm dashboard',
@@ -14,16 +18,27 @@ export default async function TransactionsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const searchParamsResolved = await searchParams;
-  const result = await getTransactions(searchParamsResolved);
+  const rawParams = await searchParams;
+  const filters = searchParamsCache.parse(rawParams);
+  const queryClient = getQueryClient();
 
-  if (!result.success) {
-    throw new Error(result.error);
-  }
+  await queryClient.prefetchQuery({
+    queryKey: TRANSACTION_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getTransactions(filters);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    }
+  });
 
   return (
     <Shell scrollable>
-      <TransactionsView initialData={result.data} searchParams={searchParamsResolved} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <TransactionsView />
+      </HydrationBoundary>
     </Shell>
   );
 }

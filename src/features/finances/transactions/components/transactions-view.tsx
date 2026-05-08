@@ -5,7 +5,7 @@ import { Plus, ArrowLeftRight } from 'lucide-react';
 import { subDays, startOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import dynamic from 'next/dynamic';
-import { SearchParams } from 'nuqs/server';
+import { useQueryStates } from 'nuqs';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,13 +16,10 @@ import { searchParams as transactionSearchParams } from '@/filters/transactions/
 import { TransactionList } from '@/features/finances/transactions/components/transaction-list';
 import { TransactionOverview } from '@/features/finances/transactions/components/transaction-overview';
 import { TransactionAnalytics } from '@/features/finances/transactions/components/analytics/transaction-analytics';
-import { useTransactionStatistics } from '@/features/finances/transactions/hooks/use-transaction-queries';
-import type { TransactionPagination } from '@/features/finances/transactions/types';
-
-interface TransactionsViewProps {
-  initialData: TransactionPagination;
-  searchParams: SearchParams;
-}
+import {
+  useTransactions,
+  useTransactionStatistics
+} from '@/features/finances/transactions/hooks/use-transaction-queries';
 
 const TransactionDrawer = dynamic(
   () =>
@@ -35,9 +32,12 @@ const TransactionDrawer = dynamic(
   }
 );
 
-export function TransactionsView({ initialData, searchParams }: TransactionsViewProps) {
+export function TransactionsView() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('list');
+
+  const [currentParams] = useQueryStates(transactionSearchParams);
+  const { data } = useTransactions(currentParams);
 
   const today = useMemo(() => new Date(), []);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
@@ -84,8 +84,8 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
   }, []);
 
   const isZeroState =
-    initialData.pagination.totalItems === 0 &&
-    !hasActiveSearchFilters(searchParams, transactionSearchParams);
+    (data?.pagination.totalItems ?? 0) === 0 &&
+    !hasActiveSearchFilters(currentParams, transactionSearchParams);
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>
@@ -130,7 +130,7 @@ export function TransactionsView({ initialData, searchParams }: TransactionsView
             value='list'
             className='space-y-4 pt-2 border-none p-0 outline-none focus-visible:ring-0'
           >
-            <TransactionList data={initialData} searchParams={searchParams} />
+            <TransactionList data={data} />
           </TabsContent>
 
           <TabsContent

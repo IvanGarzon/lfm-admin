@@ -1,12 +1,11 @@
 'use server';
 
-import { SearchParams } from 'nuqs/server';
-
 import { TransactionRepository } from '@/repositories/transaction-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
 import type {
+  TransactionFilters,
   TransactionListItem,
   TransactionPagination,
   TransactionStatistics,
@@ -14,20 +13,18 @@ import type {
   TransactionCategoryBreakdown,
   TopTransactionCategory
 } from '@/features/finances/transactions/types';
-import { searchParamsCache } from '@/filters/transactions/transactions-filters';
 
 const transactionRepo = new TransactionRepository(prisma);
 
 /**
- * Retrieves a paginated list of transactions based on specified search and filter criteria.
- * @param searchParams - The search parameters for filtering, sorting, and pagination.
+ * Retrieves a paginated list of transactions based on specified filter criteria.
+ * @param filters - The parsed filter criteria for filtering, sorting, and pagination.
  * @returns A promise that resolves to an `ActionResult` containing the paginated transaction data.
  */
-export const getTransactions = withTenantPermission<SearchParams, TransactionPagination>(
+export const getTransactions = withTenantPermission<TransactionFilters, TransactionPagination>(
   'canReadTransactions',
-  async (ctx, searchParams) => {
+  async (ctx, filters) => {
     try {
-      const filters = searchParamsCache.parse(searchParams);
       const result = await transactionRepo.searchAndPaginate(filters, ctx.tenantId);
       return { success: true, data: result };
     } catch (error) {

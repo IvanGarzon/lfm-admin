@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useCallback, useState } from 'react';
-import { SearchParams } from 'nuqs/server';
 
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
@@ -11,17 +10,8 @@ import { TransactionTable } from './transaction-table';
 import { useDeleteTransaction } from '../hooks/use-transaction-queries';
 import { DeleteTransactionDialog } from './dialogs/delete-transaction-dialog';
 
-const DEFAULT_PAGE_SIZE = 20;
-
-export function TransactionList({
-  data,
-  searchParams: serverSearchParams
-}: {
-  data: TransactionPagination;
-  searchParams: SearchParams;
-}) {
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(data.pagination.totalItems / perPage);
+export function TransactionList({ data }: { data?: TransactionPagination }) {
+  const pageCount = data?.pagination.totalPages ?? 0;
 
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingDeleteRef, setPendingDeleteRef] = useState<string | undefined>(undefined);
@@ -55,16 +45,19 @@ export function TransactionList({
   );
 
   const { table } = useDataTable({
-    data: data.items,
+    data: data?.items ?? [],
     columns,
     pageCount: pageCount,
-    shallow: false,
     debounceMs: 500
   });
 
   return (
     <Box className='space-y-4 min-w-0 w-full'>
-      <TransactionTable table={table} items={data.items} totalItems={data.pagination.totalItems} />
+      <TransactionTable
+        table={table}
+        items={data?.items ?? []}
+        totalItems={data?.pagination.totalItems ?? 0}
+      />
 
       <DeleteTransactionDialog
         open={pendingDeleteId !== null}

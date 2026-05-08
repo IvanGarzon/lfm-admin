@@ -8,7 +8,6 @@ import {
   skipToken
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { SearchParams } from 'nuqs/server';
 import {
   getTransactions,
   getTransactionById,
@@ -34,34 +33,14 @@ import { formatDateNormalizer } from '@/lib/utils';
 
 // -- QUERY KEYS -------------------------------------------------------------
 
-/**
- * Query key factory for transaction-related queries.
- * Provides type-safe, hierarchical query keys for React Query cache management.
- */
-export const TRANSACTION_KEYS = {
-  all: ['transactions'] as const,
-  lists: () => [...TRANSACTION_KEYS.all, 'list'] as const,
-  list: (filters: Partial<TransactionFilters>) =>
-    [...TRANSACTION_KEYS.lists(), { filters }] as const,
-  details: () => [...TRANSACTION_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...TRANSACTION_KEYS.details(), id] as const,
-  categories: () => [...TRANSACTION_KEYS.all, 'categories'] as const,
-  statistics: () => [...TRANSACTION_KEYS.all, 'statistics'] as const,
-  analytics: () => [...TRANSACTION_KEYS.all, 'analytics'] as const,
-  trend: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'trend', { limit }] as const,
-  categoryBreakdown: (dateFilter?: {
-    startDate?: Date | string | null;
-    endDate?: Date | string | null;
-  }) => [...TRANSACTION_KEYS.analytics(), 'breakdown', { dateFilter }] as const,
-  topCategories: (limit?: number) => [...TRANSACTION_KEYS.analytics(), 'top', { limit }] as const
-};
+import { TRANSACTION_KEYS } from '@/features/finances/transactions/constants/query-keys';
 
 // -- QUERY HOOKS (Data Fetching) --------------------------------------------
 
 /**
  * Fetches a paginated, filtered list of transactions.
  *
- * @param filters - Filter criteria including search, type, status, and pagination
+ * @param filters - Parsed filter criteria including search, type, status, and pagination
  * @returns Query result containing the filtered transaction list
  *
  * Cache behaviour:
@@ -69,37 +48,15 @@ export const TRANSACTION_KEYS = {
  * - Query automatically refetches when filters change
  * - Cache is invalidated when transactions are created, updated, or deleted
  */
-export function useTransactionList(searchParams: SearchParams) {
-  return useQuery({
-    queryKey: [...TRANSACTION_KEYS.lists(), JSON.stringify(searchParams)],
-    queryFn: async () => {
-      const result = await getTransactions(searchParams);
-      if (!result.success) throw new Error(result.error);
-      return result.data;
-    },
-    staleTime: 30 * 1000
-  });
-}
-
-export function useTransactions(filters: Partial<TransactionFilters> = {}) {
+export function useTransactions(filters: TransactionFilters) {
   return useQuery({
     queryKey: TRANSACTION_KEYS.list(filters),
     queryFn: async () => {
-      const searchParams: Record<string, string | string[]> = {};
-
-      if (filters.search) searchParams.search = filters.search;
-      if (filters.type) searchParams.type = filters.type;
-      if (filters.status && filters.status.length > 0) searchParams.status = filters.status;
-      if (filters.page) searchParams.page = String(filters.page);
-      if (filters.perPage) searchParams.perPage = String(filters.perPage);
-
-      const result = await getTransactions(searchParams);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
+      const result = await getTransactions(filters);
+      if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    placeholderData: keepPreviousData,
     staleTime: 30 * 1000
   });
 }

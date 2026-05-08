@@ -1,8 +1,12 @@
+import dynamic from 'next/dynamic';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SearchParams } from 'nuqs/server';
-import { getTransactions } from '@/actions/finances/transactions/queries';
 import { Shell } from '@/components/shared/shell';
 import { TransactionsView } from '@/features/finances/transactions/components/transactions-view';
-import dynamic from 'next/dynamic';
+import { getTransactions } from '@/actions/finances/transactions/queries';
+import { getQueryClient } from '@/lib/query-client';
+import { TRANSACTION_KEYS } from '@/features/finances/transactions/constants/query-keys';
+import { searchParamsCache } from '@/filters/transactions/transactions-filters';
 
 const TransactionDrawer = dynamic(
   () =>
@@ -22,17 +26,28 @@ export default async function TransactionIdPage({
   searchParams: Promise<SearchParams>;
 }) {
   const { id } = await params;
-  const searchParamsResolved = await searchParams;
-  const result = await getTransactions(searchParamsResolved);
+  const rawParams = await searchParams;
+  const filters = searchParamsCache.parse(rawParams);
+  const queryClient = getQueryClient();
 
-  if (!result.success) {
-    throw new Error(result.error);
-  }
+  await queryClient.prefetchQuery({
+    queryKey: TRANSACTION_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getTransactions(filters);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      return result.data;
+    }
+  });
 
   return (
     <Shell scrollable>
-      <TransactionsView initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <TransactionDrawer id={id} open={true} /> : null}
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <TransactionsView />
+        {id ? <TransactionDrawer id={id} open={true} /> : null}
+      </HydrationBoundary>
     </Shell>
   );
 }
