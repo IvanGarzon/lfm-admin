@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
-import { SearchParams } from 'nuqs/server';
 import { useQueryStates } from 'nuqs';
 import { Plus, UserX2Icon } from 'lucide-react';
 import { useDataTable } from '@/hooks/use-data-table';
@@ -11,12 +10,9 @@ import { Box } from '@/components/ui/box';
 import { EmptyState } from '@/components/shared/empty-state';
 import { EmployeesTable } from '@/features/staff/employees/components/employees-table';
 import { createEmployeeColumns } from '@/features/staff/employees/components/employee-columns';
-import { useDeleteEmployee } from '@/features/staff/employees/hooks/use-employees';
-import type { EmployeePagination } from '@/features/staff/employees/types';
+import { useDeleteEmployee, useEmployees } from '@/features/staff/employees/hooks/use-employees';
 import { searchParams as employeeSearchParams } from '@/filters/employees/employee-filters';
 import { hasActiveSearchFilters } from '@/lib/utils';
-
-const DEFAULT_PAGE_SIZE = 20;
 
 const EmployeeDrawer = dynamic(
   () =>
@@ -29,19 +25,11 @@ const EmployeeDrawer = dynamic(
   }
 );
 
-export function EmployeesList({
-  initialData,
-  searchParams: serverSearchParams
-}: {
-  initialData: EmployeePagination;
-  searchParams: SearchParams;
-}) {
+export function EmployeesList() {
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const deleteEmployee = useDeleteEmployee();
   const [currentParams] = useQueryStates(employeeSearchParams);
-
-  const perPage = Number(serverSearchParams.perPage) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.ceil(initialData.pagination.totalItems / perPage);
+  const { data } = useEmployees(currentParams);
 
   const columns = useMemo(
     () =>
@@ -58,15 +46,14 @@ export function EmployeesList({
   };
 
   const { table } = useDataTable({
-    data: initialData.items,
+    data: data?.items ?? [],
     columns,
-    pageCount: pageCount,
-    shallow: false,
+    pageCount: data?.pagination.totalPages ?? 0,
     debounceMs: 500
   });
 
   const isZeroState =
-    (initialData?.pagination.totalItems ?? 0) === 0 &&
+    (data?.pagination.totalItems ?? 0) === 0 &&
     !hasActiveSearchFilters(currentParams, employeeSearchParams);
 
   return (
@@ -100,8 +87,8 @@ export function EmployeesList({
 
           <EmployeesTable
             table={table}
-            items={initialData.items}
-            totalItems={initialData.pagination.totalItems}
+            items={data?.items ?? []}
+            totalItems={data?.pagination.totalItems ?? 0}
           />
         </>
       )}

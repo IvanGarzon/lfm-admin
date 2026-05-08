@@ -1,10 +1,13 @@
+import dynamic from 'next/dynamic';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SearchParams } from 'nuqs/server';
 import { Shell } from '@/components/shared/shell';
 import { EmployeesList } from '@/features/staff/employees/components/employees-list';
 import { getEmployees } from '@/actions/staff/employees/queries';
-import dynamic from 'next/dynamic';
+import { getQueryClient } from '@/lib/query-client';
+import { EMPLOYEE_KEYS } from '@/features/staff/employees/constants/query-keys';
+import { searchParamsCache } from '@/filters/employees/employee-filters';
 
-// Lazy load QuoteDrawer to reduce initial bundle size
 const EmployeeDrawer = dynamic(
   () =>
     import('@/features/staff/employees/components/employee-drawer').then(
@@ -15,10 +18,6 @@ const EmployeeDrawer = dynamic(
   }
 );
 
-export const metadata = {
-  title: 'Dashboard : Employee View'
-};
-
 export default async function EmployeePage({
   params,
   searchParams
@@ -27,17 +26,25 @@ export default async function EmployeePage({
   searchParams: Promise<SearchParams>;
 }) {
   const { id } = await params;
-  const searchParamsResolved = await searchParams;
-  const result = await getEmployees(searchParamsResolved);
+  const rawParams = await searchParams;
+  const filters = searchParamsCache.parse(rawParams);
+  const queryClient = getQueryClient();
 
-  if (!result.success) {
-    throw new Error(result.error);
-  }
+  await queryClient.prefetchQuery({
+    queryKey: EMPLOYEE_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getEmployees(filters);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    }
+  });
 
   return (
     <Shell scrollable>
-      <EmployeesList initialData={result.data} searchParams={searchParamsResolved} />
-      {id ? <EmployeeDrawer id={id} open={true} /> : null}
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <EmployeesList />
+        {id ? <EmployeeDrawer id={id} open={true} /> : null}
+      </HydrationBoundary>
     </Shell>
   );
 }

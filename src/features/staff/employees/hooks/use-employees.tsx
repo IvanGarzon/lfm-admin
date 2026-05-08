@@ -1,27 +1,36 @@
 'use client';
 
-import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type {
   CreateEmployeeInput,
   UpdateEmployeeInput,
   DeleteEmployeeInput
 } from '@/schemas/employees';
-import { getEmployeeById } from '@/actions/staff/employees/queries';
+import { getEmployees, getEmployeeById } from '@/actions/staff/employees/queries';
 import {
   updateEmployee,
   createEmployee,
   deleteEmployee
 } from '@/actions/staff/employees/mutations';
-import type { EmployeeListItem } from '@/features/staff/employees/types';
+import type { EmployeeFilters, EmployeeListItem } from '@/features/staff/employees/types';
 
-export const EMPLOYEE_KEYS = {
-  all: ['employees'] as const,
-  lists: () => [...EMPLOYEE_KEYS.all, 'list'] as const,
-  list: (filters: string) => [...EMPLOYEE_KEYS.lists(), { filters }] as const,
-  details: () => [...EMPLOYEE_KEYS.all, 'detail'] as const,
-  detail: (id: string) => [...EMPLOYEE_KEYS.details(), id] as const
-};
+import { EMPLOYEE_KEYS } from '@/features/staff/employees/constants/query-keys';
+
+export { EMPLOYEE_KEYS };
+
+export function useEmployees(filters: EmployeeFilters) {
+  return useQuery({
+    queryKey: EMPLOYEE_KEYS.list(filters),
+    queryFn: async () => {
+      const result = await getEmployees(filters);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000
+  });
+}
 
 export function useEmployeeById(id: string | undefined) {
   return useQuery({
