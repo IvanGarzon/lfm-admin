@@ -111,7 +111,7 @@ export function CustomersList() {
       ) : null}
 
       <DeleteCustomerDialog
-        open={!!deletingCustomer}
+        open={Boolean(deletingCustomer)}
         onOpenChange={(open) => !open && setDeletingCustomer(null)}
         onConfirm={handleConfirmDelete}
         customerName={deletingCustomer?.name}

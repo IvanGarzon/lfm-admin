@@ -155,7 +155,7 @@ export function InvoiceItemRow({
                     <InputGroupInput
                       {...field}
                       placeholder='Enter item name'
-                      disabled={!!selectedProductId || isLocked}
+                      disabled={Boolean(selectedProductId) || isLocked}
                     />
                     <InputGroupAddon align='inline-end'>
                       {selectedProductId ? (
@@ -237,7 +237,7 @@ export function InvoiceItemRow({
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                       min='0'
                       className='text-left'
-                      disabled={(!!selectedProductId && isPriceLocked) || isLocked}
+                      disabled={(Boolean(selectedProductId) && isPriceLocked) || isLocked}
                     />
                     {selectedProductId ? (
                       <InputGroupAddon align='inline-end'>

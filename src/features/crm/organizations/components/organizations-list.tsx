@@ -165,7 +165,7 @@ export function OrganizationsList() {
       </Dialog>
 
       <Dialog
-        open={!!editingOrganization}
+        open={Boolean(editingOrganization)}
         onOpenChange={(open) => !open && setEditingOrganization(null)}
       >
         <DialogContent className='max-w-2xl max-h-[90vh] p-0'>
@@ -187,7 +187,7 @@ export function OrganizationsList() {
       </Dialog>
 
       <DeleteOrganizationDialog
-        open={!!deletingOrganization}
+        open={Boolean(deletingOrganization)}
         onOpenChange={(open) => !open && setDeletingOrganization(null)}
         onConfirm={handleConfirmDelete}
         organizationName={deletingOrganization?.name}

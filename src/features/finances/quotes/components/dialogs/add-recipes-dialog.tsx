@@ -348,7 +348,7 @@ export function AddRecipesDialog({
                   {filteredRecipes.map((recipe) => {
                     const key = `recipe-${recipe.id}`;
                     const selected = selectedItems.get(key);
-                    const isSelected = !!selected;
+                    const isSelected = Boolean(selected);
 
                     return (
                       <RecipeItemCard
@@ -383,7 +383,7 @@ export function AddRecipesDialog({
                   {filteredGroups.map((group) => {
                     const key = `group-${group.id}`;
                     const selected = selectedItems.get(key);
-                    const isSelected = !!selected;
+                    const isSelected = Boolean(selected);
 
                     return (
                       <RecipeItemCard

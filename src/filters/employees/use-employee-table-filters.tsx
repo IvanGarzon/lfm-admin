@@ -38,7 +38,7 @@ export function useEmployeeTableFilters() {
   }, [setSearch, setGender, setStatus, setPage]);
 
   const isAnyFilterActive = useMemo(() => {
-    return !!search || !!gender || !!status;
+    return Boolean(search) || Boolean(gender) || Boolean(status);
   }, [search, gender, status]);
 
   return {

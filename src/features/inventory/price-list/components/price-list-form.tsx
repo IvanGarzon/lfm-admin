@@ -97,7 +97,7 @@ export function PriceListForm({
 
   const initialAdvancedOpen = useMemo(() => {
     if (item) {
-      return !!(item.unitType || item.bunchSize || item.season || item.retailPriceOverride);
+      return Boolean(item.unitType || item.bunchSize || item.season || item.retailPriceOverride);
     }
     return false;
   }, [item]);

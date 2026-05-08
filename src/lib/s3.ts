@@ -14,7 +14,7 @@ import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from './file-constants';
 
 // Environment configuration
 const isDevelopment = env.NODE_ENV === 'development';
-const isLocalStack = isDevelopment && !!env.AWS_ENDPOINT_URL;
+const isLocalStack = isDevelopment && Boolean(env.AWS_ENDPOINT_URL);
 
 // S3 Configuration
 const AWS_REGION = env.AWS_REGION;
