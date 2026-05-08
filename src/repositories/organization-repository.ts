@@ -29,11 +29,6 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
    * Search and paginate organizations with advanced filtering capabilities.
    * Supports full-text search across organization name, phone, email, and ABN,
    * status filtering, sorting, and pagination.
-   */
-  /**
-   * Search and paginate organizations with advanced filtering capabilities.
-   * Supports full-text search across organization name, phone, email, and ABN,
-   * status filtering, sorting, and pagination.
    * @param params - Filter parameters for the search
    * @param params.name - Search term for name, phone, email, or ABN
    * @param params.status - Optional array of statuses to filter by
@@ -242,9 +237,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Locates an organization by its name using a case-insensitive search.
-   * @param name - The organization name to search for
-   * @returns The organization object or null
+   * Locates an organisation by its name using a case-insensitive search.
+   * @param name - The organisation name to search for
+   * @param tenantId - The tenant ID to scope the query
+   * @returns The organisation object or null if not found
    */
   async findOrganizationByName(name: string, tenantId: string) {
     return this.prisma.organization.findFirst({
@@ -259,9 +255,10 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Creates a new organization record.
-   * @param data - The organization creation input data
-   * @returns The newly created organization
+   * Creates a new organisation record.
+   * @param data - The organisation creation input data
+   * @param tenantId - The tenant ID to scope the record
+   * @returns The newly created organisation
    */
   async createOrganization(data: CreateOrganizationInput, tenantId: string) {
     return this.prisma.organization.create({
@@ -283,10 +280,11 @@ export class OrganizationRepository extends BaseRepository<Prisma.OrganizationGe
   }
 
   /**
-   * Finds an organization by name or creates it if it doesn't exist.
+   * Finds an organisation by name or creates it if it does not exist.
    * Useful for importer logic or quick-add features.
-   * @param name - The organization name
-   * @returns The existing or newly created organization
+   * @param name - The organisation name
+   * @param tenantId - The tenant ID to scope the query and record
+   * @returns The existing or newly created organisation
    */
   async findOrCreateOrganization(name: string, tenantId: string) {
     const existing = await this.findOrganizationByName(name, tenantId);

@@ -578,6 +578,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
           stats.converted = count;
           stats.totalConvertedValue = sum;
           break;
+        default:
+          break;
       }
     });
 
@@ -1868,6 +1870,8 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
         case QuoteStatus.CONVERTED:
           funnel.converted = count;
           funnel.convertedValue = value;
+          break;
+        default:
           break;
       }
     });

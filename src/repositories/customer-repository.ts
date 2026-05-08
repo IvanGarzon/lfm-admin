@@ -239,9 +239,10 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   }
 
   /**
-   * Find a single customer by their email address.
+   * Find a single customer by their email address within a tenant.
    * @param email - The email address to search for
-   * @returns A promise that resolves to the customer or null
+   * @param tenantId - The tenant ID to scope the query
+   * @returns A promise that resolves to the customer or null if not found
    */
   async findCustomerByEmail(email: string, tenantId: string) {
     return this.prisma.customer.findFirst({
@@ -252,6 +253,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   /**
    * Get a list of active customers for population of selection components.
    * Returns a minimal set of fields needed for dropdowns and pickers.
+   * @param tenantId - The tenant ID to scope the query
    * @returns A promise that resolves to an array of active customer summaries
    */
   async findActiveCustomers(tenantId: string) {
@@ -281,8 +283,9 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
 
   /**
    * Create a new customer record.
-   * Automatically handles address logic based on organization settings.
+   * Automatically handles address logic based on organisation settings.
    * @param data - The customer creation input data
+   * @param tenantId - The tenant ID to scope the record
    * @returns A promise that resolves to the newly created customer
    */
   async createCustomer(data: CreateCustomerInput, tenantId: string) {
@@ -386,6 +389,7 @@ export class CustomerRepository extends BaseRepository<Prisma.CustomerGetPayload
   /**
    * Performs a soft delete on a customer by setting deletedAt and updating status.
    * @param id - The unique identifier of the customer to delete
+   * @param tenantId - The tenant ID to scope the query
    * @returns A promise that resolves to the soft-deleted customer
    */
   async softDeleteCustomer(id: string, tenantId: string) {

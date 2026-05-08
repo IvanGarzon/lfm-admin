@@ -578,6 +578,8 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
         case InvoiceStatus.PARTIALLY_PAID:
           stats.partiallyPaid = group._count;
           break;
+        default:
+          break;
       }
     });
 
