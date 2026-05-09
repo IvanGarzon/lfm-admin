@@ -1,9 +1,21 @@
 'use server';
 
-import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
+import {
+  searchInvoices,
+  findInvoiceByIdWithDetails,
+  findInvoiceMetadataById,
+  findInvoiceItems,
+  findInvoicePayments,
+  findInvoiceStatusHistory
+} from '@/db/invoices/queries';
+import {
+  getInvoiceStatistics as fetchInvoiceStatistics,
+  getInvoiceMonthlyRevenueTrend,
+  getInvoiceTopDebtors
+} from '@/db/invoices/analytics';
 import type {
   InvoiceFilters,
   InvoiceStatistics,
@@ -17,8 +29,6 @@ import type {
   TopCustomerDebtor
 } from '@/features/finances/invoices/types';
 
-const invoiceRepo = new InvoiceRepository(prisma);
-
 /**
  * Retrieves a paginated list of invoices based on specified search and filter criteria.
  * @param filters - The parsed filter parameters for filtering, sorting, and pagination.
@@ -28,7 +38,7 @@ export const getInvoices = withTenantPermission<InvoiceFilters, InvoicePaginatio
   'canReadInvoices',
   async (ctx, filters) => {
     try {
-      const result = await invoiceRepo.searchInvoices(filters, ctx.tenantId);
+      const result = await searchInvoices(prisma, filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -48,7 +58,7 @@ export const getInvoiceById = withTenantPermission<string, InvoiceWithDetails>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+      const invoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -71,7 +81,7 @@ export const getInvoiceMetadata = withTenantPermission<string, InvoiceMetadata>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findInvoiceMetadataById(id, ctx.tenantId);
+      const invoice = await findInvoiceMetadataById(prisma, id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -93,7 +103,7 @@ export const getInvoiceItems = withTenantPermission<string, InvoiceItemDetail[]>
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const items = await invoiceRepo.findInvoiceItems(id);
+      const items = await findInvoiceItems(prisma, id);
       return { success: true, data: items };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice items');
@@ -110,7 +120,7 @@ export const getInvoicePayments = withTenantPermission<string, InvoicePaymentIte
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const payments = await invoiceRepo.findInvoicePayments(id);
+      const payments = await findInvoicePayments(prisma, id);
       return { success: true, data: payments };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice payments');
@@ -127,7 +137,7 @@ export const getInvoiceStatusHistory = withTenantPermission<string, InvoiceStatu
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const history = await invoiceRepo.findInvoiceStatusHistory(id);
+      const history = await findInvoiceStatusHistory(prisma, id);
       return { success: true, data: history };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch invoice status history');
@@ -147,7 +157,7 @@ export const getInvoiceStatistics = withTenantPermission<
   InvoiceStatistics
 >('canReadInvoices', async (ctx, dateFilter) => {
   try {
-    const stats = await invoiceRepo.getInvoiceStatistics(ctx.tenantId, dateFilter);
+    const stats = await fetchInvoiceStatistics(prisma, ctx.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
@@ -163,7 +173,7 @@ export const getMonthlyRevenueTrend = withTenantPermission<number | undefined, R
   'canReadInvoices',
   async (ctx, limit = 12) => {
     try {
-      const trend = await invoiceRepo.getInvoiceMonthlyRevenueTrend(limit, ctx.tenantId);
+      const trend = await getInvoiceMonthlyRevenueTrend(prisma, ctx.tenantId, limit);
       return { success: true, data: trend };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch revenue trend');
@@ -180,7 +190,7 @@ export const getTopDebtors = withTenantPermission<number | undefined, TopCustome
   'canReadInvoices',
   async (ctx, limit = 5) => {
     try {
-      const debtors = await invoiceRepo.getInvoiceTopDebtors(limit, ctx.tenantId);
+      const debtors = await getInvoiceTopDebtors(prisma, ctx.tenantId, limit);
       return { success: true, data: debtors };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch top debtors');
@@ -199,7 +209,7 @@ export const getInvoicePdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+      const invoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }
@@ -233,7 +243,7 @@ export const getReceiptPdfUrl = withTenantPermission<string, { url: string }>(
   'canReadInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+      const invoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
       }

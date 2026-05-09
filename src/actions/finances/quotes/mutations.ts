@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { QuoteRepository } from '@/repositories/quote-repository';
-import { InvoiceRepository } from '@/repositories/invoice-repository';
+import { generateInvoiceNumber } from '@/db/invoices/identifiers';
+import { findInvoiceByIdWithDetails } from '@/db/invoices/queries';
 import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
@@ -36,7 +37,6 @@ import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.servi
 import { getTenantBranding } from '@/actions/tenant/queries';
 
 const quoteRepo = new QuoteRepository(prisma);
-const invoiceRepo = new InvoiceRepository(prisma);
 const emailAuditRepo = new EmailAuditRepository(prisma);
 
 /**
@@ -285,7 +285,7 @@ export const convertQuoteToInvoice = withTenantPermission<
 >('canManageQuotes', async (ctx, data) => {
   try {
     const validatedData = ConvertQuoteToInvoiceSchema.parse(data);
-    const invoiceNumber = await invoiceRepo.generateInvoiceNumber(ctx.tenantId);
+    const invoiceNumber = await generateInvoiceNumber(prisma, ctx.tenantId);
 
     // Convert quote to invoice
     const result = await quoteRepo.convertQuoteToInvoice(
@@ -302,7 +302,7 @@ export const convertQuoteToInvoice = withTenantPermission<
 
     // Auto-send invoice email to customer
     try {
-      const invoice = await invoiceRepo.findByIdWithDetails(result.invoiceId, ctx.tenantId);
+      const invoice = await findInvoiceByIdWithDetails(prisma, result.invoiceId, ctx.tenantId);
       if (invoice) {
         await queueInvoiceEmail({
           invoiceId: invoice.id,

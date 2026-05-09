@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { InvoiceRepository } from '@/repositories/invoice-repository';
 import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
@@ -21,8 +20,25 @@ import {
   type CancelInvoiceInput,
   type BulkUpdateInvoiceStatusInput
 } from '@/schemas/invoices';
+import { findInvoiceByIdWithDetails } from '@/db/invoices/queries';
+import { createInvoiceWithItems, updateInvoiceWithItems } from '@/db/invoices/mutations';
+import {
+  markInvoiceAsPending as markAsPending,
+  markInvoiceAsDraft as markAsDraft,
+  cancelInvoice as cancelInvoiceDb,
+  bulkUpdateInvoiceStatus as bulkUpdateStatusDb
+} from '@/db/invoices/status';
+import {
+  addInvoicePayment,
+  incrementInvoiceReminderCount,
+  deleteInvoice as deleteInvoiceDb,
+  duplicateInvoice as duplicateInvoiceDb
+} from '@/db/invoices/payments';
+import {
+  generateInvoiceReceiptNumber,
+  updateInvoiceReceiptNumber
+} from '@/db/invoices/identifiers';
 
-const invoiceRepo = new InvoiceRepository(prisma);
 const emailAuditRepo = new EmailAuditRepository(prisma);
 
 /**
@@ -38,11 +54,7 @@ export const createInvoice = withTenantPermission<
   try {
     const validatedData = CreateInvoiceSchema.parse(data);
 
-    const invoice = await invoiceRepo.createInvoiceWithItems(
-      validatedData,
-      ctx.tenantId,
-      ctx.userId
-    );
+    const invoice = await createInvoiceWithItems(prisma, validatedData, ctx.tenantId, ctx.userId);
 
     revalidatePath('/finances/invoices');
 
@@ -67,7 +79,8 @@ export const updateInvoice = withTenantPermission<UpdateInvoiceInput, { id: stri
     try {
       const validatedData = UpdateInvoiceSchema.parse(data);
 
-      const invoice = await invoiceRepo.updateInvoiceWithItems(
+      const invoice = await updateInvoiceWithItems(
+        prisma,
         validatedData.id,
         validatedData,
         ctx.tenantId
@@ -98,11 +111,7 @@ export const markInvoiceAsPending = withTenantPermission<MarkInvoiceAsPendingInp
   async (ctx, data) => {
     try {
       const validatedInvoice = MarkInvoiceAsPendingSchema.parse(data);
-      const invoice = await invoiceRepo.markInvoiceAsPending(
-        validatedInvoice.id,
-        ctx.tenantId,
-        ctx.userId
-      );
+      const invoice = await markAsPending(prisma, validatedInvoice.id, ctx.tenantId, ctx.userId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -169,7 +178,7 @@ export const markInvoiceAsDraft = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      const invoice = await invoiceRepo.markInvoiceAsDraft(id, ctx.tenantId, ctx.userId);
+      const invoice = await markAsDraft(prisma, id, ctx.tenantId, ctx.userId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -197,7 +206,8 @@ export const recordPayment = withTenantPermission<
   try {
     const validatedData = RecordPaymentSchema.parse(data);
 
-    const invoice = await invoiceRepo.addInvoicePayment(
+    const invoice = await addInvoicePayment(
+      prisma,
       validatedData.id,
       ctx.tenantId,
       validatedData.amount,
@@ -211,7 +221,7 @@ export const recordPayment = withTenantPermission<
       return { success: false, error: 'Invoice not found' };
     }
 
-    // Transaction creation is now handled atomically inside invoiceRepo.addInvoicePayment
+    // Transaction creation is now handled atomically inside addInvoicePayment
     logger.info('Payment recorded and transaction created', {
       context: 'recordPayment',
       metadata: {
@@ -254,7 +264,8 @@ export const cancelInvoice = withTenantPermission<CancelInvoiceInput, { id: stri
     try {
       const validatedData = CancelInvoiceSchema.parse(data);
 
-      const invoice = await invoiceRepo.cancelInvoice(
+      const invoice = await cancelInvoiceDb(
+        prisma,
         validatedData.id,
         ctx.tenantId,
         validatedData.cancelReason,
@@ -285,7 +296,7 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
   async (ctx, id) => {
     try {
       // Get full invoice details
-      let invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+      let invoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -304,11 +315,11 @@ export const sendInvoiceReceipt = withTenantPermission<string, { id: string }>(
         });
 
         // Generate receipt number if missing
-        const receiptNumber = await invoiceRepo.generateInvoiceReceiptNumber();
-        await invoiceRepo.updateInvoiceReceiptNumber(id, ctx.tenantId, receiptNumber);
+        const receiptNumber = await generateInvoiceReceiptNumber();
+        await updateInvoiceReceiptNumber(prisma, id, ctx.tenantId, receiptNumber);
 
         // Refetch invoice with receipt number
-        const updatedInvoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+        const updatedInvoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
         if (!updatedInvoice) {
           return { success: false, error: 'Failed to update invoice' };
         }
@@ -386,7 +397,8 @@ export const bulkUpdateInvoiceStatus = withTenantPermission<
 >('canManageInvoices', async (ctx, data) => {
   try {
     const validatedData = BulkUpdateInvoiceStatusSchema.parse(data);
-    const results = await invoiceRepo.bulkUpdateInvoiceStatus(
+    const results = await bulkUpdateStatusDb(
+      prisma,
       validatedData.ids,
       ctx.tenantId,
       validatedData.status,
@@ -421,7 +433,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
   async (ctx, id) => {
     try {
       // Get full invoice details
-      const invoice = await invoiceRepo.findInvoiceByIdWithDetails(id, ctx.tenantId);
+      const invoice = await findInvoiceByIdWithDetails(prisma, id, ctx.tenantId);
 
       if (!invoice) {
         return { success: false, error: 'Invoice not found' };
@@ -512,7 +524,7 @@ export const sendInvoiceReminder = withTenantPermission<string, { id: string }>(
         };
       }
 
-      const updatedInvoice = await invoiceRepo.incrementInvoiceReminderCount(id, ctx.tenantId);
+      const updatedInvoice = await incrementInvoiceReminderCount(prisma, id, ctx.tenantId);
       if (!updatedInvoice) {
         return { success: false, error: 'Failed to update reminder count' };
       }
@@ -544,7 +556,7 @@ export const deleteInvoice = withTenantPermission<string, { id: string }>(
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      await invoiceRepo.deleteInvoice(id, ctx.tenantId);
+      await deleteInvoiceDb(prisma, id, ctx.tenantId);
 
       revalidatePath('/finances/invoices');
 
@@ -566,7 +578,7 @@ export const duplicateInvoice = withTenantPermission<string, { id: string; invoi
   'canManageInvoices',
   async (ctx, id) => {
     try {
-      const result = await invoiceRepo.duplicateInvoice(id, ctx.tenantId);
+      const result = await duplicateInvoiceDb(prisma, id, ctx.tenantId);
 
       revalidatePath('/finances/invoices');
 

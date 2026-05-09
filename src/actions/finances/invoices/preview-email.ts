@@ -1,10 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { InvoiceRepository } from '@/repositories/invoice-repository';
+import { findInvoiceMetadataById } from '@/db/invoices/queries';
 import { createEmailPreviewFunction } from '@/lib/email-preview-factory';
-
-const invoiceRepository = new InvoiceRepository(prisma);
 
 export type InvoiceEmailType = 'sent' | 'reminder';
 
@@ -14,11 +12,11 @@ export type InvoiceEmailType = 'sent' | 'reminder';
  * Uses the email preview factory to eliminate duplication with quote previews
  */
 export const previewInvoiceEmail = createEmailPreviewFunction<
-  Awaited<ReturnType<typeof invoiceRepository.findInvoiceMetadataById>>,
+  Awaited<ReturnType<typeof findInvoiceMetadataById>>,
   InvoiceEmailType
 >({
   entityName: 'Invoice',
-  fetchEntity: (id, tenantId) => invoiceRepository.findInvoiceMetadataById(id, tenantId),
+  fetchEntity: (id, tenantId) => findInvoiceMetadataById(prisma, id, tenantId),
   getCustomerEmail: (invoice) => invoice!.customer.email,
   buildEmailConfig: (invoice, type, tenantName) => {
     if (!invoice) {

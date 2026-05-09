@@ -11,9 +11,7 @@ import {
   type SendReceiptEmailInput,
   type SendReminderEmailInput
 } from '@/schemas/invoices';
-import { InvoiceRepository } from '@/repositories/invoice-repository';
-
-const invoiceRepository = new InvoiceRepository(prisma);
+import { findInvoiceByIdWithDetails } from '@/db/invoices/queries';
 
 /**
  * Get the email recipient, overriding with test email if in test mode
@@ -42,7 +40,7 @@ export async function processInvoiceEmail(
   type: 'pending_notification' | 'receipt' | 'reminder',
   tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
-  const invoice = await invoiceRepository.findByIdWithDetails(invoiceId, tenantId);
+  const invoice = await findInvoiceByIdWithDetails(prisma, invoiceId, tenantId);
 
   if (!invoice) {
     throw new Error('Invoice not found');
