@@ -729,7 +729,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       });
 
       if (!currentQuote) {
-        throw new Error('Quote not found');
+        throw new Error(`Quote ${id} not found`);
       }
 
       const statusChanged = currentQuote.status !== data.status;
@@ -1224,7 +1224,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       });
 
       if (!quote) {
-        throw new Error('Quote not found');
+        throw new Error(`Quote ${quoteId} not found for tenant ${invoiceData.tenantId}`);
       }
 
       const previousStatus = quote.status;
@@ -1623,7 +1623,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
       });
 
       if (!parentQuote) {
-        throw new Error('Parent quote not found');
+        throw new Error(`Parent quote ${parentQuoteId} not found for tenant ${tenantId}`);
       }
 
       // Calculate the next version number
@@ -2042,7 +2042,7 @@ export class QuoteRepository extends BaseRepository<Prisma.QuoteGetPayload<objec
     });
 
     if (!original) {
-      throw new Error('Quote not found');
+      throw new Error(`Quote ${id} not found for tenant ${tenantId}`);
     }
 
     // Generate new quote number with retry logic for unique constraint

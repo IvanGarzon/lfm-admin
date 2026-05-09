@@ -289,7 +289,7 @@ export class TaskExecutionRepository {
   async incrementRetryCount(id: string): Promise<TaskExecution> {
     const execution = await this.findById(id);
     if (!execution) {
-      throw new Error('Execution not found');
+      throw new Error(`Execution ${id} not found`);
     }
 
     return this.prisma.taskExecution.update({

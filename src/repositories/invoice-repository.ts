@@ -823,7 +823,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
       });
 
       if (!currentInvoice) {
-        throw new Error('Invoice not found');
+        throw new Error(`Invoice ${id} not found`);
       }
 
       // 2. Determine if the invoice content is locked.
@@ -1240,7 +1240,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     });
 
     if (!invoice) {
-      throw new Error('Invoice not found');
+      throw new Error(`Invoice ${invoiceId} not found for tenant ${tenantId}`);
     }
 
     const previousStatus = invoice.status;
@@ -1564,7 +1564,7 @@ export class InvoiceRepository extends BaseRepository<Prisma.InvoiceGetPayload<o
     });
 
     if (!original) {
-      throw new Error('Invoice not found');
+      throw new Error(`Invoice ${id} not found for tenant ${tenantId}`);
     }
 
     // Generate new invoice number
