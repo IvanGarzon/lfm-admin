@@ -9,8 +9,8 @@ import type { UpdateCustomerInput } from '@/schemas/customers';
 const { mockCustomerRepo, mockOrgRepo, mockAuth } = vi.hoisted(() => ({
   mockCustomerRepo: {
     findCustomerByEmail: vi.fn(),
+    findCustomerById: vi.fn(),
     createCustomer: vi.fn(),
-    findById: vi.fn(),
     updateCustomer: vi.fn(),
     softDeleteCustomer: vi.fn()
   },
@@ -116,7 +116,7 @@ describe('Customer Mutations', () => {
     };
 
     it('updates a customer and returns the ID', async () => {
-      mockCustomerRepo.findById.mockResolvedValue({ id: TEST_CUSTOMER_ID });
+      mockCustomerRepo.findCustomerById.mockResolvedValue({ id: TEST_CUSTOMER_ID });
       mockCustomerRepo.updateCustomer.mockResolvedValue({ id: TEST_CUSTOMER_ID });
 
       const result = await updateCustomer(updateInput);
@@ -130,7 +130,7 @@ describe('Customer Mutations', () => {
     });
 
     it('returns error when customer does not exist', async () => {
-      mockCustomerRepo.findById.mockResolvedValue(null);
+      mockCustomerRepo.findCustomerById.mockResolvedValue(null);
 
       const result = await updateCustomer(updateInput);
 
@@ -142,7 +142,7 @@ describe('Customer Mutations', () => {
     });
 
     it('returns error when update returns null', async () => {
-      mockCustomerRepo.findById.mockResolvedValue({ id: TEST_CUSTOMER_ID });
+      mockCustomerRepo.findCustomerById.mockResolvedValue({ id: TEST_CUSTOMER_ID });
       mockCustomerRepo.updateCustomer.mockResolvedValue(null);
 
       const result = await updateCustomer(updateInput);
