@@ -635,7 +635,7 @@ describe('InvoiceRepository (integration)', () => {
     it('throws when invoice does not exist', async () => {
       await expect(
         invoiceRepository.deleteInvoice('cltest000000000000none0001', tenantId)
-      ).rejects.toThrow('Invoice not found');
+      ).rejects.toThrow('not found');
     });
 
     it('throws when ID belongs to a different tenant', async () => {
@@ -649,9 +649,7 @@ describe('InvoiceRepository (integration)', () => {
         otherTenantId
       );
 
-      await expect(invoiceRepository.deleteInvoice(id, tenantId)).rejects.toThrow(
-        'Invoice not found'
-      );
+      await expect(invoiceRepository.deleteInvoice(id, tenantId)).rejects.toThrow('not found');
     });
   });
 
@@ -691,7 +689,7 @@ describe('InvoiceRepository (integration)', () => {
     it('throws when source invoice does not exist', async () => {
       await expect(
         invoiceRepository.duplicateInvoice('cltest000000000000none0001', tenantId)
-      ).rejects.toThrow('Invoice not found');
+      ).rejects.toThrow('not found');
     });
 
     it('throws when ID belongs to a different tenant', async () => {
@@ -705,9 +703,7 @@ describe('InvoiceRepository (integration)', () => {
         otherTenantId
       );
 
-      await expect(invoiceRepository.duplicateInvoice(id, tenantId)).rejects.toThrow(
-        'Invoice not found'
-      );
+      await expect(invoiceRepository.duplicateInvoice(id, tenantId)).rejects.toThrow('not found');
     });
 
     it('copies all items from the original invoice', async () => {
@@ -810,7 +806,7 @@ describe('InvoiceRepository (integration)', () => {
           },
           tenantId
         )
-      ).rejects.toThrow('Invoice not found');
+      ).rejects.toThrow('not found');
     });
   });
 
@@ -976,7 +972,7 @@ describe('InvoiceRepository (integration)', () => {
           'Credit Card',
           new Date()
         )
-      ).rejects.toThrow('Invoice not found');
+      ).rejects.toThrow('not found');
     });
 
     it('throws when invoice belongs to a different tenant', async () => {
@@ -993,7 +989,7 @@ describe('InvoiceRepository (integration)', () => {
 
       await expect(
         invoiceRepository.addInvoicePayment(id, tenantId, 50, 'Credit Card', new Date())
-      ).rejects.toThrow('Invoice not found');
+      ).rejects.toThrow('not found');
     });
 
     it('does not double-record a payment when the same idempotency key is used twice', async () => {

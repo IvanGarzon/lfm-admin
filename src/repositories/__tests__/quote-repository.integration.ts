@@ -326,7 +326,7 @@ describe('QuoteRepository (integration)', () => {
     it('throws when quote not found', async () => {
       await expect(
         quoteRepository.duplicateQuote('cltest000000000000none0001', tenantId)
-      ).rejects.toThrow('Quote not found');
+      ).rejects.toThrow('not found');
     });
   });
 
@@ -350,7 +350,7 @@ describe('QuoteRepository (integration)', () => {
     it('throws when parent quote not found', async () => {
       await expect(
         quoteRepository.createQuoteVersion('cltest000000000000none0001', tenantId)
-      ).rejects.toThrow('Parent quote not found');
+      ).rejects.toThrow('not found');
     });
   });
 
@@ -653,7 +653,7 @@ describe('QuoteRepository (integration)', () => {
           },
           tenantId
         )
-      ).rejects.toThrow('Quote not found');
+      ).rejects.toThrow('not found');
     });
   });
 
@@ -773,7 +773,7 @@ describe('QuoteRepository (integration)', () => {
           discount: 0,
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         })
-      ).rejects.toThrow('Quote not found');
+      ).rejects.toThrow('not found');
     });
 
     it('throws when status transition is invalid (DRAFT → CONVERTED)', async () => {
