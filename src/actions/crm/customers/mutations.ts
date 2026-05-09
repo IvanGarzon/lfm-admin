@@ -78,7 +78,7 @@ export const updateCustomer = withTenantPermission<UpdateCustomerInput, { id: st
   async (ctx, data) => {
     try {
       const validatedData = UpdateCustomerSchema.parse(data);
-      const existing = await customerRepo.findById(validatedData.id);
+      const existing = await customerRepo.findCustomerById(validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Customer not found' };
       }
