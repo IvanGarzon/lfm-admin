@@ -17,9 +17,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Read `.claude/rules/` before starting:
 
 - [`tooling.md`](.claude/rules/tooling.md) — Package manager (pnpm), tech stack
-- [`api-conventions.md`](.claude/rules/api-conventions.md) — Data flow, hooks, actions, repositories, schemas, filters, types
+- [`api-conventions.md`](.claude/rules/api-conventions.md) — Data flow, hooks, actions, db functions, repositories, schemas, filters, types
 - [`code-style.md`](.claude/rules/code-style.md) — TypeScript quality, naming, imports, comments, Australian English
-- [`testing.md`](.claude/rules/testing.md) — Test structure, coverage, repository integration tests
+- [`testing.md`](.claude/rules/testing.md) — Test structure, coverage, integration tests
 - [`git.md`](.claude/rules/git.md) — Commit format, PR guidelines
 - [`working-standards.md`](.claude/rules/working-standards.md) — Scope, problem solving, common mistakes
 
@@ -53,7 +53,9 @@ src/
 │   ├── finances/
 │   ├── inventory/
 │   └── staff/
-├── repositories/                   # Database access layer
+├── db/                             # Database access functions (new pattern — see ADR-007)
+│   └── invoices/                   # Plain async functions, prisma as first arg
+├── repositories/                   # Database access layer (existing, being migrated to src/db/)
 │   ├── customer-repository.ts
 │   └── ...
 ├── schemas/                        # Zod schemas + inferred input types

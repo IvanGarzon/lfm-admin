@@ -5,9 +5,9 @@
 - Minimum coverage: expected behaviour + edge case + error handling.
 - No obvious comments in tests — don't restate what the code does. The code should speak for itself.
 
-## Repository Tests
+## DB Function and Repository Tests
 
-Repository tests must run against the actual database — do not mock Prisma. All code that interacts with Prisma (i.e. all repositories) must be tested with real database calls.
+All code that interacts with Prisma must be tested with real database calls — do not mock Prisma.
 
 ## Test Factories (`src/lib/testing/factories/`)
 
@@ -18,11 +18,15 @@ Repository tests must run against the actual database — do not mock Prisma. Al
 - **Unit/action tests**: a module-level `const baseInput = createXInput()` is acceptable — Prisma is mocked, there is no shared mutable state.
 
 ```ts
-// correct — integration test, fresh call per test
-const result = await repository.createEmployee(
-  createEmployeeInput({ email: 'x@example.com' }),
+// correct — integration test (db function), fresh call per test
+const result = await createInvoiceWithItems(
+  getTestPrisma(),
+  createInvoiceInput({ customerId }),
   tenantId
 );
+
+// correct — integration test (repository), fresh call per test
+const result = await customerRepository.createCustomer(createCustomerInput(), tenantId);
 
 // correct — unit/action test, module-level const is fine
 const baseInput = createCustomerInput();
@@ -31,7 +35,16 @@ const baseInput = createCustomerInput();
 const input = createEmployeeInput;
 ```
 
-## Repository Integration Test Structure
+## DB Function Integration Test Structure
+
+- File: `src/db/<domain>/__tests__/<domain>.integration.ts`
+- Use `setupTestDatabaseLifecycle()`, `getTestPrisma()`, `createTestTenant()` from `@/lib/testing/integration/database`.
+- Call functions directly — no class instantiation.
+- Create a fresh tenant in `beforeEach` — never share tenant state between tests.
+- Group tests by function with `// -- functionName ---...` section headers (dash style to column 80).
+- Every function group must cover: happy path, not-found/null case, tenant isolation.
+
+## Repository Integration Test Structure (existing repos)
 
 - File: `src/repositories/__tests__/entity-repository.integration.ts`
 - Use `setupTestDatabaseLifecycle()`, `getTestPrisma()`, `createTestTenant()` from `@/lib/testing/integration/database`.

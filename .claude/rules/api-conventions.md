@@ -3,10 +3,12 @@
 ## Data Flow
 
 ```
-UI Component → Hook → Server Action → Repository → Prisma → Database
+UI Component → Hook → Server Action → DB function (src/db/) → Prisma → Database
 ```
 
 Every layer has a single responsibility. Do not skip layers.
+
+New entities use DB functions in `src/db/<domain>/`. Existing repositories in `src/repositories/` remain until explicitly migrated — see ADR-007.
 
 ## Hooks (`src/features/**/hooks/`)
 
@@ -25,9 +27,9 @@ Every layer has a single responsibility. Do not skip layers.
   - `withTenant` — authenticated user scoped to a tenant, no permission check.
   - `withTenantPermission('permissionKey', ...)` — tenant-scoped with RBAC check. Use for any write or sensitive read.
   - `withSuperAdmin` — super-admin only operations.
-- No Prisma calls in actions. All database access goes through a repository.
+- No Prisma calls in actions. All database access goes through a DB function (`src/db/`) or repository (`src/repositories/`).
 - No type or interface definitions in action files. Define types in `src/features/**/types.ts`.
-- Validate external input with Zod schemas before passing to repositories.
+- Validate external input with Zod schemas before passing to DB functions or repositories.
 - Multi-parameter operations must be consolidated into a single input object type.
 - No barrel `index.ts` files in action folders. Import directly from `mutations.ts` or `queries.ts`.
 - Every exported action function must have a JSDoc comment.
@@ -35,29 +37,31 @@ Every layer has a single responsibility. Do not skip layers.
 - Wrap all logic in try/catch and always use `handleActionError(error, 'message')` from `@/lib/error-handler` in the catch block.
 - After mutations, call `revalidatePath()` for each affected route (list page + detail page where applicable).
 
-## Repositories (`src/repositories/*-repository.ts`)
+## DB Functions (`src/db/<domain>/`) — new pattern
+
+New database access is written as plain async functions, not classes.
+
+- Files split by concern: `queries.ts`, `mutations.ts`, `analytics.ts`, etc. No barrel `index.ts`.
+- First argument is always `prisma: PrismaClient` — enables `getTestPrisma()` injection in tests.
+- Function names are entity-scoped and explicit: `findInvoiceById`, not `findById`.
+- Every function includes `tenantId` in every `where` clause — including internal re-fetches after mutations.
+- Soft-delete queries scope by `tenantId`.
+- Unique lookups use `findFirst({ where: { field, tenantId } })`, not `findUnique`.
+- Use `getPaginationMetadata(total, perPage, page)` from `@/lib/utils` — never build pagination manually.
+- Every exported function must have a multi-line JSDoc comment with `@param` tags and a `@returns` tag.
+
+## Repositories (`src/repositories/*-repository.ts`) — existing, being migrated
+
+Repositories in `src/repositories/` remain in place until explicitly migrated to `src/db/`. Do not add new repositories — new entities go to `src/db/`. See ADR-007.
+
+Rules that still apply to existing repositories:
 
 - Extend `BaseRepository<Prisma.ModelGetPayload<object>>`.
 - Constructor takes `private prisma: PrismaClient` and exposes `protected get model()`.
-- Method names must be repository-scoped and explicit:
-  - `findCustomerById`, not `findById`
-  - `softDeleteCustomer`, not `softDelete`
-  - `searchCustomers`, not `searchAndPaginate`
-  - `findCustomerByEmail(email, tenantId)`, not `findByEmail(email)`
-- Every query and mutation must include `tenantId` in the `where` clause — including internal re-fetches after updates.
-- Soft-delete methods must also scope by `tenantId`.
-- Unique lookups must be scoped to `tenantId` — use `findFirst({ where: { email, tenantId } })` not `findUnique({ where: { email } })`.
-- Use `getPaginationMetadata(total, perPage, page)` from `@/lib/utils` — never build pagination manually.
-- Private helper methods belong inside the class, not at module level.
-- Never export a singleton instance from a repository file. Instantiate with `new XRepository(prisma)` at the top of each action file that needs it.
-- Every repository method (public and private) must have a multi-line JSDoc comment with `@param` tags for each parameter and a `@returns` tag. Single-line `/** ... */` comments are not acceptable. Follow this format:
-  ```ts
-  /**
-   * Short description of what the method does.
-   * @param paramName - What this parameter controls
-   * @returns What the promise resolves to, including the null/false case where applicable
-   */
-  ```
+- Method names must be repository-scoped and explicit.
+- Every query and mutation must include `tenantId` in the `where` clause.
+- Never export a singleton instance. Instantiate with `new XRepository(prisma)` at the call site.
+- Every method must have a multi-line JSDoc comment with `@param` and `@returns` tags.
 
 ## Schemas (`src/schemas/`)
 
@@ -78,6 +82,6 @@ Every layer has a single responsibility. Do not skip layers.
 ## Types (`src/features/**/types.ts`)
 
 - All domain types and interfaces live here.
-- Never extend Prisma model types directly — Prisma uses `Decimal` for numeric fields. Define explicit plain types and convert with `Number()` at the repository boundary.
+- Never extend Prisma model types directly — Prisma uses `Decimal` for numeric fields. Define explicit plain types and convert with `Number()` at the DB function or repository boundary.
 - Never use `any` — including in private mapper method parameters. Use an explicit inline shape or a named type.
 - Schema input types (`CreateXInput`, `UpdateXInput`) live in `src/schemas/` and are inferred from Zod schemas.

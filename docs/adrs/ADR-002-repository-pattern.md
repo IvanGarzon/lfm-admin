@@ -1,6 +1,6 @@
 # ADR 002: Repository Pattern for Database Access
 
-Status: Accepted
+Status: Superseded by ADR-007 (for new entities; existing repositories remain until migrated)
 
 ## Context
 
