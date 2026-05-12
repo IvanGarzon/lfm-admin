@@ -1,10 +1,8 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { QuoteRepository } from '@/repositories/quote-repository';
+import { findQuoteById } from '@/db/quotes/queries';
 import { createEmailPreviewFunction } from '@/lib/email-preview-factory';
-
-const quoteRepository = new QuoteRepository(prisma);
 
 export type QuoteEmailType = 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
 
@@ -14,11 +12,11 @@ export type QuoteEmailType = 'sent' | 'reminder' | 'accepted' | 'rejected' | 'ex
  * Uses the email preview factory to eliminate duplication with invoice previews
  */
 export const previewQuoteEmail = createEmailPreviewFunction<
-  Awaited<ReturnType<typeof quoteRepository.findByIdWithDetails>>,
+  Awaited<ReturnType<typeof findQuoteById>>,
   QuoteEmailType
 >({
   entityName: 'Quote',
-  fetchEntity: (id, tenantId) => quoteRepository.findByIdWithDetails(id, tenantId),
+  fetchEntity: (id, tenantId) => findQuoteById(prisma, id, tenantId),
   getCustomerEmail: (quote) => quote!.customer.email,
   buildEmailConfig: (quote, type, tenantName) => {
     if (!quote) {

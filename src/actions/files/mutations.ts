@@ -10,9 +10,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { revalidatePath } from 'next/cache';
 import { env } from '@/env';
 import { withTenantPermission } from '@/lib/action-auth';
-import { QuoteRepository } from '@/repositories/quote-repository';
-
-const quoteRepo = new QuoteRepository(prisma);
+import { findQuoteById } from '@/db/quotes/queries';
 
 export const uploadFile = withTenantPermission<
   FormData,
@@ -42,7 +40,7 @@ export const uploadFile = withTenantPermission<
 
     // Validate ownership when quoteId is a real entity ID (not a generic folder identifier)
     if (z.string().cuid().safeParse(quoteId).success) {
-      const quote = await quoteRepo.findQuoteById(quoteId, ctx.tenantId);
+      const quote = await findQuoteById(prisma, quoteId, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }

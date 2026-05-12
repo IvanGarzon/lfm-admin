@@ -1,7 +1,7 @@
 /**
- * QuoteRepository Integration Tests
+ * Quote DB Functions Integration Tests
  *
- * Tests the QuoteRepository against a real Postgres database spun up via
+ * Tests the Quote DB functions against a real Postgres database spun up via
  * Testcontainers. No mocks — every assertion hits an actual DB query.
  *
  * Run with: pnpm test:integration
@@ -9,7 +9,50 @@
 
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { QuoteStatus } from '@/prisma/client';
-import { QuoteRepository } from '@/repositories/quote-repository';
+import {
+  createQuoteWithItems,
+  updateQuoteWithItems,
+  convertQuoteToInvoice,
+  checkAndExpireQuotes,
+  softDeleteQuote,
+  createQuoteVersion,
+  createQuoteItemAttachment,
+  updateQuoteItemNotes,
+  updateQuoteItemColors,
+  deleteQuoteItemAttachment,
+  toggleQuoteFavourite,
+  duplicateQuote,
+  bulkUpdateQuoteStatus,
+  bulkSoftDeleteQuotes
+} from '@/db/quotes/mutations';
+import {
+  searchQuotes,
+  findQuoteById,
+  findQuoteMetadata,
+  findQuoteItems,
+  findQuoteStatusHistory,
+  getQuoteVersions,
+  quoteNumberExists,
+  findQuoteItemAttachments,
+  findQuoteItemAttachmentById,
+  countQuoteItemAttachments,
+  countQuoteItemAttachmentsByS3Key
+} from '@/db/quotes/queries';
+import {
+  getQuoteStatistics,
+  getMonthlyQuoteValueTrend,
+  getConversionFunnel,
+  getTopCustomersByQuotedValue,
+  getAverageTimeToDecision
+} from '@/db/quotes/analytics';
+import { generateQuoteNumber } from '@/db/quotes/identifiers';
+import {
+  markQuoteAsAccepted,
+  markQuoteAsOnHold,
+  markQuoteAsCancelled,
+  markQuoteAsRejected,
+  markQuoteAsSent
+} from '@/db/quotes/status';
 import { CustomerRepository } from '@/repositories/customer-repository';
 import {
   setupTestDatabaseLifecycle,
@@ -32,14 +75,12 @@ vi.mock('@/features/finances/quotes/services/quote-pdf.service', () => ({
 
 setupTestDatabaseLifecycle();
 
-describe('QuoteRepository (integration)', () => {
-  let quoteRepository: QuoteRepository;
+describe('Quote DB functions (integration)', () => {
   let customerRepository: CustomerRepository;
   let tenantId: string;
   let customerId: string;
 
   beforeAll(() => {
-    quoteRepository = new QuoteRepository(getTestPrisma());
     customerRepository = new CustomerRepository(getTestPrisma());
   });
 
@@ -51,7 +92,8 @@ describe('QuoteRepository (integration)', () => {
 
   describe('createQuoteWithItems', () => {
     it('creates a quote and returns id and quoteNumber', async () => {
-      const result = await quoteRepository.createQuoteWithItems(
+      const result = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
@@ -61,11 +103,13 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('generates sequential quote numbers within the same tenant', async () => {
-      const first = await quoteRepository.createQuoteWithItems(
+      const first = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const second = await quoteRepository.createQuoteWithItems(
+      const second = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
@@ -83,12 +127,14 @@ describe('QuoteRepository (integration)', () => {
         otherTenantId
       );
 
-      const main = await quoteRepository.createQuoteWithItems(
+      const main = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
-      const other = await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
+      const other = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
@@ -102,12 +148,13 @@ describe('QuoteRepository (integration)', () => {
 
   describe('findQuoteById', () => {
     it('returns full quote details', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const result = await quoteRepository.findQuoteById(id, tenantId);
+      const result = await findQuoteById(getTestPrisma(), id, tenantId);
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -117,12 +164,13 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('converts Decimal fields to number', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const result = await quoteRepository.findQuoteById(id, tenantId);
+      const result = await findQuoteById(getTestPrisma(), id, tenantId);
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -132,7 +180,7 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null for a non-existent ID', async () => {
-      const result = await quoteRepository.findQuoteById('cltest000000000000none0001', tenantId);
+      const result = await findQuoteById(getTestPrisma(), 'cltest000000000000none0001', tenantId);
       expect(result).toBeNull();
     });
 
@@ -142,12 +190,13 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      const result = await quoteRepository.findQuoteById(id, tenantId);
+      const result = await findQuoteById(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
@@ -160,23 +209,24 @@ describe('QuoteRepository (integration)', () => {
         otherTenantId
       );
 
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      const result = await quoteRepository.searchQuotes({ page: 1, perPage: 20 }, tenantId);
+      const result = await searchQuotes(getTestPrisma(), { page: 1, perPage: 20 }, tenantId);
 
       expect(result.pagination.totalItems).toBe(1);
     });
 
     it('paginates correctly', async () => {
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
 
-      const result = await quoteRepository.searchQuotes({ page: 1, perPage: 2 }, tenantId);
+      const result = await searchQuotes(getTestPrisma(), { page: 1, perPage: 2 }, tenantId);
 
       expect(result.items).toHaveLength(2);
       expect(result.pagination.totalItems).toBe(3);
@@ -186,20 +236,21 @@ describe('QuoteRepository (integration)', () => {
 
   describe('softDeleteQuote', () => {
     it('soft-deletes a quote and hides it from subsequent finds', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      await quoteRepository.softDeleteQuote(id, tenantId);
+      await softDeleteQuote(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.findQuoteById(id, tenantId);
+      const result = await findQuoteById(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.softDeleteQuote('cltest000000000000none0001', tenantId)
+        softDeleteQuote(getTestPrisma(), 'cltest000000000000none0001', tenantId)
       ).rejects.toThrow();
     });
 
@@ -209,24 +260,26 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      await expect(quoteRepository.softDeleteQuote(id, tenantId)).rejects.toThrow();
+      await expect(softDeleteQuote(getTestPrisma(), id, tenantId)).rejects.toThrow();
     });
   });
 
   describe('markQuoteAsAccepted', () => {
     it('transitions status from SENT to ACCEPTED', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      const result = await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -234,7 +287,8 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.markQuoteAsAccepted(
+      const result = await markQuoteAsAccepted(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId
       );
@@ -247,25 +301,27 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
         otherTenantId
       );
-      await quoteRepository.markQuoteAsSent(id, otherTenantId);
+      await markQuoteAsSent(getTestPrisma(), id, otherTenantId);
 
-      const result = await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      const result = await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('markQuoteAsSent', () => {
     it('transitions status from DRAFT to SENT', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const result = await quoteRepository.markQuoteAsSent(id, tenantId);
+      const result = await markQuoteAsSent(getTestPrisma(), id, tenantId);
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -273,20 +329,21 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.markQuoteAsSent('cltest000000000000none0001', tenantId);
+      const result = await markQuoteAsSent(getTestPrisma(), 'cltest000000000000none0001', tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('markQuoteAsRejected', () => {
     it('transitions status from SENT to REJECTED', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.markQuoteAsRejected(id, tenantId, 'Too expensive');
+      const result = await markQuoteAsRejected(getTestPrisma(), id, tenantId, 'Too expensive');
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -294,7 +351,8 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.markQuoteAsRejected(
+      const result = await markQuoteAsRejected(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId,
         'reason'
@@ -305,7 +363,8 @@ describe('QuoteRepository (integration)', () => {
 
   describe('duplicateQuote', () => {
     it('creates an independent copy with DRAFT status and a new quote number', async () => {
-      const { id, quoteNumber } = await quoteRepository.createQuoteWithItems(
+      const { id, quoteNumber } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({
           customerId,
           items: [createQuoteItemInput({ description: 'Original item', quantity: 2 })]
@@ -313,63 +372,66 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      const duplicate = await quoteRepository.duplicateQuote(id, tenantId);
+      const duplicate = await duplicateQuote(getTestPrisma(), id, tenantId);
 
       expect(duplicate.id).not.toBe(id);
       expect(duplicate.quoteNumber).not.toBe(quoteNumber);
 
-      const duplicateDetails = await quoteRepository.findQuoteById(duplicate.id, tenantId);
+      const duplicateDetails = await findQuoteById(getTestPrisma(), duplicate.id, tenantId);
       expect(duplicateDetails?.status).toBe('DRAFT');
       expect(duplicateDetails?.items).toHaveLength(1);
     });
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.duplicateQuote('cltest000000000000none0001', tenantId)
+        duplicateQuote(getTestPrisma(), 'cltest000000000000none0001', tenantId)
       ).rejects.toThrow('not found');
     });
   });
 
   describe('createQuoteVersion', () => {
     it('creates a new version linked to the parent and starts as DRAFT', async () => {
-      const { id: parentId } = await quoteRepository.createQuoteWithItems(
+      const { id: parentId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const newVersion = await quoteRepository.createQuoteVersion(parentId, tenantId);
+      const newVersion = await createQuoteVersion(getTestPrisma(), parentId, tenantId);
 
       expect(newVersion.id).not.toBe(parentId);
       expect(newVersion.versionNumber).toBe(2);
 
-      const versionDetails = await quoteRepository.findQuoteById(newVersion.id, tenantId);
+      const versionDetails = await findQuoteById(getTestPrisma(), newVersion.id, tenantId);
       expect(versionDetails?.status).toBe('DRAFT');
       expect(versionDetails?.parentQuoteId).toBe(parentId);
     });
 
     it('throws when parent quote not found', async () => {
       await expect(
-        quoteRepository.createQuoteVersion('cltest000000000000none0001', tenantId)
+        createQuoteVersion(getTestPrisma(), 'cltest000000000000none0001', tenantId)
       ).rejects.toThrow('not found');
     });
   });
 
   describe('toggleQuoteFavourite', () => {
     it('toggles isFavourite on and off', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const toggled = await quoteRepository.toggleQuoteFavourite(id, tenantId);
+      const toggled = await toggleQuoteFavourite(getTestPrisma(), id, tenantId);
       expect(toggled?.isFavourite).toBe(true);
 
-      const toggledBack = await quoteRepository.toggleQuoteFavourite(id, tenantId);
+      const toggledBack = await toggleQuoteFavourite(getTestPrisma(), id, tenantId);
       expect(toggledBack?.isFavourite).toBe(false);
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.toggleQuoteFavourite(
+      const result = await toggleQuoteFavourite(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId
       );
@@ -384,24 +446,26 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      const result = await quoteRepository.toggleQuoteFavourite(id, tenantId);
+      const result = await toggleQuoteFavourite(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('findQuoteMetadata', () => {
     it('returns lightweight metadata with numeric fields but no items array', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const result = await quoteRepository.findQuoteMetadata(id, tenantId);
+      const result = await findQuoteMetadata(getTestPrisma(), id, tenantId);
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -412,7 +476,8 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null for a non-existent ID', async () => {
-      const result = await quoteRepository.findQuoteMetadata(
+      const result = await findQuoteMetadata(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId
       );
@@ -425,19 +490,21 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      const result = await quoteRepository.findQuoteMetadata(id, tenantId);
+      const result = await findQuoteMetadata(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('findQuoteItems', () => {
     it('returns items for a quote with numeric prices', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({
           customerId,
           items: [
@@ -448,7 +515,7 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      const items = await quoteRepository.findQuoteItems(id);
+      const items = await findQuoteItems(getTestPrisma(), id);
 
       expect(items).toHaveLength(2);
       expect(typeof items[0].unitPrice).toBe('number');
@@ -459,21 +526,22 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns empty array for a non-existent quote', async () => {
-      const items = await quoteRepository.findQuoteItems('cltest000000000000none0001');
+      const items = await findQuoteItems(getTestPrisma(), 'cltest000000000000none0001');
       expect(items).toHaveLength(0);
     });
   });
 
   describe('findQuoteStatusHistory', () => {
     it('returns history entries in ascending order after status changes', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
-      await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
+      await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
 
-      const history = await quoteRepository.findQuoteStatusHistory(id);
+      const history = await findQuoteStatusHistory(getTestPrisma(), id);
 
       expect(history.length).toBeGreaterThanOrEqual(3);
       expect(history[0].status).toBe('DRAFT');
@@ -481,21 +549,21 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns empty array for a non-existent quote', async () => {
-      const history = await quoteRepository.findQuoteStatusHistory('cltest000000000000none0001');
+      const history = await findQuoteStatusHistory(getTestPrisma(), 'cltest000000000000none0001');
       expect(history).toHaveLength(0);
     });
   });
 
   describe('generateQuoteNumber', () => {
     it('returns a number in QUO-YYYY-NNNN format starting at 0001', async () => {
-      const number = await quoteRepository.generateQuoteNumber(tenantId);
+      const number = await generateQuoteNumber(getTestPrisma(), tenantId);
       expect(number).toMatch(/^QUO-\d{4}-0001$/);
     });
 
     it('increments based on the highest existing quote number for the tenant', async () => {
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
 
-      const next = await quoteRepository.generateQuoteNumber(tenantId);
+      const next = await generateQuoteNumber(getTestPrisma(), tenantId);
       const seq = parseInt(next.split('-')[2], 10);
       expect(seq).toBe(2);
     });
@@ -503,68 +571,73 @@ describe('QuoteRepository (integration)', () => {
 
   describe('quoteNumberExists', () => {
     it('returns true when the quote number exists', async () => {
-      const { quoteNumber } = await quoteRepository.createQuoteWithItems(
+      const { quoteNumber } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const exists = await quoteRepository.quoteNumberExists(quoteNumber);
+      const exists = await quoteNumberExists(getTestPrisma(), quoteNumber);
       expect(exists).toBe(true);
     });
 
     it('returns false when the quote number does not exist', async () => {
-      const exists = await quoteRepository.quoteNumberExists('QUO-9999-9999');
+      const exists = await quoteNumberExists(getTestPrisma(), 'QUO-9999-9999');
       expect(exists).toBe(false);
     });
 
     it('returns false for own quote when excludeId is provided', async () => {
-      const { id, quoteNumber } = await quoteRepository.createQuoteWithItems(
+      const { id, quoteNumber } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const exists = await quoteRepository.quoteNumberExists(quoteNumber, id);
+      const exists = await quoteNumberExists(getTestPrisma(), quoteNumber, id);
       expect(exists).toBe(false);
     });
   });
 
   describe('countQuoteVersions', () => {
     it('returns 1 for a quote with no child versions', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
 
-      const count = await quoteRepository.countQuoteVersions(id);
-      expect(count).toBe(1);
+      const versions = await getQuoteVersions(getTestPrisma(), id);
+      expect(versions).toHaveLength(1);
     });
 
     it('returns 2 after creating a new version', async () => {
-      const { id: parentId } = await quoteRepository.createQuoteWithItems(
+      const { id: parentId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const newVersion = await quoteRepository.createQuoteVersion(parentId, tenantId);
+      const newVersion = await createQuoteVersion(getTestPrisma(), parentId, tenantId);
 
-      const count = await quoteRepository.countQuoteVersions(newVersion.id);
-      expect(count).toBe(2);
+      const versions = await getQuoteVersions(getTestPrisma(), newVersion.id);
+      expect(versions).toHaveLength(2);
     });
 
     it('returns 0 for a non-existent quote', async () => {
-      const count = await quoteRepository.countQuoteVersions('cltest000000000000none0001');
-      expect(count).toBe(0);
+      const versions = await getQuoteVersions(getTestPrisma(), 'cltest000000000000none0001');
+      expect(versions).toHaveLength(0);
     });
   });
 
   describe('getQuoteVersions', () => {
     it('returns all versions in the chain ordered by version number', async () => {
-      const { id: parentId } = await quoteRepository.createQuoteWithItems(
+      const { id: parentId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      await quoteRepository.createQuoteVersion(parentId, tenantId);
+      await createQuoteVersion(getTestPrisma(), parentId, tenantId);
 
-      const versions = await quoteRepository.getQuoteVersions(parentId);
+      const versions = await getQuoteVersions(getTestPrisma(), parentId);
 
       expect(versions).toHaveLength(2);
       expect(versions[0].versionNumber).toBe(1);
@@ -572,14 +645,15 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns empty array for a non-existent quote', async () => {
-      const versions = await quoteRepository.getQuoteVersions('cltest000000000000none0001');
+      const versions = await getQuoteVersions(getTestPrisma(), 'cltest000000000000none0001');
       expect(versions).toHaveLength(0);
     });
   });
 
   describe('updateQuoteWithItems', () => {
     it('replaces items and returns updated quote with recalculated amount', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({
           customerId,
           items: [createQuoteItemInput({ description: 'Old item', unitPrice: 100 })]
@@ -587,7 +661,8 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      const updated = await quoteRepository.updateQuoteWithItems(
+      const updated = await updateQuoteWithItems(
+        getTestPrisma(),
         id,
         {
           id,
@@ -611,12 +686,14 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('creates a status history entry when status changes', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      await quoteRepository.updateQuoteWithItems(
+      await updateQuoteWithItems(
+        getTestPrisma(),
         id,
         {
           id,
@@ -632,13 +709,14 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      const history = await quoteRepository.findQuoteStatusHistory(id);
+      const history = await findQuoteStatusHistory(getTestPrisma(), id);
       expect(history.some((h) => h.status === 'SENT')).toBe(true);
     });
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.updateQuoteWithItems(
+        updateQuoteWithItems(
+          getTestPrisma(),
           'cltest000000000000none0001',
           {
             id: 'cltest000000000000none0001',
@@ -659,13 +737,14 @@ describe('QuoteRepository (integration)', () => {
 
   describe('markQuoteAsOnHold', () => {
     it('transitions from SENT to ON_HOLD and records the reason', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.markQuoteAsOnHold(id, tenantId, 'Waiting on approval');
+      const result = await markQuoteAsOnHold(getTestPrisma(), id, tenantId, 'Waiting on approval');
 
       expect(result).not.toBeNull();
       if (!result) throw new Error('Expected result to not be null');
@@ -673,7 +752,8 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.markQuoteAsOnHold(
+      const result = await markQuoteAsOnHold(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId
       );
@@ -686,25 +766,28 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
         otherTenantId
       );
-      await quoteRepository.markQuoteAsSent(id, otherTenantId);
+      await markQuoteAsSent(getTestPrisma(), id, otherTenantId);
 
-      const result = await quoteRepository.markQuoteAsOnHold(id, tenantId);
+      const result = await markQuoteAsOnHold(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('markQuoteAsCancelled', () => {
     it('transitions from DRAFT to CANCELLED with a reason', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const result = await quoteRepository.markQuoteAsCancelled(
+      const result = await markQuoteAsCancelled(
+        getTestPrisma(),
         id,
         tenantId,
         'Customer changed mind'
@@ -716,7 +799,8 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns null when quote not found', async () => {
-      const result = await quoteRepository.markQuoteAsCancelled(
+      const result = await markQuoteAsCancelled(
+        getTestPrisma(),
         'cltest000000000000none0001',
         tenantId
       );
@@ -729,26 +813,28 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
 
-      const result = await quoteRepository.markQuoteAsCancelled(id, tenantId);
+      const result = await markQuoteAsCancelled(getTestPrisma(), id, tenantId);
       expect(result).toBeNull();
     });
   });
 
   describe('convertQuoteToInvoice', () => {
     it('creates an invoice from an accepted quote and transitions it to CONVERTED', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
-      await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
+      await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.convertQuoteToInvoice(id, {
+      const result = await convertQuoteToInvoice(getTestPrisma(), id, {
         invoiceNumber: 'INV-2024-C001',
         tenantId,
         gst: 10,
@@ -759,14 +845,14 @@ describe('QuoteRepository (integration)', () => {
       expect(result.invoiceId).toBeDefined();
       expect(result.invoiceNumber).toBe('INV-2024-C001');
 
-      const quote = await quoteRepository.findQuoteById(id, tenantId);
+      const quote = await findQuoteById(getTestPrisma(), id, tenantId);
       expect(quote?.status).toBe('CONVERTED');
       expect(quote?.invoiceId).toBe(result.invoiceId);
     });
 
     it('throws when quote not found', async () => {
       await expect(
-        quoteRepository.convertQuoteToInvoice('cltest000000000000none0001', {
+        convertQuoteToInvoice(getTestPrisma(), 'cltest000000000000none0001', {
           invoiceNumber: 'INV-2024-C002',
           tenantId,
           gst: 10,
@@ -777,13 +863,14 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('throws when status transition is invalid (DRAFT → CONVERTED)', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
       await expect(
-        quoteRepository.convertQuoteToInvoice(id, {
+        convertQuoteToInvoice(getTestPrisma(), id, {
           invoiceNumber: 'INV-2024-C003',
           tenantId,
           gst: 10,
@@ -798,57 +885,63 @@ describe('QuoteRepository (integration)', () => {
     it('expires DRAFT and SENT quotes past their validUntil date', async () => {
       const pastDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 2 days ago
 
-      const { id: draftId } = await quoteRepository.createQuoteWithItems(
+      const { id: draftId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: pastDate }),
         tenantId
       );
-      const { id: sentId } = await quoteRepository.createQuoteWithItems(
+      const { id: sentId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: pastDate }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(sentId, tenantId);
+      await markQuoteAsSent(getTestPrisma(), sentId, tenantId);
 
-      const count = await quoteRepository.checkAndExpireQuotes();
+      const count = await checkAndExpireQuotes(getTestPrisma());
 
       expect(count).toBeGreaterThanOrEqual(2);
 
-      const draftResult = await quoteRepository.findQuoteById(draftId, tenantId);
-      const sentResult = await quoteRepository.findQuoteById(sentId, tenantId);
+      const draftResult = await findQuoteById(getTestPrisma(), draftId, tenantId);
+      const sentResult = await findQuoteById(getTestPrisma(), sentId, tenantId);
       expect(draftResult?.status).toBe('EXPIRED');
       expect(sentResult?.status).toBe('EXPIRED');
     });
 
     it('does not expire quotes with a future validUntil', async () => {
       const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT', validUntil: futureDate }),
         tenantId
       );
 
-      await quoteRepository.checkAndExpireQuotes();
+      await checkAndExpireQuotes(getTestPrisma());
 
-      const result = await quoteRepository.findQuoteById(id, tenantId);
+      const result = await findQuoteById(getTestPrisma(), id, tenantId);
       expect(result?.status).toBe('DRAFT');
     });
 
     it('returns 0 when no quotes are due to expire', async () => {
-      const count = await quoteRepository.checkAndExpireQuotes();
+      const count = await checkAndExpireQuotes(getTestPrisma());
       expect(count).toBe(0);
     });
   });
 
   describe('bulkUpdateQuoteStatus', () => {
     it('updates multiple quotes and returns success for each', async () => {
-      const q1 = await quoteRepository.createQuoteWithItems(
+      const q1 = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      const q2 = await quoteRepository.createQuoteWithItems(
+      const q2 = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const results = await quoteRepository.bulkUpdateQuoteStatus(
+      const results = await bulkUpdateQuoteStatus(
+        getTestPrisma(),
         [q1.id, q2.id],
         QuoteStatus.SENT,
         tenantId
@@ -859,12 +952,14 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns failure for a non-existent quote without failing the batch', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const results = await quoteRepository.bulkUpdateQuoteStatus(
+      const results = await bulkUpdateQuoteStatus(
+        getTestPrisma(),
         [id, 'cltest000000000000none0001'],
         QuoteStatus.SENT,
         tenantId
@@ -875,12 +970,14 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns failure for an invalid status transition (DRAFT → ACCEPTED)', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const results = await quoteRepository.bulkUpdateQuoteStatus(
+      const results = await bulkUpdateQuoteStatus(
+        getTestPrisma(),
         [id],
         QuoteStatus.ACCEPTED,
         tenantId
@@ -891,12 +988,14 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('succeeds without error when quote is already at the target status', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const results = await quoteRepository.bulkUpdateQuoteStatus(
+      const results = await bulkUpdateQuoteStatus(
+        getTestPrisma(),
         [id],
         QuoteStatus.DRAFT,
         tenantId
@@ -911,12 +1010,18 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
         otherTenantId
       );
 
-      const results = await quoteRepository.bulkUpdateQuoteStatus([id], QuoteStatus.SENT, tenantId);
+      const results = await bulkUpdateQuoteStatus(
+        getTestPrisma(),
+        [id],
+        QuoteStatus.SENT,
+        tenantId
+      );
 
       expect(results[0].success).toBe(false);
     });
@@ -924,37 +1029,41 @@ describe('QuoteRepository (integration)', () => {
 
   describe('bulkSoftDeleteQuotes', () => {
     it('soft-deletes DRAFT quotes and returns success for each', async () => {
-      const q1 = await quoteRepository.createQuoteWithItems(
+      const q1 = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      const q2 = await quoteRepository.createQuoteWithItems(
+      const q2 = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
 
-      const results = await quoteRepository.bulkSoftDeleteQuotes([q1.id, q2.id], tenantId);
+      const results = await bulkSoftDeleteQuotes(getTestPrisma(), [q1.id, q2.id], tenantId);
 
       expect(results.every((r) => r.success)).toBe(true);
-      expect(await quoteRepository.findQuoteById(q1.id, tenantId)).toBeNull();
-      expect(await quoteRepository.findQuoteById(q2.id, tenantId)).toBeNull();
+      expect(await findQuoteById(getTestPrisma(), q1.id, tenantId)).toBeNull();
+      expect(await findQuoteById(getTestPrisma(), q2.id, tenantId)).toBeNull();
     });
 
     it('rejects non-DRAFT quotes and returns an error message', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
 
-      const results = await quoteRepository.bulkSoftDeleteQuotes([id], tenantId);
+      const results = await bulkSoftDeleteQuotes(getTestPrisma(), [id], tenantId);
 
       expect(results[0].success).toBe(false);
       expect(results[0].error).toContain('DRAFT');
     });
 
     it('returns failure for a non-existent quote without throwing', async () => {
-      const results = await quoteRepository.bulkSoftDeleteQuotes(
+      const results = await bulkSoftDeleteQuotes(
+        getTestPrisma(),
         ['cltest000000000000none0001'],
         tenantId
       );
@@ -966,14 +1075,15 @@ describe('QuoteRepository (integration)', () => {
 
   describe('createQuoteItemAttachment / findQuoteItemAttachments', () => {
     it('creates an attachment and retrieves it by item ID', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
       const itemId = items[0].id;
 
-      await quoteRepository.createQuoteItemAttachment({
+      await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: itemId,
         fileName: 'design.png',
         fileSize: 12345,
@@ -982,48 +1092,51 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/design.png'
       });
 
-      const attachments = await quoteRepository.findQuoteItemAttachments(itemId);
+      const attachments = await findQuoteItemAttachments(getTestPrisma(), itemId);
       expect(attachments).toHaveLength(1);
       expect(attachments[0].fileName).toBe('design.png');
     });
 
     it('returns empty array when item has no attachments', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
 
-      const attachments = await quoteRepository.findQuoteItemAttachments(items[0].id);
+      const attachments = await findQuoteItemAttachments(getTestPrisma(), items[0].id);
       expect(attachments).toHaveLength(0);
     });
   });
 
   describe('updateQuoteItemNotes', () => {
     it('updates the notes field and persists to the database', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
       const itemId = items[0].id;
 
-      await quoteRepository.updateQuoteItemNotes(itemId, 'Rush order — priority handling');
+      await updateQuoteItemNotes(getTestPrisma(), itemId, 'Rush order — priority handling');
 
-      const updatedItems = await quoteRepository.findQuoteItems(quoteId);
+      const updatedItems = await findQuoteItems(getTestPrisma(), quoteId);
       expect(updatedItems[0].notes).toBe('Rush order — priority handling');
     });
 
     it('clears notes when an empty string is provided', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
-      await quoteRepository.updateQuoteItemNotes(items[0].id, 'Some note');
-      await quoteRepository.updateQuoteItemNotes(items[0].id, '');
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
+      await updateQuoteItemNotes(getTestPrisma(), items[0].id, 'Some note');
+      await updateQuoteItemNotes(getTestPrisma(), items[0].id, '');
 
-      const updatedItems = await quoteRepository.findQuoteItems(quoteId);
+      const updatedItems = await findQuoteItems(getTestPrisma(), quoteId);
       expect(updatedItems[0].notes).toBe('');
     });
   });
@@ -1031,40 +1144,43 @@ describe('QuoteRepository (integration)', () => {
   // -- updateQuoteItemColors ---------------------------------------------------
   describe('updateQuoteItemColors', () => {
     it('persists an array of colour hex values', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
 
-      await quoteRepository.updateQuoteItemColors(items[0].id, ['#FF0000', '#00FF00', '#0000FF']);
+      await updateQuoteItemColors(getTestPrisma(), items[0].id, ['#FF0000', '#00FF00', '#0000FF']);
 
-      const updatedItems = await quoteRepository.findQuoteItems(quoteId);
+      const updatedItems = await findQuoteItems(getTestPrisma(), quoteId);
       expect(updatedItems[0].colors).toEqual(['#FF0000', '#00FF00', '#0000FF']);
     });
 
     it('replaces existing colours when updated again', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
-      await quoteRepository.updateQuoteItemColors(items[0].id, ['#AAAAAA']);
-      await quoteRepository.updateQuoteItemColors(items[0].id, ['#111111', '#222222']);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
+      await updateQuoteItemColors(getTestPrisma(), items[0].id, ['#AAAAAA']);
+      await updateQuoteItemColors(getTestPrisma(), items[0].id, ['#111111', '#222222']);
 
-      const updatedItems = await quoteRepository.findQuoteItems(quoteId);
+      const updatedItems = await findQuoteItems(getTestPrisma(), quoteId);
       expect(updatedItems[0].colors).toEqual(['#111111', '#222222']);
     });
   });
 
   describe('findQuoteItemAttachmentById', () => {
     it('returns the attachment when found', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
-      const attachment = await quoteRepository.createQuoteItemAttachment({
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
+      const attachment = await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: items[0].id,
         fileName: 'mockup.pdf',
         fileSize: 99999,
@@ -1073,13 +1189,14 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/mockup.pdf'
       });
 
-      const result = await quoteRepository.findQuoteItemAttachmentById(attachment.id);
+      const result = await findQuoteItemAttachmentById(getTestPrisma(), attachment.id);
       expect(result).not.toBeNull();
       expect(result?.fileName).toBe('mockup.pdf');
     });
 
     it('returns null for a non-existent attachment', async () => {
-      const result = await quoteRepository.findQuoteItemAttachmentById(
+      const result = await findQuoteItemAttachmentById(
+        getTestPrisma(),
         'cltest000000000000none0001'
       );
       expect(result).toBeNull();
@@ -1088,12 +1205,13 @@ describe('QuoteRepository (integration)', () => {
 
   describe('deleteQuoteItemAttachment', () => {
     it('deletes attachment and returns true', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
-      const attachment = await quoteRepository.createQuoteItemAttachment({
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
+      const attachment = await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: items[0].id,
         fileName: 'delete-me.png',
         fileSize: 1000,
@@ -1102,27 +1220,28 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/delete-me.png'
       });
 
-      const deleted = await quoteRepository.deleteQuoteItemAttachment(attachment.id);
+      const deleted = await deleteQuoteItemAttachment(getTestPrisma(), attachment.id);
       expect(deleted).toBe(true);
-      expect(await quoteRepository.findQuoteItemAttachmentById(attachment.id)).toBeNull();
+      expect(await findQuoteItemAttachmentById(getTestPrisma(), attachment.id)).toBeNull();
     });
 
     it('returns false for a non-existent attachment', async () => {
-      const result = await quoteRepository.deleteQuoteItemAttachment('cltest000000000000none0001');
+      const result = await deleteQuoteItemAttachment(getTestPrisma(), 'cltest000000000000none0001');
       expect(result).toBe(false);
     });
   });
 
   describe('countQuoteItemAttachments', () => {
     it('returns the correct count of attachments for an item', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
       const itemId = items[0].id;
 
-      await quoteRepository.createQuoteItemAttachment({
+      await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: itemId,
         fileName: 'a.png',
         fileSize: 100,
@@ -1130,7 +1249,7 @@ describe('QuoteRepository (integration)', () => {
         s3Key: 'quotes/a.png',
         s3Url: 'https://s3.example.com/quotes/a.png'
       });
-      await quoteRepository.createQuoteItemAttachment({
+      await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: itemId,
         fileName: 'b.png',
         fileSize: 200,
@@ -1139,33 +1258,35 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/b.png'
       });
 
-      const count = await quoteRepository.countQuoteItemAttachments(itemId);
+      const count = await countQuoteItemAttachments(getTestPrisma(), itemId);
       expect(count).toBe(2);
     });
 
     it('returns 0 when item has no attachments', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
 
-      const count = await quoteRepository.countQuoteItemAttachments(items[0].id);
+      const count = await countQuoteItemAttachments(getTestPrisma(), items[0].id);
       expect(count).toBe(0);
     });
   });
 
   describe('countQuoteItemAttachmentsByS3Key', () => {
     it('counts other attachments sharing the same S3 key, excluding the given ID', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
       const itemId = items[0].id;
       const sharedKey = 'quotes/shared-asset.png';
 
-      const a1 = await quoteRepository.createQuoteItemAttachment({
+      const a1 = await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: itemId,
         fileName: 'copy1.png',
         fileSize: 500,
@@ -1173,7 +1294,7 @@ describe('QuoteRepository (integration)', () => {
         s3Key: sharedKey,
         s3Url: 'https://s3.example.com/quotes/shared-asset.png'
       });
-      await quoteRepository.createQuoteItemAttachment({
+      await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: itemId,
         fileName: 'copy2.png',
         fileSize: 500,
@@ -1182,17 +1303,18 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/shared-asset.png'
       });
 
-      const count = await quoteRepository.countQuoteItemAttachmentsByS3Key(sharedKey, a1.id);
+      const count = await countQuoteItemAttachmentsByS3Key(getTestPrisma(), sharedKey, a1.id);
       expect(count).toBe(1);
     });
 
     it('returns 0 when no other attachments share the S3 key', async () => {
-      const { id: quoteId } = await quoteRepository.createQuoteWithItems(
+      const { id: quoteId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId }),
         tenantId
       );
-      const items = await quoteRepository.findQuoteItems(quoteId);
-      const attachment = await quoteRepository.createQuoteItemAttachment({
+      const items = await findQuoteItems(getTestPrisma(), quoteId);
+      const attachment = await createQuoteItemAttachment(getTestPrisma(), {
         quoteItemId: items[0].id,
         fileName: 'unique.png',
         fileSize: 100,
@@ -1201,7 +1323,8 @@ describe('QuoteRepository (integration)', () => {
         s3Url: 'https://s3.example.com/quotes/unique-asset.png'
       });
 
-      const count = await quoteRepository.countQuoteItemAttachmentsByS3Key(
+      const count = await countQuoteItemAttachmentsByS3Key(
+        getTestPrisma(),
         'quotes/unique-asset.png',
         attachment.id
       );
@@ -1211,17 +1334,19 @@ describe('QuoteRepository (integration)', () => {
 
   describe('getQuoteStatistics', () => {
     it('returns correct status counts for the tenant', async () => {
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      const { id: sentId } = await quoteRepository.createQuoteWithItems(
+      const { id: sentId } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(sentId, tenantId);
+      await markQuoteAsSent(getTestPrisma(), sentId, tenantId);
 
-      const stats = await quoteRepository.getQuoteStatistics(tenantId);
+      const stats = await getQuoteStatistics(getTestPrisma(), tenantId);
 
       expect(stats.total).toBe(2);
       expect(stats.draft).toBe(1);
@@ -1235,18 +1360,19 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id }),
         otherTenantId
       );
-      await quoteRepository.createQuoteWithItems(createQuoteInput({ customerId }), tenantId);
+      await createQuoteWithItems(getTestPrisma(), createQuoteInput({ customerId }), tenantId);
 
-      const stats = await quoteRepository.getQuoteStatistics(tenantId);
+      const stats = await getQuoteStatistics(getTestPrisma(), tenantId);
       expect(stats.total).toBe(1);
     });
 
     it('returns zeroed stats for a tenant with no quotes', async () => {
-      const stats = await quoteRepository.getQuoteStatistics(tenantId);
+      const stats = await getQuoteStatistics(getTestPrisma(), tenantId);
       expect(stats.total).toBe(0);
       expect(stats.totalQuotedValue).toBe(0);
     });
@@ -1255,16 +1381,18 @@ describe('QuoteRepository (integration)', () => {
       const past = new Date(2020, 0, 15);
       const recent = new Date();
 
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, issuedDate: past, validUntil: new Date(2020, 1, 15) }),
         tenantId
       );
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, issuedDate: recent }),
         tenantId
       );
 
-      const stats = await quoteRepository.getQuoteStatistics(tenantId, {
+      const stats = await getQuoteStatistics(getTestPrisma(), tenantId, {
         startDate: new Date(2021, 0, 1)
       });
 
@@ -1274,12 +1402,13 @@ describe('QuoteRepository (integration)', () => {
 
   describe('getMonthlyQuoteValueTrend', () => {
     it('returns monthly aggregated data including the current month', async () => {
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, issuedDate: new Date() }),
         tenantId
       );
 
-      const trend = await quoteRepository.getMonthlyQuoteValueTrend(12, tenantId);
+      const trend = await getMonthlyQuoteValueTrend(getTestPrisma(), tenantId, 12);
 
       expect(Array.isArray(trend)).toBe(true);
       expect(trend.length).toBeGreaterThanOrEqual(1);
@@ -1287,33 +1416,34 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns empty array for a tenant with no quotes', async () => {
-      const trend = await quoteRepository.getMonthlyQuoteValueTrend(12, tenantId);
+      const trend = await getMonthlyQuoteValueTrend(getTestPrisma(), tenantId, 12);
       expect(trend).toHaveLength(0);
     });
 
     it('respects the limit parameter', async () => {
-      const trend = await quoteRepository.getMonthlyQuoteValueTrend(2, tenantId);
+      const trend = await getMonthlyQuoteValueTrend(getTestPrisma(), tenantId, 2);
       expect(trend.length).toBeLessThanOrEqual(2);
     });
   });
 
   describe('getConversionFunnel', () => {
     it('returns funnel counts with correct accepted value', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
-      await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
+      await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
 
-      const funnel = await quoteRepository.getConversionFunnel(tenantId);
+      const funnel = await getConversionFunnel(getTestPrisma(), tenantId);
 
       expect(funnel.accepted).toBe(1);
       expect(funnel.acceptedValue).toBeGreaterThan(0);
     });
 
     it('returns zeros for a tenant with no quotes', async () => {
-      const funnel = await quoteRepository.getConversionFunnel(tenantId);
+      const funnel = await getConversionFunnel(getTestPrisma(), tenantId);
       expect(funnel.sent).toBe(0);
       expect(funnel.accepted).toBe(0);
       expect(funnel.converted).toBe(0);
@@ -1325,13 +1455,14 @@ describe('QuoteRepository (integration)', () => {
         createCustomerInput(),
         otherTenantId
       );
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId: otherCustomer.id, status: 'DRAFT' }),
         otherTenantId
       );
-      await quoteRepository.markQuoteAsSent(id, otherTenantId);
+      await markQuoteAsSent(getTestPrisma(), id, otherTenantId);
 
-      const funnel = await quoteRepository.getConversionFunnel(tenantId);
+      const funnel = await getConversionFunnel(getTestPrisma(), tenantId);
       expect(funnel.sent).toBe(0);
     });
   });
@@ -1343,11 +1474,13 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, items: [createQuoteItemInput({ unitPrice: 100 })] }),
         tenantId
       );
-      await quoteRepository.createQuoteWithItems(
+      await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({
           customerId: bigSpender.id,
           items: [createQuoteItemInput({ unitPrice: 5000 })]
@@ -1355,7 +1488,7 @@ describe('QuoteRepository (integration)', () => {
         tenantId
       );
 
-      const top = await quoteRepository.getTopCustomersByQuotedValue(5, tenantId);
+      const top = await getTopCustomersByQuotedValue(getTestPrisma(), tenantId, 5);
 
       expect(top).toHaveLength(2);
       expect(top[0].totalQuotedValue).toBeGreaterThan(top[1].totalQuotedValue);
@@ -1363,7 +1496,7 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns empty array for a tenant with no quotes', async () => {
-      const top = await quoteRepository.getTopCustomersByQuotedValue(5, tenantId);
+      const top = await getTopCustomersByQuotedValue(getTestPrisma(), tenantId, 5);
       expect(top).toHaveLength(0);
     });
 
@@ -1373,27 +1506,29 @@ describe('QuoteRepository (integration)', () => {
           createCustomerInput({ email: `topcustomer${i}@example.com` }),
           tenantId
         );
-        await quoteRepository.createQuoteWithItems(
+        await createQuoteWithItems(
+          getTestPrisma(),
           createQuoteInput({ customerId: c.id }),
           tenantId
         );
       }
 
-      const top = await quoteRepository.getTopCustomersByQuotedValue(2, tenantId);
+      const top = await getTopCustomersByQuotedValue(getTestPrisma(), tenantId, 2);
       expect(top).toHaveLength(2);
     });
   });
 
   describe('getAverageTimeToDecision', () => {
     it('returns numeric average fields after quotes reach a decision', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
-      await quoteRepository.markQuoteAsAccepted(id, tenantId);
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
+      await markQuoteAsAccepted(getTestPrisma(), id, tenantId);
 
-      const result = await quoteRepository.getAverageTimeToDecision(tenantId);
+      const result = await getAverageTimeToDecision(getTestPrisma(), tenantId);
 
       expect(typeof result.avgDaysToAccept).toBe('number');
       expect(typeof result.avgDaysToReject).toBe('number');
@@ -1402,7 +1537,7 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('returns zeros when no quotes have reached a decision', async () => {
-      const result = await quoteRepository.getAverageTimeToDecision(tenantId);
+      const result = await getAverageTimeToDecision(getTestPrisma(), tenantId);
 
       expect(result.avgDaysToAccept).toBe(0);
       expect(result.avgDaysToReject).toBe(0);
@@ -1410,14 +1545,15 @@ describe('QuoteRepository (integration)', () => {
     });
 
     it('calculates rejection average independently from acceptance', async () => {
-      const { id } = await quoteRepository.createQuoteWithItems(
+      const { id } = await createQuoteWithItems(
+        getTestPrisma(),
         createQuoteInput({ customerId, status: 'DRAFT' }),
         tenantId
       );
-      await quoteRepository.markQuoteAsSent(id, tenantId);
-      await quoteRepository.markQuoteAsRejected(id, tenantId, 'Too expensive');
+      await markQuoteAsSent(getTestPrisma(), id, tenantId);
+      await markQuoteAsRejected(getTestPrisma(), id, tenantId, 'Too expensive');
 
-      const result = await quoteRepository.getAverageTimeToDecision(tenantId);
+      const result = await getAverageTimeToDecision(getTestPrisma(), tenantId);
 
       expect(result.avgDaysToReject).toBeGreaterThanOrEqual(0);
       expect(result.avgDaysToAccept).toBe(0);

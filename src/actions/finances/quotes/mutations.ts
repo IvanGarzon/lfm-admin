@@ -1,7 +1,34 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { QuoteRepository } from '@/repositories/quote-repository';
+import {
+  createQuoteWithItems,
+  updateQuoteWithItems,
+  convertQuoteToInvoice as convertQuoteToInvoiceDb,
+  checkAndExpireQuotes as checkAndExpireQuotesDb,
+  softDeleteQuote,
+  createQuoteVersion as createQuoteVersionDb,
+  createQuoteItemAttachment,
+  updateQuoteItemNotes as updateQuoteItemNotesDb,
+  updateQuoteItemColors as updateQuoteItemColorsDb,
+  deleteQuoteItemAttachment as deleteQuoteItemAttachmentDb,
+  toggleQuoteFavourite as toggleQuoteFavouriteDb,
+  duplicateQuote as duplicateQuoteDb,
+  bulkUpdateQuoteStatus as bulkUpdateQuoteStatusDb,
+  bulkSoftDeleteQuotes
+} from '@/db/quotes/mutations';
+import {
+  findQuoteById,
+  findQuoteItemAttachmentById,
+  countQuoteItemAttachmentsByS3Key
+} from '@/db/quotes/queries';
+import {
+  markQuoteAsAccepted as markAsAccepted,
+  markQuoteAsOnHold as markAsOnHold,
+  markQuoteAsCancelled as markAsCancelled,
+  markQuoteAsRejected as markAsRejected,
+  markQuoteAsSent as markAsSent
+} from '@/db/quotes/status';
 import { generateInvoiceNumber } from '@/db/invoices/identifiers';
 import { findInvoiceByIdWithDetails } from '@/db/invoices/queries';
 import { EmailAuditRepository } from '@/repositories/email-audit-repository';
@@ -36,7 +63,6 @@ import { ALLOWED_IMAGE_MIME_TYPES } from '@/lib/file-constants';
 import { queueQuoteEmail, queueInvoiceEmail } from '@/services/email-queue.service';
 import { getTenantBranding } from '@/actions/tenant/queries';
 
-const quoteRepo = new QuoteRepository(prisma);
 const emailAuditRepo = new EmailAuditRepository(prisma);
 
 /**
@@ -52,7 +78,7 @@ export const createQuote = withTenantPermission<
   try {
     // Validate input
     const validatedData = CreateQuoteSchema.parse(data);
-    const quote = await quoteRepo.createQuoteWithItems(validatedData, ctx.tenantId, ctx.userId);
+    const quote = await createQuoteWithItems(prisma, validatedData, ctx.tenantId, ctx.userId);
     revalidatePath('/finances/quotes');
 
     return {
@@ -75,12 +101,13 @@ export const updateQuote = withTenantPermission<UpdateQuoteInput, { id: string }
   async (ctx, data) => {
     try {
       const validatedData = UpdateQuoteSchema.parse(data);
-      const existing = await quoteRepo.findQuoteById(validatedData.id, ctx.tenantId);
+      const existing = await findQuoteById(prisma, validatedData.id, ctx.tenantId);
       if (!existing) {
         return { success: false, error: 'Quote not found' };
       }
 
-      const quote = await quoteRepo.updateQuoteWithItems(
+      const quote = await updateQuoteWithItems(
+        prisma,
         validatedData.id,
         validatedData,
         ctx.tenantId,
@@ -112,7 +139,7 @@ export const markQuoteAsAccepted = withTenantPermission<MarkQuoteAsAcceptedInput
   async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsAcceptedSchema.parse(data);
-      const quote = await quoteRepo.markQuoteAsAccepted(validatedData.id, ctx.tenantId, ctx.userId);
+      const quote = await markAsAccepted(prisma, validatedData.id, ctx.tenantId, ctx.userId);
 
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -139,7 +166,8 @@ export const markQuoteAsRejected = withTenantPermission<MarkQuoteAsRejectedInput
   async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsRejectedSchema.parse(data);
-      const quote = await quoteRepo.markQuoteAsRejected(
+      const quote = await markAsRejected(
+        prisma,
         validatedData.id,
         ctx.tenantId,
         validatedData.rejectReason,
@@ -174,7 +202,7 @@ export const markQuoteAsSent = withTenantPermission<
     const { id, options } = data;
 
     // Fetch quote with customer details
-    const quote = await quoteRepo.markQuoteAsSent(id, ctx.tenantId, ctx.userId);
+    const quote = await markAsSent(prisma, id, ctx.tenantId, ctx.userId);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -218,7 +246,8 @@ export const markQuoteAsOnHold = withTenantPermission<MarkQuoteAsOnHoldInput, { 
   async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsOnHoldSchema.parse(data);
-      const quote = await quoteRepo.markQuoteAsOnHold(
+      const quote = await markAsOnHold(
+        prisma,
         validatedData.id,
         ctx.tenantId,
         validatedData.reason,
@@ -250,7 +279,8 @@ export const markQuoteAsCancelled = withTenantPermission<MarkQuoteAsCancelledInp
   async (ctx, data) => {
     try {
       const validatedData = MarkQuoteAsCancelledSchema.parse(data);
-      const quote = await quoteRepo.markQuoteAsCancelled(
+      const quote = await markAsCancelled(
+        prisma,
         validatedData.id,
         ctx.tenantId,
         validatedData.cancelReason,
@@ -288,7 +318,8 @@ export const convertQuoteToInvoice = withTenantPermission<
     const invoiceNumber = await generateInvoiceNumber(prisma, ctx.tenantId);
 
     // Convert quote to invoice
-    const result = await quoteRepo.convertQuoteToInvoice(
+    const result = await convertQuoteToInvoiceDb(
+      prisma,
       validatedData.id,
       {
         invoiceNumber,
@@ -341,7 +372,7 @@ export const convertQuoteToInvoice = withTenantPermission<
  */
 export async function checkAndExpireQuotes(): Promise<ActionResult<{ count: number }>> {
   try {
-    const count = await quoteRepo.checkAndExpireQuotes();
+    const count = await checkAndExpireQuotesDb(prisma);
 
     if (count > 0) {
       revalidatePath('/finances/quotes');
@@ -364,7 +395,7 @@ export const deleteQuote = withTenantPermission<string, { id: string }>(
   'canManageQuotes',
   async (ctx, id) => {
     try {
-      await quoteRepo.softDeleteQuote(id, ctx.tenantId);
+      await softDeleteQuote(prisma, id, ctx.tenantId);
 
       revalidatePath('/finances/quotes');
 
@@ -431,7 +462,7 @@ export const uploadQuoteItemAttachment = withTenantPermission<FormData, QuoteIte
       });
 
       // Create database record
-      const attachment = await quoteRepo.createQuoteItemAttachment({
+      const attachment = await createQuoteItemAttachment(prisma, {
         quoteItemId: validatedData.quoteItemId,
         fileName: validatedData.fileName,
         fileSize: validatedData.fileSize,
@@ -478,13 +509,14 @@ export const deleteQuoteItemAttachment = withTenantPermission<
     const validatedData = DeleteItemAttachmentSchema.parse(data);
 
     // Get attachment details
-    const attachment = await quoteRepo.findQuoteItemAttachmentById(validatedData.attachmentId);
+    const attachment = await findQuoteItemAttachmentById(prisma, validatedData.attachmentId);
     if (!attachment) {
       return { success: false, error: 'Attachment not found' };
     }
 
     // Check if other attachments use the same S3 key (e.g. from duplicated quotes)
-    const usageCount = await quoteRepo.countQuoteItemAttachmentsByS3Key(
+    const usageCount = await countQuoteItemAttachmentsByS3Key(
+      prisma,
       attachment.s3Key,
       attachment.id
     );
@@ -495,7 +527,7 @@ export const deleteQuoteItemAttachment = withTenantPermission<
     }
 
     // Delete from database
-    const success = await quoteRepo.deleteQuoteItemAttachment(validatedData.attachmentId);
+    const success = await deleteQuoteItemAttachmentDb(prisma, validatedData.attachmentId);
     if (!success) {
       return { success: false, error: 'Failed to delete attachment record' };
     }
@@ -521,7 +553,7 @@ export const updateQuoteItemNotes = withTenantPermission<
 >('canManageQuotes', async (ctx, data) => {
   try {
     // Update notes in database
-    const quoteItem = await quoteRepo.updateQuoteItemNotes(data.quoteItemId, data.notes);
+    const quoteItem = await updateQuoteItemNotesDb(prisma, data.quoteItemId, data.notes);
 
     revalidatePath(`/finances/quotes/${data.quoteId}`);
 
@@ -562,7 +594,7 @@ export const updateQuoteItemColors = withTenantPermission<
     }
 
     // Update colors in database
-    const quoteItem = await quoteRepo.updateQuoteItemColors(data.quoteItemId, data.colors);
+    const quoteItem = await updateQuoteItemColorsDb(prisma, data.quoteItemId, data.colors);
 
     revalidatePath(`/finances/quotes/${data.quoteId}`);
 
@@ -597,12 +629,13 @@ export const createQuoteVersion = withTenantPermission<
     const validatedData = CreateVersionSchema.parse(data);
 
     // Get parent quote to include its number in the response
-    const parentQuote = await quoteRepo.findQuoteById(validatedData.quoteId, ctx.tenantId);
+    const parentQuote = await findQuoteById(prisma, validatedData.quoteId, ctx.tenantId);
     if (!parentQuote) {
       return { success: false, error: 'Quote not found' };
     }
 
-    const newVersion = await quoteRepo.createQuoteVersion(
+    const newVersion = await createQuoteVersionDb(
+      prisma,
       validatedData.quoteId,
       ctx.tenantId,
       ctx.userId
@@ -637,7 +670,7 @@ export const sendQuoteEmail = withTenantPermission<
 >('canManageQuotes', async (ctx, data) => {
   try {
     // Fetch quote with customer details
-    const quote = await quoteRepo.findQuoteById(data.quoteId, ctx.tenantId);
+    const quote = await findQuoteById(prisma, data.quoteId, ctx.tenantId);
     if (!quote) {
       return { success: false, error: 'Quote not found' };
     }
@@ -694,7 +727,7 @@ export const sendQuoteFollowUp = withTenantPermission<string, { auditId: string;
   async (ctx, quoteId) => {
     try {
       // Fetch quote with customer details
-      const quote = await quoteRepo.findQuoteById(quoteId, ctx.tenantId);
+      const quote = await findQuoteById(prisma, quoteId, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
@@ -773,7 +806,7 @@ export const duplicateQuote = withTenantPermission<string, { id: string; quoteNu
   'canManageQuotes',
   async (ctx, id) => {
     try {
-      const result = await quoteRepo.duplicateQuote(id, ctx.tenantId);
+      const result = await duplicateQuoteDb(prisma, id, ctx.tenantId);
 
       revalidatePath('/finances/quotes');
 
@@ -802,7 +835,8 @@ export const bulkUpdateQuoteStatus = withTenantPermission<
   }
 >('canManageQuotes', async (ctx, data) => {
   try {
-    const results = await quoteRepo.bulkUpdateQuoteStatus(
+    const results = await bulkUpdateQuoteStatusDb(
+      prisma,
       data.ids,
       data.status,
       ctx.tenantId,
@@ -842,7 +876,7 @@ export const bulkDeleteQuotes = withTenantPermission<
   }
 >('canManageQuotes', async (ctx, ids) => {
   try {
-    const results = await quoteRepo.bulkSoftDeleteQuotes(ids, ctx.tenantId);
+    const results = await bulkSoftDeleteQuotes(prisma, ids, ctx.tenantId);
 
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
@@ -872,7 +906,7 @@ export const toggleQuoteFavourite = withTenantPermission<
   { id: string; isFavourite: boolean }
 >('canManageQuotes', async (ctx, id) => {
   try {
-    const result = await quoteRepo.toggleQuoteFavourite(id, ctx.tenantId);
+    const result = await toggleQuoteFavouriteDb(prisma, id, ctx.tenantId);
 
     if (!result) {
       return { success: false, error: 'Quote not found' };

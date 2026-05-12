@@ -3,10 +3,8 @@ import { logger } from '@/lib/logger';
 import { sendEmailNotification } from '@/lib/email-service';
 import { env } from '@/env';
 import type { QuoteWithDetails } from '@/features/finances/quotes/types';
-import { QuoteRepository } from '@/repositories/quote-repository';
+import { findQuoteById } from '@/db/quotes/queries';
 import { getTenantBrandingById } from '@/actions/tenant/queries';
-
-const quoteRepository = new QuoteRepository(prisma);
 
 /**
  * Get the email recipient, overriding with test email if in test mode
@@ -35,7 +33,7 @@ export async function processQuoteEmail(
   type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup',
   tenantId: string
 ): Promise<{ success: true; emailId?: string }> {
-  const quote = await quoteRepository.findByIdWithDetails(quoteId, tenantId);
+  const quote = await findQuoteById(prisma, quoteId, tenantId);
 
   if (!quote) {
     throw new Error('Quote not found');

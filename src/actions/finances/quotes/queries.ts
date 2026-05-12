@@ -1,10 +1,27 @@
 'use server';
 
-import { QuoteRepository } from '@/repositories/quote-repository';
 import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
+import {
+  searchQuotes,
+  findQuoteById,
+  findQuoteMetadata,
+  findQuoteItems,
+  findQuoteStatusHistory,
+  findQuoteItemAttachmentById,
+  findQuoteItemAttachments,
+  getQuoteVersions as fetchQuoteVersions
+} from '@/db/quotes/queries';
+import {
+  getQuoteStatistics as fetchQuoteStatistics,
+  getMonthlyQuoteValueTrend as fetchMonthlyTrend,
+  getConversionFunnel as fetchConversionFunnel,
+  getTopCustomersByQuotedValue as fetchTopCustomers,
+  getAverageTimeToDecision as fetchAvgTimeToDecision
+} from '@/db/quotes/analytics';
+import { getSignedDownloadUrl } from '@/lib/s3';
 import type {
   QuoteFilters,
   QuoteStatistics,
@@ -20,9 +37,6 @@ import type {
   AverageTimeToDecision,
   StatsDateFilter
 } from '@/features/finances/quotes/types';
-import { getSignedDownloadUrl } from '@/lib/s3';
-
-const quoteRepo = new QuoteRepository(prisma);
 
 /**
  * Retrieves a paginated list of quotes based on specified filter criteria.
@@ -33,7 +47,7 @@ export const getQuotes = withTenantPermission<QuoteFilters, QuotePagination>(
   'canReadQuotes',
   async (ctx, filters) => {
     try {
-      const result = await quoteRepo.searchQuotes(filters, ctx.tenantId);
+      const result = await searchQuotes(prisma, filters, ctx.tenantId);
 
       return { success: true, data: result };
     } catch (error) {
@@ -52,7 +66,7 @@ export const getQuoteById = withTenantPermission<string, QuoteWithDetails>(
   'canReadQuotes',
   async (ctx, id) => {
     try {
-      const quote = await quoteRepo.findQuoteById(id, ctx.tenantId);
+      const quote = await findQuoteById(prisma, id, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
@@ -67,7 +81,6 @@ export const getQuoteById = withTenantPermission<string, QuoteWithDetails>(
 /**
  * Retrieves lightweight quote metadata without items.
  * Used for headers, actions, and navigation where item details aren't needed.
- * Significantly reduces data transfer compared to getQuoteById.
  * @param id - The ID of the quote to retrieve.
  * @returns A promise that resolves to an `ActionResult` containing the quote metadata,
  * or an error if the quote is not found.
@@ -76,7 +89,7 @@ export const getQuoteMetadata = withTenantPermission<string, QuoteMetadata>(
   'canReadQuotes',
   async (ctx, id) => {
     try {
-      const quote = await quoteRepo.findQuoteMetadata(id, ctx.tenantId);
+      const quote = await findQuoteMetadata(prisma, id, ctx.tenantId);
 
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -91,7 +104,6 @@ export const getQuoteMetadata = withTenantPermission<string, QuoteMetadata>(
 
 /**
  * Retrieves quote items with attachments for a specific quote.
- * Fetched separately from quote metadata for better performance.
  * @param quoteId - The ID of the quote to retrieve items for.
  * @returns A promise that resolves to an `ActionResult` containing the quote items.
  */
@@ -99,7 +111,7 @@ export const getQuoteItems = withTenantPermission<string, QuoteItem[]>(
   'canReadQuotes',
   async (ctx, quoteId) => {
     try {
-      const items = await quoteRepo.findQuoteItems(quoteId);
+      const items = await findQuoteItems(prisma, quoteId);
 
       return { success: true, data: items };
     } catch (error) {
@@ -117,7 +129,7 @@ export const getQuoteStatusHistory = withTenantPermission<string, QuoteStatusHis
   'canReadQuotes',
   async (ctx, id) => {
     try {
-      const history = await quoteRepo.findQuoteStatusHistory(id);
+      const history = await findQuoteStatusHistory(prisma, id);
 
       return { success: true, data: history };
     } catch (error) {
@@ -137,7 +149,7 @@ export const getQuoteStatistics = withTenantPermission<
   QuoteStatistics
 >('canReadQuotes', async (ctx, dateFilter) => {
   try {
-    const stats = await quoteRepo.getQuoteStatistics(ctx.tenantId, dateFilter);
+    const stats = await fetchQuoteStatistics(prisma, ctx.tenantId, dateFilter);
     return { success: true, data: stats };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch statistics');
@@ -153,7 +165,7 @@ export const getQuoteItemAttachments = withTenantPermission<string, QuoteItemAtt
   'canReadQuotes',
   async (ctx, quoteItemId) => {
     try {
-      const attachments = await quoteRepo.findQuoteItemAttachments(quoteItemId);
+      const attachments = await findQuoteItemAttachments(prisma, quoteItemId);
 
       return {
         success: true,
@@ -186,13 +198,11 @@ export const getItemAttachmentDownloadUrl = withTenantPermission<
   { url: string; fileName: string }
 >('canReadQuotes', async (ctx, attachmentId) => {
   try {
-    // Get attachment details
-    const attachment = await quoteRepo.findQuoteItemAttachmentById(attachmentId);
+    const attachment = await findQuoteItemAttachmentById(prisma, attachmentId);
     if (!attachment) {
       return { success: false, error: 'Attachment not found' };
     }
 
-    // Generate signed URL with filename to force download
     const url = await getSignedDownloadUrl(attachment.s3Key, 24 * 60 * 60, attachment.fileName);
 
     return {
@@ -226,7 +236,7 @@ export const getQuoteVersions = withTenantPermission<
   }[]
 >('canReadQuotes', async (ctx, quoteId) => {
   try {
-    const versions = await quoteRepo.getQuoteVersions(quoteId);
+    const versions = await fetchQuoteVersions(prisma, quoteId);
 
     const normalizedVersions = versions.map((v) => ({
       ...v,
@@ -248,13 +258,11 @@ export const getQuotePdfUrl = withTenantPermission<string, { url: string; filena
   'canReadQuotes',
   async (ctx, id) => {
     try {
-      const quote = await quoteRepo.findQuoteById(id, ctx.tenantId);
+      const quote = await findQuoteById(prisma, id, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
       }
 
-      // Generate or retrieve PDF using centralized service
-      // Note: skipDownload=true since we only need the URL, not the buffer
       const { getOrGenerateQuotePdf } =
         await import('@/features/finances/quotes/services/quote-pdf.service');
       const result = await getOrGenerateQuotePdf(quote, {
@@ -281,7 +289,7 @@ export const getMonthlyQuoteValueTrend = withTenantPermission<
   QuoteValueTrend[]
 >('canReadQuotes', async (ctx, limit) => {
   try {
-    const trend = await quoteRepo.getMonthlyQuoteValueTrend(limit, ctx.tenantId);
+    const trend = await fetchMonthlyTrend(prisma, ctx.tenantId, limit);
     return { success: true, data: trend };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch quote value trend');
@@ -298,7 +306,7 @@ export const getConversionFunnel = withTenantPermission<
   ConversionFunnelData
 >('canReadQuotes', async (ctx, dateFilter) => {
   try {
-    const funnel = await quoteRepo.getConversionFunnel(ctx.tenantId, dateFilter);
+    const funnel = await fetchConversionFunnel(prisma, ctx.tenantId, dateFilter);
     return { success: true, data: funnel };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch conversion funnel');
@@ -315,7 +323,7 @@ export const getTopCustomersByQuotedValue = withTenantPermission<
   TopCustomerByQuotedValue[]
 >('canReadQuotes', async (ctx, limit) => {
   try {
-    const topCustomers = await quoteRepo.getTopCustomersByQuotedValue(limit, ctx.tenantId);
+    const topCustomers = await fetchTopCustomers(prisma, ctx.tenantId, limit);
     return { success: true, data: topCustomers };
   } catch (error) {
     return handleActionError(error, 'Failed to fetch top customers');
@@ -330,7 +338,7 @@ export const getAverageTimeToDecision = withTenantPermission<void, AverageTimeTo
   'canReadQuotes',
   async (ctx) => {
     try {
-      const avgTime = await quoteRepo.getAverageTimeToDecision(ctx.tenantId);
+      const avgTime = await fetchAvgTimeToDecision(prisma, ctx.tenantId);
       return { success: true, data: avgTime };
     } catch (error) {
       return handleActionError(error, 'Failed to fetch average time to decision');
