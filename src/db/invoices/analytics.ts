@@ -4,20 +4,20 @@ import { withDatabaseRetry } from '@/lib/retry';
 import type {
   InvoiceStatistics,
   RevenueTrend,
-  TopCustomerDebtor
+  TopCustomerDebtor,
 } from '@/features/finances/invoices/types';
 
 // -- Private helpers ------------------------------------------------------------
 
 async function getBasicStats(
   prisma: PrismaClient,
-  where: Prisma.InvoiceWhereInput
+  where: Prisma.InvoiceWhereInput,
 ): Promise<{ total: number; totalRevenue: number; pendingRevenue: number }> {
   const data = await prisma.invoice.groupBy({
     by: ['status'],
     where,
     _count: true,
-    _sum: { amount: true }
+    _sum: { amount: true },
   });
 
   let totalRevenue = 0;
@@ -64,11 +64,11 @@ export async function getInvoiceStatistics(
   dateFilter?: {
     startDate?: Date;
     endDate?: Date;
-  }
+  },
 ): Promise<InvoiceStatistics> {
   const whereClause: Prisma.InvoiceWhereInput = {
     tenantId,
-    deletedAt: null
+    deletedAt: null,
   };
 
   // Add date filter if provided
@@ -91,8 +91,8 @@ export async function getInvoiceStatistics(
       deletedAt: null,
       issuedDate: {
         gte: new Date(dateFilter.startDate.getTime() - duration),
-        lte: new Date(dateFilter.endDate.getTime() - duration)
-      }
+        lte: new Date(dateFilter.endDate.getTime() - duration),
+      },
     };
   } else if (!dateFilter?.startDate && !dateFilter?.endDate) {
     // Default: Compare this month to last month
@@ -104,8 +104,8 @@ export async function getInvoiceStatistics(
       deletedAt: null,
       issuedDate: {
         gte: firstDayLastMonth,
-        lt: firstDayThisMonth
-      }
+        lt: firstDayThisMonth,
+      },
     };
   }
 
@@ -133,13 +133,13 @@ export async function getInvoiceStatistics(
           by: ['status'],
           where: whereClause,
           _count: true,
-          _sum: { amount: true }
+          _sum: { amount: true },
         }),
         prisma.$queryRaw<[{ avg: number }]>(avgQuery),
         previousWhereClause ? getBasicStats(prisma, previousWhereClause) : Promise.resolve(null),
         getInvoiceMonthlyRevenueTrend(prisma, tenantId, 12),
-        getInvoiceTopDebtors(prisma, tenantId, 5)
-      ])
+        getInvoiceTopDebtors(prisma, tenantId, 5),
+      ]),
     );
 
   // Process current period data
@@ -159,7 +159,7 @@ export async function getInvoiceStatistics(
     pendingRevenue: 0,
     avgInvoiceValue: Number(avgInvoiceData[0]?.avg ?? 0),
     revenueTrend,
-    topDebtors
+    topDebtors,
   };
 
   statusGroupData.forEach((group) => {
@@ -224,7 +224,7 @@ export async function getInvoiceStatistics(
 export async function getInvoiceMonthlyRevenueTrend(
   prisma: PrismaClient,
   tenantId: string,
-  limit: number = 12
+  limit: number = 12,
 ): Promise<RevenueTrend[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = await withDatabaseRetry(() =>
@@ -243,16 +243,16 @@ export async function getInvoiceMonthlyRevenueTrend(
       GROUP BY year, month_num, month
       ORDER BY year DESC, month_num DESC
       LIMIT ${limit}
-    `)
+    `),
   );
 
   return data
     .map((item) => ({
       month: `${item.month} ${item.year}`,
       total: item.total,
-      paid: item.paid
+      paid: item.paid,
     }))
-    .reverse();
+    .toReversed();
 }
 
 /**
@@ -265,7 +265,7 @@ export async function getInvoiceMonthlyRevenueTrend(
 export async function getInvoiceTopDebtors(
   prisma: PrismaClient,
   tenantId: string,
-  limit: number = 5
+  limit: number = 5,
 ): Promise<TopCustomerDebtor[]> {
   const data = await withDatabaseRetry(() =>
     prisma.$queryRaw<
@@ -284,13 +284,13 @@ export async function getInvoiceTopDebtors(
       GROUP BY c.id, "customerName"
       ORDER BY "amountDue" DESC
       LIMIT ${limit}
-    `)
+    `),
   );
 
   return data.map((item) => ({
     customerId: item.customerId,
     customerName: item.customerName,
     amountDue: item.amountDue,
-    invoiceCount: item.invoiceCount
+    invoiceCount: item.invoiceCount,
   }));
 }

@@ -1,98 +1,150 @@
+import { execSync } from 'child_process';
 import { test, expect } from '@playwright/test';
 
-// Credentials for a user with MANAGER or ADMIN role
-const TEST_USER = {
-  email: 'test@example.com',
-  password: 'password'
-};
+// Quote-specific seed data (Carol Martinez → QUO-E2E-0001, Dave Nguyen → QUO-E2E-0002)
+// is created in beforeAll and removed in afterAll. The e2e tenant itself is owned by
+// global-setup / global-teardown.
 
-test.describe('Quote Management Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Listen to browser console logs
-    page.on('console', (msg) => console.log(`[Browser Console] ${msg.text()}`));
+test.describe('Quotes page', () => {
+  // Run tests sequentially — the lifecycle test mutates shared quote data.
+  test.describe.configure({ mode: 'serial' });
 
-    // Login before each test
-    await page.goto('/signin');
-    await page.getByLabel('Email').fill(TEST_USER.email);
-    await page.locator('[name="password"]').fill(TEST_USER.password);
-    await page.getByRole('button', { name: /sign in/i }).click({ force: true });
-
-    // Wait for redirect to dashboard or home
-    await expect(page).not.toHaveURL('/signin');
-    console.log('Login passed, current URL:', page.url());
+  test.beforeAll(() => {
+    // Teardown first to reset any mutations from a previous run (e.g. lifecycle test
+    // leaves QUO-E2E-0001 in ACCEPTED/converted state). Then re-seed deterministic DRAFT quotes.
+    execSync('pnpm tsx --env-file=.env prisma/seeds/teardown-e2e-quotes.ts', {
+      stdio: 'inherit',
+    });
+    execSync('pnpm tsx --env-file=.env prisma/seeds/seed-e2e-quotes.ts', { stdio: 'inherit' });
   });
 
-  test('Full quote lifecycle: Create -> Send -> Accept -> Convert', async ({ page }) => {
-    // 1. Navigate to Quotes
+  test('shows quote list on load', async ({ page }) => {
     await page.goto('/finances/quotes');
-    console.log('Navigated to quotes, current URL:', page.url());
-    await expect(page.getByRole('heading', { name: /Quotes/i })).toBeVisible({ timeout: 10000 });
 
-    // 2. Create new quote (Draft)
-    await page.getByRole('button', { name: /new quote/i }).click();
-    await expect(page).toHaveURL(/\/finances\/quotes\/new/);
+    // Seeded data means the list view always renders (no empty state).
+    await expect(page.getByRole('heading', { name: /Quotes/i })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('button', { name: /new quote/i })).toBeVisible();
+    await expect(page.getByRole('searchbox')).toBeVisible();
+  });
 
-    // Fill form
-    // Assuming there's a customer selector
-    await page.getByRole('combobox', { name: /customer/i }).click();
-    await page.getByRole('option').first().click(); // Select first available customer
+  test('search filters the list to matching quotes', async ({ page }) => {
+    await page.goto('/finances/quotes');
 
-    await page.locator('[name="items.0.description"]').fill('Custom Development Project');
-    await page.locator('[name="items.0.quantity"]').fill('1');
-    await page.locator('[name="items.0.unitPrice"]').fill('5000');
+    const searchInput = page.getByRole('searchbox');
+    await expect(searchInput).toBeVisible({ timeout: 10_000 });
 
-    await page.getByRole('button', { name: /create quote/i }).click();
+    await searchInput.fill('Carol');
 
-    // Expect redirect to quote details
-    await expect(page).toHaveURL(/\/finances\/quotes\/[a-zA-Z0-9]+/);
+    // URL updates after debounce.
+    await expect(page).toHaveURL(/search=Carol/, { timeout: 2_000 });
 
-    // Verify Draft status
-    await expect(page.getByText('DRAFT', { exact: true })).toBeVisible();
+    // Carol Martinez's row appears; Dave Nguyen's does not.
+    await expect(page.getByRole('row').filter({ hasText: /Carol/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('row').filter({ hasText: /Dave/i })).not.toBeVisible();
+  });
 
-    // 3. Edit Quote (if needed, optional path)
+  test('search param in URL pre-populates the search input', async ({ page }) => {
+    await page.goto('/finances/quotes?search=Dave');
 
-    // 4. Mark as Sent
-    await page.getByRole('button', { name: /mark as sent/i }).click();
-    // Confirm modal if exists (Quote status change might just be direct or have confirmation)
-    // If confirmation modal:
-    // await page.getByRole('button', { name: /confirm/i }).click();
+    const searchInput = page.getByRole('searchbox');
+    await expect(searchInput).toBeVisible({ timeout: 10_000 });
+    await expect(searchInput).toHaveValue('Dave');
 
-    await expect(page.getByText('SENT', { exact: true })).toBeVisible();
+    // Dave Nguyen's row is visible; Carol Martinez's is not.
+    await expect(page.getByRole('row').filter({ hasText: /Dave/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('row').filter({ hasText: /Carol/i })).not.toBeVisible();
+  });
 
-    // 5. Customer Accepts (Simulate via Admin UI "Mark as Accepted")
-    // Quote actions menu might be under a "Actions" dropdown or similar if not primary button
-    const actionsButton = page.getByRole('button', { name: /actions/i });
-    if (await actionsButton.isVisible()) {
-      await actionsButton.click();
-      await page.getByRole('menuitem', { name: /mark as accepted/i }).click();
-    } else {
-      // Look for direct button if exposed
-      const acceptButton = page.getByRole('button', { name: /mark as accepted/i });
-      if (await acceptButton.isVisible()) {
-        await acceptButton.click();
-      } else {
-        // Maybe needs to be "Mark as Accepted" from dropdown
-        // Try searching just by text if role is ambiguous
-        await page.getByText(/mark as accepted/i).click();
-      }
-    }
+  test('full lifecycle: DRAFT → SENT → ACCEPTED → Convert to Invoice', async ({ page }) => {
+    await page.goto('/finances/quotes');
 
-    await expect(page.getByText('ACCEPTED', { exact: true })).toBeVisible();
+    // Open QUO-E2E-0001 by clicking its quote number link.
+    const quoteLink = page.getByRole('link', { name: 'QUO-E2E-0001' });
+    await expect(quoteLink).toBeVisible({ timeout: 10_000 });
+    // Resolve the quote URL from the link's href, then navigate directly.
+    // Clicking the Next.js Link triggers client-side navigation that relies on
+    // the intercepting route — Playwright does not reliably process that
+    // soft-navigation within the storageState test context.
+    const href = await quoteLink.getAttribute('href');
+    await page.goto(href ?? '/finances/quotes');
 
-    // 6. Convert to Invoice
-    await page.getByRole('button', { name: /convert to invoice/i }).click();
+    // Scope all drawer assertions to the dialog whose heading is the quote number.
+    const drawer = page
+      .getByRole('dialog')
+      .filter({ has: page.getByRole('heading', { name: 'QUO-E2E-0001' }) });
 
-    // Confirm conversion if modal exists
-    const confirmConvert = page.getByRole('button', { name: /convert/i, exact: true });
-    if (await confirmConvert.isVisible()) {
-      await confirmConvert.click();
-    }
+    await expect(drawer).toBeVisible({ timeout: 15_000 });
+    await expect(drawer.getByText('Draft', { exact: true })).toBeVisible({ timeout: 10_000 });
 
-    // Should redirect to the new invoice
-    await expect(page).toHaveURL(/\/finances\/invoices\/[a-zA-Z0-9]+/);
+    // -- DRAFT → SENT --------------------------------------------------------
 
-    // 7. Verify Invoice Created from Quote
-    await expect(page.getByText('DRAFT', { exact: true })).toBeVisible(); // Starts as draft invoice usually
-    await expect(page.getByText('Custom Development Project')).toBeVisible(); // Item preserved
+    await drawer.getByRole('button', { name: 'More Options' }).click();
+    await page.getByRole('menuitem', { name: /send quote/i }).click();
+
+    // EmailPreviewDialog appears — skip sending and mark as sent without email.
+    await expect(page.getByRole('button', { name: /Mark as Sent \(No Email\)/i })).toBeVisible({
+      timeout: 5_000,
+    });
+    await page.getByRole('button', { name: /Mark as Sent \(No Email\)/i }).click();
+
+    // Status updates in the drawer once the mutation settles.
+    await expect(drawer.getByText('Sent', { exact: true })).toBeVisible({ timeout: 10_000 });
+
+    // -- SENT → ACCEPTED -----------------------------------------------------
+
+    // Accept quote is a direct mutation with no confirmation dialog.
+    await drawer.getByRole('button', { name: 'More Options' }).click();
+    await page.getByRole('menuitem', { name: /accept quote/i }).click();
+
+    await expect(drawer.getByText('Accepted', { exact: true })).toBeVisible({ timeout: 10_000 });
+
+    // -- ACCEPTED → Invoice --------------------------------------------------
+
+    await drawer.getByRole('button', { name: 'More Options' }).click();
+    await page.getByRole('menuitem', { name: /convert to invoice/i }).click();
+
+    // ConvertToInvoiceDialog — submit with default values (due date already set).
+    await expect(page.getByRole('heading', { name: 'Convert Quote to Invoice' })).toBeVisible({
+      timeout: 5_000,
+    });
+    await page.getByRole('button', { name: /^Convert to Invoice$/ }).click();
+
+    // Should redirect to the newly created invoice.
+    await expect(page).toHaveURL(/\/finances\/invoices\/[a-zA-Z0-9]+/, { timeout: 15_000 });
+
+    // Verify the invoice was created from the quote (starts as DRAFT, preserves item).
+    const invoiceDrawer = page.getByRole('dialog');
+    await expect(invoiceDrawer.getByText('Draft', { exact: true })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(invoiceDrawer.getByText('Floral Arrangement Service')).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  test('Reset button removes search and sort params from URL', async ({ page }) => {
+    await page.goto(
+      '/finances/quotes?search=Carol&sort=%5B%7B%22id%22%3A%22validUntil%22%2C%22desc%22%3Atrue%7D%5D',
+    );
+
+    const resetButton = page.getByRole('button', { name: /reset/i });
+    await expect(resetButton).toBeVisible({ timeout: 10_000 });
+
+    await resetButton.click();
+
+    await expect(page).not.toHaveURL(/search=/, { timeout: 3_000 });
+    await expect(page).not.toHaveURL(/sort=/, { timeout: 3_000 });
+
+    // Both rows visible again after reset.
+    await expect(page.getByRole('row').filter({ hasText: /Carol/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByRole('row').filter({ hasText: /Dave/i })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });
