@@ -22,9 +22,27 @@ export const E2E_QUOTE_CUSTOMERS = [
   },
 ];
 
+// One fixture per test that mutates state. customerIndex maps into E2E_QUOTE_CUSTOMERS.
+const E2E_QUOTE_FIXTURES = [
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0001', description: 'Floral Arrangement Service' }, // lifecycle: DRAFT → SENT → ACCEPTED → Invoice
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0002', description: 'Floral Arrangement Service' }, // search / reset tests
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0003', description: 'Wedding Bouquet' }, // reject test
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0004', description: 'Sympathy Display' }, // cancel test
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0005', description: 'Birthday Flowers' }, // delete test
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0006', description: 'Corporate Arrangement' }, // duplicate test
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0007', description: 'Anniversary Roses' }, // on hold test
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0008', description: 'Spring Collection' }, // create version test
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0009', description: 'Seasonal Centrepiece' }, // PDF download test
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0010', description: 'Elegant Orchid Display' }, // email resend test
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0011', description: 'Garden Party Flowers' }, // edit items test
+  { customerIndex: 0, quoteNumber: 'QUO-E2E-0012', description: 'Tropical Arrangement' }, // unsaved changes test
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0013', description: 'Minimalist Bouquet' }, // bulk delete 1
+  { customerIndex: 1, quoteNumber: 'QUO-E2E-0014', description: 'Vintage Rose Collection' }, // bulk delete 2
+];
+
 /**
  * Seeds deterministic quote test data for the E2E tenant.
- * Creates two known customers and one DRAFT quote per customer.
+ * Creates two known customers and one DRAFT quote per fixture.
  * Safe to run repeatedly — skips creation if records already exist.
  */
 export async function seedE2EQuotes(): Promise<void> {
@@ -41,11 +59,11 @@ export async function seedE2EQuotes(): Promise<void> {
 
   const year = new Date().getFullYear();
 
-  for (let i = 0; i < E2E_QUOTE_CUSTOMERS.length; i++) {
-    const { firstName, lastName, email, gender } = E2E_QUOTE_CUSTOMERS[i];
+  // -- Ensure customers exist ------------------------------------------------
 
-    // -- Customer ------------------------------------------------------------
+  const customerIds: Record<string, string> = {};
 
+  for (const { firstName, lastName, email, gender } of E2E_QUOTE_CUSTOMERS) {
     let customer = await prisma.customer.findFirst({
       where: { email, tenantId: tenant.id },
       select: { id: true },
@@ -59,22 +77,27 @@ export async function seedE2EQuotes(): Promise<void> {
       console.log(`   Created E2E customer: ${firstName} ${lastName}`);
     }
 
-    // -- Quote ---------------------------------------------------------------
+    customerIds[email] = customer.id;
+  }
 
-    const quoteNumber = `QUO-E2E-${String(i + 1).padStart(4, '0')}`;
+  // -- Ensure quotes exist ---------------------------------------------------
+
+  const issuedDate = new Date(`${year}-01-15`);
+  const validUntil = new Date(`${year}-06-15`);
+
+  for (const { customerIndex, quoteNumber, description } of E2E_QUOTE_FIXTURES) {
+    const { email, firstName, lastName } = E2E_QUOTE_CUSTOMERS[customerIndex];
+
     const existing = await prisma.quote.findFirst({
       where: { quoteNumber, tenantId: tenant.id },
       select: { id: true },
     });
 
     if (!existing) {
-      const issuedDate = new Date(`${year}-01-15`);
-      const validUntil = new Date(`${year}-06-15`);
-
       await prisma.quote.create({
         data: {
           quoteNumber,
-          customerId: customer.id,
+          customerId: customerIds[email],
           tenantId: tenant.id,
           status: QuoteStatus.DRAFT,
           currency: 'AUD',
@@ -84,14 +107,7 @@ export async function seedE2EQuotes(): Promise<void> {
           issuedDate,
           validUntil,
           items: {
-            create: [
-              {
-                description: 'Floral Arrangement Service',
-                quantity: 1,
-                unitPrice: 1000,
-                total: 1000,
-              },
-            ],
+            create: [{ description, quantity: 1, unitPrice: 1000, total: 1000 }],
           },
         },
       });

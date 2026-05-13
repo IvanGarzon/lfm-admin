@@ -13,7 +13,7 @@ test.describe('Invoices page', () => {
     // Teardown first to reset any mutations from a previous run (e.g. lifecycle test
     // leaves INV-E2E-0001 in PAID state). Then re-seed deterministic DRAFT invoices.
     execSync('pnpm tsx --env-file=.env prisma/seeds/teardown-e2e-invoices.ts', {
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
     execSync('pnpm tsx --env-file=.env prisma/seeds/seed-e2e-invoices.ts', { stdio: 'inherit' });
   });
@@ -22,8 +22,8 @@ test.describe('Invoices page', () => {
     await page.goto('/finances/invoices');
 
     // Seeded data means the list view always renders (no empty state).
-    await expect(page.getByRole('heading', { name: /Invoices/i })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: /new invoice/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /add invoice/i })).toBeVisible();
     await expect(page.getByRole('searchbox')).toBeVisible();
   });
 
@@ -40,7 +40,7 @@ test.describe('Invoices page', () => {
 
     // Alice Thornton's row appears; Bob Kellerman's does not.
     await expect(page.getByRole('row').filter({ hasText: /Alice/i })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
     await expect(page.getByRole('row').filter({ hasText: /Bob/i })).not.toBeVisible();
   });
@@ -54,7 +54,7 @@ test.describe('Invoices page', () => {
 
     // Bob Kellerman's row is visible; Alice Thornton's is not.
     await expect(page.getByRole('row').filter({ hasText: /Bob/i })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
     await expect(page.getByRole('row').filter({ hasText: /Alice/i })).not.toBeVisible();
   });
@@ -90,7 +90,7 @@ test.describe('Invoices page', () => {
 
     // EmailPreviewDialog appears — skip sending and just mark as pending.
     await expect(page.getByRole('button', { name: /Mark as Pending \(No Email\)/i })).toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
     await page.getByRole('button', { name: /Mark as Pending \(No Email\)/i }).click();
 
@@ -110,7 +110,7 @@ test.describe('Invoices page', () => {
 
     // RecordPaymentDialog — fill full amount via the 100% shortcut.
     await expect(page.getByRole('heading', { name: 'Record Payment' })).toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
     await page.getByRole('button', { name: '100%' }).click();
     await page.getByRole('button', { name: /^Record Payment$/ }).click();
@@ -118,7 +118,7 @@ test.describe('Invoices page', () => {
     // After full payment the app opens a SendReceiptDialog — dismiss it so it
     // does not interfere with subsequent assertions.
     await expect(page.getByRole('heading', { name: 'Record Payment' })).not.toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
     const sendReceiptHeading = page.getByRole('heading', { name: /send receipt/i });
     if (await sendReceiptHeading.isVisible()) {
@@ -131,7 +131,7 @@ test.describe('Invoices page', () => {
 
   test('Reset button removes search and sort params from URL', async ({ page }) => {
     await page.goto(
-      '/finances/invoices?search=Alice&sort=%5B%7B%22id%22%3A%22dueDate%22%2C%22desc%22%3Atrue%7D%5D'
+      '/finances/invoices?search=Alice&sort=%5B%7B%22id%22%3A%22dueDate%22%2C%22desc%22%3Atrue%7D%5D',
     );
 
     const resetButton = page.getByRole('button', { name: /reset/i });
@@ -144,10 +144,10 @@ test.describe('Invoices page', () => {
 
     // Both rows visible again after reset.
     await expect(page.getByRole('row').filter({ hasText: /Alice/i })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
     await expect(page.getByRole('row').filter({ hasText: /Bob/i })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
   });
 });

@@ -41,6 +41,10 @@ export const env = createEnv({
       .transform((s) => s === 'true'),
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
 
+    // Upstash KV — rate limiting (optional; limiting disabled when absent)
+    KV_REST_API_URL: z.url().optional(),
+    KV_REST_API_TOKEN: z.string().optional(),
+
     // E2E testing
     E2E_TENANT: z.string().optional(),
     E2E_SLUG: z.string().optional(),
@@ -49,11 +53,11 @@ export const env = createEnv({
     E2E_SKIP_OTP: z
       .string()
       .optional()
-      .transform((s) => s === 'true')
+      .transform((s) => s === 'true'),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1)
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().min(1),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -80,10 +84,12 @@ export const env = createEnv({
     EMAIL_TEST_MODE: process.env.EMAIL_TEST_MODE,
     EMAIL_TEST_RECIPIENT: process.env.EMAIL_TEST_RECIPIENT,
     EMAIL_DRY_RUN: process.env.EMAIL_DRY_RUN,
+    KV_REST_API_URL: process.env.KV_REST_API_URL,
+    KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN,
     E2E_TENANT: process.env.E2E_TENANT,
     E2E_SLUG: process.env.E2E_SLUG,
     E2E_EMAIL: process.env.E2E_EMAIL,
     E2E_PASSWORD: process.env.E2E_PASSWORD,
-    E2E_SKIP_OTP: process.env.E2E_SKIP_OTP
-  }
+    E2E_SKIP_OTP: process.env.E2E_SKIP_OTP,
+  },
 });

@@ -7,7 +7,7 @@ const E2E_USER = {
   firstName: 'Carol',
   lastName: 'Seed',
   fullName: 'Carol Seed',
-  updatedFirstName: 'Updated'
+  updatedFirstName: 'Updated',
 };
 
 test.describe('User Management Flow', () => {
@@ -28,7 +28,7 @@ test.describe('User Management Flow', () => {
 
     // Seed data is present — list must not be in empty state.
     await expect(page.getByRole('row').filter({ hasText: E2E_USER.fullName })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
   });
 
@@ -46,7 +46,7 @@ test.describe('User Management Flow', () => {
   });
 
   test('shows validation errors when submitting the invite form with an invalid email', async ({
-    page
+    page,
   }) => {
     await page.goto('/users');
 
@@ -57,7 +57,7 @@ test.describe('User Management Flow', () => {
     await page.getByRole('button', { name: /send invitation/i }).click();
 
     await expect(page.getByText(/please enter a valid email address/i)).toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
   });
 
@@ -82,7 +82,7 @@ test.describe('User Management Flow', () => {
     await Promise.all([page.waitForURL(/\/users\/.+/, { timeout: 10_000 }), userLink.click()]);
 
     await expect(page.getByRole('button', { name: /update user/i })).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
   });
 
@@ -108,8 +108,8 @@ test.describe('User Management Flow', () => {
 
     await expect(
       page.getByRole('link', {
-        name: new RegExp(`${E2E_USER.updatedFirstName} ${E2E_USER.lastName}`, 'i')
-      })
+        name: new RegExp(`${E2E_USER.updatedFirstName} ${E2E_USER.lastName}`, 'i'),
+      }),
     ).toBeVisible({ timeout: 10_000 });
 
     // No manual restore — beforeAll re-seeds on the next run, resetting the name.
@@ -137,15 +137,15 @@ test.describe('User Management Flow', () => {
 
     await Promise.all([
       page.waitForURL(/\/users\/.+\/permissions/, { timeout: 5_000 }),
-      page.getByRole('tab', { name: /permissions/i }).click()
+      page.getByRole('tab', { name: /permissions/i }).click(),
     ]);
 
     await expect(page.getByRole('heading', { name: /role assignment/i })).toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
 
     await expect(page.getByText(/select a predefined role to set permissions below/i)).toBeVisible({
-      timeout: 10_000
+      timeout: 10_000,
     });
 
     const drawer = page.getByRole('dialog');
@@ -161,14 +161,14 @@ test.describe('User Management Flow', () => {
 
     // Wait for the mutation to complete before navigating away.
     await expect(page.getByRole('button', { name: /update user/i })).toBeEnabled({
-      timeout: 5_000
+      timeout: 5_000,
     });
 
     // Wait for the permissions data to load before checking the saved role.
     const confirmedDrawer = page.getByRole('dialog');
     await expect(confirmedDrawer.getByRole('combobox')).toBeVisible({ timeout: 10_000 });
     await expect(confirmedDrawer.getByRole('combobox')).toContainText(/manager/i, {
-      timeout: 10_000
+      timeout: 10_000,
     });
   });
 
@@ -188,11 +188,11 @@ test.describe('User Management Flow', () => {
 
     await Promise.all([
       page.waitForURL(/\/users\/.+\/security/, { timeout: 5_000 }),
-      page.getByRole('tab', { name: /security/i }).click()
+      page.getByRole('tab', { name: /security/i }).click(),
     ]);
 
     await expect(page.getByRole('heading', { name: /active sessions/i })).toBeVisible({
-      timeout: 5_000
+      timeout: 5_000,
     });
 
     // Skeleton must resolve — Carol has no sessions so "No active sessions." must appear.
@@ -202,7 +202,7 @@ test.describe('User Management Flow', () => {
     await expect(page.getByText(/two-factor authentication/i)).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText(/login notifications/i)).toBeVisible({ timeout: 5_000 });
     await expect(page.getByRole('button', { name: /^enable$/i })).toHaveCount(2, {
-      timeout: 5_000
+      timeout: 5_000,
     });
 
     // Enable two-factor authentication — first Enable button in DOM order.
@@ -211,13 +211,13 @@ test.describe('User Management Flow', () => {
       .first()
       .click();
     await expect(page.getByRole('button', { name: /^disable$/i })).toHaveCount(1, {
-      timeout: 5_000
+      timeout: 5_000,
     });
 
     // Enable login notifications — now the only remaining Enable button.
     await page.getByRole('button', { name: /^enable$/i }).click();
     await expect(page.getByRole('button', { name: /^disable$/i })).toHaveCount(2, {
-      timeout: 5_000
+      timeout: 5_000,
     });
   });
 });

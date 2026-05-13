@@ -11,12 +11,22 @@ import { revalidatePath } from 'next/cache';
 import { env } from '@/env';
 import { withTenantPermission } from '@/lib/action-auth';
 import { findQuoteById } from '@/db/quotes/queries';
+import { uploadLimiter, checkRateLimit, getRequestIp } from '@/rate-limiter';
 
 export const uploadFile = withTenantPermission<
   FormData,
   { s3Key: string; s3Url: string; fileName: string; fileSize: number; mimeType: string }
 >('canManageQuotes', async (ctx, formData) => {
   try {
+    const ip = await getRequestIp();
+    const limited = await checkRateLimit(uploadLimiter, ip);
+    if (limited) {
+      return {
+        success: false,
+        error: `Too many upload requests. Try again in ${limited.retryAfter}s.`,
+      };
+    }
+
     const fileEntry = formData.get('file');
     const quoteIdEntry = formData.get('quoteId');
 
@@ -34,7 +44,7 @@ export const uploadFile = withTenantPermission<
     if (file.size > MAX_FILE_SIZE) {
       return {
         success: false,
-        error: `File exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB size limit`
+        error: `File exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB size limit`,
       };
     }
 
@@ -60,7 +70,7 @@ export const uploadFile = withTenantPermission<
           Bucket: env.AWS_S3_BUCKET_NAME,
           Key: s3Key,
           Body: buffer,
-          ContentType: file.type
+          ContentType: file.type,
         });
         await s3Client.send(command);
         result = { s3Key, s3Url: getS3Url(s3Key) };
@@ -72,13 +82,13 @@ export const uploadFile = withTenantPermission<
           resourceType: 'quotes',
           resourceId: quoteId,
           subPath: 'attachments',
-          metadata: { quoteId }
+          metadata: { quoteId },
         });
       }
     } else {
       return {
         success: false,
-        error: `File type ${file.type} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}, text/plain (test only)`
+        error: `File type ${file.type} is not allowed. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}, text/plain (test only)`,
       };
     }
 
@@ -88,8 +98,8 @@ export const uploadFile = withTenantPermission<
         userId: ctx.userId,
         fileName: file.name,
         fileSize: file.size,
-        s3Key: result.s3Key
-      }
+        s3Key: result.s3Key,
+      },
     });
 
     revalidatePath('/tools/files');
@@ -102,13 +112,13 @@ export const uploadFile = withTenantPermission<
         s3Url: result.s3Url,
         fileName: file.name,
         fileSize: file.size,
-        mimeType: file.type
-      }
+        mimeType: file.type,
+      },
     };
   } catch (error) {
     return handleActionError(error, 'Failed to upload file', {
       action: 'uploadFile',
-      userId: ctx.userId
+      userId: ctx.userId,
     });
   }
 });
@@ -127,8 +137,8 @@ export const deleteFile = withTenantPermission<string, { message: string }>(
         context: 'file-delete',
         metadata: {
           userId: ctx.userId,
-          s3Key
-        }
+          s3Key,
+        },
       });
 
       revalidatePath('/tools/files');
@@ -137,14 +147,14 @@ export const deleteFile = withTenantPermission<string, { message: string }>(
 
       return {
         success: true,
-        data: { message: 'File deleted successfully' }
+        data: { message: 'File deleted successfully' },
       };
     } catch (error) {
       return handleActionError(error, 'Failed to delete file', {
         action: 'deleteFile',
         userId: ctx.userId,
-        s3Key
+        s3Key,
       });
     }
-  }
+  },
 );

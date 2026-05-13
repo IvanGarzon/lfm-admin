@@ -119,6 +119,8 @@
     "@tiptap/starter-kit": "^3.22.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "@vercel/analytics": "^2.0.1",
     "calendar": "^0.1.1",
     "class-variance-authority": "^0.7.1",

@@ -1,77 +1,73 @@
-// src/lib/rate-limiter.ts
-// import { NextRequest, NextResponse } from 'next/server';
-// import { kv } from '@vercel/kv'; // Vercel KV client
-// import { Ratelimit } from '@upstash/ratelimit'; // Rate limiting library
-// import { env } from '@/env';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-// let ratelimitInstance: Ratelimit | null = null;
+// -- Setup --------------------------------------------------------------------
 
-// Initialize Vercel KV and Ratelimit instances
-// This happens once when the module is first imported.
-// if (env.KV_REST_API_URL && env.KV_REST_API_TOKEN) {
-//   ratelimitInstance = new Ratelimit({
-//     redis: kv,
-//     // Example: Allow 10 requests per 10 seconds from the same IP address
-//     limiter: Ratelimit.slidingWindow(10, '10 s'),
-//     analytics: true, // Optional: Enable analytics in your Vercel KV (Upstash) console
-//     prefix: '@my_app_ratelimit_module', // Unique prefix for your Redis keys
-//   });
-//   console.log('Rate limiter initialized with Vercel KV.');
-// } else {
-//   if (env.NODE_ENV === 'development') {
-//     console.warn(
-//       'Vercel KV environment variables not found for rate limiter. ' +
-//         'Rate limiting will be disabled. ' +
-//         'Ensure a KV store is connected to your Vercel project and ' +
-//         'environment variables are pulled for local development (e.g., by running `vc env pull .env.local`).',
-//     );
-//   } else {
-//     console.error(
-//       'Vercel KV environment variables not found for rate limiter. ' +
-//         'Rate limiting is disabled. Check Vercel KV configuration.',
-//     );
-//   }
-// }
+let redis: Redis | null = null;
+
+if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+  redis = new Redis({
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
+  });
+}
+
+// -- Limiters -----------------------------------------------------------------
+
+// 10 requests per 10 minutes per IP — brute-force protection for auth endpoints
+export const authLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '10 m'), prefix: 'rl:auth' })
+  : null;
+
+// 20 requests per minute per IP — flood protection for file uploads
+export const uploadLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(20, '1 m'), prefix: 'rl:upload' })
+  : null;
+
+// 60 requests per minute per IP — prevent hobby-tier exhaustion from E2E tests
+export const testLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(60, '1 m'), prefix: 'rl:test' })
+  : null;
+
+// -- Helper -------------------------------------------------------------------
 
 /**
- * Checks if a request from a given IP is rate-limited.
- * @param req The incoming NextRequest.
- * @returns A NextResponse object with status 429 if rate-limited, otherwise null.
+ * Checks rate limit for a given identifier. Fails open when KV is not configured.
+ *
+ * @param limiter - The Ratelimit instance to check against
+ * @param identifier - IP address to scope the limit
+ * @returns null if allowed, or { status: 429, retryAfter } if blocked
  */
-// export async function checkRequestRateLimit(req: NextRequest): Promise<NextResponse | null> {
-//   if (!ratelimitInstance) {
-//     // Rate limiting is not configured or disabled, so allow the request.
-//     return null;
-//   }
+export async function checkRateLimit(
+  limiter: Ratelimit | null,
+  identifier: string,
+): Promise<{ status: 429; retryAfter: number } | null> {
+  if (!limiter) {
+    return null;
+  }
 
-//   const ipAddress = (req as NextRequest & { ip?: string }).ip ?? '127.0.0.1'; // Get IP address (fallback for local dev/tests)
+  const { success, reset } = await limiter.limit(identifier);
+  if (success) {
+    return null;
+  }
 
-//   try {
-//     const { success, limit, remaining, reset } = await ratelimitInstance.limit(ipAddress);
+  return { status: 429, retryAfter: Math.ceil((reset - Date.now()) / 1000) };
+}
 
-//     if (!success) {
-//       const resetDate = new Date(reset);
-//       console.info(
-//         `RATE LIMIT EXCEEDED for IP: ${ipAddress}. Limit: ${limit}, Remaining: ${remaining}, Resets at: ${resetDate.toLocaleTimeString()}`,
-//       );
-//       return new NextResponse('Too Many Requests', {
-//         status: 429,
-//         headers: {
-//           'X-Ratelimit-Limit': limit.toString(),
-//           'X-Ratelimit-Remaining': remaining.toString(),
-//           'X-Ratelimit-Reset': resetDate.toISOString(),
-//           'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
-//         },
-//       });
-//     }
-//     // Optionally, log successful checks if needed for high-volume debugging:
-//     // console.debug(`Rate limit check passed for IP: ${ip}. Remaining: ${remaining}`);
-//     return null; // Request is not rate-limited
-//   } catch (error) {
-//     console.error('Error during rate limiting check:', error);
-//     // Decide on fail-open or fail-closed behavior if the limiter itself errors.
-//     // Returning null here means fail-open (request proceeds if limiter fails).
-//     // For critical protection, you might throw an error or return a 500 response.
-//     return null;
-//   }
-// }
+// -- IP extraction ------------------------------------------------------------
+
+/**
+ * Extracts the client IP from Next.js request headers.
+ * Falls back to '127.0.0.1' when headers are unavailable.
+ *
+ * @returns IP address string
+ */
+export async function getRequestIp(): Promise<string> {
+  const { headers } = await import('next/headers');
+  const headersList = await headers();
+  return (
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headersList.get('x-real-ip') ??
+    '127.0.0.1'
+  );
+}

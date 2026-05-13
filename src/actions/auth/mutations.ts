@@ -2,7 +2,7 @@
 
 import crypto from 'node:crypto';
 import type { Account, Profile } from 'next-auth';
-import bcrypt from 'bcryptjs';
+import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
@@ -18,10 +18,11 @@ import {
   BadRequestError,
   RateLimitError,
   UnauthorizedError,
-  InternalServerError
+  InternalServerError,
 } from '@/services/error';
 import { SignInSchema, OtpVerifySchema } from '@/schemas/auth';
 import type { SignInInput, OtpVerifyInput } from '@/schemas/auth';
+import { authLimiter, checkRateLimit, getRequestIp } from '@/rate-limiter';
 
 const auditService = new AuditService(prisma);
 
@@ -50,7 +51,7 @@ export interface SignInArgs {
  */
 export async function handleSignIn({
   account,
-  profile
+  profile,
 }: SignInArgs): Promise<ActionResult<boolean>> {
   try {
     if (!account) {
@@ -60,7 +61,7 @@ export async function handleSignIn({
     const email = profile?.email;
     if (!email || email.trim() === '') {
       throw new BadRequestError('Error during sign-in: Missing or empty email in profile', {
-        field: 'email'
+        field: 'email',
       });
     }
 
@@ -70,22 +71,22 @@ export async function handleSignIn({
     const existingUser = await userRepo.getUserByEmail(email);
     const existingAccount = await accountRepo.findByProviderAndAccountId(
       account.provider,
-      account.providerAccountId
+      account.providerAccountId,
     );
 
     if (existingAccount) {
       auditService.LoggedIn({
         data: {
-          userId: existingAccount.userId
-        }
+          userId: existingAccount.userId,
+        },
       });
 
       logger.info('User signed in with existing account', {
         context: 'handleSignIn',
         metadata: {
           userId: existingAccount.userId,
-          provider: account.provider
-        }
+          provider: account.provider,
+        },
       });
 
       return { success: true, data: true };
@@ -101,21 +102,21 @@ export async function handleSignIn({
         expiresAt: account.expires_at,
         tokenType: account.token_type,
         scope: account.scope,
-        idToken: account.id_token
+        idToken: account.id_token,
       });
 
       auditService.LoggedIn({
         data: {
-          userId: existingUser.id
-        }
+          userId: existingUser.id,
+        },
       });
 
       logger.info('Linked new account to existing user', {
         context: 'handleSignIn',
         metadata: {
           userId: existingUser.id,
-          provider: account.provider
-        }
+          provider: account.provider,
+        },
       });
 
       return { success: true, data: true };
@@ -126,7 +127,7 @@ export async function handleSignIn({
         firstName: profile?.given_name || 'Unknown',
         lastName: profile?.family_name || 'Unknown',
         email: profile?.email,
-        avatarUrl: profile?.picture
+        avatarUrl: profile?.picture,
       },
       {
         type: account.type,
@@ -137,8 +138,8 @@ export async function handleSignIn({
         expiresAt: account.expires_at,
         tokenType: account.token_type,
         scope: account.scope,
-        idToken: account.id_token
-      }
+        idToken: account.id_token,
+      },
     );
 
     if (!newUser) {
@@ -147,16 +148,16 @@ export async function handleSignIn({
 
     auditService.LoggedIn({
       data: {
-        userId: newUser.id
-      }
+        userId: newUser.id,
+      },
     });
 
     logger.info('Created new user with account', {
       context: 'handleSignIn',
       metadata: {
         userId: newUser.id,
-        provider: account.provider
-      }
+        provider: account.provider,
+      },
     });
 
     return { success: true, data: true };
@@ -165,7 +166,7 @@ export async function handleSignIn({
     return handleActionError(error, 'Sign-in failed', {
       action: 'handleSignIn',
       provider: account?.provider,
-      email: profile?.email
+      email: profile?.email,
     });
   }
 }
@@ -179,9 +180,15 @@ export async function handleSignIn({
  * @returns ActionResult with requiresOtp flag and optional challengeToken
  */
 export async function initiateSignIn(
-  input: SignInInput
+  input: SignInInput,
 ): Promise<ActionResult<{ requiresOtp: false } | { requiresOtp: true; challengeToken: string }>> {
   try {
+    const ip = await getRequestIp();
+    const limited = await checkRateLimit(authLimiter, ip);
+    if (limited) {
+      throw new RateLimitError(`Too many sign-in attempts. Try again in ${limited.retryAfter}s.`);
+    }
+
     const { email, password } = SignInSchema.parse(input);
 
     const userRepo = new UserRepository(prisma);
@@ -191,7 +198,7 @@ export async function initiateSignIn(
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    const passwordValid = await bcrypt.compare(password, user.password);
+    const passwordValid = await compare(password, user.password);
     if (!passwordValid) {
       throw new UnauthorizedError('Invalid credentials');
     }
@@ -212,7 +219,7 @@ export async function initiateSignIn(
       hashedCode,
       expires,
       userAgent: clientDetails.userAgent,
-      requestedIpAddress: clientDetails.ipAddress
+      requestedIpAddress: clientDetails.ipAddress,
     });
 
     const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'there';
@@ -222,12 +229,12 @@ export async function initiateSignIn(
         to: email,
         subject: 'Your sign-in verification code',
         template: 'otp',
-        props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES }
+        props: { userName, otpCode: code, expiresInMinutes: OTP_EXPIRY_MINUTES },
       });
     } catch (err) {
       logger.error('Failed to send OTP email', err, {
         context: 'initiateSignIn',
-        metadata: { userId: user.id }
+        metadata: { userId: user.id },
       });
 
       throw new InternalServerError('Failed to send verification code. Please try again.');
@@ -237,8 +244,8 @@ export async function initiateSignIn(
       data: {
         userId: user.id,
         ipAddress: clientDetails.ipAddress ?? undefined,
-        userAgent: clientDetails.userAgent ?? undefined
-      }
+        userAgent: clientDetails.userAgent ?? undefined,
+      },
     });
 
     return { success: true, data: { requiresOtp: true, challengeToken: token.challengeToken } };
@@ -255,9 +262,17 @@ export async function initiateSignIn(
  * @returns ActionResult with verified: true on success
  */
 export async function verifyTwoFactorCode(
-  input: OtpVerifyInput
+  input: OtpVerifyInput,
 ): Promise<ActionResult<{ verified: true }>> {
   try {
+    const ip = await getRequestIp();
+    const limited = await checkRateLimit(authLimiter, ip);
+    if (limited) {
+      throw new RateLimitError(
+        `Too many verification attempts. Try again in ${limited.retryAfter}s.`,
+      );
+    }
+
     const { challengeToken, code } = OtpVerifySchema.parse(input);
 
     const tokenRepo = new TwoFactorTokenRepository(prisma);
@@ -281,7 +296,7 @@ export async function verifyTwoFactorCode(
 
     const hashMatch = crypto.timingSafeEqual(
       Buffer.from(hashedSubmitted, 'hex'),
-      Buffer.from(token.otpCode, 'hex')
+      Buffer.from(token.otpCode, 'hex'),
     );
 
     if (!hashMatch) {
@@ -295,7 +310,7 @@ export async function verifyTwoFactorCode(
       const remaining = MAX_ATTEMPTS - updated.numberOfAttempts;
       auditService.OtpFailed({ data: { userId: token.userId, attemptsRemaining: remaining } });
       throw new UnauthorizedError(
-        `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+        `Invalid code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`,
       );
     }
 
@@ -306,7 +321,7 @@ export async function verifyTwoFactorCode(
     await confirmationRepo.upsertByUserId(token.userId);
 
     auditService.OtpVerified({
-      data: { userId: token.userId, ipAddress: clientDetails.ipAddress ?? undefined }
+      data: { userId: token.userId, ipAddress: clientDetails.ipAddress ?? undefined },
     });
 
     return { success: true, data: { verified: true } };

@@ -22,7 +22,7 @@ export async function createInvoiceWithItems(
   prisma: PrismaClient,
   data: CreateInvoiceInput,
   tenantId: string,
-  createdBy?: string
+  createdBy?: string,
 ): Promise<{ id: string; invoiceNumber: string }> {
   let attempts = 0;
   const maxAttempts = 3;
@@ -61,14 +61,14 @@ export async function createInvoiceWithItems(
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 total: item.quantity * item.unitPrice,
-                productId: item.productId
-              }))
-            }
+                productId: item.productId,
+              })),
+            },
           },
           select: {
             id: true,
-            invoiceNumber: true
-          }
+            invoiceNumber: true,
+          },
         });
 
         // Create initial status history entry
@@ -79,8 +79,8 @@ export async function createInvoiceWithItems(
             previousStatus: null,
             updatedAt: new Date(),
             updatedBy: createdBy,
-            notes: 'Invoice created'
-          }
+            notes: 'Invoice created',
+          },
         });
 
         return invoice;
@@ -117,7 +117,7 @@ export async function updateInvoiceWithItems(
   prisma: PrismaClient,
   id: string,
   data: UpdateInvoiceInput,
-  tenantId: string
+  tenantId: string,
 ): Promise<InvoiceWithDetails | null> {
   // Calculate total amount
   const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -130,7 +130,7 @@ export async function updateInvoiceWithItems(
     // 1. Fetch current invoice to check status and locking
     const currentInvoice = await tx.invoice.findUnique({
       where: { id, deletedAt: null },
-      select: { status: true, amountPaid: true }
+      select: { status: true, amountPaid: true },
     });
 
     if (!currentInvoice) {
@@ -144,7 +144,7 @@ export async function updateInvoiceWithItems(
       InvoiceStatus.OVERDUE,
       InvoiceStatus.PAID,
       InvoiceStatus.PARTIALLY_PAID,
-      InvoiceStatus.CANCELLED
+      InvoiceStatus.CANCELLED,
     ];
 
     const isLocked = lockedStatuses.includes(currentInvoice.status);
@@ -161,7 +161,7 @@ export async function updateInvoiceWithItems(
 
       if (hasContentChanges) {
         throw new Error(
-          `This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`
+          `This invoice is ${currentInvoice.status.toLowerCase()} and its content cannot be modified. Revert to draft first if possible.`,
         );
       }
 
@@ -173,8 +173,8 @@ export async function updateInvoiceWithItems(
           where: { id },
           data: {
             status: data.status,
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
 
         await tx.invoiceStatusHistory.create({
@@ -183,8 +183,8 @@ export async function updateInvoiceWithItems(
             status: data.status,
             previousStatus: currentInvoice.status,
             updatedAt: new Date(),
-            notes: `Status updated via edit: ${data.status}`
-          }
+            notes: `Status updated via edit: ${data.status}`,
+          },
         });
       }
 
@@ -212,8 +212,8 @@ export async function updateInvoiceWithItems(
     await tx.invoiceItem.deleteMany({
       where: {
         invoiceId: data.id,
-        id: { notIn: existingItemIds }
-      }
+        id: { notIn: existingItemIds },
+      },
     });
 
     // Update invoice details
@@ -230,8 +230,8 @@ export async function updateInvoiceWithItems(
         gst: data.gst,
         discount: data.discount,
         amountDue,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
 
     // Update existing items
@@ -245,8 +245,8 @@ export async function updateInvoiceWithItems(
           unitPrice: item.unitPrice,
           total: item.quantity * item.unitPrice,
           productId: item.productId,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     }
 
@@ -260,9 +260,9 @@ export async function updateInvoiceWithItems(
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.quantity * item.unitPrice,
-            productId: item.productId
+            productId: item.productId,
           };
-        })
+        }),
       });
     }
 
