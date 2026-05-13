@@ -6,9 +6,11 @@ Audit of the full codebase. Findings grouped by severity. Check off items as res
 
 ## CRITICAL
 
-- [ ] **C1 — Rate limiting disabled**
+- [x] **C1 — Rate limiting disabled** ✓ 2026-05-14
   - File: `src/rate-limiter.ts`
-  - Re-enable Upstash/KV rate limiting on auth + file upload endpoints.
+  - Installed `@upstash/ratelimit` + `@upstash/redis`. Three limiters: 10 req/10m per IP for auth, 20 req/min per IP for uploads, 30 req/min per user ID for all private actions.
+  - Wired into `withAuth`, `withTenant`, `withTenantPermission`. `updateSessionHeartbeat` exempted via `skipRateLimit`.
+  - Disabled in development (`NODE_ENV !== 'development'` guard). Fails open when KV not configured.
 
 - [x] **C2 — `switchActiveTenant` no DB validation** ✓ 2026-05-09
   - File: `src/actions/admin/switch-tenant.ts`

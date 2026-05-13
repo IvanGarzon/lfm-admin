@@ -10,9 +10,10 @@ import type {
   AuthenticatedHandler,
   TenantHandler,
   TenantContext,
-  UnauthenticatedHandler
+  UnauthenticatedHandler,
 } from '@/types/actions';
 import { type PermissionKey, hasPermission } from './permissions';
+import { apiLimiter, checkRateLimit } from '@/rate-limiter';
 
 export const SUPER_ADMIN_TENANT_COOKIE = 'sa_active_tenant_id';
 
@@ -55,7 +56,8 @@ function isAuthenticatedSession(session: Session | null): session is Authenticat
  * );
  */
 export function withAuth<TInput, TOutput>(
-  handler: AuthenticatedHandler<TInput, TOutput>
+  handler: AuthenticatedHandler<TInput, TOutput>,
+  options?: { skipRateLimit?: boolean },
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -63,8 +65,15 @@ export function withAuth<TInput, TOutput>(
     if (!isAuthenticatedSession(session)) {
       return {
         success: false,
-        error: 'You must be signed in to perform this action'
+        error: 'You must be signed in to perform this action',
       };
+    }
+
+    if (!options?.skipRateLimit) {
+      const limited = await checkRateLimit(apiLimiter, session.user.id);
+      if (limited) {
+        return { success: false, error: `Too many requests. Try again in ${limited.retryAfter}s.` };
+      }
     }
 
     return handler(session, input);
@@ -91,7 +100,7 @@ export function withAuth<TInput, TOutput>(
  */
 export function withTenantPermission<TInput, TOutput>(
   permission: PermissionKey | PermissionKey[],
-  handler: TenantHandler<TInput, TOutput>
+  handler: TenantHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -99,8 +108,13 @@ export function withTenantPermission<TInput, TOutput>(
     if (!isAuthenticatedSession(session)) {
       return {
         success: false,
-        error: 'You must be signed in to perform this action'
+        error: 'You must be signed in to perform this action',
       };
+    }
+
+    const limited = await checkRateLimit(apiLimiter, session.user.id);
+    if (limited) {
+      return { success: false, error: `Too many requests. Try again in ${limited.retryAfter}s.` };
     }
 
     const permissions = Array.isArray(permission) ? permission : [permission];
@@ -109,7 +123,7 @@ export function withTenantPermission<TInput, TOutput>(
     if (missingPermissions.length > 0) {
       return {
         success: false,
-        error: 'You do not have permission to perform this action'
+        error: 'You do not have permission to perform this action',
       };
     }
 
@@ -117,7 +131,7 @@ export function withTenantPermission<TInput, TOutput>(
       tenantId,
       tenantSlug,
       userId: session.user.id,
-      user: session.user
+      user: session.user,
     });
 
     if (session.user.tenantId && session.user.tenantSlug) {
@@ -130,7 +144,7 @@ export function withTenantPermission<TInput, TOutput>(
       if (!tenant) {
         return {
           success: false,
-          error: 'No tenant selected. Use the tenant switcher in the sidebar.'
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
         };
       }
       return handler(createContext(tenant.id, tenant.slug), input);
@@ -153,7 +167,7 @@ async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string 
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    select: { id: true, slug: true }
+    select: { id: true, slug: true },
   });
 
   return tenant ?? null;
@@ -177,7 +191,7 @@ async function resolveTenantForSuperAdmin(): Promise<{ id: string; slug: string 
  * );
  */
 export function withTenant<TInput, TOutput>(
-  handler: TenantHandler<TInput, TOutput>
+  handler: TenantHandler<TInput, TOutput>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();
@@ -186,11 +200,16 @@ export function withTenant<TInput, TOutput>(
       return { success: false, error: 'You must be signed in to perform this action' };
     }
 
+    const limited = await checkRateLimit(apiLimiter, session.user.id);
+    if (limited) {
+      return { success: false, error: `Too many requests. Try again in ${limited.retryAfter}s.` };
+    }
+
     const createContext = (tenantId: string, tenantSlug: string): TenantContext => ({
       tenantId,
       tenantSlug,
       userId: session.user.id,
-      user: session.user
+      user: session.user,
     });
 
     if (session.user.tenantId && session.user.tenantSlug) {
@@ -203,7 +222,7 @@ export function withTenant<TInput, TOutput>(
       if (!tenant) {
         return {
           success: false,
-          error: 'No tenant selected. Use the tenant switcher in the sidebar.'
+          error: 'No tenant selected. Use the tenant switcher in the sidebar.',
         };
       }
       return handler(createContext(tenant.id, tenant.slug), input);
@@ -226,7 +245,7 @@ export function withTenant<TInput, TOutput>(
  * );
  */
 export function withSuperAdmin<TInput, TOutput>(
-  handler: (session: SuperAdminSession, input: TInput) => Promise<ActionResult<TOutput>>
+  handler: (session: SuperAdminSession, input: TInput) => Promise<ActionResult<TOutput>>,
 ): UnauthenticatedHandler<TInput, TOutput> {
   return async (input: TInput): Promise<ActionResult<TOutput>> => {
     const session = await getSession();

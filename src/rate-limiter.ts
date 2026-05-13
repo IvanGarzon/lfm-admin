@@ -1,14 +1,15 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { env } from '@/env';
 
 // -- Setup --------------------------------------------------------------------
 
 let redis: Redis | null = null;
 
-if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
+if (env.NODE_ENV !== 'development' && env.KV_REST_API_URL && env.KV_REST_API_TOKEN) {
   redis = new Redis({
-    url: process.env.KV_REST_API_URL,
-    token: process.env.KV_REST_API_TOKEN,
+    url: env.KV_REST_API_URL,
+    token: env.KV_REST_API_TOKEN,
   });
 }
 
@@ -24,9 +25,9 @@ export const uploadLimiter = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(20, '1 m'), prefix: 'rl:upload' })
   : null;
 
-// 60 requests per minute per IP — prevent hobby-tier exhaustion from E2E tests
-export const testLimiter = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(60, '1 m'), prefix: 'rl:test' })
+// 30 requests per minute per user ID — general private API abuse protection
+export const apiLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(30, '1 m'), prefix: 'rl:api' })
   : null;
 
 // -- Helper -------------------------------------------------------------------
