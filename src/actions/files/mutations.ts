@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod';
+const CUID_REGEX = /^c[a-z0-9]{24,}$/i;
 import { uploadFileToS3, deleteFileFromS3, generateS3Key, getS3Url, s3Client } from '@/lib/s3';
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/file-constants';
 import { handleActionError } from '@/lib/error-handler';
@@ -49,7 +49,7 @@ export const uploadFile = withTenantPermission<
     }
 
     // Validate ownership when quoteId is a real entity ID (not a generic folder identifier)
-    if (z.string().cuid().safeParse(quoteId).success) {
+    if (CUID_REGEX.test(quoteId)) {
       const quote = await findQuoteById(prisma, quoteId, ctx.tenantId);
       if (!quote) {
         return { success: false, error: 'Quote not found' };
@@ -129,6 +129,18 @@ export const deleteFile = withTenantPermission<string, { message: string }>(
     try {
       if (!s3Key) {
         return { success: false, error: 'No s3Key provided' };
+      }
+
+      // Validate ownership: parse quoteId from key format quotes/{quoteId}/...
+      const keyParts = s3Key.split('/');
+      if (keyParts[0] === 'quotes' && keyParts[1]) {
+        const quoteId = keyParts[1];
+        if (CUID_REGEX.test(quoteId)) {
+          const quote = await findQuoteById(prisma, quoteId, ctx.tenantId);
+          if (!quote) {
+            return { success: false, error: 'Quote not found' };
+          }
+        }
       }
 
       await deleteFileFromS3(s3Key);

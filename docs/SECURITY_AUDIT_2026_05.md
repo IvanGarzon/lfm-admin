@@ -118,3 +118,4 @@ Audit of the full codebase. Findings grouped by severity. Check off items as res
 | 2026-05-09 | L2 fixed        | Added id/tenantId context to 8 generic error throws                                       |
 | 2026-05-09 | L3 mitigated    | Task execution has timeout; Prisma covered by Neon + Vercel timeouts                      |
 | 2026-05-09 | C5 fixed        | `updateCustomer` now uses tenant-scoped `findCustomerById`; test mock updated             |
+| 2026-05-14 | C1 fixed        | Rate limiting via Upstash: auth (10/10m), uploads (20/1m), all private actions (30/1m)    |
