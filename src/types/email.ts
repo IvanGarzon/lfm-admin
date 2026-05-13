@@ -22,6 +22,7 @@ export const EmailTypeEnum = z.enum([
   'quote.accepted',
   'quote.rejected',
   'quote.expired',
+  'quote.followup',
 
   // Report-related
   'report.monthly',
@@ -70,7 +71,7 @@ export const QueueEmailSchema = z.object({
   // Email details
   emailType: EmailTypeEnum,
   templateName: EmailTemplateEnum,
-  recipient: z.string().email(),
+  recipient: z.email(),
   subject: z.string(),
 
   // Optional associations
@@ -79,7 +80,7 @@ export const QueueEmailSchema = z.object({
   quoteId: z.string().optional(),
 
   // Email data (will be passed to template)
-  emailData: z.record(z.any()),
+  emailData: z.record(z.string(), z.unknown()),
 
   // Attachments
   attachments: z
@@ -96,7 +97,7 @@ export const QueueEmailSchema = z.object({
   priority: z.enum(['high', 'normal', 'low']).default('normal'),
 
   // Metadata
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional()
 });
 
 export type QueueEmailPayload = z.infer<typeof QueueEmailSchema>;
@@ -133,7 +134,7 @@ export const CreateEmailAuditSchema = z.object({
   inngestRunId: z.string().optional(),
 
   // Additional metadata
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional()
 });
 
 export type CreateEmailAuditInput = z.infer<typeof CreateEmailAuditSchema>;

@@ -11,6 +11,7 @@ import { logger } from '@/lib/logger';
 import { ScheduledTaskRepository } from '@/repositories/scheduled-task-repository';
 import { EmailAuditRepository } from '@/repositories/email-audit-repository';
 import { env } from '@/env';
+import { EmailTypeEnum } from '@/types/email';
 import type { QueueEmailPayload } from '@/types/email';
 
 const taskRepo = new ScheduledTaskRepository(prisma);
@@ -149,14 +150,14 @@ export async function queueInvoiceEmail(params: {
   type: 'pending' | 'reminder' | 'receipt' | 'overdue';
   recipient: string;
   subject: string;
-  emailData: Record<string, any>;
+  emailData: Record<string, unknown>;
   attachments?: QueueEmailPayload['attachments'];
 }) {
   return queueEmail({
     tenantId: params.tenantId,
     entityType: 'invoice',
     entityId: params.invoiceId,
-    emailType: `invoice.${params.type}` as any,
+    emailType: EmailTypeEnum.parse(`invoice.${params.type}`),
     templateName:
       params.type === 'receipt' ? 'receipt' : params.type === 'reminder' ? 'reminder' : 'invoice',
     recipient: params.recipient,
@@ -179,14 +180,14 @@ export async function queueQuoteEmail(params: {
   type: 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
   recipient: string;
   subject: string;
-  emailData: Record<string, any>;
+  emailData: Record<string, unknown>;
   attachments?: QueueEmailPayload['attachments'];
 }) {
   return queueEmail({
     tenantId: params.tenantId,
     entityType: 'quote',
     entityId: params.quoteId,
-    emailType: `quote.${params.type}` as any,
+    emailType: EmailTypeEnum.parse(`quote.${params.type}`),
     templateName: 'quote',
     recipient: params.recipient,
     subject: params.subject,

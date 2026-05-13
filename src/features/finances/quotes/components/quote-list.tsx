@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-
 import { useDataTable } from '@/hooks/use-data-table';
 import { Box } from '@/components/ui/box';
 import {
@@ -21,7 +20,8 @@ import { QuoteTable } from '@/features/finances/quotes/components/quote-table';
 import type { QuotePagination } from '@/features/finances/quotes/types';
 import { createQuoteColumns } from '@/features/finances/quotes/components/quote-columns';
 import { useQuoteActions } from '@/features/finances/quotes/context/quote-action-context';
-import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
+import { previewQuoteEmail } from '@/actions/finances/quotes/preview-email';
+import type { QuoteEmailType } from '@/features/finances/quotes/types';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 import type { QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
 

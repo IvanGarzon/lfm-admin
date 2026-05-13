@@ -36,6 +36,7 @@ import { QuoteStatus } from '@/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { handleActionError } from '@/lib/error-handler';
 import { withTenantPermission } from '@/lib/action-auth';
+import { logger } from '@/lib/logger';
 import {
   CreateQuoteSchema,
   UpdateQuoteSchema,
@@ -217,8 +218,13 @@ export const markQuoteAsSent = withTenantPermission<
         if (!emailResult.success) {
           emailWarning = emailResult.error;
         }
-      } catch (emailError) {
-        emailWarning = 'Failed to queue automatic email';
+      } catch (error) {
+        logger.error('Failed to queue quote email', error, {
+          context: 'markQuoteAsSent',
+          metadata: { quoteId: quote.id }
+        });
+
+        emailWarning = 'Failed to queue quote email';
       }
     }
 
@@ -336,6 +342,7 @@ export const convertQuoteToInvoice = withTenantPermission<
       const invoice = await findInvoiceByIdWithDetails(prisma, result.invoiceId, ctx.tenantId);
       if (invoice) {
         await queueInvoiceEmail({
+          tenantId: ctx.tenantId,
           invoiceId: invoice.id,
           customerId: invoice.customer.id,
           type: 'pending',
@@ -351,8 +358,11 @@ export const convertQuoteToInvoice = withTenantPermission<
           }
         });
       }
-    } catch (emailError) {
-      // Log error but don't fail the conversion
+    } catch (error) {
+      logger.error('Failed to queue invoice email after converting quote to invoice', error, {
+        context: 'convertQuoteToInvoice',
+        metadata: { invoiceId: result.invoiceId }
+      });
     }
 
     revalidatePath('/finances/quotes');

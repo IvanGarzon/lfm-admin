@@ -1,15 +1,15 @@
 'use client';
 
-import { QuoteStatusSchema, type QuoteStatus } from '@/zod/schemas/enums/QuoteStatus.schema';
+import { QuoteStatusSchema } from '@/zod/schemas/enums/QuoteStatus.schema';
 import { useState, useCallback, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { previewQuoteEmail, type QuoteEmailType } from '@/actions/finances/quotes/preview-email';
+import { previewQuoteEmail } from '@/actions/finances/quotes/preview-email';
+import { type QuoteEmailType } from '@/features/finances/quotes/types';
 import { EmailPreviewDialog, type EmailPreviewData } from '@/components/email/email-preview-dialog';
 
 import type { CreateQuoteInput, UpdateQuoteInput } from '@/schemas/quotes';
 import { Box } from '@/components/ui/box';
-import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerBody,
@@ -392,7 +392,7 @@ export function QuoteDrawer({
       status: quote.status,
       validUntil: quote.validUntil
     });
-  }, [quote?.status, quote?.validUntil]);
+  }, [quote]);
 
   const { title, status } = useMemo(() => {
     if (mode === 'create') {

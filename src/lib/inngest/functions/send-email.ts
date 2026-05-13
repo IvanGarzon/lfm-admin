@@ -58,6 +58,7 @@ export const sendEmailFunction = inngest.createFunction(
           sentAt: existingAudit.sentAt
         }
       });
+
       return { success: true, skipped: true, reason: 'already_sent' };
     }
 
@@ -124,6 +125,7 @@ type InvoiceEmailType =
   | 'invoice.reminder'
   | 'invoice.receipt'
   | 'invoice.overdue';
+
 type QuoteEmailType =
   | 'quote.sent'
   | 'quote.reminder'

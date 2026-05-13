@@ -12,7 +12,6 @@ import { seedQuotes } from './seeds/seed-quotes';
 import { seedTransactions } from './seeds/seed-transactions';
 import { seedPriceListItems } from './seeds/seed-price-list-items';
 import { seedRecipes } from './seeds/seed-recipes';
-import { seedE2EUser } from './seeds/seed-e2e-user';
 import { seedSuperAdmin } from './seeds/seed-superadmin';
 import { hasFlag, parseArg } from './seeds/seed-helpers';
 

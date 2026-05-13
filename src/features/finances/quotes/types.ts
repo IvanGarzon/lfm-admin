@@ -212,3 +212,5 @@ export type AverageTimeToDecision = {
   avgDaysToReject: number;
   avgDaysToDecision: number; // Combined average for accept/reject
 };
+
+export type QuoteEmailType = 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';

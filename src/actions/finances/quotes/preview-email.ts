@@ -3,8 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { findQuoteById } from '@/db/quotes/queries';
 import { createEmailPreviewFunction } from '@/lib/email-preview-factory';
-
-export type QuoteEmailType = 'sent' | 'reminder' | 'accepted' | 'rejected' | 'expired' | 'followup';
+import { QuoteEmailType } from '@/features/finances/quotes/types';
 
 /**
  * Preview quote email without sending
