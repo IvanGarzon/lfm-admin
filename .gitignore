@@ -46,3 +46,7 @@ localstack-data/
 
 *storybook.log
 e2e/.auth/
+
+# playwright
+/playwright-report/
+/test-results/
